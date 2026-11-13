@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="da">
+<head>
+  <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HUWiki Google Drev – test</title>
+  <style>
+    * {box-sizing:border-box}
+    body {font:15px/1.45 system-ui,sans-serif;margin:0;color:#182634;background:#f7f9fa}
+    header {display:flex;flex-wrap:wrap;align-items:center;gap:.8rem;padding:.7rem 1rem;border-bottom:1px solid #d4dbe0;background:#fff}
+    header strong {margin-right:auto}
+    main {padding:1.25rem;max-width:720px;margin:0 auto}
+    label {display:block;margin:.8rem 0 .3rem;font-weight:600}
+    input,select,button {font:inherit;padding:.5rem;border-radius:5px;border:1px solid #aebac4}
+    button {cursor:pointer;background:#e8f4f1;border-color:#7bafa0}
+    button:disabled {opacity:.5;cursor:wait}
+    input[type=email],input[type=text] {width:min(100%,420px)}
+    small {display:block;color:#536574;margin:.5rem 0}
+    #status {padding:.5rem 1rem;background:#eef2f5;white-space:pre-wrap}
+    #wiki {border:0;width:100%;height:calc(100dvh - 112px);background:white}
+    #workspace[hidden], #start[hidden] {display:none}
+    #sharing {display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
+    #sharing label {margin:0}
+    #sharing input {width:210px}
+    .danger {color:#b42318}
+    .warning {background:#fff2ce;padding:.7rem 1rem;border-radius:6px}
+    a {color:#145d78}
+    fieldset {margin:1.2rem 0;border:1px solid #cad3d9;border-radius:8px;padding:1rem}
+  </style>
+</head>
+<body>
+  <header>
+    <strong>HUWiki Google Drev <small>Eksperimentel gemme- og deleadapter</small></strong>
+    <span id="fileName"></span>
+    <a id="driveLink" target="_blank" rel="noopener" hidden>Vis på Drev</a>
+  </header>
+  <div id="status" role="status" aria-live="polite">Klar til at forbinde en wiki.</div>
+
+  <main id="start">
+    <p>Denne testadapter bruger <strong>din Google-konto</strong> til at åbne, gemme og dele en almindelig HTML-wiki. Ingen Google Picker og ingen URL Fetch.</p>
+    <fieldset>
+      <legend><strong>Opret en ny wiki på mit Google Drev</strong></legend>
+      <p>Vælg den færdige HTML-wiki, du byggede i Forge. Det er en lokal filvælger, ikke Google Picker.</p>
+      <form id="uploadForm">
+        <input name="wikiFile" type="file" accept=".html,text/html" required>
+        <button type="submit">Upload og åbn</button>
+      </form>
+    </fieldset>
+    <fieldset>
+      <legend><strong>Åbn en eksisterende delt wiki</strong></legend>
+      <label for="fileId">Google Drive-fil-ID</label>
+      <input id="fileId" type="text" autocomplete="off" placeholder="ID fra en delt wiki">
+      <button id="openButton" type="button">Åbn wiki</button>
+    </fieldset>
+    <p class="warning">Indtil vi har afprøvet deling og konflikter med to konti, bør du kun bruge kopier af dine wikier. Ingen data flettes automatisk.</p>
+  </main>
+
+  <section id="workspace" hidden>
+    <header>
+      <div id="sharing">
+        <label for="recipient">Del med</label>
+        <input id="recipient" type="email" placeholder="modtager@gmail.com">
+        <select id="role" aria-label="Adgang">
+          <option value="writer">Redaktør</option>
+          <option value="reader">Læser</option>
+        </select>
+        <button id="shareButton" type="button">Del og send invitation</button>
+      </div>
+    </header>
+    <iframe id="wiki" title="HUWiki"></iframe>
+  </section>
+
+<script>
+"use strict";
+const START_ID = <?!= initialIdJson ?>;
+const $ = (id) => document.getElementById(id);
+let current = null;
+let savePending = false;
+
+function report(message, bad) {
+  $("status").textContent = message;
+  $("status").className = bad ? "danger" : "";
+}
+
+function rpc(method, ...params) {
+  return new Promise((resolve, reject) => {
+    const runner = google.script.run
+      .withSuccessHandler(resolve)
+      .withFailureHandler(error => reject(new Error(error && error.message || String(error))));
+    runner[method](...params);
+  });
+}
+
+function enableWorkspace(meta) {
+  current = meta;
+  $("start").hidden = true;
+  $("workspace").hidden = false;
+  $("fileName").textContent = meta.name + (meta.canEdit ? "" : " (kun læsning)");
+  $("driveLink").href = "https://drive.google.com/file/d/" + encodeURIComponent(meta.id) + "/view";
+  $("driveLink").hidden = false;
+  $("shareButton").disabled = !meta.canShare;
+}
+
+async function openWiki(id) {
+  report("Henter wiki fra Google Drive…");
+  try {
+    const result = await rpc("huOpen", id);
+    enableWorkspace(result.meta);
+    const frame = $("wiki");
+    frame.srcdoc = result.html;
+    report("Wiki indlæst på " + result.elapsedMs + " ms. " +
+      (result.meta.canEdit ? "Gemning er aktiveret." : "Du har kun læseadgang."));
+    if (result.meta.canEdit) await installSaver(frame, result.meta.id);
+  } catch (error) {
+    report("Kunne ikke åbne wikien: " + error.message, true);
+  }
+}
+
+async function installSaver(frame, fileId) {
+  // Same principle as Tiddly Drive 2: register a high-priority TW saver.
+  for (let attempt = 0; attempt < 150; attempt++) {
+    const tw = frame.contentWindow && frame.contentWindow.$tw;
+    if (tw && tw.saverHandler && Array.isArray(tw.saverHandler.savers)) {
+      if (tw.saverHandler.savers.some(s => s.info && s.info.name === "huwiki-google-drive")) return;
+      tw.saverHandler.savers.push({
+        info: {name:"huwiki-google-drive", priority:2000, capabilities:["save","autosave"]},
+        save(text, method, callback) {
+          if (savePending || !current || current.id !== fileId) return Promise.resolve(false);
+          savePending = true;
+          const initialVersion = current.version;
+          const changesAtStart = tw.saverHandler.numChanges;
+          report("Gemmer på Google Drev…");
+          return rpc("huSave", fileId, text, initialVersion)
+            .then(result => {
+              if (result.conflict) {
+                report("KONFLIKT: " + result.message +
+                  " Din åbne wiki er ikke overskrevet. Gem eventuelt en lokal kopi.", true);
+                return false;
+              }
+              if (!result.ok) {
+                report("Gemning mislykkedes. Download en lokal kopi.", true);
+                return false;
+              }
+              current = result.meta;
+              // Do not discard edits made *during* the asynchronous save.
+              if (tw.saverHandler.numChanges === changesAtStart) {
+                tw.saverHandler.numChanges = 0;
+                tw.saverHandler.updateDirtyStatus();
+              }
+              report("Gemt på " + result.elapsedMs + " ms.");
+              return true;
+            })
+            .catch(error => {
+              report("Gemning mislykkedes: " + error.message + ". Gem en lokal kopi.", true);
+              return false;
+            })
+            .finally(() => { savePending = false; });
+        }
+      });
+      return;
+    }
+    await new Promise(resolve => setTimeout(resolve, 120));
+  }
+  report("Wikien er indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", true);
+}
+
+$("uploadForm").addEventListener("submit", event => {
+  event.preventDefault();
+  const form = event.currentTarget;
+  report("Opretter HTML-filen på dit Google Drev…");
+  google.script.run
+    .withSuccessHandler(result => openWiki(result.meta.id))
+    .withFailureHandler(error => report("Upload mislykkedes: " + (error.message || error), true))
+    .huCreate(form); // Forms may only be passed as the sole google.script.run argument.
+});
+
+$("openButton").addEventListener("click", () => openWiki($("fileId").value.trim()));
+$("shareButton").addEventListener("click", async () => {
+  if (!current) return;
+  const email = $("recipient").value.trim();
+  const role = $("role").value;
+  if (!email) {report("Indtast modtagerens Google-mailadresse.", true);return;}
+  report("Deler wikien og sender invitation gennem Google Drive…");
+  try {
+    const result = await rpc("huShare", current.id, email, role);
+    report("Delt med " + result.recipient + " som " +
+      (result.role === "writer" ? "redaktør" : "læser") + ". Google Drive har sendt invitationen. " +
+      "Link: " + result.link);
+  } catch (error) {
+    report("Deling mislykkedes: " + error.message, true);
+  }
+});
+if (START_ID) {
+  $("fileId").value = START_ID;
+  openWiki(START_ID);
+}
+</script>
+</body>
+</html>
