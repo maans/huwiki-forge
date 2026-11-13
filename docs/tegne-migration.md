@@ -1,6 +1,6 @@
 # HUWiki Tegne Edition – portering til Forge
 
-Status: 13. november 2026 · **0.1.1-test.1**. Mac/iPad-browsertest mangler.
+Status: 13. november 2026 · **0.1.2-test.1**. Mac/iPad-browsertest mangler.
 
 ## Første testudgave
 
@@ -26,6 +26,10 @@ Test på Mac og iPad: opret/redigér/duplikér tegninger, Gem/genåbn wiki, skif
 
 Den oprindelige HUWiki 0.3.4-motor og det originale galleri/figurbibliotek skal sammenlignes og migreres separat, med fuld licens- og regressionstest.
 
-## Rettelser i 0.1.1-test.1
+## Rettelser i 0.1.2-test.1
 
 Tegne-panelets ekstra gemmeknap er fjernet. Brug TiddlyWikis eksisterende Gem-funktion. Et ugyldigt engelsk filter i redigeringspanelet er rettet; automatikken kontrollerer nu også synlige filterfejl i den rigtige browser.
+
+## Direkte publicering og sikkerhedskontrol – 0.1.2-test.1
+
+Den åbne tegning og hvert tegningskort har en **Udgiv tegning / Publish drawing**-handling, som kalder samme SitePublisher med tegningens egen tiddlertitel. Tegnestudiets startside indeholder en interaktiv editor og er ikke en statisk artikel. SitePublisher afviser nu udgivelse af en levende editor med tydelig forklaring frem for at eksportere et site, hvor tegningen mangler. Vælg en konkret tegning, tagget `HUWiki/Tegning`, eller en almindelig artikel, der indlejrer tegningen.

@@ -8,7 +8,7 @@ Udgivelse er en kapacitet, som flere Editions kan få glæde af. Den skal ikke v
 
 | Plugin | TiddlyWiki-titel | Forge-fil | Version |
 | --- | --- | --- | --- |
-| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.14-test.1 |
+| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.15-test.1 |
 | HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.7-test.1 |
 
 Begge plugins er browserværktøjer, ikke serverside-håndtering af Google Drev eller Apps Script. Den separate `PDF Publisher` laver PDF; `SitePublisher` laver **HTML-sites**. Den almindelige redigerbare single-file wiki gemmes fortsat med TiddlyWikis indbyggede saver.
@@ -88,7 +88,7 @@ Denne udgave viderefører den eksisterende SitePublisher-brugerflade. Den har en
 De læsbare integrationskilder ligger i `plugins/site-publisher/src/media-export.js` og `plugins/site-publisher/src/cutout-viewer.js`, og runtime + CSS er indlejret i samme SitePublisher-plugin. Der er ingen særskilt CutOut-udgiver.
 
 
-## Excalidraw/SVG i SitePublisher 0.1.14-test.1
+## Excalidraw/SVG i SitePublisher 0.1.15-test.1
 
 Den samme SitePublisher-brugerflade bygger nu også statiske, skalerbare SVG-tegninger. Den bruger funktionerne fra OAuthLabs `siteDrawingSource()`, `drawingSiteWiki()` og `siteDrawingBody()`, tilpasset til Forges **én HTML-fil** og automatiske preview:
 
@@ -102,3 +102,7 @@ Den samme SitePublisher-brugerflade bygger nu også statiske, skalerbare SVG-teg
 Dette er en teknisk integration, **ikke en komplet Forge-Tegne Edition**. Den gamle Tegne-pluginsamling, dens oprindelige tredjepartslicenser og dens SVG-eksportfunktion skal verificeres særskilt før en ny Forge Edition kan tilbydes. Den downloadede HTML indeholder kun det færdige SVG-billede. Sitelayouts, HUPedia-faktabokse, ABC, CutOut, download/del og touch-fokus er ikke tilsigtet ændret.
 
 **Manuel accept mangler:** Byg en wiki med den kompatible Tegne-motor; prøv direkte Excalidraw-tegning, `{{Min Tegning}}`, en tegning med indsat PNG, transparent baggrund, lange tegninger, skrift/tegning i forskellige størrelser, en privat kladde og SVG i både preview og downloadet HTML uden netværk på Mac og iPad. Automatiske Node-tests dækker eksportkontrakten og afvisninger, ikke den faktiske iPad-rendering.
+
+### Tegnestudie og direkte udgivelse – 0.1.15-test.1
+
+Tegne Edition har nu en **Udgiv tegning**-handling, der sender den åbne tegning direkte til den fælles SitePublisher. Et tegningskort kan også udgives uden at åbne editoren. Eksport af den interaktive HUWiki Tegne-startside eller en aktiv Excalidraw-editor stoppes med en forståelig fejl. Det forhindrer en succesmelding med en forsvunden tegning. Eksport af selve tegningens tiddler eller WikiText-artikler med indlejrede tegninger fungerer fortsat gennem SVG-adapteren.

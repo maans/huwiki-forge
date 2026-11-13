@@ -160,6 +160,28 @@ function siteDrawingBody(title,ctx){
  if(ctx)ctx.drawings=true;
  return '<figure class="huw-site-drawing"><img alt="'+safe(title)+'" src="'+safe(src)+'"></figure>';
 }
+// A live editor is not a reader view. Do not mark a site successful when
+// the drawing canvas disappears during static WikiText rendering.
+// Guard original WikiText: the active editor is not an exportable SVG reader.
+function publicationRejectLiveDrawingSource(title,source){
+ var fenced=false,hasEditor=false,tick=String.fromCharCode(96);
+ String(source||"").split(/\n/).forEach(function(line){
+  if(line.trim().slice(0,3)===tick+tick+tick){fenced=!fenced;return;}
+  if(fenced)return;
+  var parts=line.split(new RegExp("("+tick+"[^"+tick+"]*"+tick+")","g"));
+  for(var i=0;i<parts.length;i+=2){
+   if(/<\$excalidraw(?=[\s/>])/i.test(parts[i])||
+      /<\$transclude\b[^>]*\$:\/plugins\/huwiki\/tegne\/home(?=["'\s/>])/i.test(parts[i]))hasEditor=true;
+  }
+ });
+ if(hasEditor)publicationRejectLiveDrawingUi({querySelector:function(){return true;}},title);
+}
+function publicationRejectLiveDrawingUi(root,title){
+ if(!root||!root.querySelector||!root.querySelector(".hu-tegne-app,.hu-tegne-editor,.excalidraw"))return;
+ throw publicationDrawingError(title,
+  "Dette er tegnestudiets redigeringsside, ikke en tegning. Vælg Udgiv tegning i Tegne Edition, eller vælg selve tegningens tiddler i SitePublisher.",
+  "This is the drawing studio, not a drawing. Choose Publish drawing in Tegne Edition, or select the drawing tiddler in SitePublisher.");
+}
 function drawingSiteWiki(ctx){
  var normal=$tw.wiki,local=Object.create(normal);
  local.parseTiddler=function(title,options){

@@ -55,7 +55,7 @@ function createDrawingAdapter(rows,options={}){
  const safe=(s)=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const publicationMediaError=(title,detail)=>new Error("SitePublisher · "+title+": "+detail);
  const api=new Function("$tw","publicationMediaError","wikiLanguage","safe","XMLSerializer","setTimeout","clearTimeout",
-  code+"\nreturn {publicationDrawingFields,publicationDrawingAllowed,publicationDrawingValidate,publicationDrawingCheckSvg,publicationDrawingReferences,siteDrawingSource,siteDrawingBody,drawingSiteWiki,isDrawingTitle};"
+  code+"\nreturn {publicationDrawingFields,publicationDrawingAllowed,publicationDrawingValidate,publicationDrawingCheckSvg,publicationDrawingReferences,siteDrawingSource,siteDrawingBody,drawingSiteWiki,isDrawingTitle,publicationRejectLiveDrawingUi,publicationRejectLiveDrawingSource};"
  )(tw,publicationMediaError,()=>options.lang||"en",safe,serializer,setTimeout,clearTimeout);
  return {api,rows,wiki,seen,calls:()=>calls};
 }
@@ -68,7 +68,7 @@ test("Drawing SVG adapter is separate readable code bundled in one shared SitePu
  const plugin=JSON.parse(await read("plugins/site-publisher/dist/plugin.json"));
  const items=JSON.parse(plugin.text).tiddlers;
  const js=items[base+"/startup.js"].text;
- assert.equal(plugin.version,"0.1.14-test.1");
+ assert.equal(plugin.version,"0.1.15-test.1");
  assert.ok(js.includes(code.trim()));
  new Script(js);new Script(code);
  assert.equal(items[base+"/drawings/view.css"].type,"text/css");
@@ -81,7 +81,26 @@ test("Drawing SVG adapter is separate readable code bundled in one shared SitePu
  assert.match(js,/preview\.srcdoc=exported/);
  assert.ok(js.includes("if(exportedFigures<drawingReferences.length)"),"Missing drawings must stop publication");
  assert.match(js,/function downloadHtml\(/);
+ assert.match(js,/publicationRejectLiveDrawingUi\(div,title\)/,"Live drawing editors must never export as empty static sites");
+ assert.match(code,/\.hu-tegne-app,\.hu-tegne-editor,\.excalidraw/,"Detect the drawing studio generically");
  assert.doesNotMatch(code,/google\.script\.run|DriveApp|navigator\.share|createElement\(["']select["']\)/);
+});
+test("SitePublisher must reject a live drawing studio instead of reporting a site without the drawing",()=>{
+ const {api}=createDrawingAdapter(records());
+ const studio={querySelector(query){assert.match(query,/hu-tegne-app/);return {className:"hu-tegne-app"};}};
+ assert.throws(()=>api.publicationRejectLiveDrawingUi(studio,"HUWiki Tegne"),/drawing studio, not a drawing/);
+ const regular={querySelector(){return null;}};
+ assert.doesNotThrow(()=>api.publicationRejectLiveDrawingUi(regular,"Ordinary article"));
+});
+test("Publisher rejects Excalidraw studio transclusion in source while ignoring code examples",()=>{
+ const {api}=createDrawingAdapter(records());
+ const bad='<$transclude $tiddler="$:/plugins/huwiki/tegne/home" $mode="block"/>';
+ assert.throws(()=>api.publicationRejectLiveDrawingSource("HUWiki Tegne",bad),/drawing studio, not a drawing/);
+ assert.throws(()=>api.publicationRejectLiveDrawingSource("Article",'<$excalidraw tiddler="Diagram"/>'),/drawing studio, not a drawing/);
+ const tick=String.fromCharCode(96);
+ assert.doesNotThrow(()=>api.publicationRejectLiveDrawingSource("Docs",tick+bad+tick));
+ assert.doesNotThrow(()=>api.publicationRejectLiveDrawingSource("Docs",tick.repeat(3)+"\n"+bad+"\n"+tick.repeat(3)));
+ assert.doesNotThrow(()=>api.publicationRejectLiveDrawingSource("Article","! Normal article\n\n{{Diagram}}"));
 });
 test("Drawing scene is validated, privacy kept, and images must be actually embedded",()=>{
  const rows=records(),{api}=createDrawingAdapter(rows);
