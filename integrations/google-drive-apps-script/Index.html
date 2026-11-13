@@ -137,6 +137,10 @@ async function installSaver(frame, fileId) {
     }
     if (tw && tw.saverHandler && Array.isArray(tw.saverHandler.savers)) {
       if (tw.saverHandler.savers.some(s => s.info && s.info.name === "huwiki-google-drive")) return;
+      if (!/^[a-f0-9]{32}$/i.test(current && current.fingerprint || "")) {
+        report("Google Drev returnerede ingen checksum for wikiens HTML. Gemning er slået fra for at undgå overskrivning.", true);
+        return;
+      }
       let changeSerial = 0;
       if (tw.wiki && typeof tw.wiki.addEventListener === "function") {
         tw.wiki.addEventListener("change", () => {changeSerial++;});
@@ -170,7 +174,9 @@ async function installSaver(frame, fileId) {
             }
             try {
               report("Gemmer på Google Drev…");
-              const result = await rpc("huSave", fileId, job.text, current.version);
+              const started = performance.now();
+              const result = await rpc("huSave", fileId, job.text, current.fingerprint);
+              const totalMs = Math.round(performance.now() - started);
               if (result.conflict) {
                 blockedConflict = true;
                 failure(job.callbacks, "KONFLIKT: " + result.message +
@@ -189,7 +195,9 @@ async function installSaver(frame, fileId) {
                 tw.saverHandler.numChanges = Math.max(1, tw.saverHandler.numChanges);
                 tw.saverHandler.updateDirtyStatus();
               }
-              report("Gemt på Google Drev (" + result.elapsedMs + " ms).");
+              report("Gemt på Google Drev – i alt " +
+                (totalMs / 1000).toFixed(1) + " sek. (server: " +
+                (result.elapsedMs / 1000).toFixed(1) + " sek.).");
             } catch (error) {
               failure(job.callbacks, "Gemning mislykkedes: " +
                 (error.message || String(error)) + ". Hent en lokal sikkerhedskopi.");
