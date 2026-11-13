@@ -11,7 +11,8 @@ const HU_SYNC_PROPERTY = "forgeDriveSyncSheetId";
 const HU_SYNC_HEADER = ["seq", "opId", "actor", "title", "operation", "fieldsJson", "timestamp"];
 const HU_SYNC_MAX_OPS = 25;
 const HU_SYNC_MAX_BATCH_CHARS = 250000;
-const HU_SYNC_MAX_TIDDLER_CHARS = 90000;
+// Google Sheets has a ~50,000-character cell limit.
+const HU_SYNC_MAX_TIDDLER_CHARS = 45000;
 const HU_SYNC_MAX_POLL = 250;
 
 function huSyncLinkedId_(wikiId) {
@@ -109,7 +110,8 @@ function huSyncPull(wikiId, afterSeq, maxItems) {
     seq: cursor + offset + 1,
     opId: String(row[1]),
     actor: String(row[2]),
-    title: String(row[3]),
+    // Store JSON-escaped titles in Sheets to prevent formula injection.
+    title: JSON.parse(String(row[3])),
     operation: String(row[4]),
     fields: row[4] === "delete" ? null : JSON.parse(String(row[5] || "{}")),
     timestamp: String(row[6])
@@ -122,7 +124,7 @@ function huSyncValidate_(operations) {
       operations.length > HU_SYNC_MAX_OPS ||
       JSON.stringify(operations).length > HU_SYNC_MAX_BATCH_CHARS)
     throw new Error("Synkpakke er tom eller for stor.");
-  const titles = {};
+  const titles = new Set();
   return operations.map(op => {
     if (!op || typeof op.title !== "string" || !op.title.trim() ||
         op.title.length > 600 || op.title.startsWith("$:/") ||
@@ -130,8 +132,10 @@ function huSyncValidate_(operations) {
         (op.operation !== "put" && op.operation !== "delete") ||
         !Number.isSafeInteger(op.baseSeq) || op.baseSeq < 0)
       throw new Error("Ugyldig eller ikke-synkroniserbar tiddler-ændring.");
-    if (titles[op.title]) throw new Error("Duplikeret tiddler i en synkpakke.");
-    titles[op.title] = true;
+    if (titles.has(op.title)) throw new Error("Duplikeret tiddler i en synkpakke.");
+    titles.add(op.title);
+    if (!/^[A-Za-z0-9_-]{8,100}$/.test(String(op.actor || "")))
+      throw new Error("Ugyldigt deltager-ID.");
     if (op.operation === "put") {
       if (!op.fields || typeof op.fields !== "object" ||
           Array.isArray(op.fields) || op.fields.title !== op.title)
@@ -182,7 +186,7 @@ function huSyncPush(wikiId, operations) {
       const rows = book.journal.getRange(scanStart, 1,
         scanEnd - scanStart + 1, HU_SYNC_HEADER.length).getValues();
       for (let i = rows.length - 1; i >= 0; i--) {
-        const title = String(rows[i][3]);
+        const title = JSON.parse(String(rows[i][3]));
         if (wanted.has(title)) {
           latest[title] = {
             seq: scanStart + i - 1,
@@ -213,7 +217,7 @@ function huSyncPush(wikiId, operations) {
 
     const now = new Date().toISOString();
     const rowsToAppend = fresh.map((op, n) => [
-      lastRow + n, op.opId, op.actor, op.title, op.operation, op.fieldsJson, now
+      lastRow + n, op.opId, op.actor, JSON.stringify(op.title), op.operation, op.fieldsJson, now
     ]);
     if (rowsToAppend.length) {
       book.journal.getRange(lastRow + 1, 1,
