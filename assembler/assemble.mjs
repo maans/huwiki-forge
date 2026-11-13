@@ -28,22 +28,28 @@ function validateTiddlers(tiddlers) {
   }
 }
 
-export function assembleHtml(emptyHtml, tiddlers) {
-  if (typeof emptyHtml !== "string" || !emptyHtml.includes("tiddlywiki-tiddler-store")) {
-    throw new Error("Filen ser ikke ud til at være en almindelig TiddlyWiki empty.html.");
+export const CORE_LIBRARY_MARKER = "<!--~~ Library modules ~~-->";
+
+export function validateCore(html) {
+  if (typeof html !== "string" || !html.includes(CORE_LIBRARY_MARKER) ||
+      !html.includes("tiddlywiki-tiddler-store") || !html.includes("$:/core")) {
+    throw new Error("Ugyldig eller inkompatibel TiddlyWiki empty.html (Library modules-markøren eller kernen mangler).");
   }
-  validateTiddlers(tiddlers);
-  const head = /<head\b[^>]*>/i;
-  if (!head.test(emptyHtml)) {
-    throw new Error("TiddlyWiki-filen mangler <head>.");
-  }
-  // Escape '<' so tiddler text cannot terminate the JSON script element.
-  const safeJson = JSON.stringify(tiddlers).replace(/</g, "\\u003c");
-  const store = '<script class="tiddlywiki-tiddler-store" type="application/json">' +
-    safeJson + '</script>';
-  return emptyHtml.replace(head, match => match + "\n" + store + "\n");
+  return true;
 }
 
+export function assembleHtml(emptyHtml, tiddlers) {
+  validateCore(emptyHtml);
+  validateTiddlers(tiddlers);
+  // Same escaping and insertion marker as the original HUWiki Code.js.
+  const safeJson = JSON.stringify(tiddlers)
+    .replace(/</g, "\\u003c").replace(/>/g, "\\u003e").replace(/&/g, "\\u0026");
+  const store = '<script class="tiddlywiki-tiddler-store" type="application/json">' +
+    safeJson + "</script>";
+  const index = emptyHtml.indexOf(CORE_LIBRARY_MARKER);
+  return emptyHtml.slice(0,index) +
+    "\n<!-- HUWiki Forge Edition -->\n" + store + "\n" + emptyHtml.slice(index);
+}
 async function readJson(url, fetcher) {
   const response = await fetcher(url);
   if (!response.ok) {
@@ -82,4 +88,43 @@ export async function loadEdition(manifestLocation, fetcher = fetch) {
   }
   validateTiddlers(tiddlers);
   return { manifest, tiddlers };
+}
+
+
+/**
+ * Github Pages may temporarily serve an old copy when its bot synchronizes
+ * a new core with GITHUB_TOKEN. Use GitHub's raw origin as fallback.
+ * Infer owner/repository from GitHub Pages URL so forks remain independent.
+ */
+export function githubRawCoreUrl(pageUrl) {
+  const url = new URL(pageUrl);
+  const match = /^([a-z0-9-]+)\.github\.io$/i.exec(url.hostname);
+  if (!match) return null;
+  const owner = match[1];
+  const segments = url.pathname.split("/").filter(Boolean);
+  const repo = segments[0] || owner + ".github.io";
+  return "https://raw.githubusercontent.com/" + encodeURIComponent(owner) + "/" +
+    encodeURIComponent(repo) + "/main/core/empty.html";
+}
+
+export async function loadOfficialCore(baseUrl, fetcher = fetch) {
+  const localUrl = new URL("../core/empty.html", baseUrl).href;
+  const candidates = [localUrl];
+  const rawUrl = githubRawCoreUrl(baseUrl);
+  if (rawUrl) candidates.push(rawUrl);
+  candidates.push("https://tiddlywiki.com/empty.html");
+  const errors = [];
+  for (const url of candidates) {
+    try {
+      const response = await fetcher(url);
+      if (!response.ok) throw new Error("HTTP " + response.status);
+      const html = await response.text();
+      validateCore(html);
+      return { html, sourceUrl: url };
+    } catch (error) {
+      errors.push(url + ": " + String(error.message || error));
+    }
+  }
+  throw new Error("Kunne ikke hente en gyldig TiddlyWiki-kerne automatisk. " +
+    "GitHub-spejlet skal først oprettes. " + errors.join(" | "));
 }
