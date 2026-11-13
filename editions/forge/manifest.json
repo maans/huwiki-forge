@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "forge",
+  "name": "HUWiki Forge",
+  "version": "0.1.0-test.1",
+  "coreVersion": "5.4.1",
+  "tiddlers": [
+    "tiddlers/config.json",
+    "tiddlers/seed.json",
+    "../shared/libraries.json"
+  ],
+  "plugins": [
+    "../../themes/modern/dist/theme.json"
+  ]
+}
