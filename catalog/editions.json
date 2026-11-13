@@ -62,6 +62,14 @@
       "description": "Independent MusicXML/MuseScore to ABC importer; automatically included in Music Edition; preview and native TiddlyWiki import",
       "file": "../plugins/musescore-import/dist/plugin.json",
       "status": "test"
+    },
+    {
+      "id": "google-drive",
+      "name": "HUWiki Google Drev (eksperimentel)",
+      "version": "0.1.0-test.1",
+      "description": "Valgfri forbindelse til delt HTML-wiki på Drive via Apps Script. Kræver særskilt webapp-implementering. Ingen Google Picker.",
+      "file": "../plugins/google-drive/dist/plugin.json",
+      "status": "prototype"
     }
   ]
 }
