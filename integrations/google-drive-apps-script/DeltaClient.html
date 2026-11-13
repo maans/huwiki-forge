@@ -1,0 +1,670 @@
+<script>
+/*
+ * ForgeDrive incremental TiddlyWiki client — experimental.
+ * One append-only shared change log, never an individual Drive file per tiddler.
+ * Requests run via Apps Script HTML Service google.script.run.
+ *
+ * Background means "while the wiki tab is open". Closing the tab does not
+ * guarantee that pending changes have reached Drive.
+ */
+(function () {
+  "use strict";
+  const QUIET_MS = 2500;
+  const ACTIVE_POLL_MS = 25000;
+  const MAX_FIELDS_JSON_LENGTH = 45000; // Keep each Sheets JSON cell under 50K
+  const MAX_OPERATIONS = 25;
+  // Stay below the Apps Script backend limit of 250,000 JSON characters.
+  const MAX_BATCH_CHARS = 200000;
+
+  function id() {
+    return "fd_" + Date.now().toString(36) + "_" +
+      Math.random().toString(36).slice(2, 14);
+  }
+  function plainFields(tiddler) {
+    const fields = {};
+    if (!tiddler || !tiddler.fields) return fields;
+    for (const key of Object.keys(tiddler.fields)) {
+      fields[key] = typeof tiddler.getFieldString === "function" ?
+        tiddler.getFieldString(key) : String(tiddler.fields[key] == null ? "" : tiddler.fields[key]);
+    }
+    return fields;
+  }
+  function identicalFields(a, b) {
+    if (!a || !b) return false;
+    const ak = Object.keys(a).sort(), bk = Object.keys(b).sort();
+    if (ak.length !== bk.length || ak.some((k, i) => k !== bk[i])) return false;
+    return ak.every(key => a[key] === b[key]);
+  }
+  class ForgeDriveDelta {
+    constructor(options) {
+      this.tw = options.tw;
+      this.fileId = options.fileId;
+      this.rpc = options.rpc;
+      this.onStatus = options.onStatus || (() => {});
+      this.localize = options.localize || ((da, _en) => da);
+      this.onState = options.onState || (() => {});
+      this.actor = id();
+      this.cursor = 0;
+      this.revisions = new Map();
+      this.pending = new Map();
+      this.remoteEchoes = new Map();
+      this.conflicts = new Map();
+      this.active = false;
+      this.canEdit = false;
+      this.flushing = false;
+      this.pulling = false;
+      this.flushTimer = null;
+      this.pollTimer = null;
+      this.retryTimer = null;
+      this.onlineHandler = null;
+      this.visibilityHandler = null;
+      this.sequence = 0;
+      this.dirtyOutsideSync = false;
+      this.unsupported = new Map();
+      try {
+        this.storage = options.storage === undefined ? window.localStorage : options.storage;
+      } catch (_error) {
+        this.storage = null; // Some browsers block iframe/local storage access.
+      }
+      this.recoveryKey = "";
+      this.storageFailed = false;
+      this.listenerInstalled = false;
+      this.bootstrapping = false;
+      this.lastPullSucceeded = false;
+      this.snapshotSeq = Number(options.snapshotSeq) || 0;
+      this.snapshotFingerprint = String(options.fingerprint || "").toLowerCase();
+      this.snapshotOutdated = false;
+      this.systemDirtySerial = 0;
+      // The in-memory HTML baseline plus acknowledged journal edits.
+      // Never equate "0 pending" with "all changes persisted" without
+      // comparing the current wiki against this confirmed baseline.
+      this.persisted = new Map();
+      this.checkTimer = null;
+      this.changeListener = null;
+      this.observedChanges = 0;
+      this.confirmedChanges = 0;
+      this.recoveredByScan = 0;
+      this.lastScanAt = 0;
+    }
+    hasUnsynced() {
+      return this.pending.size > 0 || this.flushing ||
+        this.conflicts.size > 0 || this.dirtyOutsideSync ||
+        this.unsupported.size > 0;
+    }
+    state() {
+      this.onState({
+        active: this.active,
+        canEdit: this.canEdit,
+        pending: this.pending.size,
+        conflicts: this.conflicts.size,
+        unsupported: this.unsupported.size,
+        cursor: this.cursor,
+        unsynced: this.hasUnsynced(),
+        bootstrapping: this.bootstrapping,
+        snapshotOutdated: this.snapshotOutdated,
+        nativeDirty: !!(this.tw.saverHandler && this.tw.saverHandler.isDirty &&
+          this.tw.saverHandler.isDirty()),
+        dirtyOutsideSync: this.dirtyOutsideSync,
+        observedChanges: this.observedChanges,
+        confirmedChanges: this.confirmedChanges,
+        recoveredByScan: this.recoveredByScan
+      });
+    }
+    /** Build a confirmed starting point from the HTML wiki before replaying the journal. */
+    captureBaseline() {
+      this.persisted.clear();
+      const wiki = this.tw.wiki;
+      wiki.each((tiddler, title) => {
+        if (typeof title === "string" && !title.startsWith("$:/")) {
+          this.persisted.set(title, plainFields(tiddler));
+        }
+      });
+    }
+    /**
+     * Safety-net for a TiddlyWiki edit that did not reach our change listener.
+     * This is LOCAL only; no Drive calls. It runs when native dirty tracking
+     * reports changes but there is nothing queued for the journal.
+     */
+    reconcileUnobservedChanges() {
+      if (!this.active || this.bootstrapping || this.snapshotOutdated ||
+          !this.changeListener || !this.canEdit) return;
+      const wiki = this.tw.wiki, observed = new Set(), missing = Object.create(null);
+      wiki.each((tiddler, title) => {
+        if (typeof title !== "string" || title.startsWith("$:/")) return;
+        observed.add(title);
+        const fields = plainFields(tiddler);
+        const pending = this.pending.get(title);
+        const unsupported = this.unsupported.get(title);
+        if (identicalFields(this.persisted.get(title), fields) ||
+            (pending && pending.operation === "put" && identicalFields(pending.fields, fields)) ||
+            (unsupported && identicalFields(unsupported.fields, fields))) return;
+        missing[title] = {normal: true, modified: true};
+      });
+      for (const title of this.persisted.keys()) {
+        if (!observed.has(title) && !this.pending.has(title) && !this.unsupported.has(title))
+          missing[title] = {normal: true, deleted: true};
+      }
+      const titles = Object.keys(missing);
+      if (titles.length) {
+        this.recoveredByScan += titles.length;
+        this.changeListener(missing);
+      }
+      this.lastScanAt = Date.now();
+      this.state();
+    }
+    /** Keep unsent edits across a reload; never treat this as remote persistence. */
+    persist() {
+      if (!this.recoveryKey || !this.storage) {
+        if (!this.storageFailed && this.recoveryKey) {
+          this.storageFailed = true;
+          this.onStatus(this.localize("Lokal gendannelse er ikke tilgængelig i denne browser. Hent en HTML-backup før du lukker.", "Local recovery is unavailable in this browser. Download an HTML backup before closing."), true);
+        }
+        return;
+      }
+      const payload = {
+        actor: this.actor,
+        snapshotFingerprint: this.snapshotFingerprint,
+        pending: [...this.pending.values()],
+        conflicts: [...this.conflicts.entries()],
+        unsupported: [...this.unsupported.entries()]
+      };
+      try {
+        if (payload.pending.length || payload.conflicts.length || payload.unsupported.length) {
+          this.storage.setItem(this.recoveryKey, JSON.stringify(payload));
+        } else {
+          this.storage.removeItem(this.recoveryKey);
+        }
+      } catch (error) {
+        if (!this.storageFailed) {
+          this.storageFailed = true;
+          this.onStatus(this.localize("Browseren kunne ikke sikre lokale synkændringer. Hent straks en lokal HTML-sikkerhedskopi.", "The browser could not store local edits. Download an HTML backup immediately."), true);
+        }
+      }
+    }
+    restore() {
+      if (!this.recoveryKey || !this.storage) return;
+      let saved;
+      try { saved = JSON.parse(this.storage.getItem(this.recoveryKey) || "null"); }
+      catch (_error) { this.onStatus(this.localize("Ugyldig lokal synkkø. Hent en lokal sikkerhedskopi.", "Invalid local sync queue. Download an HTML backup."), true); return; }
+      if (!saved || !Array.isArray(saved.pending)) return;
+      if (typeof saved.actor === "string") this.actor = saved.actor;
+      // Pending drafts were captured from the HTML file that was open then.
+      // If another user saved a newer full HTML snapshot, its large/system
+      // tiddlers may have changed without any journal revision. Restore
+      // drafts for a local HTML backup, but NEVER silently push them.
+      const sourceFingerprint = String(saved.snapshotFingerprint || "").toLowerCase();
+      const snapshotMismatch = sourceFingerprint !== this.snapshotFingerprint;
+      for (const op of saved.pending) {
+        if (!op || !op.title || op.title.startsWith("$:/") ||
+            !["put","delete"].includes(op.operation) ||
+            !Number.isSafeInteger(op.baseSeq) || op.baseSeq < 0 ||
+            typeof op.opId !== "string" ||
+            (op.operation === "put" && (!op.fields || op.fields.title !== op.title))) continue;
+        this.pending.set(op.title, op);
+        if (Number.isSafeInteger(op.serial)) this.sequence = Math.max(this.sequence, op.serial);
+        const wiki = this.tw.wiki;
+        const local = wiki.getTiddler(op.title);
+        if (op.operation === "delete") {
+          if (local) {
+            this.remoteEchoes.set(op.title, null);
+            wiki.deleteTiddler(op.title);
+          }
+        } else if (!local || !identicalFields(plainFields(local), op.fields)) {
+          this.remoteEchoes.set(op.title, op.fields);
+          wiki.addTiddler(new this.tw.Tiddler(op.fields));
+        }
+      }
+      for (const item of saved.conflicts || []) {
+        if (Array.isArray(item) && this.pending.has(item[0])) this.conflicts.set(item[0], item[1]);
+      }
+      for (const item of saved.unsupported || []) {
+        if (!Array.isArray(item) || typeof item[0] !== "string") continue;
+        const title = item[0], entry = item[1];
+        if (!entry || !entry.fields || entry.fields.title !== title) continue;
+        this.unsupported.set(title, entry);
+        if (Number.isSafeInteger(entry.serial)) this.sequence = Math.max(this.sequence, entry.serial);
+        const now = this.tw.wiki.getTiddler(title);
+        if (!now || !identicalFields(plainFields(now), entry.fields)) {
+          this.remoteEchoes.set(title, entry.fields);
+          this.tw.wiki.addTiddler(new this.tw.Tiddler(entry.fields));
+        }
+      }
+      if (snapshotMismatch &&
+          (this.pending.size || this.unsupported.size || this.conflicts.size)) {
+        this.snapshotOutdated = true;
+        this.lastPullSucceeded = false;
+        this.onStatus(this.localize(
+          "Lokale ændringer blev gendannet fra et ældre HTML-snapshot. De er kun i denne browser. Hent en lokal backup, før du genåbner wikien.",
+          "Local edits from an older HTML snapshot were recovered. They exist only in this browser. Download a local backup before reopening the wiki."
+        ), true);
+      } else if (this.pending.size || this.unsupported.size || this.conflicts.size) {
+        this.onStatus(this.localize("Lokale ikke-synkroniserede ændringer blev gendannet. De er endnu ikke gemt på Drev.", "Unsynced local edits were recovered. They are not yet saved to Drive."), true);
+      }
+    }
+    async start(initialInfo) {
+      if (this.active) return true;
+      const info = initialInfo || await this.rpc("huSyncInfo", this.fileId);
+      if (!info.enabled) return false;
+      this.canEdit = !!info.canEdit;
+      // The cursor belongs to the EXACT HTML bytes loaded by huOpen, not
+      // to a newer metadata read made while the iframe was booting.
+      if (Number(info.snapshotSeq || 0) !== this.snapshotSeq ||
+          !/^[a-f0-9]{32}$/.test(this.snapshotFingerprint) ||
+          String(info.fingerprint || "").toLowerCase() !== this.snapshotFingerprint) {
+        this.snapshotOutdated = true;
+        this.onStatus(this.localize("Google Drev har et nyere HTML-snapshot. Genåbn wikien før synkronisering.", "Google Drive has a newer HTML snapshot. Reopen the wiki before syncing."), true);
+        this.state();
+        return false;
+      }
+      this.cursor = this.snapshotSeq;
+      this.recoveryKey = info.accountKey ?
+        "forgeDriveDelta.v1:" + this.fileId + ":" + info.accountKey : "";
+      if (!this.recoveryKey) {
+        // Without account isolation, do not risk leaking locally cached edits
+        // from one Google login to another on the same machine.
+        this.onStatus(this.localize("Kontoen kunne ikke identificeres til sikker lokal gendannelse.", "Your account could not be identified for secure local recovery."), true);
+      }
+      const sh = this.tw.saverHandler;
+      if (sh && sh.isDirty && sh.isDirty()) this.dirtyOutsideSync = true;
+      this.active = true;
+      this.bootstrapping = true;
+      this.captureBaseline();
+      this.registerChangeListener();
+      if (this.cursor > 0) {
+        try {
+          const baseline = await this.rpc("huSyncSnapshotHeads", this.fileId, this.cursor);
+          if (baseline.snapshotSeq !== this.cursor || !Array.isArray(baseline.heads))
+            throw new Error("Snapshot-hovedrevisionerne er ugyldige.");
+          for (const item of baseline.heads) {
+            if (typeof item.title === "string" && Number.isSafeInteger(item.seq))
+              this.revisions.set(item.title, item.seq);
+          }
+        } catch (error) {
+          this.active = false;
+          this.bootstrapping = false;
+          this.onStatus(this.localize("Kunne ikke indlæse snapshotrevisioner: ", "Could not load snapshot revisions: ") +
+            (error.message || String(error)), true);
+          this.state();
+          return false;
+        }
+      }
+      this.restore();
+      this.state();
+      const pulled = await this.pullAll();
+      this.bootstrapping = false;
+      if (!pulled) {
+        // A stale or unavailable journal must NEVER unlock an editable HTML
+        // baseline with unknown remote changes. Keep any recovered drafts,
+        // but require reopening before further editing.
+        this.active = false;
+        this.onStatus(this.localize(
+          "Ændringsloggen kunne ikke indlæses sikkert. Genåbn wikien. Lokale uafsendte ændringer er bevaret.",
+          "The change log could not be loaded safely. Reopen the wiki. Unsent local drafts were preserved."
+        ), true);
+        this.state();
+        return false;
+      }
+      // In particular, restarting after a failed network request must send
+      // pending drafts even if no new typing occurs.
+      if (pulled && this.pending.size) this.scheduleFlush();
+      this.onlineHandler = () => {
+        if (!this.active) return;
+        void this.pullAll().then(ok => { if (ok) this.scheduleFlush(); });
+      };
+      window.addEventListener?.("online", this.onlineHandler);
+      this.pollTimer = setInterval(() => {
+        if (this.active && navigator.onLine !== false &&
+            typeof document !== "undefined" && !document.hidden) {
+          void this.pullAll();
+        }
+      }, ACTIVE_POLL_MS);
+      this.visibilityHandler = () => {
+        if (this.active && !document.hidden && navigator.onLine !== false)
+          void this.pullAll().then(ok => { if (ok) this.scheduleFlush(); });
+      };
+      document.addEventListener?.("visibilitychange", this.visibilityHandler);
+      // Low-cost safety check: only scan while TiddlyWiki reports unsaved
+      // changes that have not been captured by the delta queue.
+      this.checkTimer = setInterval(() => {
+        const sh = this.tw.saverHandler;
+        if (this.active && !this.flushing && !this.pulling &&
+            sh && sh.isDirty && sh.isDirty() &&
+            Date.now() - this.lastScanAt > 8000) this.reconcileUnobservedChanges();
+      }, 5000);
+      if (pulled) this.onStatus(this.localize("Baggrundssynkronisering er aktiv.", "Background synchronization is active."), false);
+      this.state();
+      return true;
+    }
+    stop() {
+      this.active = false;
+      if (this.flushTimer) clearTimeout(this.flushTimer);
+      if (this.pollTimer) clearInterval(this.pollTimer);
+      if (this.checkTimer) clearInterval(this.checkTimer);
+      if (this.retryTimer) clearTimeout(this.retryTimer);
+      if (this.onlineHandler) window.removeEventListener?.("online", this.onlineHandler);
+      if (this.visibilityHandler) document.removeEventListener?.("visibilitychange", this.visibilityHandler);
+      this.onlineHandler = null;
+      this.visibilityHandler = null;
+      this.state();
+    }
+    registerChangeListener() {
+      if (this.listenerInstalled) return;
+      this.listenerInstalled = true;
+      const wiki = this.tw.wiki;
+      this.changeListener = changes => {
+        if (!this.active) return;
+        for (const [title, change] of Object.entries(changes || {})) {
+          if (!change || !change.normal) continue;
+          if (typeof title !== "string" || title.startsWith("$:/")) {
+            // Ignore transient TW UI state; only count special tiddlers if
+            // they are included in TiddlyWiki's actual SaverFilter.
+            try {
+              const sh = this.tw.saverHandler;
+              if (typeof sh?.filterFn === "function") {
+                const match = sh.filterFn.call(wiki, iterator => {
+                  iterator(wiki.getTiddler(title), title);
+                });
+                if (Array.isArray(match) && match.length > 0) {
+                  this.dirtyOutsideSync = true;
+                  this.systemDirtySerial = ++this.sequence;
+                }
+              }
+            } catch (_error) {
+              this.dirtyOutsideSync = true; // fail safe
+              this.systemDirtySerial = ++this.sequence;
+            }
+            continue;
+          }
+          const tiddler = wiki.getTiddler(title);
+          const fields = tiddler ? plainFields(tiddler) : null;
+          if (this.remoteEchoes.has(title)) {
+            const echo = this.remoteEchoes.get(title);
+            this.remoteEchoes.delete(title);
+            if (echo === null && !fields) continue;
+            if (echo && fields && identicalFields(echo, fields)) continue;
+          }
+          if (!this.canEdit) {
+            this.dirtyOutsideSync = true;
+            this.systemDirtySerial = ++this.sequence;
+            this.onStatus(this.localize("Denne konto har kun læseadgang. Lokale ændringer kan ikke synkroniseres.", "This account is read-only. Local changes cannot be synchronized."), true);
+            continue;
+          }
+          // Large embedded assets/plugins cannot fit in a Sheets cell.
+          // Never retry them endlessly or silently mark them synced.
+          if (fields && JSON.stringify(fields).length > MAX_FIELDS_JSON_LENGTH) {
+            this.pending.delete(title);
+            this.unsupported.set(title, {
+              fields: fields, serial: ++this.sequence,
+              reason: "Tiddleren er for stor til Sheets-synk."
+            });
+            this.persist();
+            this.onStatus(this.localize("Tiddleren '", "Tiddler '") + title +
+              this.localize("' er for stor til baggrundssynk. Brug Gem på Google Drev (hel HTML-kopi).", "' is too large for background sync. Use Save to Google Drive (full HTML copy)."), true);
+            continue;
+          }
+          this.unsupported.delete(title);
+          const old = this.pending.get(title);
+          this.observedChanges++;
+          this.pending.set(title, {
+            title,
+            operation: tiddler ? "put" : "delete",
+            fields,
+            baseSeq: old ? old.baseSeq : (this.revisions.get(title) || 0),
+            opId: id(),
+            actor: this.actor,
+            serial: ++this.sequence
+          });
+        }
+        this.persist();
+        this.state();
+        this.scheduleFlush();
+      };
+      wiki.addEventListener("change", this.changeListener);
+    }
+    scheduleFlush() {
+      if (!this.pending.size || !this.canEdit || this.bootstrapping ||
+          this.snapshotOutdated) return;
+      if (![...this.pending.keys()].some(title => !this.conflicts.has(title))) return;
+      if (this.flushTimer) clearTimeout(this.flushTimer);
+      this.flushTimer = setTimeout(() => {
+        this.flushTimer = null;
+        void this.flush();
+      }, QUIET_MS);
+    }
+    async flush() {
+      if (!this.active || this.bootstrapping || this.flushing ||
+          this.snapshotOutdated || !this.canEdit || !this.pending.size) return;
+      if (navigator.onLine === false) {
+        this.onStatus(this.localize("Offline: dine tiddlerændringer afventer forbindelse.", "Offline: your edits are queued until the connection returns."), true);
+        return;
+      }
+      this.flushing = true;
+      this.state();
+      const batch = [];
+      let budget = 2; // JSON array brackets
+      for (const op of this.pending.values()) {
+        if (this.conflicts.has(op.title)) continue;
+        if (batch.length >= MAX_OPERATIONS) break;
+        const length = JSON.stringify(op).length + 1;
+        if (budget + length > MAX_BATCH_CHARS) break;
+        batch.push(op);
+        budget += length;
+      }
+      if (!batch.length) {
+        this.flushing = false;
+        this.state();
+        return;
+      }
+      try {
+        const result = await this.rpc("huSyncPush", this.fileId, batch.map(op => ({
+          title: op.title, operation: op.operation, fields: op.fields,
+          baseSeq: op.baseSeq, opId: op.opId, actor: op.actor
+        })), this.snapshotFingerprint);
+        if (result.snapshotStale) {
+          this.markSnapshotOutdated();
+        } else if (result.conflict) {
+          for (const conflict of result.conflicts || []) {
+            this.conflicts.set(conflict.title, conflict);
+          }
+          this.persist();
+          this.onStatus(this.localize("Synkkonflikt i ", "Sync conflict in ") +
+            (result.conflicts || []).map(e => e.title).join(", ") +
+            this.localize(". Dine lokale ændringer er bevaret. Hent en sikkerhedskopi.", ". Local edits were preserved. Download a backup."), true);
+        } else if (!result.ok) {
+          throw new Error("Ændringsloggen afviste opdateringen.");
+        } else {
+          for (const ack of result.accepted || []) {
+            const committed = batch.find(op => op.opId === ack.opId && op.title === ack.title);
+            if (committed) {
+              if (committed.operation === "delete") this.persisted.delete(ack.title);
+              else this.persisted.set(ack.title, committed.fields);
+              this.confirmedChanges++;
+            }
+            this.revisions.set(ack.title, ack.seq);
+            const stillQueued = this.pending.get(ack.title);
+            if (stillQueued && stillQueued.opId === ack.opId) {
+              this.pending.delete(ack.title);
+            } else if (stillQueued) {
+              stillQueued.baseSeq = ack.seq;
+            }
+          }
+          this.persist();
+          // Only reset TW dirty tracking if every change in this batch was
+          // acknowledged and no non-synced system edit exists.
+          if (!this.hasUnsyncedExceptFlight() && !this.dirtyOutsideSync &&
+              !this.unsupported.size) {
+            const sh = this.tw.saverHandler;
+            if (sh) {
+              sh.numChanges = 0;
+              sh.updateDirtyStatus();
+            }
+          }
+          const count = (result.accepted || []).length;
+          this.onStatus(this.localize("Synkroniseret ", "Synchronized ") + count +
+            (count === 1 ? " tiddler" : this.localize(" tiddlere", " tiddlers")) +
+            this.localize(" i baggrunden.", " in the background."), false);
+        }
+      } catch (error) {
+        this.onStatus(this.localize("Synkronisering mislykkedes: ", "Synchronization failed: ") +
+          (error.message || String(error)) +
+          this.localize(". Ændringerne er stadig åbne i wikien.", ". Your edits remain in the open wiki."), true);
+        if (!this.retryTimer) {
+          this.retryTimer = setTimeout(() => {
+            this.retryTimer = null;
+            void this.flush();
+          }, 15000);
+        }
+      } finally {
+        this.flushing = false;
+        this.state();
+        if (this.pending.size && !this.retryTimer) this.scheduleFlush();
+      }
+    }
+    hasUnsyncedExceptFlight() {
+      return this.pending.size > 0 || this.conflicts.size > 0;
+    }
+    /**
+     * A successful whole-HTML upload persists system/large tiddlers at the
+     * render-time watermark. Later changes are NOT covered by that upload.
+     * Other live clients must reopen the HTML to see snapshot-only assets.
+     */
+    noteSnapshotSaved(watermark, fingerprint) {
+      if (!Number.isSafeInteger(watermark)) return;
+      const next = String(fingerprint || "").toLowerCase();
+      if (/^[a-f0-9]{32}$/.test(next)) {
+        this.snapshotFingerprint = next;
+        this.snapshotOutdated = false;
+        this.lastPullSucceeded = true;
+      }
+      for (const [title, entry] of this.unsupported.entries()) {
+        if (entry && entry.serial <= watermark) {
+          // This particular oversized tiddler was included in the HTML
+          // bytes rendered before the watermark; future reconciliations
+          // must not mistake it for an unsaved new edit.
+          this.persisted.set(title, entry.fields);
+          this.unsupported.delete(title);
+        }
+      }
+      if (this.systemDirtySerial <= watermark) this.dirtyOutsideSync = false;
+      this.persist();
+      this.state();
+    }
+    /**
+     * Prepare a consistent HTML snapshot BEFORE TiddlyWiki renders it.
+     * Its exact journal cursor is rechecked under the server lock.
+     */
+    async prepareSnapshot() {
+      if (!this.active) return true;
+      if (this.snapshotOutdated || navigator.onLine === false ||
+          this.bootstrapping || this.flushing)
+        return false;
+      if (this.pending.size && !this.conflicts.size) await this.flush();
+      if (this.pending.size || this.conflicts.size || this.flushing) return false;
+      return !!(await this.pullAll()) && !this.pending.size &&
+        !this.conflicts.size && !this.flushing;
+    }
+    markSnapshotOutdated() {
+      if (!this.snapshotOutdated) {
+        this.snapshotOutdated = true;
+        this.lastPullSucceeded = false;
+        this.onStatus(this.localize(
+          "En anden bruger har gemt en nyere HTML-wiki. Dine lokale ændringer er bevaret, men synk er sat på pause. Hent en lokal backup, og genåbn wikien.",
+          "Another user saved a newer HTML wiki. Your local edits remain, but sync is paused. Download a local backup and reopen the wiki."
+        ), true);
+        this.state();
+      }
+    }
+    async pullAll() {
+      if (!this.active || this.pulling || this.snapshotOutdated ||
+          navigator.onLine === false) return false;
+      this.pulling = true;
+      const beforeLocalEdit = this.sequence;
+      let appliedRemote = 0;
+      let caughtUp = false;
+      try {
+        for (let page = 0; page < 100; page++) {
+          const result = await this.rpc("huSyncPull", this.fileId, this.cursor, 100);
+          if (!result.enabled) {
+            this.onStatus(this.localize("Den delte ændringslog er ikke tilgængelig.", "The shared change log is unavailable."), true);
+            return false;
+          }
+          if (String(result.fingerprint || "").toLowerCase() !== this.snapshotFingerprint) {
+            this.markSnapshotOutdated();
+            return false;
+          }
+          for (const event of result.events || []) {
+            if (this.applyRemote(event)) appliedRemote++;
+          }
+          this.cursor = result.cursor;
+          if (!result.hasMore) { caughtUp = true; break; }
+        }
+        if (!caughtUp) throw new Error("Ændringsloggen er endnu ikke fuldt indlæst. Redigering af snapshots er blokeret.");
+        // The native TW SaverHandler also counts REMOTE modifications as
+        // dirty. They were already persisted by another user, and must not
+        // light up the save indicator in this client. Wait for TW to dispatch
+        // its queued change events before resetting the counter. Never reset
+        // if any local edit or conflict happened meanwhile.
+        if (appliedRemote > 0) {
+          await new Promise(resolve => setTimeout(resolve, 0));
+          if (!this.pending.size && !this.flushing && !this.conflicts.size &&
+              !this.dirtyOutsideSync && !this.unsupported.size &&
+              this.sequence === beforeLocalEdit) {
+            const sh = this.tw.saverHandler;
+            if (sh) {
+              sh.numChanges = 0;
+              sh.updateDirtyStatus();
+            }
+          }
+        }
+        this.lastPullSucceeded = true;
+        this.state();
+        return true;
+      } catch (error) {
+        this.lastPullSucceeded = false;
+        this.onStatus(this.localize("Kunne ikke hente ændringer: ", "Could not fetch changes: ") +
+          (error.message || String(error)), true);
+        return false;
+      } finally {
+        this.pulling = false;
+      }
+    }
+    applyRemote(event) {
+      const title = event.title;
+      if (!title || title.startsWith("$:/")) return false;
+      const prior = this.revisions.get(title) || 0;
+      if (event.seq <= prior) return false;
+      this.revisions.set(title, event.seq);
+      if (event.operation === "delete") this.persisted.delete(title);
+      else if (event.operation === "put" && event.fields) this.persisted.set(title, event.fields);
+      // Never overwrite an unsent or unsupported local edit. Conflicts are
+      // isolated by title so other tiddlers continue synchronizing.
+      if (this.pending.has(title) || this.unsupported.has(title)) {
+        const pending = this.pending.get(title);
+        if (!pending || pending.opId !== event.opId) {
+          this.conflicts.set(title, {title, actual: event.seq,
+            expected: pending ? pending.baseSeq : prior});
+          this.persist();
+          this.onStatus(this.localize("Konflikt: ", "Conflict: ") + title +
+            this.localize(" er ændret af en anden bruger. Din lokale version er bevaret.", " was changed by another user. Your local version was preserved."), true);
+        }
+        return false;
+      }
+      const wiki = this.tw.wiki;
+      if (event.operation === "delete") {
+        if (!wiki.getTiddler(title)) return false;
+        this.remoteEchoes.set(title, null);
+        wiki.deleteTiddler(title);
+      } else if (event.operation === "put" && event.fields) {
+        const now = wiki.getTiddler(title);
+        if (now && identicalFields(plainFields(now), event.fields)) return false;
+        this.remoteEchoes.set(title, event.fields);
+        wiki.addTiddler(new this.tw.Tiddler(event.fields));
+      } else {
+        return false;
+      }
+      return true;
+    }
+  }
+  window.ForgeDriveDelta = ForgeDriveDelta;
+})();
+</script>

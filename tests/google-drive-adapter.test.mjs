@@ -41,7 +41,10 @@ test("Google Drive integration is strictly optional in Forge", () => {
 test("Apps Script runs as the accessing user and does not require mail or URL Fetch scopes", () => {
   assert.equal(manifest.webapp.executeAs, "USER_ACCESSING");
   assert.equal(manifest.webapp.access, "ANYONE");
-  assert.deepEqual(manifest.oauthScopes, ["https://www.googleapis.com/auth/drive"]);
+  assert.deepEqual(manifest.oauthScopes, [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets"
+  ]);
   assert.equal(manifest.dependencies.enabledAdvancedServices[0].version, "v3");
   assert.doesNotMatch(server, /UrlFetchApp\s*\.|MailApp\s*\.|GmailApp\s*\./);
   assert.doesNotMatch(server, /PickerBuilder|google\.picker/);
@@ -53,8 +56,10 @@ test("server uses content checksum preflight and Drive sharing notifications", (
   assert.match(server, /md5Checksum/);
   assert.match(server, /Drive\.Files\.update\(/);
   assert.match(server, /Drive\.Permissions\.create\(/);
-  assert.match(server, /sendNotificationEmail:\s*true/);
-  assert.match(server, /emailMessage:/);
+  assert.match(server, /sendNotificationEmail:\s*notify/);
+  assert.match(server, /huGrantShare_\(id, email, role, true, link\)/);
+  assert.match(server, /options\.emailMessage\s*=/);
+  assert.match(server, /Drive\.Permissions\.remove\(sheetId, journal\.id\)/);
 });
 
 test("HTML app exposes local upload, Google Drive invitation and wiki saver", () => {
@@ -87,6 +92,8 @@ test("TiddlyWiki saver uses synchronous boolean + asynchronous callback", () => 
   assert.match(ui, /id="saveButton"/);
   assert.match(ui, /saveWiki\(\{method:\s*"save"\}\)/);
   assert.match(ui, /beforeunload/);
+  assert.match(ui, /id="enableSyncButton"/);
+  assert.match(ui, /HtmlService\.createHtmlOutputFromFile\("DeltaClient"\)/);
   assert.doesNotMatch(ui, /savePending\s*=/);
   assert.match(ui, /Hent lokal sikkerhedskopi/);
 });
@@ -159,4 +166,15 @@ test("missing Drive checksum fails closed without overwriting", () => {
   const testEnv = makeServerFixture({fingerprint: "", version: "100"});
   assert.throws(() => testEnv.ctx.huSave(testEnv.file.id, "<html>edit</html>", ""), /checksum/);
   assert.equal(testEnv.writes, 0);
+});
+
+test("the recipient gets a bilingual warning and a separately copyable ForgeDrive deep link", () => {
+  assert.match(server, /Google's automatically generated file card/);
+  assert.match(server, /huLaunchUrl_\(verified\.id\)/);
+  assert.match(ui, /id="launchLink"/);
+  assert.match(ui, /id="copyLaunchLink"/);
+  assert.match(ui, /showLaunchLink\(result\.launchLink\)/);
+  assert.match(ui, /navigator\.clipboard\.writeText\(url\)/);
+  assert.match(ui, /Google's file card only previews the HTML source/);
+  assert.doesNotMatch(ui, /<select[^>]+id="language"/);
 });

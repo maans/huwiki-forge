@@ -1,115 +1,149 @@
-# HUWiki Google Drev – isoleret teknisk test
+# ForgeDrive — valgfri Google Drev-integration (test)
 
-**Status: eksperimentel. Brugeren har oprettet webapp-implementeringen; login, Drive-overførsler og flerbrugerfunktioner er endnu ikke verificeret.**
+**Status (13. november 2026):** Background tiddler sync under udvikling på
+`feat/forgedrive-background-tiddler-sync` (PR #2, draft).
+**Ikke udrullet på den eksisterende /exec-webapp.** GitHub Actions tester
+simulationer; **ægte flerbruger- og browsertest med to Google-konti mangler**.
 
-**Seneste oplyste test-URL (13. november 2026):**
-https://script.google.com/macros/s/AKfycbxcW3X-jn0sUcNL1MKUg3RNp4UeG_4LqQyglAc9VlSKcB8mgHTAFUbO1BzAYM4tdwF-/exec
+- Repository: https://github.com/maans/huwiki-forge
+- Script-ID: `1WTaV-Z-rTOgR1yLZ5IydFRizlSEFR9NksQVXqWocWeOdJjjJ_MCWRFzP`
+- Eksisterende webapp:
+  https://script.google.com/macros/s/AKfycbxcW3X-jn0sUcNL1MKUg3RNp4UeG_4LqQyglAc9VlSKcB8mgHTAFUbO1BzAYM4tdwF-/exec
 
-**Apps Script script-ID:** `1WTaV-Z-rTOgR1yLZ5IydFRizlSEFR9NksQVXqWocWeOdJjjJ_MCWRFzP`
+## Det nye
 
-Det valgfri Forge-plugin leverer URL'en som default. Dette er en offentlig
-webapp-adresse, **ikke et adgangstoken**. Hvis webappens URL skifter ved ny
-implementering, skal plugin-konfigurationen også opdateres.
+1. Forge bygger fortsat en almindelig, selvstændig TiddlyWiki-HTML-fil.
+2. Brugeren vælger frivilligt Google Drev-pluginet og uploader wikien via en
+   **lokal filvælger** i Apps Script HTML Service — ingen Google Picker.
+3. `huSyncEnable` opretter **én Google Sheets-ændringslog pr. HTML-wiki**
+   og kobler den til wikien via Drive custom properties. Eksisterende
+   tiddlere forbliver i den oprindelige HTML-baseline; den overskrives ikke.
+4. Eksisterende direkte maildelinger spejles til loggen, før synk
+   aktiveres. Link-, domæne- og gruppedeling afvises, hvis de ikke kan
+   spejles sikkert. Efterfølgende invitationer og rolleændringer omfatter
+   både HTML-filen og ændringsloggen.
+5. `DeltaClient.html` samler små, lokale ændringer efter en rolig periode,
+   sender dem med `google.script.run` og henter andres ændringer med en
+   moderat pollingfrekvens. Skjulte faner poller ikke, og synk genoptages
+   ved tilbagevenden til fanen eller nettet.
+6. Revisionskontrol foregår **pr. tiddler**, med operation-ID'er for
+   sikre gentagne forsøg. Konkurrerende ændringer bevarer den lokale
+   version og rapporterer en konflikt; øvrige tiddlere kan fortsætte.
+   Klienten gemmer en lokal sammenligningsbaseline af bekræftede tiddlere.
+   Hvis TiddlyWiki viser ugemte ændringer, men ingen delta-operationer
+   ligger i kø, sammenlignes wikiens almindelige tiddlere lokalt med
+   baseline. Oversete redigeringer eller sletninger køres gennem den
+   almindelige revisionskontrollerede synkronisering uden ekstra Drive-kald.
+   Brugerfladen viser særskilt **registreret**, **bekræftet gemt** og
+   **fundet ved kontrol**, sammen med den oprindelige TiddlyWiki-dirty-status.
+   Derfor er `0 pending` aldrig i sig selv en gemmebekræftelse.
+7. Kun bekræftede ændringer tæller som synkroniserede. Ved offline/fejl
+   forbliver ændringer i køen, og browseren advarer før lukning.
+   Pending drafts genoprettes via kontoopdelt browserlagring, **hvis
+   browseren tillader dette**. Ved manglende/fuld browserlagring vises
+   advarsel: hent altid en lokal HTML-backup, før du lukker.
+   **Gendannede ændringer fra et ældre HTML-snapshot bliver ikke sendt
+   automatisk til et nyt snapshot**. Klienten bevarer dem til lokal
+   sikkerhedskopi og kræver manuel afklaring.
+8. Store medie- og plugin-tiddlere, der ikke kan være i en Sheets-celle,
+   udelades af delta-loggen og kræver et manuelt fuldt HTML-snapshot.
+   Andre åbne klienter må genåbne wikien for at få sådanne ændringer.
+   De sendes ikke i et endeløst retry-loop.
+9. Komplet HTML-snapshot bevares som frivillig handling. `huSave`
+   kontrollerer både Drives indholds-`md5Checksum` og journalens
+   sekvensnummer under samme Apps Script-lock som delta-skrivningerne.
+   `huSyncEnable` og alle `huSyncPush` kontrollerer også browserens
+   **oprindelige HTML-checksum**. Hvis en anden bruger har gemt et nyt
+   HTML-snapshot, stoppes synkroniseringen uden at kassere lokale ændringer,
+   selv hvis ændringen kun omfattede store medier eller systemtiddlere.
+   En gammel browser kan derfor ikke overskrive nyere logændringer.
+10. Snapshot-sekvensnummer bruges ved genåbning til at hente **kompakte
+    revisionshoveder**, ikke alle gamle tiddler-tekster. TiddlyWikis
+    `$:/language` (dansk/engelsk) styrer synkgrænsefladen uden en
+    ekstra sprogvælger.
 
+## Vigtige krav
 
-Denne prototype skal ikke erstatte Forge, TiddlyWikis almindelige lokale HTML-gemning
-eller det tidligere OAuthLab. Den lader to Google-konti redigere **én delt HTML-wiki**
-skiftevis, med versionskontrol og Google Drives almindelige tilladelser.
+- Manifest: `webapp.executeAs: USER_ACCESSING`, `access: ANYONE`
+  (altså loggede Google-brugere). Ikke ejerens rettigheder eller kvoter.
+- Advanced Drive API v3 og `SpreadsheetApp` bruges med scopes
+  `drive` og `spreadsheets`; ingen Picker, UrlFetch, Gmail eller MailApp.
+- `Drive.Permissions.remove(fileId, permissionId)` er Apps Scripts
+  Advanced Drive-navn for API v3's `permissions.delete`.
+- Script-lock beskytter webappens egne samtidige skrivninger. Google
+  Drive-redigering uden for denne webapp er **ikke atomisk** med denne lås.
+  Indholds-checksum standser en overskrivning ved en forskel.
+- Synkronisering gælder, mens fanen er åben; den er **ikke** en
+  serverbaseret baggrundsproces, der fortsætter efter lukning.
+- De fleste almindelige tiddlere synkroniseres som deltaer. `$:/`-
+  systemtiddlere og overstore assets kræver fortsat et snapshot.
+- Viewer kan hente fjernændringer; redigering og invitation afhænger
+  af Drives aktuelle filrettigheder.
+- Almindelige Forge Editions er helt uafhængige af Google Drive.
 
-## Første afprøvning og fundet fejl (13. november 2026)
+## Automatisk test
 
-- Kontoen `humamamm@gmail.com` kunne uploade og åbne `HUWiki-demo (1).html` i ForgeDrive.
-- Første gemning gav en **falsk konflikt** efter cirka 10 sekunder.
-- Drive-revisionshistorikken viste kun den oprindelige revision: HTML-indholdet var ikke blevet ændret.
-- Årsag i den oprindelige kontrol: Drive-feltet `version` tæller også serverændringer i metadata og kan derfor ikke alene bruges til at afgøre, om HTML'en er ændret.
-- Rettelse: `md5Checksum` som indholdsfingerprint, og fail-closed hvis checksum mangler. Testene omfatter samme checksum med ændret versionsnummer og ændret checksum med samme versionsnummer.
-- Ved retest: Hent først den lokale backup fra den konfliktramte wiki. Udgiv en **ny version af samme Apps Script-implementering**, ellers bruger `/exec` stadig gammel kode.
-- Gemmestatus skal måle **samlet browser-ventetid** og server-tid hver for sig.
+Kør `npm test` fra repositoryets rodmappe.
+Særligt `tests/forgedrive-background-sync.test.mjs` tester backend,
+to browserklienter, konflikter, duplikerede operationer, deling,
+sletning, offline recovery, tiddlerredigering under upload,
+snapshots og status. `tests/google-drive-adapter.test.mjs` tester
+den oprindelige helfil-adapter og manifestets rettigheder.
 
-## Brugerrejsen
+Disse tests bruger en simuleret Drive/Sheets-backend. **De beviser
+ikke**, at Google Workspace-delingspolitik, HTML Service-iframes,
+kvoter, iPad eller større reelle wikier fungerer.
 
-1. Brugeren vælger en Edition i Forge, evt. `Google Drev (test)` som ekstra plugin.
-2. Forge leverer fortsat en selvstændig HTML-fil. Den virker også uden Google.
-3. I den valgfri Apps Script-webapp uploader brugeren sin færdige HTML-fil
-   én gang via **lokal** filvælger. Det er **ikke Google Picker**.
-4. Filen oprettes i **brugerens eget Google Drev** og åbnes af Apps Script-webappen
-   i en iframe. En TiddlyWiki-saver gemmer via `google.script.run`.
-5. Fra topbjælken deles filen med en Google-kontomailadresse som **læser** eller
-   **redaktør**. Google Drive API sender automatisk invitationsmail med link til
-   den delte wiki i Apps Script-webappen.
-6. Modtageren åbner linket i egen Google-session. Webappen udføres som den
-   **aktuelle bruger**, så Drives rettigheder og Apps Script-kvoter følger denne.
+## Invitationsmail og korrekt webapp-link
 
-Den oprindeligt downloadede HTML-fil forbindes **ikke automatisk** til Drive.
-Når filen er importeret, er webappens Drive-kopi den delte version; rediger
-ikke sideløbende i den lokale kopi. Sømløs import direkte fra en lokal TiddlyWiki
-kan tilføjes senere, efter at denne løsning er browser- og rettighedstestet.
+Googles standardmail om deling viser automatisk et filkort med navnet
+på `wiki.html`. **Filkortet åbner Google Drives rå HTML-forhåndsvisning,
+ikke TiddlyWiki i ForgeDrive.** Denne destination kan ikke ændres med
+Drive Permissions API. Modtageren skal i stedet bruge deep-linket til
+Apps Script-webappen med `/exec?id=<wiki-file-id>`.
 
-## Sådan installeres testen
+ForgeDrive tilføjer derfor både en tydelig, tosproget instruktion i
+Googles `emailMessage` og et **Åbn i ForgeDrive / Kopiér ForgeDrive-link**
+i webappen. Det kan videresendes selvstændigt, hvis Gmail ikke gør
+adressen i delingsbeskeden klikbar. URL'en hentes fra
+`ScriptApp.getService().getUrl()` — aldrig fra HTML Service-rammens
+`script.googleusercontent.com`-adresse. Drive styrer fortsat adgang
+til både HTML-filen og ændringsloggen; linket giver ikke i sig selv adgang.
 
-1. Opret et **nyt, selvstændigt Apps Script-projekt på den private Google-konto**.
-   Brug ikke det eksisterende OAuthLab-projekt.
-2. Kopiér `Code.gs` og `Index.html` til Apps Script. Anvend `appsscript.json`.
-   Slå visning af manifestfil til i Apps Script-projektindstillingerne.
-3. Aktivér **Advanced Google services → Drive API v3** i Apps Script.
-   Hvis projektet bruger eget Cloud-projekt, skal Drive API også aktiveres dér.
-4. Implementér som **Webapp**:
-   - **Udfør som:** `Brugeren, der åbner webappen` / `USER_ACCESSING`.
-   - **Hvem har adgang:** `Alle med en Google-konto` (logget ind) / `ANYONE`.
-5. Åbn den ovenstående `/exec`-adresse som den private bruger, og godkend tilladelserne.
-6. Byg en **lille test-Edition** i Forge. Vælg filen fra webappens lokale
-   filvælger, og kontroller at den kan åbnes og gemmes.
-7. Del med skolekontoen som redaktør. Modtageren bruger linket i
-   Google Drive-invitationen. Test begge veje.
-8. Opret derefter forskellige tiddlere og til sidst en bevidst konflikt
-   i to åbne sessioner. Bekræft, at sidste ændring ikke overskrives lydløst.
-9. Mål indlæsning og gemning med både en lille wiki og Musik Edition.
+## Manuel første test, efter sikker backup og ny version
 
-## Gennemførte begrænsninger og fejl vi skal lede efter
+1. Brug den private Google-konto som ejer af den eksisterende
+   Apps Script-webapp. Tag først en `clasp pull`-backup af HEAD.
+2. Upload den gennemtestede branch med `clasp push`. **Opdater derefter
+   manuelt den eksisterende implementering med en ny version**;
+   opret ikke en ny /exec-adresse.
+3. Importér en lille Demo Edition, aktivér tiddler-synk, og redigér et
+   par små tiddlere. Kontroller at dirty-indikatoren slukkes, når
+   sidste ændring er bekræftet, og at der ikke sker helfil-upload
+   for hver ændring.
+4. Del som redaktør til skolekontoen. Kontroller først om
+   skolekontoens Workspace-politik tillader ekstern deling og
+   OAuth-adgang til begge filer.
+5. Åbn på begge konti og kontroller: ny tiddler, redigering,
+   fjernsletning, samtidige konflikter og genåbning.
+6. Afprøv en offline ændring, netforbindelse igen, en overstor
+   medietiddler samt manuel HTML-sikkerhedskopi. Brug kun testdata.
 
-- Ingen `UrlFetchApp`, `MailApp`, `GmailApp` eller Google Picker bruges.
-- Appen laver **hele HTML-uploaden ved gemning**, ikke tiddlerbaseret sync.
-- Google Drives `md5Checksum` for **filindholdet** kontrolleres før upload; `version` er ikke pålideligt som indholdsfingerprint, fordi det også ændres ved metadataændringer. `LockService` serialiserer
-  webappens gemninger, men kan **ikke** sikre atomisk konfliktkontrol mod
-  redigering uden for dette Apps Script-projekt.
-- En konfliktramt browser beholder lokale ændringer i hukommelsen.
-  Brugeren skal kunne eksportere lokal backup, før vedkommende genindlæser.
-- `google.script.run` og iframe-opsætningen skal testes på Mac og iPad.
-- Den valgte 12 MB testgrænse er bevidst konservativ; store Editions kan
-  ramme Apps Scripts upload- og udførelsesgrænser.
-- En Google Workspace-administrator kan begrænse ekstern deling eller de
-  scopes, webappen beder om. Meddel fejlen i stedet for at omgå den.
-- Google Drive-notifikationen sendes via **Drive API's permissions.create**
-  (ikke Gmail API); `sendNotificationEmail=true`. Senere kan vi tilbyde
-  eget mailprogram/anden udbyder, hvis deling og invitation skal adskilles.
-- `DriveApp` kræver bred Drive-adgang i Apps Script. Den eksisterende
-  OAuthLab-verifikation overføres **ikke** automatisk til en ny app.
-- Utestet med TiddlyWiki HTML, der benytter ekstern core.
+## Tidligere fund (13. november 2026)
 
-## Arkitektur og fremtidig retning
+- Første helfilstest: ca. **2,5 MB** HTML, upload og åbning lykkedes.
+- Første gemning gav en falsk konflikt pga. Google Drive `version`
+  (metadata ændrer version); rettet til **`md5Checksum`**.
+- Hel HTML-gemning tog **34,4 sek.** fra browseren og **3,0 sek.**
+  i selve Apps Script-kaldet. Derfor deltaer til hverdag og kun
+  lejlighedsvise snapshots.
+- TW dirty-indikator forblev rød efter gemning; delta-klientens
+  ack- og remote-event-håndtering er forbedret, men kræver en
+  reel browsertest.
 
-```text
-Forge Edition Assembler
-  └─ Valgfrit Google Drev-plugin (launcher / hjælp)
-       └─ Selvstændig Apps Script-webapp [USER_ACCESSING]
-            ├─ HTMLService + google.script.run
-            ├─ TiddlyWiki i iframe + custom saver
-            ├─ Drive API: filer og permissions
-            └─ Google Drive: én delt wiki.html
-```
+## Relevante Google-referencer
 
-*Dette er en afgrænset test af den enkle helfilsløsning.* Senere kan vi bygge
-en udskiftelig sync-adapter med tiddler-deltaer, hvis praktiske målinger
-retfærdiggør kompleksiteten. Der skal ikke indføres nogen Google-afhængighed
-i almindelige Editions.
-
-## Kilder
-
-- Tiddly Drive 2: https://github.com/aneuhold/tiddlydrive
-- Apps Script webapps: https://developers.google.com/apps-script/guides/web
-- HTMLService-client/server: https://developers.google.com/apps-script/guides/html/communication
-- Drive permissions/create: https://developers.google.com/workspace/drive/api/reference/rest/v3/permissions/create
-
-Tiddly Drive 2 er GPLv3. Denne prototype er en selvstændig implementering
-inspireret af de offentligt beskrevne designmønstre; ingen kode er kopieret.
-Licens for ny Forge-kode fastlægges senere.
+- https://developers.google.com/apps-script/manifest/web-app-api-executable
+- https://developers.google.com/apps-script/advanced/drive
+- https://developers.google.com/apps-script/guides/html/communication
+- https://developers.google.com/workspace/drive/api/reference/rest/v3/permissions

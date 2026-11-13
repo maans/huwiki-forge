@@ -23,6 +23,10 @@
     #sharing {display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
     #sharing label {margin:0}
     #sharing input {width:210px}
+    #launchRow {display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;padding:.55rem 1rem;background:#f5f8fa;border-top:1px solid #cad3d9}
+    #launchRow[hidden] {display:none}
+    #launchRow small {flex-basis:100%;margin:0}
+    #launchLink {overflow-wrap:anywhere}
     .danger {color:#b42318}
     .warning {background:#fff2ce;padding:.7rem 1rem;border-radius:6px}
     a {color:#145d78}
@@ -31,62 +35,128 @@
 </head>
 <body>
   <header>
-    <strong>HUWiki Google Drev <small>Eksperimentel gemme- og deleadapter</small></strong>
+    <strong>HUWiki Google Drev <small data-i18n="subtitle">Eksperimentel gemme- og deleadapter</small></strong>
     <span id="fileName"></span>
-    <a id="driveLink" target="_blank" rel="noopener" hidden>Vis på Drev</a>
+    <a id="driveLink" target="_blank" rel="noopener" data-i18n="driveLink" hidden>Vis på Drev</a>
   </header>
-  <div id="status" role="status" aria-live="polite">Klar til at forbinde en wiki.</div>
+  <div id="status" role="status" aria-live="polite" data-i18n="ready">Klar til at forbinde en wiki.</div>
 
   <main id="start">
-    <p>Denne testadapter bruger <strong>din Google-konto</strong> til at åbne, gemme og dele en almindelig HTML-wiki. Ingen Google Picker og ingen URL Fetch.</p>
+    <p data-i18n="intro">Denne testadapter bruger din Google-konto til at åbne, gemme og dele en almindelig HTML-wiki. Ingen Google Picker og ingen URL Fetch.</p>
     <fieldset>
-      <legend><strong>Opret en ny wiki på mit Google Drev</strong></legend>
-      <p>Vælg den færdige HTML-wiki, du byggede i Forge. Det er en lokal filvælger, ikke Google Picker.</p>
+      <legend><strong data-i18n="create">Opret en ny wiki på mit Google Drev</strong></legend>
+      <p data-i18n="choose">Vælg den færdige HTML-wiki, du byggede i Forge. Det er en lokal filvælger, ikke Google Picker.</p>
       <form id="uploadForm">
         <input name="wikiFile" type="file" accept=".html,text/html" required>
-        <button type="submit">Upload og åbn</button>
+        <button type="submit" data-i18n="upload">Upload og åbn</button>
       </form>
     </fieldset>
     <fieldset>
-      <legend><strong>Åbn en eksisterende delt wiki</strong></legend>
-      <label for="fileId">Google Drive-fil-ID</label>
-      <input id="fileId" type="text" autocomplete="off" placeholder="ID fra en delt wiki">
-      <button id="openButton" type="button">Åbn wiki</button>
+      <legend><strong data-i18n="openExisting">Åbn en eksisterende delt wiki</strong></legend>
+      <label for="fileId" data-i18n="fileId">Google Drive-fil-ID</label>
+      <input id="fileId" type="text" autocomplete="off" data-i18n-placeholder="idPlaceholder" placeholder="ID fra en delt wiki">
+      <button id="openButton" type="button" data-i18n="open">Åbn wiki</button>
     </fieldset>
-    <p class="warning">Indtil vi har afprøvet deling og konflikter med to konti, bør du kun bruge kopier af dine wikier. Ingen data flettes automatisk.</p>
+    <p class="warning" data-i18n="warning">Indtil vi har afprøvet deling og konflikter med to konti, bør du kun bruge kopier af dine wikier. Ingen data flettes automatisk.</p>
   </main>
 
   <section id="workspace" hidden>
     <header>
-      <button type="button" id="saveButton" disabled>Gem på Google Drev</button>
-      <small id="saveHint">Automatisk gemning er slået fra – gem, når du er færdig.</small>
+      <button type="button" id="saveButton" data-i18n="save" disabled>Gem på Google Drev</button>
+      <small id="saveHint" data-i18n="saveHint">Ingen baggrundssynk endnu – Gem laver en komplet HTML-kopi.</small>
+      <button type="button" id="enableSyncButton" data-i18n="enableSync" disabled>Aktivér tiddler-synk</button>
+      <small id="syncStatus" role="status" data-i18n="syncOff">Tiddler-synk er endnu ikke aktiveret.</small>
     </header>
     <header>
       <div id="sharing">
-        <label for="recipient">Del med</label>
-        <input id="recipient" type="email" placeholder="modtager@gmail.com">
+        <label for="recipient" data-i18n="shareWith">Del med</label>
+        <input id="recipient" type="email" data-i18n-placeholder="recipientPlaceholder" placeholder="modtager@gmail.com">
         <select id="role" aria-label="Adgang">
-          <option value="writer">Redaktør</option>
-          <option value="reader">Læser</option>
+          <option value="writer" data-i18n="writer">Redaktør</option>
+          <option value="reader" data-i18n="reader">Læser</option>
         </select>
-        <button id="shareButton" type="button">Del og send invitation</button>
+        <button id="shareButton" type="button" data-i18n="share">Del og send invitation</button>
       </div>
     </header>
+    <div id="launchRow" hidden>
+      <small data-i18n="launchHelp">Google viser et filkort med HTML-forhåndsvisning. Brug i stedet dette direkte ForgeDrive-link.</small>
+      <a id="launchLink" target="_blank" rel="noopener" data-i18n="launchOpen">Åbn i ForgeDrive</a>
+      <button id="copyLaunchLink" type="button" data-i18n="launchCopy">Kopiér ForgeDrive-link</button>
+    </div>
     <div style="padding:.5rem 1rem;background:#fff;border-top:1px solid #cad3d9">
-      <button id="backupButton" type="button">Hent lokal sikkerhedskopi</button>
-      <small>Hvis gemning fejler, bevares ændringerne i den åbne wiki. Hent en kopi, før du genindlæser siden.</small>
+      <button id="backupButton" type="button" data-i18n="backup">Hent lokal sikkerhedskopi</button>
+      <small data-i18n="backupHelp">Hvis gemning fejler, bevares ændringerne i den åbne wiki. Hent en kopi, før du genindlæser siden.</small>
     </div>
     <iframe id="wiki" title="HUWiki" style="height:calc(100dvh - 196px)"></iframe>
   </section>
 
+<?!= HtmlService.createHtmlOutputFromFile("DeltaClient").getContent(); ?>
 <script>
 "use strict";
 const START_ID = <?!= initialIdJson ?>;
 const $ = (id) => document.getElementById(id);
+let language = "da";
+const I18N = {
+  da: {
+    subtitle:"Eksperimentel gemme- og deleadapter",driveLink:"Vis på Drev",
+    ready:"Klar til at forbinde en wiki.",
+    intro:"Denne testadapter bruger din Google-konto til at åbne, gemme og dele en almindelig HTML-wiki. Ingen Google Picker og ingen URL Fetch.",
+    create:"Opret en ny wiki på mit Google Drev",
+    choose:"Vælg den færdige HTML-wiki fra Forge. Det er en lokal filvælger, ikke Google Picker.",
+    upload:"Upload og åbn",openExisting:"Åbn en eksisterende delt wiki",fileId:"Google Drive-fil-ID",
+    idPlaceholder:"ID fra en delt wiki",open:"Åbn wiki",
+    warning:"Indtil deling og konflikter er testet med to konti, bør du kun bruge kopier af dine wikier. Ingen data flettes automatisk.",
+    save:"Gem på Google Drev",saveHint:"Ingen baggrundssynk endnu – Gem laver en komplet HTML-kopi.",
+    enableSync:"Aktivér tiddler-synk",syncOff:"Tiddler-synk er endnu ikke aktiveret.",
+    shareWith:"Del med",recipientPlaceholder:"modtager@gmail.com",
+    writer:"Redaktør",reader:"Læser",share:"Del og send invitation",
+    launchHelp:"Google viser et filkort med HTML-forhåndsvisning. Brug i stedet dette direkte ForgeDrive-link.",
+    launchOpen:"Åbn i ForgeDrive",launchCopy:"Kopiér ForgeDrive-link",
+    backup:"Hent lokal sikkerhedskopi",backupHelp:"Hvis gemning fejler, bevares ændringerne i den åbne wiki. Hent en kopi, før du genindlæser siden."
+  },
+  en: {
+    subtitle:"Experimental save and sharing adapter",driveLink:"View in Drive",
+    ready:"Ready to connect a wiki.",
+    intro:"This adapter uses your own Google account to open, save and share a normal HTML wiki. No Google Picker or URL Fetch.",
+    create:"Create a wiki in my Google Drive",
+    choose:"Select your finished Forge HTML wiki with a local file picker (not Google Picker).",
+    upload:"Upload and open",openExisting:"Open an existing shared wiki",fileId:"Google Drive file ID",
+    idPlaceholder:"ID of a shared wiki",open:"Open wiki",
+    warning:"Until sharing and conflicts have been tested with two accounts, use copies of your wikis only. Changes are not automatically merged.",
+    save:"Save to Google Drive",saveHint:"No background sync yet – Save uploads the complete HTML file.",
+    enableSync:"Enable tiddler sync",syncOff:"Tiddler sync is not yet enabled.",
+    shareWith:"Share with",recipientPlaceholder:"recipient@gmail.com",
+    writer:"Editor",reader:"Reader",share:"Share and send invitation",
+    launchHelp:"Google's file card only previews the HTML source. Use this direct ForgeDrive app link instead.",
+    launchOpen:"Open in ForgeDrive",launchCopy:"Copy ForgeDrive link",
+    backup:"Download local backup",backupHelp:"If saving fails, your edits remain in the open wiki. Download a copy before reloading the page."
+  }
+};
+const loc = (da, en) => language === "da" ? da : en;
+function updateLanguage(tw) {
+  if (!tw || !tw.wiki) return;
+  const chosen = String(tw.wiki.getTiddlerText("$:/language", "$:/languages/da-DK"));
+  const next = chosen === "$:/languages/da-DK" ? "da" : "en";
+  if (language === next) return;
+  language = next;
+  document.documentElement.lang = next;
+  for (const node of document.querySelectorAll("[data-i18n]")) {
+    const value = I18N[next][node.getAttribute("data-i18n")];
+    if (value) node.textContent = value;
+  }
+  for (const node of document.querySelectorAll("[data-i18n-placeholder]")) {
+    node.placeholder = I18N[next][node.getAttribute("data-i18n-placeholder")] || "";
+  }
+  if (current) $("fileName").textContent = current.name +
+    (current.canEdit ? "" : loc(" (kun læsning)", " (read-only)"));
+  if (delta) delta.state();
+}
+
 let current = null;
 let saving = false;
 let nextSave = null;
 let blockedConflict = false;
+let delta = null;
 
 function report(message, bad) {
   $("status").textContent = message;
@@ -102,6 +172,19 @@ function rpc(method, ...params) {
   });
 }
 
+function showLaunchLink(link) {
+  const row = $("launchRow");
+  const a = $("launchLink");
+  // Canonical URL returned by the Apps Script backend, never derived from
+  // the HTML Service iframe's script.googleusercontent.com address.
+  const valid = typeof link === "string" &&
+    /^https:\/\/script\.google\.com\/macros\/s\/[^/?]+\/exec\?id=/.test(link);
+  row.hidden = !valid;
+  if (valid) a.href = link;
+  else a.removeAttribute("href");
+  $("copyLaunchLink").disabled = !valid;
+}
+
 function enableWorkspace(meta) {
   current = meta;
   $("start").hidden = true;
@@ -111,21 +194,47 @@ function enableWorkspace(meta) {
   $("driveLink").hidden = false;
   $("shareButton").disabled = !meta.canShare;
   $("saveButton").disabled = true;
+  $("enableSyncButton").disabled = true;
 }
 
 async function openWiki(id) {
-  report("Henter wiki fra Google Drive…");
+  report(loc("Henter wiki fra Google Drev…", "Loading wiki from Google Drive…"));
   try {
     const result = await rpc("huOpen", id);
     enableWorkspace(result.meta);
+    showLaunchLink(result.launchLink);
     const frame = $("wiki");
+    // Never allow editing an out-of-date HTML baseline before the journal
+    // has been replayed and our change listener has been installed.
+    frame.style.pointerEvents = "none";
+    frame.removeAttribute("data-sync-blocked");
+    frame.setAttribute("aria-busy", "true");
     frame.srcdoc = result.html;
-    report("Wiki indlæst på " + result.elapsedMs + " ms. " +
-      (result.meta.canEdit ? "Gemning er aktiveret." : "Du har kun læseadgang."));
-    if (result.meta.canEdit) await installSaver(frame, result.meta.id);
+    report(loc("Wiki indlæst på ", "Wiki loaded in ") + result.elapsedMs + " ms. " +
+      (result.meta.canEdit ?
+        loc("Forbinder TiddlyWikis gemmefunktion…", "Connecting the TiddlyWiki saver…") :
+        loc("Du har kun læseadgang.", "You have read-only access.")));
+    try {
+      if (result.meta.canEdit) await installSaver(frame, result.meta.id);
+      await connectDelta(frame, result.meta.id);
+    } finally {
+      if (!frame.hasAttribute("data-sync-blocked")) {
+        frame.style.pointerEvents = "";
+        frame.removeAttribute("aria-busy");
+      }
+    }
   } catch (error) {
-    report("Kunne ikke åbne wikien: " + error.message, true);
+    report(loc("Kunne ikke åbne wikien: ", "Could not open the wiki: ") + error.message, true);
   }
+}
+
+async function waitForWiki(frame) {
+  for (let attempt = 0; attempt < 300; attempt++) {
+    const tw = frame.contentWindow && frame.contentWindow.$tw;
+    if (tw && tw.wiki && tw.saverHandler && Array.isArray(tw.saverHandler.savers)) return tw;
+    await new Promise(resolve => setTimeout(resolve, 150));
+  }
+  throw new Error("Wikien kunne ikke starte TiddlyWiki-synkroniseringen.");
 }
 
 async function installSaver(frame, fileId) {
@@ -137,17 +246,23 @@ async function installSaver(frame, fileId) {
     try {
       tw = frame.contentWindow && frame.contentWindow.$tw;
     } catch (error) {
-      report("Browseren tillader ikke adgang til TiddlyWiki-rammen: " + error.message, true);
+      report(loc("Browseren tillader ikke adgang til TiddlyWiki-rammen: ", "The browser blocked access to the TiddlyWiki frame: ") + error.message, true);
       return;
     }
     if (tw && tw.saverHandler && Array.isArray(tw.saverHandler.savers)) {
-      if (tw.saverHandler.savers.some(s => s.info && s.info.name === "huwiki-google-drive")) return;
+      if (tw.saverHandler.savers.some(s => s.info && s.info.name === "huwiki-google-drive")) {
+        // Reopening or restarting the wiki can leave the saver registered.
+        // Do not leave the manual snapshot button looking unavailable.
+        $("saveButton").disabled = false;
+        report(loc("Gemmefunktionen er tilsluttet.", "The wiki saver is connected."));
+        return true;
+      }
       // Disable TiddlyWiki's own autosave before installing our saver.
       // Only manual 'save' invocations will send full HTML to Google Drive.
       tw.config.disableAutoSave = true;
       if (!/^[a-f0-9]{32}$/i.test(current && current.fingerprint || "")) {
-        report("Google Drev returnerede ingen checksum for wikiens HTML. Gemning er slået fra for at undgå overskrivning.", true);
-        return;
+        report(loc("Google Drev returnerede ingen checksum for wikiens HTML. Gemning er slået fra for at undgå overskrivning.", "Google Drive returned no HTML checksum. Saving has been disabled to prevent overwrites."), true);
+        return false;
       }
       // Count ONLY the edits included in the TiddlyWiki SaverFilter.
       // Transient/system changes also emit wiki change events; counting
@@ -189,18 +304,23 @@ async function installSaver(frame, fileId) {
             let job = nextSave;
             nextSave = null;
             if (blockedConflict) {
-              failure(job.callbacks, "Konflikt: Wikien er ændret i Drive. Hent lokal backup og genindlæs.");
+              failure(job.callbacks, loc("Konflikt: Wikien er ændret i Drive. Hent lokal backup og genindlæs.", "Conflict: The wiki changed in Drive. Download a local backup and reopen."));
               continue;
             }
             try {
-              report("Gemmer på Google Drev…");
+              report(loc("Gemmer på Google Drev…", "Saving to Google Drive…"));
               const started = performance.now();
-              const result = await rpc("huSave", fileId, job.text, current.fingerprint);
+              if (job.deltaActive && (job.deltaUnsafe || !Number.isSafeInteger(job.deltaCursor))) {
+                failure(job.callbacks, loc("Snapshot er blokeret, mens ændringer afventer baggrundssynk. Hent eventuelt lokal backup.", "Snapshot blocked while edits await background sync. Download a local backup if needed."));
+                continue;
+              }
+              const result = await rpc("huSave", fileId, job.text, current.fingerprint,
+                job.deltaActive ? job.deltaCursor : null);
               const totalMs = Math.round(performance.now() - started);
               if (result.conflict) {
                 blockedConflict = true;
-                failure(job.callbacks, "KONFLIKT: " + result.message +
-                  " Hent en lokal sikkerhedskopi før du genindlæser.");
+                failure(job.callbacks, "CONFLICT: " + result.message +
+                  loc(" Hent en lokal sikkerhedskopi før du genindlæser.", " Download a local backup before reloading."));
                 continue;
               }
               if (!result.ok) throw new Error("Drive meldte fejl under gemning.");
@@ -212,18 +332,20 @@ async function installSaver(frame, fileId) {
               // The native callback sets numChanges=0. Only restore dirty
               // state for save-worthy edits made AFTER this HTML snapshot.
               const unsavedAfterSnapshot = Math.max(0, changeSerial - job.serial);
+              if (delta && job.deltaActive) delta.noteSnapshotSaved(job.deltaSerial, current.fingerprint);
               if (unsavedAfterSnapshot) {
                 sh.numChanges = Math.max(sh.numChanges, unsavedAfterSnapshot);
                 sh.updateDirtyStatus();
               }
               report((sh.isDirty() ?
-                "Wikien er gemt, men nyere ændringer afventer en ny gemning. " :
-                "Alle ændringer er gemt. ") +
-                "Google Drev: i alt " + (totalMs / 1000).toFixed(1) +
-                " sek. (server: " + (result.elapsedMs / 1000).toFixed(1) + " sek.).");
+                loc("Wikien er gemt, men nyere ændringer afventer en ny gemning. ", "Wiki saved, but newer edits still await saving. ") :
+                loc("Alle ændringer er gemt. ", "All changes saved. ")) +
+                loc("Google Drev: i alt ", "Google Drive: total ") + (totalMs / 1000).toFixed(1) +
+                loc(" sek. (server: ", " sec (server: ") + (result.elapsedMs / 1000).toFixed(1) +
+                loc(" sek.).", " sec)."));
             } catch (error) {
-              failure(job.callbacks, "Gemning mislykkedes: " +
-                (error.message || String(error)) + ". Hent en lokal sikkerhedskopi.");
+              failure(job.callbacks, loc("Gemning mislykkedes: ", "Saving failed: ") +
+                (error.message || String(error)) + loc(". Hent en lokal sikkerhedskopi.", ". Download a local backup."));
             }
           }
         } finally {
@@ -239,14 +361,31 @@ async function installSaver(frame, fileId) {
         save(text, method, callback) {
           if (!current || current.id !== fileId) return false;
           if (blockedConflict) {
-            callback("KONFLIKT: Hent lokal sikkerhedskopi og genindlæs wikien.");
+            callback(loc("KONFLIKT: Hent lokal sikkerhedskopi og genindlæs wikien.", "CONFLICT: Download a local backup and reopen the wiki."));
             return true;
           }
-          const job = {text, method, serial:changeSerial, callbacks:[{callback}]};
+          // Called immediately after the synchronous HTML render. The
+          // cursor and local edit serial belong to THESE rendered bytes,
+          // never to a later, already modified wiki state.
+          const syncing = !!(delta && delta.active);
+          const job = {
+            text, method, serial: changeSerial,
+            deltaActive: syncing,
+            deltaCursor: syncing ? delta.cursor : null,
+            deltaSerial: syncing ? delta.sequence : 0,
+            deltaUnsafe: syncing && (delta.bootstrapping || delta.pulling ||
+              delta.flushing || delta.pending.size > 0 ||
+              delta.conflicts.size > 0 || !delta.lastPullSucceeded),
+            callbacks: [{callback}]
+          };
           if (nextSave) {
             nextSave.text = job.text;
             nextSave.method = job.method;
             nextSave.serial = job.serial;
+            nextSave.deltaActive = job.deltaActive;
+            nextSave.deltaCursor = job.deltaCursor;
+            nextSave.deltaSerial = job.deltaSerial;
+            nextSave.deltaUnsafe = job.deltaUnsafe;
             nextSave.callbacks.push(...job.callbacks);
           } else {
             nextSave = job;
@@ -256,27 +395,138 @@ async function installSaver(frame, fileId) {
         }
       });
       $("saveButton").disabled = false;
-      report("Wiki indlæst. Automatisk gemning er fra – brug Gem, når du er klar.");
-      return;
+      report(loc("Wiki indlæst. Automatisk gemning er fra – brug Gem, når du er klar.", "Wiki loaded. Automatic full-file saving is off – use Save when ready."));
+      return true;
     }
     await new Promise(resolve => setTimeout(resolve, 150));
   }
-  report("Wikien blev indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", true);
+  report(loc("Wikien blev indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", "The wiki loaded, but its TiddlyWiki saver could not be connected."), true);
+  return false;
 }
 
-$("saveButton").addEventListener("click", () => {
+async function connectDelta(frame, fileId) {
+  try {
+    const tw = await waitForWiki(frame);
+    updateLanguage(tw);
+    tw.wiki.addEventListener("change", changes => {
+      if (changes && changes["$:/language"]) updateLanguage(tw);
+    });
+    if (delta) delta.stop();
+    delta = new window.ForgeDriveDelta({
+      tw,
+      fileId,
+      rpc,
+      snapshotSeq: current && current.snapshotSeq || 0,
+      fingerprint: current && current.fingerprint || "",
+      localize: loc,
+      onStatus: (message, bad) => {
+        $("syncStatus").textContent = message;
+        $("syncStatus").style.color = bad ? "#b42318" : "#27634e";
+      },
+      onState: state => {
+        if (!state.active) {
+          $("saveHint").textContent = I18N[language].saveHint;
+          return;
+        }
+        // Pending = 0 means "no queued operations", NOT "all edits saved".
+        // Show independent TW dirty tracking and server acknowledgments so
+        // no user mistakes a green connection status for confirmed storage.
+        const summary = loc(
+          "Baggrundssynk (", "Background sync (") + state.pending +
+          loc(" i kø, ", " pending, ") + state.conflicts +
+          loc(" konflikter, ", " conflicts, ") + state.unsupported +
+          loc(" kun i HTML). ", " HTML-only). ") +
+          loc("Registreret: ", "Detected: ") + state.observedChanges +
+          loc(", bekræftet gemt: ", ", confirmed saved: ") + state.confirmedChanges +
+          (state.recoveredByScan ? loc(", fundet ved kontrol: ", ", recovered by scan: ") +
+            state.recoveredByScan : "") + ". ";
+        const warnings = [];
+        if (state.nativeDirty) warnings.push(loc("TiddlyWiki viser ugemte ændringer", "TiddlyWiki reports unsaved changes"));
+        if (state.dirtyOutsideSync) warnings.push(loc("systemændringer kræver fuld HTML-gemning", "system edits need a full HTML save"));
+        if (state.snapshotOutdated) warnings.push(loc("HTML-snapshot er forældet", "HTML snapshot is outdated"));
+        $("saveHint").textContent = summary +
+          (warnings.length ? warnings.join("; ") + ". " : "") +
+          loc("Gem på Drev laver en fuld HTML-kopi.", "Save to Drive uploads a full HTML copy.");
+      }
+    });
+    const info = await rpc("huSyncInfo", fileId);
+    if (info.enabled) {
+      $("enableSyncButton").hidden = true;
+      const started = await delta.start(info);
+      if (!started) {
+        frame.setAttribute("data-sync-blocked", "true");
+        throw new Error(loc(
+          "HTML-snapshot og ændringslog kunne ikke forbindes. Genåbn wikien.",
+          "The HTML snapshot and journal could not be matched. Reopen the wiki."));
+      }
+    } else {
+      $("enableSyncButton").disabled = !info.canEdit || !info.canShare;
+      $("enableSyncButton").hidden = false;
+    }
+  } catch (error) {
+    $("syncStatus").textContent = loc("Tiddler-synk kan ikke startes: ", "Could not start tiddler sync: ") + error.message;
+    $("syncStatus").style.color = "#b42318";
+    // A linked wiki must not be edited against a missing/broken journal.
+    // Otherwise even an apparently unrelated edit could overwrite newer
+    // snapshot-only plugin or media content later.
+    if (current && current.syncEnabled) {
+      frame.setAttribute("data-sync-blocked", "true");
+      $("saveButton").disabled = true;
+    }
+  }
+}
+
+$("enableSyncButton").addEventListener("click", async () => {
+  if (!current || !delta) return;
+  // The HTML copy must already contain all edits made before delta mode.
+  // Otherwise they would fall between the snapshot and the new journal.
+  const sh = $("wiki").contentWindow?.$tw?.saverHandler;
+  if (sh?.isDirty()) {
+    $("syncStatus").textContent =
+      loc("Gem først dine ændringer på Google Drev. Aktivér derefter tiddler-synk.", "Save your changes to Google Drive first, then enable tiddler sync.");
+    $("syncStatus").style.color = "#b42318";
+    return;
+  }
+  $("enableSyncButton").disabled = true;
+  $("syncStatus").textContent = loc("Opretter delt ændringslog på Google Drev…", "Creating a shared change log in Google Drive…");
+  try {
+    await rpc("huSyncEnable", current.id, current.fingerprint);
+    // From this moment the server has a journal even if client bootstrap
+    // fails; do not fall back to an editable stale whole-file wiki.
+    current.syncEnabled = true;
+    const active = await delta.start();
+    if (!active) throw new Error(loc("Ændringsloggen kunne ikke aktiveres.", "Could not enable the change log."));
+    $("enableSyncButton").hidden = true;
+  } catch (error) {
+    $("syncStatus").textContent = loc("Aktivering mislykkedes: ", "Activation failed: ") + error.message;
+    $("syncStatus").style.color = "#b42318";
+    if (current.syncEnabled) {
+      $("wiki").setAttribute("data-sync-blocked", "true");
+      $("wiki").style.pointerEvents = "none";
+      $("saveButton").disabled = true;
+    }
+    $("enableSyncButton").disabled = false;
+  }
+});
+
+$("saveButton").addEventListener("click", async () => {
   if (saving || nextSave) return;
   if (blockedConflict) {
-    report("Gemning er blokeret af en konflikt. Hent en lokal kopi før genindlæsning.", true);
+    report(loc("Gemning er blokeret af en konflikt. Hent en lokal kopi før genindlæsning.", "Saving is blocked by a conflict. Download a local backup before reloading."), true);
     return;
   }
   try {
+    if (delta && delta.active) {
+      const ready = await delta.prepareSnapshot();
+      if (!ready) throw new Error(
+        loc("Ikke alle tiddlerændringer er synkroniseret. Hent eventuelt lokal backup, og prøv igen.", "Not all tiddler edits have synced. Download a local backup if needed and try again."));
+    }
     const tw = $("wiki").contentWindow.$tw;
     if (!tw || !tw.saverHandler) throw new Error("Wikien er ikke klar.");
     if (!tw.saverHandler.saveWiki({method: "save"}))
       throw new Error("Ingen gemmefunktion er tilgængelig.");
   } catch (error) {
-    report("Kunne ikke starte gemning: " + error.message, true);
+    report(loc("Kunne ikke starte gemning: ", "Could not start saving: ") + error.message, true);
   }
 });
 
@@ -285,7 +535,7 @@ $("saveButton").addEventListener("click", () => {
 window.addEventListener("beforeunload", event => {
   try {
     const sh = $("wiki").contentWindow?.$tw?.saverHandler;
-    if (saving || nextSave || (sh && sh.isDirty())) {
+    if (saving || nextSave || (delta && delta.hasUnsynced()) || (sh && sh.isDirty())) {
       event.preventDefault();
       event.returnValue = "";
     }
@@ -300,34 +550,51 @@ $("backupButton").addEventListener("click", () => {
     if (!tw || !tw.saverHandler) throw new Error("Wikien er ikke klar.");
     tw.saverHandler.saveWiki({method:"download"});
   } catch (error) {
-    report("Lokal backup kunne ikke startes: " + error.message, true);
+    report(loc("Lokal backup kunne ikke startes: ", "Could not start local backup: ") + error.message, true);
   }
 });
 
 $("uploadForm").addEventListener("submit", event => {
   event.preventDefault();
   const form = event.currentTarget;
-  report("Opretter HTML-filen på dit Google Drev…");
+  report(loc("Opretter HTML-filen på dit Google Drev…", "Creating the HTML file in your Google Drive…"));
   google.script.run
     .withSuccessHandler(result => openWiki(result.meta.id))
-    .withFailureHandler(error => report("Upload mislykkedes: " + (error.message || error), true))
+    .withFailureHandler(error => report(loc("Upload mislykkedes: ", "Upload failed: ") + (error.message || error), true))
     .huCreate(form); // Forms may only be passed as the sole google.script.run argument.
 });
 
 $("openButton").addEventListener("click", () => openWiki($("fileId").value.trim()));
+$("copyLaunchLink").addEventListener("click", async () => {
+  const url = $("launchLink").getAttribute("href");
+  if (!url) return;
+  try {
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function")
+      throw new Error("Clipboard unavailable");
+    await navigator.clipboard.writeText(url);
+    report(loc("ForgeDrive-linket er kopieret.", "ForgeDrive link copied."));
+  } catch (_error) {
+    // Clipboard access is often blocked in Apps Script's sandboxed iframe.
+    // The browser prompt still permits manual selection and copying.
+    window.prompt(loc("Kopiér dette ForgeDrive-link:", "Copy this ForgeDrive link:"), url);
+  }
+});
+
 $("shareButton").addEventListener("click", async () => {
   if (!current) return;
   const email = $("recipient").value.trim();
   const role = $("role").value;
-  if (!email) {report("Indtast modtagerens Google-mailadresse.", true);return;}
-  report("Deler wikien og sender invitation gennem Google Drive…");
+  if (!email) {report(loc("Indtast modtagerens Google-mailadresse.", "Enter the recipient's Google email address."), true);return;}
+  report(loc("Deler wikien og sender invitation gennem Google Drev…", "Sharing the wiki and sending an invitation through Google Drive…"));
   try {
     const result = await rpc("huShare", current.id, email, role);
-    report("Delt med " + result.recipient + " som " +
-      (result.role === "writer" ? "redaktør" : "læser") + ". Google Drive har sendt invitationen. " +
+    report(loc("Delt med ", "Shared with ") + result.recipient + loc(" som ", " as ") +
+      (result.role === "writer" ? loc("redaktør", "editor") : loc("læser", "reader")) +
+      loc(". Google Drev har sendt invitationen. ", ". Google Drive sent the invitation. ") +
+      loc(" Brug ForgeDrive-linket herover – ikke Googles filkort. ", " Use the ForgeDrive app link above – not Google's file card. ") +
       "Link: " + result.link);
   } catch (error) {
-    report("Deling mislykkedes: " + error.message, true);
+    report(loc("Deling mislykkedes: ", "Sharing failed: ") + error.message, true);
   }
 });
 if (START_ID) {
