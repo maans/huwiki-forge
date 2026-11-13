@@ -67,9 +67,9 @@
         cursor: this.cursor
       });
     }
-    async start() {
+    async start(initialInfo) {
       if (this.active) return true;
-      const info = await this.rpc("huSyncInfo", this.fileId);
+      const info = initialInfo || await this.rpc("huSyncInfo", this.fileId);
       if (!info.enabled) return false;
       this.canEdit = !!info.canEdit;
       this.active = true;
@@ -96,9 +96,19 @@
         for (const [title, change] of Object.entries(changes || {})) {
           if (!change || !change.normal) continue;
           if (typeof title !== "string" || title.startsWith("$:/")) {
-            // Native TW may consider custom system tiddlers save-worthy,
-            // but the v1 sync protocol deliberately doesn't sync them.
-            this.dirtyOutsideSync = true;
+            // Ignore transient TW UI state; only count special tiddlers if
+            // they are included in TiddlyWiki's actual SaverFilter.
+            try {
+              const sh = this.tw.saverHandler;
+              if (typeof sh?.filterFn === "function") {
+                const match = sh.filterFn.call(wiki, iterator => {
+                  iterator(wiki.getTiddler(title), title);
+                });
+                if (Array.isArray(match) && match.length > 0) this.dirtyOutsideSync = true;
+              }
+            } catch (_error) {
+              this.dirtyOutsideSync = true; // fail safe
+            }
             continue;
           }
           const tiddler = wiki.getTiddler(title);
