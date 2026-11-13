@@ -8,7 +8,7 @@ Udgivelse er en kapacitet, som flere Editions kan få glæde af. Den skal ikke v
 
 | Plugin | TiddlyWiki-titel | Forge-fil | Version |
 | --- | --- | --- | --- |
-| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.12-test.1 |
+| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.13-test.1 |
 | HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.7-test.1 |
 
 Begge plugins er browserværktøjer, ikke serverside-håndtering af Google Drev eller Apps Script. Den separate `PDF Publisher` laver PDF; `SitePublisher` laver **HTML-sites**. Den almindelige redigerbare single-file wiki gemmes fortsat med TiddlyWikis indbyggede saver.
@@ -75,3 +75,14 @@ Valg af Sitelayout påvirker **samme HTML**, som anvendes til Sitevisning, Hent 
 Bemærk at valg af HUPedia-layout ikke i sig selv skaber faktabokse på almindelige artikler. Faktaboksens data/skabelon hører til HUPedia-pluginet, og sitelayoutet vælger kun det visuelle udtryk.
 
 **Acceptkontrol:** Byg ny HUPedia-wiki, vælg Sitelayout Modern, Retro og HUPedia, sammenlign Sitevisning og downloadet HTML, test faktabokse og fokusvisning på Mac/iPad.
+
+
+## CutOut og offline-medier i SitePublisher 0.1.13-test.1
+
+Denne udgave viderefører den eksisterende SitePublisher-brugerflade. Den har en **læser uden editor** til CutOut-animationer, bygget ud fra den gamle `CutOutSiteRuntime.js`. Animationen fungerer som et selvstændigt indholdselement eller i en artikel med `<$cutout tiddler="..." />`, `<$cutout-film ... />` eller `<$cutout-theatre ... />`. Alle anvendte CutOut-scener og interne billedtiddlere samles rekursivt i samme HTML-eksport. Billeder kan også være indlejrede data-URL'er. `loop` og `autoplay` følger widgetten; læseren har afspil, til start og tidslinje, men ingen CutOut-editor eller lokal sprogvælger.
+
+**Direkte indlejring:** Billeder (PNG, JPEG, GIF, WebP, AVIF, SVG), lyd (bl.a. MP3, Ogg, WAV, AAC) og video (bl.a. MP4, WebM) kan udgives fra faktisk indlejrede tiddlerdata eller data-URL'er. SVG beholder sin vektorkvalitet; scripts og eksterne SVG-billedreferencer afvises. Mediereferencer i allerede renderet HTML, eksempelvis en billedtiddler i en almindelig WikiText-artikel, omskrives til data-URL'er. Udgivelsen afvises med en forklaring, hvis den nødvendige ressource kun er en ekstern URL, `file:`-sti, `blob:`-adresse, manglende tiddler eller en ikke-understøttet indlejring som iframe eller `srcset`. Dermed loves der ikke offline-publicering, hvis modtageren ikke kan få hele indholdet i filen.
+
+**Begrænsning:** Den gamle Tegne/Excalidraw-eksport er endnu ikke migreret til denne version. Ej heller er alle CutOut-projektvarianter, HUPedia-indlejrede specialwidgets, videoformater og avancerede TiddlyWiki-widgets browsertestet. Tests kontrollerer pakning, rekursiv afhængighedsindsamling, fejltilfælde, JavaScript-syntaks og simuleret CutOut-afspilning; **Mac- og iPad-browseraccept mangler**. Sammenlign både Sitevisning og den downloadede HTML uden internetforbindelse.
+
+De læsbare integrationskilder ligger i `plugins/site-publisher/src/media-export.js` og `plugins/site-publisher/src/cutout-viewer.js`, og runtime + CSS er indlejret i samme SitePublisher-plugin. Der er ingen særskilt CutOut-udgiver.
