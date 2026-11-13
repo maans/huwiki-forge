@@ -66,8 +66,8 @@
     {
       "id": "google-drive",
       "name": "HUWiki Google Drev (eksperimentel)",
-      "version": "0.1.0-test.1",
-      "description": "Valgfri forbindelse til delt HTML-wiki på Drive via Apps Script. Kræver særskilt webapp-implementering. Ingen Google Picker.",
+      "version": "0.1.0-test.2",
+      "description": "Valgfrit plugin som åbner ForgeDrive på Google Drev, delt HTML-wiki og invitationsmail (test, kræver Google-login).",
       "file": "../plugins/google-drive/dist/plugin.json",
       "status": "prototype"
     }
