@@ -109,7 +109,7 @@ function backendFixture() {
         Object.assign(p, patch);
         return {id: p.id};
       },
-      delete: (id, permissionId) => {
+      remove: (id, permissionId) => {
         permissions.set(id, (permissions.get(id) || []).filter(p => p.id !== permissionId));
       }
     },
