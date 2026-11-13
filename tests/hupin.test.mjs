@@ -66,9 +66,9 @@ test("HUPin Edition is assembled using only public local files",async()=>{
  const {manifest,tiddlers}=await loadEdition("https://forge.example/huwiki-forge/editions/hupin/manifest.json",localFetch);
  assert.equal(manifest.id,"hupin");
  assert.equal(manifest.version,"0.1.0-test.1");
- assert.equal(tiddlers.length,14); // 11 existing + 3 shared library tiddlers
+ assert.equal(tiddlers.length,15); // 11 existing + 4 shared Forge tiddlers
  const byTitle=new Map(tiddlers.map(t=>[t.title,t]));
-  for(const title of ["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community"])assert.ok(byTitle.has(title),title+" missing from Edition");
+  for(const title of ["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community","$:/huwiki/forge/page-control"])assert.ok(byTitle.has(title),title+" missing from Edition");
  assert.ok(byTitle.has("$:/plugins/huwiki/hupin"));
  assert.ok(byTitle.has("$:/themes/huwiki/modern"));
  assert.ok(byTitle.has("HUPin · Demobillede"));
