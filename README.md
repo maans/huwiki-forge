@@ -4,19 +4,22 @@
 
 HUWiki Forge skal oprette en ny, selvstændig TiddlyWiki fra en **frisk, testet og kompatibel** `empty.html` og et manifest med Editionens tiddlere og plugins. Brugeren redigerer og gemmer bagefter med TiddlyWikis **egne** funktioner. Forge bygger hverken en ny HTML-saver, backupmotor eller generel serversynkronisering.
 
-## Første assembler-test
+## Prøv Forge Assembler
 
-1. Åbn [Edition Assembler](https://maans.github.io/huwiki-forge/assembler/) fra GitHub Pages.
-2. Tryk **Byg demo-Edition**. Forge forsøger selv at hente en officiel TiddlyWiki `empty.html` fra det synkroniserede Github-spejl.
-3. Åbn den downloadede HTML-fil. Tiddleren *Demo: Velkommen* og JavaScript-startup-plugin skal virke ved første opstart.
-4. Gem derefter den nye wiki med TiddlyWikis helt almindelige Gem-funktion.
+Åbn **[Edition Assembler](https://maans.github.io/huwiki-forge/assembler/)** og vælg en Edition fra kataloget:
 
-Du skal **ikke** selv downloade `empty.html`. Det er dog stadig muligt at vælge en lokal fil i et fold-ud-felt, hvis du vil teste en bestemt version.
+- **HUPedia Edition (test):** Den første migrerede, rigtige HUWiki Edition. Originalt HUPedia-plugin (21 interne tiddlere), eget tema (2 interne tiddlere), otte redigerbare eksempel-tiddlere og lokal konfiguration. Ingen Google-tjenester er nødvendige.
+- **Demo Edition:** Den tidligere gennemprøvede opstartstest af TiddlyWiki og et startup-plugin.
 
-Den officielle kerne synkroniseres af [GitHub Actions](.github/workflows/sync-tw-core.yml). Dette er fortsat en prototype: vi har brug for en reel browsertest og test af de eksisterende Editions.
+Tryk **Byg Edition**. Forge henter automatisk den **fastlåste** TiddlyWiki-kerne og leverer én selvstændig HTML-fil. Du skal **ikke** selv hente `empty.html`. Åbn filen og brug TiddlyWikis indbyggede redigering og Gem-funktion.
 
-Kør automatiske enhedstests med `npm test` (Node.js 20+). Se [analysen af den gamle HUWiki-kode](docs/huwiki-source-analysis.md).
+Et valgfrit felt til en lokal `empty.html` er bevaret til versionskontrol. Den officielle upstream-kerne overvåges i GitHub Actions, men nye versioner gemmes som **kandidater** og erstatter ikke automatisk den version, Editions bruger.
 
+**Separat plugin:** [HUWiki Trim 0.1.5](plugins/trim/dist/plugin.json) er overført med sin MIT-licens. Trim er et plugin, ikke en selvstændig Edition.
+
+Kør `npm test` (Node.js 20+) for de automatiske tests. De kontrollerer nu også HUPedia-komponenter og samling mod den fastlåste kerne. Enhedstests kan ikke erstatte reel browserafprøvning.
+
+Se [migrationsstatus og Google-uafhængighed](docs/migration-status.md), [AI Editionens forbindelsesdesign](docs/ai-connections.md) og [HUWiki-kildeanalysen](docs/huwiki-source-analysis.md).
 ## Struktur
 
 - `assembler/` — før-boot assembler og testside
