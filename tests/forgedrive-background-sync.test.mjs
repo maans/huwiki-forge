@@ -123,7 +123,9 @@ function backendFixture() {
       getBytes: () => Buffer.from(text, "utf8")
     })
   };
-  const ctx = {SpreadsheetApp, Drive, LockService, Utilities};
+  const ScriptApp = {getService: () => ({getUrl: () => "https://script.google.com/macros/s/test/exec"})};
+  const DriveApp = {getFileById: () => ({setTrashed() {}})};
+  const ctx = {SpreadsheetApp, Drive, LockService, Utilities, ScriptApp, DriveApp, console};
   vm.runInNewContext(server + "\n" + fileServer, ctx);
   return {ctx, file, books, permissions, get htmlWrites() {return htmlWrites;} };
 }
@@ -479,4 +481,37 @@ test("first edit after reopening an HTML snapshot uses the real tiddler base rev
   assert.equal(client.conflicts.size,0);
   assert.equal(f.ctx.huSyncPull(f.file.id,0,10).events[1].fields.text,"after restart");
   client.stop();
+});
+
+test("direct sharing and role changes update the HTML wiki and its journal idempotently", () => {
+  const f = backendFixture();
+  const linked = f.ctx.huSyncEnable(f.file.id);
+  const first = f.ctx.huShare(f.file.id,"collaborator@example.com","writer");
+  assert.equal(first.role,"writer");
+  assert.equal(f.permissions.get(f.file.id).filter(p => p.role === "writer").length,1);
+  assert.equal(f.permissions.get(linked.sheetId).filter(p => p.role === "writer").length,1);
+  f.ctx.huShare(f.file.id,"collaborator@example.com","writer");
+  assert.equal(f.permissions.get(linked.sheetId).length,1,"repeat sharing must not duplicate a grant");
+  f.ctx.huShare(f.file.id,"collaborator@example.com","reader");
+  assert.equal(f.permissions.get(f.file.id).find(p => p.emailAddress === "collaborator@example.com").role,"reader");
+  assert.equal(f.permissions.get(linked.sheetId)[0].role,"reader");
+});
+
+test("failed HTML invitation rolls back a new journal permission", () => {
+  const f = backendFixture();
+  const linked = f.ctx.huSyncEnable(f.file.id);
+  const original = f.ctx.Drive.Permissions.create;
+  f.ctx.Drive.Permissions.create = (grant,id,options) => {
+    if (id === f.file.id) throw new Error("Workspace sharing blocked");
+    return original(grant,id,options);
+  };
+  assert.throws(() => f.ctx.huShare(f.file.id,"recipient@example.com","writer"), /sharing blocked/);
+  assert.equal(f.permissions.get(linked.sheetId).length,0);
+});
+
+test("group or link shares are not silently granted to a private delta journal", () => {
+  const f = backendFixture();
+  f.permissions.get(f.file.id).push({type:"anyone",role:"reader",id:"unsafe"});
+  assert.throws(() => f.ctx.huSyncEnable(f.file.id), /linkdeling/);
+  assert.equal(f.file.properties.forgeDriveSyncSheetId, undefined);
 });
