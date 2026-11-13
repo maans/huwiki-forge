@@ -6,6 +6,7 @@ import { fileURLToPath } from "node:url";
 
 const at = (path) => readFileSync(fileURLToPath(new URL("../" + path, import.meta.url)), "utf8");
 const server = at("integrations/google-drive-apps-script/DeltaSync.gs");
+const fileServer = at("integrations/google-drive-apps-script/Code.gs");
 const client = at("integrations/google-drive-apps-script/DeltaClient.html");
 const manifest = JSON.parse(at("integrations/google-drive-apps-script/appsscript.json"));
 
@@ -59,7 +60,9 @@ function backendFixture() {
     name: "HUWiki-demo.html",
     mimeType: "text/html",
     capabilities: { canEdit: true, canShare: true },
-    properties: {}
+    properties: {},
+    md5Checksum: "a".repeat(32),
+    version: "1"
   };
   const books = new Map();
   const permissions = new Map([[file.id, [
@@ -79,10 +82,19 @@ function backendFixture() {
     flush() {}
   };
   let nextPermission = 1;
+  let htmlWrites = 0;
   const Drive = {
     Files: {
       get: () => ({ ...file, properties: { ...file.properties } }),
-      update: ({ properties }) => { Object.assign(file.properties, properties); }
+      update: ({ properties }, _id, blob) => {
+        if (properties) Object.assign(file.properties, properties);
+        if (blob) {
+          htmlWrites++;
+          file.md5Checksum = "b".repeat(32);
+          file.version = String(Number(file.version) + 1);
+        }
+        return {...file, properties: {...file.properties}};
+      }
     },
     Permissions: {
       list: (id) => ({permissions: (permissions.get(id) || []).map(p => ({...p}))}),
@@ -106,9 +118,14 @@ function backendFixture() {
   const LockService = {
     getScriptLock: () => ({ waitLock() {}, releaseLock() {} })
   };
-  const ctx = { SpreadsheetApp, Drive, LockService, huFile_: () => ({ ...file }), huFileId_: x => x };
-  vm.runInNewContext(server, ctx);
-  return { ctx, file, books, permissions };
+  const Utilities = {
+    newBlob: text => ({
+      getBytes: () => Buffer.from(text, "utf8")
+    })
+  };
+  const ctx = {SpreadsheetApp, Drive, LockService, Utilities};
+  vm.runInNewContext(server + "\n" + fileServer, ctx);
+  return {ctx, file, books, permissions, get htmlWrites() {return htmlWrites;} };
 }
 
 function op(title, baseSeq, opId, text = "hello") {
