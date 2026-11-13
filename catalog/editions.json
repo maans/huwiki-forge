@@ -96,7 +96,7 @@
     {
       "id": "forgeshare",
       "name": "ForgeShare / Tailscale-samarbejde",
-      "version": "0.1.0-test.1",
+      "version": "0.1.0-test.2",
       "description": "Privat samarbejde med vejledning på dansk/engelsk og valgfrie lokale hjælpere / Private collaboration guide and optional local helpers",
       "file": "../plugins/forgeshare/dist/plugin.json",
       "status": "test"

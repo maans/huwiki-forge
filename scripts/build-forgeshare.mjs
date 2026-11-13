@@ -67,7 +67,7 @@ export async function build() {
   const title = base + '/download/script';
   tiddlers[title] = {title, type: 'text/plain', text: 'data:application/octet-stream;base64,' + Buffer.from(script).toString('base64')};
   return {plugin: {title: base, name: 'ForgeShare', description: 'Tailscale collaboration / Tailscale-samarbejde',
-    author: 'HUWiki', version: '0.1.0-test.1', 'plugin-type': 'plugin', type: 'application/json',
+    author: 'HUWiki', version: '0.1.0-test.2', 'plugin-type': 'plugin', type: 'application/json',
     'core-version': '>=5.4.1', 'studio-category': 'Collaboration', 'studio-tags': 'Tailscale Node.js offline',
     'studio-source-titles': Object.keys(tiddlers).map(x => '[[' + x + ']]').join(' '),
     text: JSON.stringify({tiddlers})}, downloads};

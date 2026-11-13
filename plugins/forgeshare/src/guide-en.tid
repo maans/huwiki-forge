@@ -47,13 +47,19 @@ If you already have a working TiddlyWiki server wiki, use its folder. Otherwise,
 !! Start and stop sharing
 
 # Open the helper's start file. If TiddlyWiki is missing, you can choose to let the helper download the tested version. It explains the installation and requires approval; Node.js and Tailscale use their own installers.
-# Choose your prepared wiki folder in the dialog.
+# On first use, choose your prepared wiki folder and give it a name, such as Family or Garden. Next time, select the name from the list. Choose “Add another wiki” to add a different folder. Addresses are chosen and remembered automatically.
 # Choose a login name and password for this sharing session. The password needs at least 12 characters. The helper creates the credentials file and removes it on normal shutdown.
 # Review the summary and confirm that sharing may start.
 # When the window says ''Sharing is active'', copy the address and open it yourself in your browser. Leave the helper's status window open.
-# When finished, wait for edits to save. Press OK/Cancel in the status window to stop. Choose a login again next time.
+# When finished, wait for edits to save. Press OK/Cancel in its named status window to stop only that wiki. Choose a login again next time.
 
-The helper opens no website. It never asks for your Tailscale password or changes your existing AI services. If a prerequisite is missing or a needed port is occupied, it stops with an explanation.
+!! Several wikis on one computer
+
+Open the helper again to start another named wiki. Each has its own address, login and status window. Stopping Family leaves Garden running. All your iPads can open the same wiki; they do not need separate servers.
+
+The helper remembers names, folders and addresses on this computer, not passwords. The list is shared by helper copies under the same computer login. It checks existing services before assigning an address, including other Tailscale connections. Your AI, remote access and other services are not replaced. If a saved address is later occupied, it explains the conflict rather than silently changing your shared link. The address can still change if your Tailscale computer name/domain changes.
+
+The helper opens no website and never asks for your Tailscale password. Start a given wiki folder only once: stop any manually started server for that folder before using the helper. Each wiki needs its own folder; two helper windows cannot start the same saved wiki.
 
 !! Share with one person or a group
 

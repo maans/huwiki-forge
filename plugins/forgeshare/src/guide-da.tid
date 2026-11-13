@@ -47,13 +47,19 @@ Har du allerede en wiki, der virker via TiddlyWikis server, kan du bruge dens ma
 !! Start og stop delingen
 
 # Åbn hjælperens startfil. Hvis TiddlyWiki mangler, kan du vælge at lade hjælperen hente den testede version. Du får en forklaring og skal godkende installationen; Node.js og Tailscale installeres via deres egne installationsprogrammer.
-# Vælg din forberedte wikimappe i dialogboksen.
+# Første gang vælger du din forberedte wikimappe og giver den et navn, f.eks. Familie eller Have. Næste gang vælger du blot navnet på listen. Vælg “Tilføj en wiki” for at tilføje en anden mappe. Adresser vælges og huskes automatisk.
 # Vælg et brugernavn og en adgangskode til denne deling. Adgangskoden skal være mindst 12 tegn. Hjælperen sørger for loginfilen og fjerner den igen ved normal afslutning.
 # Læs oversigten og bekræft, at delingen må starte.
 # Når vinduet siger ''Deling er aktiv'', kopierer du adressen. Åbn den selv i din browser. Lad hjælperens statusvindue stå åbent.
-# Når I er færdige, venter I på, at ændringer er gemt. Tryk OK/Annuller i statusvinduet for at stoppe. Næste gang vælger du login igen.
+# Når I er færdige, venter I på, at ændringer er gemt. Tryk OK/Annuller i statusvinduet med wikiens navn for kun at stoppe den wiki. Næste gang vælger du login igen.
 
-Hjælperen åbner ingen hjemmeside. Den beder ikke om din Tailscale-adgangskode. Den ændrer ikke dine eksisterende AI-tjenester. Hvis noget nødvendigt mangler eller er optaget, stopper den med en forklaring.
+!! Flere wikier på samme computer
+
+Åbn hjælperen igen for at starte endnu en navngivet wiki. Hver har sin egen adresse, sit eget login og sit eget statusvindue. Stopper du Familie, kører Have videre. Alle dine iPads kan åbne den samme wiki; de behøver ikke hver sin server.
+
+Hjælperen husker navne, mapper og adresser på denne computer, men ikke adgangskoder. Kopier af hjælperen under samme computerkonto bruger den samme liste. Den undersøger eksisterende tjenester, før den vælger en adresse, også andre Tailscale-forbindelser. Dine AI-tjenester, fjernadgang og øvrige tjenester bliver ikke erstattet. Hvis en gemt adresse senere er optaget, forklarer den konflikten i stedet for at ændre dit delte link i stilhed. Adressen kan dog ændres, hvis computerens Tailscale-navn eller domæne ændres.
+
+Hjælperen åbner ingen hjemmeside og beder aldrig om din Tailscale-adgangskode. Kør kun en given wikimappe én gang: stop en eventuel manuelt startet server for samme mappe først. Hver wiki skal have sin egen mappe; to hjælpevinduer kan ikke starte den samme gemte wiki.
 
 !! Del med en person eller en gruppe
 

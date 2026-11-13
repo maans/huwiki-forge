@@ -1,4 +1,4 @@
-ForgeShare 0.1.0-test.1 — Mac / Windows / Linux
+ForgeShare 0.1.0-test.2 — Mac / Windows / Linux
 
 DANSK
 1. Hent og installer Node.js fra https://nodejs.org/en/download og Tailscale fra
@@ -9,12 +9,14 @@ DANSK
    kræver Zenity, som kan installeres via programbutikken.
 3. Følg dialogboksene. Hvis TiddlyWiki mangler, kan du godkende installation
    af den testede version 5.4.1. Intet installeres uden dette særskilte valg.
-4. Vælg en allerede forberedt wikimappe. En HTML-fil skal først kopieres til
+4. Vælg en gemt wiki efter navn, eller tilføj en forberedt wikimappe med navn. En HTML-fil skal først kopieres til
    en serverwiki som beskrevet under Avanceret hjælp i pluginet. Denne første
    opsætning kan kræve hjælp; scriptet konverterer ikke automatisk HTML.
 5. Vælg brugernavn og adgangskode. Hjælperen laver selv en privat midlertidig
    loginfil. Bekræft til sidst delingen, kopiér adressen og åbn den selv.
-6. Lad statusdialogen stå åben. OK/Annuller stopper delingen og fjerner loginet.
+6. Lad statusdialogen stå åben. OK/Annuller stopper KUN denne wiki og loginet.
+   Åbn hjælperen igen for at starte en anden wiki samtidig. Den husker navne
+   og adresser; du skal ikke vælge porte. Kør aldrig samme mappe i to servere.
    Alle inviterede skal have Tailscale. Kontroller først, at de kun får adgang
    til wikien og ikke dine øvrige tjenester.
 
@@ -35,12 +37,14 @@ ENGLISH
    its dialogs need Zenity, available through your software manager.
 3. Follow the dialogs. If TiddlyWiki is missing, you can separately approve
    installing the tested version 5.4.1. Nothing installs without that choice.
-4. Select an already prepared wiki folder. An HTML file first needs a server
+4. Choose a saved wiki by name, or add a prepared wiki folder with a name. An HTML file first needs a server
    copy; see Advanced help in the plugin. First setup may require help; this
    script does not automatically convert HTML.
 5. Choose a username/password. The helper creates a private temporary login
    file. Finally confirm sharing, copy the address and open it yourself.
-6. Keep the status dialog open. OK/Cancel stops sharing and removes the login.
+6. Keep the status dialog open. OK/Cancel stops ONLY this wiki and its login.
+   Open the helper again to run another wiki alongside it. Names and addresses
+   are remembered; no port selection is needed. Never run one folder twice.
    Invitees need Tailscale. First verify they can access only your wiki,
    not other services on your computer.
 
@@ -63,10 +67,23 @@ TECHNICAL / TEKNISK
   restrict file ACLs to your account; this helper cannot verify Windows ACLs.
 - Every CSV account receives read/write access. Use manual TW readers/writers
   for different permissions. Restrict Tailscale grants/ACLs to intended people
-  and port 10000. No policy is changed by the helper.
-- Only 127.0.0.1:8080 and foreground HTTPS 10000 -> 8080 are used.
+  and the selected wiki HTTPS port shown in the confirmation. No policy changes.
+- Each wiki gets an available local 20000-20999 and HTTPS 21000-21999 port.
+  The server binds only 127.0.0.1; Serve is foreground. Existing OS listeners,
+  Serve/Funnel/Foreground/Services and saved assignments are skipped.
+- wikis.json in your ForgeShare app-data folder stores names, paths and ports,
+  not passwords. Copies of the helper under your account share the list.
+  Mac: ~/Library/Application Support/ForgeShare
+  Windows: %LOCALAPPDATA%/ForgeShare
+  Linux: $XDG_DATA_HOME/ForgeShare, normally ~/.local/share/ForgeShare
+- Saved addresses never move silently: if another service takes one, startup
+  is refused. Changing the address needs help with saved assignments, sharing
+  rules and links. Do not run the same folder in a manually started server.
+- Locks prevent duplicate starts and coordinate catalogue changes. Confirmed
+  dead owners can be recovered. If a lock remains after all helpers exit, get
+  assistance inspecting the locks subfolder; do not delete active locks.
 - Existing AI mappings 443 -> 11434 and 8443 -> 1234 remain untouched.
-- Occupied ports, unknown Serve formats and anonymous access cause refusal.
+- Occupied saved ports, unknown Serve formats and anonymous access cause refusal.
 - No Funnel, serve reset, --bg or automatic browser opening. GUI mode may
   install pinned TiddlyWiki via npm only after separate explicit approval.
 - Do not change Serve concurrently in another terminal. No global rollback is

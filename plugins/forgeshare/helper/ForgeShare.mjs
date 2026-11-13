@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.0-test.1 — optional local helper. No install, browser launch or shell evaluation.
-import {readFile, realpath, stat, access, mkdir, mkdtemp, writeFile, rm} from 'node:fs/promises';
+// ForgeShare 0.1.0-test.2 — optional local helper. Explicit local actions; no browser launch or shell evaluation.
+import {readFile, realpath, stat, access, mkdir, mkdtemp, writeFile, rm, rename} from 'node:fs/promises';
+import {randomUUID} from 'node:crypto';
 import {constants} from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -15,11 +16,12 @@ const execute = promisify(execFile);
 const self = fileURLToPath(import.meta.url);
 const quiet = process.argv.includes('--gui');
 export const serveArgs = ['serve', '--https=10000', 'http://127.0.0.1:8080'];
+export const makeServeArgs = (port, httpsPort) => ['serve', `--https=${httpsPort}`, `http://127.0.0.1:${port}`];
 const fail = (en, da) => { throw Error(`${en}\n${da}`); };
 const object = value => !!value && typeof value === 'object' && !Array.isArray(value);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
-export function validateServe(config, requireFree = true) {
+export function validateServe(config, requireFree = true, httpsPort = 10000) {
   if (!object(config)) fail('Unrecognised Serve status; nothing started.', 'Ukendt Serve-status; intet startet.');
   const allowed = ['TCP', 'Web', 'AllowFunnel', 'Foreground', 'Services', 'ETag'];
   for (const [key, value] of Object.entries(config)) {
@@ -28,34 +30,34 @@ export function validateServe(config, requireFree = true) {
     if (value === null) continue;
     if (!object(value)) fail('Invalid Serve configuration.', 'Ugyldig Serve-konfiguration.');
     if (key === 'Foreground' || key === 'Services') {
-      for (const nested of Object.values(value)) validateServe(nested, requireFree);
+      for (const nested of Object.values(value)) validateServe(nested, requireFree, httpsPort);
     } else {
       for (const [entry, setting] of Object.entries(value)) {
         if (key === 'AllowFunnel' && typeof setting !== 'boolean') fail('Invalid Funnel status.', 'Ugyldig Funnel-status.');
         if (key !== 'AllowFunnel' && !object(setting)) fail('Invalid Serve handler.', 'Ugyldig Serve-handler.');
-        if ((entry === '10000' || entry.endsWith(':10000')) && (requireFree || (key === 'AllowFunnel' && setting)))
-          fail('Port 10000 is already configured or publicly exposed. Inspect tailscale serve status.', 'Port 10000 er allerede konfigureret eller offentligt eksponeret. Se tailscale serve status.');
+        if ((entry === String(httpsPort) || entry.endsWith(':' + httpsPort)) && (requireFree || (key === 'AllowFunnel' && setting)))
+          fail(`This wiki's address is already in use or publicly exposed (${httpsPort}). Nothing replaced.`, `Wikiens adresse er allerede i brug eller offentligt eksponeret (${httpsPort}). Intet overskrevet.`);
       }
     }
   }
   return config;
 }
 
-// Ignore only our reserved port and empty maps; compare all unrelated configuration.
-export function protectedConfig(value) {
+// Ignore only our selected port and empty maps; compare all unrelated configuration.
+export function protectedConfig(value, httpsPort = 10000) {
   if (!object(value)) return value;
   const result = {};
   for (const key of Object.keys(value).sort()) {
-    if (key === 'ETag' || key === '10000' || key.endsWith(':10000')) continue;
-    const nested = protectedConfig(value[key]);
+    if (key === 'ETag' || key === String(httpsPort) || key.endsWith(':' + httpsPort)) continue;
+    const nested = protectedConfig(value[key], httpsPort);
     if (nested !== null && (!object(nested) || Object.keys(nested).length)) result[key] = nested;
   }
   return result;
 }
-export function hasWikiRoute(config, hostname) {
+export function hasWikiRoute(config, hostname, port = 8080, httpsPort = 10000) {
   return Object.values(config.Foreground || {}).some(item =>
-    item.TCP?.['10000']?.HTTPS === true &&
-    item.Web?.[hostname + ':10000']?.Handlers?.['/']?.Proxy === 'http://127.0.0.1:8080');
+    item.TCP?.[httpsPort]?.HTTPS === true &&
+    item.Web?.[hostname + ':' + httpsPort]?.Handlers?.['/']?.Proxy === 'http://127.0.0.1:' + port);
 }
 export function serverArgs(wiki, credentials, port = 8080) {
   return [wiki, '--listen', 'host=127.0.0.1', `port=${port}`, `credentials=${credentials}`,
@@ -89,16 +91,160 @@ export async function validateFiles(wikiInput, credentialsInput, platform = proc
   validateCredentials(await readFile(credentials, 'utf8'));
   return {wiki, credentials};
 }
-export function checkPort(port = 8080) {
+export function checkPort(port = 8080, host = '127.0.0.1') {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
-    server.once('error', () => reject(Error(`Port ${port} is in use / er optaget. No existing process was stopped / Ingen eksisterende proces blev stoppet.`)));
-    server.listen({host: '127.0.0.1', port, exclusive: true}, () => server.close(resolve));
+    server.once('error', error => reject(Object.assign(Error(`Port ${port} is in use or unavailable / er optaget eller utilgængelig. No existing process was stopped / Ingen eksisterende proces blev stoppet.`), {code: error.code})));
+    server.listen({host, port, exclusive: true}, () => server.close(resolve));
   });
 }
 async function jsonCommand(executable, args) {
   const {stdout} = await execute(executable, args, {timeout: 10000, maxBuffer: 1024 * 1024, windowsHide: true});
   return JSON.parse(stdout);
+}
+
+// Avoid well-known ports and the usual OS ephemeral ranges. These ranges are
+// candidates, never reservations: inspect Serve AND the OS before assigning.
+export const localRange = [20000, 20999], shareRange = [21000, 21999];
+export async function checkAddressPort(port) {
+  // BSD/macOS permits some wildcard/specific-address bind combinations. Check
+  // each local interface as well, including the Tailscale interface if present.
+  const addresses = new Set(['127.0.0.1', '::1']);
+  for (const [name, entries] of Object.entries(os.networkInterfaces())) {
+    for (const entry of entries || []) addresses.add(entry.scopeid && !entry.address.includes('%') ? entry.address + '%' + name : entry.address);
+  }
+  for (const address of addresses) {
+    try { await checkPort(port, address); }
+    catch (error) { if (!['EAFNOSUPPORT', 'EADDRNOTAVAIL'].includes(error.code)) throw error; }
+  }
+  await checkPort(port, '0.0.0.0');
+  // IPv6-only listeners can coexist with IPv4. Fail closed if this check fails.
+  await new Promise((resolve, reject) => {
+    const server = net.createServer();
+    server.once('error', error => {
+      if (['EAFNOSUPPORT', 'EADDRNOTAVAIL'].includes(error.code)) resolve();
+      else reject(Error(`An existing service uses address ${port}. / En eksisterende tjeneste bruger adressen ${port}.`));
+    });
+    server.listen({host: '::', port, ipv6Only: true, exclusive: true}, () => server.close(resolve));
+  });
+}
+export function usedServePorts(config) {
+  validateServe(config, false, -1);
+  const used = new Set();
+  function collect(item) {
+    for (const kind of ['TCP', 'Web', 'AllowFunnel']) {
+      for (const key of Object.keys(item[kind] || {})) {
+        const value = Number(key.split(':').at(-1));
+        if (!Number.isInteger(value) || value < 1 || value > 65535) throw Error('Unknown Serve port / Ukendt Serve-port.');
+        used.add(value);
+      }
+    }
+    for (const kind of ['Foreground', 'Services']) for (const child of Object.values(item[kind] || {})) collect(child);
+  }
+  collect(config);
+  return used;
+}
+const profileKey = value => value.normalize('NFC').toLocaleLowerCase('en-US');
+const wikiKey = value => process.platform === 'win32' ? value.toLowerCase() : value;
+export function validateRegistry(data) {
+  if (!object(data) || data.version !== 1 || !Array.isArray(data.wikis)) throw Error('Unknown wiki list format / Ukendt format i wikilisten.');
+  const ids = new Set(), names = new Set(), folders = new Set(), ports = new Set();
+  for (const entry of data.wikis) {
+    if (!object(entry) || Object.keys(entry).some(key => !['id', 'name', 'wiki', 'port', 'httpsPort'].includes(key)) ||
+        !/^[a-f0-9-]{36}$/.test(entry.id) || typeof entry.name !== 'string' ||
+        !entry.name.trim() || entry.name.length > 80 || /[\x00-\x1f\x7f]/.test(entry.name) ||
+        typeof entry.wiki !== 'string' || !path.isAbsolute(entry.wiki) ||
+        !Number.isInteger(entry.port) || entry.port < localRange[0] || entry.port > localRange[1] ||
+        !Number.isInteger(entry.httpsPort) || entry.httpsPort < shareRange[0] || entry.httpsPort > shareRange[1] ||
+        ids.has(entry.id) || names.has(profileKey(entry.name)) || folders.has(wikiKey(entry.wiki)) || ports.has(entry.port) || ports.has(entry.httpsPort))
+      throw Error('Invalid or duplicate wiki entry. Wiki list was not changed. / Ugyldig eller gentaget wiki. Wikilisten blev ikke ændret.');
+    ids.add(entry.id); names.add(profileKey(entry.name)); folders.add(wikiKey(entry.wiki)); ports.add(entry.port); ports.add(entry.httpsPort);
+  }
+  return data;
+}
+export async function readRegistry(root = appFolder()) {
+  try { return validateRegistry(JSON.parse(await readFile(path.join(root, 'wikis.json'), 'utf8'))); }
+  catch (error) { if (error.code === 'ENOENT') return {version: 1, wikis: []}; throw error; }
+}
+async function writeRegistry(root, registry) {
+  validateRegistry(registry);
+  const filename = path.join(root, 'wikis.json'), temporary = filename + '.' + randomUUID();
+  try { await writeFile(temporary, JSON.stringify(registry, null, 2) + '\n', {mode: 0o600, flag: 'wx'}); await rename(temporary, filename); }
+  finally { await rm(temporary, {force: true}); }
+}
+function alive(pid) {
+  try { process.kill(pid, 0); return true; } catch (error) { return error.code !== 'ESRCH'; }
+}
+// Serialize catalogue changes/startup across separate helper windows. A second
+// lock serializes stale-lock recovery so one recovery cannot delete a new owner.
+export async function acquireLock(root, key, attempts = 80) {
+  const directory = path.join(root, 'locks', key), owner = path.join(directory, 'owner.json');
+  await mkdir(path.dirname(directory), {recursive: true, mode: 0o700});
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      await mkdir(directory, {mode: 0o700});
+      try { await writeFile(owner, JSON.stringify({pid: process.pid}), {mode: 0o600, flag: 'wx'}); }
+      catch (error) { await rm(directory, {recursive: true, force: true}); throw error; }
+      let released = false;
+      return async () => { if (!released) { released = true; await rm(directory, {recursive: true, force: true}); } };
+    } catch (error) { if (error.code !== 'EEXIST') throw error; }
+    const recovery = directory + '.recovery';
+    let recovering = false;
+    try {
+      await mkdir(recovery); recovering = true;
+      const previous = JSON.parse(await readFile(owner, 'utf8'));
+      if (Number.isInteger(previous.pid) && previous.pid > 0 && !alive(previous.pid)) {
+        await rm(directory, {recursive: true, force: true});
+      }
+    } catch (error) { if (!['EEXIST', 'ENOENT'].includes(error.code) && !(error instanceof SyntaxError)) throw error; }
+    finally { if (recovering) await rm(recovery, {recursive: true, force: true}); }
+    if (attempt + 1 < attempts) await sleep(100);
+  }
+  throw Error('This wiki is already running, or another helper is setting up. Use its status window, or try again shortly. / Wikien kører allerede, eller en anden hjælper er ved at starte. Brug dens statusvindue, eller prøv igen om lidt.');
+}
+export async function registerWiki({root = appFolder(), wiki: input, name, tailscale}, deps = {}) {
+  const wiki = await realpath(input);
+  const release = await acquireLock(root, 'catalog');
+  try {
+    const registry = await readRegistry(root);
+    const existing = registry.wikis.find(entry => wikiKey(entry.wiki) === wikiKey(wiki));
+    if (existing) return existing;
+    const info = JSON.parse(await readFile(path.join(wiki, 'tiddlywiki.info'), 'utf8'));
+    for (const plugin of ['tiddlywiki/tiddlyweb', 'tiddlywiki/filesystem']) if (!info.plugins?.includes(plugin)) throw Error('Prepare this server wiki first / Forbered først denne serverwiki.');
+    const entry = {id: randomUUID(), name: name.trim().normalize('NFC'), wiki, port: localRange[0], httpsPort: shareRange[0]};
+    // Validate the name before probing/allocating; real allocations follow below.
+    validateRegistry({version: 1, wikis: [entry]});
+    if (registry.wikis.some(item => profileKey(item.name) === profileKey(entry.name))) throw Error('Choose a different wiki name / Vælg et andet wikinavn.');
+    const config = await (deps.readJSON || jsonCommand)(tailscale, ['serve', 'status', '--json']);
+    const used = usedServePorts(config);
+    for (const item of registry.wikis) { used.add(item.port); used.add(item.httpsPort); }
+    const check = deps.checkAddressPort || checkAddressPort;
+    async function choose([first, last]) {
+      for (let candidate = first; candidate <= last; candidate++) {
+        if (used.has(candidate)) continue;
+        try { await check(candidate); used.add(candidate); return candidate; } catch {}
+      }
+      throw Error('No free address was found. No services changed. / Ingen ledig adresse fundet. Ingen tjenester ændret.');
+    }
+    entry.port = await choose(localRange); entry.httpsPort = await choose(shareRange);
+    registry.wikis.push(entry); await writeRegistry(root, registry);
+    return entry;
+  } finally { await release(); }
+}
+export async function startNamedSession(profile, options, deps = {}) {
+  const root = options.root || appFolder();
+  const releaseWiki = await acquireLock(root, 'wiki-' + profile.id, 2);
+  let releaseCatalog;
+  try {
+    releaseCatalog = await acquireLock(root, 'catalog');
+    const saved = (await readRegistry(root)).wikis.find(entry => entry.id === profile.id);
+    if (!saved || JSON.stringify(saved) !== JSON.stringify(profile) || wikiKey(await realpath(profile.wiki)) !== wikiKey(profile.wiki))
+      throw Error('Wiki selection changed. Choose it again. / Wikivalget er ændret. Vælg igen.');
+    const session = await (deps.startSession || startSession)({...options, ...profile}, deps);
+    const finished = session.finished.finally(releaseWiki);
+    return {...session, finished, stop: async () => { await session.stop(); await releaseWiki(); }};
+  } catch (error) { await releaseWiki(); throw error; }
+  finally { if (releaseCatalog) await releaseCatalog(); }
 }
 export async function findTailscale() {
   const executable = process.platform === 'win32' ? 'tailscale.exe' : 'tailscale';
@@ -150,17 +296,19 @@ export async function stopChild(child) {
   });
 }
 export async function startSession(options, deps = {}) {
+  const port = options.port ?? 8080, httpsPort = options.httpsPort ?? 10000;
   const readJSON = deps.readJSON || jsonCommand;
   const startServer = deps.startWiki || startWiki;
   const startServe = deps.spawn || spawn;
-  const portCheck = deps.checkPort || checkPort;
-  const probe = deps.probe || (async () => (await fetch('http://127.0.0.1:8080/status', {signal: AbortSignal.timeout(5000)})).status);
-  const before = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']));
+  const portCheck = deps.checkPort || checkAddressPort;
+  const probe = deps.probe || (async () => (await fetch(`http://127.0.0.1:${port}/status`, {signal: AbortSignal.timeout(5000)})).status);
+  const before = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), true, httpsPort);
   const status = await readJSON(options.tailscale, ['status', '--json']);
   const hostname = status.Self?.DNSName?.replace(/\.$/, '');
   if (status.BackendState !== 'Running' || !hostname || !/^[a-z0-9.-]+\.ts\.net$/i.test(hostname))
     fail('Sign in to Tailscale and configure MagicDNS/HTTPS first.', 'Log ind i Tailscale og konfigurer MagicDNS/HTTPS først.');
-  await portCheck();
+  await portCheck(port);
+  await (deps.checkAddressPort || checkAddressPort)(httpsPort);
   let server, serve, closed = false, stopping;
   const stop = () => {
     if (stopping) return stopping;
@@ -175,27 +323,27 @@ export async function startSession(options, deps = {}) {
   try {
     const started = startServer(options); server = started.child;
     const address = await started.ready;
-    if (closed || address.address !== '127.0.0.1' || address.port !== 8080) throw Error('Unexpected server address / Uventet serveradresse.');
+    if (closed || address.address !== '127.0.0.1' || address.port !== port) throw Error('Unexpected server address / Uventet serveradresse.');
     if (await probe() !== 401) fail('Anonymous access is not blocked. Sharing refused.', 'Anonym adgang er ikke blokeret. Deling afvist.');
     // Recheck immediately before Serve. No --yes: concurrent changes cannot be silently approved.
-    const current = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']));
-    if (JSON.stringify(protectedConfig(before)) !== JSON.stringify(protectedConfig(current))) throw Error('Serve changed during startup / Serve blev ændret under start.');
-    serve = startServe(options.tailscale, serveArgs, {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit'], windowsHide: true});
+    const current = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), true, httpsPort);
+    if (JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(current, httpsPort))) throw Error('Serve changed during startup / Serve blev ændret under start.');
+    serve = startServe(options.tailscale, makeServeArgs(port, httpsPort), {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit'], windowsHide: true});
     let serveError;
     serve.once('error', error => { serveError = error; });
     for (let attempt = 0; attempt < 40; attempt++) {
       if (serveError) throw serveError;
       if (serve.exitCode !== null || serve.signalCode !== null || server.exitCode !== null || server.signalCode !== null)
         fail('A process stopped. Check prerequisites and HTTPS setup.', 'En proces stoppede. Kontroller programmer og HTTPS-opsætning.');
-      const after = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), false);
-      if (JSON.stringify(protectedConfig(before)) !== JSON.stringify(protectedConfig(after)))
+      const after = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), false, httpsPort);
+      if (JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(after, httpsPort)))
         fail('Unrelated Serve settings changed; stopping our processes without restoring someone else’s settings.', 'Andre Serve-indstillinger blev ændret; stopper egne processer uden at overskrive andres opsætning.');
-      if (hasWikiRoute(after, hostname)) {
+      if (hasWikiRoute(after, hostname, port, httpsPort)) {
         const finished = new Promise(resolve => {
           const exit = () => { stop().then(resolve); };
           server.once('exit', exit); serve.once('exit', exit);
         });
-        return {url: `https://${hostname}:10000`, stop, finished};
+        return {url: `https://${hostname}:${httpsPort}`, stop, finished};
       }
       await sleep(250);
     }
@@ -231,15 +379,25 @@ export async function main() {
       runtime = inputPath(await readline.question('Installed tiddlywiki package folder (Ctrl+C to cancel) / Installationsmappe: '));
     }
     const {boot, version} = await validateRuntime(runtime);
-    const wikiInput = inputPath(await readline.question('Server wiki folder / Serverwikimappe: '));
+    const root = appFolder();
+    const choices = (await readRegistry(root)).wikis;
+    choices.forEach((item, index) => console.log(`${index + 1}. ${item.name}`));
+    const selection = await readline.question('Choose a wiki number, or Enter to add one / Vælg wikinummer, eller Enter for ny: ');
+    let profile = selection ? choices[Number(selection) - 1] : undefined;
+    if (selection && !profile) throw Error('Unknown wiki / Ukendt wiki.');
+    if (!profile) {
+      const wikiInput = inputPath(await readline.question('Server wiki folder / Serverwikimappe: '));
+      const name = await readline.question('Wiki name / Wikinavn: ');
+      profile = await registerWiki({root, wiki: wikiInput, name, tailscale});
+    }
     const credentialsInput = inputPath(await readline.question('Private credentials CSV outside wiki / Privat login-CSV uden for wikien: '));
-    const files = await validateFiles(wikiInput, credentialsInput);
-    console.log(`\nWiki: ${files.wiki}\nTiddlyWiki: ${version} (tested / testet: 5.4.1)\n127.0.0.1:8080 → private HTTPS :10000\n443 and 8443 remain unchanged / 443 og 8443 bevares.\nAll accounts in the CSV can read and write / Alle konti i CSV-filen kan læse og skrive.\nRestrict Tailscale access to intended people and :10000 first.\nBegræns først Tailscale-adgang til de tiltænkte personer og :10000.\nWindows: restrict CSV permissions to your account; ACLs are not checked.\nWindows: begræns CSV-rettigheder til din konto; ACL kontrolleres ikke.\n`);
+    const files = await validateFiles(profile.wiki, credentialsInput);
+    console.log(`\nWiki: ${profile.name}\nFolder / Mappe: ${files.wiki}\nTiddlyWiki: ${version} (tested / testet: 5.4.1)\n127.0.0.1:${profile.port} → private HTTPS :${profile.httpsPort}\nExisting services remain unchanged / Eksisterende tjenester bevares.\nAll accounts in the CSV can read and write / Alle konti i CSV-filen kan læse og skrive.\nRestrict Tailscale access to intended people and TCP ${profile.httpsPort} first.\nBegræns først Tailscale-adgang til de tiltænkte personer og TCP ${profile.httpsPort}.\nWindows: restrict CSV permissions to your account; ACLs are not checked.\nWindows: begræns CSV-rettigheder til din konto; ACL kontrolleres ikke.\n`);
     if (await readline.question('Type START to share / Skriv START for at dele: ') !== 'START') return;
     readline.close();
     if (interrupted) return;
     // Track children from creation, including startup, so Ctrl+C never strands a process.
-    session = await startSession({...files, boot, tailscale}, {
+    session = await startNamedSession(profile, {...files, boot, tailscale, root}, {
       startWiki: options => { const result = startWiki(options); children.add(result.child); if (interrupted) void stopChild(result.child); return result; },
       spawn: (...args) => { const child = spawn(...args); children.add(child); if (interrupted) void stopChild(child); return child; }
     });
@@ -293,9 +451,10 @@ export function dialogCommand(platform, kind, message, initial = '') {
       text: 'return text returned of (display dialog (item 1 of argv) default answer (item 2 of argv) with title "ForgeShare")',
       password: 'return text returned of (display dialog (item 1 of argv) default answer "" with hidden answer with title "ForgeShare")',
       confirm: 'display dialog (item 1 of argv) buttons {"Cancel / Annuller", "Continue / Fortsæt"} default button 2 cancel button 1 with title "ForgeShare"',
-      info: 'display dialog (item 1 of argv) buttons {"OK"} default button 1 with title "ForgeShare"'
+      info: 'display dialog (item 1 of argv) buttons {"OK"} default button 1 with title "ForgeShare"',
+      choice: 'set picked to choose from list (items 2 thru -1 of argv) with prompt (item 1 of argv) with title "ForgeShare"\nif picked is false then error number -128\nreturn item 1 of picked'
     };
-    return ['/usr/bin/osascript', ['-e', `on run argv\n${actions[kind]}\nend run`, '--', message, initial]];
+    return ['/usr/bin/osascript', ['-e', `on run argv\n${actions[kind]}\nend run`, '--', message, ...(kind === 'choice' ? initial : [initial])]];
   }
   if (platform === 'win32') {
     // Base64 JSON carries arbitrary paths/text without PowerShell quoting/injection.
@@ -304,6 +463,7 @@ export function dialogCommand(platform, kind, message, initial = '') {
 $d = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')) | ConvertFrom-Json
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 switch ($d.kind) {
+ 'choice' { $f=New-Object Windows.Forms.Form; $f.Text='ForgeShare'; $f.Width=570; $f.Height=400; $f.StartPosition='CenterScreen'; $l=New-Object Windows.Forms.Label; $l.Text=$d.message; $l.SetBounds(15,15,520,60); $list=New-Object Windows.Forms.ListBox; $list.SetBounds(15,80,520,220); foreach ($item in $d.initial) { [void]$list.Items.Add([string]$item) }; $list.SelectedIndex=0; $b=New-Object Windows.Forms.Button; $b.Text='OK'; $b.SetBounds(430,315,100,30); $b.DialogResult='OK'; $f.Controls.AddRange(@($l,$list,$b)); $f.AcceptButton=$b; if ($f.ShowDialog() -ne 'OK' -or $null -eq $list.SelectedItem) { exit 2 }; Write-Output $list.SelectedItem }
  'folder' { $p = New-Object Windows.Forms.FolderBrowserDialog; $p.Description = $d.message; if ($p.ShowDialog() -ne 'OK') { exit 2 }; Write-Output $p.SelectedPath }
  'file' { $p = New-Object Windows.Forms.OpenFileDialog; $p.Title = $d.message; $p.Filter = 'TiddlyWiki HTML|*.html;*.htm'; if ($p.ShowDialog() -ne 'OK') { exit 2 }; Write-Output $p.FileName }
  'text' { $v = [Microsoft.VisualBasic.Interaction]::InputBox($d.message, 'ForgeShare', $d.initial); if (!$v) { exit 2 }; Write-Output $v }
@@ -316,6 +476,7 @@ switch ($d.kind) {
   if (platform === 'linux') {
     const common = ['--title=ForgeShare'];
     const flags = {
+      choice: ['--list', '--text=' + message, '--column=Wiki', '--height=400', ...(Array.isArray(initial) ? initial : [])],
       folder: ['--file-selection', '--directory', '--title=' + message],
       file: ['--file-selection', '--file-filter=Wiki | *.html *.htm', '--title=' + message],
       text: ['--entry', '--text=' + message, '--entry-text=' + initial],
@@ -380,21 +541,30 @@ export async function privateSessionDirectory() {
 }
 export async function guiMain(deps = {}) {
   const ask = deps.dialog || dialog;
-  const start = deps.startSession || startSession;
+  const root = deps.root || appFolder();
   let session, privateDir;
   const children = new Set();
   let interrupted = false;
   const interrupt = () => { interrupted = true; if (session) void session.stop(); else for (const child of children) void stopChild(child); };
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, interrupt);
   try {
-    await ask('confirm', 'Share one wiki privately. Your computer must stay on. Nothing will be shared until you confirm the final step.\n\nDel én wiki privat. Din computer skal forblive tændt. Intet deles, før du bekræfter det sidste trin.');
+    await ask('confirm', 'Choose a wiki to share privately. Open this helper again to run another wiki alongside it. Your computer must stay on. Nothing is shared until the final confirmation.\n\nVælg en wiki til privat deling. Åbn hjælperen igen for at køre endnu en wiki samtidig. Computeren skal forblive tændt. Intet deles før sidste bekræftelse.');
     if (Number(process.versions.node.split('.')[0]) < 20) fail('Install Node.js 20 or later.', 'Installer Node.js 20 eller nyere.');
     const tailscale = await (deps.findTailscale || findTailscale)();
     const installed = await (deps.findTiddlyWiki || findTiddlyWiki)();
     const runtime = installed ? await validateRuntime(installed) : await (deps.installRuntime || installRuntime)(ask);
-    const wiki = await realpath(await ask('folder', 'Choose the prepared wiki folder / Vælg den forberedte wikimappe'));
-    try { await access(path.join(wiki, 'tiddlywiki.info')); }
-    catch { fail('This is not a prepared wiki folder. Follow “First setup” in ForgeShare; an HTML file must first be copied into a server wiki.', 'Dette er ikke en forberedt wikimappe. Følg “Første opsætning” i ForgeShare; en HTML-fil skal først kopieres til en serverwiki.'); }
+    const choices = (await readRegistry(root)).wikis;
+    const add = '＋ Add another wiki / Tilføj en wiki';
+    const picked = choices.length ? await ask('choice', 'Choose your wiki / Vælg din wiki', [...choices.map(item => 'Wiki: ' + item.name), add]) : add;
+    let profile = choices.find(item => 'Wiki: ' + item.name === picked);
+    if (!profile && picked !== add) throw Error('Unknown wiki selection / Ukendt wikivalg.');
+    if (!profile) {
+      const wiki = await realpath(await ask('folder', 'Choose the prepared wiki folder / Vælg den forberedte wikimappe'));
+      try { await access(path.join(wiki, 'tiddlywiki.info')); }
+      catch { fail('This is not a prepared wiki folder. Follow “First setup” in ForgeShare; an HTML file must first be copied into a server wiki.', 'Dette er ikke en forberedt wikimappe. Følg “Første opsætning” i ForgeShare; en HTML-fil skal først kopieres til en serverwiki.'); }
+      const name = await ask('text', 'Give this wiki a name, for example Family or Garden.\nGiv wikien et navn, for eksempel Familie eller Have.', path.basename(wiki));
+      profile = await registerWiki({root, wiki, name, tailscale}, deps);
+    }
     const username = await ask('text', 'Choose the login name for this session.\nVælg brugernavn til denne deling.', 'wiki');
     const password = await ask('password', 'Choose a password of 12+ characters. Share it privately with your collaborator.\nVælg en adgangskode på mindst 12 tegn. Giv den privat til din samarbejdspartner.');
     const confirm = await ask('password', 'Repeat the password / Gentag adgangskoden');
@@ -403,17 +573,18 @@ export async function guiMain(deps = {}) {
     privateDir = await privateSessionDirectory();
     const credentials = path.join(privateDir, 'login.csv');
     await writeFile(credentials, `username,password\n${username},${password}\n`, {mode: 0o600, flag: 'wx'});
-    const files = await validateFiles(wiki, credentials);
-    await ask('confirm', `Start sharing this wiki?\nStart deling af denne wiki?\n\n${wiki}\n\nPeople allowed by your Tailscale rules AND this login can read and edit. Limit Tailscale access to this wiki (:10000) first. Existing AI services stay unchanged.\n\nPersoner med Tailscale-adgang OG dette login kan læse og redigere. Begræns først Tailscale-adgang til denne wiki (:10000). Eksisterende AI-tjenester bevares.\n\nNo browser opens automatically. / Ingen browser åbnes automatisk.`);
+    const files = await validateFiles(profile.wiki, credentials);
+    await ask('confirm', `Start sharing “${profile.name}”?\nStart deling af “${profile.name}”?\n\n${profile.wiki}\n\nPeople allowed by your Tailscale rules AND this login can read and edit. Limit guest access to this wiki first (access-rule reference: TCP ${profile.httpsPort}). Existing services stay unchanged.\n\nPersoner med Tailscale-adgang OG dette login kan læse og redigere. Begræns først gæsters adgang til denne wiki (til adgangsreglen: TCP ${profile.httpsPort}). Eksisterende tjenester bevares.\n\nNo browser opens automatically. / Ingen browser åbnes automatisk.`);
     if (interrupted) return;
-    session = await start({...files, boot: runtime.boot, tailscale}, {
+    session = await startNamedSession(profile, {...files, boot: runtime.boot, tailscale, root}, {
+      ...deps,
       startWiki: options => { const value = startWiki(options); children.add(value.child); if (interrupted) void stopChild(value.child); return value; },
       spawn: (...args) => { const child = spawn(...args); children.add(child); if (interrupted) void stopChild(child); return child; }
     });
     if (interrupted) return;
     const statusDialog = new AbortController();
     session.finished.then(() => statusDialog.abort());
-    await ask('text', 'Sharing is active. Copy this address, then leave this window open. OK/Cancel stops sharing.\n\nDeling er aktiv. Kopiér adressen, og lad dette vindue stå åbent. OK/Annuller stopper deling.\n\nThe other person needs Tailscale and the login.\nDen anden skal bruge Tailscale og login.', session.url, statusDialog.signal);
+    await ask('text', `“${profile.name}” — sharing is active. Copy this address and leave this window open. OK/Cancel stops ONLY this wiki. Open the helper again to start another.\n\n“${profile.name}” — deling er aktiv. Kopiér adressen, og lad vinduet stå åbent. OK/Annuller stopper KUN denne wiki. Åbn hjælperen igen for at starte endnu en.\n\nThe other person needs Tailscale and the login.\nDen anden skal bruge Tailscale og login.`, session.url, statusDialog.signal);
   } catch (error) {
     if (session) await session.stop();
     if (!error.cancelled && !interrupted) {

@@ -4,7 +4,7 @@ type: text/vnd.tiddlywiki
 !! 1. Forbered en serverwiki
 
 * Tag en kopi af din HTML-wiki først. Bevar originalen som offline-kopi.
-* Installer Node.js 20 eller nyere, TiddlyWiki (testet med 5.4.1) og Tailscale fra deres officielle kilder. Log ind i Tailscale på værtscomputeren og på iPad/andre klienter. Hjælperen installerer ikke programmer eller ændrer dit Tailscale-login.
+* Installer Node.js 20 eller nyere, TiddlyWiki (testet med 5.4.1) og Tailscale fra deres officielle kilder. Log ind i Tailscale på værtscomputeren og på iPad/andre klienter. Hjælperen kan tilbyde særskilt godkendt installation af TiddlyWiki; den ændrer ikke dit Tailscale-login.
 * Opret en ''ny'' servermappe med TiddlyWikis almindelige kommando:
 
 ```sh
@@ -29,20 +29,21 @@ Kør `node ForgeShare.mjs` for terminalversionen eller `node ForgeShare.mjs --gu
 
 Opret en privat UTF-8 CSV-fil ''uden for servermappen'', med første linje `username,password` og én bruger pr. linje. Brug unikke adgangskoder på mindst 12 tegn. Den enkle hjælper accepterer ikke kommaer, anførselstegn eller linjeskift i værdier. På Mac/Linux skal filen ejes af dig og kun være læsbar/skrivbar af dig (`chmod 600`). På Windows skal filens adgangsrettigheder begrænses til din konto; hjælperen kan ikke kontrollere Windows-ACL'er. Gem aldrig loginfilen i wikien, Git eller en delt mappe.
 
-Alle brugere i denne fil får læse- og skriveret med hjælperen. Ved forskellige rettigheder: brug manuel start og TiddlyWikis `readers`/`writers`. Tailscale-netadgang og wiki-login er to forskellige kontroller. Begræns Tailscale grants/ACL til de tiltænkte personer og port ''10000'', især ved deling af værtscomputeren: deling kan ellers også give adgang til andre tjenester. Hjælperen ændrer ingen grants/ACL'er.
+Alle brugere i denne fil får læse- og skriveret med hjælperen. Ved forskellige rettigheder: brug manuel start og TiddlyWikis `readers`/`writers`. Tailscale-netadgang og wiki-login er to forskellige kontroller. Begræns Tailscale grants/ACL til de tiltænkte personer og ''denne wikis HTTPS-port fra bekræftelsen'', især ved deling af værtscomputeren: deling kan ellers også give adgang til andre tjenester. Hjælperen ændrer ingen grants/ACL'er.
 
-|! Tjeneste |! Tailscale → lokal port |
-| Eksisterende AI | 443 → 11434 (bevares) |
-| Eksisterende LM Studio/AI | 8443 → 1234 (bevares) |
-| ForgeShare | 10000 → 8080 |
+Hver ny navngivet wiki får en ledig lokal port fra 20000–20999 og en ledig HTTPS-port fra 21000–21999. Områderne er kandidater, ikke reserverede porte: hjælperen springer eksisterende lokale tjenester, Serve/Funnel, aktive forgrundssessioner, Services og gemte wikiporte over. Eksisterende tjenester på 443, 8443, 8080 og 10000 bevares. Node-serveren lytter kun på `127.0.0.1`.
 
-Hjælperen kontrollerer eksisterende Serve-konfiguration, afviser en optaget 10000 og starter kun en ledig lokal 8080 bundet til `127.0.0.1`. Den bruger aldrig `serve reset`, Funnel, `--bg` eller en standardkommando, der overtager port 443. Undlad samtidig at ændre Serve i en anden terminal. Den anvender denne målrettede kommando:
+Navne, fulde mappestier og faste portvalg gemmes i `wikis.json` i din kontos ForgeShare-programmappe: `~/Library/Application Support/ForgeShare` på Mac, `%LOCALAPPDATA%/ForgeShare` på Windows og `$XDG_DATA_HOME/ForgeShare` (normalt `~/.local/share/ForgeShare`) på Linux. Listen indeholder ingen adgangskoder. Lokale låse koordinerer opstart og forhindrer, at hjælperen starter samme mappe to gange. Kør ikke samme mappe i en anden server manuelt.
+
+Serve startes altid med udtrykkelige porte i forgrunden. Eksempel, ''kun hvis netop disse porte er valgt'':
 
 ```sh
-tailscale serve --https=10000 http://127.0.0.1:8080
+tailscale serve --https=21000 http://127.0.0.1:20000
 ```
 
-Tailscale skal have HTTPS/MagicDNS klar; følg Tailscales officielle opsætning, hvis Serve afviser start. Når hjælperen viser klar-status, åbn selv den viste `https://maskine.tailnet.ts.net:10000` på begge enheder. Del adressen kun med de tilsigtede brugere, og send login ad en separat, privat kanal. En adresse alene giver ikke Tailscale-adgang. Brug ''Serve'', som er privat i tailnettet; ''Funnel'' offentliggør på internettet og bruges ikke her.
+Hjælperen bruger aldrig `serve reset`, Funnel, `--bg`, en standardkommando til 443 eller global gendannelse. Den sammenligner øvrig Serve-konfiguration før og efter start. Ved samtidig ændring udefra stopper den sine egne nye processer; prøv igen, når ændringen er afsluttet. Når en wikis statusvindue lukkes, stopper kun dens egne Serve/serverprocesser, og ventende ændringer får tid til at blive gemt.
+
+Tailscale skal have HTTPS/MagicDNS klar. Åbn selv hele adressen fra hjælperen på begge enheder. Brug den valgte HTTPS-port i adgangsregler; den lokale port er ikke delingsporten. Del kun adressen med de tiltænkte brugere, og send login separat. Adressen alene giver ikke Tailscale-adgang. Serve er privat; Funnel ville offentliggøre på internettet og bruges ikke her.
 
 !! 4. Synkroniseringshastighed
 
@@ -60,12 +61,13 @@ Knappen ændrer kun denne konfiguration efter dit klik; den starter ingen tjenes
 
 !! 5. Fejlfinding
 
-* ''Lokal adresse virker ikke:'' kontroller Node.js/TiddlyWiki, servermappen, terminalens fejl og om 8080 er optaget. Hjælperen overtager eller afslutter aldrig en eksisterende server.
-* ''Lokalt virker, iPad virker ikke:'' kontroller Tailscale-forbindelse på begge enheder, HTTPS/MagicDNS, adgangsregler og hele adressen inklusive `:10000`. Kontroller `tailscale status` og `tailscale serve status`. Hold værtscomputeren vågen.
+* ''Lokal adresse virker ikke:'' kontroller Node.js/TiddlyWiki, servermappen, fejlbeskeden og denne wikis valgte lokale port. Hjælperen overtager eller afslutter aldrig en eksisterende server.
+* ''Lokalt virker, iPad virker ikke:'' kontroller Tailscale-forbindelse på begge enheder, HTTPS/MagicDNS, adgangsregler og hele adressen inklusive portnummeret til sidst. Kontroller `tailscale status` og `tailscale serve status`. Hold værtscomputeren vågen.
 * ''401/loginfejl:'' kontroller CSV-header, adgangskode og bruger. ''403/kun læsning:'' kontroller `readers`/`writers`. Slå ikke CSRF-beskyttelse fra for at omgå en fejl.
 * ''Mac modtager langsomt:'' kontroller pollingværdien og reload også Mac-browseren. Hold fanerne aktive under målingen; iPad kan sætte baggrundsfaner i bero.
 * ''Ændringer mangler:'' kontroller, at begge browsere bruger samme serveradresse og ikke en lokal HTML-kopi. Se TiddlyWikis synkroniseringsstatus/log. Eksporter ugemte tiddlere før reload ved fejl.
-* ''Port 10000 er i brug:'' gennemse Serve-status. Hjælperen nægter at erstatte eksisterende opsætning. Brug ikke en global nulstilling; undersøg først, hvem der ejer tjenesten.
+* ''Gemt adresse optaget:'' hjælperen afviser at erstatte en anden tjeneste eller flytte wikien i stilhed. Gennemse Serve-status, og undersøg hvem der bruger adressen. Nulstil ikke alt. En bevidst flytning kræver hjælp til at opdatere wikiens gemte portvalg, adgangsregler og delte links, mens alle hjælpere er stoppet.
+* ''Kører allerede:'' brug wikiens eksisterende statusvindue med navn. Hvis en anden hjælper er ved at starte, vent og prøv igen. Låse fra bekræftet afsluttede processer ryddes op; ufuldstændige eller uafklarede låse bevares. Fortsætter fejlen efter alle hjælpere er afsluttet, få hjælp til at kontrollere undermappen `locks`, før gamle låse fjernes.
 
 !! 6. Backup, konflikter og offline
 
@@ -77,7 +79,7 @@ Brug TiddlyWikis indbyggede ''Download save''/HTML-eksport til en selvstændig o
 
 !! Kilder og version
 
-ForgeShare 0.1.0-test.1. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
+ForgeShare 0.1.0-test.2. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
@@ -89,7 +91,7 @@ ForgeShare 0.1.0-test.1. Original HUWiki-kode; licensvalg afventer projektets be
 
 !! Kontrollér kun-wiki-adgang
 
-Tailscales tilladelser lægges sammen. En snæver regel for port 10000 begrænser ikke en eksisterende bred tilladelse. Gennemgå også regler, der omfatter `*` eller `autogroup:shared`; erstat ikke hele din nuværende politik med et eksempel. Begræns gæsteadgang til værten og TCP 10000. Kontrollér fra en faktisk inviteret brugers enhed, at wikien kan nås, men 443 og 8443 ikke kan — og at ejerens AI-tjenester stadig virker. ForgeShare kan kontrollere Serve-konfigurationen, men kan ikke bevise gæsternes effektive adgangsregler.
+Tailscales tilladelser lægges sammen. En snæver regel for én wikis HTTPS-port begrænser ikke en eksisterende bred tilladelse. Gennemgå også regler, der omfatter `*` eller `autogroup:shared`; erstat ikke hele din nuværende politik med et eksempel. Begræns gæsteadgang til værten og den pågældende wikis valgte HTTPS TCP-port. Kontrollér fra en faktisk inviteret brugers enhed, at wikien kan nås, men de andre wikier, 443 og 8443 ikke kan — og at ejerens AI-tjenester stadig virker. ForgeShare kan kontrollere Serve-konfigurationen, men kan ikke bevise gæsternes effektive adgangsregler.
 
 * [[Tailscale: del en computer og styr adgang|https://tailscale.com/docs/features/sharing]]
 * [[Tailscale grants|https://tailscale.com/docs/reference/syntax/grants]]

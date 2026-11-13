@@ -6,9 +6,10 @@ import os from 'node:os';
 import {createRequire} from 'node:module';
 import {EventEmitter} from 'node:events';
 import net from 'node:net';
+import {execFileSync} from 'node:child_process';
 import {build, base} from '../scripts/build-forgeshare.mjs';
 import {assembleHtml} from '../assembler/assemble.mjs';
-import {validateServe, protectedConfig, validateCredentials, validateFiles, serverArgs, startWiki, stopChild, startSession, dialogCommand, checkPort, serveArgs, guiMain, privateSessionDirectory} from '../plugins/forgeshare/helper/ForgeShare.mjs';
+import {validateServe, protectedConfig, validateCredentials, validateFiles, serverArgs, startWiki, stopChild, startSession, dialogCommand, checkPort, serveArgs, guiMain, privateSessionDirectory, readRegistry, registerWiki, startNamedSession, acquireLock, usedServePorts, validateRegistry, checkAddressPort} from '../plugins/forgeshare/helper/ForgeShare.mjs';
 const require = createRequire(import.meta.url);
 const {TiddlyWiki} = require('tiddlywiki/boot/boot.js');
 const boot = require.resolve('tiddlywiki/boot/boot.js');
@@ -142,7 +143,7 @@ function mockSession({configs = [ai, ai, withWiki()], probe = 401, earlyExit = f
   if (earlyExit) serve.exitCode = 1;
   return {server, serve, calls, deps: {
     readJSON: async (exe, args) => { calls.push(args); return args[0] === 'status' ? {BackendState: 'Running', Self: {DNSName: 'host.example.ts.net.'}} : structuredClone(configs[Math.min(index++, configs.length - 1)]); },
-    checkPort: async () => {}, probe: async () => probe,
+    checkPort: async () => {}, checkAddressPort: async () => {}, probe: async () => probe,
     startWiki: () => ({child: server, ready: Promise.resolve({address: '127.0.0.1', port: 8080})}),
     spawn: (exe, args) => { calls.push(args); return serve; }
   }};
@@ -209,6 +210,8 @@ test('graphical flow uses native choices and private temporary credentials, then
   await writeFile(path.join(wiki, 'tiddlywiki.info'), JSON.stringify({plugins: ['tiddlywiki/tiddlyweb', 'tiddlywiki/filesystem']}));
   let credentials, stopped = 0, confirmations = 0; const shown = [];
   await guiMain({
+    root: path.join(temp, 'gui profiles'),
+    readJSON: async () => ai, checkAddressPort: async () => {},
     findTailscale: async () => '/test/tailscale',
     findTiddlyWiki: async () => path.dirname(require.resolve('tiddlywiki/package.json')),
     dialog: async (kind, message, initial) => {
@@ -258,4 +261,155 @@ test('image finder includes imported images without modified dates, unlike Recen
     assert.ok(tw.wiki.renderTiddler('text/html', base + '/home').includes('Undated import.png'));
     assert.ok(!tw.wiki.renderText('text/html', 'text/vnd.tiddlywiki', '<<timeline>>').includes('Undated import.png'));
   } finally { tw.wiki.deleteTiddler('Undated import.png'); }
+});
+
+async function preparedWiki(name) {
+  const wiki = path.join(temp, name);
+  await mkdir(wiki, {recursive: true});
+  await writeFile(path.join(wiki, 'tiddlywiki.info'), JSON.stringify({plugins: ['tiddlywiki/tiddlyweb', 'tiddlywiki/filesystem']}));
+  return wiki;
+}
+test('named wiki registration skips OS/Serve/Funnel/service conflicts, remembers addresses and serializes parallel additions', async () => {
+  const root = path.join(temp, 'catalogue');
+  const configuration = {...ai, Foreground: {other: {TCP: {'20000': {TCPForward: 'something'}}}},
+    Services: {'svc:other': {Web: {'service.ts.net:21000': {Handlers: {}}}}}, AllowFunnel: {'host:21001': true}};
+  assert.deepEqual([...usedServePorts(configuration)].sort((a,b) => a-b), [443,8443,20000,21000,21001]);
+  const deps = {readJSON: async () => configuration, checkAddressPort: async port => {
+    if ([20001,21002].includes(port)) throw Error('occupied by another application');
+  }};
+  const wiki = await preparedWiki('family named'), garden = await preparedWiki('garden named');
+  const [a, b] = await Promise.all([
+    registerWiki({root, wiki, name: 'Familie', tailscale: 'fake'}, deps),
+    registerWiki({root, wiki: garden, name: 'Have', tailscale: 'fake'}, deps)
+  ]);
+  assert.equal(new Set([a.port,b.port,a.httpsPort,b.httpsPort]).size, 4);
+  for (const item of [a,b]) { assert.ok(item.port >= 20002); assert.ok(item.httpsPort >= 21003); }
+  assert.deepEqual(await registerWiki({root, wiki, name: 'Another label', tailscale: 'fake'}, deps), a);
+  const saved = await readRegistry(root); assert.equal(saved.wikis.length, 2);
+  assert.ok(!JSON.stringify(saved).includes('password'));
+  await assert.rejects(registerWiki({root, wiki: await preparedWiki('duplicate name'), name: 'familie', tailscale: 'fake'}, deps), /different wiki name/);
+  const corrupt = structuredClone(saved); corrupt.wikis[0].httpsPort = 443;
+  assert.throws(() => validateRegistry(corrupt));
+  await writeFile(path.join(root, 'wikis.json'), '{invalid');
+  await assert.rejects(readRegistry(root));
+  assert.equal(await readFile(path.join(root, 'wikis.json'), 'utf8'), '{invalid', 'Corruption must not reset saved addresses');
+});
+
+test('a running named wiki cannot be started twice; its saved address is never silently replaced', async () => {
+  const root = path.join(temp, 'locked catalogue');
+  const profile = await registerWiki({root, wiki: await preparedWiki('locked wiki'), name: 'Same wiki', tailscale: 'fake'},
+    {readJSON: async () => ai, checkAddressPort: async () => {}});
+  let starts = 0, resolve;
+  const deps = {startSession: async () => { starts++; return {finished: new Promise(r => { resolve = r; }), stop: async () => resolve()}; }};
+  const session = await startNamedSession(profile, {root}, deps);
+  await assert.rejects(startNamedSession(profile, {root}, deps), /already running/);
+  assert.equal(starts, 1);
+  await session.stop(); await session.finished;
+  const mock = mockSession({configs: [{TCP: {[profile.httpsPort]: {HTTPS: true}}}]});
+  await assert.rejects(startNamedSession(profile, {root, tailscale: 'fake'}, mock.deps), /already in use/);
+  assert.deepEqual((await readRegistry(root)).wikis[0], profile);
+  assert.equal(mock.server.kills.length, 0);
+  const release = await acquireLock(root, 'wiki-' + profile.id, 1); await release();
+});
+
+test('OS port inspection preserves an existing IPv4 service', async () => {
+  const other = net.createServer(); await new Promise(resolve => other.listen(0, '127.0.0.1', resolve));
+  try { await assert.rejects(checkAddressPort(other.address().port)); assert.ok(other.listening); }
+  finally { await new Promise(resolve => other.close(resolve)); }
+});
+
+test('locks recover a confirmed dead process, preserve live owners and fail closed on incomplete ownership', async () => {
+  const root = path.join(temp, 'lock recovery'), key = 'catalog';
+  const directory = path.join(root, 'locks', key); await mkdir(directory, {recursive:true});
+  const pid = Number(execFileSync(process.execPath, ['-e', 'process.stdout.write(String(process.pid))'], {encoding:'utf8', windowsHide:true}));
+  await writeFile(path.join(directory, 'owner.json'), JSON.stringify({pid}));
+  const release = await acquireLock(root, key, 3);
+  await assert.rejects(acquireLock(root, key, 1), /already running/);
+  assert.equal(JSON.parse(await readFile(path.join(directory, 'owner.json'), 'utf8')).pid, process.pid);
+  await release(); await release();
+  await mkdir(directory);
+  await assert.rejects(acquireLock(root, key, 1), /already running/);
+  await writeFile(path.join(directory, 'owner.json'), 'incomplete');
+  await assert.rejects(acquireLock(root, key, 1), /already running/);
+  assert.equal(await readFile(path.join(directory, 'owner.json'), 'utf8'), 'incomplete');
+});
+
+test('dynamic session refuses public exposure and never hides changes to a different wiki route', async () => {
+  const other = withWiki();
+  const port = 20042, httpsPort = 21042;
+  const changed = structuredClone(other); changed.Foreground.owned.Web['host.example.ts.net:10000'].Handlers['/'].Proxy = 'http://127.0.0.1:9999';
+  assert.notDeepEqual(protectedConfig(other, httpsPort), protectedConfig(changed, httpsPort));
+  assert.throws(() => validateServe({AllowFunnel: {['host:' + httpsPort]: true}}, false, httpsPort));
+  const mock = mockSession({configs: [other, changed]});
+  mock.deps.startWiki = () => ({child:mock.server, ready:Promise.resolve({address:'127.0.0.1',port})});
+  await assert.rejects(startSession({tailscale:'fake',port,httpsPort},mock.deps), /changed during startup/);
+  assert.deepEqual(mock.server.kills, ['SIGTERM']);
+  assert.equal(mock.serve.kills.length,0);
+});
+
+test('two named real servers keep data separate; stopping one preserves the other and existing Tailscale services', async () => {
+  const root = path.join(temp, 'multi-server catalogue');
+  const config = {...structuredClone(ai), TCP: {...ai.TCP, '22': {TCPForward: 'localhost:22'}}, Foreground: {
+    unrelated: {TCP: {'10000': {HTTPS: true}}, Web: {'host.example.ts.net:10000': {Handlers: {'/': {Proxy: 'http://127.0.0.1:8080'}}}}}}
+  };
+  const original = structuredClone(config);
+  const deps = {
+    readJSON: async (exe, args) => args[0] === 'status' ? {BackendState: 'Running', Self: {DNSName: 'host.example.ts.net.'}} : structuredClone(config),
+    spawn: (exe, args) => {
+      const port = Number(args[1].split('=')[1]), child = new Child();
+      assert.deepEqual(args, ['serve', `--https=${port}`, args[2]]);
+      config.Foreground[port] = {TCP: {[port]: {HTTPS: true}}, Web: {['host.example.ts.net:' + port]: {Handlers: {'/': {Proxy: args[2]}}}}};
+      child.once('exit', () => { delete config.Foreground[port]; }); return child;
+    }
+  };
+  const a = await registerWiki({root, wiki: await preparedWiki('multi a'), name: 'Family', tailscale: 'fake'}, deps);
+  const b = await registerWiki({root, wiki: await preparedWiki('multi b'), name: 'Garden', tailscale: 'fake'}, deps);
+  const credentials = path.join(temp, 'multi-login.csv');
+  await writeFile(credentials, 'username,password\nalice,multi-wiki-password\n', {mode: 0o600});
+  const options = {root, boot, credentials, tailscale: 'fake'};
+  let first, second;
+  try {
+    first = await startNamedSession(a, options, deps);
+    second = await startNamedSession(b, options, deps);
+    assert.equal(first.url, `https://host.example.ts.net:${a.httpsPort}`);
+    assert.notEqual(first.url, second.url);
+    const headers = {Authorization: 'Basic ' + Buffer.from('alice:multi-wiki-password').toString('base64'),
+      'X-Requested-With': 'TiddlyWiki', 'Content-Type': 'application/json'};
+    const resource = entry => `http://127.0.0.1:${entry.port}/recipes/default/tiddlers/Shared`;
+    for (const entry of [a,b]) assert.equal((await fetch(resource(entry), {method:'PUT', headers, body: JSON.stringify({title:'Shared', text:entry.name})})).status, 204);
+    assert.equal((await (await fetch(resource(a), {headers})).json()).text, 'Family');
+    assert.equal((await (await fetch(resource(b), {headers})).json()).text, 'Garden');
+    await first.stop(); await first.finished;
+    assert.equal((await (await fetch(resource(b), {headers})).json()).text, 'Garden');
+    assert.ok(config.Foreground[b.httpsPort]); assert.ok(!config.Foreground[a.httpsPort]);
+    await second.stop(); await second.finished;
+    assert.deepEqual(config, original);
+  } finally { if (first) await first.stop(); if (second) await second.stop(); }
+});
+
+test('returning GUI users choose the saved name without choosing a folder or port', async () => {
+  const root = path.join(temp, 'returning gui');
+  const profile = await registerWiki({root, wiki: await preparedWiki('saved gui wiki'), name: 'Familie & børn', tailscale: 'fake'},
+    {readJSON: async () => ai, checkAddressPort: async () => {}});
+  let chosen = false, started = false;
+  await guiMain({root,
+    findTailscale: async () => 'fake', findTiddlyWiki: async () => path.dirname(require.resolve('tiddlywiki/package.json')),
+    dialog: async (kind, message, initial) => {
+      if (kind === 'confirm') return '';
+      if (kind === 'choice') { assert.ok(initial.includes('Wiki: Familie & børn')); chosen = true; return 'Wiki: Familie & børn'; }
+      if (kind === 'password') return 'a-private-password';
+      if (kind === 'text') return initial.startsWith('https:') ? '' : 'alice';
+      assert.fail('Unexpected folder/error dialog: ' + message);
+    },
+    startSession: async options => {
+      assert.ok(chosen); assert.equal(options.wiki, profile.wiki); assert.equal(options.httpsPort, profile.httpsPort); started = true;
+      return {url: `https://host.example.ts.net:${profile.httpsPort}`, finished: new Promise(() => {}), stop: async () => {}};
+    }
+  });
+  assert.ok(started);
+  const choices = ['Wiki: Familie & børn', '＋ Add another wiki / Tilføj en wiki'];
+  assert.deepEqual(dialogCommand('darwin', 'choice', 'Choose', choices)[1].slice(-2), choices);
+  assert.deepEqual(dialogCommand('linux', 'choice', 'Choose', choices)[1].slice(-2), choices);
+  const source = Buffer.from(dialogCommand('win32', 'choice', 'Choose', choices)[1].at(-1), 'base64').toString('utf16le');
+  assert.ok(source.includes('Windows.Forms.ListBox')); assert.ok(!source.includes('Familie & børn'));
 });

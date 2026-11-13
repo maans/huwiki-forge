@@ -4,7 +4,7 @@ type: text/vnd.tiddlywiki
 !! 1. Prepare a server wiki
 
 * Back up your HTML wiki first. Keep the original as an offline copy.
-* Install Node.js 20 or later, TiddlyWiki (tested with 5.4.1), and Tailscale from their official sources. Sign in to Tailscale on the host and iPad/other clients. The helper does not install software or change your Tailscale login.
+* Install Node.js 20 or later, TiddlyWiki (tested with 5.4.1), and Tailscale from their official sources. Sign in to Tailscale on the host and iPad/other clients. The helper can offer a separately approved TiddlyWiki installation; it does not change your Tailscale login.
 * Create a ''new'' server folder with TiddlyWiki's standard command:
 
 ```sh
@@ -29,20 +29,21 @@ Run `node ForgeShare.mjs` for terminal mode or `node ForgeShare.mjs --gui` for d
 
 Create a private UTF-8 CSV file ''outside the wiki folder'', with header `username,password` and one user per line. Use unique passwords of at least 12 characters. The simple helper does not accept commas, quotation marks or line breaks in values. On Mac/Linux the file must be owned by you and accessible only to you (`chmod 600`). On Windows, restrict its file permissions to your account; the helper cannot verify Windows ACLs. Never store the file in the wiki, Git or a shared folder.
 
-The helper grants read and write access to every account in that file. For different permissions, start manually using TiddlyWiki's `readers`/`writers`. Tailnet access and wiki authentication are separate controls. Restrict Tailscale grants/ACLs to the intended people and port ''10000'', especially when sharing the host: sharing can otherwise expose other services too. The helper does not change grants/ACLs.
+The helper grants read and write access to every account in that file. For different permissions, start manually using TiddlyWiki's `readers`/`writers`. Tailnet access and wiki authentication are separate controls. Restrict Tailscale grants/ACLs to the intended people and ''this wiki’s HTTPS port shown in the confirmation'', especially when sharing the host: sharing can otherwise expose other services too. The helper does not change grants/ACLs.
 
-|! Service |! Tailscale → local port |
-| Existing AI | 443 → 11434 (preserved) |
-| Existing LM Studio/AI | 8443 → 1234 (preserved) |
-| ForgeShare | 10000 → 8080 |
+Each new named wiki gets a free local port from 20000–20999 and a free HTTPS port from 21000–21999. These are candidate ranges, not reserved ports: the helper skips existing OS listeners, Serve/Funnel entries, foreground sessions, Services entries and saved wiki assignments. Existing services on 443, 8443, 8080 and 10000 remain untouched. The Node server listens only on `127.0.0.1`.
 
-The helper checks the existing Serve configuration, refuses an occupied 10000 and starts only an available local 8080 bound to `127.0.0.1`. It never uses `serve reset`, Funnel, `--bg`, or an implicit port-443 command. Do not change Serve concurrently in another terminal. The targeted command is:
+Names, canonical folder paths and stable port assignments are stored in `wikis.json` under the current user's ForgeShare application-data folder: `~/Library/Application Support/ForgeShare` on Mac, `%LOCALAPPDATA%/ForgeShare` on Windows, and `$XDG_DATA_HOME/ForgeShare` (normally `~/.local/share/ForgeShare`) on Linux. No passwords are stored in this list. Local locks serialize startup and prevent duplicate helper starts for a folder. Do not run the same folder in another server manually.
+
+Serve is always started with explicit ports in the foreground. For example, ''only if those ports were selected'':
 
 ```sh
-tailscale serve --https=10000 http://127.0.0.1:8080
+tailscale serve --https=21000 http://127.0.0.1:20000
 ```
 
-Tailscale needs HTTPS/MagicDNS configured; follow its official setup if Serve refuses to start. When the helper reports ready, open the displayed `https://machine.tailnet.ts.net:10000` yourself on both devices. Share the address only with intended users and send credentials through a separate private channel. An address alone does not grant tailnet access. ''Serve'' is private within the tailnet; ''Funnel'' exposes a service to the internet and is not used here.
+The helper never uses `serve reset`, Funnel, `--bg`, an implicit 443 command, or global rollback. It compares unrelated Serve configuration before and after startup. A concurrent external change makes it stop its own new processes; retry after the other change is finished. Closing a wiki's status window stops only its owned Serve/server processes and drains pending saves.
+
+Tailscale needs HTTPS/MagicDNS configured. Open the complete address shown by the helper yourself on both devices. Use the selected HTTPS port in access rules; the local port is not the sharing port. Share the address only with intended users and send credentials separately. An address alone does not grant Tailscale access. Serve is private; Funnel would expose a service to the internet and is not used here.
 
 !! 4. Sync speed
 
@@ -60,12 +61,13 @@ The button changes only this setting after your click; it starts no service. A s
 
 !! 5. Troubleshooting
 
-* ''Local address fails:'' check Node.js/TiddlyWiki, the wiki folder, terminal errors and port 8080. The helper never takes over or kills an existing server.
-* ''Local works, iPad fails:'' check Tailscale on both devices, HTTPS/MagicDNS, access rules and the complete address including `:10000`. Check `tailscale status` and `tailscale serve status`. Keep the host awake.
+* ''Local address fails:'' check Node.js/TiddlyWiki, the wiki folder, the error message and that wiki’s assigned local port. The helper never takes over or kills an existing server.
+* ''Local works, iPad fails:'' check Tailscale on both devices, HTTPS/MagicDNS, access rules and the complete address including its port suffix. Check `tailscale status` and `tailscale serve status`. Keep the host awake.
 * ''401/login error:'' check the CSV header, password and username. ''403/read-only:'' check `readers`/`writers`. Do not disable CSRF protection to work around an error.
 * ''Mac receives slowly:'' check the polling value and reload the Mac browser too. Keep tabs active when measuring; iPad may suspend background tabs.
 * ''Missing changes:'' check both browsers use the same server address, not a local HTML copy. Inspect TiddlyWiki sync status/logs. Export unsaved tiddlers before reloading after errors.
-* ''Port 10000 is occupied:'' inspect Serve status. The helper refuses to replace existing configuration. Do not reset everything; establish who owns the service first.
+* ''Saved address occupied:'' the helper refuses to replace another service or silently move the wiki. Check Serve status and who owns the conflicting service. Do not reset everything. An intentional move needs assistance updating that wiki’s saved assignment, access rules and shared links while all helpers are stopped.
+* ''Already running:'' use that wiki’s existing named status window. If another helper is starting, wait and retry. A confirmed dead process's lock is recovered; an incomplete or unverifiable lock is left alone. If this persists after all helpers have exited, get assistance checking the `locks` subfolder before removing stale locks.
 
 !! 6. Backup, conflicts and offline use
 
@@ -77,7 +79,7 @@ Use TiddlyWiki's built-in ''Download save''/HTML export to keep a standalone off
 
 !! Sources and version
 
-ForgeShare 0.1.0-test.1. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
+ForgeShare 0.1.0-test.2. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
@@ -89,7 +91,7 @@ ForgeShare 0.1.0-test.1. Original HUWiki code; licensing awaits the project's de
 
 !! Verify wiki-only access
 
-Tailscale permissions are additive. A narrow port-10000 rule does not restrict an existing broad allowance. Review rules covering `*` or `autogroup:shared` too; do not replace your whole existing policy with an example. Limit guest access to the host and TCP 10000. From an actual invited user's device, confirm the wiki is accessible but 443 and 8443 are not, while the owner's AI services still work. ForgeShare checks Serve configuration but cannot prove guests' effective access policy.
+Tailscale permissions are additive. A narrow rule for one wiki’s HTTPS port does not restrict an existing broad allowance. Review rules covering `*` or `autogroup:shared` too; do not replace your whole existing policy with an example. Limit guest access to the host and that wiki’s selected HTTPS TCP port. From an actual invited user's device, confirm the wiki is accessible but your other wikis, 443 and 8443 are not, while the owner's AI services still work. ForgeShare checks Serve configuration but cannot prove guests' effective access policy.
 
 * [[Tailscale: sharing a machine and controlling access|https://tailscale.com/docs/features/sharing]]
 * [[Tailscale grants|https://tailscale.com/docs/reference/syntax/grants]]
