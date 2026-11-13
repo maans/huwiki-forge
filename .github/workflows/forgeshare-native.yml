@@ -9,6 +9,31 @@ on:
 permissions:
   contents: read
 jobs:
+  mac:
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: python3 scripts/build-forgeshare-mac.py
+      - run: node scripts/build-forgeshare.mjs
+      - run: |
+          mkdir -p "$RUNNER_TEMP/ForgeShare-native"
+          ditto -x -k plugins/forgeshare/dist/ForgeShare-mac.zip "$RUNNER_TEMP/ForgeShare-native"
+          codesign --verify --strict "$RUNNER_TEMP/ForgeShare-native/ForgeShare.app"
+          "$RUNNER_TEMP/ForgeShare-native/ForgeShare.app/Contents/MacOS/ForgeShare" --self-test
+  guide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - run: node scripts/forgeshare-browser-smoke.mjs
   windows:
     runs-on: windows-latest
     timeout-minutes: 10

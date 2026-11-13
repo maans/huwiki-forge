@@ -1,0 +1,14 @@
+{
+  "platform": "mac",
+  "sources": {
+    "macos/ForgeShare.swift": "f6a859b78914814021886660825ae9dcb158da7cf1004da210a839d5a09d841d",
+    "macos/Icon.swift": "e7a372a3807a9d5cf7c79b9225752f309282bb8c71b3982964635a5025ab192c",
+    "macos/Info.plist": "33aa198cedcd3f6a7fb1fea5714b384ae8491a0a917be51c902c556577860434",
+    "../helper/ForgeShare.mjs": "30fdfdbb97b8aa1d30028eb80f2aefb5977e4283756f796c6b225c6735b8d1c4"
+  },
+  "artifacts": {
+    "ForgeShare": "66b165ddf6a6ccfa020a04d6787e3cfb15e45b26ef2f34c021502e8f5eed1e52",
+    "ForgeShare.icns": "f0c2c6854267bb0af6ea4377305fdd5c310de005bf906118aa6f6aa68e958cb2",
+    "CodeResources": "53abe8ada7983470af1c4426a2aeed546780ec1b58bc14ecc27ee3ee5566f8d0"
+  }
+}

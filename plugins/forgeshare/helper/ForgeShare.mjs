@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.0-test.3 — optional local helper. Explicit local actions; no browser launch or shell evaluation.
+// ForgeShare 0.1.1 — optional local helper. Explicit local actions; no browser launch or shell evaluation.
 import {readFile, realpath, stat, access, mkdir, mkdtemp, writeFile, rm, rename} from 'node:fs/promises';
 import {randomUUID} from 'node:crypto';
 import {constants} from 'node:fs';
@@ -544,12 +544,19 @@ export async function privateSessionDirectory() {
   return directory;
 }
 export async function guiMain(deps = {}) {
-  const ask = deps.dialog || dialog;
+  const shutdown = new AbortController();
+  const ask = (kind, message, initial = '', signal = shutdown.signal) => (deps.dialog || dialog)(kind, message, initial, signal);
   const root = deps.root || appFolder();
   let session, privateDir;
   const children = new Set();
   let interrupted = false;
-  const interrupt = () => { interrupted = true; if (session) void session.stop(); else for (const child of children) void stopChild(child); };
+  const interrupt = () => { interrupted = true; shutdown.abort(); if (session) void session.stop(); else for (const child of children) void stopChild(child); };
+  const appMode = deps.appMode ?? process.argv.includes('--app');
+  const inputStream = deps.input || process.stdin;
+  const report = data => { if (appMode) (deps.report || (item => process.stdout.write(JSON.stringify(item) + '\n')))(data); };
+  let input = '';
+  const inputData = chunk => { input += chunk.toString(); if (input.includes('STOP\n') || input.length > 1024) interrupt(); };
+  if (appMode) { inputStream.on('data', inputData); inputStream.once('end', interrupt); }
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, interrupt);
   try {
     await ask('confirm', 'Choose a wiki to share privately. Open this helper again to run another wiki alongside it. Your computer must stay on. Nothing is shared until the final confirmation.\n\nVælg en wiki til privat deling. Åbn hjælperen igen for at køre endnu en wiki samtidig. Computeren skal forblive tændt. Intet deles før sidste bekræftelse.');
@@ -569,6 +576,7 @@ export async function guiMain(deps = {}) {
       const name = await ask('text', 'Give this wiki a name, for example Family or Garden.\nGiv wikien et navn, for eksempel Familie eller Have.', path.basename(wiki));
       profile = await registerWiki({root, wiki, name, tailscale}, deps);
     }
+    report({event: 'selected', name: profile.name});
     const username = await ask('text', 'Choose the login name for this session.\nVælg brugernavn til denne deling.', 'wiki');
     const password = await ask('password', 'Choose a password of 12+ characters. Share it privately with your collaborator.\nVælg en adgangskode på mindst 12 tegn. Giv den privat til din samarbejdspartner.');
     const confirm = await ask('password', 'Repeat the password / Gentag adgangskoden');
@@ -586,6 +594,8 @@ export async function guiMain(deps = {}) {
       spawn: (...args) => { const child = spawn(...args); children.add(child); if (interrupted) void stopChild(child); return child; }
     });
     if (interrupted) return;
+    report({event: 'ready', name: profile.name, url: session.url});
+    if (appMode) { await session.finished; return; }
     const statusDialog = new AbortController();
     session.finished.then(() => statusDialog.abort());
     await ask('text', `“${profile.name}” — sharing is active. Copy this address and leave this window open. OK/Cancel stops ONLY this wiki. Open the helper again to start another.\n\n“${profile.name}” — deling er aktiv. Kopiér adressen, og lad vinduet stå åbent. OK/Annuller stopper KUN denne wiki. Åbn hjælperen igen for at starte endnu en.\n\nThe other person needs Tailscale and the login.\nDen anden skal bruge Tailscale og login.`, session.url, statusDialog.signal);
@@ -599,6 +609,7 @@ export async function guiMain(deps = {}) {
     if (session) await session.stop();
     for (const child of children) await stopChild(child);
     if (privateDir) await rm(privateDir, {recursive: true, force: true});
+    if (appMode) { inputStream.off('data', inputData); inputStream.off('end', interrupt); inputStream.pause(); }
     for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.off(signal, interrupt);
   }
 }

@@ -1,114 +1,124 @@
 title: $:/plugins/huwiki/forgeshare/guide-da
 type: text/vnd.tiddlywiki
 
-! ForgeShare / Tailscale-samarbejde
-
-Arbejd i den samme wiki fra flere computere eller en iPad. Du vælger, hvem der må være med. Din computer opbevarer wikien og skal være tændt, mens I arbejder.
-
-''Dette er en testudgave.'' Den første klargøring af en eksisterende HTML-wiki kan kræve hjælp. Selve delingen startes i dialogbokse; du skal ikke skrive startkommandoer eller lave en loginfil.
-
-!! Først: hvem skal hente hvad?
-
-|! Person |! Det skal være installeret |
-| Dig, der har wikien | Node.js og Tailscale. Hjælperen kan tilbyde at installere TiddlyWiki med din godkendelse. |
-| Dem, du inviterer | Tailscale og en almindelig browser. Ingen Node.js eller TiddlyWiki-installation. |
-
-Node.js er motoren, der lader din computer køre wikien. Tailscale giver jer en privat forbindelse. TiddlyWiki er programmet, som åbner og gemmer wikiens indhold. Ingen af installationssiderne åbnes automatisk.
-
+<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Tailscale-samarbejde<span class="hu-share-badge">Testudgave</span></div><h1>Din wiki. Sammen.</h1><p>Fra computer, telefon eller tablet — med dem, du inviterer.</p></div>
+<div class="hu-share-steps">
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">1</span><div class="hu-share-step-body"><h2>Hent hjælperen</h2><p>Vælg computeren, hvor wikien skal ligge.</p>
 <div class="hu-share-downloads">
-<a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">1. Hent Node.js</a>
-<a href="https://tailscale.com/download" target="_blank" rel="noopener noreferrer">2. Hent Tailscale</a>
+<a href={{$:/plugins/huwiki/forgeshare/download/mac}} download="ForgeShare-mac.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Mac</span></a>
+<a href={{$:/plugins/huwiki/forgeshare/download/windows}} download="ForgeShare-windows.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Windows</span></a>
+<a href={{$:/plugins/huwiki/forgeshare/download/linux}} download="ForgeShare-linux.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Linux</span></a>
 </div>
+<details class="hu-share-detail">
+<summary>Første gang? Det skal være installeret</summary>
+<div class="hu-share-detail-body">
 
-På Mac og Windows: vælg installationsprogrammet til din computer, åbn det, og følg trinnene. Log derefter ind i Tailscale. På Linux afhænger installationen af din distribution; brug dens programbutik, hvor det er muligt, og følg den officielle vejledning. Linux-hjælperens dialogbokse kræver også Zenity.
+På computeren med wikien skal du installere Node.js og Tailscale. Brug deres installationsprogrammer, og log ind i Tailscale. Hjælperen kan derefter tilbyde at installere TiddlyWiki.
 
-!! Hent hjælperen
+<div class="hu-share-install-links"><a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">Hent Node.js ↗</a> <a href="https://tailscale.com/download" target="_blank" rel="noopener noreferrer">Hent Tailscale ↗</a></div>
 
-''Mac: kun til teknisk afprøvning.'' Der er endnu ingen almindelig, signeret ForgeShare-app. Den nuværende startfil kan blive afvist af macOS med beskeden om, at Apple ikke kan kontrollere den for malware. Den er derfor endnu ikke klar som enkel Mac-løsning til uøvede brugere. Terminalkommandoer og ny udpakning løser ikke denne sikkerhedskontrol.
+På Linux: følg vejledningen til din distribution. Dialogboksene kræver også Zenity.
 
-Vælg din computer nedenfor. Pak hele ZIP-filen ud på skrivebordet, læs den korte vejledning, og åbn startfilen. At hente filen starter ikke deling.
-
-<div class="hu-share-downloads">
-<a href={{$:/plugins/huwiki/forgeshare/download/mac}} download="ForgeShare-mac.zip">Hent teknisk Mac-test</a>
-<a href={{$:/plugins/huwiki/forgeshare/download/windows}} download="ForgeShare-windows.zip">Hent til Windows</a>
-<a href={{$:/plugins/huwiki/forgeshare/download/linux}} download="ForgeShare-linux.zip">Hent til Linux</a>
 </div>
-
-* ''Mac:'' åbn `Start-ForgeShare.command`.
-* ''Windows:'' åbn `Start-ForgeShare.cmd`.
-* ''Linux:'' start `Start-ForgeShare.sh`. Systemet kan kræve, at du tillader kørsel i filens egenskaber.
-
-Et terminalvindue kan være synligt bag dialogboksene, men du behøver ikke skrive kommandoer i det. Startfilen til Mac er pakket klar til kørsel. Hvis macOS blokerer den med en sikkerhedsbesked, stop afprøvningen. Det kræver en bedre udgivet app; du skal ikke skrive terminalkommandoer eller slå beskyttelse fra. Hjælperen er endnu ikke en signeret app og indeholder ikke sin egen Node.js. Ingen sikkerhedsindstillinger skal slås fra.
-
-!! Første opsætning — kun én gang
-
-Den wiki, som deles, skal ligge i en forberedt mappe. En almindelig HTML-fil kan ikke bare vælges som mappe. Bevar HTML-filen som din originale offline-kopi.
-
-Har du allerede en wiki, der virker via TiddlyWikis server, kan du bruge dens mappe. Ellers skal du først lave en serverkopi; den præcise vejledning står under ''Avanceret hjælp'' nedenfor. Få eventuelt hjælp til dette første trin. Denne testudgave konverterer ikke automatisk din HTML-wiki.
-
-!! Start og stop delingen
-
-# Åbn hjælperens startfil. Hvis TiddlyWiki mangler, kan du vælge at lade hjælperen hente den testede version. Du får en forklaring og skal godkende installationen; Node.js og Tailscale installeres via deres egne installationsprogrammer.
-# Første gang vælger du din forberedte wikimappe og giver den et navn, f.eks. Familie eller Have. Næste gang vælger du blot navnet på listen. Vælg “Tilføj en wiki” for at tilføje en anden mappe. Adresser vælges og huskes automatisk.
-# Vælg et brugernavn og en adgangskode til denne deling. Adgangskoden skal være mindst 12 tegn. Hjælperen sørger for loginfilen og fjerner den igen ved normal afslutning.
-# Læs oversigten og bekræft, at delingen må starte.
-# Når vinduet siger ''Deling er aktiv'', kopierer du adressen. Åbn den selv i din browser. Lad hjælperens statusvindue stå åbent.
-# Når I er færdige, venter I på, at ændringer er gemt. Tryk OK/Annuller i statusvinduet med wikiens navn for kun at stoppe den wiki. Næste gang vælger du login igen.
-
-!! Flere wikier på samme computer
-
-Åbn hjælperen igen for at starte endnu en navngivet wiki. Hver har sin egen adresse, sit eget login og sit eget statusvindue. Stopper du Familie, kører Have videre. Alle dine iPads kan åbne den samme wiki; de behøver ikke hver sin server.
-
-Hjælperen husker navne, mapper og adresser på denne computer, men ikke adgangskoder. Kopier af hjælperen under samme computerkonto bruger den samme liste. Den undersøger eksisterende tjenester, før den vælger en adresse, også andre Tailscale-forbindelser. Dine AI-tjenester, fjernadgang og øvrige tjenester bliver ikke erstattet. Hvis en gemt adresse senere er optaget, forklarer den konflikten i stedet for at ændre dit delte link i stilhed. Adressen kan dog ændres, hvis computerens Tailscale-navn eller domæne ændres.
-
-Hjælperen åbner ingen hjemmeside og beder aldrig om din Tailscale-adgangskode. Kør kun en given wikimappe én gang: stop en eventuel manuelt startet server for samme mappe først. Hver wiki skal have sin egen mappe; to hjælpevinduer kan ikke starte den samme gemte wiki.
-
-!! Del med en person eller en gruppe
-
-# Hver deltager installerer Tailscale og logger ind på ''sin egen'' konto.
-# Åbn selv Tailscales administration og find den computer, der kører wikien. Brug dens ''Share''-funktion til at sende personlige invitationer. Tailscale tilbyder også genanvendelige invitationslinks; del dem kun med de tilsigtede personer.
-# ''Kontroller adgangen før invitationen bruges.'' Tailscale deler adgang til en computer. For kun at dele denne wiki skal adgangsreglerne begrænse gæster til wikiens tjeneste. Andre tjenester på computeren skal forblive private. Se kontrollen under Avanceret hjælp, og få hjælp hvis nødvendigt; ForgeShare ændrer ikke adgangsreglerne for dig.
-# Deltagerne accepterer invitationen. Send derefter wikiens adresse og, via en separat privat besked, det valgte wiki-login.
-# Prøv med én deltager først: kan vedkommende åbne og redigere wikien, mens dine øvrige tjenester er utilgængelige?
-
-Alle med adgang kan åbne den samme wiki samtidig. Den enkle dialogversion bruger ét fælles wiki-login for denne deling; det er adskilt fra deltagernes personlige Tailscale-konti. Brug den avancerede start med flere wiki-konti, hvis I skal kunne skelne forfattere eller tilbagekalde et enkelt wiki-login.
-
-Modtagerne skal bruge Tailscale til denne private løsning. Tailscales ''Funnel'' kan give adgang uden Tailscale, men gør tjenesten tilgængelig fra internettet. ForgeShare aktiverer ikke Funnel.
-
-!! Samarbejd uden at overskrive hinanden
-
-Aftal, hvem der redigerer den enkelte artikel. TiddlyWiki sammenfletter ikke automatisk samtidige rettelser i den samme tiddler.
-
-Det valgfrie ''Meddelelser''-plugin kan bruges til samtalen ved en artikel: ifølge den oplyste struktur gemmes hver besked som en selvstændig tiddler, selv om beskederne vises ved artiklen. Så ændrer hver ny besked sin egen tiddler. Det låser ikke selve artiklen; aftal stadig, hvem der redigerer den. Meddelelser er ikke påkrævet eller bundlet, og integrationen er endnu ikke afprøvet her.
-
-!! Ændringer kommer lidt senere frem
-
-Begge browsere skal opdage nye ændringer. Det gælder også browseren på den computer, der har wikien. I din bekræftede Mac/iPad-test blev hastigheden nogenlunde ens efter indstillingen 3000 ms og genindlæsning på begge enheder. Se ''Synkroniseringshastighed'' under Avanceret hjælp for knappen og forklaringen.
-
-!! Bevar en kopi
-
-Synkronisering er ikke backup: en sletning kan også blive delt. Tag regelmæssigt en kopi af wikimappen, når serveren er stoppet, og bevar flere versioner. Du kan stadig hente en selvstændig HTML-kopi med TiddlyWikis egne funktioner. Ændringer i en offline-kopi sendes ikke automatisk tilbage.
-
-!! Et billede ser ud til at mangle
-
-En synkroniseret billedtiddler åbner ikke nødvendigvis af sig selv hos de andre. Importerede billeder kan også mangle datoen ''senest ændret'' og derfor være udeladt af ''Seneste''. Søg efter filnavnet eller brug listen herunder. Åbn billedet, vælg Redigér og Gem for at give det en ændringsdato. Giv det gerne et genkendeligt navn.
-
-<details>
-<summary>Find billeder i denne wiki — også uden dato</summary>
-
-<$list filter="[is[image]!is[system]sort[title]]" emptyMessage="Ingen billeder fundet i denne browser.">
-<div><$link/></div>
-</$list>
-
 </details>
+</div></section>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Vælg din wiki</h2><p>Pak ZIP-filen ud, åbn ForgeShare, og tryk <strong>Start en wiki</strong>. Vælg et gemt navn, eller tilføj en wikimappe.</p>
+<details class="hu-share-detail">
+<summary>Jeg har kun en HTML-fil</summary>
+<div class="hu-share-detail-body">
 
-Hvis billedet stadig mangler, skal det undersøges, om serveren har modtaget det, og om begge enheder åbner samme wiki. Et billede i servermappen er ikke alene bevis for, at den anden browser har vist det. ''Hent seneste fra server'' åbner ikke automatisk alle nye tiddlere.
+Bevar HTML-filen som din offline-kopi. Første gang skal indholdet kopieres til en forberedt servermappe; denne testudgave gør det endnu ikke automatisk. Få eventuelt hjælp til dette trin. Se trin 1 i ''Avanceret hjælp'' nedenfor. Har du allerede en serverwiki, kan du vælge dens mappe.
 
-<details>
+</div>
+</details>
+</div></section>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del adressen</h2><p>Invitér via Tailscale. Kopiér wikiens adresse fra appen, og send den sammen med et wiki-login via private beskeder.</p>
+<p class="hu-share-access">Invitationen gælder computeren. Begræns gæsternes adgang til wikien, før du inviterer.</p><details class="hu-share-detail">
+<summary>Sådan inviterer du andre</summary>
+<div class="hu-share-detail-body">
+
+# Deltagerne installerer Tailscale og logger ind på deres egne konti. De behøver kun Tailscale og en browser.
+# Åbn Tailscales administration, vælg værtscomputeren, og brug ''Share''. Personlige invitationer og genanvendelige invitationslinks kan bruges til flere deltagere.
+# Kontroller adgangsreglerne: gæster skal kunne nå denne wiki, mens øvrige private tjenester er utilgængelige. Se ''Kontrollér kun-wiki-adgang'' under Avanceret hjælp; få hjælp ved behov. ForgeShare ændrer ikke disse regler.
+# Når invitationen er accepteret, sender du wikiens adresse og wiki-login via separate private beskeder. Prøv først med én deltager.
+
+Appen bruger ét fælles wiki-login pr. deling. Det er adskilt fra deltagernes Tailscale-konti. Flere wiki-konti kræver avanceret opsætning.
+
+Denne løsning kræver Tailscale hos deltagerne. Tailscale Funnel kan give offentlig internetadgang, men aktiveres ikke af ForgeShare.
+
+</div>
+</details>
+</div></section>
+</div>
+<p class="hu-share-footer">Computeren skal være tændt, mens I arbejder. Stop i appen afslutter kun den valgte wiki.</p>
+<h2 class="hu-share-help-heading">Hjælp, når du har brug for den</h2>
+<div class="hu-share-help">
+<details class="hu-share-detail">
+<summary>Hvis computeren blokerer appen</summary>
+<div class="hu-share-detail-body">
+
+Testappen er ikke signeret med et udgivercertifikat.
+
+* ''Mac:'' åbn `ForgeShare.app`. Hvis macOS blokerer den som ukendt, kan du — når du har tillid til denne download — godkende netop appen under Systemindstillinger → Anonymitet & sikkerhed → Åbn alligevel. Se [[Apples vejledning|https://support.apple.com/en-us/102445]].
+* ''Windows:'' åbn `ForgeShare.exe`. Lad `ForgeShare.mjs` blive i samme mappe. Ved SmartScreens advarsel om en ukendt app kan du vælge Flere oplysninger → Kør alligevel, hvis valget tilbydes, og du har tillid til filen. Smart App Control eller computerens politik kan blokere helt. Se [[Microsofts forklaring|https://learn.microsoft.com/windows/apps/package-and-deploy/smartscreen-reputation]].
+* ''Linux:'' åbn `Start-ForgeShare.sh`; tillad om nødvendigt kørsel i filens egenskaber. Et terminalvindue kan være synligt på Linux.
+
+Mac- og Windows-apps åbner ikke Terminal. Slå ikke computerens generelle beskyttelse fra. Hvis appen fortsat er blokeret, stop og få hjælp.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Flere wikier — uden portnumre</summary>
+<div class="hu-share-detail-body">
+
+Tryk ''Start en wiki'' igen. Vælg f.eks. Familie eller Have. Hver wiki får sin egen adresse og sit eget login. Kopiér adressen eller stop wikien på dens række i appen. På Linux åbner du hjælperen igen; hver wiki har sit eget statusvindue.
+
+Hjælperen husker navne, mapper og adresser på denne computer, men ikke adgangskoder. Den bruger ledige forbindelser og bevarer andre tjenester. Hvis en gemt adresse er optaget, forklarer den konflikten. Den flytter ikke wikien i stilhed.
+
+Flere enheder kan åbne samme wiki. Der skal kun køre én server for wikien. Start derfor ikke samme mappe i en anden server samtidig. Værtscomputerens Tailscale-navn eller domæne kan ændre adressen.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Ændringer kommer langsomt frem</summary>
+<div class="hu-share-detail-body">
+
+Alle browsere tjekker løbende efter ændringer — også browseren på værtscomputeren. Du kan vælge et interval på 3 sekunder under ''Synkroniseringshastighed'' i Avanceret hjælp. Gem først, og genindlæs derefter wikien på hver enhed.
+
+Det kan få ændringer frem hurtigere, men garanterer ikke en bestemt hastighed. Hold fanen aktiv, mens du afprøver det.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Samarbejde, backup og offline</summary>
+<div class="hu-share-detail-body">
+
+Aftal, hvem der redigerer en artikel. TiddlyWiki sammenfletter ikke automatisk samtidige rettelser i samme tiddler.
+
+Det valgfrie ''Meddelelser''-plugin gemmer efter sin beskrevne struktur hver besked som en selvstændig tiddler. Det kan holde samtalen adskilt fra artiklens tekst, men låser ikke artiklen. Integrationen er endnu ikke afprøvet her.
+
+Tag regelmæssige kopier af wikimappen, mens serveren er stoppet. Synkronisering er ikke backup: sletninger deles også. HTML/offline-kopier er stadig mulige; deres ændringer sendes ikke automatisk tilbage.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Et billede ser ud til at mangle</summary>
+<div class="hu-share-detail-body">
+
+Et nyt billede åbner ikke automatisk hos andre. Billedtiddlere uden ændringsdato kan desuden mangle under ''Seneste''. Find billedet her; vælg Redigér og Gem for at give det en ændringsdato.
+
+<$list filter="[is[image]!is[system]sort[title]]" emptyMessage="Ingen billeder fundet i denne browser."><div><$link/></div></$list>
+
+Mangler det stadig, så kontroller, at serveren har modtaget billedet, og at enhederne bruger samme wiki. ''Hent seneste fra server'' åbner ikke alle nye tiddlere.
+
+</div>
+</details>
+<details class="hu-share-detail">
 <summary>Avanceret hjælp</summary>
+<div class="hu-share-detail-body">
 
 <$transclude $tiddler="$:/plugins/huwiki/forgeshare/advanced-da" $mode="block"/>
 
+</div>
 </details>
-
-* [[Apple: sikker åbning af programmer på Mac|https://support.apple.com/en-us/102445]]
+</div>

@@ -4,8 +4,8 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 export const nativeRoot=fileURLToPath(new URL('../plugins/forgeshare/native/',import.meta.url));
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
-export const sourceFiles={mac:['macos/ForgeShare.swift','macos/Icon.swift','macos/Info.plist'],windows:['windows/ForgeShare.cs','windows/build.ps1']};
-export const binaries={mac:['ForgeShare','ForgeShare.icns'],windows:['ForgeShare.exe']};
+export const sourceFiles={mac:['macos/ForgeShare.swift','macos/Icon.swift','macos/Info.plist','../helper/ForgeShare.mjs'],windows:['windows/ForgeShare.cs','windows/build.ps1']};
+export const binaries={mac:['ForgeShare','ForgeShare.icns','CodeResources'],windows:['ForgeShare.exe']};
 export async function manifest(platform) {
   const sources={},artifacts={};
   for(const file of sourceFiles[platform])sources[file]=sha(await readFile(path.join(nativeRoot,file)));

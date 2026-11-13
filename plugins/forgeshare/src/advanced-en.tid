@@ -4,7 +4,7 @@ type: text/vnd.tiddlywiki
 !! 1. Prepare a server wiki
 
 * Back up your HTML wiki first. Keep the original as an offline copy.
-* Install Node.js 20 or later, TiddlyWiki (tested with 5.4.1), and Tailscale from their official sources. Sign in to Tailscale on the host and iPad/other clients. The helper can offer a separately approved TiddlyWiki installation; it does not change your Tailscale login.
+* Install Node.js 20 or later, TiddlyWiki (tested with 5.4.1), and Tailscale from their official sources. Sign in to Tailscale on the host and the devices that will access the wiki. The helper can offer a separately approved TiddlyWiki installation; it does not change your Tailscale login.
 * Create a ''new'' server folder with TiddlyWiki's standard command:
 
 ```sh
@@ -47,9 +47,9 @@ Tailscale needs HTTPS/MagicDNS configured. Open the complete address shown by th
 
 !! 4. Sync speed
 
-The Mac browser is a separate client even when the Mac hosts the server. Receiving clients poll for updates; saving, network delays and background-tab suspension also affect timing.
+The browser on the host computer is a separate client, just like a browser on a phone or tablet. Receiving clients poll for updates; saving, network delays and background-tab suspension also affect timing.
 
-Confirmed user test: Mac and iPad synced both ways over Tailscale. With `$:/config/SyncPollingInterval` set to `3000` and a reload, perceived speed became roughly equal. This is an observation, not a promise of a maximum three-second delay.
+With `$:/config/SyncPollingInterval` set to `3000`, the browser normally checks for changes every three seconds. This does not guarantee that every change appears within three seconds.
 
 Current setting (ms): <$text text={{{ [{$:/config/SyncPollingInterval}else[60000]] }}}/>. Without an override, tested TW 5.4.1 uses 60000 ms. Shorter intervals increase requests.
 
@@ -62,9 +62,9 @@ The button changes only this setting after your click; it starts no service. A s
 !! 5. Troubleshooting
 
 * ''Local address fails:'' check Node.js/TiddlyWiki, the wiki folder, the error message and that wiki’s assigned local port. The helper never takes over or kills an existing server.
-* ''Local works, iPad fails:'' check Tailscale on both devices, HTTPS/MagicDNS, access rules and the complete address including its port suffix. Check `tailscale status` and `tailscale serve status`. Keep the host awake.
+* ''The wiki only works on the host computer:'' check Tailscale on both devices, HTTPS/MagicDNS, access rules and the complete address including its port suffix. Check `tailscale status` and `tailscale serve status`. Keep the host awake.
 * ''401/login error:'' check the CSV header, password and username. ''403/read-only:'' check `readers`/`writers`. Do not disable CSRF protection to work around an error.
-* ''Mac receives slowly:'' check the polling value and reload the Mac browser too. Keep tabs active when measuring; iPad may suspend background tabs.
+* ''One device receives slowly:'' check the polling value and reload the wiki on that device. Keep tabs active when measuring; browsers may suspend background tabs.
 * ''Missing changes:'' check both browsers use the same server address, not a local HTML copy. Inspect TiddlyWiki sync status/logs. Export unsaved tiddlers before reloading after errors.
 * ''Saved address occupied:'' the helper refuses to replace another service or silently move the wiki. Check Serve status and who owns the conflicting service. Do not reset everything. An intentional move needs assistance updating that wiki’s saved assignment, access rules and shared links while all helpers are stopped.
 * ''Already running:'' use that wiki’s existing named status window. If another helper is starting, wait and retry. A confirmed dead process's lock is recovered; an incomplete or unverifiable lock is left alone. If this persists after all helpers have exited, get assistance checking the `locks` subfolder before removing stale locks.
@@ -79,7 +79,7 @@ Use TiddlyWiki's built-in ''Download save''/HTML export to keep a standalone off
 
 !! Sources and version
 
-ForgeShare 0.1.0-test.3. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
+ForgeShare 0.1.1. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
@@ -91,7 +91,7 @@ ForgeShare 0.1.0-test.3. Original HUWiki code; licensing awaits the project's de
 
 !! Verify wiki-only access
 
-Tailscale permissions are additive. A narrow rule for one wiki’s HTTPS port does not restrict an existing broad allowance. Review rules covering `*` or `autogroup:shared` too; do not replace your whole existing policy with an example. Limit guest access to the host and that wiki’s selected HTTPS TCP port. From an actual invited user's device, confirm the wiki is accessible but your other wikis, 443 and 8443 are not, while the owner's AI services still work. ForgeShare checks Serve configuration but cannot prove guests' effective access policy.
+Tailscale permissions are additive. A narrow rule for one wiki’s HTTPS port does not restrict an existing broad allowance. Review rules covering `*` or `autogroup:shared` too; do not replace your whole existing policy with an example. Limit guest access to the host and that wiki’s selected HTTPS TCP port. From an actual invited user's device, confirm the wiki is accessible but other private services are not, while the owner can still access them. ForgeShare checks Serve configuration but cannot prove guests' effective access policy.
 
 * [[Tailscale: sharing a machine and controlling access|https://tailscale.com/docs/features/sharing]]
 * [[Tailscale grants|https://tailscale.com/docs/reference/syntax/grants]]

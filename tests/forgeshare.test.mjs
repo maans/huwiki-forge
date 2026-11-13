@@ -5,6 +5,7 @@ import path from 'node:path';
 import os from 'node:os';
 import {createRequire} from 'node:module';
 import {EventEmitter} from 'node:events';
+import {PassThrough} from 'node:stream';
 import net from 'node:net';
 import {execFileSync} from 'node:child_process';
 import {build, base} from '../scripts/build-forgeshare.mjs';
@@ -34,6 +35,9 @@ test.after(async () => { await rm(temp, {recursive: true, force: true}); });
 test('bundle is reproducible, standalone and opt-in in the catalog', async () => {
   assert.deepEqual((await build()).plugin, plugin);
   assert.equal(plugin.title, base);
+  // TW 5.4.1 compares only major/minor/patch when deciding whether to import.
+  for (const previous of ['0.1.0-test.1','0.1.0-test.2','0.1.0-test.3'])
+    assert.ok(tw.utils.compareVersions(plugin.version,previous)>0,'The actual TW importer must accept this upgrade');
   assert.equal(plugin.dependents, undefined);
   assert.ok(Object.keys(shadows).every(title => title.startsWith(base + '/')));
   assert.ok(!shadows['$:/language']); assert.ok(!shadows['$:/config/SyncPollingInterval']);
@@ -97,7 +101,7 @@ test('native language dropdown switches the already rendered guide for standard 
       assert.equal(tw.wiki.getTiddlerText('$:/language'),title);
       guide.refresh({'$:/language': {modified:true}});
       assert.ok(container.innerHTML.includes(expected)); assert.ok(!container.innerHTML.includes(excluded));
-      assert.equal((container.innerHTML.match(/class="hu-share-downloads"/g) || []).length,2, 'Only one guide is rendered');
+      assert.equal((container.innerHTML.match(/class="hu-share-downloads"/g) || []).length,1, 'Only one guide is rendered');
     }
   } finally {
     tw.wiki.addTiddler({title:'$:/language',text:'$:/languages/en-GB'});
@@ -146,17 +150,17 @@ test('all downloadable ZIP files embed the exact standalone reviewed script', as
   for (const platform of ['mac', 'windows', 'linux']) {
     const bytes = Buffer.from(shadows[base + '/download/' + platform].text.split(',')[1], 'base64');
     assert.equal(bytes.readUInt32LE(), 0x04034b50);
-    const count = bytes.readUInt16LE(bytes.length - 22 + 10); assert.equal(count, 3);
+    const count = bytes.readUInt16LE(bytes.length - 22 + 10); assert.equal(count, platform==='mac'?6:3);
     let offset = 0; const files = {};
     while (bytes.readUInt32LE(offset) === 0x04034b50) {
       const size = bytes.readUInt32LE(offset + 18), length = bytes.readUInt16LE(offset + 26);
       const name = bytes.subarray(offset + 30, offset + 30 + length).toString();
-      files[name] = bytes.subarray(offset + 30 + length, offset + 30 + length + size).toString();
+      files[name] = bytes.subarray(offset + 30 + length, offset + 30 + length + size);
       offset += 30 + length + size;
     }
-    assert.equal(files['ForgeShare.mjs'], source);
+    assert.equal(files[platform==='mac'?'ForgeShare.app/Contents/Resources/ForgeShare.mjs':'ForgeShare.mjs'].toString(), source);
     assert.ok(files['README.txt']);
-    assert.doesNotMatch(files['README.txt'], /chmod|node ForgeShare|TECHNICAL \/ TEKNISK/);
+    assert.doesNotMatch(files['README.txt'].toString(), /chmod|node ForgeShare|TECHNICAL \/ TEKNISK/);
     // Mac/Linux users should receive an executable launcher from the ZIP,
     // rather than having to repair its permissions in a terminal.
     const directory = bytes.readUInt32LE(bytes.length - 22 + 16);
@@ -165,11 +169,21 @@ test('all downloadable ZIP files embed the exact standalone reviewed script', as
       assert.equal(bytes.readUInt32LE(entry), 0x02014b50);
       const length = bytes.readUInt16LE(entry + 28);
       const name = bytes.subarray(entry + 46, entry + 46 + length).toString();
-      if (platform !== 'windows' && name.startsWith('Start-'))
+      if (name.startsWith('Start-') || name.endsWith('/MacOS/ForgeShare'))
         assert.equal((bytes.readUInt32LE(entry + 38) >>> 16) & 0o777, 0o755);
       entry += 46 + length + bytes.readUInt16LE(entry + 30) + bytes.readUInt16LE(entry + 32);
     }
-    assert.match(Object.entries(files).find(([name]) => name.startsWith('Start-'))[1], /--gui/);
+    if(platform==='linux')assert.match(files['Start-ForgeShare.sh'].toString(),/--gui/);
+    else assert.ok(!Object.keys(files).some(name=>/\.(cmd|command)$/.test(name)));
+    if(platform==='mac') {
+      assert.equal(files['ForgeShare.app/Contents/MacOS/ForgeShare'].readUInt32BE(),0xcafebabe,'Universal Mac executable');
+      assert.equal(files['ForgeShare.app/Contents/Resources/ForgeShare.icns'].subarray(0,4).toString(),'icns');
+    }
+    if(platform==='windows') {
+      const exe=files['ForgeShare.exe']; assert.equal(exe.subarray(0,2).toString(),'MZ');
+      const pe=exe.readUInt32LE(0x3c); assert.equal(exe.readUInt32LE(pe),0x4550);
+      assert.equal(exe.readUInt16LE(pe+24+68),2,'GUI subsystem: no console window');
+    }
   }
   assert.equal(Buffer.from(shadows[base + '/download/script'].text.split(',')[1], 'base64').toString(), source);
 });
@@ -316,6 +330,47 @@ test('cancelling graphical welcome starts nothing and installs nothing', async (
   await guiMain({dialog: async () => { throw Object.assign(Error('cancel'), {cancelled: true}); },
     findTailscale: async () => { inspected = true; }, startSession: async () => assert.fail('Unexpected start')});
   assert.equal(inspected, false);
+});
+
+test('native app STOP and parent exit cancel setup without starting services', async () => {
+  for (const eof of [false, true]) {
+    const input = new PassThrough();
+    await guiMain({appMode:true, input,
+      findTailscale:async () => assert.fail('No services should be inspected after cancellation'),
+      dialog:async (kind,message,initial,signal) => new Promise((resolve,reject) => {
+        signal.addEventListener('abort', () => reject(Object.assign(Error('cancel'),{cancelled:true})),{once:true});
+        queueMicrotask(() => eof ? input.end() : input.write('STOP\n'));
+      })
+    });
+    assert.equal(input.listenerCount('data'),0);
+    assert.equal(input.listenerCount('end'),0);
+  }
+});
+
+test('native app reports names and addresses only, drains owned session on STOP or parent exit and removes credentials', async () => {
+  for (const eof of [false, true]) {
+    const input=new PassThrough(), reports=[];
+    let credentials, stopped=0, finish;
+    const finished=new Promise(resolve=>{finish=resolve;});
+    const wiki=await preparedWiki('native '+eof);
+    await guiMain({appMode:true,input,root:path.join(temp,'native profiles '+eof),
+      readJSON:async()=>ai,checkAddressPort:async()=>{},
+      findTailscale:async()=>'/test/tailscale',findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
+      dialog:async(kind,message,initial)=>{
+        if(kind==='folder')return wiki;
+        if(kind==='password')return 'a-private-password';
+        if(kind==='confirm')return '';
+        if(kind==='text') { assert.ok(!String(initial).startsWith('https:'),'App must use its main window, not another status dialog'); return initial==='wiki'?'alice':'My wiki'; }
+        assert.fail('Unexpected dialog: '+message);
+      },
+      startSession:async options=>{credentials=options.credentials;return {url:'https://host.example.ts.net:21000',finished,stop:async()=>{stopped++;finish();}};},
+      report:item=>{ reports.push(item); if(item.event==='ready')queueMicrotask(()=>eof?input.end():input.write('STOP\n')); }
+    });
+    assert.deepEqual(reports,[{event:'selected',name:'My wiki'},{event:'ready',name:'My wiki',url:'https://host.example.ts.net:21000'}]);
+    assert.ok(stopped>=1);
+    await assert.rejects(readFile(credentials),{code:'ENOENT'});
+    assert.equal(input.listenerCount('data'),0);
+  }
 });
 
 test('private login directory can be protected before any credentials are written', async () => {

@@ -1,6 +1,7 @@
 import {readFile, readdir, writeFile, mkdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {checkNative} from './native-manifest.mjs';
 const root = fileURLToPath(new URL('../plugins/forgeshare/', import.meta.url));
 export const base = '$:/plugins/huwiki/forgeshare';
 const read = file => readFile(path.join(root, file), 'utf8');
@@ -66,19 +67,35 @@ export async function build() {
     text: `<$let isDanish={{{ ${filter} +[count[]] }}}>\n\n<$list filter="[<isDanish>match[1]]" variable="language">\n\n${da.text}\n</$list>\n<$list filter="[<isDanish>match[0]]" variable="language">\n\n${en.text}\n</$list>\n</$let>\n`};
   const script = await read('helper/ForgeShare.mjs'), instructions = await read('helper/README.txt');
   const downloads = {};
-  for (const [platform, filename] of Object.entries({mac: 'Start-ForgeShare.command', windows: 'Start-ForgeShare.cmd', linux: 'Start-ForgeShare.sh'})) {
-    downloads[platform] = zip([
-      {name: 'ForgeShare.mjs', text: script, executable: true},
-      {name: filename, text: await read('helper/' + filename), executable: platform !== 'windows'},
-      {name: 'README.txt', text: instructions}
-    ]);
+  await checkNative('mac'); await checkNative('windows');
+  const binary = file => readFile(path.join(root,'native/compiled',file));
+  const app = 'ForgeShare.app/Contents/';
+  const packages = {
+    mac: [
+      {name:app+'MacOS/ForgeShare',text:await binary('ForgeShare'),executable:true},
+      {name:app+'Info.plist',text:await read('native/macos/Info.plist')},
+      {name:app+'Resources/ForgeShare.icns',text:await binary('ForgeShare.icns')},
+      {name:app+'_CodeSignature/CodeResources',text:await binary('CodeResources')},
+      {name:app+'Resources/ForgeShare.mjs',text:script}
+    ],
+    windows: [
+      {name:'ForgeShare.exe',text:await binary('ForgeShare.exe')},
+      {name:'ForgeShare.mjs',text:script}
+    ],
+    linux: [
+      {name:'Start-ForgeShare.sh',text:await read('helper/Start-ForgeShare.sh'),executable:true},
+      {name:'ForgeShare.mjs',text:script,executable:true}
+    ]
+  };
+  for (const [platform, files] of Object.entries(packages)) {
+    downloads[platform] = zip([...files,{name:'README.txt',text:instructions}]);
     const title = base + '/download/' + platform;
     tiddlers[title] = {title, type: 'text/plain', text: 'data:application/zip;base64,' + downloads[platform].toString('base64')};
   }
   const title = base + '/download/script';
   tiddlers[title] = {title, type: 'text/plain', text: 'data:application/octet-stream;base64,' + Buffer.from(script).toString('base64')};
   return {plugin: {title: base, name: 'ForgeShare', description: 'Tailscale collaboration / Tailscale-samarbejde',
-    author: 'HUWiki', version: '0.1.0-test.3', list: 'readme', 'plugin-type': 'plugin', type: 'application/json',
+    author: 'HUWiki', version: '0.1.1', list: 'readme', 'plugin-type': 'plugin', type: 'application/json',
     'core-version': '>=5.4.1', 'studio-category': 'Collaboration', 'studio-tags': 'Tailscale Node.js offline',
     'studio-source-titles': Object.keys(tiddlers).map(x => '[[' + x + ']]').join(' '),
     text: JSON.stringify({tiddlers})}, downloads};

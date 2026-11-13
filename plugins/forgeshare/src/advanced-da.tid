@@ -4,7 +4,7 @@ type: text/vnd.tiddlywiki
 !! 1. Forbered en serverwiki
 
 * Tag en kopi af din HTML-wiki først. Bevar originalen som offline-kopi.
-* Installer Node.js 20 eller nyere, TiddlyWiki (testet med 5.4.1) og Tailscale fra deres officielle kilder. Log ind i Tailscale på værtscomputeren og på iPad/andre klienter. Hjælperen kan tilbyde særskilt godkendt installation af TiddlyWiki; den ændrer ikke dit Tailscale-login.
+* Installer Node.js 20 eller nyere, TiddlyWiki (testet med 5.4.1) og Tailscale fra deres officielle kilder. Log ind i Tailscale på værtscomputeren og de enheder, der skal åbne wikien. Hjælperen kan tilbyde særskilt godkendt installation af TiddlyWiki; den ændrer ikke dit Tailscale-login.
 * Opret en ''ny'' servermappe med TiddlyWikis almindelige kommando:
 
 ```sh
@@ -47,9 +47,9 @@ Tailscale skal have HTTPS/MagicDNS klar. Åbn selv hele adressen fra hjælperen 
 
 !! 4. Synkroniseringshastighed
 
-Mac-browseren er en selvstændig klient, også når Mac'en kører serveren. Modtagende klienter spørger efter ændringer; hastigheden afhænger også af gemning, netværk og browserens baggrundstilstand.
+Browseren på værtscomputeren er en selvstændig klient, ligesom browseren på en telefon eller tablet. Modtagende klienter spørger efter ændringer; hastigheden afhænger også af gemning, netværk og browserens baggrundstilstand.
 
-Bekræftet brugertest: Mac og iPad kunne synkronisere begge veje over Tailscale. Med `$:/config/SyncPollingInterval` sat til `3000` og reload oplevedes nogenlunde samme hastighed. Det er en observation, ikke et løfte om højst tre sekunder.
+Med `$:/config/SyncPollingInterval` sat til `3000` spørger browseren normalt efter ændringer hvert tredje sekund. Det er ikke et løfte om, at alle ændringer vises inden for tre sekunder.
 
 Nuværende indstilling (ms): <$text text={{{ [{$:/config/SyncPollingInterval}else[60000]] }}}/>. Uden indstilling bruger den testede TW 5.4.1 60000 ms. En kortere periode giver flere forespørgsler.
 
@@ -62,9 +62,9 @@ Knappen ændrer kun denne konfiguration efter dit klik; den starter ingen tjenes
 !! 5. Fejlfinding
 
 * ''Lokal adresse virker ikke:'' kontroller Node.js/TiddlyWiki, servermappen, fejlbeskeden og denne wikis valgte lokale port. Hjælperen overtager eller afslutter aldrig en eksisterende server.
-* ''Lokalt virker, iPad virker ikke:'' kontroller Tailscale-forbindelse på begge enheder, HTTPS/MagicDNS, adgangsregler og hele adressen inklusive portnummeret til sidst. Kontroller `tailscale status` og `tailscale serve status`. Hold værtscomputeren vågen.
+* ''Wikien virker kun på værtscomputeren:'' kontroller Tailscale-forbindelse på begge enheder, HTTPS/MagicDNS, adgangsregler og hele adressen inklusive portnummeret til sidst. Kontroller `tailscale status` og `tailscale serve status`. Hold værtscomputeren vågen.
 * ''401/loginfejl:'' kontroller CSV-header, adgangskode og bruger. ''403/kun læsning:'' kontroller `readers`/`writers`. Slå ikke CSRF-beskyttelse fra for at omgå en fejl.
-* ''Mac modtager langsomt:'' kontroller pollingværdien og reload også Mac-browseren. Hold fanerne aktive under målingen; iPad kan sætte baggrundsfaner i bero.
+* ''En enhed modtager langsomt:'' kontroller pollingværdien og genindlæs wikien på enheden. Hold fanerne aktive under målingen; browsere kan sætte baggrundsfaner i bero.
 * ''Ændringer mangler:'' kontroller, at begge browsere bruger samme serveradresse og ikke en lokal HTML-kopi. Se TiddlyWikis synkroniseringsstatus/log. Eksporter ugemte tiddlere før reload ved fejl.
 * ''Gemt adresse optaget:'' hjælperen afviser at erstatte en anden tjeneste eller flytte wikien i stilhed. Gennemse Serve-status, og undersøg hvem der bruger adressen. Nulstil ikke alt. En bevidst flytning kræver hjælp til at opdatere wikiens gemte portvalg, adgangsregler og delte links, mens alle hjælpere er stoppet.
 * ''Kører allerede:'' brug wikiens eksisterende statusvindue med navn. Hvis en anden hjælper er ved at starte, vent og prøv igen. Låse fra bekræftet afsluttede processer ryddes op; ufuldstændige eller uafklarede låse bevares. Fortsætter fejlen efter alle hjælpere er afsluttet, få hjælp til at kontrollere undermappen `locks`, før gamle låse fjernes.
@@ -79,7 +79,7 @@ Brug TiddlyWikis indbyggede ''Download save''/HTML-eksport til en selvstændig o
 
 !! Kilder og version
 
-ForgeShare 0.1.0-test.3. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
+ForgeShare 0.1.1. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
@@ -91,7 +91,7 @@ ForgeShare 0.1.0-test.3. Original HUWiki-kode; licensvalg afventer projektets be
 
 !! Kontrollér kun-wiki-adgang
 
-Tailscales tilladelser lægges sammen. En snæver regel for én wikis HTTPS-port begrænser ikke en eksisterende bred tilladelse. Gennemgå også regler, der omfatter `*` eller `autogroup:shared`; erstat ikke hele din nuværende politik med et eksempel. Begræns gæsteadgang til værten og den pågældende wikis valgte HTTPS TCP-port. Kontrollér fra en faktisk inviteret brugers enhed, at wikien kan nås, men de andre wikier, 443 og 8443 ikke kan — og at ejerens AI-tjenester stadig virker. ForgeShare kan kontrollere Serve-konfigurationen, men kan ikke bevise gæsternes effektive adgangsregler.
+Tailscales tilladelser lægges sammen. En snæver regel for én wikis HTTPS-port begrænser ikke en eksisterende bred tilladelse. Gennemgå også regler, der omfatter `*` eller `autogroup:shared`; erstat ikke hele din nuværende politik med et eksempel. Begræns gæsteadgang til værten og den pågældende wikis valgte HTTPS TCP-port. Kontrollér fra en faktisk inviteret brugers enhed, at wikien kan nås, men øvrige private tjenester ikke kan — og at ejeren stadig har adgang til dem. ForgeShare kan kontrollere Serve-konfigurationen, men kan ikke bevise gæsternes effektive adgangsregler.
 
 * [[Tailscale: del en computer og styr adgang|https://tailscale.com/docs/features/sharing]]
 * [[Tailscale grants|https://tailscale.com/docs/reference/syntax/grants]]

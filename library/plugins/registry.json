@@ -4,6 +4,19 @@
   "items": [
     {
       "fields": {
+        "title": "$:/plugins/huwiki/forgeshare",
+        "type": "application/json",
+        "name": "ForgeShare",
+        "description": "Tailscale collaboration / Tailscale-samarbejde",
+        "author": "HUWiki",
+        "version": "0.1.1",
+        "plugin-type": "plugin",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/forgeshare/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/lessons-balkan",
         "type": "application/json",
         "name": "HUWiki · Balkan / Balkan",

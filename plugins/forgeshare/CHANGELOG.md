@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.1 (test release)
+
+- Replace Mac/Windows terminal launchers with native apps: icon, active wiki names/addresses, copy and individual Stop. Mac is universal and ad-hoc sealed, without Developer ID/notarization; Windows is an unsigned GUI .exe. Node.js/Tailscale remain prerequisites.
+- Add explicit per-app approval guidance, source/artifact manifests, native build/self-tests, and STOP/parent-exit cleanup tests. No global security changes.
+- Redesign the bilingual guide around three short steps, immediate downloads, icons and expandable help. Use general computer/phone/tablet examples, without personal device/test references. Verify mobile fit, keyboard help and language refresh in a headless browser.
+- Increment the patch version because TW 5.4.1 ignores prerelease suffixes when comparing imports.
+- Integrate the optional package into the shared Forge plugin registry; retain offline HTML and all existing services.
+
 ## 0.1.0-test.3
 
 - Fix Danish selection for the existing HUWiki Dansk language pack; follow the native `$:/language` selector and language metadata.
