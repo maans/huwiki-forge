@@ -1,6 +1,6 @@
 # ForgeShare / Tailscale-samarbejde
 
-Optional, standalone TiddlyWiki 5 plugin, `0.1.0-test.2`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control.
+Optional, standalone TiddlyWiki 5 plugin, `0.1.0-test.3`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
 
 Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeShare** or the plugin readme. Forge's **Extra plugins** catalog lists it as an optional test package; no Edition includes it automatically. HTML/offline use and native savers remain available.
 
@@ -12,7 +12,7 @@ Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeS
 4. If TiddlyWiki is missing, the dialog helper can offer a separate, explicit installation of `tiddlywiki@5.4.1` in the user's ForgeShare application-data folder. It invokes npm via Node with `--ignore-scripts` and no shell, and does not install globally. Declining does not install anything. Node.js and Tailscale are never silently installed.
 5. After the final sharing confirmation, the helper starts the Node server and foreground Tailscale Serve. It opens no website or browser. The user copies the address from the status dialog. Closing that named dialog stops only its wiki. Open the helper again to run another named wiki alongside it.
 
-The start files can leave a terminal window behind the dialogs. These are inspectable source scripts, not signed desktop applications or bundled Node executables. Mac/Linux extraction may require executable permissions. The native dialogs have not yet been manually exercised on all target systems.
+The start files can leave a terminal window behind the dialogs. These are inspectable source scripts, not signed desktop applications or bundled Node executables. Mac/Linux launcher ZIP entries carry executable permissions. The included getting-started sheet contains no terminal commands; it suggests the built-in extractor and assistance if startup is blocked. Signing/notarization remains outside this test package. The native dialogs have not yet been manually exercised on all target systems.
 
 ## Safety and limits
 
@@ -61,3 +61,5 @@ No production deployment or merge is part of this feature. Test status remains u
 - [Serve foreground configuration model](https://github.com/tailscale/tailscale/blob/main/ipn/serve.go)
 
 Original HUWiki code; the project has not chosen its license yet. Existing third-party licenses remain unchanged. TailShare was considered but is already used by other Tailscale sharing tools, so this package keeps ForgeShare as its working name.
+
+Translation references: [developer translation guide](https://tiddlywiki.com/dev/static/How%2520to%2520create%2520a%2520translation%2520for%2520TiddlyWiki.html), [translation mechanism](https://tiddlywiki.com/static/TranslationMechanism.html), and [plugin information tiddlers](https://tiddlywiki.com/static/Plugin%2520Information%2520Tiddlers.html). The native core language dropdown and an already-rendered guide are exercised in tests, including HUWiki Dansk’s actual title/name combination.

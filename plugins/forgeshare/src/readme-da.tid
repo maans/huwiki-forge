@@ -1,0 +1,12 @@
+title: $:/plugins/huwiki/forgeshare/da-DK/readme
+type: text/vnd.tiddlywiki
+
+! ForgeShare — privat samarbejde
+
+Del en TiddlyWiki med familie eller andre via Tailscale. Du kan køre flere wikier på samme computer og vælge dem efter navn. Hjælperen vælger ledige porte og bevarer eksisterende tjenester.
+
+Åbn kontrolpanelet, og vælg fanen ''ForgeShare''. Hvis fanen mangler, aktivér pluginet, gem og genindlæs wikien. Her finder du opsætning, hjælpere til Mac, Windows og Linux, sikker deling, synkronisering og backup.
+
+Sproget følger TiddlyWikis egen sprogvælger: både ''Dansk (Danmark)'' og ''HUWiki Dansk'' viser dansk. Der er ingen ekstra sprogvælger. Andre sprog bruger den engelske vejledning.
+
+''Testudgave.'' Import af pluginet starter ingen server, ændrer ingen adgangsregler og installerer ingen programmer. Hjælperen skal hentes og startes lokalt. Node.js og Tailscale skal være installeret. HTML/offline-kopier kan stadig bruges.

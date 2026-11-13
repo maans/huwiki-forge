@@ -1,4 +1,0 @@
-title: $:/plugins/huwiki/forgeshare/readme
-type: text/vnd.tiddlywiki
-
-<$transclude $tiddler="$:/plugins/huwiki/forgeshare/home" $mode="block"/>

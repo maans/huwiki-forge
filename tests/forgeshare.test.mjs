@@ -47,13 +47,14 @@ test('bundle is reproducible, standalone and opt-in in the catalog', async () =>
 test('actual TW renderer selects Danish and English, preserves block headings and download links offline', () => {
   for (const [language, expected, excluded] of [
     ['$:/languages/da-DK', 'Tailscale-samarbejde', 'Tailscale collaboration'],
+    ['$:/languages/huwiki-da-DK', 'Tailscale-samarbejde', 'Tailscale collaboration'],
     ['da', 'Tailscale-samarbejde', 'Tailscale collaboration'],
     ['$:/languages/en-GB', 'Tailscale collaboration', 'Tailscale-samarbejde'],
     ['$:/languages/de-DE', 'Tailscale collaboration', 'Tailscale-samarbejde']
   ]) {
     tw.wiki.addTiddler({title: '$:/language', text: language});
     const html = tw.wiki.renderTiddler('text/html', base + '/home');
-    assert.match(html, new RegExp(expected)); assert.ok(!html.includes(excluded));
+    assert.ok(html.includes(expected), language); assert.ok(!html.includes(excluded), language);
     assert.match(html, /<h[12][^>]*>/); assert.doesNotMatch(html, /Filter error|Missing closing/);
     for (const name of ['mac', 'windows', 'linux']) {
       assert.ok(html.includes(`download="ForgeShare-${name}.zip"`));
@@ -64,6 +65,70 @@ test('actual TW renderer selects Danish and English, preserves block headings an
   }
   tw.wiki.deleteTiddler('$:/language');
   assert.match(tw.wiki.renderTiddler('text/html', base + '/home'), /Tailscale collaboration/);
+});
+test('native language dropdown switches the already rendered guide for standard and HUWiki Danish', async () => {
+  const standard = tw.loadPluginFolder(path.join(path.dirname(require.resolve('tiddlywiki/package.json')), 'languages/da-DK'));
+  const custom = {...standard, title:'$:/languages/huwiki-da-DK', name:'HUWiki Dansk'};
+  const renamed = {...standard, title:'$:/languages/custom-danish', name:'da-DK'};
+  for (const data of [standard,custom,renamed]) tw.wiki.addTiddler(data);
+  tw.wiki.readPluginInfo();
+  const document = tw.fakeDocument;
+  const container = document.createElement('div');
+  const guide = tw.wiki.makeWidget(tw.wiki.parseTiddler(base + '/home'), {document});
+  guide.render(container, null);
+  const dropdown = tw.wiki.makeWidget(tw.wiki.parseTiddler('$:/snippets/minilanguageswitcher'), {document});
+  const menu = document.createElement('div'); dropdown.render(menu, null);
+  function findSelect(widget) {
+    if (widget.selectTitle === '$:/language') return widget;
+    for (const child of widget.children || []) { const found = findSelect(child); if (found) return found; }
+  }
+  const select = findSelect(dropdown); assert.ok(select, 'Use the actual core selector');
+  assert.ok(menu.innerHTML.includes(custom.title));
+  try {
+    for (const [title,expected,excluded] of [
+      [custom.title,'Tailscale-samarbejde','Tailscale collaboration'],
+      ['$:/languages/en-GB','Tailscale collaboration','Tailscale-samarbejde'],
+      [standard.title,'Tailscale-samarbejde','Tailscale collaboration'],
+      [renamed.title,'Tailscale-samarbejde','Tailscale collaboration'],
+      ['$:/languages/en-GB','Tailscale collaboration','Tailscale-samarbejde']
+    ]) {
+      select.getSelectDomNode().value = title; select.handleChangeEvent({});
+      await new Promise(resolve => setImmediate(resolve));
+      assert.equal(tw.wiki.getTiddlerText('$:/language'),title);
+      guide.refresh({'$:/language': {modified:true}});
+      assert.ok(container.innerHTML.includes(expected)); assert.ok(!container.innerHTML.includes(excluded));
+      assert.equal((container.innerHTML.match(/class="hu-share-downloads"/g) || []).length,2, 'Only one guide is rendered');
+    }
+  } finally {
+    tw.wiki.addTiddler({title:'$:/language',text:'$:/languages/en-GB'});
+    await new Promise(resolve => setImmediate(resolve));
+    for (const data of [standard,custom,renamed]) tw.wiki.deleteTiddler(data.title);
+  }
+});
+
+test('native plugin information localizes standalone readmes even when ForgeShare shadows are unavailable', () => {
+  assert.equal(plugin.list,'readme');
+  for (const code of ['da-DK','en-GB','HUWiki Dansk']) {
+    assert.ok(shadows[base+'/'+code+'/readme']);
+    assert.ok(!shadows[base+'/'+code+'/readme'].text.includes('$transclude'));
+  }
+  tw.wiki.unregisterPluginTiddlers('plugin',[base]); tw.wiki.unpackPluginTiddlers();
+  try {
+    assert.equal(tw.wiki.getTiddler(base+'/home'),undefined);
+    for (const [language,name,expected] of [
+      ['$:/languages/da-DK','da-DK','privat samarbejde'],
+      ['$:/languages/huwiki-da-DK','HUWiki Dansk','privat samarbejde'],
+      ['$:/languages/en-GB','en-GB','private collaboration'],
+      ['$:/languages/de-DE','de-DE','private collaboration']
+    ]) {
+      tw.wiki.addTiddler({title:'$:/language',text:language});
+      const html=tw.wiki.renderText('text/html','text/vnd.tiddlywiki',`<$vars currentTiddler="${base}" languageTitle="${name}" currentTab="readme">{{||$:/core/ui/PluginInfo}}</$vars>`);
+      assert.ok(html.includes(expected),html.slice(0,300));
+      assert.match(html,/<h1[^>]*>/);
+    }
+  } finally {
+    tw.wiki.registerPluginTiddlers('plugin',[base]); tw.wiki.unpackPluginTiddlers(); tw.wiki.deleteTiddler('$:/language');
+  }
 });
 test('native 3000 action changes only the requested config; read-only view hides it', () => {
   tw.wiki.addTiddler({title: '$:/status/IsReadOnly', text: 'yes'});
@@ -91,6 +156,19 @@ test('all downloadable ZIP files embed the exact standalone reviewed script', as
     }
     assert.equal(files['ForgeShare.mjs'], source);
     assert.ok(files['README.txt']);
+    assert.doesNotMatch(files['README.txt'], /chmod|node ForgeShare|TECHNICAL \/ TEKNISK/);
+    // Mac/Linux users should receive an executable launcher from the ZIP,
+    // rather than having to repair its permissions in a terminal.
+    const directory = bytes.readUInt32LE(bytes.length - 22 + 16);
+    let entry = directory;
+    for (let i = 0; i < count; i++) {
+      assert.equal(bytes.readUInt32LE(entry), 0x02014b50);
+      const length = bytes.readUInt16LE(entry + 28);
+      const name = bytes.subarray(entry + 46, entry + 46 + length).toString();
+      if (platform !== 'windows' && name.startsWith('Start-'))
+        assert.equal((bytes.readUInt32LE(entry + 38) >>> 16) & 0o777, 0o755);
+      entry += 46 + length + bytes.readUInt16LE(entry + 30) + bytes.readUInt16LE(entry + 32);
+    }
     assert.match(Object.entries(files).find(([name]) => name.startsWith('Start-'))[1], /--gui/);
   }
   assert.equal(Buffer.from(shadows[base + '/download/script'].text.split(',')[1], 'base64').toString(), source);

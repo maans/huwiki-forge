@@ -53,6 +53,17 @@ export async function build() {
     if (!tiddler.title.startsWith(base + '/') || tiddlers[tiddler.title]) throw Error('Invalid/duplicate title');
     tiddlers[tiddler.title] = tiddler;
   }
+  // TW's native PluginInfo uses the selected language plugin's name field.
+  // HUWiki's installed Danish pack uses a display name instead of "da-DK".
+  const da = tiddlers[base + '/da-DK/readme'], en = tiddlers[base + '/en-GB/readme'];
+  const alias = base + '/HUWiki Dansk/readme';
+  tiddlers[alias] = {...da, title: alias};
+  // Keep info readable even when the plugin is disabled/not unpacked: native
+  // PluginInfo can read these subtiddlers directly from the plugin JSON.
+  const filter = tiddlers[base + '/home'].text.match(/<\$list filter="([^"]+)"/)[1];
+  const readme = base + '/readme';
+  tiddlers[readme] = {title: readme, type: 'text/vnd.tiddlywiki',
+    text: `<$let isDanish={{{ ${filter} +[count[]] }}}>\n\n<$list filter="[<isDanish>match[1]]" variable="language">\n\n${da.text}\n</$list>\n<$list filter="[<isDanish>match[0]]" variable="language">\n\n${en.text}\n</$list>\n</$let>\n`};
   const script = await read('helper/ForgeShare.mjs'), instructions = await read('helper/README.txt');
   const downloads = {};
   for (const [platform, filename] of Object.entries({mac: 'Start-ForgeShare.command', windows: 'Start-ForgeShare.cmd', linux: 'Start-ForgeShare.sh'})) {
@@ -67,7 +78,7 @@ export async function build() {
   const title = base + '/download/script';
   tiddlers[title] = {title, type: 'text/plain', text: 'data:application/octet-stream;base64,' + Buffer.from(script).toString('base64')};
   return {plugin: {title: base, name: 'ForgeShare', description: 'Tailscale collaboration / Tailscale-samarbejde',
-    author: 'HUWiki', version: '0.1.0-test.2', 'plugin-type': 'plugin', type: 'application/json',
+    author: 'HUWiki', version: '0.1.0-test.3', list: 'readme', 'plugin-type': 'plugin', type: 'application/json',
     'core-version': '>=5.4.1', 'studio-category': 'Collaboration', 'studio-tags': 'Tailscale Node.js offline',
     'studio-source-titles': Object.keys(tiddlers).map(x => '[[' + x + ']]').join(' '),
     text: JSON.stringify({tiddlers})}, downloads};

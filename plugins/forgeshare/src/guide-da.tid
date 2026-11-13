@@ -36,7 +36,7 @@ Vælg din computer nedenfor. Pak hele ZIP-filen ud på skrivebordet, læs den ko
 * ''Windows:'' åbn `Start-ForgeShare.cmd`.
 * ''Linux:'' start `Start-ForgeShare.sh`. Systemet kan kræve, at du tillader kørsel i filens egenskaber.
 
-Et terminalvindue kan være synligt bag dialogboksene, men du behøver ikke skrive kommandoer i det. Mac/Linux kan efter udpakning kræve kørselsrettighed; se den medfølgende vejledning. Hjælperen er endnu ikke en signeret app og indeholder ikke sin egen Node.js. Ingen sikkerhedsindstillinger skal slås fra.
+Et terminalvindue kan være synligt bag dialogboksene, men du behøver ikke skrive kommandoer i det. Startfilen til Mac er pakket klar til kørsel. Hvis den ikke kan åbnes, pak den originale ZIP ud med computerens eget udpakningsprogram. Hvis den stadig blokeres, få hjælp med fejlbeskeden; du skal ikke skrive terminalkommandoer. Hjælperen er endnu ikke en signeret app og indeholder ikke sin egen Node.js. Ingen sikkerhedsindstillinger skal slås fra.
 
 !! Første opsætning — kun én gang
 

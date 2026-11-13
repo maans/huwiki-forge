@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.0-test.2 — optional local helper. Explicit local actions; no browser launch or shell evaluation.
+// ForgeShare 0.1.0-test.3 — optional local helper. Explicit local actions; no browser launch or shell evaluation.
 import {readFile, realpath, stat, access, mkdir, mkdtemp, writeFile, rm, rename} from 'node:fs/promises';
 import {randomUUID} from 'node:crypto';
 import {constants} from 'node:fs';

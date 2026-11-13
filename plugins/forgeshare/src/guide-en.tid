@@ -36,7 +36,7 @@ Choose your computer below. Extract the entire ZIP to your desktop, read the sho
 * ''Windows:'' open `Start-ForgeShare.cmd`.
 * ''Linux:'' run `Start-ForgeShare.sh`. Your system may require permission to run it in the file's properties.
 
-A terminal window may remain behind the dialogs, but you do not need to type commands into it. Mac/Linux extraction may require executable permission; see the included instructions. The helper is not yet a signed application and does not contain Node.js. Do not disable security protections.
+A terminal window may remain behind the dialogs, but you do not need to type commands into it. The Mac start file is packaged with permission to run. If it will not open, extract the original ZIP with your computer's built-in extractor. If it is still blocked, get help with the message shown; no terminal commands are required. The helper is not yet a signed application and does not contain Node.js. Do not disable security protections.
 
 !! First setup — once only
 

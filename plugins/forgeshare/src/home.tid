@@ -4,7 +4,7 @@ tags: $:/tags/ControlPanel
 type: text/vnd.tiddlywiki
 
 <div class="hu-forgeshare">
-<$list filter="[{$:/language}prefix[$:/languages/da]] [{$:/language}match[da]]" variable="language" emptyMessage="""<$transclude $tiddler="$:/plugins/huwiki/forgeshare/guide-en" $mode="block"/>""">
+<$list filter="[{$:/language}get[name]lowercase[]regexp[^da(-|$)]] [{$:/language}match[$:/languages/huwiki-da-DK]] [{$:/language}removeprefix[$:/languages/]lowercase[]regexp[^da(-|$)]] [{$:/language}match[da]] +[limit[1]]" variable="language" emptyMessage="""<$transclude $tiddler="$:/plugins/huwiki/forgeshare/guide-en" $mode="block"/>""">
 <$transclude $tiddler="$:/plugins/huwiki/forgeshare/guide-da" $mode="block"/>
 </$list>
 </div>

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.0-test.3
+
+- Fix Danish selection for the existing HUWiki Dansk language pack; follow the native `$:/language` selector and language metadata.
+- Provide standalone localized native plugin information tabs and test live switching through the actual core selector, with English fallback.
+- Replace the helper's technical README with a short bilingual getting-started sheet; remove terminal commands and preserve executable ZIP permissions.
+
 ## 0.1.0-test.2
 
 - Add saved wiki names with a native picker on Mac, Windows and Linux; run several independent helpers/wikis concurrently.
