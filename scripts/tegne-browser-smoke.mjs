@@ -71,9 +71,23 @@ async function main(){
   await page.waitForFunction(()=>document.querySelector(".hu-tegne-editor .excalidraw"),null,{timeout:60000});
   console.log("Excalidraw editor visible on sample scene");
 
-  // Startup message should open the same shared SitePublisher as other Editions.
-  await page.evaluate(()=>window.$tw.rootWidget.dispatchEvent({type:"tm-huwiki-sitepublisher",param:"Farvefigurer"}));
+  // Reproduce the user's report: exporting the interactive Tegne home must
+  // NOT claim success after losing the live Excalidraw canvas.
+  await page.evaluate(()=>window.$tw.rootWidget.dispatchEvent({type:"tm-huwiki-sitepublisher",param:"HUWiki Tegne"}));
   await page.locator(".husp-overlay").waitFor({timeout:30000});
+  await page.waitForFunction(()=>/drawing studio, not a drawing|tegnestudiets redigeringsside/i.test(document.querySelector(".husp-status")?.textContent||""),null,{timeout:30000});
+  if(!await page.locator(".husp-tools button").nth(1).isDisabled())
+    throw Error("Download must be disabled when live editor cannot be published");
+  console.log("Publishing live editor is rejected with an explicit error");
+  await page.locator(".husp-head button").last().click();
+  await page.locator(".husp-overlay").waitFor({state:"detached",timeout:10000});
+
+  // Use the actual editor's Publish drawing action (not a synthetic message).
+  await page.locator(".hu-tegne-editor button.hu-tegne-publish").click({timeout:30000});
+  await page.locator(".husp-overlay").waitFor({timeout:30000});
+  const selectedNames=await page.locator(".husp-item .title").allTextContents();
+  if(selectedNames.length!==1||selectedNames[0]!=="Farvefigurer")
+    throw Error("Publish drawing must select only the active drawing: "+selectedNames.join(" | "));
   await page.waitForFunction(()=>{
    const text=document.querySelector(".husp-status")?.textContent||"";
    return /(preview ready|forhåndsvisning klar|sitepublisher:)/i.test(text);
@@ -85,6 +99,7 @@ async function main(){
   if(!html.includes("data:image/svg+xml"))throw Error("SitePublisher SVG was not embedded in the offline site");
   if(/file:\/\/\/Users\//.test(html))throw Error("Editor private filesystem leaked into site");
   console.log("Offline SVG export verified in real Chromium renderer");
+  console.log("Publish drawing button selected the active drawing, not the editor");
   await page.evaluate(()=>window.$tw.rootWidget.dispatchEvent({type:"tm-huwiki-sitepublisher",param:"En tegning i en artikel"}));
   await page.waitForFunction(()=>{
    const el=document.querySelector(".husp-preview");
