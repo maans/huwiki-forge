@@ -6,15 +6,16 @@ HUWiki Forge skal oprette en ny, selvstændig TiddlyWiki fra en **frisk, testet 
 
 ## Første assembler-test
 
-1. Hent `empty.html` fra https://tiddlywiki.com/empty.html til din computer.
-2. Åbn `assembler/index.html` via GitHub Pages eller en lokal webserver (`python3 -m http.server` i repositoryets rod).
-3. Vælg den hentede `empty.html`, og klik **Byg demo-Edition**.
-4. Åbn den downloadede HTML-fil. Tiddleren *Demo: Velkommen* og det indlæste JavaScript-startup-plugin skal virke ved første opstart.
-5. Gem den nye wiki med TiddlyWikis almindelige Gem-funktion.
+1. Åbn [Edition Assembler](https://maans.github.io/huwiki-forge/assembler/) fra GitHub Pages.
+2. Tryk **Byg demo-Edition**. Forge forsøger selv at hente en officiel TiddlyWiki `empty.html` fra det synkroniserede Github-spejl.
+3. Åbn den downloadede HTML-fil. Tiddleren *Demo: Velkommen* og JavaScript-startup-plugin skal virke ved første opstart.
+4. Gem derefter den nye wiki med TiddlyWikis helt almindelige Gem-funktion.
 
-Dette er bevidst en **separat testside**, ikke den endelige Forge-startside. Testen undgår CORS- og opdateringsproblemer ved at lade brugeren vælge den officielle `empty.html` lokalt. Senere tilføjer vi en testet, versionslåst kopi af kernen til repositoryet og flytter launcherens brugerflade ind i en rigtig TiddlyWiki.
+Du skal **ikke** selv downloade `empty.html`. Det er dog stadig muligt at vælge en lokal fil i et fold-ud-felt, hvis du vil teste en bestemt version.
 
-Kør automatisk kontrol lokalt med `npm test` (Node.js 20+).
+Den officielle kerne synkroniseres af [GitHub Actions](.github/workflows/sync-tw-core.yml). Dette er fortsat en prototype: vi har brug for en reel browsertest og test af de eksisterende Editions.
+
+Kør automatiske enhedstests med `npm test` (Node.js 20+). Se [analysen af den gamle HUWiki-kode](docs/huwiki-source-analysis.md).
 
 ## Struktur
 
