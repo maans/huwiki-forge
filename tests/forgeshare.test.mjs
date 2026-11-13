@@ -318,6 +318,18 @@ test('OS port inspection preserves an existing IPv4 service', async () => {
   finally { await new Promise(resolve => other.close(resolve)); }
 });
 
+test('OS port inspection also preserves an IPv6-only service', async t => {
+  const other = net.createServer();
+  try {
+    await new Promise((resolve, reject) => { other.once('error', reject); other.listen({host:'::1', port:0, ipv6Only:true}, resolve); });
+  } catch (error) {
+    if (['EAFNOSUPPORT', 'EADDRNOTAVAIL'].includes(error.code)) { t.skip('IPv6 is unavailable on this host'); return; }
+    throw error;
+  }
+  try { await assert.rejects(checkAddressPort(other.address().port)); assert.ok(other.listening); }
+  finally { await new Promise(resolve => other.close(resolve)); }
+});
+
 test('locks recover a confirmed dead process, preserve live owners and fail closed on incomplete ownership', async () => {
   const root = path.join(temp, 'lock recovery'), key = 'catalog';
   const directory = path.join(root, 'locks', key); await mkdir(directory, {recursive:true});

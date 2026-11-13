@@ -110,8 +110,8 @@ export async function checkAddressPort(port) {
   // BSD/macOS permits some wildcard/specific-address bind combinations. Check
   // each local interface as well, including the Tailscale interface if present.
   const addresses = new Set(['127.0.0.1', '::1']);
-  for (const [name, entries] of Object.entries(os.networkInterfaces())) {
-    for (const entry of entries || []) addresses.add(entry.scopeid && !entry.address.includes('%') ? entry.address + '%' + name : entry.address);
+  for (const entries of Object.values(os.networkInterfaces())) {
+    for (const entry of entries || []) addresses.add(entry.scopeid && !entry.address.includes('%') ? entry.address + '%' + entry.scopeid : entry.address);
   }
   for (const address of addresses) {
     try { await checkPort(port, address); }
