@@ -81,6 +81,21 @@ Begge browsere skal opdage nye ændringer. Det gælder også browseren på den c
 
 Synkronisering er ikke backup: en sletning kan også blive delt. Tag regelmæssigt en kopi af wikimappen, når serveren er stoppet, og bevar flere versioner. Du kan stadig hente en selvstændig HTML-kopi med TiddlyWikis egne funktioner. Ændringer i en offline-kopi sendes ikke automatisk tilbage.
 
+!! Et billede ser ud til at mangle
+
+En synkroniseret billedtiddler åbner ikke nødvendigvis af sig selv hos de andre. Importerede billeder kan også mangle datoen ''senest ændret'' og derfor være udeladt af ''Seneste''. Søg efter filnavnet eller brug listen herunder. Åbn billedet, vælg Redigér og Gem for at give det en ændringsdato. Giv det gerne et genkendeligt navn.
+
+<details>
+<summary>Find billeder i denne wiki — også uden dato</summary>
+
+<$list filter="[is[image]!is[system]sort[title]]" emptyMessage="Ingen billeder fundet i denne browser.">
+<div><$link/></div>
+</$list>
+
+</details>
+
+Hvis billedet stadig mangler, skal det undersøges, om serveren har modtaget det, og om begge enheder åbner samme wiki. Et billede i servermappen er ikke alene bevis for, at den anden browser har vist det. ''Hent seneste fra server'' åbner ikke automatisk alle nye tiddlere.
+
 <details>
 <summary>Avanceret hjælp</summary>
 

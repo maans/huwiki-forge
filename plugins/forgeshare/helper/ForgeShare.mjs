@@ -300,7 +300,7 @@ export function dialogCommand(platform, kind, message, initial = '') {
   if (platform === 'win32') {
     // Base64 JSON carries arbitrary paths/text without PowerShell quoting/injection.
     const data = Buffer.from(JSON.stringify({kind, message, initial})).toString('base64');
-    const script = `Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName Microsoft.VisualBasic
+    const script = `$env:PSModulePath=$PSHOME+'\\Modules'; $ErrorActionPreference='Stop'; Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName Microsoft.VisualBasic
 $d = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')) | ConvertFrom-Json
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 switch ($d.kind) {
@@ -367,7 +367,7 @@ export async function privateSessionDirectory() {
       await execute('icacls.exe', [directory, '/inheritance:r', '/grant:r', `*${sid}:(OI)(CI)F`], {windowsHide: true});
       // Verify the effective DACL before writing a password. Unexpected explicit
       // grants also fail closed; removing inheritance alone would not remove them.
-      const verify = `$p=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')); $a=Get-Acl -LiteralPath $p -ErrorAction Stop; $rules=$a.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]); if (!$a.AreAccessRulesProtected -or $rules.Count -eq 0) { exit 1 }; foreach ($r in $rules) { if ($r.AccessControlType -eq 'Allow' -and $r.IdentityReference.Value -ne '${sid}') { exit 2 } }`;
+      const verify = `$p=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')); $a=[IO.Directory]::GetAccessControl($p); $rules=$a.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]); if (!$a.AreAccessRulesProtected -or $rules.Count -eq 0) { exit 1 }; foreach ($r in $rules) { if ($r.AccessControlType -eq 'Allow' -and $r.IdentityReference.Value -ne '${sid}') { exit 2 } }`;
       await execute('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(verify, 'utf16le').toString('base64')], {windowsHide: true});
     } catch (cause) {
       await rm(directory, {recursive: true, force: true});

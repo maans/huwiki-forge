@@ -251,3 +251,11 @@ test('private login directory can be protected before any credentials are writte
     throw error;
   } finally { if (directory) await rm(directory, {recursive: true, force: true}); }
 });
+
+test('image finder includes imported images without modified dates, unlike Recent', () => {
+  tw.wiki.addTiddler({title: 'Undated import.png', type: 'image/png', text: 'aW1hZ2U='});
+  try {
+    assert.ok(tw.wiki.renderTiddler('text/html', base + '/home').includes('Undated import.png'));
+    assert.ok(!tw.wiki.renderText('text/html', 'text/vnd.tiddlywiki', '<<timeline>>').includes('Undated import.png'));
+  } finally { tw.wiki.deleteTiddler('Undated import.png'); }
+});

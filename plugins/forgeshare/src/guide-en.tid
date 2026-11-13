@@ -81,6 +81,21 @@ Both browsers have to discover changes, including the browser on the hosting com
 
 Sync is not backup: a deletion can be shared too. Regularly copy the wiki folder with the server stopped, keeping several versions. You can still download a standalone HTML copy through TiddlyWiki's own controls. Offline edits are not automatically sent back.
 
+!! An image seems to be missing
+
+A synced image tiddler does not necessarily open itself for other people. Imported images may also lack a ''modified'' date and therefore be absent from ''Recent''. Search by filename or use the list below. Open the image, choose Edit and Save to give it a modified date. Consider a recognizable name.
+
+<details>
+<summary>Find images in this wiki — including those without dates</summary>
+
+<$list filter="[is[image]!is[system]sort[title]]" emptyMessage="No images found in this browser.">
+<div><$link/></div>
+</$list>
+
+</details>
+
+If the image is still missing, check whether it reached the server and whether both devices use the same wiki. A file in the server folder alone does not prove the other browser displayed it. ''Get latest from server'' does not automatically open every new tiddler.
+
 <details>
 <summary>Advanced help</summary>
 
