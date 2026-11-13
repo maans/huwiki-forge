@@ -1,0 +1,34 @@
+name: Tegne offline browser smoke
+on:
+  pull_request:
+    paths:
+      - editions/tegne/**
+      - plugins/tegne/**
+      - plugins/tegne-excalidraw/**
+      - plugins/tegne-react/**
+      - scripts/tegne-browser-smoke.mjs
+      - assembler/**
+      - .github/workflows/tegne-browser-smoke.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install Playwright browser controller
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Find installed Chrome
+        run: |
+          command -v google-chrome
+          google-chrome --version
+      - name: Boot a fully assembled local HTML wiki and publish SVG offline
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: node scripts/tegne-browser-smoke.mjs
