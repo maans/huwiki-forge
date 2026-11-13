@@ -10,10 +10,6 @@
 <$action-sendmessage $message="hu-tegne-new"/>
 ＋ Ny tegning
 </$button>
-<$button>
-<$action-sendmessage $message="tm-save-wiki"/>
-Gem wikien
-</$button>
 <$link to="Tegne · Udgivelse">Sådan udgiver du tegninger</$link>
 </div>
 
