@@ -60,8 +60,16 @@ function huOpen(fileId) {
   // Hent filindholdet én gang. Må ikke kalde getBytes() på store wikier
   // blot for at måle størrelse, når Drive allerede leverer metadata.size.
   const html = DriveApp.getFileById(meta.id).getBlob().getDataAsString("UTF-8");
+  // Avoid pairing an old snapshot cursor with new HTML bytes (or vice versa)
+  // if another collaborator saves during this download.
+  const verified = huFile_(meta.id);
+  const metaSeq = String(meta.properties && meta.properties.forgeDriveSnapshotSeq || "0");
+  const verifiedSeq = String(verified.properties && verified.properties.forgeDriveSnapshotSeq || "0");
+  if (meta.md5Checksum !== verified.md5Checksum || metaSeq !== verifiedSeq) {
+    throw new Error("Wikien blev opdateret, mens den blev hentet. Åbn den igen for at undgå tabte ændringer.");
+  }
   return {
-    meta: huPublicMeta_(meta),
+    meta: huPublicMeta_(verified),
     html: html,
     elapsedMs: Date.now() - started
   };
