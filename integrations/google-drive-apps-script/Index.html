@@ -68,7 +68,11 @@
         <button id="shareButton" type="button">Del og send invitation</button>
       </div>
     </header>
-    <iframe id="wiki" title="HUWiki"></iframe>
+    <div style="padding:.5rem 1rem;background:#fff;border-top:1px solid #cad3d9">
+      <button id="backupButton" type="button">Hent lokal sikkerhedskopi</button>
+      <small>Hvis gemning fejler, bevares ændringerne i den åbne wiki. Hent en kopi, før du genindlæser siden.</small>
+    </div>
+    <iframe id="wiki" title="HUWiki" style="height:calc(100dvh - 196px)"></iframe>
   </section>
 
 <script>
@@ -76,7 +80,9 @@
 const START_ID = <?!= initialIdJson ?>;
 const $ = (id) => document.getElementById(id);
 let current = null;
-let savePending = false;
+let saving = false;
+let nextSave = null;
+let blockedConflict = false;
 
 function report(message, bad) {
   $("status").textContent = message;
@@ -118,52 +124,122 @@ async function openWiki(id) {
 }
 
 async function installSaver(frame, fileId) {
-  // Same principle as Tiddly Drive 2: register a high-priority TW saver.
-  for (let attempt = 0; attempt < 150; attempt++) {
-    const tw = frame.contentWindow && frame.contentWindow.$tw;
+  // TiddlyWiki savers MUST return a boolean synchronously and call the
+  // supplied callback asynchronously when persistence succeeds or fails.
+  // A Promise as the return value is not a valid saver implementation.
+  for (let attempt = 0; attempt < 300; attempt++) {
+    let tw = null;
+    try {
+      tw = frame.contentWindow && frame.contentWindow.$tw;
+    } catch (error) {
+      report("Browseren tillader ikke adgang til TiddlyWiki-rammen: " + error.message, true);
+      return;
+    }
     if (tw && tw.saverHandler && Array.isArray(tw.saverHandler.savers)) {
       if (tw.saverHandler.savers.some(s => s.info && s.info.name === "huwiki-google-drive")) return;
+      let changeSerial = 0;
+      if (tw.wiki && typeof tw.wiki.addEventListener === "function") {
+        tw.wiki.addEventListener("change", () => {changeSerial++;});
+      }
+
+      const failure = (requests, message) => {
+        report(message, true);
+        for (const req of requests) {
+          try {req.callback(message);} catch (error) {console.error(error);}
+        }
+      };
+
+      const pumpSaves = async () => {
+        if (saving) return;
+        saving = true;
+        try {
+          while (nextSave) {
+            let job = nextSave;
+            nextSave = null;
+            // Coalesce bursts of edits into a single latest HTML upload.
+            if (job.method === "autosave") {
+              await new Promise(resolve => setTimeout(resolve, 800));
+              if (nextSave) {
+                nextSave.callbacks.unshift(...job.callbacks);
+                continue;
+              }
+            }
+            if (blockedConflict) {
+              failure(job.callbacks, "Konflikt: Wikien er ændret i Drive. Hent lokal backup og genindlæs.");
+              continue;
+            }
+            try {
+              report("Gemmer på Google Drev…");
+              const result = await rpc("huSave", fileId, job.text, current.version);
+              if (result.conflict) {
+                blockedConflict = true;
+                failure(job.callbacks, "KONFLIKT: " + result.message +
+                  " Hent en lokal sikkerhedskopi før du genindlæser.");
+                continue;
+              }
+              if (!result.ok) throw new Error("Drive meldte fejl under gemning.");
+              current = result.meta;
+              for (const req of job.callbacks) {
+                // TiddlyWiki clears its dirty counter in the callback.
+                req.callback(null);
+              }
+              // Do not silently discard edits made during an outstanding
+              // asynchronous upload (or during the 800 ms debounce).
+              if (changeSerial > job.serial && tw.saverHandler) {
+                tw.saverHandler.numChanges = Math.max(1, tw.saverHandler.numChanges);
+                tw.saverHandler.updateDirtyStatus();
+              }
+              report("Gemt på Google Drev (" + result.elapsedMs + " ms).");
+            } catch (error) {
+              failure(job.callbacks, "Gemning mislykkedes: " +
+                (error.message || String(error)) + ". Hent en lokal sikkerhedskopi.");
+            }
+          }
+        } finally {
+          saving = false;
+          // A callback might have queued new work during the last iteration.
+          if (nextSave) void pumpSaves();
+        }
+      };
+
       tw.saverHandler.savers.push({
         info: {name:"huwiki-google-drive", priority:2000, capabilities:["save","autosave"]},
         save(text, method, callback) {
-          if (savePending || !current || current.id !== fileId) return Promise.resolve(false);
-          savePending = true;
-          const initialVersion = current.version;
-          const changesAtStart = tw.saverHandler.numChanges;
-          report("Gemmer på Google Drev…");
-          return rpc("huSave", fileId, text, initialVersion)
-            .then(result => {
-              if (result.conflict) {
-                report("KONFLIKT: " + result.message +
-                  " Din åbne wiki er ikke overskrevet. Gem eventuelt en lokal kopi.", true);
-                return false;
-              }
-              if (!result.ok) {
-                report("Gemning mislykkedes. Download en lokal kopi.", true);
-                return false;
-              }
-              current = result.meta;
-              // Do not discard edits made *during* the asynchronous save.
-              if (tw.saverHandler.numChanges === changesAtStart) {
-                tw.saverHandler.numChanges = 0;
-                tw.saverHandler.updateDirtyStatus();
-              }
-              report("Gemt på " + result.elapsedMs + " ms.");
-              return true;
-            })
-            .catch(error => {
-              report("Gemning mislykkedes: " + error.message + ". Gem en lokal kopi.", true);
-              return false;
-            })
-            .finally(() => { savePending = false; });
+          if (!current || current.id !== fileId) return false;
+          if (blockedConflict) {
+            callback("KONFLIKT: Hent lokal sikkerhedskopi og genindlæs wikien.");
+            return true;
+          }
+          const job = {text, method, serial:changeSerial, callbacks:[{callback}]};
+          if (nextSave) {
+            nextSave.text = job.text;
+            nextSave.method = job.method;
+            nextSave.serial = job.serial;
+            nextSave.callbacks.push(...job.callbacks);
+          } else {
+            nextSave = job;
+          }
+          void pumpSaves();
+          return true;
         }
       });
+      report("Wiki indlæst. Google Drev-gemning er aktiv.");
       return;
     }
-    await new Promise(resolve => setTimeout(resolve, 120));
+    await new Promise(resolve => setTimeout(resolve, 150));
   }
-  report("Wikien er indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", true);
+  report("Wikien blev indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", true);
 }
+
+$("backupButton").addEventListener("click", () => {
+  try {
+    const tw = $("wiki").contentWindow.$tw;
+    if (!tw || !tw.saverHandler) throw new Error("Wikien er ikke klar.");
+    tw.saverHandler.saveWiki({method:"download"});
+  } catch (error) {
+    report("Lokal backup kunne ikke startes: " + error.message, true);
+  }
+});
 
 $("uploadForm").addEventListener("submit", event => {
   event.preventDefault();
