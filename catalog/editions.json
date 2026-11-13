@@ -28,16 +28,16 @@
     {
       "id": "site-publisher",
       "name": "HUWiki SitePublisher",
-      "version": "0.1.3-test.1",
-      "description": "Udgiv valgte tiddlere som et statisk HTML-site (Musik: nodepult og repertoire). Testversion, ikke automatisk installeret.",
+      "version": "0.1.4-test.1",
+      "description": "Udgiv artikler og noder til HTML-site. Nyt indholdsoverblik og sammenklappelige indstillinger (testversion).",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
     },
     {
       "id": "pdf-publisher",
       "name": "HUWiki PDF Publisher",
-      "version": "0.2.5-test.1",
-      "description": "Udgiv tiddlere og samlinger til PDF med sideorden og indholdsfortegnelse (Musik: ABC-sideopslag). Testversion.",
+      "version": "0.2.6-test.1",
+      "description": "PDF med automatisk forhåndsvisning, miniatureoverblik og bogopslag (testversion).",
       "file": "../plugins/print-article/dist/plugin.json",
       "status": "test"
     }
