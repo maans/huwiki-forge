@@ -42,7 +42,7 @@ test("HUPin demo keeps an editable original SVG and opens ordinary tiddlers from
  const picture=seed.find(t=>t.title==="HUPin · Demobillede");
  assert.equal(picture.type,"image/svg+xml");
  assert.match(picture.text,/<svg\b/);
- assert.doesNotMatch(picture.text,/<script\b|onload=|https?:/i,"SVG is self-contained");
+ assert.doesNotMatch(picture.text,/<script\\b|onload=|<image[^>]+(?:https?:|javascript:)|(?:href|src)="https?:/i,"SVG is self-contained apart from its namespace URI");
  const project=seed.find(t=>t.title==="HUPin · Interaktivt billede");
  assert.equal(project.text,"<$huwiki-hupin project=<<currentTiddler>>/>");
  assert.ok(project.tags.includes("HUPin"));
