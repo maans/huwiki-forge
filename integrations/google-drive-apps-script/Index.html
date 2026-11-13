@@ -180,6 +180,7 @@ async function openWiki(id) {
     // Never allow editing an out-of-date HTML baseline before the journal
     // has been replayed and our change listener has been installed.
     frame.style.pointerEvents = "none";
+    frame.removeAttribute("data-sync-blocked");
     frame.setAttribute("aria-busy", "true");
     frame.srcdoc = result.html;
     report("Wiki indlæst på " + result.elapsedMs + " ms. " +
@@ -188,8 +189,10 @@ async function openWiki(id) {
       if (result.meta.canEdit) await installSaver(frame, result.meta.id);
       await connectDelta(frame, result.meta.id);
     } finally {
-      frame.style.pointerEvents = "";
-      frame.removeAttribute("aria-busy");
+      if (!frame.hasAttribute("data-sync-blocked")) {
+        frame.style.pointerEvents = "";
+        frame.removeAttribute("aria-busy");
+      }
     }
   } catch (error) {
     report("Kunne ikke åbne wikien: " + error.message, true);
@@ -397,9 +400,12 @@ async function connectDelta(frame, fileId) {
     if (info.enabled) {
       $("enableSyncButton").hidden = true;
       const started = await delta.start(info);
-      if (!started) throw new Error(loc(
-        "HTML-snapshot og ændringslog kunne ikke forbindes. Genåbn wikien.",
-        "The HTML snapshot and journal could not be matched. Reopen the wiki."));
+      if (!started) {
+        frame.setAttribute("data-sync-blocked", "true");
+        throw new Error(loc(
+          "HTML-snapshot og ændringslog kunne ikke forbindes. Genåbn wikien.",
+          "The HTML snapshot and journal could not be matched. Reopen the wiki."));
+      }
     } else {
       $("enableSyncButton").disabled = !info.canEdit || !info.canShare;
       $("enableSyncButton").hidden = false;
