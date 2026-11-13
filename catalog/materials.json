@@ -1,0 +1,167 @@
+{
+  "schemaVersion": 1,
+  "title": "HUWiki Forge · Delt · offentlige materialer",
+  "description": "Small public index; resources are fetched on demand, and TiddlyWiki performs import.",
+  "items": [
+    {
+      "id": "hupedia-examples",
+      "kind": "tiddler-collection",
+      "category": "HUPedia",
+      "label_da": "HUPedia · eksempelartikler",
+      "label_en": "HUPedia · sample articles",
+      "source": "../editions/hupedia/tiddlers/seed.json"
+    },
+    {
+      "id": "lessons-basic",
+      "kind": "plugin-collection",
+      "category": "Musik",
+      "label_da": "Grundøvelser",
+      "label_en": "Basic exercises",
+      "source": "../plugins/lessons-basic/dist/plugin.json",
+      "version": "0.3.14",
+      "requires": [
+        "$:/plugins/huwiki/abc"
+      ]
+    },
+    {
+      "id": "lessons-jazz",
+      "kind": "plugin-collection",
+      "category": "Musik",
+      "label_da": "Jazz",
+      "label_en": "Jazz",
+      "source": "../plugins/lessons-jazz/dist/plugin.json",
+      "version": "0.3.34-test.1",
+      "requires": [
+        "$:/plugins/huwiki/abc"
+      ]
+    },
+    {
+      "id": "lessons-rhythm",
+      "kind": "plugin-collection",
+      "category": "Musik",
+      "label_da": "Rytmik",
+      "label_en": "Rhythm",
+      "source": "../plugins/lessons-rhythm/dist/plugin.json",
+      "version": "0.3.16-test.2",
+      "requires": [
+        "$:/plugins/huwiki/abc"
+      ]
+    },
+    {
+      "id": "lessons-balkan",
+      "kind": "plugin-collection",
+      "category": "Musik",
+      "label_da": "Balkan",
+      "label_en": "Balkan",
+      "source": "../plugins/lessons-balkan/dist/plugin.json",
+      "version": "0.3.14",
+      "requires": [
+        "$:/plugins/huwiki/abc"
+      ]
+    },
+    {
+      "id": "lessons-india",
+      "kind": "plugin-collection",
+      "category": "Musik",
+      "label_da": "Indien og konnakol",
+      "label_en": "India and konnakol",
+      "source": "../plugins/lessons-india/dist/plugin.json",
+      "version": "0.3.14",
+      "requires": [
+        "$:/plugins/huwiki/abc"
+      ]
+    },
+    {
+      "id": "lessons-folk",
+      "kind": "plugin-collection",
+      "category": "Musik",
+      "label_da": "Folkemusik",
+      "label_en": "Folk music",
+      "source": "../plugins/lessons-folk/dist/plugin.json",
+      "version": "0.3.34-test.1",
+      "requires": [
+        "$:/plugins/huwiki/abc"
+      ]
+    },
+    {
+      "id": "hupedia-plugin",
+      "kind": "plugin",
+      "category": "HUPedia",
+      "label_da": "HUPedia · artikelværktøjer",
+      "label_en": "HUPedia · article tools",
+      "source": "../plugins/hupedia/dist/plugin.json"
+    },
+    {
+      "id": "musescore-import",
+      "kind": "plugin",
+      "category": "Musik",
+      "label_da": "MuseScore → ABC Importer",
+      "label_en": "MuseScore → ABC Importer",
+      "source": "../plugins/musescore-import/dist/plugin.json",
+      "version": "0.1.4-beta.1"
+    },
+    {
+      "id": "abc",
+      "kind": "plugin",
+      "category": "Musik",
+      "label_da": "ABC-nodeplugin",
+      "label_en": "ABC score plugin",
+      "source": "../plugins/abc/dist/plugin.json",
+      "version": "0.3.31-test.8"
+    },
+    {
+      "id": "modern-theme",
+      "kind": "theme",
+      "category": "Tema",
+      "label_da": "Modern",
+      "label_en": "Modern",
+      "source": "../themes/modern/dist/theme.json",
+      "version": "0.1.2"
+    },
+    {
+      "id": "retro-theme",
+      "kind": "theme",
+      "category": "Tema",
+      "label_da": "Retro",
+      "label_en": "Retro",
+      "source": "../themes/retro/dist/theme.json",
+      "version": "0.1.3"
+    },
+    {
+      "id": "hupedia-theme",
+      "kind": "theme",
+      "category": "Tema",
+      "label_da": "HUPedia tema",
+      "label_en": "HUPedia theme",
+      "source": "../themes/hupedia/dist/theme.json",
+      "version": "0.2.4-test.1"
+    },
+    {
+      "id": "site-publisher",
+      "kind": "plugin",
+      "category": "Udgivelse",
+      "label_da": "Udgiv som HTML-site",
+      "label_en": "HTML SitePublisher",
+      "source": "../plugins/site-publisher/dist/plugin.json",
+      "version": "0.1.12-test.1"
+    },
+    {
+      "id": "pdf-publisher",
+      "kind": "plugin",
+      "category": "Udgivelse",
+      "label_da": "Udgiv som PDF",
+      "label_en": "PDF Publisher",
+      "source": "../plugins/print-article/dist/plugin.json",
+      "version": "0.2.8-test.1"
+    },
+    {
+      "id": "trim",
+      "kind": "plugin",
+      "category": "Design",
+      "label_da": "HUWiki Trim",
+      "label_en": "HUWiki Trim",
+      "source": "../plugins/trim/dist/plugin.json",
+      "version": "0.1.5"
+    }
+  ]
+}
