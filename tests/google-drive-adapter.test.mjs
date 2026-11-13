@@ -47,9 +47,10 @@ test("Apps Script runs as the accessing user and does not require mail or URL Fe
   assert.doesNotMatch(server, /PickerBuilder|google\.picker/);
 });
 
-test("server supports file version preflight and Drive sharing notifications", () => {
+test("server uses content checksum preflight and Drive sharing notifications", () => {
   assert.match(server, /LockService\.getScriptLock\(\)/);
-  assert.match(server, /String\(current\.version\)\s*!==\s*String\(expectedVersion\)/);
+  assert.match(server, /diskFingerprint\s*!==\s*baseline/);
+  assert.match(server, /md5Checksum/);
   assert.match(server, /Drive\.Files\.update\(/);
   assert.match(server, /Drive\.Permissions\.create\(/);
   assert.match(server, /sendNotificationEmail:\s*true/);
@@ -61,6 +62,7 @@ test("HTML app exposes local upload, Google Drive invitation and wiki saver", ()
   assert.match(ui, /huCreate\(form\)/);
   assert.match(ui, /huShare/);
   assert.match(ui, /huSave/);
+  assert.match(ui, /current\.fingerprint/);
   assert.match(ui, /huwiki-google-drive/);
   assert.match(ui, /iframe id="wiki"/);
 });
@@ -81,4 +83,71 @@ test("TiddlyWiki saver uses synchronous boolean + asynchronous callback", () => 
   assert.match(ui, /capabilities:\s*\["save","autosave"\]/);
   assert.match(ui, /changeSerial\s*>\s*job\.serial/);
   assert.match(ui, /Hent lokal sikkerhedskopi/);
+});
+
+
+function makeServerFixture({fingerprint = "a".repeat(32), version = "8"} = {}) {
+  const vm = requireVmModule();
+  let writes = 0;
+  let lastPayload = null;
+  const file = {
+    id: "1slj3k2JQrUh6rizHQ1gRUtghu1Wtr2az",
+    name: "HUWiki-demo.html",
+    mimeType: "text/html",
+    size: "2553535",
+    version,
+    md5Checksum: fingerprint,
+    modifiedTime: "2026-11-13T18:01:59.672Z",
+    capabilities: {canEdit: true, canShare: true}
+  };
+  const ctx = {
+    Drive: {Files: {
+      get: () => ({...file}),
+      update: (_file, _id, upload) => {
+        writes += 1;
+        lastPayload = upload;
+        file.version = String(Number(file.version) + 1);
+        file.md5Checksum = "c".repeat(32);
+      }
+    }},
+    Utilities: {
+      newBlob: (value) => ({
+        getBytes: () => Buffer.from(value, "utf8"),
+        setName(name) { this.name = name; return this; }
+      })
+    },
+    LockService: {getScriptLock: () => ({
+      waitLock() {},
+      releaseLock() {}
+    })}
+  };
+  vm.runInNewContext(server, ctx);
+  return {ctx, file, get writes() {return writes;}, get upload() {return lastPayload;}};
+}
+
+// Resolve once via Node's standard module loader, without adding production deps.
+import vm from "node:vm";
+function requireVmModule() { return vm; }
+
+test("first save succeeds if Drive's metadata version changes but HTML checksum is unchanged", () => {
+  const testEnv = makeServerFixture({fingerprint: "a".repeat(32), version: "100"});
+  const result = testEnv.ctx.huSave(testEnv.file.id, "<html>local edit</html>", "a".repeat(32));
+  assert.equal(result.ok, true);
+  assert.equal(result.conflict, undefined);
+  assert.equal(testEnv.writes, 1);
+  assert.equal(result.meta.fingerprint, "c".repeat(32));
+});
+
+test("save refuses an actual content conflict even when version does not change", () => {
+  const testEnv = makeServerFixture({fingerprint: "b".repeat(32), version: "100"});
+  const result = testEnv.ctx.huSave(testEnv.file.id, "<html>stale edit</html>", "a".repeat(32));
+  assert.equal(result.ok, false);
+  assert.equal(result.conflict, true);
+  assert.equal(testEnv.writes, 0);
+});
+
+test("missing Drive checksum fails closed without overwriting", () => {
+  const testEnv = makeServerFixture({fingerprint: "", version: "100"});
+  assert.throws(() => testEnv.ctx.huSave(testEnv.file.id, "<html>edit</html>", ""), /checksum/);
+  assert.equal(testEnv.writes, 0);
 });
