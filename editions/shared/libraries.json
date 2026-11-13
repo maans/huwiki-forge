@@ -20,5 +20,13 @@
     "tags": "$:/tags/SideBar",
     "type": "text/vnd.tiddlywiki",
     "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n! HUWiki Community\n\nHer finder du de offentlige HUWiki Forge Editions, som kan bygges og downloades direkte fra GitHub.\n\n[[Åbn HUWiki Community|https://forge.måns.dk/community/]]\n\nEn Edition er en selvstændig wiki-skabelon. Den er ikke en uploadt brugerwiki. Offentlige wiki-links kan senere føjes til kataloget efter ejerens tilladelse.\n\nTailscale Funnel kan bruges til at dele en levende wiki separat, men er ikke nødvendig for at hente Editions.\n</$list>\n\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n! HUWiki Community\n\nDiscover public HUWiki Forge Editions that you can build and download from GitHub.\n\n[[Open HUWiki Community|https://forge.måns.dk/community/]]\n\nAn Edition is a standalone wiki template, not a user-uploaded wiki. Public wiki links can be curated later with their owners' permission.\n\nTailscale Funnel is an optional way to share a running wiki, not a requirement for downloading Editions.\n</$list>"
+  },
+  {
+    "title": "$:/huwiki/forge/page-control",
+    "tags": "$:/tags/PageControls",
+    "type": "text/vnd.tiddlywiki",
+    "caption": "F · HUWiki Forge",
+    "description": "Åbn HUWiki Forge / Open HUWiki Forge",
+    "text": "\\whitespace trim\n<a href=\"https://forge.måns.dk/\" class=\"tc-btn-invisible huw-forge-home\" title=\"HUWiki Forge\" aria-label=\"HUWiki Forge\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15em;line-height:1.4;padding:2px 5px;text-decoration:none\">F</a>"
   }
 ]
