@@ -23,6 +23,10 @@
     #sharing {display:flex;flex-wrap:wrap;gap:.4rem;align-items:center}
     #sharing label {margin:0}
     #sharing input {width:210px}
+    #launchRow {display:flex;flex-wrap:wrap;gap:.6rem;align-items:center;padding:.55rem 1rem;background:#f5f8fa;border-top:1px solid #cad3d9}
+    #launchRow[hidden] {display:none}
+    #launchRow small {flex-basis:100%;margin:0}
+    #launchLink {overflow-wrap:anywhere}
     .danger {color:#b42318}
     .warning {background:#fff2ce;padding:.7rem 1rem;border-radius:6px}
     a {color:#145d78}
@@ -74,6 +78,11 @@
         <button id="shareButton" type="button" data-i18n="share">Del og send invitation</button>
       </div>
     </header>
+    <div id="launchRow" hidden>
+      <small data-i18n="launchHelp">Google viser et filkort med HTML-forhåndsvisning. Brug i stedet dette direkte ForgeDrive-link.</small>
+      <a id="launchLink" target="_blank" rel="noopener" data-i18n="launchOpen">Åbn i ForgeDrive</a>
+      <button id="copyLaunchLink" type="button" data-i18n="launchCopy">Kopiér ForgeDrive-link</button>
+    </div>
     <div style="padding:.5rem 1rem;background:#fff;border-top:1px solid #cad3d9">
       <button id="backupButton" type="button" data-i18n="backup">Hent lokal sikkerhedskopi</button>
       <small data-i18n="backupHelp">Hvis gemning fejler, bevares ændringerne i den åbne wiki. Hent en kopi, før du genindlæser siden.</small>
@@ -101,6 +110,8 @@ const I18N = {
     enableSync:"Aktivér tiddler-synk",syncOff:"Tiddler-synk er endnu ikke aktiveret.",
     shareWith:"Del med",recipientPlaceholder:"modtager@gmail.com",
     writer:"Redaktør",reader:"Læser",share:"Del og send invitation",
+    launchHelp:"Google viser et filkort med HTML-forhåndsvisning. Brug i stedet dette direkte ForgeDrive-link.",
+    launchOpen:"Åbn i ForgeDrive",launchCopy:"Kopiér ForgeDrive-link",
     backup:"Hent lokal sikkerhedskopi",backupHelp:"Hvis gemning fejler, bevares ændringerne i den åbne wiki. Hent en kopi, før du genindlæser siden."
   },
   en: {
@@ -116,6 +127,8 @@ const I18N = {
     enableSync:"Enable tiddler sync",syncOff:"Tiddler sync is not yet enabled.",
     shareWith:"Share with",recipientPlaceholder:"recipient@gmail.com",
     writer:"Editor",reader:"Reader",share:"Share and send invitation",
+    launchHelp:"Google's file card only previews the HTML source. Use this direct ForgeDrive app link instead.",
+    launchOpen:"Open in ForgeDrive",launchCopy:"Copy ForgeDrive link",
     backup:"Download local backup",backupHelp:"If saving fails, your edits remain in the open wiki. Download a copy before reloading the page."
   }
 };
@@ -159,6 +172,19 @@ function rpc(method, ...params) {
   });
 }
 
+function showLaunchLink(link) {
+  const row = $("launchRow");
+  const a = $("launchLink");
+  // Canonical URL returned by the Apps Script backend, never derived from
+  // the HTML Service iframe's script.googleusercontent.com address.
+  const valid = typeof link === "string" &&
+    /^https:\/\/script\.google\.com\/macros\/s\/[^/?]+\/exec\?id=/.test(link);
+  row.hidden = !valid;
+  if (valid) a.href = link;
+  else a.removeAttribute("href");
+  $("copyLaunchLink").disabled = !valid;
+}
+
 function enableWorkspace(meta) {
   current = meta;
   $("start").hidden = true;
@@ -176,6 +202,7 @@ async function openWiki(id) {
   try {
     const result = await rpc("huOpen", id);
     enableWorkspace(result.meta);
+    showLaunchLink(result.launchLink);
     const frame = $("wiki");
     // Never allow editing an out-of-date HTML baseline before the journal
     // has been replayed and our change listener has been installed.
@@ -538,6 +565,21 @@ $("uploadForm").addEventListener("submit", event => {
 });
 
 $("openButton").addEventListener("click", () => openWiki($("fileId").value.trim()));
+$("copyLaunchLink").addEventListener("click", async () => {
+  const url = $("launchLink").getAttribute("href");
+  if (!url) return;
+  try {
+    if (!navigator.clipboard || typeof navigator.clipboard.writeText !== "function")
+      throw new Error("Clipboard unavailable");
+    await navigator.clipboard.writeText(url);
+    report(loc("ForgeDrive-linket er kopieret.", "ForgeDrive link copied."));
+  } catch (_error) {
+    // Clipboard access is often blocked in Apps Script's sandboxed iframe.
+    // The browser prompt still permits manual selection and copying.
+    window.prompt(loc("Kopiér dette ForgeDrive-link:", "Copy this ForgeDrive link:"), url);
+  }
+});
+
 $("shareButton").addEventListener("click", async () => {
   if (!current) return;
   const email = $("recipient").value.trim();
@@ -549,6 +591,7 @@ $("shareButton").addEventListener("click", async () => {
     report(loc("Delt med ", "Shared with ") + result.recipient + loc(" som ", " as ") +
       (result.role === "writer" ? loc("redaktør", "editor") : loc("læser", "reader")) +
       loc(". Google Drev har sendt invitationen. ", ". Google Drive sent the invitation. ") +
+      loc(" Brug ForgeDrive-linket herover – ikke Googles filkort. ", " Use the ForgeDrive app link above – not Google's file card. ") +
       "Link: " + result.link);
   } catch (error) {
     report(loc("Deling mislykkedes: ", "Sharing failed: ") + error.message, true);
