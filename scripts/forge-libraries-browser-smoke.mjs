@@ -30,7 +30,7 @@ async function main(){
  await writeFile(dest,html);
  const server=createServer(async(req,res)=>{
   const u=new URL(req.url,"http://localhost");
-  const filename=path.resolve(root,"."+u.pathname);
+  const filename=path.resolve(root,"."+u.pathname+(u.pathname.endsWith("/")?"index.html":""));
   if(!filename.startsWith(root+path.sep)){res.writeHead(403).end();return;}
   try{
    const contents=await readFile(filename);
