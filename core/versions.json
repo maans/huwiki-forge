@@ -3,6 +3,6 @@
   "sourceUrl": "https://tiddlywiki.com/empty.html",
   "version": "5.4.1",
   "sha256": "f161e81d0b25d6902ab259a5a8797c7a2a9abce3dc2d57e63d7a078100084028",
-  "status": "candidate",
-  "note": "Official upstream empty.html; compatibility of real Editions requires independent testing."
+  "status": "pinned",
+  "note": "Version 5.4.1 er fastlåst til Editions. Demo er browsertestet; HUPedia er kun automatisk testet indtil videre. Nye upstream-versioner lægges som kandidater til særskilt godkendelse."
 }
