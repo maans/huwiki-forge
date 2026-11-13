@@ -93,6 +93,8 @@ test("Publisher toolbar descriptions follow TiddlyWiki language without an extra
     const tool=entries[p.title+"/Toolbar"];
     assert.equal(tool.type,"text/vnd.tiddlywiki");
     assert.ok(tool.description.includes("else[$:/languages/en-GB]"),"Toolbar descriptions must fall back to English");
+    assert.ok(tool.text.includes('variable="huwikiLocale"'),"Locale wrapper cannot replace currentTiddler");
+    assert.ok(tool.description.includes('variable="huwikiLocale"'),"Description locale wrapper must be explicit");
     assert.equal(tool.text.split(String.fromCharCode(92)+"whitespace trim").length-1,1,"Only the initial whitespace pragma is valid");
     assert.ok(!tool.text.includes("\n"+String.fromCharCode(92)+"whitespace trim\n<" ));
     assert.ok(entries[p.title+"/readme"],"Internal README must be included");
