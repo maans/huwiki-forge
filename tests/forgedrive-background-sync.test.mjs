@@ -468,6 +468,7 @@ test("first edit after reopening an HTML snapshot uses the real tiddler base rev
   W.wiki.addTiddler(new W.Tiddler({title:"Already in HTML", text:"hello"}));
   W.saverHandler.numChanges = 0;
   const client = new Delta({tw:W,fileId:f.file.id,
+    snapshotSeq:saved.meta.snapshotSeq,
     rpc: async (name,...args) => f.ctx[name](...args)});
   await client.start();
   assert.equal(client.cursor,1);
