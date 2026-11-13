@@ -1,0 +1,18 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "HUWiki HUPin"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "Klikbare billeder, SVG og kort"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[HUPin · Start]]"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  }
+]
