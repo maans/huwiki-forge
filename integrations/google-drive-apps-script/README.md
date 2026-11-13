@@ -16,6 +16,16 @@ Denne prototype skal ikke erstatte Forge, TiddlyWikis almindelige lokale HTML-ge
 eller det tidligere OAuthLab. Den lader to Google-konti redigere **én delt HTML-wiki**
 skiftevis, med versionskontrol og Google Drives almindelige tilladelser.
 
+## Første afprøvning og fundet fejl (13. november 2026)
+
+- Kontoen `humamamm@gmail.com` kunne uploade og åbne `HUWiki-demo (1).html` i ForgeDrive.
+- Første gemning gav en **falsk konflikt** efter cirka 10 sekunder.
+- Drive-revisionshistorikken viste kun den oprindelige revision: HTML-indholdet var ikke blevet ændret.
+- Årsag i den oprindelige kontrol: Drive-feltet `version` tæller også serverændringer i metadata og kan derfor ikke alene bruges til at afgøre, om HTML'en er ændret.
+- Rettelse: `md5Checksum` som indholdsfingerprint, og fail-closed hvis checksum mangler. Testene omfatter samme checksum med ændret versionsnummer og ændret checksum med samme versionsnummer.
+- Ved retest: Hent først den lokale backup fra den konfliktramte wiki. Udgiv en **ny version af samme Apps Script-implementering**, ellers bruger `/exec` stadig gammel kode.
+- Gemmestatus skal måle **samlet browser-ventetid** og server-tid hver for sig.
+
 ## Brugerrejsen
 
 1. Brugeren vælger en Edition i Forge, evt. `Google Drev (test)` som ekstra plugin.
@@ -59,10 +69,10 @@ kan tilføjes senere, efter at denne løsning er browser- og rettighedstestet.
 
 - Ingen `UrlFetchApp`, `MailApp`, `GmailApp` eller Google Picker bruges.
 - Appen laver **hele HTML-uploaden ved gemning**, ikke tiddlerbaseret sync.
-- Google Drive-versionen kontrolleres før upload. `LockService` serialiserer
+- Google Drives `md5Checksum` for **filindholdet** kontrolleres før upload; `version` er ikke pålideligt som indholdsfingerprint, fordi det også ændres ved metadataændringer. `LockService` serialiserer
   webappens gemninger, men kan **ikke** sikre atomisk konfliktkontrol mod
   redigering uden for dette Apps Script-projekt.
-- En konfliktramte browser beholder lokale ændringer i hukommelsen.
+- En konfliktramt browser beholder lokale ændringer i hukommelsen.
   Brugeren skal kunne eksportere lokal backup, før vedkommende genindlæser.
 - `google.script.run` og iframe-opsætningen skal testes på Mac og iPad.
 - Den valgte 12 MB testgrænse er bevidst konservativ; store Editions kan
