@@ -130,6 +130,13 @@ function backendFixture() {
   return {ctx, file, books, permissions, get htmlWrites() {return htmlWrites;} };
 }
 
+function enable(f, fingerprint = f.file.md5Checksum) {
+  return f.ctx.huSyncEnable(f.file.id, fingerprint);
+}
+function push(f, operations, fingerprint = f.file.md5Checksum) {
+  return f.ctx.huSyncPush(f.file.id, operations, fingerprint);
+}
+
 function op(title, baseSeq, opId, text = "hello") {
   return {
     title, baseSeq, opId, actor: "fd_12345678", operation: "put",
@@ -197,8 +204,8 @@ test("sync has user-scoped authorization and does not use Picker/UrlFetch", () =
 
 test("creates exactly one shared change log linked to its Drive HTML wiki", () => {
   const f = backendFixture();
-  const a = f.ctx.huSyncEnable(f.file.id);
-  const b = f.ctx.huSyncEnable(f.file.id);
+  const a = enable(f);
+  const b = enable(f);
   assert.equal(a.sheetId, b.sheetId);
   assert.equal(f.books.size, 1);
   assert.equal(f.file.properties.forgeDriveSyncSheetId, a.sheetId);
@@ -206,9 +213,9 @@ test("creates exactly one shared change log linked to its Drive HTML wiki", () =
 
 test("different tiddler edits batch without a full HTML upload", () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
-  const a = f.ctx.huSyncPush(f.file.id, [op("Tiddler A", 0, "fd_first_0001")]);
-  const b = f.ctx.huSyncPush(f.file.id, [op("Tiddler B", 0, "fd_second_002")]);
+  enable(f);
+  const a = push(f, [op("Tiddler A", 0, "fd_first_0001")]);
+  const b = push(f, [op("Tiddler B", 0, "fd_second_002")]);
   assert.equal(a.ok, true);
   assert.equal(b.ok, true);
   const pull = f.ctx.huSyncPull(f.file.id, 0, 100);
@@ -219,9 +226,9 @@ test("different tiddler edits batch without a full HTML upload", () => {
 
 test("rejects only real concurrent edits on the same tiddler", () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
-  f.ctx.huSyncPush(f.file.id, [op("Conflict", 0, "fd_first_0001")]);
-  const conflict = f.ctx.huSyncPush(f.file.id, [op("Conflict", 0, "fd_second_002", "different")]);
+  enable(f);
+  push(f, [op("Conflict", 0, "fd_first_0001")]);
+  const conflict = push(f, [op("Conflict", 0, "fd_second_002", "different")]);
   assert.equal(conflict.conflict, true);
   assert.equal(conflict.conflicts[0].actual, 1);
   assert.equal(f.ctx.huSyncPull(f.file.id, 0, 100).events.length, 1);
@@ -229,10 +236,10 @@ test("rejects only real concurrent edits on the same tiddler", () => {
 
 test("retry with same operation id is idempotent", () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
+  enable(f);
   const action = op("Notes", 0, "fd_action_0001");
-  f.ctx.huSyncPush(f.file.id, [action]);
-  const repeat = f.ctx.huSyncPush(f.file.id, [action]);
+  push(f, [action]);
+  const repeat = push(f, [action]);
   assert.equal(repeat.ok, true);
   assert.equal(repeat.accepted[0].seq, 1);
   assert.equal(f.ctx.huSyncPull(f.file.id, 0, 100).events.length, 1);
@@ -240,22 +247,20 @@ test("retry with same operation id is idempotent", () => {
 
 test("Sheets input rejects oversized changes and invalid identifiers", () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
-  assert.throws(() => f.ctx.huSyncPush(f.file.id,
-    [op("Large", 0, "fd_large_0001", "x".repeat(50000))]), /for stor/);
-  assert.throws(() => f.ctx.huSyncPush(f.file.id,
-    [op("$:/system", 0, "fd_system_001")]), /Ugyldig/);
+  enable(f);
+  assert.throws(() => push(f, [op("Large", 0, "fd_large_0001", "x".repeat(50000))]), /for stor/);
+  assert.throws(() => push(f, [op("$:/system", 0, "fd_system_001")]), /Ugyldig/);
   assert.equal(f.ctx.huSyncPull(f.file.id, 0, 100).events.length, 0);
 });
 
 test("browser clients exchange updates and clear remote dirty state", async () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
+  enable(f);
   const Delta = clientClass();
   const A = fakeWiki(), B = fakeWiki();
   const rpc = async (name, ...args) => f.ctx[name](...args);
-  const a = new Delta({ tw: A, fileId: f.file.id, rpc });
-  const b = new Delta({ tw: B, fileId: f.file.id, rpc });
+  const a = new Delta({fingerprint: f.file.md5Checksum, tw: A, fileId: f.file.id, rpc });
+  const b = new Delta({fingerprint: f.file.md5Checksum, tw: B, fileId: f.file.id, rpc });
   await a.start();
   await b.start();
   A.wiki.addTiddler(new A.Tiddler({ title: "Shared", text: "first" }));
@@ -271,12 +276,12 @@ test("browser clients exchange updates and clear remote dirty state", async () =
 
 test("browser conflict retains the second editor's unsent version", async () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
+  enable(f);
   const Delta = clientClass();
   const A = fakeWiki(), B = fakeWiki();
   const rpc = async (name, ...args) => f.ctx[name](...args);
-  const a = new Delta({ tw: A, fileId: f.file.id, rpc });
-  const b = new Delta({ tw: B, fileId: f.file.id, rpc });
+  const a = new Delta({fingerprint: f.file.md5Checksum, tw: A, fileId: f.file.id, rpc });
+  const b = new Delta({fingerprint: f.file.md5Checksum, tw: B, fileId: f.file.id, rpc });
   await a.start(); await b.start();
   A.wiki.addTiddler(new A.Tiddler({ title: "Same", text: "first" }));
   await a.flush(); await b.pullAll();
@@ -291,7 +296,7 @@ test("browser conflict retains the second editor's unsent version", async () => 
 
 test("oversized tiddlers stay dirty and do not trigger repeated network writes", async () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
+  enable(f);
   const Delta = clientClass();
   const A = fakeWiki();
   let writes = 0;
@@ -299,7 +304,7 @@ test("oversized tiddlers stay dirty and do not trigger repeated network writes",
     if (name === "huSyncPush") writes++;
     return f.ctx[name](...args);
   };
-  const a = new Delta({ tw: A, fileId: f.file.id, rpc });
+  const a = new Delta({fingerprint: f.file.md5Checksum, tw: A, fileId: f.file.id, rpc });
   await a.start();
   A.wiki.addTiddler(new A.Tiddler({ title: "Oversize", text: "X".repeat(50000) }));
   assert.equal(a.pending.size, 0);
@@ -317,7 +322,7 @@ test("enabling a log preserves HTML baseline and mirrors existing named shares",
     id: "preexisting", type: "user", role: "writer",
     emailAddress: "school@example.com"
   });
-  const enabled = f.ctx.huSyncEnable(f.file.id);
+  const enabled = enable(f);
   const grants = f.permissions.get(enabled.sheetId);
   assert.equal(grants.length, 1);
   assert.equal(grants[0].emailAddress, "school@example.com");
@@ -329,8 +334,8 @@ test("enabling a log preserves HTML baseline and mirrors existing named shares",
 
 test("snapshot never overwrites a newer delta journal even with matching HTML checksum", () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
-  f.ctx.huSyncPush(f.file.id, [op("New shared tiddler", 0, "fd_snapshot_01")]);
+  enable(f);
+  push(f, [op("New shared tiddler", 0, "fd_snapshot_01")]);
   const checksum = f.file.md5Checksum;
   const stale = f.ctx.huSave(f.file.id, "<html>stale</html>", checksum, 0);
   assert.equal(stale.conflict, true);
@@ -344,11 +349,11 @@ test("snapshot never overwrites a newer delta journal even with matching HTML ch
 
 test("deleted tiddlers propagate and do not leave remote dirty status", async () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
+  enable(f);
   const Delta = clientClass(), A = fakeWiki(), B = fakeWiki();
   const rpc = async (name, ...args) => f.ctx[name](...args);
-  const a = new Delta({tw: A, fileId: f.file.id, rpc});
-  const b = new Delta({tw: B, fileId: f.file.id, rpc});
+  const a = new Delta({fingerprint: f.file.md5Checksum,tw: A, fileId: f.file.id, rpc});
+  const b = new Delta({fingerprint: f.file.md5Checksum,tw: B, fileId: f.file.id, rpc});
   await a.start(); await b.start();
   A.wiki.addTiddler(new A.Tiddler({title:"Delete me", text:"hello"}));
   await a.flush(); await b.pullAll();
@@ -362,7 +367,7 @@ test("deleted tiddlers propagate and do not leave remote dirty status", async ()
 
 test("changes made during an in-flight push remain pending and dirty", async () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
+  enable(f);
   const Delta = clientClass(), A = fakeWiki();
   let release, first = true;
   const rpc = (name, ...args) => {
@@ -374,7 +379,7 @@ test("changes made during an in-flight push remain pending and dirty", async () 
     }
     return Promise.resolve(f.ctx[name](...args));
   };
-  const a = new Delta({tw: A, fileId:f.file.id, rpc});
+  const a = new Delta({fingerprint: f.file.md5Checksum,tw: A, fileId:f.file.id, rpc});
   await a.start();
   A.wiki.addTiddler(new A.Tiddler({title:"Typing", text:"first"}));
   const flight = a.flush();
@@ -393,11 +398,11 @@ test("changes made during an in-flight push remain pending and dirty", async () 
 
 test("one conflict does not freeze unrelated tiddler changes", async () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
+  enable(f);
   const Delta = clientClass(), A = fakeWiki(), B = fakeWiki();
   const rpc = async (name,...args) => f.ctx[name](...args);
-  const a = new Delta({tw:A,fileId:f.file.id,rpc});
-  const b = new Delta({tw:B,fileId:f.file.id,rpc});
+  const a = new Delta({fingerprint: f.file.md5Checksum,tw:A,fileId:f.file.id,rpc});
+  const b = new Delta({fingerprint: f.file.md5Checksum,tw:B,fileId:f.file.id,rpc});
   await a.start(); await b.start();
   A.wiki.addTiddler(new A.Tiddler({title:"Same",text:"initial"}));
   await a.flush(); await b.pullAll();
@@ -416,7 +421,7 @@ test("one conflict does not freeze unrelated tiddler changes", async () => {
 
 test("pending offline edits survive reload in the same Google account", async () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
+  enable(f);
   const data = new Map();
   const storage = {
     getItem: key => data.get(key) || null,
@@ -426,13 +431,13 @@ test("pending offline edits survive reload in the same Google account", async ()
   const Delta = clientClass();
   const rpc = async (name,...args) => f.ctx[name](...args);
   const A = fakeWiki();
-  const a = new Delta({tw:A,fileId:f.file.id,rpc,storage});
+  const a = new Delta({fingerprint: f.file.md5Checksum,tw:A,fileId:f.file.id,rpc,storage});
   await a.start();
   A.wiki.addTiddler(new A.Tiddler({title:"Recovered",text:"offline draft"}));
   assert.equal(data.size,1);
   a.stop();
   const B = fakeWiki();
-  const b = new Delta({tw:B,fileId:f.file.id,rpc,storage});
+  const b = new Delta({fingerprint: f.file.md5Checksum,tw:B,fileId:f.file.id,rpc,storage});
   await b.start();
   assert.equal(B.wiki.getTiddler("Recovered").fields.text,"offline draft");
   assert.equal(b.pending.size,1);
@@ -445,11 +450,11 @@ test("pending offline edits survive reload in the same Google account", async ()
 
 test("read-only collaborator receives remote edits without false dirty warning", async () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
-  f.ctx.huSyncPush(f.file.id,[op("Remote",0,"fd_reader_0001")]);
+  enable(f);
+  push(f, [op("Remote",0,"fd_reader_0001")]);
   f.file.capabilities.canEdit = false;
   const Delta = clientClass(), B = fakeWiki();
-  const b = new Delta({tw:B,fileId:f.file.id,
+  const b = new Delta({fingerprint: f.file.md5Checksum,tw:B,fileId:f.file.id,
     rpc: async (name,...args) => f.ctx[name](...args)});
   await b.start();
   assert.equal(b.canEdit,false);
@@ -460,8 +465,8 @@ test("read-only collaborator receives remote edits without false dirty warning",
 
 test("first edit after reopening an HTML snapshot uses the real tiddler base revision", async () => {
   const f = backendFixture();
-  f.ctx.huSyncEnable(f.file.id);
-  f.ctx.huSyncPush(f.file.id, [op("Already in HTML", 0, "fd_before_snapshot")]);
+  enable(f);
+  push(f, [op("Already in HTML", 0, "fd_before_snapshot")]);
   const checksum = f.file.md5Checksum;
   const saved = f.ctx.huSave(f.file.id, "<html>snapshot 1</html>", checksum, 1);
   assert.equal(saved.ok, true);
@@ -469,7 +474,7 @@ test("first edit after reopening an HTML snapshot uses the real tiddler base rev
   const W = fakeWiki();
   W.wiki.addTiddler(new W.Tiddler({title:"Already in HTML", text:"hello"}));
   W.saverHandler.numChanges = 0;
-  const client = new Delta({tw:W,fileId:f.file.id,
+  const client = new Delta({fingerprint: f.file.md5Checksum,tw:W,fileId:f.file.id,
     snapshotSeq:saved.meta.snapshotSeq,
     rpc: async (name,...args) => f.ctx[name](...args)});
   await client.start();
@@ -485,7 +490,7 @@ test("first edit after reopening an HTML snapshot uses the real tiddler base rev
 
 test("direct sharing and role changes update the HTML wiki and its journal idempotently", () => {
   const f = backendFixture();
-  const linked = f.ctx.huSyncEnable(f.file.id);
+  const linked = enable(f);
   const first = f.ctx.huShare(f.file.id,"collaborator@example.com","writer");
   assert.equal(first.role,"writer");
   assert.equal(f.permissions.get(f.file.id).filter(p => p.role === "writer").length,1);
@@ -499,7 +504,7 @@ test("direct sharing and role changes update the HTML wiki and its journal idemp
 
 test("failed HTML invitation rolls back a new journal permission", () => {
   const f = backendFixture();
-  const linked = f.ctx.huSyncEnable(f.file.id);
+  const linked = enable(f);
   const original = f.ctx.Drive.Permissions.create;
   f.ctx.Drive.Permissions.create = (grant,id,options) => {
     if (id === f.file.id) throw new Error("Workspace sharing blocked");
@@ -512,6 +517,6 @@ test("failed HTML invitation rolls back a new journal permission", () => {
 test("group or link shares are not silently granted to a private delta journal", () => {
   const f = backendFixture();
   f.permissions.get(f.file.id).push({type:"anyone",role:"reader",id:"unsafe"});
-  assert.throws(() => f.ctx.huSyncEnable(f.file.id), /linkdeling/);
+  assert.throws(() => enable(f), /linkdeling/);
   assert.equal(f.file.properties.forgeDriveSyncSheetId, undefined);
 });
