@@ -12,7 +12,7 @@
     {
       "id": "tegne",
       "name": "HUWiki Tegne Edition (test)",
-      "version": "0.1.1-test.1",
+      "version": "0.1.2-test.1",
       "description": "Offline Excalidraw drawing studio with editable SVG scenes, SitePublisher and bilingual UI; large self-contained file; browser test pending",
       "status": "test",
       "manifest": "../editions/tegne/manifest.json",
@@ -64,8 +64,8 @@
     {
       "id": "site-publisher",
       "name": "HUWiki SitePublisher",
-      "version": "0.1.14-test.1",
-      "description": "Offline HTML publishing with CutOut, Excalidraw SVG drawings, local media, HUPedia infoboxes and selectable layouts",
+      "version": "0.1.15-test.1",
+      "description": "Offline HTML publishing with CutOut, Excalidraw SVG drawings, live studio export protection, local media and HUPedia layouts",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
     },
