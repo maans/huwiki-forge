@@ -1,6 +1,17 @@
 # HUWiki Google Drev – isoleret teknisk test
 
-**Status: eksperimentel; ikke implementeret eller testet live i Google Apps Script.**
+**Status: eksperimentel. Brugeren har oprettet webapp-implementeringen; login, Drive-overførsler og flerbrugerfunktioner er endnu ikke verificeret.**
+
+**Seneste oplyste test-URL (13. november 2026):**
+https://script.google.com/macros/s/AKfycbxcW3X-jn0sUcNL1MKUg3RNp4UeG_4LqQyglAc9VlSKcB8mgHTAFUbO1BzAYM4tdwF-/exec
+
+**Apps Script script-ID:** `1WTaV-Z-rTOgR1yLZ5IydFRizlSEFR9NksQVXqWocWeOdJjjJ_MCWRFzP`
+
+Det valgfri Forge-plugin leverer URL'en som default. Dette er en offentlig
+webapp-adresse, **ikke et adgangstoken**. Hvis webappens URL skifter ved ny
+implementering, skal plugin-konfigurationen også opdateres.
+
+
 Denne prototype skal ikke erstatte Forge, TiddlyWikis almindelige lokale HTML-gemning
 eller det tidligere OAuthLab. Den lader to Google-konti redigere **én delt HTML-wiki**
 skiftevis, med versionskontrol og Google Drives almindelige tilladelser.
@@ -35,7 +46,7 @@ kan tilføjes senere, efter at denne løsning er browser- og rettighedstestet.
 4. Implementér som **Webapp**:
    - **Udfør som:** `Brugeren, der åbner webappen` / `USER_ACCESSING`.
    - **Hvem har adgang:** `Alle med en Google-konto` (logget ind) / `ANYONE`.
-5. Åbn `/exec` som den private bruger, og godkend tilladelserne.
+5. Åbn den ovenstående `/exec`-adresse som den private bruger, og godkend tilladelserne.
 6. Byg en **lille test-Edition** i Forge. Vælg filen fra webappens lokale
    filvælger, og kontroller at den kan åbnes og gemmes.
 7. Del med skolekontoen som redaktør. Modtageren bruger linket i
