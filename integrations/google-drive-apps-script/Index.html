@@ -367,28 +367,39 @@ async function installSaver(frame, fileId) {
 async function connectDelta(frame, fileId) {
   try {
     const tw = await waitForWiki(frame);
+    updateLanguage(tw);
+    tw.wiki.addEventListener("change", changes => {
+      if (changes && changes["$:/language"]) updateLanguage(tw);
+    });
     if (delta) delta.stop();
     delta = new window.ForgeDriveDelta({
       tw,
       fileId,
       rpc,
       snapshotSeq: current && current.snapshotSeq || 0,
+      localize: loc,
       onStatus: (message, bad) => {
         $("syncStatus").textContent = message;
         $("syncStatus").style.color = bad ? "#b42318" : "#27634e";
       },
       onState: state => {
         $("saveHint").textContent = state.active ?
-          "Tiddlerændringer synkroniseres i baggrunden (" + state.pending +
-          " afventer, " + state.conflicts + " konflikter, " + state.unsupported +
-          " kun i HTML-snapshot). Gem på Google Drev laver en komplet HTML-kopi." :
-          "Ingen baggrundssynk endnu – Gem laver en komplet HTML-kopi.";
+          loc("Tiddlerændringer synkroniseres i baggrunden (",
+              "Tiddler edits sync in the background (") + state.pending +
+          loc(" afventer, ", " pending, ") + state.conflicts +
+          loc(" konflikter, ", " conflicts, ") + state.unsupported +
+          loc(" kun i HTML-snapshot). Gem på Google Drev laver en komplet HTML-kopi.",
+              " HTML-snapshot-only). Save to Google Drive uploads a full HTML copy.") :
+          I18N[language].saveHint;
       }
     });
     const info = await rpc("huSyncInfo", fileId);
     if (info.enabled) {
       $("enableSyncButton").hidden = true;
-      await delta.start(info);
+      const started = await delta.start(info);
+      if (!started) throw new Error(loc(
+        "HTML-snapshot og ændringslog kunne ikke forbindes. Genåbn wikien.",
+        "The HTML snapshot and journal could not be matched. Reopen the wiki."));
     } else {
       $("enableSyncButton").disabled = !info.canEdit || !info.canShare;
       $("enableSyncButton").hidden = false;
