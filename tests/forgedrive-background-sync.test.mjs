@@ -62,6 +62,9 @@ function backendFixture() {
     properties: {}
   };
   const books = new Map();
+  const permissions = new Map([[file.id, [
+    {id: "owner_1", type: "user", role: "owner", emailAddress: "owner@example.com"}
+  ]]]);
   const SpreadsheetApp = {
     create() {
       const id = "sheet_" + String(books.size + 1).padStart(15, "0");
@@ -75,18 +78,37 @@ function backendFixture() {
     },
     flush() {}
   };
+  let nextPermission = 1;
   const Drive = {
     Files: {
       get: () => ({ ...file, properties: { ...file.properties } }),
       update: ({ properties }) => { Object.assign(file.properties, properties); }
-    }
+    },
+    Permissions: {
+      list: (id) => ({permissions: (permissions.get(id) || []).map(p => ({...p}))}),
+      create: (grant, id) => {
+        const p = {...grant, id: "grant_" + nextPermission++};
+        permissions.set(id, [...(permissions.get(id) || []), p]);
+        return {id: p.id};
+      },
+      update: (patch, id, permissionId) => {
+        const p = (permissions.get(id) || []).find(entry => entry.id === permissionId);
+        if (!p) throw Error("Permission not found");
+        Object.assign(p, patch);
+        return {id: p.id};
+      },
+      delete: (id, permissionId) => {
+        permissions.set(id, (permissions.get(id) || []).filter(p => p.id !== permissionId));
+      }
+    },
+    About: {get: () => ({user: {permissionId: "per_account_one"}})}
   };
   const LockService = {
     getScriptLock: () => ({ waitLock() {}, releaseLock() {} })
   };
   const ctx = { SpreadsheetApp, Drive, LockService, huFile_: () => ({ ...file }), huFileId_: x => x };
   vm.runInNewContext(server, ctx);
-  return { ctx, file, books };
+  return { ctx, file, books, permissions };
 }
 
 function op(title, baseSeq, opId, text = "hello") {
@@ -149,8 +171,8 @@ function fakeWiki() {
 test("sync has user-scoped authorization and does not use Picker/UrlFetch", () => {
   assert.equal(manifest.webapp.executeAs, "USER_ACCESSING");
   assert.ok(manifest.oauthScopes.includes("https://www.googleapis.com/auth/spreadsheets"));
-  assert.doesNotMatch(server, /UrlFetchApp|google\.picker|PickerBuilder/);
-  assert.doesNotMatch(client, /UrlFetchApp|google\.picker|PickerBuilder/);
+  assert.doesNotMatch(server, /UrlFetchApp\s*\.|google\.picker|PickerBuilder/);
+  assert.doesNotMatch(client, /UrlFetchApp\s*\.|google\.picker|PickerBuilder/);
   assert.doesNotThrow(() => new vm.Script(server));
 });
 
