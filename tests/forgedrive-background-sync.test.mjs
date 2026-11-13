@@ -520,3 +520,85 @@ test("group or link shares are not silently granted to a private delta journal",
   assert.throws(() => enable(f), /linkdeling/);
   assert.equal(f.file.properties.forgeDriveSyncSheetId, undefined);
 });
+
+test("activation refuses a different HTML baseline without creating a journal", () => {
+  const f = backendFixture();
+  assert.throws(() => enable(f, "c".repeat(32)), /ændret på Google Drev/);
+  assert.equal(f.file.properties.forgeDriveSyncSheetId, undefined);
+  assert.equal(f.books.size, 0);
+});
+
+test("server rejects stale delta writes after a newer full HTML snapshot", () => {
+  const f = backendFixture();
+  enable(f);
+  const oldFingerprint = f.file.md5Checksum;
+  const snapshot = f.ctx.huSave(f.file.id, "<html>new media</html>", oldFingerprint, 0);
+  assert.equal(snapshot.ok, true);
+  const stale = push(f, [op("Concurrent", 0, "fd_stale_00001")], oldFingerprint);
+  assert.equal(stale.ok, false);
+  assert.equal(stale.snapshotStale, true);
+  assert.equal(f.ctx.huSyncPull(f.file.id, 0, 10).events.length, 0);
+  const fresh = push(f, [op("Concurrent", 0, "fd_fresh_00001")]);
+  assert.equal(fresh.ok, true);
+  assert.equal(f.ctx.huSyncPull(f.file.id, 0, 10).events.length, 1);
+});
+
+test("client refuses booting against a different HTML checksum at the same cursor", async () => {
+  const f = backendFixture();
+  enable(f);
+  const oldFingerprint = f.file.md5Checksum;
+  const snapshot = f.ctx.huSave(f.file.id, "<html>new media</html>", oldFingerprint, 0);
+  assert.equal(snapshot.ok, true);
+  const Delta = clientClass();
+  const A = fakeWiki();
+  const client = new Delta({
+    fingerprint: oldFingerprint,
+    tw: A, fileId: f.file.id,
+    rpc: async (name, ...args) => f.ctx[name](...args)
+  });
+  assert.equal(await client.start(), false);
+  assert.equal(client.snapshotOutdated, true);
+  assert.equal(client.active, false);
+  client.stop();
+});
+
+test("a newer remote HTML snapshot pauses local delta pushes without losing drafts", async () => {
+  const f = backendFixture();
+  enable(f);
+  const Delta = clientClass();
+  const A = fakeWiki();
+  const rpc = async (name, ...args) => f.ctx[name](...args);
+  const a = new Delta({fingerprint: f.file.md5Checksum,tw:A,fileId:f.file.id,rpc});
+  await a.start();
+  A.wiki.addTiddler(new A.Tiddler({title:"Draft",text:"unsent"}));
+  const previous = f.file.md5Checksum;
+  const snapshot = f.ctx.huSave(f.file.id, "<html>changed by B</html>", previous, 0);
+  assert.equal(snapshot.ok, true);
+  assert.equal(await a.pullAll(), false);
+  assert.equal(a.snapshotOutdated, true);
+  assert.equal(a.pending.size, 1);
+  await a.flush();
+  assert.equal(a.pending.size, 1);
+  assert.equal(A.wiki.getTiddler("Draft").fields.text, "unsent");
+  assert.equal(A.saverHandler.isDirty(), true);
+  assert.equal(f.ctx.huSyncPull(f.file.id, 0, 20).events.length, 0);
+  a.stop();
+});
+
+test("initial pull failure never unlocks stale HTML for editing", async () => {
+  const f = backendFixture();
+  enable(f);
+  const Delta = clientClass();
+  const A = fakeWiki();
+  const client = new Delta({
+    fingerprint: f.file.md5Checksum, tw:A, fileId:f.file.id,
+    rpc: async (name, ...args) => {
+      if (name === "huSyncPull") throw new Error("Sheets not available");
+      return f.ctx[name](...args);
+    }
+  });
+  assert.equal(await client.start(), false);
+  assert.equal(client.active, false);
+  assert.equal(client.lastPullSucceeded, false);
+  client.stop();
+});
