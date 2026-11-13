@@ -41,8 +41,12 @@ function publicationDrawingValidate(title,f){
   var file=scene.files&&scene.files[e.fileId],data=String(file&&file.dataURL||"");
   if(!/^data:image\/(?:png|jpeg|webp|gif|svg\+xml)(?:;[^,]*)?,/i.test(data))
    throw publicationDrawingError(title,"Et indsat billede mangler sine data. Gem billedet i tegningen først.","An embedded image is missing; save the image in the drawing first.");
-  if(/^data:image\/svg\+xml/i.test(data)&&(/<script\b|<foreignObject\b|onload\s*=/i.test(data)||/<script\b|<foreignObject\b|onload\s*=/i.test((function(){try{return decodeURIComponent(data.split(",").slice(1).join(","));}catch(_){return "";}})()))))
-   throw publicationDrawingError(title,"Et indsat SVG-billede indeholder usikkert indhold.","An embedded SVG image contains unsafe content.");
+  if(/^data:image\/svg\+xml/i.test(data)){
+   var urlBody=data.slice(data.indexOf(",")+1);
+   try{if(!/;base64,/i.test(data))urlBody=decodeURIComponent(urlBody);}catch(_){}
+   if(/<\s*(?:script|foreignObject)\b|\bonload\s*=/i.test(urlBody))
+    throw publicationDrawingError(title,"Et indsat SVG-billede indeholder usikkert indhold.","An embedded SVG image contains unsafe content.");
+  }
  });
  if(f["hu-transparent"]==="yes")scene.appState=Object.assign({},scene.appState,{exportBackground:false});
  return scene;
