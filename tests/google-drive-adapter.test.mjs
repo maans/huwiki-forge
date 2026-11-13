@@ -56,8 +56,10 @@ test("server uses content checksum preflight and Drive sharing notifications", (
   assert.match(server, /md5Checksum/);
   assert.match(server, /Drive\.Files\.update\(/);
   assert.match(server, /Drive\.Permissions\.create\(/);
-  assert.match(server, /sendNotificationEmail:\s*true/);
-  assert.match(server, /emailMessage:/);
+  assert.match(server, /sendNotificationEmail:\s*notify/);
+  assert.match(server, /huGrantShare_\(id, email, role, true, link\)/);
+  assert.match(server, /options\.emailMessage\s*=/);
+  assert.match(server, /Drive\.Permissions\.delete\(sheetId, journal\.id\)/);
 });
 
 test("HTML app exposes local upload, Google Drive invitation and wiki saver", () => {
