@@ -1,5 +1,5 @@
 {
   "title": "Demo: Velkommen",
   "type": "text/vnd.tiddlywiki",
-  "text": "! HUWiki Forge — demo\n\nDenne tiddler er indsat fra Edition-manifestet, inden TiddlyWiki startede.\n\nJavaScript-plugin startet: **{{$:/state/HUWikiForge/DemoPluginStarted}}**\n\nRedigér denne tiddler, og brug derefter TiddlyWikis almindelige //Gem//-funktion."
+  "text": "! HUWiki Forge — demo\n\nDenne tiddler er indsat fra Edition-manifestet, inden TiddlyWiki startede.\n\nJavaScript-plugin startet: ''{{$:/state/HUWikiForge/DemoPluginStarted}}''\n\nRedigér denne tiddler, og brug derefter TiddlyWikis almindelige //Gem//-funktion."
 }
