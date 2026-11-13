@@ -33,12 +33,23 @@ async function main(){
   const context=await browser.newContext({viewport:{width:1280,height:900},serviceWorkers:"block"});
   await context.setOffline(true);
   const page=await context.newPage();
-  const critical=[];
+  const critical=[],networkFailures=[];
   page.on("pageerror",error=>critical.push(error.message));
+  page.on("requestfailed",request=>{
+   const url=request.url();
+   networkFailures.push(url);
+   console.warn("browser failed request:",url,request.failure()?.errorText||"");
+  });
   page.on("console",message=>{if(message.type()==="error")console.warn("browser console:",message.text().slice(0,300));});
   await page.goto(pathToFileURL(filename).href,{waitUntil:"load",timeout:120000});
   await page.waitForFunction(()=>window.$tw?.wiki?.getTiddler("Farvefigurer")&&document.querySelector(".hu-tegne-app"),null,{timeout:120000});
   console.log("Boot succeeded, HUWiki Draw visible");
+  const beforeNew=await page.evaluate(()=>window.$tw.wiki.getTiddlersWithTag("HUWiki/Tegning").length);
+  const newButton=page.locator(".hu-tegne-intro .hu-tegne-primary").first();
+  await newButton.click({timeout:30000});
+  const afterNew=await page.evaluate(()=>window.$tw.wiki.getTiddlersWithTag("HUWiki/Tegning").length);
+  if(afterNew!==beforeNew+1)throw Error("New drawing button did not create a TiddlyWiki drawing tiddler");
+  console.log("Native new-drawing action creates an editable tiddler");
 
   const action=page.locator(".hu-tegne-card").filter({hasText:"Farvefigurer"}).locator("button").first();
   await action.click({timeout:30000});
@@ -60,6 +71,20 @@ async function main(){
   if(!html.includes("data:image/svg+xml"))throw Error("SitePublisher SVG was not embedded in the offline site");
   if(/file:\/\/\/Users\//.test(html))throw Error("Editor private filesystem leaked into site");
   console.log("Offline SVG export verified in real Chromium renderer");
+  await page.evaluate(()=>window.$tw.rootWidget.dispatchEvent({type:"tm-huwiki-sitepublisher",param:"En tegning i en artikel"}));
+  await page.waitForFunction(()=>{
+   const el=document.querySelector(".husp-preview");
+   const text=document.querySelector(".husp-status")?.textContent||"";
+   return el?.srcdoc.includes("data:image/svg+xml") && /(preview ready|forhåndsvisning klar|sitepublisher:)/i.test(text);
+  },null,{timeout:120000});
+  const articleStatus=await page.locator(".husp-status").innerText();
+  if(/sitepublisher:/i.test(articleStatus))throw Error(articleStatus);
+  const articleHtml=await page.locator(".husp-preview").evaluate(el=>el.srcdoc);
+  if(!articleHtml.includes("huw-site-drawing"))throw Error("Embedded article SVG was silently omitted");
+  console.log("WikiText-transcluded drawing is also published as offline SVG");
+  const forbidden=networkFailures.filter(url=>/^(https?:|blob:)/i.test(url));
+  if(forbidden.length)throw Error("Offline editor attempted forbidden runtime network requests: "+forbidden.join(", "));
+
   if(critical.some(message=>/TypeError|ReferenceError|RangeError|SyntaxError/.test(message)))throw Error("Unexpected browser JavaScript errors: "+critical.slice(0,5).join(" | "));
  }finally{await browser.close();}
 }
