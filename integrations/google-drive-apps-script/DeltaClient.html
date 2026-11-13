@@ -10,7 +10,8 @@
 (function () {
   "use strict";
   const QUIET_MS = 2500;
-  const ACTIVE_POLL_MS = 12000;
+  const ACTIVE_POLL_MS = 25000;
+  const MAX_FIELDS_JSON_LENGTH = 45000; // Keep each Sheets JSON cell under 50K
   const MAX_OPERATIONS = 25;
 
   function id() {
@@ -54,9 +55,11 @@
       this.retryTimer = null;
       this.sequence = 0;
       this.dirtyOutsideSync = false;
+      this.unsupported = new Map();
     }
     hasUnsynced() {
-      return this.pending.size > 0 || this.flushing || this.conflicts.size > 0;
+      return this.pending.size > 0 || this.flushing ||
+        this.conflicts.size > 0 || this.dirtyOutsideSync;
     }
     state() {
       this.onState({
@@ -64,6 +67,7 @@
         canEdit: this.canEdit,
         pending: this.pending.size,
         conflicts: this.conflicts.size,
+        unsupported: this.unsupported.size,
         cursor: this.cursor
       });
     }
@@ -77,7 +81,11 @@
       this.state();
       await this.pullAll();
       this.pollTimer = setInterval(() => {
-        if (this.active && navigator.onLine !== false) void this.pullAll();
+        // Do not consume Apps Script quotas for an inactive/background tab.
+        if (this.active && navigator.onLine !== false &&
+            typeof document !== "undefined" && !document.hidden) {
+          void this.pullAll();
+        }
       }, ACTIVE_POLL_MS);
       this.onStatus("Baggrundssynkronisering er aktiv.", false);
       return true;
@@ -119,6 +127,16 @@
             if (echo === null && !fields) continue;
             if (echo && fields && identicalFields(echo, fields)) continue;
           }
+          // Large embedded assets/plugins cannot fit in a Sheets cell.
+          // Never retry them endlessly or silently mark them synced.
+          if (fields && JSON.stringify(fields).length > MAX_FIELDS_JSON_LENGTH) {
+            this.unsupported.set(title, "Tiddleren er for stor til Sheets-synk.");
+            this.dirtyOutsideSync = true;
+            this.onStatus("Tiddleren '" + title +
+              "' er for stor til baggrundssynk. Brug Gem på Google Drev (hel HTML-kopi).", true);
+            continue;
+          }
+          this.unsupported.delete(title);
           const old = this.pending.get(title);
           this.pending.set(title, {
             title,
