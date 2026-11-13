@@ -272,14 +272,16 @@ function huSyncPush(wikiId, operations) {
     let scanEnd = lastRow;
     while (scanEnd >= 2 && wanted.size) {
       const scanStart = Math.max(2, scanEnd - 499);
-      const rows = book.journal.getRange(scanStart, 1,
-        scanEnd - scanStart + 1, HU_SYNC_HEADER.length).getValues();
+      // Read only opId/actor/title (B:D): avoid ever fetching the potentially
+      // huge fieldsJson payload while looking up revision heads.
+      const rows = book.journal.getRange(scanStart, 2,
+        scanEnd - scanStart + 1, 3).getValues();
       for (let i = rows.length - 1; i >= 0; i--) {
-        const title = JSON.parse(String(rows[i][3]));
+        const title = JSON.parse(String(rows[i][2]));
         if (wanted.has(title)) {
           latest[title] = {
             seq: scanStart + i - 1,
-            opId: String(rows[i][1])
+            opId: String(rows[i][0])
           };
           wanted.delete(title);
         }
