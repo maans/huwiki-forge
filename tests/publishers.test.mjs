@@ -9,7 +9,7 @@ async function json(path) {
 }
 
 const cases=[
-  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.9-test.1"},
+  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.10-test.1"},
   {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.8-test.1"}
 ];
 
@@ -202,6 +202,37 @@ test("SitePublisher exported HTML has a touch-accessible, always-recoverable foc
   element("focus-exit").onclick();
   assert.ok(!doc.body.classList.contains("husp-focus"),"A touch exit must work without Escape");
   assert.ok(!doc.body.classList.contains("husp-controls-visible"));
+});
+
+test("SitePublisher exports the source matching TiddlyWiki language for HUPedia and legacy HUWiki articles",async()=>{
+  const p=await json("plugins/site-publisher/dist/plugin.json");
+  const source=JSON.parse(p.text).tiddlers[p.title+"/startup.js"].text;
+  const begin=source.indexOf("function articleSource(title,lang){");
+  const end=source.indexOf("\nfunction embeddedArticle(",begin);
+  assert.ok(begin>=0&&end>begin,"A shared article-source resolver is required");
+  assert.ok(source.includes("embeddedArticle(title,opts.lang||wikiLanguage())"),"HTML export must pass the selected language");
+  assert.ok(source.includes("articleSource(e.title,lang)"),"The overview must use the same language as the HTML export");
+  assert.ok(source.includes("articleSource(title,wikiLanguage())"),"Source-list selection must use the current wiki language");
+
+  const seed=await json("editions/hupedia/tiddlers/seed.json");
+  const article=seed.find(t=>t.title==="Carl Nielsen");
+  assert.ok(article&&article["text-en"]);
+  const legacy={title:"Teaching",text:"Fallback", "huwiki-text-da":"Dansk undervisning", "huwiki-text-en":"English teaching notes"};
+  const plain={title:"No translation",text:"Untranslated article"};
+  const records=[...seed,legacy,plain];
+  const tw={wiki:{getTiddler(title){
+    const fields=records.find(t=>t.title===title);
+    return fields?{fields}:null;
+  }}};
+  const select=new Function("$tw",source.slice(begin,end)+"\nreturn articleSource;")(tw);
+  assert.equal(select("Carl Nielsen","en"),article["text-en"]);
+  assert.equal(select("Carl Nielsen","da"),article.text);
+  assert.match(select("Carl Nielsen","en"),/!! Life and career/);
+  assert.match(select("Carl Nielsen","da"),/!! Liv og karriere/);
+  assert.equal(select("Teaching","en"),legacy["huwiki-text-en"]);
+  assert.equal(select("Teaching","da"),legacy["huwiki-text-da"]);
+  assert.equal(select("No translation","en"),plain.text,"An untranslated article must still be published");
+  assert.equal(select("Missing","en"),"");
 });
 
 test("HUPedia no longer refers users to the obsolete site template files", async () => {
