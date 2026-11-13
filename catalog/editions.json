@@ -15,7 +15,12 @@
       "description": "ABC notation and playback · six teaching packs · MuseScore/MusicXML batch import · site/PDF publishing",
       "status": "test",
       "manifest": "../editions/music/manifest.json",
-      "version": "0.1.0-test.1"
+      "version": "0.1.0-test.1",
+      "bundledPlugins": [
+        "site-publisher",
+        "pdf-publisher",
+        "musescore-import"
+      ]
     },
     {
       "id": "demo",
