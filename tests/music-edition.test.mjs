@@ -19,9 +19,9 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  assert.equal(manifest.id,"music");
  assert.equal(manifest.coreVersion,"5.4.1");
  assert.equal(manifest.version,"0.1.0-test.1");
- assert.equal(tiddlers.length,19); // 16 existing + 3 shared library tiddlers
+ assert.equal(tiddlers.length,20); // 16 existing + 4 shared Forge tiddlers
  const byTitle=new Map(tiddlers.map(t=>[t.title,t]));
-  for(const title of ["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community"])assert.ok(byTitle.has(title),title+" missing from Edition");
+  for(const title of ["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community","$:/huwiki/forge/page-control"])assert.ok(byTitle.has(title),title+" missing from Edition");
  assert.equal(byTitle.size,tiddlers.length);
  for(const title of [
  "$:/plugins/huwiki/abc",
