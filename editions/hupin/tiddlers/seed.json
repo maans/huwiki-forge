@@ -1,0 +1,35 @@
+[
+  {
+    "title": "HUPin · Start",
+    "type": "text/vnd.tiddlywiki",
+    "tags": "HUPin Intro",
+    "text": "! Velkommen til HUPin\n\nHUPin gør billeder og SVG'er klikbare ved at placere præcise pins og områder over billedet.\n\n!! Prøv eksempelprojektet\n\nÅbn [[HUPin · Interaktivt billede]] og tryk på bygningen eller haven. Klikområderne åbner almindelige TiddlyWiki-tiddlere.\n\n!! Lav dit eget projekt\n\n<$huwiki-hupin-new/>\n\n!! Om afhængigheder\n\n* Almindelige pins på billeder og SVG kræver kun HUPin.\n* PasteUp-kompositioner kræver det særskilte PasteUp-plugin, som endnu ikke er med i denne Edition.\n* OpenStreetMap bruger eksterne kortfiler og kortfelter og kræver internetforbindelse. Google Maps er kun et valgfrit alternativ og kræver sin egen API-nøgle.\n\nDette er en teknisk test-Edition. HUPins oprindelige redigeringsværktøjer er endnu ikke fuldt oversat til engelsk."
+  },
+  {
+    "title": "HUPin · Demobillede",
+    "type": "image/svg+xml",
+    "text": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 1000 1000\" width=\"1000\" height=\"1000\" role=\"img\" aria-label=\"Illustration af skolen og haven\">\n  <rect width=\"1000\" height=\"1000\" fill=\"#eaf1e6\"/>\n  <rect x=\"0\" y=\"640\" width=\"1000\" height=\"360\" fill=\"#8ac48d\"/>\n  <path d=\"M0 735 Q280 690 485 760 T1000 730\" fill=\"none\" stroke=\"#ece9d3\" stroke-width=\"96\"/>\n  <rect x=\"160\" y=\"290\" width=\"610\" height=\"380\" rx=\"9\" fill=\"#b8cde7\" stroke=\"#385a7e\" stroke-width=\"12\"/>\n  <path d=\"M125 290 L465 95 L805 290 Z\" fill=\"#a55151\" stroke=\"#80333e\" stroke-width=\"12\"/>\n  <rect x=\"400\" y=\"420\" width=\"110\" height=\"250\" fill=\"#f0dfae\" stroke=\"#385a7e\" stroke-width=\"11\"/>\n  <rect x=\"224\" y=\"390\" width=\"105\" height=\"105\" fill=\"#f7f3d9\" stroke=\"#385a7e\" stroke-width=\"10\"/>\n  <rect x=\"585\" y=\"390\" width=\"105\" height=\"105\" fill=\"#f7f3d9\" stroke=\"#385a7e\" stroke-width=\"10\"/>\n  <circle cx=\"858\" cy=\"565\" r=\"87\" fill=\"#448a67\"/>\n  <rect x=\"843\" y=\"612\" width=\"28\" height=\"126\" fill=\"#795b3a\"/>\n  <text x=\"500\" y=\"880\" text-anchor=\"middle\" font-family=\"system-ui,sans-serif\" font-size=\"47\" fill=\"#234e3e\">Klik på bygningen eller haven</text>\n</svg>"
+  },
+  {
+    "title": "HUPin · Interaktivt billede",
+    "type": "text/vnd.tiddlywiki",
+    "tags": "HUPin",
+    "text": "<$huwiki-hupin project=<<currentTiddler>>/>",
+    "billedlink-kind": "image",
+    "billedlink-data": "{\"version\":2,\"kind\":\"image\",\"source\":\"HUPin · Demobillede\",\"sourceKind\":\"image\",\"hotspots\":[{\"id\":\"bygning\",\"shape\":\"rect\",\"points\":[[180,280],[752,664]],\"anchor\":\"\",\"anchorPoints\":[],\"title\":\"Skolens bygning\",\"label\":\"Bygning\",\"color\":\"#e26c3a\"},{\"id\":\"have\",\"shape\":\"rect\",\"points\":[[40,745],[940,960]],\"anchor\":\"\",\"anchorPoints\":[],\"title\":\"Haven\",\"label\":\"Have\",\"color\":\"#2e8d63\"}]}"
+  },
+  {
+    "title": "Skolens bygning",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! Skolens bygning\n\nDette er et eksempel på et klikbart område. Her kan du skrive om bygningen.",
+    "tags": "HUPin mål",
+    "billedlink-project": "HUPin · Interaktivt billede"
+  },
+  {
+    "title": "Haven",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! Haven\n\nDette er en anden måltiddler, som åbnes fra billedets klikbare område.",
+    "tags": "HUPin mål",
+    "billedlink-project": "HUPin · Interaktivt billede"
+  }
+]
