@@ -246,7 +246,7 @@ function huShare(fileId, recipientEmail, role) {
         try {
           if (journal.created) {
             // v3 is Permissions.delete(fileId, permissionId), NOT remove().
-            Drive.Permissions.delete(sheetId, journal.id);
+            Drive.Permissions.remove(sheetId, journal.id);
           } else {
             Drive.Permissions.update({role: journal.previousRole}, sheetId, journal.id, {
               fields: "id", supportsAllDrives: true
