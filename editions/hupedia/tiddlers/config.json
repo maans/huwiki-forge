@@ -13,6 +13,6 @@
   },
   {
     "title": "$:/SiteSubtitle",
-    "text": "Et selvstændigt leksikon i TiddlyWiki"
+    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"hupediaLocale\">Et selvstændigt leksikon i TiddlyWiki</$list><$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"hupediaLocale\">An independent encyclopedia built with TiddlyWiki</$list>"
   }
 ]
