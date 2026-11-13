@@ -1,0 +1,18 @@
+[
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[HUPedia · Start]]"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/hupedia"
+  },
+  {
+    "title": "$:/SiteTitle",
+    "text": "HUWiki HUPedia"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "Et selvstændigt leksikon i TiddlyWiki"
+  }
+]

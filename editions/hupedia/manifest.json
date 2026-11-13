@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "id": "hupedia",
+  "name": "HUPedia Edition",
+  "version": "0.2.2",
+  "coreVersion": "5.4.1",
+  "tiddlers": [
+    "tiddlers/seed.json",
+    "tiddlers/config.json"
+  ],
+  "plugins": [
+    "../../plugins/hupedia/dist/plugin.json",
+    "../../themes/hupedia/dist/theme.json"
+  ]
+}

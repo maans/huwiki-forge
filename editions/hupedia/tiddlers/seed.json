@@ -1,0 +1,90 @@
+[
+  {
+    "title": "HUPedia · Start",
+    "text": "! HUPedia · Leksikon\n\nEt tema til alle HUWiki-wikier. Visning og redigering kan tilpasses med tags, uden at felter bliver slettet.\n\n* [[Carl Nielsen]] – tag `HUPedia/Person`, redigerbar faktaboks.\n* [[Symfoni]] – tag `HUPedia/Begreb`.\n* [[Søren Kierkegaard]] – personartikel.\n* [[Romantikken]] – begrebsartikel.\n* [[HUPedia · Redaktion]] · [[Om HUPedia]]\n\nFor at aktivere temaet i en almindelig TiddlyWiki skal `$:/theme` have værdien `$:/themes/huwiki/hupedia`.\n",
+    "created": "20261016202000000",
+    "modified": "20261016202000000"
+  },
+  {
+    "title": "Om HUPedia",
+    "text": "! Om HUWiki HUPedia\nDenne demo er en ''rigtig TiddlyWiki 5'' med et installerbart HUPedia-plugin og almindelige redigerbare artikler.\n\n!! Prøv redigering\n# Åbn [[Carl Nielsen]].\n# Klik på artiklens ''redigeringsblyant''.\n# Ret tekst eller opret et nyt afsnit.\n# Gem tiddleren med fluebenet.\n# Brug TiddlyWikis ''gem wiki''-knap for at gemme hele HTML-filen lokalt.\n\n!! Nye artikler\nKlik på ''Opret ny leksikonartikel'' på forsiden og giv den en titel. Artikler markeres med tagget `PediaArtikel`. Du kan tilføje felterne `pedia-type`, `pedia-emne`, `pedia-born`, `pedia-died`, `pedia-place`, `pedia-period`, `pedia-author` og `pedia-status` i artiklens felter. Faktaboksen viser felterne automatisk.\n\n!! Redaktionel status\n`pedia-status: godkendt` betegner indhold, der efter vores plan må indgå i et senere publiceret site. Denne lokale demo har endnu ''ingen automatisk publicering'', og felterne udgør ikke en rettigheds- eller godkendelseskontrol.\n\n!! Videre integration\nPluginformatet kan importeres som tiddlers. Før integration i HUWiki Personal/Enterprise skal vi kontrollere synkronisering af plugin/systemtiddlere samt koblingen til HUWiki Publish. Der foretages ingen push eller deployment i denne pakke.\n\n!! Site-skabelon\nSe [[Site-skabelonen]] for forskellen mellem redaktion og offentlig visning. Pakken har et selvstændigt HTML-eksempel, som åbner uden internet eller viderestilling.\n",
+    "created": "20261016202000000",
+    "modified": "20261016202000000"
+  },
+  {
+    "title": "HUPedia · Redaktion",
+    "text": "! Redaktionel oversigt\nHer kan redaktionen se artiklernes status. Dette er en lokal demo; i HUWiki skal godkendelse knyttes til redaktørrettigheder og sikre udgivelsessnapshots.\n\n!! Kladder\n<$list filter=\"[tag[PediaArtikel]field:pedia-status[kladde]sort[title]]\" emptyMessage=\"Ingen kladder.\">* <$link/><br/></$list>\n\n!! Til gennemsyn\n<$list filter=\"[tag[PediaArtikel]field:pedia-status[til-gennemsyn]sort[title]]\" emptyMessage=\"Ingen artikler til gennemsyn.\">* <$link/><br/></$list>\n\n!! Godkendte artikler\n<$list filter=\"[tag[PediaArtikel]field:pedia-status[godkendt]sort[title]]\" emptyMessage=\"Ingen godkendte artikler.\">* <$link/><br/></$list>\n\nStatus ændres i artiklens felter under redigering. Vær opmærksom på, at der endnu ikke er en rettighedskontrol på denne lokale fil.",
+    "created": "20261016202000000",
+    "modified": "20261016202000000"
+  },
+  {
+    "title": "Carl Nielsen",
+    "text": "Carl Nielsen (1865–1931) var en dansk komponist, violinist og dirigent. Han er især kendt for sine seks [[symfonier|Symfoni]] og en lang række sange.\n\n!! Liv og karriere\nNielsen blev født på Fyn og fik sin første musikalske undervisning i hjemmet. Han studerede senere på konservatoriet i København og arbejdede som violinist.\n\n!! Musikken\nHans værker spænder fra sange og kammermusik til orkesterværker. Han bliver ofte omtalt som en central skikkelse i dansk musikhistorie.\n\n!! Perspektiver\nHan virkede i en periode, hvor dansk og europæisk musik udviklede sig i nye retninger efter [[Romantikken]].\n\n!! Kilder\nDette er en redaktionel demotekst. Tilføj verificerbare kilder, før en rigtig artikel godkendes.",
+    "created": "20261016202000000",
+    "modified": "20261016202000000",
+    "tags": "PediaArtikel Musik HUPedia/Person",
+    "pedia-type": "Person",
+    "pedia-emne": "Musikhistorie",
+    "pedia-born": "9. juni 1865",
+    "pedia-died": "3. oktober 1931",
+    "pedia-place": "Danmark",
+    "pedia-author": "Demoredaktionen",
+    "pedia-status": "godkendt",
+    "pedia-category": "Musikhistorie",
+    "pedia-description": "Dansk komponist og violinist (1865–1931)",
+    "pedia-subtitle": "Dansk komponist og violinist (1865–1931)"
+  },
+  {
+    "title": "Symfoni",
+    "text": "En ''symfoni'' er et større musikværk, der typisk er skrevet for symfoniorkester og ofte består af flere satser.\n\n!! Historie\nSymfonien udviklede sig i den klassiske periode og fik en central plads under [[Romantikken]].\n\n!! Danske eksempler\n[[Carl Nielsen]] skrev seks symfonier. Hans musik kan bruges som udgangspunkt for at studere genreudvikling og orkesterklang.\n\n!! Kilder\nDemotekst. Kildehenvisninger tilføjes før godkendelse.",
+    "created": "20261016202000000",
+    "modified": "20261016202000000",
+    "tags": "PediaArtikel Musik HUPedia/Begreb",
+    "pedia-type": "Begreb",
+    "pedia-emne": "Musikhistorie",
+    "pedia-period": "1700-tallet til i dag",
+    "pedia-author": "Demoredaktionen",
+    "pedia-status": "godkendt",
+    "pedia-category": "Musikhistorie",
+    "pedia-description": "En større orkesterkomposition i flere satser",
+    "pedia-subtitle": "En større orkesterkomposition i flere satser"
+  },
+  {
+    "title": "Romantikken",
+    "text": "''Romantikken'' betegner en række kunstneriske og kulturelle strømninger, der fik særlig betydning i Europa i 1800-tallet.\n\n!! I musik\nMusikken fremhævede ofte følelsesudtryk, fortælling og udvidede klangmuligheder. [[Symfoni]] og musikdramatik fik stor betydning.\n\n!! I litteratur og filosofi\nNatur, historie, individ og fantasi var centrale temaer. Periodens idéhistorie kan sammenholdes med [[Søren Kierkegaard]].\n\n!! Kilder\nDemotekst. Henvisninger er medtaget for at vise den interne artikelstruktur.",
+    "created": "20261016202000000",
+    "modified": "20261016202000000",
+    "tags": "PediaArtikel Historie HUPedia/Begreb",
+    "pedia-type": "Periode",
+    "pedia-emne": "Kulturhistorie",
+    "pedia-period": "Ca. 1800–1900",
+    "pedia-author": "Demoredaktionen",
+    "pedia-status": "godkendt",
+    "pedia-category": "Kulturhistorie",
+    "pedia-description": "Kunstnerisk og kulturel strømning",
+    "pedia-subtitle": "Kunstnerisk og kulturel strømning"
+  },
+  {
+    "title": "Søren Kierkegaard",
+    "text": "''Søren Kierkegaard'' (1813–1855) var en dansk filosof og forfatter.\n\n!! Filosofi\nHan skrev om blandt andet valg, ansvar, tro og menneskets forhold til sig selv.\n\n!! Historisk sammenhæng\nHans forfatterskab blev til i samme århundrede som [[Romantikken]], men hans tankeverden kan ikke reduceres til én enkelt strømning.\n\n!! Kilder\nDemotekst; kilder og præciseringer skal tilføjes før en egentlig udgivelse.",
+    "created": "20261016202000000",
+    "modified": "20261016202000000",
+    "tags": "PediaArtikel Filosofi HUPedia/Person",
+    "pedia-type": "Person",
+    "pedia-emne": "Filosofi",
+    "pedia-born": "5. maj 1813",
+    "pedia-died": "11. november 1855",
+    "pedia-place": "København",
+    "pedia-author": "Demoredaktionen",
+    "pedia-status": "kladde",
+    "pedia-category": "Filosofi",
+    "pedia-description": "Dansk filosof og forfatter (1813–1855)",
+    "pedia-subtitle": "Dansk filosof og forfatter (1813–1855)"
+  },
+  {
+    "title": "HUPedia · Site-skabelon",
+    "text": "! Fra redigerbart leksikon til færdigt website\nHUWiki HUPedia er både et ''redaktionsværksted'' og et ''publiceringsdesign''.\n\n* I denne TiddlyWiki kan forfattere redigere artikler, faktabokse og henvisninger.\n* I den tilhørende site-skabelon er indholdet ''skrivebeskyttet'' for læserne – ingen redigeringsknapper.\n* Godkendte tiddlers (`pedia-status: godkendt`) kan indgå i en udgivelse. I denne test er [[Carl Nielsen]], [[Symfoni]] og [[Romantikken]] godkendte, mens [[Søren Kierkegaard]] er en kladde.\n* Det selvstændige site-eksempel ligger i pakkens `02-Site-Skabelon`-mappe og hedder `ÅBN-SITE-EKSEMPEL.html`.\n",
+    "created": "20261016202000000",
+    "modified": "20261016202000000"
+  }
+]
