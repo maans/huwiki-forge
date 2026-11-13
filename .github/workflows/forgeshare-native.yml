@@ -1,0 +1,31 @@
+name: ForgeShare native apps
+on:
+  pull_request:
+    paths:
+      - plugins/forgeshare/**
+      - scripts/*forgeshare*
+      - scripts/native-manifest.mjs
+      - .github/workflows/forgeshare-native.yml
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - shell: pwsh
+        run: |
+          & ./plugins/forgeshare/native/windows/build.ps1
+          Copy-Item plugins/forgeshare/helper/ForgeShare.mjs plugins/forgeshare/native/compiled/
+          $p=Start-Process plugins/forgeshare/native/compiled/ForgeShare.exe -ArgumentList '--self-test' -Wait -PassThru
+          if($p.ExitCode -ne 0) { throw 'Native self-test failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ForgeShare-Windows-native
+          path: |
+            plugins/forgeshare/native/compiled/ForgeShare.exe
+            plugins/forgeshare/native/compiled/windows.json
