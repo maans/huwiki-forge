@@ -1,4 +1,4 @@
-/* HUWiki Tegne 1.1.0-test.1 · Forge test interface; no extra language selector */
+/* HUWiki Tegne 1.1.1-test.1 · Forge test interface; no extra language selector */
 .hu-tegne-app{--hu-ink:#182c36;--hu-line:#d9e2e7;--hu-accent:#17699b;font-family:system-ui,sans-serif;color:var(--hu-ink);max-width:1280px;margin:auto}
 .hu-tegne-app h1{font-size:clamp(2rem,4vw,3.4rem);margin:.2em 0}
 .hu-tegne-app h2{font-size:clamp(1.3rem,2vw,1.8rem);margin:.2em 0 1em}
