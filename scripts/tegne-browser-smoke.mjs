@@ -84,6 +84,8 @@ async function main(){
    includesEditor:document.querySelector(".husp-preview")?.srcdoc?.includes("hu-tegne-app")||false
   }));
   console.log("Live studio publication diagnostic:",JSON.stringify(studioExportDebug));
+  if(studioExportDebug.selected.length!==1||studioExportDebug.selected[0]!=="HUWiki Tegne")
+   throw Error("SitePublisher did not select the requested shadow tiddler: "+JSON.stringify(studioExportDebug));
   if(!/drawing studio, not a drawing|tegnestudiets redigeringsside/i.test(studioExportDebug.status))
    throw Error("The interactive Tegne home was not rejected: "+JSON.stringify(studioExportDebug));
   if(!await page.locator(".husp-tools button").nth(1).isDisabled())
