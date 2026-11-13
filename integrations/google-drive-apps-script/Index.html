@@ -59,7 +59,9 @@
   <section id="workspace" hidden>
     <header>
       <button type="button" id="saveButton" disabled>Gem på Google Drev</button>
-      <small id="saveHint">Automatisk gemning er slået fra – gem, når du er færdig.</small>
+      <small id="saveHint">Ingen baggrundssynk endnu – Gem laver en komplet HTML-kopi.</small>
+      <button type="button" id="enableSyncButton" disabled>Aktivér tiddler-synk</button>
+      <small id="syncStatus" role="status">Tiddler-synk er endnu ikke aktiveret.</small>
     </header>
     <header>
       <div id="sharing">
@@ -79,6 +81,7 @@
     <iframe id="wiki" title="HUWiki" style="height:calc(100dvh - 196px)"></iframe>
   </section>
 
+<?!= HtmlService.createHtmlOutputFromFile("DeltaClient").getContent(); ?>
 <script>
 "use strict";
 const START_ID = <?!= initialIdJson ?>;
@@ -87,6 +90,7 @@ let current = null;
 let saving = false;
 let nextSave = null;
 let blockedConflict = false;
+let delta = null;
 
 function report(message, bad) {
   $("status").textContent = message;
@@ -111,6 +115,7 @@ function enableWorkspace(meta) {
   $("driveLink").hidden = false;
   $("shareButton").disabled = !meta.canShare;
   $("saveButton").disabled = true;
+  $("enableSyncButton").disabled = true;
 }
 
 async function openWiki(id) {
@@ -123,6 +128,7 @@ async function openWiki(id) {
     report("Wiki indlæst på " + result.elapsedMs + " ms. " +
       (result.meta.canEdit ? "Gemning er aktiveret." : "Du har kun læseadgang."));
     if (result.meta.canEdit) await installSaver(frame, result.meta.id);
+    await connectDelta(frame, result.meta.id);
   } catch (error) {
     report("Kunne ikke åbne wikien: " + error.message, true);
   }
@@ -264,6 +270,57 @@ async function installSaver(frame, fileId) {
   report("Wikien blev indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", true);
 }
 
+async function connectDelta(frame, fileId) {
+  try {
+    const tw = frame.contentWindow?.$tw;
+    if (!tw || !tw.wiki) throw new Error("TiddlyWiki er endnu ikke startet.");
+    if (delta) delta.stop();
+    delta = new window.ForgeDriveDelta({
+      tw,
+      fileId,
+      rpc,
+      onStatus: (message, bad) => {
+        $("syncStatus").textContent = message;
+        $("syncStatus").style.color = bad ? "#b42318" : "#27634e";
+      },
+      onState: state => {
+        $("saveHint").textContent = state.active ?
+          "Tiddlerændringer synkroniseres i baggrunden (" + state.pending +
+          " afventer). Gem på Google Drev laver en komplet HTML-kopi." :
+          "Ingen baggrundssynk endnu – Gem laver en komplet HTML-kopi.";
+      }
+    });
+    const info = await rpc("huSyncInfo", fileId);
+    if (info.enabled) {
+      $("enableSyncButton").hidden = true;
+      await delta.start(info);
+    } else {
+      $("enableSyncButton").disabled = !info.canEdit || !info.canShare;
+      $("enableSyncButton").hidden = false;
+    }
+  } catch (error) {
+    $("syncStatus").textContent = "Tiddler-synk kan ikke startes: " + error.message;
+    $("syncStatus").style.color = "#b42318";
+    // The existing whole-file saver remains available as a fallback.
+  }
+}
+
+$("enableSyncButton").addEventListener("click", async () => {
+  if (!current || !delta) return;
+  $("enableSyncButton").disabled = true;
+  $("syncStatus").textContent = "Opretter delt ændringslog på Google Drive…";
+  try {
+    await rpc("huSyncEnable", current.id);
+    const active = await delta.start();
+    if (!active) throw new Error("Ændringsloggen kunne ikke aktiveres.");
+    $("enableSyncButton").hidden = true;
+  } catch (error) {
+    $("syncStatus").textContent = "Aktivering mislykkedes: " + error.message;
+    $("syncStatus").style.color = "#b42318";
+    $("enableSyncButton").disabled = false;
+  }
+});
+
 $("saveButton").addEventListener("click", () => {
   if (saving || nextSave) return;
   if (blockedConflict) {
@@ -285,7 +342,7 @@ $("saveButton").addEventListener("click", () => {
 window.addEventListener("beforeunload", event => {
   try {
     const sh = $("wiki").contentWindow?.$tw?.saverHandler;
-    if (saving || nextSave || (sh && sh.isDirty())) {
+    if (saving || nextSave || (delta && delta.hasUnsynced()) || (sh && sh.isDirty())) {
       event.preventDefault();
       event.returnValue = "";
     }
