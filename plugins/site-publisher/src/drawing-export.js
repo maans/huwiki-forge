@@ -1,7 +1,7 @@
 /* HUWiki Forge SitePublisher: self-contained Excalidraw/SVG export adapter.
  * Ported from HUWiki OAuthLab SiteWorkshop.js:
  *   siteDrawingSource(), drawingSiteWiki(), siteDrawingBody().
- * Uses the installed drawing engine's existing huwikki/huwikiExportSvg bridge;
+ * Uses the installed drawing engine's existing huwikiExportSvg bridge;
  * exports SVG as view-only data, not the editor/React runtime.
  * Preserve copyright and licensing of the separate Excalidraw plugin.
  */
@@ -90,6 +90,28 @@ function publicationDrawingCheckSvg(svg,title){
  });
  return svg;
 }
+// Preflight only explicitly transcluded drawings, ignoring code spans/fences.
+function publicationDrawingReferences(source){
+ var refs=[],fenced=false;
+ String(source||"").split(/\n/).forEach(function(line){
+  if(/^\s*`{3}/.test(line)){fenced=!fenced;return;}
+  if(fenced)return;
+  var parts=line.split(/(`[^`]*`)/g);
+  for(var i=0;i<parts.length;i+=2){
+   parts[i].replace(/\{\{([^{}\n]+)\}\}/g,function(_,body){
+    var title=body.split("||")[0].split("##")[0].trim();
+    if(isDrawingTitle(title))refs.push(title);
+    return _;
+   });
+   parts[i].replace(/<\$transclude\b([^>]*?)\/>/gi,function(_,attrs){
+    var m=attrs.match(/(?:^|\s)(?:\$tiddler|tiddler)\s*=\s*(["'])(.*?)\1/i);
+    if(m&&isDrawingTitle(m[2]))refs.push(m[2]);
+    return _;
+   });
+  }
+ });
+ return refs;
+}
 function siteDrawingSource(title){
  var f=publicationDrawingFields(title);
  if(!f)throw publicationDrawingError(title,"Tiddleren er ikke en Excalidraw-tegning.","Tiddler is not an Excalidraw drawing.");
@@ -99,7 +121,6 @@ function siteDrawingSource(title){
   entry=publicationDrawingCache[title];
  if(entry&&entry.key===key){
   if(entry.src)return entry.src;
-  if(entry.error)throw entry.error;
   throw publicationDrawingPending(title,entry.promise);
  }
  var scene=publicationDrawingValidate(title,f),Constructor;
@@ -124,6 +145,7 @@ function siteDrawingSource(title){
   return entry.src;
  }).catch(function(err){
   clearTimeout(timeout);
+  if(publicationDrawingCache[title]===entry)delete publicationDrawingCache[title];
   entry.error=err&&err.siteDrawingFailure?err:publicationDrawingError(title,
    "SVG-klargøringen mislykkedes: "+String(err&&err.message||err),
    "Could not prepare SVG: "+String(err&&err.message||err));
