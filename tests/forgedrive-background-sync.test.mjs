@@ -638,3 +638,28 @@ test("recovered drafts from an older HTML snapshot remain local and cannot overw
   assert.equal(f.ctx.huSyncPull(f.file.id,0,10).events.length,0);
   b.stop();
 });
+
+test("a delta push rejected by snapshot checksum pauses the browser without retrying or dropping edits", async () => {
+  const f = backendFixture();
+  enable(f);
+  const Delta = clientClass();
+  const W = fakeWiki();
+  let writes = 0;
+  const rpc = async (name, ...args) => {
+    if (name === "huSyncPush") writes++;
+    return f.ctx[name](...args);
+  };
+  const a = new Delta({tw:W,fileId:f.file.id,rpc,fingerprint:f.file.md5Checksum});
+  assert.equal(await a.start(),true);
+  W.wiki.addTiddler(new W.Tiddler({title:"In flight",text:"my local draft"}));
+  const before = f.file.md5Checksum;
+  assert.equal(f.ctx.huSave(f.file.id,"<html>other person's snapshot</html>",before,0).ok,true);
+  await a.flush(); // no polling required; server compares HTML checksum under lock
+  assert.equal(writes,1);
+  assert.equal(a.snapshotOutdated,true);
+  assert.equal(a.pending.size,1);
+  assert.equal(W.saverHandler.isDirty(),true);
+  await a.flush();
+  assert.equal(writes,1,"outdated snapshots must not retry writes endlessly");
+  a.stop();
+});
