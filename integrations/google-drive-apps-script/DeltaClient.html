@@ -155,8 +155,13 @@
       const info = initialInfo || await this.rpc("huSyncInfo", this.fileId);
       if (!info.enabled) return false;
       this.canEdit = !!info.canEdit;
-      this.cursor = Number.isSafeInteger(info.snapshotSeq) && info.snapshotSeq >= 0 ?
-        info.snapshotSeq : this.snapshotSeq;
+      // The cursor belongs to the EXACT HTML bytes loaded by huOpen, not
+      // to a newer metadata read made while the iframe was booting.
+      if (Number(info.snapshotSeq || 0) !== this.snapshotSeq) {
+        this.onStatus("Google Drev har et nyere HTML-snapshot. Genåbn wikien før synkronisering.", true);
+        return false;
+      }
+      this.cursor = this.snapshotSeq;
       this.recoveryKey = info.accountKey ?
         "forgeDriveDelta.v1:" + this.fileId + ":" + info.accountKey : "";
       if (!this.recoveryKey) {
