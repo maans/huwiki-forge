@@ -28,16 +28,16 @@
     {
       "id": "site-publisher",
       "name": "HUWiki SitePublisher",
-      "version": "0.1.4-test.1",
-      "description": "Udgiv artikler og noder til HTML-site. Nyt indholdsoverblik og sammenklappelige indstillinger (testversion).",
+      "version": "0.1.6-test.1",
+      "description": "Standalone HTML sites: automatic wiki-language UI and direct Mac download / Selvstændige HTML-sites med automatisk sprog og hentning",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
     },
     {
       "id": "pdf-publisher",
       "name": "HUWiki PDF Publisher",
-      "version": "0.2.6-test.1",
-      "description": "PDF med automatisk forhåndsvisning, miniatureoverblik og bogopslag (testversion).",
+      "version": "0.2.7-test.1",
+      "description": "PDF publishing: English/Danish labels follow TiddlyWiki, page overview and auto preview / PDF-udgivelse",
       "file": "../plugins/print-article/dist/plugin.json",
       "status": "test"
     }
