@@ -66,6 +66,7 @@
       this.bootstrapping = false;
       this.lastPullSucceeded = false;
       this.snapshotSeq = Number(options.snapshotSeq) || 0;
+      this.systemDirtySerial = 0;
     }
     hasUnsynced() {
       return this.pending.size > 0 || this.flushing ||
@@ -136,8 +137,14 @@
         if (Array.isArray(item) && this.pending.has(item[0])) this.conflicts.set(item[0], item[1]);
       }
       for (const item of saved.unsupported || []) {
-        if (Array.isArray(item) && typeof item[0] === "string") {
-          this.unsupported.set(item[0], item[1]);
+        if (!Array.isArray(item) || typeof item[0] !== "string") continue;
+        const title = item[0], entry = item[1];
+        if (!entry || !entry.fields || entry.fields.title !== title) continue;
+        this.unsupported.set(title, entry);
+        const now = this.tw.wiki.getTiddler(title);
+        if (!now || !identicalFields(plainFields(now), entry.fields)) {
+          this.remoteEchoes.set(title, entry.fields);
+          this.tw.wiki.addTiddler(new this.tw.Tiddler(entry.fields));
         }
       }
       if (this.pending.size || this.unsupported.size || this.conflicts.size)
@@ -210,10 +217,14 @@
                 const match = sh.filterFn.call(wiki, iterator => {
                   iterator(wiki.getTiddler(title), title);
                 });
-                if (Array.isArray(match) && match.length > 0) this.dirtyOutsideSync = true;
+                if (Array.isArray(match) && match.length > 0) {
+                  this.dirtyOutsideSync = true;
+                  this.systemDirtySerial = ++this.sequence;
+                }
               }
             } catch (_error) {
               this.dirtyOutsideSync = true; // fail safe
+              this.systemDirtySerial = ++this.sequence;
             }
             continue;
           }
@@ -227,6 +238,7 @@
           }
           if (!this.canEdit) {
             this.dirtyOutsideSync = true;
+            this.systemDirtySerial = ++this.sequence;
             this.onStatus("Denne konto har kun læseadgang. Lokale ændringer kan ikke synkroniseres.", true);
             continue;
           }
@@ -234,7 +246,10 @@
           // Never retry them endlessly or silently mark them synced.
           if (fields && JSON.stringify(fields).length > MAX_FIELDS_JSON_LENGTH) {
             this.pending.delete(title);
-            this.unsupported.set(title, "Tiddleren er for stor til Sheets-synk.");
+            this.unsupported.set(title, {
+              fields: fields, serial: ++this.sequence,
+              reason: "Tiddleren er for stor til Sheets-synk."
+            });
             this.persist();
             this.onStatus("Tiddleren '" + title +
               "' er for stor til baggrundssynk. Brug Gem på Google Drev (hel HTML-kopi).", true);
@@ -347,6 +362,33 @@
     }
     hasUnsyncedExceptFlight() {
       return this.pending.size > 0 || this.conflicts.size > 0;
+    }
+    /**
+     * A successful whole-HTML upload persists system/large tiddlers at the
+     * render-time watermark. Later changes are NOT covered by that upload.
+     * Other live clients must reopen the HTML to see snapshot-only assets.
+     */
+    noteSnapshotSaved(watermark) {
+      if (!Number.isSafeInteger(watermark)) return;
+      for (const [title, entry] of this.unsupported.entries()) {
+        if (entry && entry.serial <= watermark) this.unsupported.delete(title);
+      }
+      if (this.systemDirtySerial <= watermark) this.dirtyOutsideSync = false;
+      this.persist();
+      this.state();
+    }
+    /**
+     * Prepare a consistent HTML snapshot BEFORE TiddlyWiki renders it.
+     * Its exact journal cursor is rechecked under the server lock.
+     */
+    async prepareSnapshot() {
+      if (!this.active) return true;
+      if (navigator.onLine === false || this.bootstrapping || this.flushing)
+        return false;
+      if (this.pending.size && !this.conflicts.size) await this.flush();
+      if (this.pending.size || this.conflicts.size || this.flushing) return false;
+      return !!(await this.pullAll()) && !this.pending.size &&
+        !this.conflicts.size && !this.flushing;
     }
     async pullAll() {
       if (!this.active || this.pulling || navigator.onLine === false) return false;
