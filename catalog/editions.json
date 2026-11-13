@@ -4,9 +4,10 @@
     {
       "id": "hupedia",
       "name": "HUPedia Edition",
-      "description": "Leksikon med artikeltyper, faktabokse, tema og otte eksempler. Ingen Google-tjenester.",
+      "description": "Bilingual encyclopedia with editable infoboxes and editorial examples; no Google services / Tosproget leksikon med faktabokse",
       "status": "test",
-      "manifest": "../editions/hupedia/manifest.json"
+      "manifest": "../editions/hupedia/manifest.json",
+      "version": "0.2.3-test.1"
     },
     {
       "id": "demo",
