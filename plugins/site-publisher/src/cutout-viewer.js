@@ -86,7 +86,7 @@ function build(doc,wiki,scene,ancestors){
  parts.forEach(function(p){byId[p.id]=p;});
  parts.forEach(function(p){var parent=p.parent&&byId[p.parent]&&p.parent!==p.id?p.parent:"root";(children[parent]||(children[parent]=[])).push(p);});
  function add(parent,id,visited,depth){if(depth>10)return;(children[id]||[]).forEach(function(p){
-  if(visited[p.id])return;var seen=Object.assign({},visited);seen[p.id]=true,holder=svg(doc,"g"),nested=null,shape=null;
+  if(visited[p.id])return;var seen=Object.assign({},visited),holder=svg(doc,"g"),nested=null,shape=null;seen[p.id]=true;
   attr(holder,"data-cutout-id",p.id);attr(holder,"class","huw-cutout-part");
   if(p.type==="animation"){
    var title=resolve(wiki,p.animationId,p.animation);
