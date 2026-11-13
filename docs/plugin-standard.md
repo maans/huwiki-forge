@@ -1,69 +1,45 @@
-# HUWiki Forge – fælles pluginstandard
+# HUWiki Forge – Studio som fælles pluginmotor
 
-**Status:** beslutning 13. november 2026. Fremadrettet standard for nye HUWiki-plugins og for plugins under migration. Dette dokument ændrer ikke automatisk licensen på allerede offentliggjort kode.
+**Kilde og status:** Denne arkitektur bygger på den eksisterende HUWiki Studio-kode i `Studio.js`, `StudioCommunity.js`, `StudioHub.js` og `Code.js` fra OAuthLab-backuppen. Den erstatter den tidligere skitse om en konkurrerende Forge-pluginstandard. Den tidligere gennemgang af TiddlyTools-licenser gælder fortsat.
 
-## Forbillede
+## Hvad Studio allerede gør
 
-Eric L. Shulmans [TiddlyTools Time](https://tiddlytools.com/timer.html) beskriver for hver komponent installation, brug, **Requires**, **Optional**, opsætning og eksempler. Den eksisterende **HUWiki Tid 0.1.2** er en god lokal reference: Den har `readme`, `original-documentation`, `license`, `provenance` og `Ændringer`-tiddlere samt ophavsmetadata.
+- Bygger rigtige TiddlyWiki 5-plugin- og temapakker med identitet `$:/plugins/<author>/<id>` eller `$:/themes/<author>/<id>`; kilde-tiddlerne samles i pakkens `text` som JSON `{tiddlers: ...}`.
+- Håndhæver udvikler-id og plugin-id, pakkeidentitet, versionsformat `x.y.z`, uændret identitet ved opdatering, automatisk patch-version ved ændret kode og undgår at overskrive eksisterende pakker.
+- Gemmer `name`, `description`, `author`, `version`, `plugin-type`, `type`, `studio-category`, `studio-tags` og `studio-source-titles` samt oprindelseswiki-id; Studio kan samle temaer og paletter.
+- Udelukker visse synkroniseringsfelter og Drive-referencer i pakkede tiddlere; begrænser pakkestørrelsen; skiller oprettelse og udgivelse ad.
+- Udgiver selvstændige pakker via Community-hubben; snapshots er versionssatte og adskilt fra kilde-wikien, og afpublicering sletter ikke brugernes installerede kopier.
+- Eksisterende pluginbibliotek har allerede udtræk af readme og beregning af, om genindlæsning kræves (`wikiPluginLibraryReadme_`, `wikiPluginLibraryRequiresReload_`).
 
-Vi genbruger formen og grundigheden — ikke andres kildekode eller hjemmesideindhold.
+**Vigtigt:** Studions nuværende save-funktion *kræver ikke* særskilte licens-, README- og changelogfiler eller interne dokumentationstiddlere. Vi må derfor ikke hævde, at dette allerede er automatisk håndhævet. I Forge skal eventuelle forbedringer føjes til Studio-logikken og dens genererede pakke/metadata – ikke implementeres som en parallel motor.
 
-## Pluginets opbygning
+## Struktur i Forge
 
-```
-plugins/<slug>/
-  README.md          # Brugsvejledning, krævede og valgfrie afhængigheder, eksempler
-  LICENSE.md         # Konkret licens, originalforfatter og tredjepartskreditering
-  CHANGELOG.md       # Versionshistorik og migrationsnoter
-  provenance.json    # Ophav, kilder, bearbejdninger og dokumentation
-  src/               # Vedligeholdelige tiddler- og JS/CSS-kilder
-  dist/plugin.json   # Selvstændigt installerbar TiddlyWiki-pluginpakke
-```
+En Forge-pluginpakke er fortsat et installerbart TiddlyWiki-pluginbundle i `plugins/<id>/dist/plugin.json`. De læsbare kildefiler og eventuelle `README.md`, `CHANGELOG.md` og licensfiler er et supplement til **Studios eksisterende metadata**, når vi vedligeholder kode på GitHub. De er ikke en ny uafhængig pakkestandard eller et krav om, at hver tiddler skal have flere kopier.
 
-Installerbar `plugin.json` skal have felter:
+Ved selvudviklede plugins vil vi gerne bevare TiddlyTools' overskuelige dokumentation *inde i pluginet*, fx en `readme`-tiddler med formål, installation, eksempler, konfiguration, nødvendige/valgfrie afhængigheder, historik og ophav. Den præcise placering/automatiske generering besluttes i en videreudvikling af Studio, så samme data kun vedligeholdes ét sted.
 
-- `title: $:/plugins/huwiki/<slug>`, `name` og `description`
-- `author`, `version`, `core-version`, `source` og `license`
-- `plugin-type: plugin` og `type: application/json`
-- `text` med JSON-objektet `{"tiddlers": {...}}`
+## Licenser og ophav
 
-Bundlet skal desuden have interne hjælpetiddlere i sit eget navnerum:
+HUWiki Tid viser en gennemarbejdet TiddlyTools-afledning med `license: CC-BY-NC-SA-4.0`, originalforfatter, original kilde, afledt fra, original dokumentation og særskilte ændringsnoter. Denne dokumentations- og krediteringspraksis er forbilledet for *formen*.
 
-- `$:/plugins/huwiki/<slug>/readme`: vejledning direkte i wikien
-- `$:/plugins/huwiki/<slug>/license`: ophav og licensvilkår
-- `$:/plugins/huwiki/<slug>/changes`: versioner og ændringer
-- `$:/plugins/huwiki/<slug>/examples`: når relevante eksempler er nyttige
-- `$:/plugins/huwiki/<slug>/provenance`: ved afledt kode; bevar original kilde, forfatter og ændringsnoter
+- Eric L. Shulmans eksisterende TiddlyTools-vilkår og enhver anden tredjepartskildes faktiske licens videreføres uændret. Ændrede afledninger skal tydeligt kunne spores til originalen.
+- Nye originale HUWiki-plugins kan få en tilsvarende ikke-kommerciel Creative Commons-licens, når rettighedshaverne udtrykkeligt vælger det. Det er **ikke** besluttet for alle eksisterende komponenter.
+- Allerede udgivne komponenter med MIT-licens (fx SitePublisher og PDF Publisher) beholder deres MIT-licens; hverken dokumentet eller Studio ændrer tidligere udgivne kopiers licens.
+- CC BY-NC-SA 4.0 er ikke en OSI-godkendt open-source-kodelicens. Forskel mellem kodelicens og dokumentationslicens skal være tydelig.
 
-README beskriver: **formål, installation, Requires, Optional, brug, konfiguration, eksempler, begrænsninger, opdatering, ændringer, ophav/licens og kildekode**. Ved importerbare underdele skal tiddlernavne, afhængigheder og installation kunne forstås hver for sig.
+## Sprog
 
-## Licens og ophav
+TiddlyWikis indbyggede `$:/language` er den **eneste sprogvælger**. Alle generelle HUWiki-plugins skal reagere på den, herunder captions, beskrivelser, værktøjstip, hjælpetekster og vinduer. **Ingen ekstra sprogvælgerknapper** i plugins eller Forge-forsiden. Egne Editions kan stadig indeholde brugerindhold på et bestemt sprog; det er en anden sag end grænsefladens sprog.
 
-**Nye, originale HUWiki-plugins:** Ønsket delingsmodel inspireret af TiddlyTools er **CC BY-NC-SA 4.0** med kreditering, ikke-kommerciel brug og deling af bearbejdninger på samme vilkår, hvor HUWiki ejer rettighederne og vælger denne licens. Se [Creative Commons](https://creativecommons.org/licenses/by-nc-sa/4.0/). Ikke-kommerciel begrænsning betyder, at denne licens **ikke** er en OSI-godkendt open-source-kodelicens.
+## Andre kvalitetskrav
 
-**Eksisterende plugins og afledninger:** De beholder den licens, de faktisk er udgivet under, indtil oprindelse og rettigheder er gennemgået. Et plugin udgivet som MIT kan ikke bare få alle andres bidrag og eksisterende kopier omdøbt til CC BY-NC-SA. Bevar oprindelige MIT- eller øvrige licensnoter, originaldokumentation og kildehenvisninger. Ved TiddlyTools-afledninger skal `original-author`, `original-source`, `derived-from` og ændringshistorik videreføres; det er ikke vores egen originale kode.
+- Ingen obligatorisk Google Apps Script-, Drive-, Forms- eller Sheets-afhængighed i Editions.
+- Ingen API-nøgler i tiddlere, gemt HTML, pluginbundles eller debug-logs.
+- TiddlyWikis egen saver bruges til den redigerbare single-file wiki.
+- Publisher-plugins skal kunne fungere uden ABC; musikfunktioner er valgfrie.
+- Mac: **Hent** og **Del** skal være adskilte handlinger, ikke én knap der skjuler en automatisk delingsmenu.
 
-## Sprog og teknisk kvalitet
+## Næste skridt
 
-- Generelle værktøjer skal følge TiddlyWikis `$:/language`: dansk og engelsk i brugerflade, caption, description, tooltip og readme.
-- Ingen afhængighed af Google Apps Script eller en bestemt HUWiki Edition for grundfunktionerne.
-- Brug TiddlyWikis eksisterende saver frem for ny gemmemotor.
-- API-nøgler og private forbindelser må ikke gemmes i tiddlere eller eksport-HTML.
-- Reelle *Requires* og *Optional* angives i metadata/readme. ABC/Musik må ikke være skjulte krav for PDF/Site-publishing.
-
-## Releasekontrol
-
-1. Kontrollér installation i en almindelig, kompatibel TiddlyWiki (uden anden Edition).
-2. Kontrollér version, ophav, source, license, readme, changes, eksempel og afhængigheder.
-3. Test sprogomskiftning i både toolbar-beskrivelser og selve vinduet.
-4. Test opgradering/afinstallation uden at overskrive almindelige brugertiddlere.
-5. Test download og deling som **adskilte handlinger** på Mac og iPad.
-6. Kontrollér at licenser og ophavsoplysninger følger med i bundlet, og at ingen secrets følger med.
-
-## Indfasning
-
-1. SitePublisher og PDF Publisher først (bevar deres gældende MIT-vilkår, mens struktur og dokumentation standardiseres).
-2. HUPedia, Trim, Musik, ABC, AI og øvrige originalpakker.
-3. HUWiki Kalender og Tid: særligt fokus på at bevare Erics originale licens, dokumentation, kilde og tydelige bearbejdelsesoplysninger.
-
-Pluginstandarden er en projektpolitik, ikke en automatisk ændring af repositoryets eller gamle pluginversioners ophavsret.
+Vi bruger Studios eksisterende builder og community-metadatamodel som udgangspunkt, dokumenterer præcis hvad der mangler (eksempelvis obligatorisk ophav/readme), og udvider kun samme kodevej. Vi migrerer fortsat plugins ét ad gangen og tester sprog, installérbarhed, eksport og kompatibilitet.
