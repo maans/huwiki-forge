@@ -172,7 +172,7 @@ function enableWorkspace(meta) {
 }
 
 async function openWiki(id) {
-  report("Henter wiki fra Google Drive…");
+  report(loc("Henter wiki fra Google Drev…", "Loading wiki from Google Drive…"));
   try {
     const result = await rpc("huOpen", id);
     enableWorkspace(result.meta);
@@ -183,8 +183,8 @@ async function openWiki(id) {
     frame.removeAttribute("data-sync-blocked");
     frame.setAttribute("aria-busy", "true");
     frame.srcdoc = result.html;
-    report("Wiki indlæst på " + result.elapsedMs + " ms. " +
-      (result.meta.canEdit ? "Gemning er aktiveret." : "Du har kun læseadgang."));
+    report(loc("Wiki indlæst på ", "Wiki loaded in ") + result.elapsedMs + " ms. " +
+      (result.meta.canEdit ? loc("Gemning er aktiveret.", "Saving is enabled.") : loc("Du har kun læseadgang.", "You have read-only access.")));
     try {
       if (result.meta.canEdit) await installSaver(frame, result.meta.id);
       await connectDelta(frame, result.meta.id);
@@ -195,7 +195,7 @@ async function openWiki(id) {
       }
     }
   } catch (error) {
-    report("Kunne ikke åbne wikien: " + error.message, true);
+    report(loc("Kunne ikke åbne wikien: ", "Could not open the wiki: ") + error.message, true);
   }
 }
 
@@ -217,7 +217,7 @@ async function installSaver(frame, fileId) {
     try {
       tw = frame.contentWindow && frame.contentWindow.$tw;
     } catch (error) {
-      report("Browseren tillader ikke adgang til TiddlyWiki-rammen: " + error.message, true);
+      report(loc("Browseren tillader ikke adgang til TiddlyWiki-rammen: ", "The browser blocked access to the TiddlyWiki frame: ") + error.message, true);
       return;
     }
     if (tw && tw.saverHandler && Array.isArray(tw.saverHandler.savers)) {
@@ -226,7 +226,7 @@ async function installSaver(frame, fileId) {
       // Only manual 'save' invocations will send full HTML to Google Drive.
       tw.config.disableAutoSave = true;
       if (!/^[a-f0-9]{32}$/i.test(current && current.fingerprint || "")) {
-        report("Google Drev returnerede ingen checksum for wikiens HTML. Gemning er slået fra for at undgå overskrivning.", true);
+        report(loc("Google Drev returnerede ingen checksum for wikiens HTML. Gemning er slået fra for at undgå overskrivning.", "Google Drive returned no HTML checksum. Saving has been disabled to prevent overwrites."), true);
         return;
       }
       // Count ONLY the edits included in the TiddlyWiki SaverFilter.
@@ -269,14 +269,14 @@ async function installSaver(frame, fileId) {
             let job = nextSave;
             nextSave = null;
             if (blockedConflict) {
-              failure(job.callbacks, "Konflikt: Wikien er ændret i Drive. Hent lokal backup og genindlæs.");
+              failure(job.callbacks, loc("Konflikt: Wikien er ændret i Drive. Hent lokal backup og genindlæs.", "Conflict: The wiki changed in Drive. Download a local backup and reopen."));
               continue;
             }
             try {
-              report("Gemmer på Google Drev…");
+              report(loc("Gemmer på Google Drev…", "Saving to Google Drive…"));
               const started = performance.now();
               if (job.deltaActive && (job.deltaUnsafe || !Number.isSafeInteger(job.deltaCursor))) {
-                failure(job.callbacks, "Snapshot er blokeret, mens ændringer afventer baggrundssynk. Hent eventuelt lokal backup.");
+                failure(job.callbacks, loc("Snapshot er blokeret, mens ændringer afventer baggrundssynk. Hent eventuelt lokal backup.", "Snapshot blocked while edits await background sync. Download a local backup if needed."));
                 continue;
               }
               const result = await rpc("huSave", fileId, job.text, current.fingerprint,
@@ -284,8 +284,8 @@ async function installSaver(frame, fileId) {
               const totalMs = Math.round(performance.now() - started);
               if (result.conflict) {
                 blockedConflict = true;
-                failure(job.callbacks, "KONFLIKT: " + result.message +
-                  " Hent en lokal sikkerhedskopi før du genindlæser.");
+                failure(job.callbacks, "CONFLICT: " + result.message +
+                  loc(" Hent en lokal sikkerhedskopi før du genindlæser.", " Download a local backup before reloading."));
                 continue;
               }
               if (!result.ok) throw new Error("Drive meldte fejl under gemning.");
@@ -303,13 +303,14 @@ async function installSaver(frame, fileId) {
                 sh.updateDirtyStatus();
               }
               report((sh.isDirty() ?
-                "Wikien er gemt, men nyere ændringer afventer en ny gemning. " :
-                "Alle ændringer er gemt. ") +
-                "Google Drev: i alt " + (totalMs / 1000).toFixed(1) +
-                " sek. (server: " + (result.elapsedMs / 1000).toFixed(1) + " sek.).");
+                loc("Wikien er gemt, men nyere ændringer afventer en ny gemning. ", "Wiki saved, but newer edits still await saving. ") :
+                loc("Alle ændringer er gemt. ", "All changes saved. ")) +
+                loc("Google Drev: i alt ", "Google Drive: total ") + (totalMs / 1000).toFixed(1) +
+                loc(" sek. (server: ", " sec (server: ") + (result.elapsedMs / 1000).toFixed(1) +
+                loc(" sek.).", " sec)."));
             } catch (error) {
-              failure(job.callbacks, "Gemning mislykkedes: " +
-                (error.message || String(error)) + ". Hent en lokal sikkerhedskopi.");
+              failure(job.callbacks, loc("Gemning mislykkedes: ", "Saving failed: ") +
+                (error.message || String(error)) + loc(". Hent en lokal sikkerhedskopi.", ". Download a local backup."));
             }
           }
         } finally {
@@ -325,7 +326,7 @@ async function installSaver(frame, fileId) {
         save(text, method, callback) {
           if (!current || current.id !== fileId) return false;
           if (blockedConflict) {
-            callback("KONFLIKT: Hent lokal sikkerhedskopi og genindlæs wikien.");
+            callback(loc("KONFLIKT: Hent lokal sikkerhedskopi og genindlæs wikien.", "CONFLICT: Download a local backup and reopen the wiki."));
             return true;
           }
           // Called immediately after the synchronous HTML render. The
@@ -359,12 +360,12 @@ async function installSaver(frame, fileId) {
         }
       });
       $("saveButton").disabled = false;
-      report("Wiki indlæst. Automatisk gemning er fra – brug Gem, når du er klar.");
+      report(loc("Wiki indlæst. Automatisk gemning er fra – brug Gem, når du er klar.", "Wiki loaded. Automatic full-file saving is off – use Save when ready."));
       return;
     }
     await new Promise(resolve => setTimeout(resolve, 150));
   }
-  report("Wikien blev indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", true);
+  report(loc("Wikien blev indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", "The wiki loaded, but its TiddlyWiki saver could not be connected."), true);
 }
 
 async function connectDelta(frame, fileId) {
@@ -411,7 +412,7 @@ async function connectDelta(frame, fileId) {
       $("enableSyncButton").hidden = false;
     }
   } catch (error) {
-    $("syncStatus").textContent = "Tiddler-synk kan ikke startes: " + error.message;
+    $("syncStatus").textContent = loc("Tiddler-synk kan ikke startes: ", "Could not start tiddler sync: ") + error.message;
     $("syncStatus").style.color = "#b42318";
     // The existing whole-file saver remains available as a fallback.
   }
@@ -424,19 +425,19 @@ $("enableSyncButton").addEventListener("click", async () => {
   const sh = $("wiki").contentWindow?.$tw?.saverHandler;
   if (sh?.isDirty()) {
     $("syncStatus").textContent =
-      "Gem først dine ændringer på Google Drev. Aktivér derefter tiddler-synk.";
+      loc("Gem først dine ændringer på Google Drev. Aktivér derefter tiddler-synk.", "Save your changes to Google Drive first, then enable tiddler sync.");
     $("syncStatus").style.color = "#b42318";
     return;
   }
   $("enableSyncButton").disabled = true;
-  $("syncStatus").textContent = "Opretter delt ændringslog på Google Drive…";
+  $("syncStatus").textContent = loc("Opretter delt ændringslog på Google Drev…", "Creating a shared change log in Google Drive…");
   try {
     await rpc("huSyncEnable", current.id);
     const active = await delta.start();
-    if (!active) throw new Error("Ændringsloggen kunne ikke aktiveres.");
+    if (!active) throw new Error(loc("Ændringsloggen kunne ikke aktiveres.", "Could not enable the change log."));
     $("enableSyncButton").hidden = true;
   } catch (error) {
-    $("syncStatus").textContent = "Aktivering mislykkedes: " + error.message;
+    $("syncStatus").textContent = loc("Aktivering mislykkedes: ", "Activation failed: ") + error.message;
     $("syncStatus").style.color = "#b42318";
     $("enableSyncButton").disabled = false;
   }
@@ -445,21 +446,21 @@ $("enableSyncButton").addEventListener("click", async () => {
 $("saveButton").addEventListener("click", async () => {
   if (saving || nextSave) return;
   if (blockedConflict) {
-    report("Gemning er blokeret af en konflikt. Hent en lokal kopi før genindlæsning.", true);
+    report(loc("Gemning er blokeret af en konflikt. Hent en lokal kopi før genindlæsning.", "Saving is blocked by a conflict. Download a local backup before reloading."), true);
     return;
   }
   try {
     if (delta && delta.active) {
       const ready = await delta.prepareSnapshot();
       if (!ready) throw new Error(
-        "Ikke alle tiddlerændringer er synkroniseret. Hent eventuelt lokal backup, og prøv igen.");
+        loc("Ikke alle tiddlerændringer er synkroniseret. Hent eventuelt lokal backup, og prøv igen.", "Not all tiddler edits have synced. Download a local backup if needed and try again."));
     }
     const tw = $("wiki").contentWindow.$tw;
     if (!tw || !tw.saverHandler) throw new Error("Wikien er ikke klar.");
     if (!tw.saverHandler.saveWiki({method: "save"}))
       throw new Error("Ingen gemmefunktion er tilgængelig.");
   } catch (error) {
-    report("Kunne ikke starte gemning: " + error.message, true);
+    report(loc("Kunne ikke starte gemning: ", "Could not start saving: ") + error.message, true);
   }
 });
 
@@ -483,17 +484,17 @@ $("backupButton").addEventListener("click", () => {
     if (!tw || !tw.saverHandler) throw new Error("Wikien er ikke klar.");
     tw.saverHandler.saveWiki({method:"download"});
   } catch (error) {
-    report("Lokal backup kunne ikke startes: " + error.message, true);
+    report(loc("Lokal backup kunne ikke startes: ", "Could not start local backup: ") + error.message, true);
   }
 });
 
 $("uploadForm").addEventListener("submit", event => {
   event.preventDefault();
   const form = event.currentTarget;
-  report("Opretter HTML-filen på dit Google Drev…");
+  report(loc("Opretter HTML-filen på dit Google Drev…", "Creating the HTML file in your Google Drive…"));
   google.script.run
     .withSuccessHandler(result => openWiki(result.meta.id))
-    .withFailureHandler(error => report("Upload mislykkedes: " + (error.message || error), true))
+    .withFailureHandler(error => report(loc("Upload mislykkedes: ", "Upload failed: ") + (error.message || error), true))
     .huCreate(form); // Forms may only be passed as the sole google.script.run argument.
 });
 
@@ -502,15 +503,16 @@ $("shareButton").addEventListener("click", async () => {
   if (!current) return;
   const email = $("recipient").value.trim();
   const role = $("role").value;
-  if (!email) {report("Indtast modtagerens Google-mailadresse.", true);return;}
-  report("Deler wikien og sender invitation gennem Google Drive…");
+  if (!email) {report(loc("Indtast modtagerens Google-mailadresse.", "Enter the recipient's Google email address."), true);return;}
+  report(loc("Deler wikien og sender invitation gennem Google Drev…", "Sharing the wiki and sending an invitation through Google Drive…"));
   try {
     const result = await rpc("huShare", current.id, email, role);
-    report("Delt med " + result.recipient + " som " +
-      (result.role === "writer" ? "redaktør" : "læser") + ". Google Drive har sendt invitationen. " +
+    report(loc("Delt med ", "Shared with ") + result.recipient + loc(" som ", " as ") +
+      (result.role === "writer" ? loc("redaktør", "editor") : loc("læser", "reader")) +
+      loc(". Google Drev har sendt invitationen. ", ". Google Drive sent the invitation. ") +
       "Link: " + result.link);
   } catch (error) {
-    report("Deling mislykkedes: " + error.message, true);
+    report(loc("Deling mislykkedes: ", "Sharing failed: ") + error.message, true);
   }
 });
 if (START_ID) {
