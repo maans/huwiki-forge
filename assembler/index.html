@@ -27,6 +27,10 @@ Derefter bruger du TiddlyWikis egen Gem-funktion.</p>
 <label for="edition">Vælg Edition</label>
 <select id="edition" disabled><option>Henter Editions…</option></select>
 <p id="description" aria-live="polite"></p>
+<fieldset id="addons" style="margin-top:1.5rem">
+  <legend>Ekstra plugins (valgfrit)</legend>
+  <div id="plugin-list">Indlæser plugin-katalog…</div>
+</fieldset>
 <button id="assemble" type="button" disabled>Byg Edition</button>
 <output id="status" role="status" aria-live="polite"></output>
 
@@ -43,7 +47,9 @@ const button=document.getElementById("assemble");
 const select=document.getElementById("edition");
 const desc=document.getElementById("description");
 const status=document.getElementById("status");
+const pluginList=document.getElementById("plugin-list");
 let editions=[];
+let plugins=[];
 
 function updateDescription() {
   const edition=editions.find(item=>item.id===select.value);
@@ -69,6 +75,32 @@ async function loadCatalog() {
       throw new Error("Edition-manifest må kun ligge i Forgens egen editions-mappe.");
     return {...entry,manifestUrl:manifestUrl.href};
   });
+  if(!Array.isArray(catalog.plugins))catalog.plugins=[];
+  const pluginPrefix=new URL("../plugins/",location.href);
+  const seenPlugins=new Set();
+  plugins=catalog.plugins.map(item=>{
+    if(!item||typeof item.id!=="string"||!/^[a-z0-9-]+$/.test(item.id)||
+       seenPlugins.has(item.id)||typeof item.name!=="string"||typeof item.file!=="string")
+      throw new Error("Ugyldigt eller duplikeret plugin i kataloget.");
+    seenPlugins.add(item.id);
+    const pluginUrl=new URL(item.file,url);
+    if(pluginUrl.origin!==location.origin||!pluginUrl.pathname.startsWith(pluginPrefix.pathname))
+      throw new Error("Plugin-filer skal ligge i Forgens eget plugin-katalog.");
+    return {...item,pluginUrl:pluginUrl.href};
+  });
+  pluginList.replaceChildren();
+  for(const item of plugins) {
+    const label=document.createElement("label");
+    label.style.fontWeight="400";
+    label.style.marginTop=".5rem";
+    const input=document.createElement("input");
+    input.type="checkbox";
+    input.value=item.id;
+    input.className="optional-plugin";
+    label.append(input,document.createTextNode(" "+item.name+" – "+(item.description||"")));
+    pluginList.append(label);
+  }
+  if(!plugins.length)pluginList.textContent="Ingen ekstra plugins endnu.";
   if(!editions.length)throw new Error("Der er endnu ingen Editions i kataloget.");
   select.replaceChildren();
   for(const edition of editions) {
@@ -93,6 +125,19 @@ button.addEventListener("click",async()=>{
     const core=file?{html:await file.text(),sourceUrl:"lokal fil"}:await loadOfficialCore(location.href);
     const {manifest,tiddlers}=await loadEdition(selected.manifestUrl);
     if(manifest.id!==selected.id)throw new Error("Editionens ID stemmer ikke med kataloget.");
+    let extras=0;
+    for(const input of pluginList.querySelectorAll("input.optional-plugin:checked")) {
+      const item=plugins.find(value=>value.id===input.value);
+      if(!item)throw new Error("Ukendt ekstra plugin.");
+      const response=await fetch(item.pluginUrl);
+      if(!response.ok)throw new Error("Kunne ikke hente "+item.name+": HTTP "+response.status);
+      const packageTiddler=await response.json();
+      if(!packageTiddler||packageTiddler["plugin-type"]!=="plugin"||
+         typeof packageTiddler.title!=="string"||typeof packageTiddler.text!=="string")
+        throw new Error("Ugyldig pluginpakke: "+item.name);
+      tiddlers.push(packageTiddler);
+      extras++;
+    }
     if(!tiddlers.length)throw new Error("Editionen har ingen komponenter.");
     const html=assembleHtml(core.html,tiddlers);
     const blob=new Blob([html],{type:"text/html;charset=utf-8"});
@@ -104,7 +149,7 @@ button.addEventListener("click",async()=>{
     link.click();
     link.remove();
     setTimeout(()=>URL.revokeObjectURL(objectUrl),60000);
-    status.textContent="Edition samlet med "+tiddlers.length+" tiddlere/pluginpakker. "+
+    status.textContent="Edition samlet med "+tiddlers.length+" komponenter (ekstra plugins: "+extras+"). "+
       "Kerne: "+core.sourceUrl+". Åbn HTML-filen og test dens funktioner og Gem.";
   } catch(error) {
     status.textContent="Fejl: "+(error&&error.message||String(error));
