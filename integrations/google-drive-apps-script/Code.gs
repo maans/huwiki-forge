@@ -126,13 +126,16 @@ function huSave(fileId, html, expectedFingerprint) {
     const htmlBlob = Utilities.newBlob(html, "text/html", current.name);
     if (htmlBlob.getBytes().length > HU_MAX_BYTES)
       throw new Error("Kan ikke gemme: HTML-indholdet er over 12 MB.");
-    Drive.Files.update(
+    // Use metadata from the upload response, which normally already contains
+    // the NEW checksum. This saves a second Drive.Files.get() and prevents
+    // a stale follow-up version/fingerprint after a successful upload.
+    const updated = Drive.Files.update(
       {mimeType: "text/html"},
       id,
       htmlBlob,
-      {fields: "id,version,modifiedTime", supportsAllDrives: true}
+      {fields: "id,name,mimeType,version,md5Checksum,modifiedTime,capabilities(canEdit,canShare)", supportsAllDrives: true}
     );
-    const savedMeta = huFile_(id);
+    const savedMeta = updated && updated.md5Checksum ? updated : huFile_(id);
     return {ok: true, meta: huPublicMeta_(savedMeta), elapsedMs: Date.now() - started};
   } finally {
     lock.releaseLock();
