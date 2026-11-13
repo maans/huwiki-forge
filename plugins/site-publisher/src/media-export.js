@@ -61,13 +61,32 @@ function cutoutAsset(title,ctx){
  if(f.type==="image/svg+xml"&&!/^data:/i.test(text))copy.text=String(f.text||"");
  ctx.rows[title]=copy;
 }
+function validateCutoutParts(title,scene){
+ var parts=scene.parts||[],byId={};
+ if(parts.length>300)throw publicationMediaError(title,"mere end 300 CutOut-dele / over 300 CutOut parts.");
+ parts.forEach(function(p){
+  if(!p||!p.id||byId[p.id])throw publicationMediaError(title,"manglende eller dubleret del-ID / missing or duplicate part ID.");
+  byId[p.id]=p;
+ });
+ function ancestor(id,seen,depth){
+  if(depth>10)throw publicationMediaError(title,"hierarkiet er dybere end læseren understøtter / part hierarchy exceeds reader depth.");
+  if(seen[id])throw publicationMediaError(title,"cirkulær delstruktur / circular CutOut part hierarchy.");
+  var part=byId[id];
+  if(part.parent){
+   if(!byId[part.parent])throw publicationMediaError(title,"overdelen findes ikke / parent part is missing.");
+   var next=Object.assign({},seen);next[id]=true;ancestor(part.parent,next,depth+1);
+  }
+ }
+ Object.keys(byId).forEach(function(id){ancestor(id,{},0);});
+}
 function collectCutout(title,ctx,stack){
  stack=stack||[];
  if(stack.indexOf(title)!==-1)throw publicationMediaError(title,"cirkulær animationsreference / circular animation reference.");
+ if(stack.length>=16)throw publicationMediaError(title,"animationer er indlejret for dybt / nested CutOut animation exceeds reader depth.");
  if(ctx.rows[title])return;
  var scene=cutoutScene(title),t=$tw.wiki.getTiddler(title);
  if(!scene)throw publicationMediaError(title,"CutOut-animationen findes ikke eller er ugyldig / missing or invalid CutOut scene.");
- if((scene.parts||[]).length>300)throw publicationMediaError(title,"CutOut-scenen har mere end 300 dele.");
+ validateCutoutParts(title,scene);
  var next=stack.concat(title),f=t.fields,copy={title:title,type:"application/json",text:String(f.text||"")};
  if(f["cutout-id"])copy["cutout-id"]=f["cutout-id"];
  if(f["cutout-kind"])copy["cutout-kind"]=f["cutout-kind"];
