@@ -93,8 +93,8 @@ test("Publisher toolbar descriptions follow TiddlyWiki language without an extra
     const tool=entries[p.title+"/Toolbar"];
     assert.equal(tool.type,"text/vnd.tiddlywiki");
     assert.ok(tool.description.includes("else[$:/languages/en-GB]"),"Toolbar descriptions must fall back to English");
-    assert.equal((tool.text.match(/\\\\whitespace trim/g)||[]).length,1,"Only the initial whitespace pragma is valid");
-    assert.ok(!tool.text.includes("\\n\\\\whitespace trim\\n<" ));
+    assert.equal(tool.text.split(String.fromCharCode(92)+"whitespace trim").length-1,1,"Only the initial whitespace pragma is valid");
+    assert.ok(!tool.text.includes("\n"+String.fromCharCode(92)+"whitespace trim\n<" ));
     assert.ok(entries[p.title+"/readme"],"Internal README must be included");
     assert.ok(entries[p.title+"/readme-en"],"English README must be included");
     assert.ok(entries[p.title+"/readme-da"],"Danish README must be included");
