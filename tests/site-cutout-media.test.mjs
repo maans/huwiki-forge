@@ -27,7 +27,7 @@ test("SitePublisher packages readable media adapters, CutOut reader and CSS with
  const p=JSON.parse(await read("plugins/site-publisher/dist/plugin.json"));
  const t=JSON.parse(p.text).tiddlers,js=t[base+"/startup.js"].text;
  const viewer=await read("plugins/site-publisher/src/cutout-viewer.js");
- assert.equal(p.version,"0.1.13-test.1");
+ assert.equal(p.version,"0.1.14-test.1");
  assert.ok(js.includes(adapter.trim()),"Source adapter must match plugin package");
  assert.equal(t[base+"/cutout/viewer.js"].text,viewer);
  assert.equal(t[base+"/cutout/viewer.js"].type,"text/plain");

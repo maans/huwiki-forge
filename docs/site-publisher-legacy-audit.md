@@ -60,3 +60,12 @@ Den gamle `SiteWorkshop.js` er inspiceret, inklusive den komprimerede JavaScript
 **0.1.13-test.1 (13. november 2026):** Den gamle `CutOutSiteRuntime.js`, `siteCutoutWidgets()`, `cutoutAssets()` og `cutoutTitle()` er gennemgået. Én lokal read-only CutOut-læser er integreret i den nye SitePublishers fælles HTML-motor, hvor billed- og animationsreferencer valideres før udgivelse. Runtime, CutOut-JSON, CSS og interne billeddata pakkes i samme HTML-fil. Ingen editor, Google-synkronisering eller ekstra sprogknap følger med. Ligeledes kan direkte image/audio/video-tiddlere og lokale billedhenvisninger eksporteres som data-URL'er. Eksterne eller utilgængelige mediekilder giver en konkret fejl frem for en lydløs udeladelse.
 
 Den nye brugerflade, sitelayouts, HUPedia, ABC og fokusvisning er ikke bevidst ændret. **Det er en første teknisk portering, ikke en browsergodkendt version.** CutOut bør prøves med dukker, animation, indlejrede teaterscener, kamerabevægelser og flere billedvarianter på Mac/iPad samt i en afbrudt netforbindelse. Excalidraw/Tegne og komplet SVG-/video-dækning er stadig næste særskilte udviklingstrin.
+
+
+## Status: Tegne/Excalidraw i Forge
+
+**0.1.14-test.1 (13. november 2026):** Gennemgang af den oprindelige dekomprimerede `SiteWorkshop.js` og `TegneEdition.js` viser, at OAuthLab eksporterede med `Constructor.huwikiExportSvg(scene)` fra den eksisterende Excalidraw-motor og derefter serialiserede et SVG til en data-URL. Forge viderefører nu samme view-only-kontrakt med valideret scene, indlejrede billeddata, cache og automatisk asynkron forberedelse. En midlertidig TiddlyWiki-renderer erstatter Excalidraw-tiddlere med SVG ved almindelig transklusion i WikiText og HUPedia-skabeloner. Der er ikke kopieret en Excalidraw/React-runtime ind i SitePublisher.
+
+Udgivelsen stopper ved manglende motorfunktion, usikre/eksterne SVG-afhængigheder, private kladder eller manglende filindhold. Der er særskilt responsiv visnings-CSS, som indlejres, når en tegning anvendes.
+
+**Fortsat åbent:** Fuld import af Tegne Edition og verificering af tredjepartslicenser, faktisk tegnemotor/eksport i nybygget Forge-wiki, rasterbilleder og skrifttyper på iPad, dynamiske Excalidraw-objekter samt offline-browsertest. Heller ikke de ældre CutOut-, HUPedia- og ABC-funktioner er hermed manuelt browsergodkendt.

@@ -9,7 +9,7 @@ async function json(path) {
 }
 
 const cases=[
-  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.13-test.1"},
+  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.14-test.1"},
   {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.8-test.1"}
 ];
 
@@ -241,7 +241,7 @@ test("SitePublisher reuses the HUPedia article template and original styling",as
  const start=source.indexOf("function isHupediaArticle(title){");
  const end=source.indexOf("function embeddedArticle(title,lang,exportContext){",start);
  assert.ok(start>=0&&end>start,"HUPedia publication helpers must exist");
- assert.ok(source.includes("renderedPedia||$tw.wiki.renderText("),"Pedia render must be preferred over bare source text");
+ assert.ok(source.includes('renderedPedia||drawingRenderer.renderText('),"Pedia render must be preferred over bare source text");
  assert.ok(source.includes("css+=publicationComponentsCss(entries);"),"Article component CSS must be bundled into exported HTML");
  const rendered='<div class="hupedia-article"><aside class="hupedia-infobox"><h3>Carl Nielsen</h3><dl><dt>Born</dt><dd>1865</dd></dl></aside><div class="hupedia-article-text"><p>English article</p></div></div>';
  const pedia=await json("plugins/hupedia/dist/plugin.json");
