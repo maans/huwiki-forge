@@ -65,3 +65,34 @@ test("the Edition catalog only references existing manifests",async()=>{
     assert.equal(m.id,edition.id);
   }
 });
+
+
+test("standalone HUWiki Trim plugin is intact and independent of Apps Script",async()=>{
+  const item=JSON.parse(await readFile(path.join(root,"plugins/trim/dist/plugin.json"),"utf8"));
+  assert.equal(item.title,"$:/plugins/huwiki/trim");
+  assert.equal(item.version,"0.1.5");
+  assert.equal(item.license,"MIT");
+  assert.equal(item["plugin-type"],"plugin");
+  assert.equal(Object.keys(JSON.parse(item.text).tiddlers).length,3);
+  assert.ok(!item.text.includes("google.script.run"));
+});
+
+test("optional plugin catalog points only to existing standalone plugin bundles",async()=>{
+  const catalog=JSON.parse(await readFile(path.join(root,"catalog/editions.json"),"utf8"));
+  for(const item of catalog.plugins||[]) {
+    assert.match(item.id,/^[a-z0-9-]+$/);
+    const url=new URL(item.file,"https://test.example/catalog/editions.json");
+    assert.equal(url.origin,"https://test.example");
+    const file=path.join(root,url.pathname.slice(1));
+    const payload=JSON.parse(await readFile(file,"utf8"));
+    assert.equal(payload["plugin-type"],"plugin");
+  }
+});
+
+test("browser Assembler module has syntactically valid JavaScript",async()=>{
+  const html=await readFile(path.join(root,"assembler/index.html"),"utf8");
+  const match=html.match(/<script type="module">([\s\S]*?)<\/script>/);
+  assert.ok(match);
+  const body=match[1].replace(/^\s*import\s+[^;]+;\s*/,"");
+  assert.doesNotThrow(()=>new Function(body));
+});
