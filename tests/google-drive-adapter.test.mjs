@@ -23,6 +23,12 @@ test("Google Drive integration is strictly optional in Forge", () => {
   }
   assert.equal(plugin.title, "$:/plugins/huwiki/google-drive");
   assert.equal(plugin["plugin-type"], "plugin");
+  assert.equal(plugin.version, addOn.version);
+  const appURL = inner.tiddlers["$:/config/huwiki/google-drive/app-url"]?.text;
+  assert.equal(appURL,
+    "https://script.google.com/macros/s/AKfycbxcW3X-jn0sUcNL1MKUg3RNp4UeG_4LqQyglAc9VlSKcB8mgHTAFUbO1BzAYM4tdwF-/exec");
+  assert.match(inner.tiddlers["$:/plugins/huwiki/google-drive/ui-da"].text, /Åbn HUWiki Google Drev/);
+  assert.match(inner.tiddlers["$:/plugins/huwiki/google-drive/ui-en"].text, /Open HUWiki Google Drive/);
   assert.ok(inner.tiddlers["$:/plugins/huwiki/google-drive/sidebar"]);
   assert.ok(inner.tiddlers["$:/plugins/huwiki/google-drive/ui-da"]);
   assert.ok(inner.tiddlers["$:/plugins/huwiki/google-drive/ui-en"]);
