@@ -297,7 +297,7 @@ async function installSaver(frame, fileId) {
               // The native callback sets numChanges=0. Only restore dirty
               // state for save-worthy edits made AFTER this HTML snapshot.
               const unsavedAfterSnapshot = Math.max(0, changeSerial - job.serial);
-              if (delta && job.deltaActive) delta.noteSnapshotSaved(job.deltaSerial);
+              if (delta && job.deltaActive) delta.noteSnapshotSaved(job.deltaSerial, current.fingerprint);
               if (unsavedAfterSnapshot) {
                 sh.numChanges = Math.max(sh.numChanges, unsavedAfterSnapshot);
                 sh.updateDirtyStatus();
@@ -381,6 +381,7 @@ async function connectDelta(frame, fileId) {
       fileId,
       rpc,
       snapshotSeq: current && current.snapshotSeq || 0,
+      fingerprint: current && current.fingerprint || "",
       localize: loc,
       onStatus: (message, bad) => {
         $("syncStatus").textContent = message;
@@ -414,7 +415,13 @@ async function connectDelta(frame, fileId) {
   } catch (error) {
     $("syncStatus").textContent = loc("Tiddler-synk kan ikke startes: ", "Could not start tiddler sync: ") + error.message;
     $("syncStatus").style.color = "#b42318";
-    // The existing whole-file saver remains available as a fallback.
+    // A linked wiki must not be edited against a missing/broken journal.
+    // Otherwise even an apparently unrelated edit could overwrite newer
+    // snapshot-only plugin or media content later.
+    if (current && current.syncEnabled) {
+      frame.setAttribute("data-sync-blocked", "true");
+      $("saveButton").disabled = true;
+    }
   }
 }
 
@@ -432,13 +439,18 @@ $("enableSyncButton").addEventListener("click", async () => {
   $("enableSyncButton").disabled = true;
   $("syncStatus").textContent = loc("Opretter delt ændringslog på Google Drev…", "Creating a shared change log in Google Drive…");
   try {
-    await rpc("huSyncEnable", current.id);
+    await rpc("huSyncEnable", current.id, current.fingerprint);
     const active = await delta.start();
     if (!active) throw new Error(loc("Ændringsloggen kunne ikke aktiveres.", "Could not enable the change log."));
     $("enableSyncButton").hidden = true;
   } catch (error) {
     $("syncStatus").textContent = loc("Aktivering mislykkedes: ", "Activation failed: ") + error.message;
     $("syncStatus").style.color = "#b42318";
+    if (delta && delta.snapshotOutdated) {
+      $("wiki").setAttribute("data-sync-blocked", "true");
+      $("wiki").style.pointerEvents = "none";
+      $("saveButton").disabled = true;
+    }
     $("enableSyncButton").disabled = false;
   }
 });
