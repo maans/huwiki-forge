@@ -59,7 +59,8 @@ function huSyncInfo(wikiId) {
     canShare: !!linked.wiki.capabilities && !!linked.wiki.capabilities.canShare,
     sheetId: linked.sheetId,
     snapshotSeq: Number.isSafeInteger(snapshotSeq) && snapshotSeq >= 0 ? snapshotSeq : 0,
-    accountKey: huSyncAccountKey_()
+    accountKey: huSyncAccountKey_(),
+    fingerprint: String(linked.wiki.md5Checksum || "")
   };
 }
 
@@ -95,7 +96,7 @@ function huSyncMirrorShares_(wikiId, sheetId) {
  * Explicitly create a shared log. Does not change the original HTML content,
  * and does not silently enable synchronization for an existing wiki.
  */
-function huSyncEnable(wikiId) {
+function huSyncEnable(wikiId, expectedFingerprint) {
   const id = huFileId_(wikiId);
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -105,6 +106,14 @@ function huSyncEnable(wikiId) {
         !linked.wiki.capabilities.canEdit ||
         !linked.wiki.capabilities.canShare)
       throw new Error("Kun en bruger med redigerings- og delingsadgang kan aktivere synkronisering.");
+    // Do not attach a new journal to an HTML snapshot that another user
+    // updated after this browser opened it. The journal's baseline must
+    // correspond to the EXACT HTML bytes the activating editor loaded.
+    const expected = String(expectedFingerprint || "").toLowerCase();
+    const actual = String(linked.wiki.md5Checksum || "").toLowerCase();
+    if (!/^[a-f0-9]{32}$/.test(expected) || !/^[a-f0-9]{32}$/.test(actual) ||
+        expected !== actual)
+      throw new Error("Wikien er ændret på Google Drev siden åbning. Genåbn wikien, før du aktiverer tiddler-synk.");
     if (linked.sheetId) return {enabled: true, sheetId: linked.sheetId};
 
     const book = SpreadsheetApp.create("ForgeDrive — " + linked.wiki.name + " — ændringslog");
@@ -149,6 +158,7 @@ function huSyncPull(wikiId, afterSeq, maxItems) {
   const id = huFileId_(wikiId);
   const linked = huSyncLinkedId_(id);
   if (!linked.sheetId) return {enabled: false, events: [], cursor: 0, hasMore: false};
+  const fingerprint = String(linked.wiki.md5Checksum || "");
   const book = huSyncGetBook_(id, linked.sheetId);
   const lastSeq = Math.max(0, book.journal.getLastRow() - 1);
   const cursor = Number(afterSeq);
@@ -157,7 +167,7 @@ function huSyncPull(wikiId, afterSeq, maxItems) {
   const requested = Number(maxItems) || 100;
   const limit = Math.max(1, Math.min(HU_SYNC_MAX_POLL, requested));
   const count = Math.min(limit, lastSeq - cursor);
-  if (count === 0) return {enabled: true, events: [], cursor, hasMore: false};
+  if (count === 0) return {enabled: true, events: [], cursor, hasMore: false, fingerprint};
 
   const rows = book.journal.getRange(cursor + 2, 1, count, HU_SYNC_HEADER.length).getValues();
   const events = rows.map((row, offset) => ({
@@ -170,7 +180,8 @@ function huSyncPull(wikiId, afterSeq, maxItems) {
     fields: row[4] === "delete" ? null : JSON.parse(String(row[5] || "{}")),
     timestamp: String(row[6])
   }));
-  return {enabled: true, events: events, cursor: cursor + count, hasMore: cursor + count < lastSeq};
+  return {enabled: true, events: events, cursor: cursor + count,
+    hasMore: cursor + count < lastSeq, fingerprint};
 }
 
 /**
@@ -252,7 +263,7 @@ function huSyncValidate_(operations) {
  * Revisions are per tiddler. A stale edit is rejected, not overwritten.
  * The whole batch commits or none of it does.
  */
-function huSyncPush(wikiId, operations) {
+function huSyncPush(wikiId, operations, expectedFingerprint) {
   const id = huFileId_(wikiId);
   const parsed = huSyncValidate_(operations);
   const lock = LockService.getScriptLock();
@@ -262,6 +273,15 @@ function huSyncPush(wikiId, operations) {
     if (!linked.wiki.capabilities || !linked.wiki.capabilities.canEdit)
       throw new Error("Du har ikke redigeringsadgang til denne wiki.");
     if (!linked.sheetId) throw new Error("Synkronisering er endnu ikke aktiveret.");
+    // An HTML snapshot may include changed media/plugins that NEVER entered
+    // this journal. Reject all edits from a stale baseline, even when the
+    // per-title revision in the delta journal otherwise appears current.
+    const actual = String(linked.wiki.md5Checksum || "").toLowerCase();
+    const expected = String(expectedFingerprint || "").toLowerCase();
+    if (!/^[a-f0-9]{32}$/.test(actual) || !/^[a-f0-9]{32}$/.test(expected) ||
+        actual !== expected)
+      return {ok: false, snapshotStale: true, accepted: [],
+        message: "HTML-snapshot er ændret. Gem en lokal backup og genåbn wikien."};
     const book = huSyncGetBook_(id, linked.sheetId);
     const lastRow = book.journal.getLastRow();
 
