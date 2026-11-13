@@ -6,7 +6,8 @@
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/Velkommen.json",
-    "tiddlers/DefaultTiddlers.json"
+    "tiddlers/DefaultTiddlers.json",
+    "../shared/libraries.json"
   ],
   "plugins": [
     "../../plugins/forge-demo/dist/plugin.json"
