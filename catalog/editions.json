@@ -4,10 +4,10 @@
     {
       "id": "hupedia",
       "name": "HUPedia Edition",
-      "description": "Bilingual encyclopedia with editable infoboxes and editorial examples; no Google services / Tosproget leksikon med faktabokse",
+      "description": "HUPedia: readable editable WikiText, Danish/English infoboxes and article translations using TiddlyWiki's language",
       "status": "test",
       "manifest": "../editions/hupedia/manifest.json",
-      "version": "0.2.3-test.1"
+      "version": "0.2.4-test.1"
     },
     {
       "id": "demo",
