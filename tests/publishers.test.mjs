@@ -9,7 +9,7 @@ async function json(path) {
 }
 
 const cases=[
-  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.7-test.1"},
+  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.8-test.1"},
   {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.8-test.1"}
 ];
 
@@ -47,11 +47,24 @@ for (const row of cases) {
       assert.ok(js.includes('getTiddlerText("$:/language"'),"Must follow the wiki language");
       assert.ok(js.includes("function wikiLanguage()"));
       assert.ok(js.includes('Download HTML'),"English interface labels");
-      const downloader=js.slice(js.indexOf("function downloadHtml("),js.indexOf("function shareHtml("));
+      const downloader=js.slice(js.indexOf("function downloadHtml("),js.indexOf("function shareFile("));
       assert.ok(downloader.includes("link.download=filename"));
       assert.ok(downloader.includes("link.click()"));
       assert.doesNotMatch(downloader,/navigator\.share|showSaveFilePicker/,"Mac download cannot open the native share sheet");
       assert.ok(js.includes("function shareHtml("),"Native sharing remains a separate action");
+      assert.ok(js.includes("function canShareHtml("),"Sharing must test browser support for HTML files");
+      assert.ok(js.includes("shareBtn.hidden=!canShareHtml(exported"),"Hide unsupported native share instead of showing an error");
+      assert.ok(js.includes("Systemdelingen blev afvist."),"Failed native sharing should offer a file-download fallback");
+      assert.ok(js.includes("downloadHtml(html,name);"),"Share failures should try the normal HTML download");
+      const toolbar=entries[plugin.title+"/Toolbar"].text;
+      const pageControl=entries[plugin.title+"/PageControl"].text;
+      for(const source of [toolbar,pageControl]) {
+        assert.ok(source.includes("<tv-config-toolbar-text>match[yes]"),"Toolbar must show its text when configured");
+        assert.ok(source.includes("tc-btn-text"),"Toolbar text must have the TiddlyWiki standard markup");
+        assert.ok(source.includes("huwikiLocale"),"Toolbar must follow built-in wiki language");
+      }
+      assert.ok(toolbar.includes("Publish HTML site"));
+      assert.ok(toolbar.includes("Udgiv HTML-site"));
     } else {
       assert.ok(js.includes("huprint-overview-grid"));
       assert.ok(js.includes('getTiddlerText("$:/language"'),"PDF Publisher must follow wiki language");
