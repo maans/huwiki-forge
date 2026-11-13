@@ -334,7 +334,12 @@ export async function dialog(kind, message, initial = '', signal) {
     return stdout.trimEnd();
   } catch (error) {
     if (error.code === 'ENOENT') throw Error('Graphical dialogs are unavailable. On Linux, install Zenity using your software manager. / Grafiske dialoger mangler. På Linux installeres Zenity via programbutikken.');
-    throw Object.assign(Error('Cancelled / Annulleret'), {cancelled: true});
+    const cancelled = error.name === 'AbortError' ||
+      (process.platform === 'win32' && error.code === 2) ||
+      (process.platform === 'darwin' && String(error.stderr).includes('(-128)')) ||
+      (process.platform === 'linux' && error.code === 1);
+    if (cancelled) throw Object.assign(Error('Cancelled / Annulleret'), {cancelled: true});
+    throw new Error('Could not display the dialog. / Kunne ikke vise dialogboksen.', {cause: error});
   }
 }
 function appFolder() {
@@ -361,14 +366,11 @@ export async function privateSessionDirectory() {
     // Restrict the directory BEFORE putting credentials inside it.
     const data = Buffer.from(directory).toString('base64');
     try {
-      const identity = await execute('powershell.exe', ['-NoProfile', '-NonInteractive', '-Command', '[Security.Principal.WindowsIdentity]::GetCurrent().User.Value'], {windowsHide: true});
-      const sid = identity.stdout.trim();
-      if (!/^S-\d(?:-\d+)+$/.test(sid)) throw Error('Invalid Windows SID');
-      await execute('icacls.exe', [directory, '/inheritance:r', '/grant:r', `*${sid}:(OI)(CI)F`], {windowsHide: true});
-      // Verify the effective DACL before writing a password. Unexpected explicit
-      // grants also fail closed; removing inheritance alone would not remove them.
-      const verify = `$p=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')); $a=[IO.Directory]::GetAccessControl($p); $rules=$a.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]); if (!$a.AreAccessRulesProtected -or $rules.Count -eq 0) { exit 1 }; foreach ($r in $rules) { if ($r.AccessControlType -eq 'Allow' -and $r.IdentityReference.Value -ne '${sid}') { exit 2 } }`;
-      await execute('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(verify, 'utf16le').toString('base64')], {windowsHide: true});
+      // Use .NET directly: a PowerShell 7 parent may supply a module path that
+      // Windows PowerShell 5.1 cannot load. Replace the DACL, not merely inherited
+      // entries, because temporary folders can also contain explicit grants.
+      const protect = `$ErrorActionPreference='Stop'; $p=[Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')); $s=[Security.Principal.WindowsIdentity]::GetCurrent().User; $a=[Security.AccessControl.DirectorySecurity]::new(); $a.SetAccessRuleProtection($true,$false); $r=[Security.AccessControl.FileSystemAccessRule]::new($s,'FullControl','ContainerInherit,ObjectInherit','None','Allow'); $a.AddAccessRule($r); [IO.Directory]::SetAccessControl($p,$a); $a=[IO.Directory]::GetAccessControl($p); $rules=$a.GetAccessRules($true,$true,[Security.Principal.SecurityIdentifier]); if (!$a.AreAccessRulesProtected -or $rules.Count -eq 0) { exit 1 }; foreach ($r in $rules) { if ($r.AccessControlType -eq 'Allow' -and $r.IdentityReference.Value -ne $s.Value) { exit 2 } }`;
+      await execute('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(protect, 'utf16le').toString('base64')], {windowsHide: true});
     } catch (cause) {
       await rm(directory, {recursive: true, force: true});
       throw new Error('Could not protect your login file. Nothing shared.\nKunne ikke beskytte din loginfil. Intet delt.', {cause});
