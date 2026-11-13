@@ -68,7 +68,7 @@ test("Drawing SVG adapter is separate readable code bundled in one shared SitePu
  const plugin=JSON.parse(await read("plugins/site-publisher/dist/plugin.json"));
  const items=JSON.parse(plugin.text).tiddlers;
  const js=items[base+"/startup.js"].text;
- assert.equal(plugin.version,"0.1.14-test.1");
+ assert.equal(plugin.version,"0.1.15-test.1");
  assert.ok(js.includes(code.trim()));
  new Script(js);new Script(code);
  assert.equal(items[base+"/drawings/view.css"].type,"text/css");
@@ -81,6 +81,8 @@ test("Drawing SVG adapter is separate readable code bundled in one shared SitePu
  assert.match(js,/preview\.srcdoc=exported/);
  assert.ok(js.includes("if(exportedFigures<drawingReferences.length)"),"Missing drawings must stop publication");
  assert.match(js,/function downloadHtml\(/);
+ assert.match(js,/publicationRejectLiveDrawingUi\(div,title\)/,"Live drawing editors must never export as empty static sites");
+ assert.match(code,/\.hu-tegne-app,\.hu-tegne-editor,\.excalidraw/,"Detect the drawing studio generically");
  assert.doesNotMatch(code,/google\.script\.run|DriveApp|navigator\.share|createElement\(["']select["']\)/);
 });
 test("Drawing scene is validated, privacy kept, and images must be actually embedded",()=>{
