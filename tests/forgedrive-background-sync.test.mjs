@@ -179,6 +179,19 @@ function fakeWiki() {
       if (type === "change") subscribers.push(listener);
     },
     getTiddler: title => data.get(title),
+    each(callback) {
+      for (const [title, tiddler] of data) callback(tiddler, title);
+    },
+    // Mimic a real wiki edit whose queued TiddlyWiki change event was lost
+    // before ForgeDrive's listener could observe it.
+    silentAddTiddler(tiddler) {
+      data.set(tiddler.fields.title, tiddler);
+      saverHandler.numChanges++;
+    },
+    silentDeleteTiddler(title) {
+      data.delete(title);
+      saverHandler.numChanges++;
+    },
     addTiddler(tiddler) {
       const title = tiddler.fields.title;
       data.set(title, tiddler);
@@ -662,4 +675,74 @@ test("a delta push rejected by snapshot checksum pauses the browser without retr
   await a.flush();
   assert.equal(writes,1,"outdated snapshots must not retry writes endlessly");
   a.stop();
+});
+
+test("local reconciliation catches a missed normal-tiddler change event", async () => {
+  const f = backendFixture();
+  enable(f);
+  const Delta = clientClass(), W = fakeWiki();
+  const client = new Delta({fingerprint:f.file.md5Checksum,tw:W,fileId:f.file.id,
+    rpc:async (name,...args) => f.ctx[name](...args)});
+  assert.equal(await client.start(),true);
+  W.wiki.silentAddTiddler(new W.Tiddler({title:"Missed in event queue",text:"save this"}));
+  assert.equal(client.pending.size,0);
+  assert.equal(W.saverHandler.isDirty(),true);
+  client.reconcileUnobservedChanges();
+  assert.equal(client.pending.size,1);
+  assert.equal(client.recoveredByScan,1);
+  await client.flush();
+  assert.equal(client.pending.size,0);
+  assert.equal(client.confirmedChanges,1);
+  assert.equal(W.saverHandler.isDirty(),false);
+  assert.equal(f.ctx.huSyncPull(f.file.id,0,10).events[0].title,"Missed in event queue");
+  client.stop();
+});
+
+test("local reconciliation detects missed deletion without inventing one on a clean wiki", async () => {
+  const f = backendFixture();
+  enable(f);
+  const Delta = clientClass(), W = fakeWiki();
+  W.wiki.addTiddler(new W.Tiddler({title:"Existing in HTML",text:"old"}));
+  W.saverHandler.numChanges = 0;
+  const client = new Delta({fingerprint:f.file.md5Checksum,tw:W,fileId:f.file.id,
+    rpc:async (name,...args) => f.ctx[name](...args)});
+  await client.start();
+  client.reconcileUnobservedChanges();
+  assert.equal(client.pending.size,0);
+  W.wiki.silentDeleteTiddler("Existing in HTML");
+  client.reconcileUnobservedChanges();
+  assert.equal(client.pending.get("Existing in HTML").operation,"delete");
+  await client.flush();
+  assert.equal(W.saverHandler.isDirty(),false);
+  assert.equal(f.ctx.huSyncPull(f.file.id,0,10).events[0].operation,"delete");
+  client.stop();
+});
+
+test("reconciliation never marks a concurrent newer edit as saved with the earlier acknowledgment", async () => {
+  const f = backendFixture();
+  enable(f);
+  const Delta = clientClass(), W = fakeWiki();
+  let release, intercepted=false;
+  const rpc = (name,...args) => {
+    if (name==="huSyncPush" && !intercepted) {
+      intercepted=true;
+      return new Promise(resolve => { release=() => resolve(f.ctx[name](...args)); });
+    }
+    return Promise.resolve(f.ctx[name](...args));
+  };
+  const client = new Delta({fingerprint:f.file.md5Checksum,tw:W,fileId:f.file.id,rpc});
+  await client.start();
+  W.wiki.addTiddler(new W.Tiddler({title:"Draft",text:"first"}));
+  const flight = client.flush();
+  W.wiki.silentAddTiddler(new W.Tiddler({title:"Draft",text:"second"}));
+  client.reconcileUnobservedChanges();
+  release();
+  await flight;
+  assert.equal(client.pending.size,1);
+  assert.equal(W.saverHandler.isDirty(),true);
+  await client.flush();
+  assert.equal(client.pending.size,0);
+  assert.equal(W.saverHandler.isDirty(),false);
+  assert.deepEqual(f.ctx.huSyncPull(f.file.id,0,10).events.map(e=>e.fields.text),["first","second"]);
+  client.stop();
 });
