@@ -2,6 +2,14 @@
   "schemaVersion": 1,
   "editions": [
     {
+      "id": "forge",
+      "name": "HUWiki Forge (landingswiki)",
+      "description": "Editable bilingual Forge homepage, shared Plugin Library and Community, and a local-copy-friendly TiddlyWiki",
+      "status": "test",
+      "manifest": "../editions/forge/manifest.json",
+      "version": "0.1.0-test.1"
+    },
+    {
       "id": "hupedia",
       "name": "HUPedia Edition",
       "description": "HUPedia: readable editable WikiText, Danish/English infoboxes and article translations using TiddlyWiki's language",
