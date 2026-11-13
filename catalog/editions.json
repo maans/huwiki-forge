@@ -2,8 +2,16 @@
   "schemaVersion": 1,
   "editions": [
     {
+      "id": "hupedia",
+      "name": "HUPedia Edition",
+      "description": "Leksikon med artikeltyper, faktabokse, tema og otte eksempler. Ingen Google-tjenester.",
+      "status": "test",
+      "manifest": "../editions/hupedia/manifest.json"
+    },
+    {
       "id": "demo",
       "name": "Demo Edition",
+      "description": "Minimal test af TiddlyWiki-plugin og før-boot-indlæsning.",
       "status": "test",
       "manifest": "../editions/demo/manifest.json"
     }
