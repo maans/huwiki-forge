@@ -21,7 +21,7 @@ function huEmail_(value) {
 function huFile_(id) {
   const fileId = huFileId_(id);
   const meta = Drive.Files.get(fileId, {
-    fields: "id,name,mimeType,size,version,modifiedTime,capabilities(canEdit,canShare)",
+    fields: "id,name,mimeType,size,version,md5Checksum,modifiedTime,capabilities(canEdit,canShare)",
     supportsAllDrives: true
   });
   if (meta.mimeType !== "text/html" || !/\.html?$/i.test(meta.name || "")) {
@@ -35,6 +35,8 @@ function huPublicMeta_(meta) {
     id: meta.id,
     name: meta.name || "wiki.html",
     version: String(meta.version || ""),
+    // MD5 checks the actual HTML bytes, unaffected by Drive sharing changes.
+    fingerprint: String(meta.md5Checksum || ""),
     modifiedTime: meta.modifiedTime || null,
     canEdit: !!(meta.capabilities && meta.capabilities.canEdit),
     canShare: !!(meta.capabilities && meta.capabilities.canShare)
@@ -89,11 +91,11 @@ function huCreate(form) {
 }
 
 /**
- * Gem hele HTML-filen. En script-lock og Googles filversion begrænser
+ * Gem hele HTML-filen. En script-lock og Googles indholds-checksum begrænser
  * samtidige overskrivninger fra dette Apps Script-projekt.
  * Der er IKKE atomisk beskyttelse mod andre Drive-klienter.
  */
-function huSave(fileId, html, expectedVersion) {
+function huSave(fileId, html, expectedFingerprint) {
   const started = Date.now();
   const id = huFileId_(fileId);
   if (typeof html !== "string" || !html.length)
@@ -107,9 +109,18 @@ function huSave(fileId, html, expectedVersion) {
     const current = huFile_(id);
     if (!current.capabilities || !current.capabilities.canEdit)
       throw new Error("Du har ikke redigeringsadgang til denne wiki.");
-    if (!expectedVersion || String(current.version) !== String(expectedVersion)) {
+    // Drive's "version" increases for metadata/permission changes, even when
+    // the wiki's HTML is unchanged. This caused a FALSE first-save conflict.
+    // The checksum remains stable until the actual file content changes.
+    const diskFingerprint = String(current.md5Checksum || "").toLowerCase();
+    const baseline = String(expectedFingerprint || "").toLowerCase();
+    if (!/^[a-f0-9]{32}$/.test(diskFingerprint) ||
+        !/^[a-f0-9]{32}$/.test(baseline)) {
+      throw new Error("Drive kunne ikke bekræfte filens indholds-checksum. Gemning er stoppet for at beskytte dine ændringer.");
+    }
+    if (diskFingerprint !== baseline) {
       return {ok: false, conflict: true, meta: huPublicMeta_(current),
-        message: "Wikien er ændret i Google Drive. Gem lokalt og genindlæs før ny deling."};
+        message: "WIKI-KONFLIKT: Filens indhold er ændret på Google Drive siden åbning. Hent en lokal kopi før genindlæsning."};
     }
     htmlBlob.setName(current.name);
     Drive.Files.update(
