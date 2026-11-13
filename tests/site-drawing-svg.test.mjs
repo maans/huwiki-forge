@@ -55,7 +55,7 @@ function createDrawingAdapter(rows,options={}){
  const safe=(s)=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const publicationMediaError=(title,detail)=>new Error("SitePublisher · "+title+": "+detail);
  const api=new Function("$tw","publicationMediaError","wikiLanguage","safe","XMLSerializer","setTimeout","clearTimeout",
-  code+"\nreturn {publicationDrawingFields,publicationDrawingAllowed,publicationDrawingValidate,publicationDrawingCheckSvg,publicationDrawingReferences,siteDrawingSource,siteDrawingBody,drawingSiteWiki,isDrawingTitle,publicationRejectLiveDrawingUi};"
+  code+"\nreturn {publicationDrawingFields,publicationDrawingAllowed,publicationDrawingValidate,publicationDrawingCheckSvg,publicationDrawingReferences,siteDrawingSource,siteDrawingBody,drawingSiteWiki,isDrawingTitle,publicationRejectLiveDrawingUi,publicationRejectLiveDrawingSource};"
  )(tw,publicationMediaError,()=>options.lang||"en",safe,serializer,setTimeout,clearTimeout);
  return {api,rows,wiki,seen,calls:()=>calls};
 }
@@ -91,6 +91,16 @@ test("SitePublisher must reject a live drawing studio instead of reporting a sit
  assert.throws(()=>api.publicationRejectLiveDrawingUi(studio,"HUWiki Tegne"),/drawing studio, not a drawing/);
  const regular={querySelector(){return null;}};
  assert.doesNotThrow(()=>api.publicationRejectLiveDrawingUi(regular,"Ordinary article"));
+});
+test("Publisher rejects Excalidraw studio transclusion in source while ignoring code examples",()=>{
+ const {api}=createDrawingAdapter(records());
+ const bad='<$transclude $tiddler="$:/plugins/huwiki/tegne/home" $mode="block"/>';
+ assert.throws(()=>api.publicationRejectLiveDrawingSource("HUWiki Tegne",bad),/drawing studio, not a drawing/);
+ assert.throws(()=>api.publicationRejectLiveDrawingSource("Article",'<$excalidraw tiddler="Diagram"/>'),/drawing studio, not a drawing/);
+ const tick=String.fromCharCode(96);
+ assert.doesNotThrow(()=>api.publicationRejectLiveDrawingSource("Docs",tick+bad+tick));
+ assert.doesNotThrow(()=>api.publicationRejectLiveDrawingSource("Docs",tick.repeat(3)+"\n"+bad+"\n"+tick.repeat(3)));
+ assert.doesNotThrow(()=>api.publicationRejectLiveDrawingSource("Article","! Normal article\n\n{{Diagram}}"));
 });
 test("Drawing scene is validated, privacy kept, and images must be actually embedded",()=>{
  const rows=records(),{api}=createDrawingAdapter(rows);
