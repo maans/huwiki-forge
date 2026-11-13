@@ -55,7 +55,7 @@ function createDrawingAdapter(rows,options={}){
  const safe=(s)=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
  const publicationMediaError=(title,detail)=>new Error("SitePublisher · "+title+": "+detail);
  const api=new Function("$tw","publicationMediaError","wikiLanguage","safe","XMLSerializer","setTimeout","clearTimeout",
-  code+"\nreturn {publicationDrawingFields,publicationDrawingAllowed,publicationDrawingValidate,publicationDrawingCheckSvg,siteDrawingSource,siteDrawingBody,drawingSiteWiki,isDrawingTitle};"
+  code+"\nreturn {publicationDrawingFields,publicationDrawingAllowed,publicationDrawingValidate,publicationDrawingCheckSvg,publicationDrawingReferences,siteDrawingSource,siteDrawingBody,drawingSiteWiki,isDrawingTitle};"
  )(tw,publicationMediaError,()=>options.lang||"en",safe,serializer,setTimeout,clearTimeout);
  return {api,rows,wiki,seen,calls:()=>calls};
 }
@@ -79,6 +79,7 @@ test("Drawing SVG adapter is separate readable code bundled in one shared SitePu
  assert.match(js,/if\(err\.siteDrawingPending&&err\.promise\)/);
  assert.match(js,/err\.promise\.then\(function\(\)/);
  assert.match(js,/preview\.srcdoc=exported/);
+ assert.ok(js.includes("if(exportedFigures<drawingReferences.length)"),"Missing drawings must stop publication");
  assert.match(js,/function downloadHtml\(/);
  assert.doesNotMatch(code,/google\.script\.run|DriveApp|navigator\.share|createElement\(["']select["']\)/);
 });
@@ -128,7 +129,8 @@ test("The Excalidraw adapter uses the existing widget's SVG bridge, not an edito
  const broken=createDrawingAdapter(rows,{svg:{nodeType:1,localName:"div",namespaceURI:"http://www.w3.org/1999/xhtml",querySelectorAll:()=>[]}});
  const pending=initialPending(broken.api,"Diagram");
  await assert.rejects(pending.promise,/Drawing engine did not return an SVG/);
- assert.throws(()=>broken.api.siteDrawingSource("Diagram"),/Drawing engine did not return an SVG/);
+ const retry=initialPending(broken.api,"Diagram");
+ await assert.rejects(retry.promise,/Drawing engine did not return an SVG/);
 });
 test("SVG dependency sanitizer accepts embedded images/fonts but rejects external files and scripts",()=>{
  const {api}=createDrawingAdapter(records());
@@ -161,6 +163,14 @@ test("A transcluded Excalidraw drawing uses TiddlyWiki's article renderer via pa
  assert.match(rendered,/data:image\/svg\+xml/);
  assert.equal(ctx.drawings,true);
  assert.ok(seen.some(x=>Array.isArray(x)&&x[0]?.tag==="figure"),"An existing transclusion must become a static drawing");
+});
+test("Explicit drawing references are preflighted while code examples are ignored",()=>{
+ const {api}=createDrawingAdapter(records());
+ const tick=String.fromCharCode(96);
+ const text="{{Diagram}} and <$transclude tiddler=\"Media\"/> and <$transclude $tiddler=\u0027Diagram\u0027/>"+
+  "\n"+tick+"{{Diagram}}"+tick+"\n"+tick.repeat(3)+"\n{{Diagram}}\n"+tick.repeat(3)+"\n";
+ assert.deepEqual(api.publicationDrawingReferences(text),["Diagram","Media","Diagram"]);
+ assert.deepEqual(api.publicationDrawingReferences("normal article"),[]);
 });
 test("The exporter refuses invalid image dependencies from saved Excalidraw files",()=>{
  const rows=records(),{api}=createDrawingAdapter(rows);
