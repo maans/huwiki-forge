@@ -29,6 +29,14 @@ simulationer; **ægte flerbruger- og browsertest med to Google-konti mangler**.
 6. Revisionskontrol foregår **pr. tiddler**, med operation-ID'er for
    sikre gentagne forsøg. Konkurrerende ændringer bevarer den lokale
    version og rapporterer en konflikt; øvrige tiddlere kan fortsætte.
+   Klienten gemmer en lokal sammenligningsbaseline af bekræftede tiddlere.
+   Hvis TiddlyWiki viser ugemte ændringer, men ingen delta-operationer
+   ligger i kø, sammenlignes wikiens almindelige tiddlere lokalt med
+   baseline. Oversete redigeringer eller sletninger køres gennem den
+   almindelige revisionskontrollerede synkronisering uden ekstra Drive-kald.
+   Brugerfladen viser særskilt **registreret**, **bekræftet gemt** og
+   **fundet ved kontrol**, sammen med den oprindelige TiddlyWiki-dirty-status.
+   Derfor er `0 pending` aldrig i sig selv en gemmebekræftelse.
 7. Kun bekræftede ændringer tæller som synkroniserede. Ved offline/fejl
    forbliver ændringer i køen, og browseren advarer før lukning.
    Pending drafts genoprettes via kontoopdelt browserlagring, **hvis
