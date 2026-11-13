@@ -80,8 +80,14 @@ test("Apps Script and HTML-service client both parse as JavaScript", async () =>
 test("TiddlyWiki saver uses synchronous boolean + asynchronous callback", () => {
   assert.match(ui, /req\.callback\(null\)/);
   assert.match(ui, /return true;\s*\}\s*\}\);/);
-  assert.match(ui, /capabilities:\s*\["save","autosave"\]/);
-  assert.match(ui, /changeSerial\s*>\s*job\.serial/);
+  assert.match(ui, /capabilities:\s*\["save"\]/);
+  assert.match(ui, /tw\.config\.disableAutoSave\s*=\s*true/);
+  assert.match(ui, /sh\.filterFn\.call\(tw\.wiki/);
+  assert.match(ui, /unsavedAfterSnapshot\s*=\s*Math\.max\(0, changeSerial - job\.serial\)/);
+  assert.match(ui, /id="saveButton"/);
+  assert.match(ui, /saveWiki\(\{method:\s*"save"\}\)/);
+  assert.match(ui, /beforeunload/);
+  assert.doesNotMatch(ui, /savePending\s*=/);
   assert.match(ui, /Hent lokal sikkerhedskopi/);
 });
 
