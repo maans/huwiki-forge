@@ -349,29 +349,31 @@
       return this.pending.size > 0 || this.conflicts.size > 0;
     }
     async pullAll() {
-      if (!this.active || this.pulling || navigator.onLine === false) return;
+      if (!this.active || this.pulling || navigator.onLine === false) return false;
       this.pulling = true;
       const beforeLocalEdit = this.sequence;
       let appliedRemote = 0;
+      let caughtUp = false;
       try {
         for (let page = 0; page < 100; page++) {
           const result = await this.rpc("huSyncPull", this.fileId, this.cursor, 100);
           if (!result.enabled) {
             this.onStatus("Den delte ændringslog er ikke tilgængelig.", true);
-            return;
+            return false;
           }
           for (const event of result.events || []) {
             if (this.applyRemote(event)) appliedRemote++;
           }
           this.cursor = result.cursor;
-          if (!result.hasMore) break;
+          if (!result.hasMore) { caughtUp = true; break; }
         }
+        if (!caughtUp) throw new Error("Ændringsloggen er endnu ikke fuldt indlæst. Redigering af snapshots er blokeret.");
         // The native TW SaverHandler also counts REMOTE modifications as
         // dirty. They were already persisted by another user, and must not
         // light up the save indicator in this client. Wait for TW to dispatch
         // its queued change events before resetting the counter. Never reset
         // if any local edit or conflict happened meanwhile.
-        if (appliedRemote > 0 && this.canEdit) {
+        if (appliedRemote > 0) {
           await new Promise(resolve => setTimeout(resolve, 0));
           if (!this.pending.size && !this.flushing && !this.conflicts.size &&
               !this.dirtyOutsideSync && !this.unsupported.size &&
@@ -383,10 +385,14 @@
             }
           }
         }
+        this.lastPullSucceeded = true;
         this.state();
+        return true;
       } catch (error) {
+        this.lastPullSucceeded = false;
         this.onStatus("Kunne ikke hente ændringer: " +
           (error.message || String(error)), true);
+        return false;
       } finally {
         this.pulling = false;
       }
@@ -397,11 +403,14 @@
       const prior = this.revisions.get(title) || 0;
       if (event.seq <= prior) return false;
       this.revisions.set(title, event.seq);
-      // Never overwrite an unsent local edit with a remote update.
-      if (this.pending.has(title)) {
-        if (this.pending.get(title).opId !== event.opId) {
-          this.conflicts.set(title, {title, actual:event.seq,
-            expected:this.pending.get(title).baseSeq});
+      // Never overwrite an unsent or unsupported local edit. Conflicts are
+      // isolated by title so other tiddlers continue synchronizing.
+      if (this.pending.has(title) || this.unsupported.has(title)) {
+        const pending = this.pending.get(title);
+        if (!pending || pending.opId !== event.opId) {
+          this.conflicts.set(title, {title, actual: event.seq,
+            expected: pending ? pending.baseSeq : prior});
+          this.persist();
           this.onStatus("Konflikt: " + title +
             " er ændret af en anden bruger. Din lokale version er bevaret.", true);
         }
