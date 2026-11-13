@@ -49,6 +49,12 @@ Ingen manglende Google-funktion må erstattes med en dummyknap eller skjult obli
 4. Både almindelige tiddlere og pluginbundles indlæses ved første opstart; væsentlige browserhandlinger testes.
 5. Wikien kan redigeres og gemmes via TiddlyWikis **egen** saver; ingen private forbindelsesoplysninger følger med.
 6. Plugin er versioneret, kan installeres separat og har et klart afhængigheds-/licensgrundlag.
+7. **Sprogtest er obligatorisk ved import af enhver Edition:** Alle UI-tekster, pluginbeskrivelser (`caption`, `description`), værktøjstip, knapper, indstillinger, modaler og hjælpetekster skal automatisk følge TiddlyWikis **eksisterende `$:/language`** på både dansk og engelsk. Der må **ikke** tilføjes lokale sprogvælgere eller parallelle sprogsystemer. Kontroller skiftet i samme wiki og efter gem/genåbn; tiddlernes faglige brugerindhold oversættes ikke automatisk.
+
+
+## Sprogkontrol ved Edition-migration
+
+Når vi importerer **AI, Musik, Tegne, CutOut, Studio, Shop, Spørgeskema, Slideshow, AV, HUPin** og øvrige Editions, gennemgår vi hver editions UI-tiddlere, pluginmetadata og JavaScript for hårdkodede danske tekster. Eksisterende oversættelser bevares og tilpasses TiddlyWikis sprogmekanisme. Manglende engelske tekster oversættes og afprøves, før Editionen markeres som færdig. Det gælder også fælles plugins installeret i en anden Edition, og det skal fungere uden ekstra sprogvælgerknapper. Se også [pluginstandarden](plugin-standard.md).
 
 ## Kernen må ikke ændres bag om ryggen på Editions
 
