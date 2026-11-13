@@ -58,6 +58,10 @@
 
   <section id="workspace" hidden>
     <header>
+      <button type="button" id="saveButton" disabled>Gem på Google Drev</button>
+      <small id="saveHint">Automatisk gemning er slået fra – gem, når du er færdig.</small>
+    </header>
+    <header>
       <div id="sharing">
         <label for="recipient">Del med</label>
         <input id="recipient" type="email" placeholder="modtager@gmail.com">
@@ -106,6 +110,7 @@ function enableWorkspace(meta) {
   $("driveLink").href = "https://drive.google.com/file/d/" + encodeURIComponent(meta.id) + "/view";
   $("driveLink").hidden = false;
   $("shareButton").disabled = !meta.canShare;
+  $("saveButton").disabled = true;
 }
 
 async function openWiki(id) {
@@ -137,13 +142,35 @@ async function installSaver(frame, fileId) {
     }
     if (tw && tw.saverHandler && Array.isArray(tw.saverHandler.savers)) {
       if (tw.saverHandler.savers.some(s => s.info && s.info.name === "huwiki-google-drive")) return;
+      // Disable TiddlyWiki's own autosave before installing our saver.
+      // Only manual 'save' invocations will send full HTML to Google Drive.
+      tw.config.disableAutoSave = true;
       if (!/^[a-f0-9]{32}$/i.test(current && current.fingerprint || "")) {
         report("Google Drev returnerede ingen checksum for wikiens HTML. Gemning er slået fra for at undgå overskrivning.", true);
         return;
       }
+      // Count ONLY the edits included in the TiddlyWiki SaverFilter.
+      // Transient/system changes also emit wiki change events; counting
+      // every event was incorrectly keeping the Save icon permanently red.
       let changeSerial = 0;
+      const sh = tw.saverHandler;
       if (tw.wiki && typeof tw.wiki.addEventListener === "function") {
-        tw.wiki.addEventListener("change", () => {changeSerial++;});
+        tw.wiki.addEventListener("change", changes => {
+          try {
+            const filtered = typeof sh.filterFn === "function" ?
+              sh.filterFn.call(tw.wiki, iterator => {
+                for (const [title, change] of Object.entries(changes || {})) {
+                  if (change && change.normal) iterator(tw.wiki.getTiddler(title), title);
+                }
+              }) : [];
+            changeSerial += Array.isArray(filtered) ? filtered.length : 0;
+          } catch (error) {
+            console.warn("Kunne ikke evaluere SaverFilter under ændringskontrol:", error);
+            // If the filter cannot be evaluated, fail safe: a subsequent
+            // manual save may be required instead of silently clearing dirty.
+            changeSerial++;
+          }
+        });
       }
 
       const failure = (requests, message) => {
@@ -156,18 +183,11 @@ async function installSaver(frame, fileId) {
       const pumpSaves = async () => {
         if (saving) return;
         saving = true;
+        $("saveButton").disabled = true;
         try {
           while (nextSave) {
             let job = nextSave;
             nextSave = null;
-            // Coalesce bursts of edits into a single latest HTML upload.
-            if (job.method === "autosave") {
-              await new Promise(resolve => setTimeout(resolve, 800));
-              if (nextSave) {
-                nextSave.callbacks.unshift(...job.callbacks);
-                continue;
-              }
-            }
             if (blockedConflict) {
               failure(job.callbacks, "Konflikt: Wikien er ændret i Drive. Hent lokal backup og genindlæs.");
               continue;
@@ -189,15 +209,18 @@ async function installSaver(frame, fileId) {
                 // TiddlyWiki clears its dirty counter in the callback.
                 req.callback(null);
               }
-              // Do not silently discard edits made during an outstanding
-              // asynchronous upload (or during the 800 ms debounce).
-              if (changeSerial > job.serial && tw.saverHandler) {
-                tw.saverHandler.numChanges = Math.max(1, tw.saverHandler.numChanges);
-                tw.saverHandler.updateDirtyStatus();
+              // The native callback sets numChanges=0. Only restore dirty
+              // state for save-worthy edits made AFTER this HTML snapshot.
+              const unsavedAfterSnapshot = Math.max(0, changeSerial - job.serial);
+              if (unsavedAfterSnapshot) {
+                sh.numChanges = Math.max(sh.numChanges, unsavedAfterSnapshot);
+                sh.updateDirtyStatus();
               }
-              report("Gemt på Google Drev – i alt " +
-                (totalMs / 1000).toFixed(1) + " sek. (server: " +
-                (result.elapsedMs / 1000).toFixed(1) + " sek.).");
+              report((sh.isDirty() ?
+                "Wikien er gemt, men nyere ændringer afventer en ny gemning. " :
+                "Alle ændringer er gemt. ") +
+                "Google Drev: i alt " + (totalMs / 1000).toFixed(1) +
+                " sek. (server: " + (result.elapsedMs / 1000).toFixed(1) + " sek.).");
             } catch (error) {
               failure(job.callbacks, "Gemning mislykkedes: " +
                 (error.message || String(error)) + ". Hent en lokal sikkerhedskopi.");
@@ -205,13 +228,14 @@ async function installSaver(frame, fileId) {
           }
         } finally {
           saving = false;
-          // A callback might have queued new work during the last iteration.
+          $("saveButton").disabled = !current || !current.canEdit || blockedConflict;
+          // A second explicit save may have been requested while uploading.
           if (nextSave) void pumpSaves();
         }
       };
 
       tw.saverHandler.savers.push({
-        info: {name:"huwiki-google-drive", priority:2000, capabilities:["save","autosave"]},
+        info: {name:"huwiki-google-drive", priority:2000, capabilities:["save"]},
         save(text, method, callback) {
           if (!current || current.id !== fileId) return false;
           if (blockedConflict) {
@@ -231,13 +255,44 @@ async function installSaver(frame, fileId) {
           return true;
         }
       });
-      report("Wiki indlæst. Google Drev-gemning er aktiv.");
+      $("saveButton").disabled = false;
+      report("Wiki indlæst. Automatisk gemning er fra – brug Gem, når du er klar.");
       return;
     }
     await new Promise(resolve => setTimeout(resolve, 150));
   }
   report("Wikien blev indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", true);
 }
+
+$("saveButton").addEventListener("click", () => {
+  if (saving || nextSave) return;
+  if (blockedConflict) {
+    report("Gemning er blokeret af en konflikt. Hent en lokal kopi før genindlæsning.", true);
+    return;
+  }
+  try {
+    const tw = $("wiki").contentWindow.$tw;
+    if (!tw || !tw.saverHandler) throw new Error("Wikien er ikke klar.");
+    if (!tw.saverHandler.saveWiki({method: "save"}))
+      throw new Error("Ingen gemmefunktion er tilgængelig.");
+  } catch (error) {
+    report("Kunne ikke starte gemning: " + error.message, true);
+  }
+});
+
+// Browser tabs cannot reliably finish asynchronous Drive uploads on close.
+// Protect unsaved work with the normal 'unsaved changes' browser warning.
+window.addEventListener("beforeunload", event => {
+  try {
+    const sh = $("wiki").contentWindow?.$tw?.saverHandler;
+    if (saving || nextSave || (sh && sh.isDirty())) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  } catch (_error) {
+    // Wiki was not loaded. Nothing to protect.
+  }
+});
 
 $("backupButton").addEventListener("click", () => {
   try {
