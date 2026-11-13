@@ -112,7 +112,6 @@ export async function loadOfficialCore(baseUrl, fetcher = fetch) {
   const candidates = [localUrl];
   const rawUrl = githubRawCoreUrl(baseUrl);
   if (rawUrl) candidates.push(rawUrl);
-  candidates.push("https://tiddlywiki.com/empty.html");
   const errors = [];
   for (const url of candidates) {
     try {
@@ -126,5 +125,5 @@ export async function loadOfficialCore(baseUrl, fetcher = fetch) {
     }
   }
   throw new Error("Kunne ikke hente en gyldig TiddlyWiki-kerne automatisk. " +
-    "GitHub-spejlet skal først oprettes. " + errors.join(" | "));
+    "Den fastlåste kerne er ikke tilgængelig; prøv igen senere eller vælg en lokal fil. " + errors.join(" | "));
 }
