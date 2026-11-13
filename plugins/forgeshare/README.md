@@ -12,7 +12,7 @@ Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeS
 4. If TiddlyWiki is missing, the dialog helper can offer a separate, explicit installation of `tiddlywiki@5.4.1` in the user's ForgeShare application-data folder. It invokes npm via Node with `--ignore-scripts` and no shell, and does not install globally. Declining does not install anything. Node.js and Tailscale are never silently installed.
 5. After the final sharing confirmation, the helper starts the Node server and foreground Tailscale Serve. It opens no website or browser. The user copies the address from the status dialog. Closing that named dialog stops only its wiki. Open the helper again to run another named wiki alongside it.
 
-The start files can leave a terminal window behind the dialogs. These are inspectable source scripts, not signed desktop applications or bundled Node executables. Mac/Linux launcher ZIP entries carry executable permissions. The included getting-started sheet contains no terminal commands; it suggests the built-in extractor and assistance if startup is blocked. Signing/notarization remains outside this test package. The native dialogs have not yet been manually exercised on all target systems.
+The start files can leave a terminal window behind the dialogs. These are inspectable source scripts, not signed desktop applications or bundled Node executables. Mac/Linux launcher ZIP entries carry executable permissions. The included getting-started sheet contains no terminal commands; it identifies the observed Gatekeeper block and does not suggest permission changes or extraction as a fix. Signing/notarization remains outside this test package. The native dialogs have not yet been manually exercised on all target systems.
 
 ## Safety and limits
 
@@ -63,3 +63,9 @@ No production deployment or merge is part of this feature. Test status remains u
 Original HUWiki code; the project has not chosen its license yet. Existing third-party licenses remain unchanged. TailShare was considered but is already used by other Tailscale sharing tools, so this package keeps ForgeShare as its working name.
 
 Translation references: [developer translation guide](https://tiddlywiki.com/dev/static/How%2520to%2520create%2520a%2520translation%2520for%2520TiddlyWiki.html), [translation mechanism](https://tiddlywiki.com/static/TranslationMechanism.html), and [plugin information tiddlers](https://tiddlywiki.com/static/Plugin%2520Information%2520Tiddlers.html). The native core language dropdown and an already-rendered guide are exercised in tests, including HUWiki Dansk’s actual title/name combination.
+
+## Mac distribution blocker
+
+The user reproduced Gatekeeper refusing `Start-ForgeShare.command` because Apple cannot verify it for malicious software. This is distinct from executable permissions. The Mac download is now explicitly a technical test before the download button, not a beginner-ready application. A shorter README does not resolve this limitation.
+
+The intended nontechnical Mac experience needs an application bundle with a recognizable icon and native windows, no Terminal launch, Developer ID signing and Apple notarization. No such bundle or signing credentials are included in this change. Repackaging the script as an unsigned `.app` would not solve trusted distribution. See [Apple Developer ID](https://developer.apple.com/developer-id/) and [notarization](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution).

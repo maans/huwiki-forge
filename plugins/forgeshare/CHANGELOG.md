@@ -5,6 +5,7 @@
 - Fix Danish selection for the existing HUWiki Dansk language pack; follow the native `$:/language` selector and language metadata.
 - Provide standalone localized native plugin information tabs and test live switching through the actual core selector, with English fallback.
 - Replace the helper's technical README with a short bilingual getting-started sheet; remove terminal commands and preserve executable ZIP permissions.
+- Mark the Mac download as a technical test after the observed Gatekeeper block; document signed/notarized app distribution as an unresolved usability requirement.
 
 ## 0.1.0-test.2
 

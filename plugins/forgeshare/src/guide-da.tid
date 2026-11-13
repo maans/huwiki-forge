@@ -24,10 +24,12 @@ På Mac og Windows: vælg installationsprogrammet til din computer, åbn det, og
 
 !! Hent hjælperen
 
+''Mac: kun til teknisk afprøvning.'' Der er endnu ingen almindelig, signeret ForgeShare-app. Den nuværende startfil kan blive afvist af macOS med beskeden om, at Apple ikke kan kontrollere den for malware. Den er derfor endnu ikke klar som enkel Mac-løsning til uøvede brugere. Terminalkommandoer og ny udpakning løser ikke denne sikkerhedskontrol.
+
 Vælg din computer nedenfor. Pak hele ZIP-filen ud på skrivebordet, læs den korte vejledning, og åbn startfilen. At hente filen starter ikke deling.
 
 <div class="hu-share-downloads">
-<a href={{$:/plugins/huwiki/forgeshare/download/mac}} download="ForgeShare-mac.zip">Hent til Mac</a>
+<a href={{$:/plugins/huwiki/forgeshare/download/mac}} download="ForgeShare-mac.zip">Hent teknisk Mac-test</a>
 <a href={{$:/plugins/huwiki/forgeshare/download/windows}} download="ForgeShare-windows.zip">Hent til Windows</a>
 <a href={{$:/plugins/huwiki/forgeshare/download/linux}} download="ForgeShare-linux.zip">Hent til Linux</a>
 </div>
@@ -36,7 +38,7 @@ Vælg din computer nedenfor. Pak hele ZIP-filen ud på skrivebordet, læs den ko
 * ''Windows:'' åbn `Start-ForgeShare.cmd`.
 * ''Linux:'' start `Start-ForgeShare.sh`. Systemet kan kræve, at du tillader kørsel i filens egenskaber.
 
-Et terminalvindue kan være synligt bag dialogboksene, men du behøver ikke skrive kommandoer i det. Startfilen til Mac er pakket klar til kørsel. Hvis den ikke kan åbnes, pak den originale ZIP ud med computerens eget udpakningsprogram. Hvis den stadig blokeres, få hjælp med fejlbeskeden; du skal ikke skrive terminalkommandoer. Hjælperen er endnu ikke en signeret app og indeholder ikke sin egen Node.js. Ingen sikkerhedsindstillinger skal slås fra.
+Et terminalvindue kan være synligt bag dialogboksene, men du behøver ikke skrive kommandoer i det. Startfilen til Mac er pakket klar til kørsel. Hvis macOS blokerer den med en sikkerhedsbesked, stop afprøvningen. Det kræver en bedre udgivet app; du skal ikke skrive terminalkommandoer eller slå beskyttelse fra. Hjælperen er endnu ikke en signeret app og indeholder ikke sin egen Node.js. Ingen sikkerhedsindstillinger skal slås fra.
 
 !! Første opsætning — kun én gang
 
@@ -108,3 +110,5 @@ Hvis billedet stadig mangler, skal det undersøges, om serveren har modtaget det
 <$transclude $tiddler="$:/plugins/huwiki/forgeshare/advanced-da" $mode="block"/>
 
 </details>
+
+* [[Apple: sikker åbning af programmer på Mac|https://support.apple.com/en-us/102445]]

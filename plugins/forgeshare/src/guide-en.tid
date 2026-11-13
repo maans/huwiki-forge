@@ -24,10 +24,12 @@ On Mac and Windows, choose your computer's installer, open it and follow its ste
 
 !! Download the helper
 
+''Mac: technical testing only.'' There is no ordinary signed ForgeShare app yet. macOS may refuse the current start file because Apple cannot check it for malicious software. It is not yet a simple Mac solution for nontechnical users. Terminal commands and extracting again do not resolve that security check.
+
 Choose your computer below. Extract the entire ZIP to your desktop, read the short instructions and open the start file. Downloading does not start sharing.
 
 <div class="hu-share-downloads">
-<a href={{$:/plugins/huwiki/forgeshare/download/mac}} download="ForgeShare-mac.zip">Download for Mac</a>
+<a href={{$:/plugins/huwiki/forgeshare/download/mac}} download="ForgeShare-mac.zip">Download Mac technical test</a>
 <a href={{$:/plugins/huwiki/forgeshare/download/windows}} download="ForgeShare-windows.zip">Download for Windows</a>
 <a href={{$:/plugins/huwiki/forgeshare/download/linux}} download="ForgeShare-linux.zip">Download for Linux</a>
 </div>
@@ -36,7 +38,7 @@ Choose your computer below. Extract the entire ZIP to your desktop, read the sho
 * ''Windows:'' open `Start-ForgeShare.cmd`.
 * ''Linux:'' run `Start-ForgeShare.sh`. Your system may require permission to run it in the file's properties.
 
-A terminal window may remain behind the dialogs, but you do not need to type commands into it. The Mac start file is packaged with permission to run. If it will not open, extract the original ZIP with your computer's built-in extractor. If it is still blocked, get help with the message shown; no terminal commands are required. The helper is not yet a signed application and does not contain Node.js. Do not disable security protections.
+A terminal window may remain behind the dialogs, but you do not need to type commands into it. The Mac start file is packaged with permission to run. If macOS blocks it with a security alert, stop testing. This needs a properly distributed app; do not type terminal commands or disable protections. The helper is not yet a signed application and does not contain Node.js. Do not disable security protections.
 
 !! First setup — once only
 
@@ -108,3 +110,5 @@ If the image is still missing, check whether it reached the server and whether b
 <$transclude $tiddler="$:/plugins/huwiki/forgeshare/advanced-en" $mode="block"/>
 
 </details>
+
+* [[Apple: safely open apps on your Mac|https://support.apple.com/en-us/102445]]
