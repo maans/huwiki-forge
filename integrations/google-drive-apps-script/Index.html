@@ -440,13 +440,16 @@ $("enableSyncButton").addEventListener("click", async () => {
   $("syncStatus").textContent = loc("Opretter delt ændringslog på Google Drev…", "Creating a shared change log in Google Drive…");
   try {
     await rpc("huSyncEnable", current.id, current.fingerprint);
+    // From this moment the server has a journal even if client bootstrap
+    // fails; do not fall back to an editable stale whole-file wiki.
+    current.syncEnabled = true;
     const active = await delta.start();
     if (!active) throw new Error(loc("Ændringsloggen kunne ikke aktiveres.", "Could not enable the change log."));
     $("enableSyncButton").hidden = true;
   } catch (error) {
     $("syncStatus").textContent = loc("Aktivering mislykkedes: ", "Activation failed: ") + error.message;
     $("syncStatus").style.color = "#b42318";
-    if (delta && delta.snapshotOutdated) {
+    if (current.syncEnabled) {
       $("wiki").setAttribute("data-sync-blocked", "true");
       $("wiki").style.pointerEvents = "none";
       $("saveButton").disabled = true;
