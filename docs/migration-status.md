@@ -8,16 +8,18 @@ Status: 13. november 2026. Dette dokument beskriver den konkrete migration af de
 
 For tjenester der kræver en server (fx modtagelse af offentlige formularbesvarelser eller onlineordrer), må Forge tilbyde en selvhostet backend som valgfri komponent. GitHub Pages kan ikke i sig selv skrive eller modtage data.
 
+**Ny HUPedia-browsertest:** Kontroller dansk/engelsk i faktabokse, formularer, sidepanel, starter-artikler og siteundertitel. Visnings- og redigeringstiddlere bruger særskilt locale-variabel, så sprogomskiftningen ikke overtager `currentTiddler` eller ændrer felt-id’er. Test også SitePublisher og PDF Publisher: ingen synlig `\\whitespace trim`, beskrivelser i TiddlyWikis værktøjsmenu, korrekt mål-tiddler og separat Mac-download. Automatiske tests erstatter ikke browserkontrollen.
+
 ## Første konkrete overførsel
 
 | Pakke | Status | Kilde og resultat |
 | --- | --- | --- |
-| HUPedia Edition | **Migreret; første browser-test bestået for artikelvisning og faktaboks** | Originalt plugin `$:/plugins/huwiki/hupedia` (21 tiddlere), tema `$:/themes/huwiki/hupedia` (2 tiddlere) og otte redigerbare eksempel-tiddlere. Manifest i `editions/hupedia/` |
+| HUPedia Edition | **Migreret; dansk/engelsk UI og demotekster i 0.2.3-test.1; ny browsertest mangler** | Originalt plugin `$:/plugins/huwiki/hupedia` (21 tiddlere), tema `$:/themes/huwiki/hupedia` (2 tiddlere) og otte redigerbare eksempel-tiddlere. Manifest i `editions/hupedia/`. Sprog følger `$:/language` uden ekstra knapper; datafelter og tags bevares |
 | HUWiki Trim | **Migreret; indstillinger er vist i brugerens HUPedia-browsertest** | Version 0.1.5, MIT-licens, tre interne tiddlere. `plugins/trim/dist/plugin.json` |
 | Demo Edition | **Browsertestet** | Kontrol af boot, startup-plugin, redigering og TiddlyWikis egen Gem |
 
-| HUWiki SitePublisher | **Migreret som valgfrit Forge-plugin; browser-test med HUPedia mangler** | v0.1.3-test.1 fra Musik 0.3.51, 6 plugin-tiddlere, MIT. `plugins/site-publisher/dist/plugin.json` |
-| HUWiki PDF Publisher | **Migreret som valgfrit Forge-plugin; browser-test med HUPedia mangler** | v0.2.5-test.1 fra Musik 0.3.51, 4 plugin-tiddlere, MIT. `plugins/print-article/dist/plugin.json` |
+| HUWiki SitePublisher | **Migreret som valgfrit Forge-plugin; browsertest af nyeste version mangler** | v0.1.7-test.1, baseret på Musik 0.3.51, med justeret toolbar, MIT. `plugins/site-publisher/dist/plugin.json` |
+| HUWiki PDF Publisher | **Migreret som valgfrit Forge-plugin; browser-test med HUPedia mangler** | v0.2.8-test.1, baseret på Musik 0.3.51, med justeret toolbar, MIT. `plugins/print-article/dist/plugin.json` |
 
 **Udgivelsesværktøjerne er fælles, men endnu ikke standardinstalleret.** Se [udgivelsesplanen](publishers.md) for kompatibilitet med HUPedia, Musik og andre Editions. Den gamle HUPedia-site-skabelon er ikke længere en del af Forsiden; en ny tiddler forklarer udgivelsesmulighederne. Godkendte artikler filtreres endnu ikke automatisk ved eksport.
 
