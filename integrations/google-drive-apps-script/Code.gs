@@ -40,7 +40,7 @@ function huPublicMeta_(meta) {
     modifiedTime: meta.modifiedTime || null,
     canEdit: !!(meta.capabilities && meta.capabilities.canEdit),
     canShare: !!(meta.capabilities && meta.capabilities.canShare),
-    snapshotSeq: Number(meta.properties && meta.properties[HU_SYNC_SNAPSHOT_PROPERTY] || 0)
+    snapshotSeq: Number(meta.properties && meta.properties["forgeDriveSnapshotSeq"] || 0)
   };
 }
 
@@ -129,7 +129,7 @@ function huSave(fileId, html, expectedFingerprint, expectedDeltaSeq) {
     // this browser. A concurrent delta push and a whole-HTML upload use the
     // same script lock, so no logged edits can slip between this check and
     // the Drive write. Never write a stale HTML snapshot over a newer log.
-    const sheetId = current.properties && current.properties[HU_SYNC_PROPERTY];
+    const sheetId = current.properties && current.properties["forgeDriveSyncSheetId"];
     let journalHead = 0;
     if (sheetId) {
       const book = huSyncGetBook_(id, sheetId);
@@ -147,7 +147,7 @@ function huSave(fileId, html, expectedFingerprint, expectedDeltaSeq) {
     // a stale follow-up version/fingerprint after a successful upload.
     const uploadMetadata = {mimeType: "text/html"};
     if (sheetId) {
-      uploadMetadata.properties = {[HU_SYNC_SNAPSHOT_PROPERTY]: String(journalHead)};
+      uploadMetadata.properties = {["forgeDriveSnapshotSeq"]: String(journalHead)};
     }
     const updated = Drive.Files.update(
       uploadMetadata,
@@ -159,7 +159,7 @@ function huSave(fileId, html, expectedFingerprint, expectedDeltaSeq) {
     // Some mocks and Drive variants omit property values from upload replies.
     if (sheetId) {
       savedMeta.properties = Object.assign({}, current.properties, savedMeta.properties, {
-        [HU_SYNC_SNAPSHOT_PROPERTY]: String(journalHead)
+        ["forgeDriveSnapshotSeq"]: String(journalHead)
       });
     }
     return {ok: true, meta: huPublicMeta_(savedMeta), elapsedMs: Date.now() - started};
@@ -235,7 +235,7 @@ function huShare(fileId, recipientEmail, role) {
       throw new Error("Du må ikke dele denne fil.");
     const appUrl = ScriptApp.getService().getUrl();
     const link = appUrl ? appUrl + "?id=" + encodeURIComponent(id) : "";
-    const sheetId = meta.properties && meta.properties[HU_SYNC_PROPERTY];
+    const sheetId = meta.properties && meta.properties["forgeDriveSyncSheetId"];
     let journal = null;
     if (sheetId) journal = huGrantShare_(huFileId_(sheetId), email, role, false, "");
     let wiki;
