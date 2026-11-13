@@ -1,0 +1,9 @@
+{
+  "schemaVersion": 1,
+  "approved": [],
+  "candidate": {
+    "version": "5.4.1",
+    "officialUrl": "https://tiddlywiki.com/empty.html",
+    "status": "testing-local-file-only"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "editions": [
+    {
+      "id": "demo",
+      "name": "Demo Edition",
+      "status": "test",
+      "manifest": "../editions/demo/manifest.json"
+    }
+  ]
+}

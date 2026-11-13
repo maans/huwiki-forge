@@ -1,0 +1,9 @@
+{
+  "title": "$:/plugins/huwiki/forge-demo",
+  "name": "HUWiki Forge Demo",
+  "description": "Startup-plugin der kontrollerer før-boot indlæsning.",
+  "version": "0.0.1",
+  "plugin-type": "plugin",
+  "type": "application/json",
+  "text": "{\"tiddlers\":{\"$:/plugins/huwiki/forge-demo/startup.js\":{\"title\":\"$:/plugins/huwiki/forge-demo/startup.js\",\"type\":\"application/javascript\",\"module-type\":\"startup\",\"text\":\"(function () {\\n\\\"use strict\\\";\\nexports.name = \\\"huwiki-forge-demo\\\";\\nexports.synchronous = true;\\nexports.startup = function () {\\n  $tw.wiki.addTiddler(new $tw.Tiddler({\\n    title: \\\"$:/state/HUWikiForge/DemoPluginStarted\\\",\\n    text: \\\"JA\\\"\\n  }));\\n};\\n})();\"}}}"
+}

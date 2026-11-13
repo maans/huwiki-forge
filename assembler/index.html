@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HUWiki Forge — Edition Assembler-test</title>
+<style>
+  body { font: 1rem/1.6 system-ui, sans-serif; max-width: 47rem; margin: 3rem auto; padding: 0 1.25rem; }
+  label, button { display: block; margin-top: 1.1rem; }
+  button { padding: .65rem 1rem; font: inherit; cursor: pointer; }
+  output { display: block; white-space: pre-wrap; margin-top: 1.5rem; }
+  .note { padding: .8rem 1rem; border-left: 3px solid #777; }
+</style>
+</head>
+<body>
+<h1>HUWiki Forge — Edition Assembler</h1>
+<p class="note">Dette er en teknisk testside, ikke den endelige TiddlyWiki-baserede Forge-launcher.</p>
+<p>Hent først den officielle <a href="https://tiddlywiki.com/empty.html">TiddlyWiki empty.html</a>.
+Vælg filen nedenfor. Assembleren indsætter Editionens tiddlere og JavaScript-plugin før TiddlyWikis opstart.</p>
+<label for="core">Officiel empty.html</label>
+<input id="core" type="file" accept=".html,text/html">
+<button id="assemble" type="button">Byg demo-Edition</button>
+<output id="status" role="status" aria-live="polite"></output>
+<script type="module">
+import { assembleHtml, loadEdition } from "./assemble.mjs";
+const button = document.getElementById("assemble");
+const status = document.getElementById("status");
+button.addEventListener("click", async () => {
+  button.disabled = true;
+  status.textContent = "Samler Edition...";
+  try {
+    const file = document.getElementById("core").files[0];
+    if (!file) throw new Error("Vælg først en empty.html-fil.");
+    const manifestUrl = new URL("../editions/demo/manifest.json", location.href);
+    const { manifest, tiddlers } = await loadEdition(manifestUrl.href);
+    const result = assembleHtml(await file.text(), tiddlers);
+    const blob = new Blob([result], { type: "text/html;charset=utf-8" });
+    const objectUrl = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = objectUrl;
+    anchor.download = "HUWiki-" + manifest.id + ".html";
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(objectUrl), 60000);
+    status.textContent = "Edition samlet: " + tiddlers.length +
+      " tiddlere/pluginpakker. Åbn den downloadede HTML-fil og test Gem-funktionen.";
+  } catch (error) {
+    status.textContent = "Fejl: " + error.message;
+  } finally {
+    button.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
