@@ -8,6 +8,7 @@
  * Not deployed by default: enable in a separate test version first.
  */
 const HU_SYNC_PROPERTY = "forgeDriveSyncSheetId";
+const HU_SYNC_SNAPSHOT_PROPERTY = "forgeDriveSnapshotSeq";
 const HU_SYNC_HEADER = ["seq", "opId", "actor", "title", "operation", "fieldsJson", "timestamp"];
 const HU_SYNC_MAX_OPS = 25;
 const HU_SYNC_MAX_BATCH_CHARS = 250000;
@@ -34,16 +35,60 @@ function huSyncGetBook_(wikiId, sheetId) {
   return {book: book, journal: journal};
 }
 
-/** Status without creating additional resources. */
+/**
+ * A Drive permission ID is stable for each Google account and prevents
+ * browser-local recovery data being offered to a different Google login.
+ * It is not an OAuth token or an authorization grant.
+ */
+function huSyncAccountKey_() {
+  const about = Drive.About.get({fields: "user(permissionId)"});
+  const key = about && about.user && about.user.permissionId;
+  if (!key) throw new Error("Google Drev kunne ikke identificere din aktuelle konto.");
+  return String(key);
+}
+
+/** Status without creating any additional resources. */
 function huSyncInfo(wikiId) {
   const id = huFileId_(wikiId);
   const linked = huSyncLinkedId_(id);
+  const snapshotSeq = Number(linked.wiki.properties &&
+    linked.wiki.properties[HU_SYNC_SNAPSHOT_PROPERTY] || 0);
   return {
     enabled: !!linked.sheetId,
     canEdit: !!linked.wiki.capabilities && !!linked.wiki.capabilities.canEdit,
     canShare: !!linked.wiki.capabilities && !!linked.wiki.capabilities.canShare,
-    sheetId: linked.sheetId
+    sheetId: linked.sheetId,
+    snapshotSeq: Number.isSafeInteger(snapshotSeq) && snapshotSeq >= 0 ? snapshotSeq : 0,
+    accountKey: huSyncAccountKey_()
   };
+}
+
+/** Mirror existing named collaborators BEFORE making the journal live.
+ * Sharing links/groups/domains are intentionally rejected rather than
+ * accidentally exposing the log or leaving collaborators unsynchronized.
+ */
+function huSyncMirrorShares_(wikiId, sheetId) {
+  let pageToken;
+  do {
+    const page = Drive.Permissions.list(wikiId, {
+      fields: "nextPageToken,permissions(type,role,emailAddress,deleted)",
+      pageSize: 100,
+      pageToken: pageToken || undefined,
+      supportsAllDrives: true
+    });
+    for (const p of page.permissions || []) {
+      if (p.deleted || p.role === "owner") continue;
+      if (p.type !== "user" || !p.emailAddress)
+        throw new Error("Wikien har gruppe-, domæne- eller linkdeling. Brug direkte maildeling før tiddler-synk aktiveres.");
+      if (!["reader", "writer", "commenter"].includes(p.role))
+        throw new Error("Ukendt Google Drive-delerolle: " + p.role);
+      Drive.Permissions.create(
+        {type: "user", role: p.role === "writer" ? "writer" : "reader", emailAddress: p.emailAddress},
+        sheetId, {sendNotificationEmail: false, fields: "id"}
+      );
+    }
+    pageToken = page.nextPageToken || "";
+  } while (pageToken);
 }
 
 /**
@@ -71,13 +116,25 @@ function huSyncEnable(wikiId) {
     config.getRange("A1:B1").setValues([["forgedrive-sync-v1", id]]);
     config.hideSheet();
 
-    // A public Drive custom property is visible to users with access to the
-    // wiki file, even if they have their own Google OAuth session.
-    Drive.Files.update(
-      {properties: {[HU_SYNC_PROPERTY]: book.getId()}},
-      id, null,
-      {fields: "id,properties", supportsAllDrives: true}
-    );
+    try {
+      // Copies existing named sharing permissions. This must succeed for
+      // every collaborator before the wiki is linked to the journal.
+      huSyncMirrorShares_(id, book.getId());
+      // Keep the first HTML baseline: the journal starts after the existing
+      // wiki snapshot, not by re-uploading every initial tiddler.
+      Drive.Files.update(
+        {properties: {
+          [HU_SYNC_PROPERTY]: book.getId(),
+          [HU_SYNC_SNAPSHOT_PROPERTY]: "0"
+        }},
+        id, null,
+        {fields: "id,properties", supportsAllDrives: true}
+      );
+    } catch (error) {
+      try { DriveApp.getFileById(book.getId()).setTrashed(true); }
+      catch (cleanupError) { console.error("Kunne ikke rydde ubenyttet ændringslog:", cleanupError); }
+      throw error;
+    }
     return {enabled: true, sheetId: book.getId()};
   } finally {
     lock.releaseLock();
