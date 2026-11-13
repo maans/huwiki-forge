@@ -1,0 +1,40 @@
+name: Mirror official TiddlyWiki empty.html
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "25 4 * * 2"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/sync-tw-core.yml"
+      - "scripts/sync-tw-core.mjs"
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fetch official empty.html and validate marker
+        run: node scripts/sync-tw-core.mjs
+      - name: Test Edition Assembler
+        run: npm test
+      - name: Commit pinned core when changed
+        shell: bash
+        run: |
+          if [[ -z "$(git status --porcelain -- core/empty.html core/versions.json)" ]]; then
+            echo "Official core unchanged."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add core/empty.html core/versions.json
+          git commit -m "chore: mirror official TiddlyWiki empty.html"
+          git push
