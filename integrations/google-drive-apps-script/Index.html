@@ -307,6 +307,15 @@ async function connectDelta(frame, fileId) {
 
 $("enableSyncButton").addEventListener("click", async () => {
   if (!current || !delta) return;
+  // The HTML copy must already contain all edits made before delta mode.
+  // Otherwise they would fall between the snapshot and the new journal.
+  const sh = $("wiki").contentWindow?.$tw?.saverHandler;
+  if (sh?.isDirty()) {
+    $("syncStatus").textContent =
+      "Gem først dine ændringer på Google Drev. Aktivér derefter tiddler-synk.";
+    $("syncStatus").style.color = "#b42318";
+    return;
+  }
   $("enableSyncButton").disabled = true;
   $("syncStatus").textContent = "Opretter delt ændringslog på Google Drive…";
   try {
