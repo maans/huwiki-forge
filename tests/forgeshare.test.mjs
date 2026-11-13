@@ -8,7 +8,7 @@ import {EventEmitter} from 'node:events';
 import net from 'node:net';
 import {build, base} from '../scripts/build-forgeshare.mjs';
 import {assembleHtml} from '../assembler/assemble.mjs';
-import {validateServe, protectedConfig, validateCredentials, validateFiles, serverArgs, startWiki, stopChild, startSession, dialogCommand, checkPort, serveArgs, guiMain} from '../plugins/forgeshare/helper/ForgeShare.mjs';
+import {validateServe, protectedConfig, validateCredentials, validateFiles, serverArgs, startWiki, stopChild, startSession, dialogCommand, checkPort, serveArgs, guiMain, privateSessionDirectory} from '../plugins/forgeshare/helper/ForgeShare.mjs';
 const require = createRequire(import.meta.url);
 const {TiddlyWiki} = require('tiddlywiki/boot/boot.js');
 const boot = require.resolve('tiddlywiki/boot/boot.js');
@@ -235,4 +235,19 @@ test('cancelling graphical welcome starts nothing and installs nothing', async (
   await guiMain({dialog: async () => { throw Object.assign(Error('cancel'), {cancelled: true}); },
     findTailscale: async () => { inspected = true; }, startSession: async () => assert.fail('Unexpected start')});
   assert.equal(inspected, false);
+});
+
+test('private login directory can be protected before any credentials are written', async () => {
+  let directory;
+  try {
+    directory = await privateSessionDirectory();
+    const filename = path.join(directory, 'permission-check.txt');
+    await writeFile(filename, 'not a secret', {mode: 0o600});
+    assert.equal(await readFile(filename, 'utf8'), 'not a secret');
+  } catch (error) {
+    // This check runs before credentials exist. Preserve OS diagnostics in CI,
+    // while the ordinary user-facing flow keeps its concise safe explanation.
+    if (error.cause) console.error(error.cause.stderr || error.cause.message);
+    throw error;
+  } finally { if (directory) await rm(directory, {recursive: true, force: true}); }
 });
