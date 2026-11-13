@@ -217,6 +217,18 @@
       this.state();
       const pulled = await this.pullAll();
       this.bootstrapping = false;
+      if (!pulled) {
+        // A stale or unavailable journal must NEVER unlock an editable HTML
+        // baseline with unknown remote changes. Keep any recovered drafts,
+        // but require reopening before further editing.
+        this.active = false;
+        this.onStatus(this.localize(
+          "Ændringsloggen kunne ikke indlæses sikkert. Genåbn wikien. Lokale uafsendte ændringer er bevaret.",
+          "The change log could not be loaded safely. Reopen the wiki. Unsent local drafts were preserved."
+        ), true);
+        this.state();
+        return false;
+      }
       // In particular, restarting after a failed network request must send
       // pending drafts even if no new typing occurs.
       if (pulled && this.pending.size) this.scheduleFlush();
