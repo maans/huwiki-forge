@@ -89,6 +89,7 @@ test("TiddlyWiki saver uses synchronous boolean + asynchronous callback", () => 
 function makeServerFixture({fingerprint = "a".repeat(32), version = "8"} = {}) {
   const vm = requireVmModule();
   let writes = 0;
+  let gets = 0;
   let lastPayload = null;
   const file = {
     id: "1slj3k2JQrUh6rizHQ1gRUtghu1Wtr2az",
@@ -102,12 +103,13 @@ function makeServerFixture({fingerprint = "a".repeat(32), version = "8"} = {}) {
   };
   const ctx = {
     Drive: {Files: {
-      get: () => ({...file}),
+      get: () => {gets += 1; return {...file};},
       update: (_file, _id, upload) => {
         writes += 1;
         lastPayload = upload;
         file.version = String(Number(file.version) + 1);
         file.md5Checksum = "c".repeat(32);
+        return {...file};
       }
     }},
     Utilities: {
@@ -122,7 +124,7 @@ function makeServerFixture({fingerprint = "a".repeat(32), version = "8"} = {}) {
     })}
   };
   vm.runInNewContext(server, ctx);
-  return {ctx, file, get writes() {return writes;}, get upload() {return lastPayload;}};
+  return {ctx, file, get writes() {return writes;}, get gets() {return gets;}, get upload() {return lastPayload;}};
 }
 
 // Resolve once via Node's standard module loader, without adding production deps.
@@ -135,6 +137,7 @@ test("first save succeeds if Drive's metadata version changes but HTML checksum 
   assert.equal(result.ok, true);
   assert.equal(result.conflict, undefined);
   assert.equal(testEnv.writes, 1);
+  assert.equal(testEnv.gets, 1, "save should reuse updated metadata without an extra GET");
   assert.equal(result.meta.fingerprint, "c".repeat(32));
 });
 
