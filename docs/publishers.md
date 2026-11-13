@@ -1,6 +1,6 @@
 # Fælles udgivelsesplugins: SitePublisher og PDF Publisher
 
-Kilde: `HUWiki-Musik-v0.3.51-test.1-SitePublisher-Fokus-manuel.html` og de to identiske, selvstændige JSON-eksporter. Begge plugins har MIT-licens og er kopieret uden kodeændringer til Forge.
+Kilde: `HUWiki-Musik-v0.3.51-test.1-SitePublisher-Fokus-manuel.html` og de selvstændige JSON-eksporter. Begge plugins har MIT-licens. De er siden tilpasset til fælles brug i Forge: versionsnumre og JavaScript-kode er ændret, mens de oprindelige Music-v0.3.51-eksporter forbliver reference.
 
 ## Hvorfor fælles plugins?
 
@@ -8,8 +8,8 @@ Udgivelse er en kapacitet, som flere Editions kan få glæde af. Den skal ikke v
 
 | Plugin | TiddlyWiki-titel | Forge-fil | Version |
 | --- | --- | --- | --- |
-| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.3-test.1 |
-| HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.5-test.1 |
+| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.4-test.1 |
+| HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.6-test.1 |
 
 Begge plugins er browserværktøjer, ikke serverside-håndtering af Google Drev eller Apps Script. Den separate `PDF Publisher` laver PDF; `SitePublisher` laver **HTML-sites**. Den almindelige redigerbare single-file wiki gemmes fortsat med TiddlyWikis indbyggede saver.
 
@@ -33,4 +33,6 @@ HUPedia har sit eget tema og artikelplugin. Den gamle ZIP-reference til `02-Site
 4. Undersøg eventuel ensretning af brugerflade og oversættelser på dansk/engelsk.
 5. Først derefter overvej opt-in som standardvalgt addon eller en fælles pluginprofil, der kan fravælges.
 
-Plugins ligger nu i repositoryet med versionsnumre og MIT-licens. Den automatiske test kontrollerer struktur, Google-uafhængighed og at de kan indlejres før boot; den erstatter ikke de nævnte browser-tests.
+**Nye prøvefunktioner (13. november):** SitePublisher får neutral navigation (*Artikler*, *Indhold* eller *Repertoire* afhængig af indholdet), sitetitel fra `$:/SiteTitle`, en samlet klikbar indholdsoversigt samt indstillinger, der kan skjules. PDF Publisher får automatisk genberegning med debounce, et miniatureoverblik over alle sider, klik-forstørrelse med sidepile, separat bogopslag og en indstillingsknap. Den første fysiske bogside ligger stadig på højre side i bogopslag; den vises alene i oversigten, så en tom venstreside ikke fylder den første visning. Eksportens faktiske sider og paginering er ikke ændret.
+
+Plugins ligger nu i repositoryet med versionsnumre og MIT-licens. Automatiske tests kontrollerer gyldige pluginpakker, JavaScript-syntaks, udvalgte UI-kodeveje, Google-uafhængighed og korrekt indlejring før TiddlyWikis opstart. **De nye previewfunktioner er endnu ikke browsertestet og skal afprøves i en nybygget HUPedia-wiki.**
