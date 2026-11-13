@@ -1,6 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { Script } from "node:vm";
 import { assembleHtml } from "../assembler/assemble.mjs";
 
 async function json(path) {
@@ -8,8 +9,8 @@ async function json(path) {
 }
 
 const cases=[
-  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.3-test.1"},
-  {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.5-test.1"}
+  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.4-test.1"},
+  {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.6-test.1"}
 ];
 
 for (const row of cases) {
@@ -30,6 +31,27 @@ for (const row of cases) {
     assert.ok(!plugin.dependents || !/\$\:\/plugins\/huwiki\/abc/.test(plugin.dependents));
   });
 }
+
+  test(row.id + " startup JavaScript compiles and includes edition-neutral preview controls", async () => {
+    const plugin=await json(row.path);
+    const entries=JSON.parse(plugin.text).tiddlers;
+    const js=entries[Object.keys(entries).find(x=>x.endsWith("/startup.js"))].text;
+    assert.doesNotThrow(()=>new Script(js,{filename:row.id+"/startup.js"}));
+    assert.ok(js.includes('Indstillinger'),"Collapsible configuration should be present");
+    assert.ok(js.includes('Overblik'),"An overview-first preview should be present");
+    if(row.id==="site-publisher"){
+      assert.ok(js.includes('items.every(function(x){return x.kind==="article";})?"Artikler"'));
+      assert.ok(js.includes('getTiddlerText("$:/SiteTitle")'));
+      assert.ok(js.includes("renderOverview(selected)"));
+    } else {
+      assert.ok(js.includes("huprint-overview-grid"));
+      assert.ok(js.includes("schedulePreview()"));
+      assert.ok(js.includes('renderBookSpreads(lastPreviewImages)'));
+      assert.ok(js.includes('if(previewMode==="overview")'));
+      assert.ok(js.includes('if(previewMode==="page")'));
+      assert.ok(js.includes('if(previewMode==="spreads"') || js.includes('paperWrap.appendChild(E("h3","huprint-spread-heading"'));
+    }
+  });
 
 test("both publishers are discoverable as optional add-ons and not mandatory in Edition manifests", async () => {
   const catalog=await json("catalog/editions.json");
