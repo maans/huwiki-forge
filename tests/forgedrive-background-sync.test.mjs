@@ -308,3 +308,150 @@ test("oversized tiddlers stay dirty and do not trigger repeated network writes",
   assert.equal(A.saverHandler.isDirty(), true);
   a.stop();
 });
+
+test("enabling a log preserves HTML baseline and mirrors existing named shares", () => {
+  const f = backendFixture();
+  f.permissions.get(f.file.id).push({
+    id: "preexisting", type: "user", role: "writer",
+    emailAddress: "school@example.com"
+  });
+  const enabled = f.ctx.huSyncEnable(f.file.id);
+  const grants = f.permissions.get(enabled.sheetId);
+  assert.equal(grants.length, 1);
+  assert.equal(grants[0].emailAddress, "school@example.com");
+  assert.equal(grants[0].role, "writer");
+  assert.equal(f.file.properties.forgeDriveSnapshotSeq, "0");
+  assert.equal(f.htmlWrites, 0, "enabling must never rewrite the HTML wiki");
+  assert.equal(f.ctx.huSyncPull(f.file.id, 0, 20).events.length, 0);
+});
+
+test("snapshot never overwrites a newer delta journal even with matching HTML checksum", () => {
+  const f = backendFixture();
+  f.ctx.huSyncEnable(f.file.id);
+  f.ctx.huSyncPush(f.file.id, [op("New shared tiddler", 0, "fd_snapshot_01")]);
+  const checksum = f.file.md5Checksum;
+  const stale = f.ctx.huSave(f.file.id, "<html>stale</html>", checksum, 0);
+  assert.equal(stale.conflict, true);
+  assert.equal(f.htmlWrites, 0);
+  const saved = f.ctx.huSave(f.file.id, "<html>with changes</html>", checksum, 1);
+  assert.equal(saved.ok, true);
+  assert.equal(saved.meta.snapshotSeq, 1);
+  assert.equal(f.file.properties.forgeDriveSnapshotSeq, "1");
+  assert.equal(f.htmlWrites, 1);
+});
+
+test("deleted tiddlers propagate and do not leave remote dirty status", async () => {
+  const f = backendFixture();
+  f.ctx.huSyncEnable(f.file.id);
+  const Delta = clientClass(), A = fakeWiki(), B = fakeWiki();
+  const rpc = async (name, ...args) => f.ctx[name](...args);
+  const a = new Delta({tw: A, fileId: f.file.id, rpc});
+  const b = new Delta({tw: B, fileId: f.file.id, rpc});
+  await a.start(); await b.start();
+  A.wiki.addTiddler(new A.Tiddler({title:"Delete me", text:"hello"}));
+  await a.flush(); await b.pullAll();
+  A.wiki.deleteTiddler("Delete me");
+  await a.flush(); await b.pullAll();
+  assert.equal(B.wiki.getTiddler("Delete me"), undefined);
+  assert.equal(a.hasUnsynced(), false);
+  assert.equal(B.saverHandler.isDirty(), false);
+  a.stop(); b.stop();
+});
+
+test("changes made during an in-flight push remain pending and dirty", async () => {
+  const f = backendFixture();
+  f.ctx.huSyncEnable(f.file.id);
+  const Delta = clientClass(), A = fakeWiki();
+  let release, first = true;
+  const rpc = (name, ...args) => {
+    if (name === "huSyncPush" && first) {
+      first = false;
+      return new Promise(resolve => {
+        release = () => resolve(f.ctx[name](...args));
+      });
+    }
+    return Promise.resolve(f.ctx[name](...args));
+  };
+  const a = new Delta({tw: A, fileId:f.file.id, rpc});
+  await a.start();
+  A.wiki.addTiddler(new A.Tiddler({title:"Typing", text:"first"}));
+  const flight = a.flush();
+  A.wiki.addTiddler(new A.Tiddler({title:"Typing", text:"newer"}));
+  release();
+  await flight;
+  assert.equal(a.pending.size, 1, "the later edit must not be acknowledged");
+  assert.equal(A.saverHandler.isDirty(), true);
+  await a.flush();
+  assert.equal(a.pending.size, 0);
+  assert.equal(A.saverHandler.isDirty(), false);
+  const log = f.ctx.huSyncPull(f.file.id, 0, 20).events;
+  assert.deepEqual(log.map(e => e.fields.text), ["first", "newer"]);
+  a.stop();
+});
+
+test("one conflict does not freeze unrelated tiddler changes", async () => {
+  const f = backendFixture();
+  f.ctx.huSyncEnable(f.file.id);
+  const Delta = clientClass(), A = fakeWiki(), B = fakeWiki();
+  const rpc = async (name,...args) => f.ctx[name](...args);
+  const a = new Delta({tw:A,fileId:f.file.id,rpc});
+  const b = new Delta({tw:B,fileId:f.file.id,rpc});
+  await a.start(); await b.start();
+  A.wiki.addTiddler(new A.Tiddler({title:"Same",text:"initial"}));
+  await a.flush(); await b.pullAll();
+  A.wiki.addTiddler(new A.Tiddler({title:"Same",text:"edited A"}));
+  B.wiki.addTiddler(new B.Tiddler({title:"Same",text:"edited B"}));
+  await a.flush(); await b.flush();
+  assert.equal(b.conflicts.size,1);
+  B.wiki.addTiddler(new B.Tiddler({title:"Independent",text:"new"}));
+  await b.flush();
+  assert.equal(b.conflicts.size,1);
+  assert.equal(b.pending.has("Independent"),false);
+  assert.equal(b.pending.has("Same"),true);
+  assert.equal(f.ctx.huSyncPull(f.file.id,0,20).events.at(-1).title,"Independent");
+  a.stop(); b.stop();
+});
+
+test("pending offline edits survive reload in the same Google account", async () => {
+  const f = backendFixture();
+  f.ctx.huSyncEnable(f.file.id);
+  const data = new Map();
+  const storage = {
+    getItem: key => data.get(key) || null,
+    setItem: (key,value) => data.set(key,value),
+    removeItem: key => data.delete(key)
+  };
+  const Delta = clientClass();
+  const rpc = async (name,...args) => f.ctx[name](...args);
+  const A = fakeWiki();
+  const a = new Delta({tw:A,fileId:f.file.id,rpc,storage});
+  await a.start();
+  A.wiki.addTiddler(new A.Tiddler({title:"Recovered",text:"offline draft"}));
+  assert.equal(data.size,1);
+  a.stop();
+  const B = fakeWiki();
+  const b = new Delta({tw:B,fileId:f.file.id,rpc,storage});
+  await b.start();
+  assert.equal(B.wiki.getTiddler("Recovered").fields.text,"offline draft");
+  assert.equal(b.pending.size,1);
+  await b.flush();
+  assert.equal(b.pending.size,0);
+  assert.equal(data.size,0);
+  assert.equal(f.ctx.huSyncPull(f.file.id,0,20).events[0].title,"Recovered");
+  b.stop();
+});
+
+test("read-only collaborator receives remote edits without false dirty warning", async () => {
+  const f = backendFixture();
+  f.ctx.huSyncEnable(f.file.id);
+  f.ctx.huSyncPush(f.file.id,[op("Remote",0,"fd_reader_0001")]);
+  f.file.capabilities.canEdit = false;
+  const Delta = clientClass(), B = fakeWiki();
+  const b = new Delta({tw:B,fileId:f.file.id,
+    rpc: async (name,...args) => f.ctx[name](...args)});
+  await b.start();
+  assert.equal(b.canEdit,false);
+  assert.equal(B.wiki.getTiddler("Remote").fields.text,"hello");
+  assert.equal(B.saverHandler.isDirty(),false);
+  b.stop();
+});
