@@ -18,7 +18,8 @@ function cutoutScene(title){
 function isCutoutTitle(title){return !!cutoutScene(title);}
 function cutoutReference(id,title){
  var found="";
- if(id&&typeof $tw.wiki.each==="function")$tw.wiki.each(function(t,key){if(t.fields["cutout-id"]===id)found=key;});
+ var scan=$tw.wiki.eachShadowPlusTiddlers||$tw.wiki.each;
+ if(id&&typeof scan==="function")scan.call($tw.wiki,function(t,key){if(t.fields["cutout-id"]===id)found=key;});
  return found||title||"";
 }
 function publicationDataUrl(title,expectedType){
@@ -50,6 +51,7 @@ function publicationDataUrl(title,expectedType){
 function cutoutAsset(title,ctx){
  var row=$tw.wiki.getTiddler(title),f=row&&row.fields;
  if(!f)throw publicationMediaError(title,"CutOut-billedet mangler / CutOut image is missing.");
+ if(!/^image\/(?:png|jpeg|webp|gif|svg\+xml)$/.test(String(f.type||"")))throw publicationMediaError(title,"billedformatet understøttes ikke af CutOut / unsupported CutOut image format.");
  var url=publicationDataUrl(title,"image");
  var text=f.type==="image/svg+xml"?
   String(f.text||""):(/^data:/i.test(String(f.text||""))?url:String(f.text||""));
@@ -73,7 +75,7 @@ function collectCutout(title,ctx,stack){
  function addImage(p){
   if(!p)return;
   var inline=p.imageData||p.src||"";
-  if(inline&&!/^data:image\/(?:png|jpeg|gif|webp|svg\+xml|avif)[;,]/i.test(inline))
+  if(inline&&!/^data:image\/(?:png|jpeg|gif|webp|svg\+xml)[;,]/i.test(inline))
    throw publicationMediaError(title,"billedkilden er ikke indlejret / non-embedded image source: "+String(inline).slice(0,90));
   var ref=cutoutReference(p.assetId,p.asset);
   if(ref&&!p.imageData)cutoutAsset(ref,ctx);
