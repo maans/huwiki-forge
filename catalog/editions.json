@@ -10,6 +10,14 @@
       "version": "0.2.4-test.1"
     },
     {
+      "id": "music",
+      "name": "HUWiki Musik Edition (test)",
+      "description": "ABC notation and playback · six teaching packs · MuseScore/MusicXML batch import · site/PDF publishing",
+      "status": "test",
+      "manifest": "../editions/music/manifest.json",
+      "version": "0.1.0-test.1"
+    },
+    {
       "id": "demo",
       "name": "Demo Edition",
       "description": "Minimal test af TiddlyWiki-plugin og før-boot-indlæsning.",
@@ -40,6 +48,14 @@
       "version": "0.2.8-test.1",
       "description": "Create PDF publications and page overview, localized with TiddlyWiki / PDF-udgivelse og sideoversigt",
       "file": "../plugins/print-article/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "musescore-import",
+      "name": "HUWiki MuseScore → ABC Importer",
+      "version": "0.1.4-beta.1",
+      "description": "Independent MusicXML/MuseScore to ABC importer; automatically included in Music Edition; preview and native TiddlyWiki import",
+      "file": "../plugins/musescore-import/dist/plugin.json",
       "status": "test"
     }
   ]
