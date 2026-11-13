@@ -34,6 +34,9 @@ simulationer; **ægte flerbruger- og browsertest med to Google-konti mangler**.
    Pending drafts genoprettes via kontoopdelt browserlagring, **hvis
    browseren tillader dette**. Ved manglende/fuld browserlagring vises
    advarsel: hent altid en lokal HTML-backup, før du lukker.
+   **Gendannede ændringer fra et ældre HTML-snapshot bliver ikke sendt
+   automatisk til et nyt snapshot**. Klienten bevarer dem til lokal
+   sikkerhedskopi og kræver manuel afklaring.
 8. Store medie- og plugin-tiddlere, der ikke kan være i en Sheets-celle,
    udelades af delta-loggen og kræver et manuelt fuldt HTML-snapshot.
    Andre åbne klienter må genåbne wikien for at få sådanne ændringer.
@@ -41,6 +44,10 @@ simulationer; **ægte flerbruger- og browsertest med to Google-konti mangler**.
 9. Komplet HTML-snapshot bevares som frivillig handling. `huSave`
    kontrollerer både Drives indholds-`md5Checksum` og journalens
    sekvensnummer under samme Apps Script-lock som delta-skrivningerne.
+   `huSyncEnable` og alle `huSyncPush` kontrollerer også browserens
+   **oprindelige HTML-checksum**. Hvis en anden bruger har gemt et nyt
+   HTML-snapshot, stoppes synkroniseringen uden at kassere lokale ændringer,
+   selv hvis ændringen kun omfattede store medier eller systemtiddlere.
    En gammel browser kan derfor ikke overskrive nyere logændringer.
 10. Snapshot-sekvensnummer bruges ved genåbning til at hente **kompakte
     revisionshoveder**, ikke alle gamle tiddler-tekster. TiddlyWikis
