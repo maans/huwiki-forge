@@ -21,7 +21,7 @@ function huEmail_(value) {
 function huFile_(id) {
   const fileId = huFileId_(id);
   const meta = Drive.Files.get(fileId, {
-    fields: "id,name,mimeType,size,version,md5Checksum,modifiedTime,capabilities(canEdit,canShare)",
+    fields: "id,name,mimeType,size,version,md5Checksum,modifiedTime,properties,capabilities(canEdit,canShare)",
     supportsAllDrives: true
   });
   if (meta.mimeType !== "text/html" || !/\.html?$/i.test(meta.name || "")) {
