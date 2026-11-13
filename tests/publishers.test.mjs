@@ -9,8 +9,8 @@ async function json(path) {
 }
 
 const cases=[
-  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.6-test.1"},
-  {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.7-test.1"}
+  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.7-test.1"},
+  {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.8-test.1"}
 ];
 
 for (const row of cases) {
@@ -90,6 +90,11 @@ test("Publisher toolbar descriptions follow TiddlyWiki language without an extra
       assert.match(toolbar[field],/\$:\/language/,"Language must come from TiddlyWiki");
       assert.match(toolbar[field],/\$:\/languages\/da/);
     }
+    const tool=entries[p.title+"/Toolbar"];
+    assert.equal(tool.type,"text/vnd.tiddlywiki");
+    assert.ok(tool.description.includes("else[$:/languages/en-GB]"),"Toolbar descriptions must fall back to English");
+    assert.equal((tool.text.match(/\\\\whitespace trim/g)||[]).length,1,"Only the initial whitespace pragma is valid");
+    assert.ok(!tool.text.includes("\\n\\\\whitespace trim\\n<" ));
     assert.ok(entries[p.title+"/readme"],"Internal README must be included");
     assert.ok(entries[p.title+"/readme-en"],"English README must be included");
     assert.ok(entries[p.title+"/readme-da"],"Danish README must be included");
