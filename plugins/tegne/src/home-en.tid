@@ -22,6 +22,7 @@
 <h2><$text text=<<drawing>>/></h2>
 <div class="hu-tegne-actions">
 <$button><$action-sendmessage $message="hu-tegne-copy" $param=<<drawing>>/>Duplicate</$button>
+<$button class="hu-tegne-publish"><$action-sendmessage $message="tm-huwiki-sitepublisher" $param=<<drawing>>/>Publish drawing</$button>
 <$button><$action-sendmessage $message="hu-tegne-source" $param=<<drawing>>/>Download .excalidraw</$button>
 <$button><$action-sendmessage $message="hu-tegne-close"/>Close</$button>
 </div>
@@ -44,6 +45,7 @@
 <div class="hu-tegne-actions">
 <$button class="hu-tegne-primary"><$action-sendmessage $message="hu-tegne-open" $param=<<currentTiddler>>/>Open</$button>
 <$button><$action-sendmessage $message="hu-tegne-copy" $param=<<currentTiddler>>/>Duplicate</$button>
+<$button class="hu-tegne-publish"><$action-sendmessage $message="tm-huwiki-sitepublisher" $param=<<currentTiddler>>/>Publish</$button>
 </div>
 </article>
 </$list>
