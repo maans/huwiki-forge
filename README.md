@@ -21,6 +21,8 @@ Et valgfrit felt til en lokal `empty.html` er bevaret til versionskontrol. Den o
 Kør `npm test` (Node.js 20+) for de automatiske tests. De kontrollerer nu også HUPedia-komponenter og samling mod den fastlåste kerne. Enhedstests kan ikke erstatte reel browserafprøvning.
 
 Se [migrationsstatus](docs/migration-status.md), [overførselsinventar fra OAuthLab](docs/oauthlab-transfer-inventory.md), [det lette materialekatalog](catalog/materials.json), [AI Editionens forbindelsesdesign](docs/ai-connections.md) og [HUWiki-kildeanalysen](docs/huwiki-source-analysis.md).
+**Nyt valgfrit testplugin:** [ForgeShare](plugins/forgeshare/README.md) guider privat samarbejde via TiddlyWiki og Tailscale. Indeholder dansk/engelsk vejledning samt valgfrie hjælpere til Mac, Windows og Linux. Ingen Edition får det automatisk; produktion afventer godkendelse.
+
 ## Struktur
 
 - `assembler/` — før-boot assembler og testside

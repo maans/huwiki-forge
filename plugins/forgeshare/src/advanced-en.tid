@@ -1,0 +1,95 @@
+title: $:/plugins/huwiki/forgeshare/advanced-en
+type: text/vnd.tiddlywiki
+
+!! 1. Prepare a server wiki
+
+* Back up your HTML wiki first. Keep the original as an offline copy.
+* Install Node.js 20 or later, TiddlyWiki (tested with 5.4.1), and Tailscale from their official sources. Sign in to Tailscale on the host and iPad/other clients. The helper does not install software or change your Tailscale login.
+* Create a ''new'' server folder with TiddlyWiki's standard command:
+
+```sh
+tiddlywiki MySharedWiki --init server
+```
+
+Start locally first, import a copy of your Forge HTML using TiddlyWiki's Import, review the list, and select your content/plugins. Do not replace the server core or connection plugins. Wait for saves to complete, stop the server, and restart after importing plugins.
+
+```sh
+tiddlywiki MySharedWiki --listen host=127.0.0.1 port=8080
+```
+
+Open `http://127.0.0.1:8080` yourself. This preparation is local only; without authentication other local users can read and write. The server needs `tiddlywiki/tiddlyweb` and `tiddlywiki/filesystem`; the helper requires them in `tiddlywiki.info`.
+
+!! 2. Technical start without dialogs
+
+<a href={{$:/plugins/huwiki/forgeshare/download/script}} download="ForgeShare.mjs">Download standalone ForgeShare.mjs</a>
+
+Run `node ForgeShare.mjs` for terminal mode or `node ForgeShare.mjs --gui` for dialogs. Terminal mode needs an existing private credentials CSV, installs nothing and requires typing `START` after the summary. Dialog mode can install TiddlyWiki 5.4.1 locally after separate approval, uses a temporary login and stops when the status dialog closes. Neither mode opens a browser.
+
+!! 3. Authentication and safe sharing
+
+Create a private UTF-8 CSV file ''outside the wiki folder'', with header `username,password` and one user per line. Use unique passwords of at least 12 characters. The simple helper does not accept commas, quotation marks or line breaks in values. On Mac/Linux the file must be owned by you and accessible only to you (`chmod 600`). On Windows, restrict its file permissions to your account; the helper cannot verify Windows ACLs. Never store the file in the wiki, Git or a shared folder.
+
+The helper grants read and write access to every account in that file. For different permissions, start manually using TiddlyWiki's `readers`/`writers`. Tailnet access and wiki authentication are separate controls. Restrict Tailscale grants/ACLs to the intended people and port ''10000'', especially when sharing the host: sharing can otherwise expose other services too. The helper does not change grants/ACLs.
+
+|! Service |! Tailscale → local port |
+| Existing AI | 443 → 11434 (preserved) |
+| Existing LM Studio/AI | 8443 → 1234 (preserved) |
+| ForgeShare | 10000 → 8080 |
+
+The helper checks the existing Serve configuration, refuses an occupied 10000 and starts only an available local 8080 bound to `127.0.0.1`. It never uses `serve reset`, Funnel, `--bg`, or an implicit port-443 command. Do not change Serve concurrently in another terminal. The targeted command is:
+
+```sh
+tailscale serve --https=10000 http://127.0.0.1:8080
+```
+
+Tailscale needs HTTPS/MagicDNS configured; follow its official setup if Serve refuses to start. When the helper reports ready, open the displayed `https://machine.tailnet.ts.net:10000` yourself on both devices. Share the address only with intended users and send credentials through a separate private channel. An address alone does not grant tailnet access. ''Serve'' is private within the tailnet; ''Funnel'' exposes a service to the internet and is not used here.
+
+!! 4. Sync speed
+
+The Mac browser is a separate client even when the Mac hosts the server. Receiving clients poll for updates; saving, network delays and background-tab suspension also affect timing.
+
+Confirmed user test: Mac and iPad synced both ways over Tailscale. With `$:/config/SyncPollingInterval` set to `3000` and a reload, perceived speed became roughly equal. This is an observation, not a promise of a maximum three-second delay.
+
+Current setting (ms): <$text text={{{ [{$:/config/SyncPollingInterval}else[60000]] }}}/>. Without an override, tested TW 5.4.1 uses 60000 ms. Shorter intervals increase requests.
+
+<$list filter="[{$:/status/IsReadOnly}!match[yes]]" variable="ignore">
+<$button><$action-setfield $tiddler="$:/config/SyncPollingInterval" text="3000"/>Use 3000 ms in this wiki</$button>
+</$list>
+
+The button changes only this setting after your click; it starts no service. A server wiki may share the setting with other clients. Save, wait for sync to finish, then reload ''every'' client. Save drafts first. To undo, restore your previous value in [[$:/config/SyncPollingInterval]] or delete that setting tiddler for the core default. Installing ForgeShare does not change polling.
+
+!! 5. Troubleshooting
+
+* ''Local address fails:'' check Node.js/TiddlyWiki, the wiki folder, terminal errors and port 8080. The helper never takes over or kills an existing server.
+* ''Local works, iPad fails:'' check Tailscale on both devices, HTTPS/MagicDNS, access rules and the complete address including `:10000`. Check `tailscale status` and `tailscale serve status`. Keep the host awake.
+* ''401/login error:'' check the CSV header, password and username. ''403/read-only:'' check `readers`/`writers`. Do not disable CSRF protection to work around an error.
+* ''Mac receives slowly:'' check the polling value and reload the Mac browser too. Keep tabs active when measuring; iPad may suspend background tabs.
+* ''Missing changes:'' check both browsers use the same server address, not a local HTML copy. Inspect TiddlyWiki sync status/logs. Export unsaved tiddlers before reloading after errors.
+* ''Port 10000 is occupied:'' inspect Serve status. The helper refuses to replace existing configuration. Do not reset everything; establish who owns the service first.
+
+!! 6. Backup, conflicts and offline use
+
+TiddlyWiki is not a simultaneous text editor with automatic merging. Agree who edits each tiddler; concurrent edits can overwrite each other. If a conflict occurs, stop editing, export both versions under different titles, and compare manually. Faster polling does not solve conflicts.
+
+Sync is not backup: mistakes and deletions spread too. Wait for saves, stop the server and copy the entire server folder to a dated backup. Keep multiple versions and test restoration in a ''new'' folder. Store credentials separately and privately. The helper does not make automatic backups.
+
+Use TiddlyWiki's built-in ''Download save''/HTML export to keep a standalone offline copy. Test opening and saving it with the server stopped. Back up external attachments separately. Offline edits do not automatically sync back: compare and import selected tiddlers after backing up. ForgeShare replaces no saver and needs no server to display this guide.
+
+!! Sources and version
+
+ForgeShare 0.1.0-test.1. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
+
+* [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
+* [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
+* [[Credentials file|https://tiddlywiki.com/static/WebServer%2520Parameter%253A%2520credentials.html]]
+* [[Read/write permissions|https://tiddlywiki.com/static/WebServer%2520Authorization.html]]
+* [[Tailscale Serve CLI|https://tailscale.com/kb/1242/tailscale-serve]]
+* [[Tailscale Serve|https://tailscale.com/kb/1312/serve]]
+* [[TW 5.4.1 syncer source|https://github.com/Jermolene/TiddlyWiki5/blob/v5.4.1/core/modules/syncer.js]]
+
+!! Verify wiki-only access
+
+Tailscale permissions are additive. A narrow port-10000 rule does not restrict an existing broad allowance. Review rules covering `*` or `autogroup:shared` too; do not replace your whole existing policy with an example. Limit guest access to the host and TCP 10000. From an actual invited user's device, confirm the wiki is accessible but 443 and 8443 are not, while the owner's AI services still work. ForgeShare checks Serve configuration but cannot prove guests' effective access policy.
+
+* [[Tailscale: sharing a machine and controlling access|https://tailscale.com/docs/features/sharing]]
+* [[Tailscale grants|https://tailscale.com/docs/reference/syntax/grants]]

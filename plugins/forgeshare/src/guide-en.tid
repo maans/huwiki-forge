@@ -1,0 +1,89 @@
+title: $:/plugins/huwiki/forgeshare/guide-en
+type: text/vnd.tiddlywiki
+
+! ForgeShare / Tailscale collaboration
+
+Work in the same wiki from several computers or an iPad. You choose who can join. Your computer holds the wiki and must stay on while you work.
+
+''This is a test version.'' Preparing an existing HTML wiki for the first time may need help. Sharing itself starts through dialog boxes; you do not need to write startup commands or create a credentials file.
+
+!! First: who needs what?
+
+|! Person |! Software needed |
+| You, hosting the wiki | Node.js and Tailscale. The helper can offer to install TiddlyWiki with your approval. |
+| People you invite | Tailscale and a regular browser. No Node.js or TiddlyWiki installation. |
+
+Node.js is the engine that lets your computer run the wiki. Tailscale provides your private connection. TiddlyWiki opens and saves the wiki content. Neither installation page opens automatically.
+
+<div class="hu-share-downloads">
+<a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">1. Download Node.js</a>
+<a href="https://tailscale.com/download" target="_blank" rel="noopener noreferrer">2. Download Tailscale</a>
+</div>
+
+On Mac and Windows, choose your computer's installer, open it and follow its steps. Then sign in to Tailscale. On Linux, installation depends on your distribution; use its software manager where possible and follow the official instructions. The Linux helper's dialogs also require Zenity.
+
+!! Download the helper
+
+Choose your computer below. Extract the entire ZIP to your desktop, read the short instructions and open the start file. Downloading does not start sharing.
+
+<div class="hu-share-downloads">
+<a href={{$:/plugins/huwiki/forgeshare/download/mac}} download="ForgeShare-mac.zip">Download for Mac</a>
+<a href={{$:/plugins/huwiki/forgeshare/download/windows}} download="ForgeShare-windows.zip">Download for Windows</a>
+<a href={{$:/plugins/huwiki/forgeshare/download/linux}} download="ForgeShare-linux.zip">Download for Linux</a>
+</div>
+
+* ''Mac:'' open `Start-ForgeShare.command`.
+* ''Windows:'' open `Start-ForgeShare.cmd`.
+* ''Linux:'' run `Start-ForgeShare.sh`. Your system may require permission to run it in the file's properties.
+
+A terminal window may remain behind the dialogs, but you do not need to type commands into it. Mac/Linux extraction may require executable permission; see the included instructions. The helper is not yet a signed application and does not contain Node.js. Do not disable security protections.
+
+!! First setup — once only
+
+The shared wiki must live in a prepared folder. An ordinary HTML file cannot be selected as that folder. Keep the HTML file as your original offline copy.
+
+If you already have a working TiddlyWiki server wiki, use its folder. Otherwise, first create a server copy using ''Advanced help'' below. You may want help with this first step. This test version does not automatically convert your HTML wiki.
+
+!! Start and stop sharing
+
+# Open the helper's start file. If TiddlyWiki is missing, you can choose to let the helper download the tested version. It explains the installation and requires approval; Node.js and Tailscale use their own installers.
+# Choose your prepared wiki folder in the dialog.
+# Choose a login name and password for this sharing session. The password needs at least 12 characters. The helper creates the credentials file and removes it on normal shutdown.
+# Review the summary and confirm that sharing may start.
+# When the window says ''Sharing is active'', copy the address and open it yourself in your browser. Leave the helper's status window open.
+# When finished, wait for edits to save. Press OK/Cancel in the status window to stop. Choose a login again next time.
+
+The helper opens no website. It never asks for your Tailscale password or changes your existing AI services. If a prerequisite is missing or a needed port is occupied, it stops with an explanation.
+
+!! Share with one person or a group
+
+# Each participant installs Tailscale and signs in to ''their own'' account.
+# Open Tailscale administration yourself and find the computer hosting the wiki. Use its ''Share'' function to send personal invitations. Tailscale also offers reusable invitation links; give them only to intended recipients.
+# ''Check access before the invitation is used.'' Tailscale shares access to a computer. To share only this wiki, access rules must restrict guests to its service and leave other services private. See the check under Advanced help and ask for assistance if needed; ForgeShare does not edit access rules for you.
+# Participants accept the invitation. Send the wiki address and, through a separate private message, the chosen wiki login.
+# Try one participant first: can they open and edit the wiki while your other services remain inaccessible?
+
+Everyone with access can open the same wiki at once. The simple dialog version uses one shared wiki login for the session, separate from participants' individual Tailscale accounts. Use the advanced multi-account start if you need to distinguish authors or revoke an individual wiki login.
+
+Recipients need Tailscale for this private setup. Tailscale ''Funnel'' permits access without Tailscale but exposes the service to the internet. ForgeShare does not activate Funnel.
+
+!! Collaborate without overwriting each other
+
+Agree who edits each article. TiddlyWiki does not automatically merge simultaneous edits to the same tiddler.
+
+The optional ''Meddelelser'' (Messages) plugin can support discussion beside an article: according to its described structure, each message is a separate tiddler even though messages appear with the article. Each new message therefore changes its own tiddler. This does not lock the article; still agree who edits it. Messages is neither required nor bundled, and the integration has not been tested here.
+
+!! Updates may take a moment
+
+Both browsers have to discover changes, including the browser on the hosting computer. In the confirmed Mac/iPad user test, perceived speed became roughly equal after choosing 3000 ms and reloading both devices. See ''Sync speed'' under Advanced help for the button and explanation.
+
+!! Keep a copy
+
+Sync is not backup: a deletion can be shared too. Regularly copy the wiki folder with the server stopped, keeping several versions. You can still download a standalone HTML copy through TiddlyWiki's own controls. Offline edits are not automatically sent back.
+
+<details>
+<summary>Advanced help</summary>
+
+<$transclude $tiddler="$:/plugins/huwiki/forgeshare/advanced-en" $mode="block"/>
+
+</details>

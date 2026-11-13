@@ -1,0 +1,95 @@
+title: $:/plugins/huwiki/forgeshare/advanced-da
+type: text/vnd.tiddlywiki
+
+!! 1. Forbered en serverwiki
+
+* Tag en kopi af din HTML-wiki først. Bevar originalen som offline-kopi.
+* Installer Node.js 20 eller nyere, TiddlyWiki (testet med 5.4.1) og Tailscale fra deres officielle kilder. Log ind i Tailscale på værtscomputeren og på iPad/andre klienter. Hjælperen installerer ikke programmer eller ændrer dit Tailscale-login.
+* Opret en ''ny'' servermappe med TiddlyWikis almindelige kommando:
+
+```sh
+tiddlywiki MySharedWiki --init server
+```
+
+Start først serveren lokalt, importer en kopi af din Forge-HTML via TiddlyWikis Import, gennemse listen og vælg de ønskede tiddlere/plugins. Undlad at erstatte serverens kerne og forbindelsesplugins. Vent på, at ændringerne er gemt, stop serveren, og start igen efter pluginimport.
+
+```sh
+tiddlywiki MySharedWiki --listen host=127.0.0.1 port=8080
+```
+
+Åbn selv `http://127.0.0.1:8080`. Denne forberedelse er kun lokal; uden login kan andre lokale brugere læse og skrive. TiddlyWiki på serveren skal have plugins `tiddlywiki/tiddlyweb` og `tiddlywiki/filesystem`. Hjælperen kræver dem i `tiddlywiki.info`.
+
+!! 2. Teknisk start uden dialogbokse
+
+<a href={{$:/plugins/huwiki/forgeshare/download/script}} download="ForgeShare.mjs">Hent selvstændigt ForgeShare.mjs</a>
+
+Kør `node ForgeShare.mjs` for terminalversionen eller `node ForgeShare.mjs --gui` for dialogbokse. Terminalversionen kræver en eksisterende privat CSV-loginfil og installerer intet. Du skal skrive `START` efter oversigten. Dialogversionen kan installere TiddlyWiki 5.4.1 lokalt efter særskilt godkendelse, bruger et midlertidigt login og stopper, når statusdialogen lukkes. Ingen af versionerne åbner browseren.
+
+!! 3. Login og sikker deling
+
+Opret en privat UTF-8 CSV-fil ''uden for servermappen'', med første linje `username,password` og én bruger pr. linje. Brug unikke adgangskoder på mindst 12 tegn. Den enkle hjælper accepterer ikke kommaer, anførselstegn eller linjeskift i værdier. På Mac/Linux skal filen ejes af dig og kun være læsbar/skrivbar af dig (`chmod 600`). På Windows skal filens adgangsrettigheder begrænses til din konto; hjælperen kan ikke kontrollere Windows-ACL'er. Gem aldrig loginfilen i wikien, Git eller en delt mappe.
+
+Alle brugere i denne fil får læse- og skriveret med hjælperen. Ved forskellige rettigheder: brug manuel start og TiddlyWikis `readers`/`writers`. Tailscale-netadgang og wiki-login er to forskellige kontroller. Begræns Tailscale grants/ACL til de tiltænkte personer og port ''10000'', især ved deling af værtscomputeren: deling kan ellers også give adgang til andre tjenester. Hjælperen ændrer ingen grants/ACL'er.
+
+|! Tjeneste |! Tailscale → lokal port |
+| Eksisterende AI | 443 → 11434 (bevares) |
+| Eksisterende LM Studio/AI | 8443 → 1234 (bevares) |
+| ForgeShare | 10000 → 8080 |
+
+Hjælperen kontrollerer eksisterende Serve-konfiguration, afviser en optaget 10000 og starter kun en ledig lokal 8080 bundet til `127.0.0.1`. Den bruger aldrig `serve reset`, Funnel, `--bg` eller en standardkommando, der overtager port 443. Undlad samtidig at ændre Serve i en anden terminal. Den anvender denne målrettede kommando:
+
+```sh
+tailscale serve --https=10000 http://127.0.0.1:8080
+```
+
+Tailscale skal have HTTPS/MagicDNS klar; følg Tailscales officielle opsætning, hvis Serve afviser start. Når hjælperen viser klar-status, åbn selv den viste `https://maskine.tailnet.ts.net:10000` på begge enheder. Del adressen kun med de tilsigtede brugere, og send login ad en separat, privat kanal. En adresse alene giver ikke Tailscale-adgang. Brug ''Serve'', som er privat i tailnettet; ''Funnel'' offentliggør på internettet og bruges ikke her.
+
+!! 4. Synkroniseringshastighed
+
+Mac-browseren er en selvstændig klient, også når Mac'en kører serveren. Modtagende klienter spørger efter ændringer; hastigheden afhænger også af gemning, netværk og browserens baggrundstilstand.
+
+Bekræftet brugertest: Mac og iPad kunne synkronisere begge veje over Tailscale. Med `$:/config/SyncPollingInterval` sat til `3000` og reload oplevedes nogenlunde samme hastighed. Det er en observation, ikke et løfte om højst tre sekunder.
+
+Nuværende indstilling (ms): <$text text={{{ [{$:/config/SyncPollingInterval}else[60000]] }}}/>. Uden indstilling bruger den testede TW 5.4.1 60000 ms. En kortere periode giver flere forespørgsler.
+
+<$list filter="[{$:/status/IsReadOnly}!match[yes]]" variable="ignore">
+<$button><$action-setfield $tiddler="$:/config/SyncPollingInterval" text="3000"/>Brug 3000 ms i denne wiki</$button>
+</$list>
+
+Knappen ændrer kun denne konfiguration efter dit klik; den starter ingen tjeneste. På en serverwiki kan indstillingen blive delt med andre klienter. Gem, vent på afsluttet synkronisering og genindlæs ''hver'' klient. Gem kladder først. For at fortryde: gendan din tidligere værdi i [[$:/config/SyncPollingInterval]], eller slet indstillingstiddleren for kernens standard. ForgeShare ændrer ikke intervallet ved installation.
+
+!! 5. Fejlfinding
+
+* ''Lokal adresse virker ikke:'' kontroller Node.js/TiddlyWiki, servermappen, terminalens fejl og om 8080 er optaget. Hjælperen overtager eller afslutter aldrig en eksisterende server.
+* ''Lokalt virker, iPad virker ikke:'' kontroller Tailscale-forbindelse på begge enheder, HTTPS/MagicDNS, adgangsregler og hele adressen inklusive `:10000`. Kontroller `tailscale status` og `tailscale serve status`. Hold værtscomputeren vågen.
+* ''401/loginfejl:'' kontroller CSV-header, adgangskode og bruger. ''403/kun læsning:'' kontroller `readers`/`writers`. Slå ikke CSRF-beskyttelse fra for at omgå en fejl.
+* ''Mac modtager langsomt:'' kontroller pollingværdien og reload også Mac-browseren. Hold fanerne aktive under målingen; iPad kan sætte baggrundsfaner i bero.
+* ''Ændringer mangler:'' kontroller, at begge browsere bruger samme serveradresse og ikke en lokal HTML-kopi. Se TiddlyWikis synkroniseringsstatus/log. Eksporter ugemte tiddlere før reload ved fejl.
+* ''Port 10000 er i brug:'' gennemse Serve-status. Hjælperen nægter at erstatte eksisterende opsætning. Brug ikke en global nulstilling; undersøg først, hvem der ejer tjenesten.
+
+!! 6. Backup, konflikter og offline
+
+TiddlyWiki er ikke en fælles teksteditor med automatisk sammenfletning. Aftal, hvem der redigerer hvilken tiddler; samtidige ændringer kan overskrive hinanden. Ved konflikt: stop redigering, eksporter begge versioner under forskellige titler og sammenlign manuelt. En lav pollingværdi løser ikke konflikter.
+
+Synkronisering er ikke backup: også fejl og sletninger spredes. Vent på gemning, stop serveren, og kopiér hele servermappen til en dateret backup. Bevar flere versioner og prøv en gendannelse i en ''ny'' mappe. Opbevar loginfilen separat og privat. Hjælperen tager ikke automatisk backup.
+
+Brug TiddlyWikis indbyggede ''Download save''/HTML-eksport til en selvstændig offline-kopi. Test, at kopien kan åbnes og gemmes, mens serveren er stoppet. Eksterne vedhæftninger skal sikres særskilt. Offline-ændringer synkroniseres ikke automatisk tilbage: importer udvalgte tiddlere efter sammenligning og backup. ForgeShare erstatter ingen saver og kræver ingen server for at vise denne vejledning.
+
+!! Kilder og version
+
+ForgeShare 0.1.0-test.1. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
+
+* [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
+* [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
+* [[Loginfil|https://tiddlywiki.com/static/WebServer%2520Parameter%253A%2520credentials.html]]
+* [[Læsning og skrivning|https://tiddlywiki.com/static/WebServer%2520Authorization.html]]
+* [[Tailscale Serve CLI|https://tailscale.com/kb/1242/tailscale-serve]]
+* [[Tailscale Serve|https://tailscale.com/kb/1312/serve]]
+* [[TW 5.4.1 syncer-kilde|https://github.com/Jermolene/TiddlyWiki5/blob/v5.4.1/core/modules/syncer.js]]
+
+!! Kontrollér kun-wiki-adgang
+
+Tailscales tilladelser lægges sammen. En snæver regel for port 10000 begrænser ikke en eksisterende bred tilladelse. Gennemgå også regler, der omfatter `*` eller `autogroup:shared`; erstat ikke hele din nuværende politik med et eksempel. Begræns gæsteadgang til værten og TCP 10000. Kontrollér fra en faktisk inviteret brugers enhed, at wikien kan nås, men 443 og 8443 ikke kan — og at ejerens AI-tjenester stadig virker. ForgeShare kan kontrollere Serve-konfigurationen, men kan ikke bevise gæsternes effektive adgangsregler.
+
+* [[Tailscale: del en computer og styr adgang|https://tailscale.com/docs/features/sharing]]
+* [[Tailscale grants|https://tailscale.com/docs/reference/syntax/grants]]

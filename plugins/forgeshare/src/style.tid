@@ -1,0 +1,9 @@
+title: $:/plugins/huwiki/forgeshare/style
+tags: $:/tags/Stylesheet
+type: text/css
+
+.hu-forgeshare { max-width: 54em; line-height: 1.55; }
+.hu-forgeshare pre { overflow-x: auto; padding: .8em; }
+.hu-forgeshare .hu-share-downloads { display: flex; gap: .7em; flex-wrap: wrap; margin: 1em 0; }
+.hu-forgeshare .hu-share-downloads a { border: 1px solid currentColor; border-radius: .3em; padding: .5em .8em; }
+.hu-forgeshare table { width: 100%; }
