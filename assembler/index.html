@@ -54,6 +54,16 @@ let plugins=[];
 function updateDescription() {
   const edition=editions.find(item=>item.id===select.value);
   desc.textContent=edition?edition.description+" (Status: "+edition.status+")":"";
+  const included=new Set(edition&&Array.isArray(edition.bundledPlugins)?edition.bundledPlugins:[]);
+  // Plugins already bundled into an Edition are visible but cannot be added
+  // twice. This is only a UI hint; the build also checks actual package IDs.
+  for(const input of pluginList.querySelectorAll("input.optional-plugin")) {
+    const bundled=included.has(input.value);
+    if(bundled)input.checked=false;
+    input.disabled=bundled;
+    const note=input.parentElement.querySelector(".bundled-note");
+    if(note)note.hidden=!bundled;
+  }
 }
 
 async function loadCatalog() {
@@ -97,7 +107,11 @@ async function loadCatalog() {
     input.type="checkbox";
     input.value=item.id;
     input.className="optional-plugin";
-    label.append(input,document.createTextNode(" "+item.name+" – "+(item.description||"")));
+    const note=document.createElement("small");
+    note.className="bundled-note";
+    note.textContent=" (følger allerede med denne Edition)";
+    note.hidden=true;
+    label.append(input,document.createTextNode(" "+item.name+" – "+(item.description||"")),note);
     pluginList.append(label);
   }
   if(!plugins.length)pluginList.textContent="Ingen ekstra plugins endnu.";
@@ -122,20 +136,33 @@ button.addEventListener("click",async()=>{
     const selected=editions.find(item=>item.id===select.value);
     if(!selected)throw new Error("Vælg først en Edition.");
     const file=document.getElementById("core").files[0];
-    const core=file?{html:await file.text(),sourceUrl:"lokal fil"}:await loadOfficialCore(location.href);
-    const {manifest,tiddlers}=await loadEdition(selected.manifestUrl);
+    const [core,{manifest,tiddlers}]=await Promise.all([
+      file?file.text().then(html=>({html,sourceUrl:"lokal fil"})):loadOfficialCore(location.href),
+      loadEdition(selected.manifestUrl)
+    ]);
     if(manifest.id!==selected.id)throw new Error("Editionens ID stemmer ikke med kataloget.");
+    const bundledUrls=new Set(manifest.plugins.map(ref=>new URL(ref,selected.manifestUrl).href));
+    const bundledTitles=new Map(tiddlers.map(t=>[t.title,t]));
     let extras=0;
     for(const input of pluginList.querySelectorAll("input.optional-plugin:checked")) {
       const item=plugins.find(value=>value.id===input.value);
       if(!item)throw new Error("Ukendt ekstra plugin.");
+      // In case catalog metadata is stale, check the actual manifest too.
+      if(bundledUrls.has(item.pluginUrl))continue;
       const response=await fetch(item.pluginUrl);
       if(!response.ok)throw new Error("Kunne ikke hente "+item.name+": HTTP "+response.status);
       const packageTiddler=await response.json();
       if(!packageTiddler||packageTiddler["plugin-type"]!=="plugin"||
          typeof packageTiddler.title!=="string"||typeof packageTiddler.text!=="string")
         throw new Error("Ugyldig pluginpakke: "+item.name);
+      const existing=bundledTitles.get(packageTiddler.title);
+      if(existing) {
+        if(existing.version!==packageTiddler.version)
+          throw new Error("Pluginet "+item.name+" findes allerede i Editionen med version "+existing.version+". Vælg en kompatibel Edition.");
+        continue;
+      }
       tiddlers.push(packageTiddler);
+      bundledTitles.set(packageTiddler.title,packageTiddler);
       extras++;
     }
     if(!tiddlers.length)throw new Error("Editionen har ingen komponenter.");
