@@ -21,7 +21,7 @@ function huEmail_(value) {
 function huFile_(id) {
   const fileId = huFileId_(id);
   const meta = Drive.Files.get(fileId, {
-    fields: "id,name,mimeType,version,modifiedTime,capabilities(canEdit,canShare)",
+    fields: "id,name,mimeType,size,version,modifiedTime,capabilities(canEdit,canShare)",
     supportsAllDrives: true
   });
   if (meta.mimeType !== "text/html" || !/\.html?$/i.test(meta.name || "")) {
@@ -52,12 +52,14 @@ function doGet(e) {
 function huOpen(fileId) {
   const started = Date.now();
   const meta = huFile_(fileId);
-  const blob = DriveApp.getFileById(meta.id).getBlob();
-  if (blob.getBytes().length > HU_MAX_BYTES)
+  if (meta.size && Number(meta.size) > HU_MAX_BYTES)
     throw new Error("Testadapterens filgrænse er 12 MB. Filen er ikke ændret.");
+  // Hent filindholdet én gang. Må ikke kalde getBytes() på store wikier
+  // blot for at måle størrelse, når Drive allerede leverer metadata.size.
+  const html = DriveApp.getFileById(meta.id).getBlob().getDataAsString("UTF-8");
   return {
     meta: huPublicMeta_(meta),
-    html: blob.getDataAsString("UTF-8"),
+    html: html,
     elapsedMs: Date.now() - started
   };
 }
@@ -75,10 +77,12 @@ function huCreate(form) {
   const bytes = upload.getBytes();
   if (!bytes.length || bytes.length > HU_MAX_BYTES)
     throw new Error("HTML-filen skal være mellem 1 byte og 12 MB.");
-  const blob = Utilities.newBlob(bytes, "text/html", name);
+  // Blob'en kommer allerede fra HTML Service. Genbrug den direkte, så
+  // store filer ikke kopieres endnu en gang ind i Utilities.newBlob().
+  upload.setName(name).setContentType("text/html");
   const meta = Drive.Files.create(
     {name: name, mimeType: "text/html"},
-    blob,
+    upload,
     {fields: "id,name,mimeType,version,modifiedTime,capabilities(canEdit,canShare)"}
   );
   return {meta: huPublicMeta_(huFile_(meta.id)), elapsedMs: Date.now() - started};
@@ -92,9 +96,11 @@ function huCreate(form) {
 function huSave(fileId, html, expectedVersion) {
   const started = Date.now();
   const id = huFileId_(fileId);
-  if (typeof html !== "string" || !html.length ||
-      Utilities.newBlob(html, "text/html").getBytes().length > HU_MAX_BYTES)
-    throw new Error("Kan ikke gemme: HTML-indholdet er tomt eller over 12 MB.");
+  if (typeof html !== "string" || !html.length)
+    throw new Error("Kan ikke gemme: HTML-indholdet er tomt.");
+  const htmlBlob = Utilities.newBlob(html, "text/html");
+  if (htmlBlob.getBytes().length > HU_MAX_BYTES)
+    throw new Error("Kan ikke gemme: HTML-indholdet er over 12 MB.");
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
   try {
@@ -105,11 +111,11 @@ function huSave(fileId, html, expectedVersion) {
       return {ok: false, conflict: true, meta: huPublicMeta_(current),
         message: "Wikien er ændret i Google Drive. Gem lokalt og genindlæs før ny deling."};
     }
-    const blob = Utilities.newBlob(html, "text/html", current.name);
+    htmlBlob.setName(current.name);
     Drive.Files.update(
       {mimeType: "text/html"},
       id,
-      blob,
+      htmlBlob,
       {fields: "id,version,modifiedTime", supportsAllDrives: true}
     );
     const savedMeta = huFile_(id);
