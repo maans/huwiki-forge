@@ -162,6 +162,26 @@
       "label_en": "HUWiki Trim",
       "source": "../plugins/trim/dist/plugin.json",
       "version": "0.1.5"
+    },
+    {
+      "id": "hupin",
+      "kind": "plugin",
+      "category": "Design",
+      "label_da": "HUPin · klikbare billeder og SVG",
+      "label_en": "HUPin · interactive images and SVG",
+      "source": "../plugins/hupin/dist/plugin.json",
+      "version": "0.3.3"
+    },
+    {
+      "id": "hupin-demo",
+      "kind": "tiddler-collection",
+      "category": "Design",
+      "label_da": "HUPin · interaktivt SVG-eksempel",
+      "label_en": "HUPin · interactive SVG example",
+      "source": "../editions/hupin/tiddlers/seed.json",
+      "requires": [
+        "$:/plugins/huwiki/hupin"
+      ]
     }
   ]
 }
