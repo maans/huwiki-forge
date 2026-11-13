@@ -8,7 +8,7 @@ Udgivelse er en kapacitet, som flere Editions kan få glæde af. Den skal ikke v
 
 | Plugin | TiddlyWiki-titel | Forge-fil | Version |
 | --- | --- | --- | --- |
-| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.6-test.1 |
+| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.9-test.1 |
 | HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.7-test.1 |
 
 Begge plugins er browserværktøjer, ikke serverside-håndtering af Google Drev eller Apps Script. Den separate `PDF Publisher` laver PDF; `SitePublisher` laver **HTML-sites**. Den almindelige redigerbare single-file wiki gemmes fortsat med TiddlyWikis indbyggede saver.
@@ -42,3 +42,7 @@ Plugins ligger nu i repositoryet med versionsnumre og MIT-licens. Automatiske te
 Begge plugins følger nu **TiddlyWikis eksisterende `$:/language`**, uden ekstra sprogvælgerknapper. Der er dansk og engelsk i Publisher-vinduerne, tooltips/beskrivelser og plugin-readme; TiddlyWiki-styrede toolbarbeskrivelser bruger betinget wikitext. SitePublisher har nu adskilt **Hent HTML** (direkte fil-download, også på Mac) fra **Del HTML** (valgfri systemdeling). PDF Publisher beholder særskilt PDF-download.
 
 Ovenstående er verificeret ved automatiske tests og JavaScript-syntakskontrol. Dynamisk sprogskifte og Mac-browserens faktiske download skal stadig afprøves i en **nybygget** wiki, før brugerfladen kan regnes som endeligt godkendt. Pluginmetadata og versionsansvar bygger på den eksisterende **HUWiki Studio**-logik, jf. [pluginstandarden](plugin-standard.md).
+
+## Fokus på touchskærme (SitePublisher 0.1.9-test.1)
+
+Det selvstændige eksporterede HTML-site har fokusvisning uden ekstra krav til tastatur. Når fokus er aktivt og værktøjslinjen skjult, forbliver en lille, berøringsvenlig **Afslut fokus / Exit focus**-knap synlig i øverste højre hjørne med respekt for iPads safe area. Et tap på en tom del af artiklen eller det eksisterende nodeark viser/skjuler betjeningen. Links og interaktive felter forbliver klikbare. Når panelerne er synlige, kan man afslutte fokus via den almindelige topknap; på Mac virker **Escape** stadig. Dette er verificeret med en simuleret browser-runtime i CI, ikke endnu en manuel iPad-test.
