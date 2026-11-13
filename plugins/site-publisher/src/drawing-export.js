@@ -160,6 +160,14 @@ function siteDrawingBody(title,ctx){
  if(ctx)ctx.drawings=true;
  return '<figure class="huw-site-drawing"><img alt="'+safe(title)+'" src="'+safe(src)+'"></figure>';
 }
+// A live editor is not a reader view. Do not mark a site successful when
+// the drawing canvas disappears during static WikiText rendering.
+function publicationRejectLiveDrawingUi(root,title){
+ if(!root||!root.querySelector||!root.querySelector(".hu-tegne-app,.hu-tegne-editor,.excalidraw"))return;
+ throw publicationDrawingError(title,
+  "Dette er tegnestudiets redigeringsside, ikke en tegning. Vælg Udgiv tegning i Tegne Edition, eller vælg selve tegningens tiddler i SitePublisher.",
+  "This is the drawing studio, not a drawing. Choose Publish drawing in Tegne Edition, or select the drawing tiddler in SitePublisher.");
+}
 function drawingSiteWiki(ctx){
  var normal=$tw.wiki,local=Object.create(normal);
  local.parseTiddler=function(title,options){
