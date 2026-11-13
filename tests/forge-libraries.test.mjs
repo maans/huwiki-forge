@@ -14,10 +14,18 @@ const communityUrl="https://forge.måns.dk/community/";
 
 test("Every Edition shares the native HUWiki Plugin Library and separate Community address",async()=>{
  const config=await json("editions/shared/libraries.json");
- assert.equal(config.length,3);
+ assert.equal(config.length,4);
  const plugin=config.find(t=>t.title==="$:/config/HUWikiPluginLibrary");
  const community=config.find(t=>t.title==="$:/config/HUWikiCommunity");
  const card=config.find(t=>t.title==="HUWiki Community");
+ const fButton=config.find(t=>t.title==="$:/huwiki/forge/page-control");
+ assert.ok(fButton,"A shared F link must be present in all Editions");
+ assert.ok(fButton.tags.includes("$:/tags/PageControls"));
+ assert.match(fButton.text,/href="https:\/\/forge\.måns\.dk\/"/);
+ assert.match(fButton.text,/aria-label="HUWiki Forge"/);
+ assert.match(fButton.text,/>F<\/a>/);
+ assert.doesNotMatch(fButton.text,/ForgeShare|Tailscale|Mine wikier|Delt med mig/,"F is only a home link");
+
  assert.equal(plugin.url,pluginUrl);
  assert.ok(plugin.tags.includes("$:/tags/PluginLibrary"));
  assert.equal(plugin.caption,"HUWiki Plugin Library");
