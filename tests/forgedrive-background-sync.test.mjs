@@ -124,7 +124,10 @@ function backendFixture() {
     })
   };
   const ScriptApp = {getService: () => ({getUrl: () => "https://script.google.com/macros/s/test/exec"})};
-  const DriveApp = {getFileById: () => ({setTrashed() {}})};
+  const DriveApp = {getFileById: () => ({
+    setTrashed() {},
+    getBlob: () => ({getDataAsString: () => "<html>demo wiki</html>"})
+  })};
   const ctx = {SpreadsheetApp, Drive, LockService, Utilities, ScriptApp, DriveApp, console};
   vm.runInNewContext(server + "\n" + fileServer, ctx);
   return {ctx, file, books, permissions, get htmlWrites() {return htmlWrites;} };
@@ -767,4 +770,14 @@ test("a confirmed whole HTML snapshot does not requeue its already-saved oversiz
   a.reconcileUnobservedChanges();
   assert.equal(a.unsupported.size,1,"newer large media edits must remain unsynced");
   a.stop();
+});
+
+test("the invitation deep link opens ForgeDrive /exec rather than the Drive HTML preview", () => {
+  const f = backendFixture();
+  const expected = "https://script.google.com/macros/s/test/exec?id=" + f.file.id;
+  assert.equal(f.ctx.huLaunchUrl_(f.file.id), expected);
+  assert.equal(f.ctx.huOpen(f.file.id).launchLink, expected);
+  assert.match(fileServer, /ikke Googles filkort/);
+  assert.match(fileServer, /not the Google Drive file card/);
+  assert.doesNotMatch(expected, /drive\.google\.com\/file/);
 });
