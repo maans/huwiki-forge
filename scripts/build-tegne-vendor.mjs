@@ -21,6 +21,8 @@ const excalidrawUrl="https://github.com/ItsTheWhale/tiddlywiki-excalidraw/releas
 const pinnedReactCommit="06276b7c5b2cc464ad4cdf94f8c3ebaaf854de55";
 const expectedReactGitSha="023f92ef58a6072835846fd621513346df59d680";
 const reactUrl="https://raw.githubusercontent.com/ItsTheWhale/tiddlywiki-excalidraw/"+pinnedReactCommit+"/wiki/tiddlers/system/%24__plugins_linonetwo_tw-react.json";
+const reactLicenseUrl="https://raw.githubusercontent.com/tiddly-gittly/tw-react/e85df316d26d4d1e719ae7a800e849736d8cfece/LICENSE";
+const expectedReactLicenseGitSha="eb02ebc56be865a0bb4009c849b16cebbc7d4dec";
 
 const blobSha=buffer=>createHash("sha1").update("blob "+buffer.length+"\0").update(buffer).digest("hex");
 const sha256=buffer=>createHash("sha256").update(buffer).digest("hex");
@@ -67,6 +69,37 @@ function patchExcalidraw(plugin){
  if(!/\bMp\s*\(/.test(code)||!/\bup\s*\(/.test(code))
    throw Error("Pinned upstream release has different SVG internals; do not append unsafe bridge");
  widget.text+=bridge;
+ // Carry the HUWiki Danish translations in the editor package itself so
+ // ordinary TiddlyWiki installations do not need an overriding shadow plugin.
+ const lingoTitle="$:/plugins/itw/tw-excalidraw/lingo";
+ const lingo=store.tiddlers[lingoTitle];
+ if(!lingo||typeof lingo.text!=="string"||!lingo.text.includes("~[[en-GB]]"))
+  throw Error("Cannot safely extend the upstream Excalidraw language lingo");
+ lingo.text=lingo.text.replace("~[[en-GB]]",
+  "~[<raw-language-code>match[da-DK]] ~[{$:/language}suffix[da-DK]then[da-DK]] ~[[en-GB]]");
+ const da={
+   Name:"HUWiki Tegne · Excalidraw",
+   Description:"Et tegneplugin med redigerbare vektorer og genbrugelige figurer.",
+   ParserWarning:"Dette indhold er en Excalidraw-tegning. Vis tegningen med Excalidraw-widgetten.",
+   NewButtonCaption:"ny Excalidraw-tegning",
+   NewButtonHint:"Opret en redigerbar tegning",
+   OpenInLayoutButtonCaption:"redigér tegning",
+   OpenInLayoutButtonHint:"Åbn tegningen til redigering i fuld skærm",
+   EnterLayoutButtonCaption:"Åbn i fuld skærm",
+   ExitLayoutButtonCaption:"Tilbage til wikien",
+   EmbedTiddlerButtonCaption:"Indlejr en tiddler",
+   "Settings/Description":"Tilpas Excalidraws udseende og funktioner.",
+   "Settings/DefaultTheme/Caption":"Standardtema",
+   "Settings/DefaultTheme/Hint":"Vælg tegnefladens standardtema",
+   "Settings/Theme/auto":"Automatisk",
+   "Settings/Theme/light":"Lyst",
+   "Settings/Theme/dark":"Mørkt"
+ };
+ for(const [key,text] of Object.entries(da)){
+  const title="$:/plugins/itw/tw-excalidraw/language/da-DK/"+key;
+  if(store.tiddlers[title])throw Error("Unexpected existing Danish localization: "+title);
+  store.tiddlers[title]={title,text};
+ }
  plugin.text=JSON.stringify(store);
  plugin["huwiki-site-svg"]="1";
  // Do not relicense upstream package or remove its original license tiddler.
@@ -74,7 +107,10 @@ function patchExcalidraw(plugin){
    throw Error("Upstream Excalidraw/React copyright notice missing");
  return plugin;
 }
-function reactEnvelope(store){
+function reactEnvelope(store,license){
+ const title="$:/plugins/linonetwo/tw-react/license";
+ if(!store||typeof store!=="object"||!store.tiddlers)throw Error("Invalid React package");
+ if(!store.tiddlers[title])store.tiddlers[title]={title,type:"text/plain",text:license};
  return {
   title:"$:/plugins/linonetwo/tw-react",type:"application/json",
   "plugin-type":"plugin",name:"ReactJS",author:"LinOnetwo",
@@ -85,13 +121,15 @@ function reactEnvelope(store){
  };
 }
 async function main(){
- const [engineRaw,reactRaw]=await Promise.all([download(excalidrawUrl),download(reactUrl)]);
+ const [engineRaw,reactRaw,reactLicenseRaw]=await Promise.all([download(excalidrawUrl),download(reactUrl),download(reactLicenseUrl)]);
  if(sha256(engineRaw)!==expectedExcalidrawSha256)
   throw Error("Excalidraw release checksum changed. Aborting vendor import.");
  if(blobSha(reactRaw)!==expectedReactGitSha)
   throw Error("Pinned React plugin Git blob changed. Aborting vendor import.");
+ if(blobSha(reactLicenseRaw)!==expectedReactLicenseGitSha)
+  throw Error("React upstream MIT license changed. Aborting vendor import.");
  const engine=patchExcalidraw(JSON.parse(engineRaw.toString("utf8")));
- const react=reactEnvelope(JSON.parse(reactRaw.toString("utf8")));
+ const react=reactEnvelope(JSON.parse(reactRaw.toString("utf8")),reactLicenseRaw.toString("utf8"));
  if(!pluginTiddlers(react).tiddlers["$:/plugins/linonetwo/tw-react/widget.js"])
   throw Error("React widget missing");
  for(const [file,content] of [
