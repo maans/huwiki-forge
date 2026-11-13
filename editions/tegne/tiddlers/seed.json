@@ -1,0 +1,32 @@
+[
+  {
+    "title": "Farvefigurer",
+    "type": "application/vnd.excalidraw+json",
+    "tags": "HUWiki/Tegning",
+    "hu-category": "Kunst",
+    "hu-description": "Redigerbare former, farver og enkle konturer · Editable colored shapes",
+    "text": "{\"type\":\"excalidraw\",\"version\":2,\"source\":\"HUWiki Forge test\",\"elements\":[{\"id\":\"blue-rect\",\"type\":\"rectangle\",\"x\":70,\"y\":80,\"width\":320,\"height\":180,\"angle\":0,\"strokeColor\":\"#1e40af\",\"backgroundColor\":\"#bfdbfe\",\"fillStyle\":\"solid\",\"strokeWidth\":2,\"strokeStyle\":\"solid\",\"roughness\":0,\"opacity\":100,\"groupIds\":[],\"frameId\":null,\"roundness\":{\"type\":3},\"seed\":123456,\"version\":1,\"versionNonce\":123456,\"isDeleted\":false,\"boundElements\":null,\"updated\":1763060400000,\"link\":null,\"locked\":false},{\"id\":\"orange-ellipse\",\"type\":\"ellipse\",\"x\":500,\"y\":65,\"width\":220,\"height\":220,\"angle\":0,\"strokeColor\":\"#9a3412\",\"backgroundColor\":\"#fdba74\",\"fillStyle\":\"solid\",\"strokeWidth\":2,\"strokeStyle\":\"solid\",\"roughness\":0,\"opacity\":100,\"groupIds\":[],\"frameId\":null,\"roundness\":null,\"seed\":123456,\"version\":1,\"versionNonce\":123456,\"isDeleted\":false,\"boundElements\":null,\"updated\":1763060400000,\"link\":null,\"locked\":false},{\"id\":\"green-diamond\",\"type\":\"diamond\",\"x\":300,\"y\":330,\"width\":180,\"height\":160,\"angle\":0,\"strokeColor\":\"#166534\",\"backgroundColor\":\"#bbf7d0\",\"fillStyle\":\"solid\",\"strokeWidth\":2,\"strokeStyle\":\"solid\",\"roughness\":0,\"opacity\":100,\"groupIds\":[],\"frameId\":null,\"roundness\":{\"type\":3},\"seed\":123456,\"version\":1,\"versionNonce\":123456,\"isDeleted\":false,\"boundElements\":null,\"updated\":1763060400000,\"link\":null,\"locked\":false}],\"appState\":{\"viewBackgroundColor\":\"#ffffff\",\"exportBackground\":true},\"files\":{}}"
+  },
+  {
+    "title": "Geometri på papir",
+    "type": "application/vnd.excalidraw+json",
+    "tags": "HUWiki/Tegning",
+    "hu-category": "Teknik",
+    "hu-description": "Et lille eksempel til at undersøge SVG-eksport · Small SVG export test",
+    "hu-transparent": "yes",
+    "text": "{\"type\":\"excalidraw\",\"version\":2,\"source\":\"HUWiki Forge test\",\"elements\":[{\"id\":\"circle-one\",\"type\":\"ellipse\",\"x\":80,\"y\":100,\"width\":200,\"height\":200,\"angle\":0,\"strokeColor\":\"#0e7490\",\"backgroundColor\":\"#a5f3fc\",\"fillStyle\":\"solid\",\"strokeWidth\":2,\"strokeStyle\":\"solid\",\"roughness\":0,\"opacity\":100,\"groupIds\":[],\"frameId\":null,\"roundness\":null,\"seed\":123456,\"version\":1,\"versionNonce\":123456,\"isDeleted\":false,\"boundElements\":null,\"updated\":1763060400000,\"link\":null,\"locked\":false},{\"id\":\"rect-two\",\"type\":\"rectangle\",\"x\":350,\"y\":100,\"width\":250,\"height\":200,\"angle\":0,\"strokeColor\":\"#7c3aed\",\"backgroundColor\":\"#ddd6fe\",\"fillStyle\":\"solid\",\"strokeWidth\":2,\"strokeStyle\":\"solid\",\"roughness\":0,\"opacity\":100,\"groupIds\":[],\"frameId\":null,\"roundness\":{\"type\":3},\"seed\":123456,\"version\":1,\"versionNonce\":123456,\"isDeleted\":false,\"boundElements\":null,\"updated\":1763060400000,\"link\":null,\"locked\":false}],\"appState\":{\"viewBackgroundColor\":\"#ffffff\",\"exportBackground\":true},\"files\":{}}"
+  },
+  {
+    "title": "Tegne · Udgivelse",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! Udgiv dine tegninger\n\nTegninger i HUWiki er redigerbare tiddlere af typen `application/vnd.excalidraw+json`.\n\n**Sådan prøver du HTML-udgivelse:**\n\n# Åbn `Farvefigurer` fra tegnestudiet, og redigér en form.\n# Gem wikien med TiddlyWikis egen Gem-knap.\n# Åbn SitePublisher fra sidens værktøjer.\n# Vælg `Farvefigurer` eller `En tegning i en artikel`.\n# Sammenlign Sitevisning og den downloadede HTML-fil uden internet.\n\nEn udgivet tegning er en skalerbar SVG-læservisning. Den er ikke længere redigerbar i den downloadede sitefil. Behold den oprindelige wiki for at kunne redigere tegningen igen.\n\nKilder og licenser til Excalidraw og React bevares i deres respektive plugins.",
+    "text-en": "! Publish your drawings\n\nHUWiki drawings are editable tiddlers with type `application/vnd.excalidraw+json`.\n\n**To test HTML export:**\n\n# Open `Farvefigurer` in the drawing studio and edit a shape.\n# Save the wiki using TiddlyWiki's own Save button.\n# Open SitePublisher from the page controls.\n# Publish `Farvefigurer` or `En tegning i en artikel`.\n# Compare the live preview and downloaded HTML offline.\n\nA published drawing is a scalable SVG reader image, not an editable Excalidraw canvas. Keep your original wiki to continue editing.\n\nExcalidraw and React credits/licenses remain in their source plugins."
+  },
+  {
+    "title": "En tegning i en artikel",
+    "type": "text/vnd.tiddlywiki",
+    "tags": "HUWiki/Artikel",
+    "text": "! Tegning i en artikel\n\nDette er en almindelig artikel skrevet i WikiText, med luft mellem afsnittene.\n\nHer indsættes en redigerbar tegning som TiddlyWiki-transklusion:\n\n{{Farvefigurer}}\n\nDu kan ændre originaltegningen fra HUWiki Tegne. Ved HTML-publicering skal figuren blive til et skalerbart SVG-billede.",
+    "text-en": "! Drawing in an article\n\nThis is an ordinary, human-editable WikiText article.\n\nThe Excalidraw drawing is transcluded below:\n\n{{Farvefigurer}}\n\nEdit the source in HUWiki Draw. SitePublisher should embed the drawing as a standalone scalable SVG image."
+  }
+]
