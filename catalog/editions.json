@@ -29,8 +29,8 @@
     {
       "id": "site-publisher",
       "name": "HUWiki SitePublisher",
-      "version": "0.1.8-test.1",
-      "description": "Publish standalone HTML sites; native sharing if supported, otherwise direct Mac download / Udgiv HTML-sites",
+      "version": "0.1.9-test.1",
+      "description": "Standalone HTML site publisher: Danish/English toolbar, Mac download, sharing fallback and iPad-safe focus view",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
     },
