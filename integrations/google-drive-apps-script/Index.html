@@ -184,7 +184,9 @@ async function openWiki(id) {
     frame.setAttribute("aria-busy", "true");
     frame.srcdoc = result.html;
     report(loc("Wiki indlæst på ", "Wiki loaded in ") + result.elapsedMs + " ms. " +
-      (result.meta.canEdit ? loc("Gemning er aktiveret.", "Saving is enabled.") : loc("Du har kun læseadgang.", "You have read-only access.")));
+      (result.meta.canEdit ?
+        loc("Forbinder TiddlyWikis gemmefunktion…", "Connecting the TiddlyWiki saver…") :
+        loc("Du har kun læseadgang.", "You have read-only access.")));
     try {
       if (result.meta.canEdit) await installSaver(frame, result.meta.id);
       await connectDelta(frame, result.meta.id);
@@ -221,13 +223,19 @@ async function installSaver(frame, fileId) {
       return;
     }
     if (tw && tw.saverHandler && Array.isArray(tw.saverHandler.savers)) {
-      if (tw.saverHandler.savers.some(s => s.info && s.info.name === "huwiki-google-drive")) return;
+      if (tw.saverHandler.savers.some(s => s.info && s.info.name === "huwiki-google-drive")) {
+        // Reopening or restarting the wiki can leave the saver registered.
+        // Do not leave the manual snapshot button looking unavailable.
+        $("saveButton").disabled = false;
+        report(loc("Gemmefunktionen er tilsluttet.", "The wiki saver is connected."));
+        return true;
+      }
       // Disable TiddlyWiki's own autosave before installing our saver.
       // Only manual 'save' invocations will send full HTML to Google Drive.
       tw.config.disableAutoSave = true;
       if (!/^[a-f0-9]{32}$/i.test(current && current.fingerprint || "")) {
         report(loc("Google Drev returnerede ingen checksum for wikiens HTML. Gemning er slået fra for at undgå overskrivning.", "Google Drive returned no HTML checksum. Saving has been disabled to prevent overwrites."), true);
-        return;
+        return false;
       }
       // Count ONLY the edits included in the TiddlyWiki SaverFilter.
       // Transient/system changes also emit wiki change events; counting
@@ -361,11 +369,12 @@ async function installSaver(frame, fileId) {
       });
       $("saveButton").disabled = false;
       report(loc("Wiki indlæst. Automatisk gemning er fra – brug Gem, når du er klar.", "Wiki loaded. Automatic full-file saving is off – use Save when ready."));
-      return;
+      return true;
     }
     await new Promise(resolve => setTimeout(resolve, 150));
   }
   report(loc("Wikien blev indlæst, men TiddlyWikis gemmefunktion kunne ikke tilkobles.", "The wiki loaded, but its TiddlyWiki saver could not be connected."), true);
+  return false;
 }
 
 async function connectDelta(frame, fileId) {
@@ -388,14 +397,29 @@ async function connectDelta(frame, fileId) {
         $("syncStatus").style.color = bad ? "#b42318" : "#27634e";
       },
       onState: state => {
-        $("saveHint").textContent = state.active ?
-          loc("Tiddlerændringer synkroniseres i baggrunden (",
-              "Tiddler edits sync in the background (") + state.pending +
-          loc(" afventer, ", " pending, ") + state.conflicts +
+        if (!state.active) {
+          $("saveHint").textContent = I18N[language].saveHint;
+          return;
+        }
+        // Pending = 0 means "no queued operations", NOT "all edits saved".
+        // Show independent TW dirty tracking and server acknowledgments so
+        // no user mistakes a green connection status for confirmed storage.
+        const summary = loc(
+          "Baggrundssynk (", "Background sync (") + state.pending +
+          loc(" i kø, ", " pending, ") + state.conflicts +
           loc(" konflikter, ", " conflicts, ") + state.unsupported +
-          loc(" kun i HTML-snapshot). Gem på Google Drev laver en komplet HTML-kopi.",
-              " HTML-snapshot-only). Save to Google Drive uploads a full HTML copy.") :
-          I18N[language].saveHint;
+          loc(" kun i HTML). ", " HTML-only). ") +
+          loc("Registreret: ", "Detected: ") + state.observedChanges +
+          loc(", bekræftet gemt: ", ", confirmed saved: ") + state.confirmedChanges +
+          (state.recoveredByScan ? loc(", fundet ved kontrol: ", ", recovered by scan: ") +
+            state.recoveredByScan : "") + ". ";
+        const warnings = [];
+        if (state.nativeDirty) warnings.push(loc("TiddlyWiki viser ugemte ændringer", "TiddlyWiki reports unsaved changes"));
+        if (state.dirtyOutsideSync) warnings.push(loc("systemændringer kræver fuld HTML-gemning", "system edits need a full HTML save"));
+        if (state.snapshotOutdated) warnings.push(loc("HTML-snapshot er forældet", "HTML snapshot is outdated"));
+        $("saveHint").textContent = summary +
+          (warnings.length ? warnings.join("; ") + ". " : "") +
+          loc("Gem på Drev laver en fuld HTML-kopi.", "Save to Drive uploads a full HTML copy.");
       }
     });
     const info = await rpc("huSyncInfo", fileId);
