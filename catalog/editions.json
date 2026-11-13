@@ -15,5 +15,15 @@
       "status": "test",
       "manifest": "../editions/demo/manifest.json"
     }
+  ],
+  "plugins": [
+    {
+      "id": "trim",
+      "name": "HUWiki Trim",
+      "version": "0.1.5",
+      "description": "Valgfrit designværktøj (MIT-licens), kan installeres i enhver TiddlyWiki.",
+      "file": "../plugins/trim/dist/plugin.json",
+      "status": "test"
+    }
   ]
 }
