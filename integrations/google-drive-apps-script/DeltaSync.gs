@@ -16,12 +16,9 @@ const HU_SYNC_MAX_TIDDLER_CHARS = 45000;
 const HU_SYNC_MAX_POLL = 250;
 
 function huSyncLinkedId_(wikiId) {
-  const wiki = huFile_(wikiId); // already enforces Drive HTML access
-  const linked = Drive.Files.get(wiki.id, {
-    fields: "id,properties,capabilities(canEdit,canShare)",
-    supportsAllDrives: true
-  });
-  const sheetId = linked.properties && linked.properties[HU_SYNC_PROPERTY];
+  const wiki = huFile_(wikiId); // enforces access; includes custom properties
+  // Avoid a second Google Drive metadata request on every background poll.
+  const sheetId = wiki.properties && wiki.properties[HU_SYNC_PROPERTY];
   if (sheetId) huFileId_(sheetId);
   return {wiki: wiki, sheetId: sheetId || ""};
 }
