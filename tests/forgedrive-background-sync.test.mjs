@@ -746,3 +746,25 @@ test("reconciliation never marks a concurrent newer edit as saved with the earli
   assert.deepEqual(f.ctx.huSyncPull(f.file.id,0,10).events.map(e=>e.fields.text),["first","second"]);
   client.stop();
 });
+
+test("a confirmed whole HTML snapshot does not requeue its already-saved oversized media", async () => {
+  const f = backendFixture();
+  enable(f);
+  const Delta = clientClass(), W = fakeWiki();
+  const a = new Delta({fingerprint:f.file.md5Checksum,tw:W,fileId:f.file.id,
+    rpc:async (name,...args) => f.ctx[name](...args)});
+  await a.start();
+  const huge = new W.Tiddler({title:"Large media",text:"x".repeat(48000)});
+  W.wiki.addTiddler(huge);
+  assert.equal(a.unsupported.size,1);
+  const watermark = a.sequence;
+  a.noteSnapshotSaved(watermark, f.file.md5Checksum);
+  assert.equal(a.unsupported.size,0);
+  a.reconcileUnobservedChanges();
+  assert.equal(a.unsupported.size,0);
+  assert.equal(a.pending.size,0);
+  W.wiki.silentAddTiddler(new W.Tiddler({title:"Large media",text:"y".repeat(48000)}));
+  a.reconcileUnobservedChanges();
+  assert.equal(a.unsupported.size,1,"newer large media edits must remain unsynced");
+  a.stop();
+});
