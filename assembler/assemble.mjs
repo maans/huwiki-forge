@@ -72,20 +72,25 @@ export async function loadEdition(manifestLocation, fetcher = fetch) {
     throw new Error("Ukendt eller ufuldstændigt Edition-manifest.");
   }
   const references = [...manifest.tiddlers, ...manifest.plugins];
-  const tiddlers = [];
-  for (const reference of references) {
+  // Validate all references before performing network requests. Plugin packages
+  // may be large, so fetch independent same-origin files concurrently instead
+  // of waiting for one plugin download before starting the next.
+  const urls = references.map(reference => {
     if (typeof reference !== "string" || !reference) {
       throw new Error("Ugyldig filreference i Edition-manifestet.");
     }
     const url = new URL(reference, manifestUrl);
-    // No arbitrary third-party code sources in this first prototype.
     if (url.origin !== manifestUrl.origin || !["http:", "https:"].includes(url.protocol)) {
       throw new Error("Eksterne filreferencer er endnu ikke tilladt: " + reference);
     }
-    const data = await readJson(url.href, fetcher);
-    const entries = Array.isArray(data) ? data : [data];
-    tiddlers.push(...entries);
-  }
+    return url.href;
+  });
+  const chunks = await Promise.all(urls.map(async url => {
+    const data = await readJson(url, fetcher);
+    return Array.isArray(data) ? data : [data];
+  }));
+  // Promise.all preserves manifest order, irrespective of completion order.
+  const tiddlers = chunks.flat();
   validateTiddlers(tiddlers);
   return { manifest, tiddlers };
 }
