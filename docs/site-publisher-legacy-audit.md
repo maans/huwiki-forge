@@ -49,3 +49,7 @@ TiddlyWikis `$:/language` forbliver den eneste sprogvælger. Artiklers source Wi
 ## Bemærkning om status
 
 Den gamle `SiteWorkshop.js` er inspiceret, inklusive den komprimerede JavaScript-kilde. Dette dokument er en **funktionsinventarliste og migrationsplan**, ikke en erklæring om, at alt det gamle allerede virker i Forge. Browserresultat og forskellige medietyper skal testes, før de markeres som færdige.
+
+## Status: Sitelayout i Forge
+
+**0.1.12-test.1** har ét layoutvalg i det eksisterende SitePublisher-panel: Auto, Standard, Modern, Retro, Vanilla og HUPedia. Auto følger den aktive TW-theme-identitet. Stylingen ligger i særskilte CSS-tiddlere og indlejres i én HTML-fil. Der er ikke indført den gamle SiteWorkshops lange liste af detaljerede designkontroller. Auto/CSS er dækket af automatiske tests, men sammenligning i browser mangler endnu.
