@@ -8,7 +8,7 @@ Udgivelse er en kapacitet, som flere Editions kan få glæde af. Den skal ikke v
 
 | Plugin | TiddlyWiki-titel | Forge-fil | Version |
 | --- | --- | --- | --- |
-| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.11-test.1 |
+| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.12-test.1 |
 | HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.7-test.1 |
 
 Begge plugins er browserværktøjer, ikke serverside-håndtering af Google Drev eller Apps Script. Den separate `PDF Publisher` laver PDF; `SitePublisher` laver **HTML-sites**. Den almindelige redigerbare single-file wiki gemmes fortsat med TiddlyWikis indbyggede saver.
@@ -43,18 +43,35 @@ Begge plugins følger nu **TiddlyWikis eksisterende `$:/language`**, uden ekstra
 
 Ovenstående er verificeret ved automatiske tests og JavaScript-syntakskontrol. Dynamisk sprogskifte og Mac-browserens faktiske download skal stadig afprøves i en **nybygget** wiki, før brugerfladen kan regnes som endeligt godkendt. Pluginmetadata og versionsansvar bygger på den eksisterende **HUWiki Studio**-logik, jf. [pluginstandarden](plugin-standard.md).
 
-## Fokus på touchskærme (SitePublisher 0.1.11-test.1)
+## Fokus på touchskærme (SitePublisher 0.1.12-test.1)
 
 Det selvstændige eksporterede HTML-site har fokusvisning uden ekstra krav til tastatur. Når fokus er aktivt og værktøjslinjen skjult, forbliver en lille, berøringsvenlig **Afslut fokus / Exit focus**-knap synlig i øverste højre hjørne med respekt for iPads safe area. Et tap på en tom del af artiklen eller det eksisterende nodeark viser/skjuler betjeningen. Links og interaktive felter forbliver klikbare. Når panelerne er synlige, kan man afslutte fokus via den almindelige topknap; på Mac virker **Escape** stadig. Dette er verificeret med en simuleret browser-runtime i CI, ikke endnu en manuel iPad-test.
 
-## Tosproget HUPedia-eksport (SitePublisher 0.1.11-test.1)
+## Tosproget HUPedia-eksport (SitePublisher 0.1.12-test.1)
 
 SitePublisher læser den engelske tekst fra HUPedias `text-en` og bevarer samtidig de ældre HUWiki-felter `huwiki-text-en`/`huwiki-text-da`. Valget følger TiddlyWikis eksisterende `$:/language` og ændrer ikke brugerens artikelkilde. Forhåndsvisningen og artikeloversigten bruger samme sprog som HTML-eksporten. Mangler der en oversættelse, eksporteres grundteksten. PDF Publisher arbejder fra den viste artikel i TiddlyWiki og bruger ikke denne kildeudvælger.
 
-## HUPedia-komponenter i SitePublisher 0.1.11-test.1
+## HUPedia-komponenter i SitePublisher 0.1.12-test.1
 
 HUPedia-artikler med `HUPedia/Person`, `HUPedia/Begreb` og øvrige HUPedia-artikeltyper (eller det ældre `PediaArtikel`-tag) udgives med **HUPedias eksisterende `article-view`-skabelon**. SitePublisher henter samtidig CSS'en fra `$:/plugins/huwiki/hupedia/style.css` og indlejrer den i sitet. Der opbygges ikke et parallelt sæt af HUPedia-felter i SitePublisher.
 
 Hvis skabelonen mangler, eller den renderede faktaboks ikke kan findes, stoppes udgivelsen med en fejl i stedet for at udgive en ufuldstændig artikel. Almindelige TiddlyWiki-artikler uden HUPedia-tag fortsætter med den eksisterende WikiText-eksport, og artikelteksterne forbliver redigerbare i den oprindelige wiki.
 
 Det er **den første medie-/temaforbedring**, ikke en færdig portering af OAuthLabs fire designprofiler eller CutOut, Tegne/SVG og lyd. Se [legacy-gennemgangen](site-publisher-legacy-audit.md). Den nuværende brugerflade og separate Mac-download er bevaret. Den konkrete browsergengivelse af faktabokse skal stadig godkendes.
+
+## Valg af sitelayout (SitePublisher 0.1.12-test.1)
+
+I **Indstillinger → Sitelayout** kan man vælge følgende, uden at åbne et nyt panel:
+
+- **Automatisk (følg wikiens tema)** (standard): HUPedia, Modern, Retro eller Vanilla bruges, når wikiens aktive tema har en tilsvarende designprofil; ellers anvendes Forges eksisterende standard.
+- **Standard (nuværende):** Grønt enkeltfilssite med nuværende navigation og fuldskærmsvisning.
+- **Modern:** Luftigt, blåtonet læselayout.
+- **Retro:** Varme papirfarver, klassisk typografi og dobbelte kanter.
+- **Vanilla (klassisk):** Enkelt og traditionelt TiddlyWiki-inspireret læselayout.
+- **HUPedia (leksikon):** Leksikonlayout, som kombineres med HUPedias eksisterende faktabokse og artikelkomponenter.
+
+Valg af Sitelayout påvirker **samme HTML**, som anvendes til Sitevisning, Hent HTML og Del HTML. SitePublisher bevarer den eksisterende indholdsudvælgelse, siderækkefølge, oversigt, nodeafspilning og iPad-fokusfunktion; der oprettes ingen ny sprogvælger eller særlig design-editor. Hver designs CSS er en redigerbar systemtiddler i pluginpakken under \`$:/plugins/huwiki/site-publisher/layouts/\`. Alle nødvendige stilarter indlejres i den eksporterede HTML-fil, uden netværksafhængigheder. De fire profiler er **tilpasset den gamle OAuthLab-designretning**, ikke kopier af den gamle multi-page SiteWorkshop UI.
+
+Bemærk at valg af HUPedia-layout ikke i sig selv skaber faktabokse på almindelige artikler. Faktaboksens data/skabelon hører til HUPedia-pluginet, og sitelayoutet vælger kun det visuelle udtryk.
+
+**Acceptkontrol:** Byg ny HUPedia-wiki, vælg Sitelayout Modern, Retro og HUPedia, sammenlign Sitevisning og downloadet HTML, test faktabokse og fokusvisning på Mac/iPad.
