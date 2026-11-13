@@ -75,6 +75,16 @@
       this.snapshotFingerprint = String(options.fingerprint || "").toLowerCase();
       this.snapshotOutdated = false;
       this.systemDirtySerial = 0;
+      // The in-memory HTML baseline plus acknowledged journal edits.
+      // Never equate "0 pending" with "all changes persisted" without
+      // comparing the current wiki against this confirmed baseline.
+      this.persisted = new Map();
+      this.checkTimer = null;
+      this.changeListener = null;
+      this.observedChanges = 0;
+      this.confirmedChanges = 0;
+      this.recoveredByScan = 0;
+      this.lastScanAt = 0;
     }
     hasUnsynced() {
       return this.pending.size > 0 || this.flushing ||
@@ -91,8 +101,56 @@
         cursor: this.cursor,
         unsynced: this.hasUnsynced(),
         bootstrapping: this.bootstrapping,
-        snapshotOutdated: this.snapshotOutdated
+        snapshotOutdated: this.snapshotOutdated,
+        nativeDirty: !!(this.tw.saverHandler && this.tw.saverHandler.isDirty &&
+          this.tw.saverHandler.isDirty()),
+        dirtyOutsideSync: this.dirtyOutsideSync,
+        observedChanges: this.observedChanges,
+        confirmedChanges: this.confirmedChanges,
+        recoveredByScan: this.recoveredByScan
       });
+    }
+    /** Build a confirmed starting point from the HTML wiki before replaying the journal. */
+    captureBaseline() {
+      this.persisted.clear();
+      const wiki = this.tw.wiki;
+      wiki.each((tiddler, title) => {
+        if (typeof title === "string" && !title.startsWith("$:/")) {
+          this.persisted.set(title, plainFields(tiddler));
+        }
+      });
+    }
+    /**
+     * Safety-net for a TiddlyWiki edit that did not reach our change listener.
+     * This is LOCAL only; no Drive calls. It runs when native dirty tracking
+     * reports changes but there is nothing queued for the journal.
+     */
+    reconcileUnobservedChanges() {
+      if (!this.active || this.bootstrapping || this.snapshotOutdated ||
+          !this.changeListener || !this.canEdit) return;
+      const wiki = this.tw.wiki, observed = new Set(), missing = Object.create(null);
+      wiki.each((tiddler, title) => {
+        if (typeof title !== "string" || title.startsWith("$:/")) return;
+        observed.add(title);
+        const fields = plainFields(tiddler);
+        const pending = this.pending.get(title);
+        const unsupported = this.unsupported.get(title);
+        if (identicalFields(this.persisted.get(title), fields) ||
+            (pending && pending.operation === "put" && identicalFields(pending.fields, fields)) ||
+            (unsupported && identicalFields(unsupported.fields, fields))) return;
+        missing[title] = {normal: true, modified: true};
+      });
+      for (const title of this.persisted.keys()) {
+        if (!observed.has(title) && !this.pending.has(title) && !this.unsupported.has(title))
+          missing[title] = {normal: true, deleted: true};
+      }
+      const titles = Object.keys(missing);
+      if (titles.length) {
+        this.recoveredByScan += titles.length;
+        this.changeListener(missing);
+      }
+      this.lastScanAt = Date.now();
+      this.state();
     }
     /** Keep unsent edits across a reload; never treat this as remote persistence. */
     persist() {
@@ -210,6 +268,7 @@
       if (sh && sh.isDirty && sh.isDirty()) this.dirtyOutsideSync = true;
       this.active = true;
       this.bootstrapping = true;
+      this.captureBaseline();
       this.registerChangeListener();
       if (this.cursor > 0) {
         try {
@@ -264,6 +323,14 @@
           void this.pullAll().then(ok => { if (ok) this.scheduleFlush(); });
       };
       document.addEventListener?.("visibilitychange", this.visibilityHandler);
+      // Low-cost safety check: only scan while TiddlyWiki reports unsaved
+      // changes that have not been captured by the delta queue.
+      this.checkTimer = setInterval(() => {
+        const sh = this.tw.saverHandler;
+        if (this.active && !this.flushing && !this.pulling &&
+            sh && sh.isDirty && sh.isDirty() &&
+            Date.now() - this.lastScanAt > 8000) this.reconcileUnobservedChanges();
+      }, 5000);
       if (pulled) this.onStatus(this.localize("Baggrundssynkronisering er aktiv.", "Background synchronization is active."), false);
       this.state();
       return true;
@@ -272,6 +339,7 @@
       this.active = false;
       if (this.flushTimer) clearTimeout(this.flushTimer);
       if (this.pollTimer) clearInterval(this.pollTimer);
+      if (this.checkTimer) clearInterval(this.checkTimer);
       if (this.retryTimer) clearTimeout(this.retryTimer);
       if (this.onlineHandler) window.removeEventListener?.("online", this.onlineHandler);
       if (this.visibilityHandler) document.removeEventListener?.("visibilitychange", this.visibilityHandler);
@@ -283,7 +351,7 @@
       if (this.listenerInstalled) return;
       this.listenerInstalled = true;
       const wiki = this.tw.wiki;
-      wiki.addEventListener("change", changes => {
+      this.changeListener = changes => {
         if (!this.active) return;
         for (const [title, change] of Object.entries(changes || {})) {
           if (!change || !change.normal) continue;
@@ -336,6 +404,7 @@
           }
           this.unsupported.delete(title);
           const old = this.pending.get(title);
+          this.observedChanges++;
           this.pending.set(title, {
             title,
             operation: tiddler ? "put" : "delete",
@@ -349,7 +418,8 @@
         this.persist();
         this.state();
         this.scheduleFlush();
-      });
+      };
+      wiki.addEventListener("change", this.changeListener);
     }
     scheduleFlush() {
       if (!this.pending.size || !this.canEdit || this.bootstrapping ||
@@ -404,6 +474,12 @@
           throw new Error("Ændringsloggen afviste opdateringen.");
         } else {
           for (const ack of result.accepted || []) {
+            const committed = batch.find(op => op.opId === ack.opId && op.title === ack.title);
+            if (committed) {
+              if (committed.operation === "delete") this.persisted.delete(ack.title);
+              else this.persisted.set(ack.title, committed.fields);
+              this.confirmedChanges++;
+            }
             this.revisions.set(ack.title, ack.seq);
             const stillQueued = this.pending.get(ack.title);
             if (stillQueued && stillQueued.opId === ack.opId) {
@@ -552,6 +628,8 @@
       const prior = this.revisions.get(title) || 0;
       if (event.seq <= prior) return false;
       this.revisions.set(title, event.seq);
+      if (event.operation === "delete") this.persisted.delete(title);
+      else if (event.operation === "put" && event.fields) this.persisted.set(title, event.fields);
       // Never overwrite an unsent or unsupported local edit. Conflicts are
       // isolated by title so other tiddlers continue synchronizing.
       if (this.pending.has(title) || this.unsupported.has(title)) {
