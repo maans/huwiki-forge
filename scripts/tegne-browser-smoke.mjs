@@ -75,7 +75,17 @@ async function main(){
   // NOT claim success after losing the live Excalidraw canvas.
   await page.evaluate(()=>window.$tw.rootWidget.dispatchEvent({type:"tm-huwiki-sitepublisher",param:"HUWiki Tegne"}));
   await page.locator(".husp-overlay").waitFor({timeout:30000});
-  await page.waitForFunction(()=>/drawing studio, not a drawing|tegnestudiets redigeringsside/i.test(document.querySelector(".husp-status")?.textContent||""),null,{timeout:30000});
+  await page.waitForTimeout(1600);
+  const studioExportDebug=await page.evaluate(()=>({
+   status:document.querySelector(".husp-status")?.textContent||"",
+   selected:Array.from(document.querySelectorAll(".husp-item .title")).map(x=>x.textContent),
+   articleText:window.$tw.wiki.getTiddlerText("HUWiki Tegne","").slice(0,350),
+   ready:!!document.querySelector(".husp-preview")?.srcdoc,
+   includesEditor:document.querySelector(".husp-preview")?.srcdoc?.includes("hu-tegne-app")||false
+  }));
+  console.log("Live studio publication diagnostic:",JSON.stringify(studioExportDebug));
+  if(!/drawing studio, not a drawing|tegnestudiets redigeringsside/i.test(studioExportDebug.status))
+   throw Error("The interactive Tegne home was not rejected: "+JSON.stringify(studioExportDebug));
   if(!await page.locator(".husp-tools button").nth(1).isDisabled())
     throw Error("Download must be disabled when live editor cannot be published");
   console.log("Publishing live editor is rejected with an explicit error");
