@@ -59,7 +59,8 @@
     }
     hasUnsynced() {
       return this.pending.size > 0 || this.flushing ||
-        this.conflicts.size > 0 || this.dirtyOutsideSync;
+        this.conflicts.size > 0 || this.dirtyOutsideSync ||
+        this.unsupported.size > 0;
     }
     state() {
       this.onState({
@@ -130,8 +131,8 @@
           // Large embedded assets/plugins cannot fit in a Sheets cell.
           // Never retry them endlessly or silently mark them synced.
           if (fields && JSON.stringify(fields).length > MAX_FIELDS_JSON_LENGTH) {
+            this.pending.delete(title);
             this.unsupported.set(title, "Tiddleren er for stor til Sheets-synk.");
-            this.dirtyOutsideSync = true;
             this.onStatus("Tiddleren '" + title +
               "' er for stor til baggrundssynk. Brug Gem på Google Drev (hel HTML-kopi).", true);
             continue;
@@ -195,7 +196,8 @@
           }
           // Only reset TW dirty tracking if every change in this batch was
           // acknowledged and no non-synced system edit exists.
-          if (!this.hasUnsyncedExceptFlight() && !this.dirtyOutsideSync) {
+          if (!this.hasUnsyncedExceptFlight() && !this.dirtyOutsideSync &&
+              !this.unsupported.size) {
             const sh = this.tw.saverHandler;
             if (sh) {
               sh.numChanges = 0;
@@ -251,7 +253,8 @@
         if (appliedRemote > 0 && this.canEdit) {
           await new Promise(resolve => setTimeout(resolve, 0));
           if (!this.pending.size && !this.flushing && !this.conflicts.size &&
-              !this.dirtyOutsideSync && this.sequence === beforeLocalEdit) {
+              !this.dirtyOutsideSync && !this.unsupported.size &&
+              this.sequence === beforeLocalEdit) {
             const sh = this.tw.saverHandler;
             if (sh) {
               sh.numChanges = 0;
