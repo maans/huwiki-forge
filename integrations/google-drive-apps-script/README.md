@@ -94,6 +94,22 @@ Disse tests bruger en simuleret Drive/Sheets-backend. **De beviser
 ikke**, at Google Workspace-delingspolitik, HTML Service-iframes,
 kvoter, iPad eller større reelle wikier fungerer.
 
+## Invitationsmail og korrekt webapp-link
+
+Googles standardmail om deling viser automatisk et filkort med navnet
+på `wiki.html`. **Filkortet åbner Google Drives rå HTML-forhåndsvisning,
+ikke TiddlyWiki i ForgeDrive.** Denne destination kan ikke ændres med
+Drive Permissions API. Modtageren skal i stedet bruge deep-linket til
+Apps Script-webappen med `/exec?id=<wiki-file-id>`.
+
+ForgeDrive tilføjer derfor både en tydelig, tosproget instruktion i
+Googles `emailMessage` og et **Åbn i ForgeDrive / Kopiér ForgeDrive-link**
+i webappen. Det kan videresendes selvstændigt, hvis Gmail ikke gør
+adressen i delingsbeskeden klikbar. URL'en hentes fra
+`ScriptApp.getService().getUrl()` — aldrig fra HTML Service-rammens
+`script.googleusercontent.com`-adresse. Drive styrer fortsat adgang
+til både HTML-filen og ændringsloggen; linket giver ikke i sig selv adgang.
+
 ## Manuel første test, efter sikker backup og ny version
 
 1. Brug den private Google-konto som ejer af den eksisterende
