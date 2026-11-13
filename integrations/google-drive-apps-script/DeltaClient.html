@@ -194,9 +194,11 @@
       this.state();
     }
     registerChangeListener() {
+      if (this.listenerInstalled) return;
+      this.listenerInstalled = true;
       const wiki = this.tw.wiki;
       wiki.addEventListener("change", changes => {
-        if (!this.active || !this.canEdit) return;
+        if (!this.active) return;
         for (const [title, change] of Object.entries(changes || {})) {
           if (!change || !change.normal) continue;
           if (typeof title !== "string" || title.startsWith("$:/")) {
@@ -223,11 +225,17 @@
             if (echo === null && !fields) continue;
             if (echo && fields && identicalFields(echo, fields)) continue;
           }
+          if (!this.canEdit) {
+            this.dirtyOutsideSync = true;
+            this.onStatus("Denne konto har kun læseadgang. Lokale ændringer kan ikke synkroniseres.", true);
+            continue;
+          }
           // Large embedded assets/plugins cannot fit in a Sheets cell.
           // Never retry them endlessly or silently mark them synced.
           if (fields && JSON.stringify(fields).length > MAX_FIELDS_JSON_LENGTH) {
             this.pending.delete(title);
             this.unsupported.set(title, "Tiddleren er for stor til Sheets-synk.");
+            this.persist();
             this.onStatus("Tiddleren '" + title +
               "' er for stor til baggrundssynk. Brug Gem på Google Drev (hel HTML-kopi).", true);
             continue;
@@ -244,12 +252,14 @@
             serial: ++this.sequence
           });
         }
+        this.persist();
         this.state();
         this.scheduleFlush();
       });
     }
     scheduleFlush() {
-      if (!this.pending.size || this.conflicts.size || !this.canEdit) return;
+      if (!this.pending.size || !this.canEdit || this.bootstrapping) return;
+      if (![...this.pending.keys()].some(title => !this.conflicts.has(title))) return;
       if (this.flushTimer) clearTimeout(this.flushTimer);
       this.flushTimer = setTimeout(() => {
         this.flushTimer = null;
@@ -257,7 +267,7 @@
       }, QUIET_MS);
     }
     async flush() {
-      if (this.flushing || !this.canEdit || !this.pending.size || this.conflicts.size) return;
+      if (!this.active || this.bootstrapping || this.flushing || !this.canEdit || !this.pending.size) return;
       if (navigator.onLine === false) {
         this.onStatus("Offline: dine tiddlerændringer afventer forbindelse.", true);
         return;
@@ -267,6 +277,7 @@
       const batch = [];
       let budget = 2; // JSON array brackets
       for (const op of this.pending.values()) {
+        if (this.conflicts.has(op.title)) continue;
         if (batch.length >= MAX_OPERATIONS) break;
         const length = JSON.stringify(op).length + 1;
         if (budget + length > MAX_BATCH_CHARS) break;
@@ -275,7 +286,6 @@
       }
       if (!batch.length) {
         this.flushing = false;
-        this.onStatus("En tiddlerændring er for stor til den delte ændringslog. Gem en fuld HTML-kopi.", true);
         this.state();
         return;
       }
@@ -288,6 +298,7 @@
           for (const conflict of result.conflicts || []) {
             this.conflicts.set(conflict.title, conflict);
           }
+          this.persist();
           this.onStatus("Synkkonflikt i " +
             (result.conflicts || []).map(e => e.title).join(", ") +
             ". Dine lokale ændringer er bevaret. Hent en sikkerhedskopi.", true);
@@ -303,6 +314,7 @@
               stillQueued.baseSeq = ack.seq;
             }
           }
+          this.persist();
           // Only reset TW dirty tracking if every change in this batch was
           // acknowledged and no non-synced system edit exists.
           if (!this.hasUnsyncedExceptFlight() && !this.dirtyOutsideSync &&
@@ -330,7 +342,7 @@
       } finally {
         this.flushing = false;
         this.state();
-        if (!this.conflicts.size && this.pending.size && !this.retryTimer) this.scheduleFlush();
+        if (this.pending.size && !this.retryTimer) this.scheduleFlush();
       }
     }
     hasUnsyncedExceptFlight() {
