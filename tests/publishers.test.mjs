@@ -46,6 +46,7 @@ for (const row of cases) {
       assert.ok(js.includes("renderOverview(selected)"));
       assert.ok(js.includes('getTiddlerText("$:/language"'),"Must follow the wiki language");
       assert.ok(js.includes("function wikiLanguage()"));
+      assert.ok(js.includes('chosenTitle=title&&$tw.wiki.getTiddler(title)?title:""'),"Selected shadow tiddlers must not silently fall back to an unrelated tag");
       assert.ok(js.includes('Download HTML'),"English interface labels");
       const downloader=js.slice(js.indexOf("function downloadHtml("),js.indexOf("function shareFile("));
       assert.ok(downloader.includes("link.download=filename"));
