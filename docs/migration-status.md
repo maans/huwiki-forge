@@ -15,22 +15,22 @@ For tjenester der kræver en server (fx modtagelse af offentlige formularbesvare
 | Pakke | Status | Kilde og resultat |
 | --- | --- | --- |
 | HUPedia Edition | **Migreret; dansk/engelsk UI og læsbar WikiText i 0.2.4-test.1; ny browsertest mangler** | Originalt plugin `$:/plugins/huwiki/hupedia` (21 tiddlere), tema `$:/themes/huwiki/hupedia` (2 tiddlere) og otte redigerbare eksempel-tiddlere. Manifest i `editions/hupedia/`. Sprog følger `$:/language` uden ekstra knapper; datafelter og tags bevares |
-| HUWiki Trim | **Migreret; indstillinger er vist i brugerens HUPedia-browsertest** | Version 0.1.5, MIT-licens, tre interne tiddlere. `plugins/trim/dist/plugin.json` |
+| HUWiki Musik Edition | **Samlet som 0.1.0-test.1; automatiske tests bestået, ny browsertest mangler** | ABC 0.3.31-test.8, Musik 0.3.17-test.1, seks undervisningspakker, Modern-temaet, MuseScore Importer 0.1.4-beta.1 samt SitePublisher og PDF Publisher. Manifest i `editions/music/`. Ingen Google-login påkrævet for samlingen. |\n| HUWiki Trim | **Migreret; indstillinger er vist i brugerens HUPedia-browsertest** | Version 0.1.5, MIT-licens, tre interne tiddlere. `plugins/trim/dist/plugin.json` |
 | Demo Edition | **Browsertestet** | Kontrol af boot, startup-plugin, redigering og TiddlyWikis egen Gem |
 
-| HUWiki SitePublisher | **Migreret som valgfrit Forge-plugin; browsertest af nyeste version mangler** | v0.1.7-test.1, baseret på Musik 0.3.51, med justeret toolbar, MIT. `plugins/site-publisher/dist/plugin.json` |
+| HUWiki SitePublisher | **Migreret som valgfrit Forge-plugin; browsertest af nyeste version mangler** | v0.1.12-test.1, baseret på Musik 0.3.51, med justeret toolbar, MIT. `plugins/site-publisher/dist/plugin.json` |
 | HUWiki PDF Publisher | **Migreret som valgfrit Forge-plugin; browser-test med HUPedia mangler** | v0.2.8-test.1, baseret på Musik 0.3.51, med justeret toolbar, MIT. `plugins/print-article/dist/plugin.json` |
 
-**Udgivelsesværktøjerne er fælles, men endnu ikke standardinstalleret.** Se [udgivelsesplanen](publishers.md) for kompatibilitet med HUPedia, Musik og andre Editions. Den gamle HUPedia-site-skabelon er ikke længere en del af Forsiden; en ny tiddler forklarer udgivelsesmulighederne. Godkendte artikler filtreres endnu ikke automatisk ved eksport.
+**Udgivelsesværktøjerne er fælles; de er med i Musik Edition og valgfrie i HUPedia.** Se [udgivelsesplanen](publishers.md) for kompatibilitet med HUPedia, Musik og andre Editions. Den gamle HUPedia-site-skabelon er ikke længere en del af Forsiden; en ny tiddler forklarer udgivelsesmulighederne. Godkendte artikler filtreres endnu ikke automatisk ved eksport.
 
 Den gamle HUPedia-kilde er bevaret i komprimeret form i `migration/hupedia-source.b64`, så pakkens oprindelse og sammensætning kan efterprøves. De normale `plugin.json`, `theme.json` og tiddlerfiler er det, assembleren faktisk bruger.
 
-## Resterende Editions og afhængigheder
+**Delte materialer:** `catalog/materials.json` indeholder 16 statiske kilder, herunder HUPedia-eksempler, seks Musik-undervisningssamlinger, pluginpakker og temaer. Det kommende Delt-panel skal hente hvert indholdselement ved behov og bruge TiddlyWikis egen importkontrol. [Se den detaljerede OAuthLab-opgørelse](oauthlab-transfer-inventory.md).\n\n## Resterende Editions og afhængigheder
 
 | Edition/område | Fra HUWiki-koden | Nødvendigt arbejde før Forge kan kaldes selvstændig |
 | --- | --- | --- |
 | AI Edition | `AIEdition.js`, `PrivateVault.js` | Flyt den eksisterende pluginpakke, og erstat alle `google.script.run`-kald til privat boks, modelkald og billedgenerering med et lokalt/browserbaseret AI-connection API. Tokens uden for tiddlere/HTML. Se `ai-connections.md` |
-| Musik | `MusicEdition.js`, `MusicAsset*.js`, `MusicOfflineAssets.js` | Frigør ABC-, Musik- og SoundFont/afspillermoduler fra Drive-registret; bevar deres interne afhængigheder. Lydfonte må kun høre til backup og lokale runtime-pakker, aldrig wiki-restore |
+| Musik – resterende arbejde | Nyere Musik-wiki og `MusicOfflineAssets.js` | Editionens kerne er flyttet. Test afspilning, MIDI, SoundFont, import, iPad og kompatibilitet med de seneste Musik-kilder; lydfonte må kun ligge i backup/lokal runtime og aldrig wiki-restore |
 | Tegne | `TegneEdition.js`, `TegneAsset*.js`, `TegnePackage*.js` | Rekonstruér plugin-assets og versioner, selvstændigt hostede browserbiblioteker, og test uden Apps Script |
 | CutOut | `CutOutEdition.js`, `CutOutAsset*.js`, `CutOutSiteRuntime.js` | Rekonstruér plugin og runtime; fjern eventuelle serverbaserede publish-kald |
 | Studio | `StudioEdition.js`, `Studio.js`, `StudioPublish.js` | Bevar lokalt design- og pluginværksted; publicering som enkelte GitHub-filer bliver en særskilt, frivillig Publisher |
