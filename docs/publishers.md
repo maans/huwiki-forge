@@ -1,0 +1,36 @@
+# Fælles udgivelsesplugins: SitePublisher og PDF Publisher
+
+Kilde: `HUWiki-Musik-v0.3.51-test.1-SitePublisher-Fokus-manuel.html` og de to identiske, selvstændige JSON-eksporter. Begge plugins har MIT-licens og er kopieret uden kodeændringer til Forge.
+
+## Hvorfor fælles plugins?
+
+Udgivelse er en kapacitet, som flere Editions kan få glæde af. Den skal ikke være en uforanderlig del af eksempelvis HUPedia eller Musik. Derfor er plugins **selvstændige pakker i det fælles plugin-katalog**. Brugeren kan vælge dem i Assembler. De er foreløbig **fravalgt som standard**, indtil de er browser- og funktionstestet på tværs af Editions.
+
+| Plugin | TiddlyWiki-titel | Forge-fil | Version |
+| --- | --- | --- | --- |
+| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.3-test.1 |
+| HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.5-test.1 |
+
+Begge plugins er browserværktøjer, ikke serverside-håndtering af Google Drev eller Apps Script. Den separate `PDF Publisher` laver PDF; `SitePublisher` laver **HTML-sites**. Den almindelige redigerbare single-file wiki gemmes fortsat med TiddlyWikis indbyggede saver.
+
+## Funktionelle særtræk
+
+**SitePublisher:** Udgiver en valgt tiddler, et tag, et list-felt eller StoryList som et selvstændigt HTML-site med navigation. Musikfunktioner såsom nodepult, C/B♭/E♭ og ABC-lydafspilning er betinget af ABC-pluginets funktioner; de må ikke blive obligatoriske afhængigheder i andre Editions. SitePublisher renderer almindelige artikler som statisk HTML, men det er ikke garanteret, at alle interaktive widgets og makroer kan eksporteres uden tab.
+
+**PDF Publisher:** Understøtter almindelige tiddlere, samlinger, rækkefølge, interne links i indholdsfortegnelsen og valgfri blanke sider. ABC-modulet giver udvidet støtte til sangbøger, faktiske nodesider og venstre-/højresideopslag. PDF-eksport er rasterbaseret, og et fysisk foldet hæfte kræver eventuel separat udskriftsimposition.
+
+## HUPedia
+
+HUPedia har sit eget tema og artikelplugin. Den gamle ZIP-reference til `02-Site-Skabelon/ÅBN-SITE-EKSEMPEL.html` i startvejledningen er erstattet af `HUPedia · Udgivelse`. SitePublisher er endnu **ikke en valideret afløser for den gamle site-skabelon** med hensyn til alle HUPedias faktabokse, indholdslinks, typografi og redaktionelle filtre. Det skal testes.
+
+`pedia-status: godkendt` er et **redaktionelt felt**, ikke en sikkerhedskontrol. Udgivelsesplugins filtrerer ikke automatisk efter godkendelsesstatus. Kontrollér derfor udvalget inden deling.
+
+## Før vi gør dem til standard i alle Editions
+
+1. Browser-test SitePublisher med HUPedia (faktabokse, links, billeder, layout).
+2. Browser-test PDF Publisher med HUPedia og Tegne, og Music-funktionerne separat.
+3. Kontroller at fejl og tomme udvalg håndteres fornuftigt uden ABC.
+4. Undersøg eventuel ensretning af brugerflade og oversættelser på dansk/engelsk.
+5. Først derefter overvej opt-in som standardvalgt addon eller en fælles pluginprofil, der kan fravælges.
+
+Plugins ligger nu i repositoryet med versionsnumre og MIT-licens. Den automatiske test kontrollerer struktur, Google-uafhængighed og at de kan indlejres før boot; den erstatter ikke de nævnte browser-tests.
