@@ -8,8 +8,8 @@ Udgivelse er en kapacitet, som flere Editions kan få glæde af. Den skal ikke v
 
 | Plugin | TiddlyWiki-titel | Forge-fil | Version |
 | --- | --- | --- | --- |
-| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.4-test.1 |
-| HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.6-test.1 |
+| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.6-test.1 |
+| HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.7-test.1 |
 
 Begge plugins er browserværktøjer, ikke serverside-håndtering af Google Drev eller Apps Script. Den separate `PDF Publisher` laver PDF; `SitePublisher` laver **HTML-sites**. Den almindelige redigerbare single-file wiki gemmes fortsat med TiddlyWikis indbyggede saver.
 
@@ -36,3 +36,9 @@ HUPedia har sit eget tema og artikelplugin. Den gamle ZIP-reference til `02-Site
 **Nye prøvefunktioner (13. november):** SitePublisher får neutral navigation (*Artikler*, *Indhold* eller *Repertoire* afhængig af indholdet), sitetitel fra `$:/SiteTitle`, en samlet klikbar indholdsoversigt samt indstillinger, der kan skjules. PDF Publisher får automatisk genberegning med debounce, et miniatureoverblik over alle sider, klik-forstørrelse med sidepile, separat bogopslag og en indstillingsknap. Den første fysiske bogside ligger stadig på højre side i bogopslag; den vises alene i oversigten, så en tom venstreside ikke fylder den første visning. Eksportens faktiske sider og paginering er ikke ændret.
 
 Plugins ligger nu i repositoryet med versionsnumre og MIT-licens. Automatiske tests kontrollerer gyldige pluginpakker, JavaScript-syntaks, udvalgte UI-kodeveje, Google-uafhængighed og korrekt indlejring før TiddlyWikis opstart. **De nye previewfunktioner er endnu ikke browsertestet og skal afprøves i en nybygget HUPedia-wiki.**
+
+## Sprog og Mac-download
+
+Begge plugins følger nu **TiddlyWikis eksisterende `$:/language`**, uden ekstra sprogvælgerknapper. Der er dansk og engelsk i Publisher-vinduerne, tooltips/beskrivelser og plugin-readme; TiddlyWiki-styrede toolbarbeskrivelser bruger betinget wikitext. SitePublisher har nu adskilt **Hent HTML** (direkte fil-download, også på Mac) fra **Del HTML** (valgfri systemdeling). PDF Publisher beholder særskilt PDF-download.
+
+Ovenstående er verificeret ved automatiske tests og JavaScript-syntakskontrol. Dynamisk sprogskifte og Mac-browserens faktiske download skal stadig afprøves i en **nybygget** wiki, før brugerfladen kan regnes som endeligt godkendt. Pluginmetadata og versionsansvar bygger på den eksisterende **HUWiki Studio**-logik, jf. [pluginstandarden](plugin-standard.md).
