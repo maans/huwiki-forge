@@ -20,7 +20,7 @@ async function localFetch(url) {
   }
 }
 
-test("the extracted HUPedia Edition has intact original plugin, theme and seeds", async()=>{
+test("HUPedia Edition retains canonical articles and has working bilingual plugin templates", async()=>{
   const {manifest,tiddlers}=await loadEdition(
     "https://forge.example/huwiki-forge/editions/hupedia/manifest.json",localFetch);
   assert.equal(manifest.id,"hupedia");
@@ -37,8 +37,20 @@ test("the extracted HUPedia Edition has intact original plugin, theme and seeds"
   const theme=byTitle.get("$:/themes/huwiki/hupedia");
   assert.equal(plugin["plugin-type"],"plugin");
   assert.equal(theme["plugin-type"],"theme");
-  assert.equal(Object.keys(JSON.parse(plugin.text).tiddlers).length,21);
-  assert.equal(Object.keys(JSON.parse(theme.text).tiddlers).length,2);
+  const pluginTiddlers=JSON.parse(plugin.text).tiddlers;
+  const themeTiddlers=JSON.parse(theme.text).tiddlers;
+  assert.ok(Object.keys(pluginTiddlers).length>=21,"Keep the original plugin components");
+  assert.ok(Object.keys(themeTiddlers).length>=2,"Keep the original theme components");
+  for(const title of [
+    "$:/plugins/huwiki/hupedia/forms/Person",
+    "$:/plugins/huwiki/hupedia/infoboxes/Person",
+    "$:/plugins/huwiki/hupedia/article-view",
+    "$:/plugins/huwiki/hupedia/body-filter",
+    "$:/plugins/huwiki/hupedia/localized-body",
+    "$:/plugins/huwiki/hupedia/english-editor"
+  ])assert.ok(pluginTiddlers[title],title+" must remain available");
+  assert.ok(themeTiddlers["$:/themes/huwiki/hupedia/sidebar/da"]);
+  assert.ok(themeTiddlers["$:/themes/huwiki/hupedia/sidebar/en"]);
   assert.ok(!plugin.text.includes("google.script.run"));
   assert.ok(!theme.text.includes("google.script.run"));
   assert.ok(!plugin.text.includes("DriveApp"));
