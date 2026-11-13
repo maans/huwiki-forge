@@ -9,7 +9,7 @@ async function json(path) {
 }
 
 const cases=[
-  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.8-test.1"},
+  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.9-test.1"},
   {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.8-test.1"}
 ];
 
@@ -124,6 +124,84 @@ test("both Publisher versions match catalog metadata",async()=>{
     const entry=catalog.plugins.find(p=>p.id===row.id);
     assert.equal(entry?.version,row.version);
   }
+});
+
+test("SitePublisher exported HTML has a touch-accessible, always-recoverable focus mode", async()=>{
+  const p=await json("plugins/site-publisher/dist/plugin.json");
+  const js=JSON.parse(p.text).tiddlers[p.title+"/startup.js"].text;
+  assert.ok(js.includes('id="focus-exit"'),"Export must have an escape-free exit button");
+  assert.ok(js.includes("body.husp-focus .husp-focus-exit{display:inline-flex"),"Exit button must appear even while the header is hidden");
+  assert.ok(js.includes("env(safe-area-inset-right)"),"The exit button must respect iPad safe areas");
+  assert.ok(js.includes("min-height:46px"),"Touch target should have usable size");
+  assert.ok(js.includes('exitBtn.onclick=function(){focus(false);};'),"Touch exit button must exit focus");
+  assert.ok(js.includes('e.data.type==="husp-toggle-controls"'),"Score blank-area tap must reveal the controls");
+
+  // Execute the exported site runtime using a small fake browser DOM.
+  const elements={};
+  const documentListeners={};
+  const windowListeners={};
+  const classes=()=>({
+    values:new Set(),
+    toggle(name,force){ if(force===undefined)force=!this.values.has(name); if(force)this.values.add(name);else this.values.delete(name); },
+    add(name){this.values.add(name);},
+    contains(name){return this.values.has(name);}
+  });
+  function element(id){
+    return elements[id]||(elements[id]={
+      id,
+      classList:classes(),attributes:{},children:[],listeners:{},
+      setAttribute(k,v){this.attributes[k]=v;},
+      removeAttribute(k){delete this.attributes[k];},
+      addEventListener(k,fn){this.listeners[k]=fn;},
+      appendChild(child){this.children.push(child);},
+      querySelectorAll(){return [];},
+      getAttribute(k){return this.attributes[k]||"";}
+    });
+  }
+  element("publisher-data").textContent=JSON.stringify({
+    lang:"en",entries:[{title:"Example",kind:"article",html:"<p>Text</p>"}],
+    siteTitle:"Example",showTitle:true,startDesk:false,playerTemplate:""
+  });
+  element("score-frame").contentWindow={postMessage(){}};
+  const doc={
+    body:element("body"),
+    activeElement:null,
+    getElementById:element,
+    querySelectorAll(selector){return selector===".chapter"?element("chapters").children:[];},
+    createElement(tag){return element("created-"+tag+"-"+Object.keys(elements).length);},
+    addEventListener(type,listener){documentListeners[type]=listener;}
+  };
+  const win={addEventListener(type,listener){windowListeners[type]=listener;},getSelection(){return "";}};
+  const start=js.indexOf("function siteRuntime(){");
+  const end=js.indexOf("\nfunction decoratePlayerTemplate",start);
+  assert.ok(start>=0&&end>start);
+  const runtime=js.slice(start,end);
+  const context={
+    document:doc,window:win,
+    location:{hash:""},history:{replaceState(){}},
+    decodeURIComponent,encodeURIComponent
+  };
+  const {createContext}=await import("node:vm");
+  new Script(runtime+";siteRuntime();").runInContext(createContext(context));
+
+  element("focus-toggle").onclick();
+  assert.ok(doc.body.classList.contains("husp-focus"));
+  assert.ok(!doc.body.classList.contains("husp-controls-visible"));
+
+  const click=element("article-view").listeners.click;
+  assert.equal(typeof click,"function");
+  click({detail:1,target:{closest(){return null;}}});
+  assert.ok(doc.body.classList.contains("husp-controls-visible"),"Tapping an article must reveal its controls");
+  click({detail:1,target:{closest(){return {tagName:"A"};}}});
+  assert.ok(doc.body.classList.contains("husp-controls-visible"),"Article links must not toggle controls");
+  click({detail:1,target:{closest(){return null;}}});
+  assert.ok(!doc.body.classList.contains("husp-controls-visible"));
+
+  windowListeners.message({source:element("score-frame").contentWindow,data:{type:"husp-toggle-controls"}});
+  assert.ok(doc.body.classList.contains("husp-controls-visible"),"Score tap must still toggle the controls");
+  element("focus-exit").onclick();
+  assert.ok(!doc.body.classList.contains("husp-focus"),"A touch exit must work without Escape");
+  assert.ok(!doc.body.classList.contains("husp-controls-visible"));
 });
 
 test("HUPedia no longer refers users to the obsolete site template files", async () => {
