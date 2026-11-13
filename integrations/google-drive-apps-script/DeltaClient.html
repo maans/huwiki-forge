@@ -184,8 +184,9 @@
               sh.updateDirtyStatus();
             }
           }
-          this.onStatus("Synkroniseret " + (result.accepted || []).length +
-            " tiddlerændringer i baggrunden.", false);
+          const count = (result.accepted || []).length;
+          this.onStatus("Synkroniseret " + count +
+            (count === 1 ? " tiddler" : " tiddlere") + " i baggrunden.", false);
         }
       } catch (error) {
         this.onStatus("Synkronisering mislykkedes: " +
@@ -209,6 +210,8 @@
     async pullAll() {
       if (!this.active || this.pulling || navigator.onLine === false) return;
       this.pulling = true;
+      const beforeLocalEdit = this.sequence;
+      let appliedRemote = 0;
       try {
         for (let page = 0; page < 100; page++) {
           const result = await this.rpc("huSyncPull", this.fileId, this.cursor, 100);
@@ -216,9 +219,27 @@
             this.onStatus("Den delte ændringslog er ikke tilgængelig.", true);
             return;
           }
-          for (const event of result.events || []) this.applyRemote(event);
+          for (const event of result.events || []) {
+            if (this.applyRemote(event)) appliedRemote++;
+          }
           this.cursor = result.cursor;
           if (!result.hasMore) break;
+        }
+        // The native TW SaverHandler also counts REMOTE modifications as
+        // dirty. They were already persisted by another user, and must not
+        // light up the save indicator in this client. Wait for TW to dispatch
+        // its queued change events before resetting the counter. Never reset
+        // if any local edit or conflict happened meanwhile.
+        if (appliedRemote > 0 && this.canEdit) {
+          await new Promise(resolve => setTimeout(resolve, 0));
+          if (!this.pending.size && !this.flushing && !this.conflicts.size &&
+              !this.dirtyOutsideSync && this.sequence === beforeLocalEdit) {
+            const sh = this.tw.saverHandler;
+            if (sh) {
+              sh.numChanges = 0;
+              sh.updateDirtyStatus();
+            }
+          }
         }
         this.state();
       } catch (error) {
@@ -230,9 +251,9 @@
     }
     applyRemote(event) {
       const title = event.title;
-      if (!title || title.startsWith("$:/")) return;
+      if (!title || title.startsWith("$:/")) return false;
       const prior = this.revisions.get(title) || 0;
-      if (event.seq <= prior) return;
+      if (event.seq <= prior) return false;
       this.revisions.set(title, event.seq);
       // Never overwrite an unsent local edit with a remote update.
       if (this.pending.has(title)) {
@@ -242,19 +263,22 @@
           this.onStatus("Konflikt: " + title +
             " er ændret af en anden bruger. Din lokale version er bevaret.", true);
         }
-        return;
+        return false;
       }
       const wiki = this.tw.wiki;
       if (event.operation === "delete") {
-        if (!wiki.getTiddler(title)) return;
+        if (!wiki.getTiddler(title)) return false;
         this.remoteEchoes.set(title, null);
         wiki.deleteTiddler(title);
       } else if (event.operation === "put" && event.fields) {
         const now = wiki.getTiddler(title);
-        if (now && identicalFields(plainFields(now), event.fields)) return;
+        if (now && identicalFields(plainFields(now), event.fields)) return false;
         this.remoteEchoes.set(title, event.fields);
         wiki.addTiddler(new this.tw.Tiddler(event.fields));
+      } else {
+        return false;
       }
+      return true;
     }
   }
   window.ForgeDriveDelta = ForgeDriveDelta;
