@@ -32,6 +32,7 @@ for (const row of cases) {
   });
 }
 
+for (const row of cases) {
   test(row.id + " startup JavaScript compiles and includes edition-neutral preview controls", async () => {
     const plugin=await json(row.path);
     const entries=JSON.parse(plugin.text).tiddlers;
@@ -52,6 +53,7 @@ for (const row of cases) {
       assert.ok(js.includes('if(previewMode==="spreads"') || js.includes('paperWrap.appendChild(E("h3","huprint-spread-heading"'));
     }
   });
+}
 
 test("both publishers are discoverable as optional add-ons and not mandatory in Edition manifests", async () => {
   const catalog=await json("catalog/editions.json");
