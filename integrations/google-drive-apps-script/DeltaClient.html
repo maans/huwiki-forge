@@ -41,6 +41,7 @@
       this.fileId = options.fileId;
       this.rpc = options.rpc;
       this.onStatus = options.onStatus || (() => {});
+      this.localize = options.localize || ((da, _en) => da);
       this.onState = options.onState || (() => {});
       this.actor = id();
       this.cursor = 0;
@@ -103,7 +104,7 @@
       } catch (error) {
         if (!this.storageFailed) {
           this.storageFailed = true;
-          this.onStatus("Browseren kunne ikke sikre lokale synkændringer. Hent straks en lokal HTML-sikkerhedskopi.", true);
+          this.onStatus(this.localize("Browseren kunne ikke sikre lokale synkændringer. Hent straks en lokal HTML-sikkerhedskopi.", "The browser could not store local edits. Download an HTML backup immediately."), true);
         }
       }
     }
@@ -111,7 +112,7 @@
       if (!this.recoveryKey || !this.storage) return;
       let saved;
       try { saved = JSON.parse(this.storage.getItem(this.recoveryKey) || "null"); }
-      catch (_error) { this.onStatus("Ugyldig lokal synkkø. Hent en lokal sikkerhedskopi.", true); return; }
+      catch (_error) { this.onStatus(this.localize("Ugyldig lokal synkkø. Hent en lokal sikkerhedskopi.", "Invalid local sync queue. Download an HTML backup."), true); return; }
       if (!saved || !Array.isArray(saved.pending)) return;
       if (typeof saved.actor === "string") this.actor = saved.actor;
       for (const op of saved.pending) {
@@ -148,7 +149,7 @@
         }
       }
       if (this.pending.size || this.unsupported.size || this.conflicts.size)
-        this.onStatus("Lokale ikke-synkroniserede ændringer blev gendannet. De er endnu ikke gemt på Drev.", true);
+        this.onStatus(this.localize("Lokale ikke-synkroniserede ændringer blev gendannet. De er endnu ikke gemt på Drev.", "Unsynced local edits were recovered. They are not yet saved to Drive."), true);
     }
     async start(initialInfo) {
       if (this.active) return true;
@@ -158,7 +159,7 @@
       // The cursor belongs to the EXACT HTML bytes loaded by huOpen, not
       // to a newer metadata read made while the iframe was booting.
       if (Number(info.snapshotSeq || 0) !== this.snapshotSeq) {
-        this.onStatus("Google Drev har et nyere HTML-snapshot. Genåbn wikien før synkronisering.", true);
+        this.onStatus(this.localize("Google Drev har et nyere HTML-snapshot. Genåbn wikien før synkronisering.", "Google Drive has a newer HTML snapshot. Reopen the wiki before syncing."), true);
         return false;
       }
       this.cursor = this.snapshotSeq;
@@ -167,7 +168,7 @@
       if (!this.recoveryKey) {
         // Without account isolation, do not risk leaking locally cached edits
         // from one Google login to another on the same machine.
-        this.onStatus("Kontoen kunne ikke identificeres til sikker lokal gendannelse.", true);
+        this.onStatus(this.localize("Kontoen kunne ikke identificeres til sikker lokal gendannelse.", "Your account could not be identified for secure local recovery."), true);
       }
       const sh = this.tw.saverHandler;
       if (sh && sh.isDirty && sh.isDirty()) this.dirtyOutsideSync = true;
@@ -186,7 +187,7 @@
         } catch (error) {
           this.active = false;
           this.bootstrapping = false;
-          this.onStatus("Kunne ikke indlæse snapshotrevisioner: " +
+          this.onStatus(this.localize("Kunne ikke indlæse snapshotrevisioner: ", "Could not load snapshot revisions: ") +
             (error.message || String(error)), true);
           this.state();
           return false;
@@ -210,7 +211,7 @@
           void this.pullAll();
         }
       }, ACTIVE_POLL_MS);
-      if (pulled) this.onStatus("Baggrundssynkronisering er aktiv.", false);
+      if (pulled) this.onStatus(this.localize("Baggrundssynkronisering er aktiv.", "Background synchronization is active."), false);
       this.state();
       return true;
     }
@@ -262,7 +263,7 @@
           if (!this.canEdit) {
             this.dirtyOutsideSync = true;
             this.systemDirtySerial = ++this.sequence;
-            this.onStatus("Denne konto har kun læseadgang. Lokale ændringer kan ikke synkroniseres.", true);
+            this.onStatus(this.localize("Denne konto har kun læseadgang. Lokale ændringer kan ikke synkroniseres.", "This account is read-only. Local changes cannot be synchronized."), true);
             continue;
           }
           // Large embedded assets/plugins cannot fit in a Sheets cell.
@@ -274,8 +275,8 @@
               reason: "Tiddleren er for stor til Sheets-synk."
             });
             this.persist();
-            this.onStatus("Tiddleren '" + title +
-              "' er for stor til baggrundssynk. Brug Gem på Google Drev (hel HTML-kopi).", true);
+            this.onStatus(this.localize("Tiddleren '", "Tiddler '") + title +
+              this.localize("' er for stor til baggrundssynk. Brug Gem på Google Drev (hel HTML-kopi).", "' is too large for background sync. Use Save to Google Drive (full HTML copy)."), true);
             continue;
           }
           this.unsupported.delete(title);
@@ -307,7 +308,7 @@
     async flush() {
       if (!this.active || this.bootstrapping || this.flushing || !this.canEdit || !this.pending.size) return;
       if (navigator.onLine === false) {
-        this.onStatus("Offline: dine tiddlerændringer afventer forbindelse.", true);
+        this.onStatus(this.localize("Offline: dine tiddlerændringer afventer forbindelse.", "Offline: your edits are queued until the connection returns."), true);
         return;
       }
       this.flushing = true;
@@ -337,9 +338,9 @@
             this.conflicts.set(conflict.title, conflict);
           }
           this.persist();
-          this.onStatus("Synkkonflikt i " +
+          this.onStatus(this.localize("Synkkonflikt i ", "Sync conflict in ") +
             (result.conflicts || []).map(e => e.title).join(", ") +
-            ". Dine lokale ændringer er bevaret. Hent en sikkerhedskopi.", true);
+            this.localize(". Dine lokale ændringer er bevaret. Hent en sikkerhedskopi.", ". Local edits were preserved. Download a backup."), true);
         } else if (!result.ok) {
           throw new Error("Ændringsloggen afviste opdateringen.");
         } else {
@@ -364,13 +365,14 @@
             }
           }
           const count = (result.accepted || []).length;
-          this.onStatus("Synkroniseret " + count +
-            (count === 1 ? " tiddler" : " tiddlere") + " i baggrunden.", false);
+          this.onStatus(this.localize("Synkroniseret ", "Synchronized ") + count +
+            (count === 1 ? " tiddler" : this.localize(" tiddlere", " tiddlers")) +
+            this.localize(" i baggrunden.", " in the background."), false);
         }
       } catch (error) {
-        this.onStatus("Synkronisering mislykkedes: " +
+        this.onStatus(this.localize("Synkronisering mislykkedes: ", "Synchronization failed: ") +
           (error.message || String(error)) +
-          ". Ændringerne er stadig åbne i wikien.", true);
+          this.localize(". Ændringerne er stadig åbne i wikien.", ". Your edits remain in the open wiki."), true);
         if (!this.retryTimer) {
           this.retryTimer = setTimeout(() => {
             this.retryTimer = null;
@@ -423,7 +425,7 @@
         for (let page = 0; page < 100; page++) {
           const result = await this.rpc("huSyncPull", this.fileId, this.cursor, 100);
           if (!result.enabled) {
-            this.onStatus("Den delte ændringslog er ikke tilgængelig.", true);
+            this.onStatus(this.localize("Den delte ændringslog er ikke tilgængelig.", "The shared change log is unavailable."), true);
             return false;
           }
           for (const event of result.events || []) {
@@ -455,7 +457,7 @@
         return true;
       } catch (error) {
         this.lastPullSucceeded = false;
-        this.onStatus("Kunne ikke hente ændringer: " +
+        this.onStatus(this.localize("Kunne ikke hente ændringer: ", "Could not fetch changes: ") +
           (error.message || String(error)), true);
         return false;
       } finally {
@@ -476,8 +478,8 @@
           this.conflicts.set(title, {title, actual: event.seq,
             expected: pending ? pending.baseSeq : prior});
           this.persist();
-          this.onStatus("Konflikt: " + title +
-            " er ændret af en anden bruger. Din lokale version er bevaret.", true);
+          this.onStatus(this.localize("Konflikt: ", "Conflict: ") + title +
+            this.localize(" er ændret af en anden bruger. Din lokale version er bevaret.", " was changed by another user. Your local version was preserved."), true);
         }
         return false;
       }
