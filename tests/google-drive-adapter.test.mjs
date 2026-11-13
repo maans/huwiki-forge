@@ -167,3 +167,14 @@ test("missing Drive checksum fails closed without overwriting", () => {
   assert.throws(() => testEnv.ctx.huSave(testEnv.file.id, "<html>edit</html>", ""), /checksum/);
   assert.equal(testEnv.writes, 0);
 });
+
+test("the recipient gets a bilingual warning and a separately copyable ForgeDrive deep link", () => {
+  assert.match(server, /Google's automatically generated file card/);
+  assert.match(server, /huLaunchUrl_\(verified\.id\)/);
+  assert.match(ui, /id="launchLink"/);
+  assert.match(ui, /id="copyLaunchLink"/);
+  assert.match(ui, /showLaunchLink\(result\.launchLink\)/);
+  assert.match(ui, /navigator\.clipboard\.writeText\(url\)/);
+  assert.match(ui, /Google's file card only previews the HTML source/);
+  assert.doesNotMatch(ui, /<select[^>]+id="language"/);
+});
