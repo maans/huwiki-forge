@@ -1,0 +1,18 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "HUWiki Musik"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "ABC notation · playing · musical education"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[HUWiki Musik – Start]]"
+  }
+]
