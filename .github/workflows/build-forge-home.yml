@@ -1,0 +1,48 @@
+name: Build public Forge landing TiddlyWiki
+
+on:
+  push:
+    branches:
+      - feat/forge-f-link-and-home-20261114
+    paths:
+      - editions/forge/**
+      - editions/shared/libraries.json
+      - scripts/build-forge-home.mjs
+      - .github/workflows/build-forge-home.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build self-contained editable TiddlyWiki with the pinned core
+        run: node scripts/build-forge-home.mjs
+      - name: Verify generated homepage boot prerequisites
+        run: |
+          node --input-type=module <<'NODE'
+          import {readFile} from 'node:fs/promises';
+          const home=await readFile('index.html','utf8');
+          for(const marker of ['tiddlywiki-tiddler-store','HUWiki Forge Edition','Velkommen til Forge','Welcome to Forge','$:/huwiki/forge/page-control']){
+            if(!home.includes(marker))throw Error('Missing generated home content: '+marker);
+          }
+          if(home.length<2_000_000)throw Error('Not a full TiddlyWiki');
+          console.log('Generated a self-contained Forge wiki:',home.length,'characters');
+          NODE
+      - name: Commit the generated homepage to the feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "build(forge): publish editable guest landing wiki"
+            git push origin HEAD:feat/forge-f-link-and-home-20261114
+          fi
