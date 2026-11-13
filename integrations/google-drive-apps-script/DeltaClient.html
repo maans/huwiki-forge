@@ -1,0 +1,252 @@
+<script>
+/*
+ * ForgeDrive incremental TiddlyWiki client — experimental.
+ * One append-only shared change log, never an individual Drive file per tiddler.
+ * Requests run via Apps Script HTML Service google.script.run.
+ *
+ * Background means "while the wiki tab is open". Closing the tab does not
+ * guarantee that pending changes have reached Drive.
+ */
+(function () {
+  "use strict";
+  const QUIET_MS = 2500;
+  const ACTIVE_POLL_MS = 12000;
+  const MAX_OPERATIONS = 25;
+
+  function id() {
+    return "fd_" + Date.now().toString(36) + "_" +
+      Math.random().toString(36).slice(2, 14);
+  }
+  function plainFields(tiddler) {
+    const fields = {};
+    if (!tiddler || !tiddler.fields) return fields;
+    for (const key of Object.keys(tiddler.fields)) {
+      fields[key] = typeof tiddler.getFieldString === "function" ?
+        tiddler.getFieldString(key) : String(tiddler.fields[key] == null ? "" : tiddler.fields[key]);
+    }
+    return fields;
+  }
+  function identicalFields(a, b) {
+    if (!a || !b) return false;
+    const ak = Object.keys(a).sort(), bk = Object.keys(b).sort();
+    if (ak.length !== bk.length || ak.some((k, i) => k !== bk[i])) return false;
+    return ak.every(key => a[key] === b[key]);
+  }
+  class ForgeDriveDelta {
+    constructor(options) {
+      this.tw = options.tw;
+      this.fileId = options.fileId;
+      this.rpc = options.rpc;
+      this.onStatus = options.onStatus || (() => {});
+      this.onState = options.onState || (() => {});
+      this.actor = id();
+      this.cursor = 0;
+      this.revisions = new Map();
+      this.pending = new Map();
+      this.remoteEchoes = new Map();
+      this.conflicts = new Map();
+      this.active = false;
+      this.canEdit = false;
+      this.flushing = false;
+      this.pulling = false;
+      this.flushTimer = null;
+      this.pollTimer = null;
+      this.retryTimer = null;
+      this.sequence = 0;
+      this.dirtyOutsideSync = false;
+    }
+    hasUnsynced() {
+      return this.pending.size > 0 || this.flushing || this.conflicts.size > 0;
+    }
+    state() {
+      this.onState({
+        active: this.active,
+        canEdit: this.canEdit,
+        pending: this.pending.size,
+        conflicts: this.conflicts.size,
+        cursor: this.cursor
+      });
+    }
+    async start() {
+      if (this.active) return true;
+      const info = await this.rpc("huSyncInfo", this.fileId);
+      if (!info.enabled) return false;
+      this.canEdit = !!info.canEdit;
+      this.active = true;
+      this.registerChangeListener();
+      this.state();
+      await this.pullAll();
+      this.pollTimer = setInterval(() => {
+        if (this.active && navigator.onLine !== false) void this.pullAll();
+      }, ACTIVE_POLL_MS);
+      this.onStatus("Baggrundssynkronisering er aktiv.", false);
+      return true;
+    }
+    stop() {
+      this.active = false;
+      if (this.flushTimer) clearTimeout(this.flushTimer);
+      if (this.pollTimer) clearInterval(this.pollTimer);
+      if (this.retryTimer) clearTimeout(this.retryTimer);
+      this.state();
+    }
+    registerChangeListener() {
+      const wiki = this.tw.wiki;
+      wiki.addEventListener("change", changes => {
+        if (!this.active || !this.canEdit) return;
+        for (const [title, change] of Object.entries(changes || {})) {
+          if (!change || !change.normal) continue;
+          if (typeof title !== "string" || title.startsWith("$:/")) {
+            // Native TW may consider custom system tiddlers save-worthy,
+            // but the v1 sync protocol deliberately doesn't sync them.
+            this.dirtyOutsideSync = true;
+            continue;
+          }
+          const tiddler = wiki.getTiddler(title);
+          const fields = tiddler ? plainFields(tiddler) : null;
+          if (this.remoteEchoes.has(title)) {
+            const echo = this.remoteEchoes.get(title);
+            this.remoteEchoes.delete(title);
+            if (echo === null && !fields) continue;
+            if (echo && fields && identicalFields(echo, fields)) continue;
+          }
+          const old = this.pending.get(title);
+          this.pending.set(title, {
+            title,
+            operation: tiddler ? "put" : "delete",
+            fields,
+            baseSeq: old ? old.baseSeq : (this.revisions.get(title) || 0),
+            opId: id(),
+            actor: this.actor,
+            serial: ++this.sequence
+          });
+        }
+        this.state();
+        this.scheduleFlush();
+      });
+    }
+    scheduleFlush() {
+      if (!this.pending.size || this.conflicts.size || !this.canEdit) return;
+      if (this.flushTimer) clearTimeout(this.flushTimer);
+      this.flushTimer = setTimeout(() => {
+        this.flushTimer = null;
+        void this.flush();
+      }, QUIET_MS);
+    }
+    async flush() {
+      if (this.flushing || !this.canEdit || !this.pending.size || this.conflicts.size) return;
+      if (navigator.onLine === false) {
+        this.onStatus("Offline: dine tiddlerændringer afventer forbindelse.", true);
+        return;
+      }
+      this.flushing = true;
+      this.state();
+      const batch = [...this.pending.values()].slice(0, MAX_OPERATIONS);
+      try {
+        const result = await this.rpc("huSyncPush", this.fileId, batch.map(op => ({
+          title: op.title, operation: op.operation, fields: op.fields,
+          baseSeq: op.baseSeq, opId: op.opId, actor: op.actor
+        })));
+        if (result.conflict) {
+          for (const conflict of result.conflicts || []) {
+            this.conflicts.set(conflict.title, conflict);
+          }
+          this.onStatus("Synkkonflikt i " +
+            (result.conflicts || []).map(e => e.title).join(", ") +
+            ". Dine lokale ændringer er bevaret. Hent en sikkerhedskopi.", true);
+        } else if (!result.ok) {
+          throw new Error("Ændringsloggen afviste opdateringen.");
+        } else {
+          for (const ack of result.accepted || []) {
+            this.revisions.set(ack.title, ack.seq);
+            const stillQueued = this.pending.get(ack.title);
+            if (stillQueued && stillQueued.opId === ack.opId) {
+              this.pending.delete(ack.title);
+            } else if (stillQueued) {
+              stillQueued.baseSeq = ack.seq;
+            }
+          }
+          // Only reset TW dirty tracking if every change in this batch was
+          // acknowledged and no non-synced system edit exists.
+          if (!this.hasUnsyncedExceptFlight() && !this.dirtyOutsideSync) {
+            const sh = this.tw.saverHandler;
+            if (sh) {
+              sh.numChanges = 0;
+              sh.updateDirtyStatus();
+            }
+          }
+          this.onStatus("Synkroniseret " + (result.accepted || []).length +
+            " tiddlerændringer i baggrunden.", false);
+        }
+      } catch (error) {
+        this.onStatus("Synkronisering mislykkedes: " +
+          (error.message || String(error)) +
+          ". Ændringerne er stadig åbne i wikien.", true);
+        if (!this.retryTimer) {
+          this.retryTimer = setTimeout(() => {
+            this.retryTimer = null;
+            void this.flush();
+          }, 15000);
+        }
+      } finally {
+        this.flushing = false;
+        this.state();
+        if (!this.conflicts.size && this.pending.size && !this.retryTimer) this.scheduleFlush();
+      }
+    }
+    hasUnsyncedExceptFlight() {
+      return this.pending.size > 0 || this.conflicts.size > 0;
+    }
+    async pullAll() {
+      if (!this.active || this.pulling || navigator.onLine === false) return;
+      this.pulling = true;
+      try {
+        for (let page = 0; page < 100; page++) {
+          const result = await this.rpc("huSyncPull", this.fileId, this.cursor, 100);
+          if (!result.enabled) {
+            this.onStatus("Den delte ændringslog er ikke tilgængelig.", true);
+            return;
+          }
+          for (const event of result.events || []) this.applyRemote(event);
+          this.cursor = result.cursor;
+          if (!result.hasMore) break;
+        }
+        this.state();
+      } catch (error) {
+        this.onStatus("Kunne ikke hente ændringer: " +
+          (error.message || String(error)), true);
+      } finally {
+        this.pulling = false;
+      }
+    }
+    applyRemote(event) {
+      const title = event.title;
+      if (!title || title.startsWith("$:/")) return;
+      const prior = this.revisions.get(title) || 0;
+      if (event.seq <= prior) return;
+      this.revisions.set(title, event.seq);
+      // Never overwrite an unsent local edit with a remote update.
+      if (this.pending.has(title)) {
+        if (this.pending.get(title).opId !== event.opId) {
+          this.conflicts.set(title, {title, actual:event.seq,
+            expected:this.pending.get(title).baseSeq});
+          this.onStatus("Konflikt: " + title +
+            " er ændret af en anden bruger. Din lokale version er bevaret.", true);
+        }
+        return;
+      }
+      const wiki = this.tw.wiki;
+      if (event.operation === "delete") {
+        if (!wiki.getTiddler(title)) return;
+        this.remoteEchoes.set(title, null);
+        wiki.deleteTiddler(title);
+      } else if (event.operation === "put" && event.fields) {
+        const now = wiki.getTiddler(title);
+        if (now && identicalFields(plainFields(now), event.fields)) return;
+        this.remoteEchoes.set(title, event.fields);
+        wiki.addTiddler(new this.tw.Tiddler(event.fields));
+      }
+    }
+  }
+  window.ForgeDriveDelta = ForgeDriveDelta;
+})();
+</script>
