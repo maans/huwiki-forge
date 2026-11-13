@@ -29,8 +29,8 @@
     {
       "id": "site-publisher",
       "name": "HUWiki SitePublisher",
-      "version": "0.1.9-test.1",
-      "description": "Standalone HTML site publisher: Danish/English toolbar, Mac download, sharing fallback and iPad-safe focus view",
+      "version": "0.1.10-test.1",
+      "description": "Standalone HTML sites: localized HUPedia article text, Mac download, optional sharing and iPad-friendly focus",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
     },
