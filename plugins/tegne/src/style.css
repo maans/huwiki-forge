@@ -1,0 +1,18 @@
+/* HUWiki Tegne 1.1.0-test.1 · Forge test interface; no extra language selector */
+.hu-tegne-app{--hu-ink:#182c36;--hu-line:#d9e2e7;--hu-accent:#17699b;font-family:system-ui,sans-serif;color:var(--hu-ink);max-width:1280px;margin:auto}
+.hu-tegne-app h1{font-size:clamp(2rem,4vw,3.4rem);margin:.2em 0}
+.hu-tegne-app h2{font-size:clamp(1.3rem,2vw,1.8rem);margin:.2em 0 1em}
+.hu-tegne-app h3{font-size:1.1rem;margin:.2em 0 .65em}
+.hu-tegne-intro{padding:clamp(1em,3vw,2em);border:1px solid var(--hu-line);border-radius:18px;background:linear-gradient(145deg,#f0f8ff,#fff);margin-bottom:1.8em}
+.hu-tegne-actions{display:flex;gap:.65em;align-items:center;flex-wrap:wrap}
+.hu-tegne-actions .tc-btn-invisible,.hu-tegne-actions button{border:1px solid #aac4d4;border-radius:8px;background:#fff;color:var(--hu-ink);padding:.65em .9em;font-weight:600;min-height:42px;cursor:pointer}
+.hu-tegne-actions button.hu-tegne-primary{background:var(--hu-accent);color:white;border-color:var(--hu-accent)}
+.hu-tegne-note{font-size:.88rem;color:#526b78;margin:.8em 0}
+.hu-tegne-editor{border:1px solid #b9d6e5;border-radius:14px;padding:clamp(.6em,2vw,1.3em);margin:1.5em 0;background:#fff}
+.hu-tegne-editor header{display:flex;align-items:center;justify-content:space-between;gap:1em;flex-wrap:wrap;margin-bottom:1em}
+.hu-tegne-editor .excalidraw{min-width:0}
+.hu-tegne-library{margin-top:2em}
+.hu-tegne-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(240px,100%),1fr));gap:1em}
+.hu-tegne-card{border:1px solid var(--hu-line);background:#fcfefe;padding:1em;border-radius:12px}
+.hu-tegne-card .hu-tegne-actions button{font-size:.9em}
+@media(max-width:650px){.hu-tegne-editor header{display:block}.hu-tegne-editor{padding:.5em}.hu-tegne-actions{gap:.4em}}
