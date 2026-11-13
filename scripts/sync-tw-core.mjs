@@ -1,5 +1,5 @@
 /*
- * Mirrors the official TiddlyWiki empty.html.
+ * Downloads upstream TiddlyWiki empty.html as a CANDIDATE.
  * Based on HUWiki's wikiFetchAndPinCore_ / wikiDetectCoreVersion_.
  * Executed on GitHub Actions, so browser CORS is not involved.
  */
@@ -33,19 +33,21 @@ export async function syncCore(fetcher = fetch, target = "core") {
   }
   const sha256 = createHash("sha256").update(html).digest("hex");
   const version = detectVersion(html);
-  const filename = join(target, "empty.html");
+  const pinned = await readFile(join(target,"empty.html"),"utf8").catch(()=>null);
+  if (pinned === html) return { changed:false, version, sha256, reason:"same-as-pinned" };
+  const filename = join(target, "candidate-empty.html");
   let previous = "";
   try { previous = await readFile(filename, "utf8"); } catch {}
   if (previous === html) return { changed: false, version, sha256 };
   await mkdir(target, { recursive: true });
   await writeFile(filename, html, "utf8");
-  await writeFile(join(target, "versions.json"), JSON.stringify({
+  await writeFile(join(target, "candidate-version.json"), JSON.stringify({
     schemaVersion: 1,
     sourceUrl: SOURCE,
     version: version,
     sha256: sha256,
     status: "candidate",
-    note: "Official upstream empty.html; compatibility of real Editions requires independent testing."
+    note: "Candidate only: core/empty.html remains pinned until a separately reviewed approval."
   }, null, 2) + "\n", "utf8");
   return { changed: true, version, sha256 };
 }
