@@ -100,8 +100,9 @@ function huSave(fileId, html, expectedFingerprint) {
   const id = huFileId_(fileId);
   if (typeof html !== "string" || !html.length)
     throw new Error("Kan ikke gemme: HTML-indholdet er tomt.");
-  const htmlBlob = Utilities.newBlob(html, "text/html");
-  if (htmlBlob.getBytes().length > HU_MAX_BYTES)
+  // Cheap early guard. Exact UTF-8 size is checked only if the
+  // preflight checksum succeeds; do not build a 2.5 MB blob for conflicts.
+  if (html.length > HU_MAX_BYTES)
     throw new Error("Kan ikke gemme: HTML-indholdet er over 12 MB.");
   const lock = LockService.getScriptLock();
   lock.waitLock(20000);
@@ -122,7 +123,9 @@ function huSave(fileId, html, expectedFingerprint) {
       return {ok: false, conflict: true, meta: huPublicMeta_(current),
         message: "WIKI-KONFLIKT: Filens indhold er ændret på Google Drive siden åbning. Hent en lokal kopi før genindlæsning."};
     }
-    htmlBlob.setName(current.name);
+    const htmlBlob = Utilities.newBlob(html, "text/html", current.name);
+    if (htmlBlob.getBytes().length > HU_MAX_BYTES)
+      throw new Error("Kan ikke gemme: HTML-indholdet er over 12 MB.");
     Drive.Files.update(
       {mimeType: "text/html"},
       id,
