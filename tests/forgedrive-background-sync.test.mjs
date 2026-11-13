@@ -455,3 +455,27 @@ test("read-only collaborator receives remote edits without false dirty warning",
   assert.equal(B.saverHandler.isDirty(),false);
   b.stop();
 });
+
+test("first edit after reopening an HTML snapshot uses the real tiddler base revision", async () => {
+  const f = backendFixture();
+  f.ctx.huSyncEnable(f.file.id);
+  f.ctx.huSyncPush(f.file.id, [op("Already in HTML", 0, "fd_before_snapshot")]);
+  const checksum = f.file.md5Checksum;
+  const saved = f.ctx.huSave(f.file.id, "<html>snapshot 1</html>", checksum, 1);
+  assert.equal(saved.ok, true);
+  const Delta = clientClass();
+  const W = fakeWiki();
+  W.wiki.addTiddler(new W.Tiddler({title:"Already in HTML", text:"hello"}));
+  W.saverHandler.numChanges = 0;
+  const client = new Delta({tw:W,fileId:f.file.id,
+    rpc: async (name,...args) => f.ctx[name](...args)});
+  await client.start();
+  assert.equal(client.cursor,1);
+  assert.equal(client.revisions.get("Already in HTML"),1);
+  W.wiki.addTiddler(new W.Tiddler({title:"Already in HTML", text:"after restart"}));
+  await client.flush();
+  assert.equal(client.pending.size,0);
+  assert.equal(client.conflicts.size,0);
+  assert.equal(f.ctx.huSyncPull(f.file.id,0,10).events[1].fields.text,"after restart");
+  client.stop();
+});
