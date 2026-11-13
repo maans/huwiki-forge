@@ -41,7 +41,7 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  assert.equal(byTitle.get("$:/theme").text,"$:/themes/huwiki/modern");
  assert.equal(byTitle.get("$:/DefaultTiddlers").text,"[[HUWiki Musik – Start]]");
  assert.equal(byTitle.get("$:/plugins/huwiki/music").dependents,"$:/plugins/huwiki/abc");
- for(const t of tiddlers.filter(t=>/^\\$:\\/plugins\\/huwiki\\/lessons-/.test(t.title))){
+ for(const t of tiddlers.filter(t=>t.title.startsWith("$:/plugins/huwiki/lessons-"))){
   assert.equal(t.dependents,"$:/plugins/huwiki/abc",t.title);
  }
  assert.equal(byTitle.get("$:/plugins/huwiki/abc").version,"0.3.31-test.8");
@@ -56,7 +56,7 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  assert.ok(internal[importer.title+"/readme-en"]);
  assert.ok(internal[importer.title+"/readme-da"]);
  assert.ok(internal[importer.title+"/widget.js"].text.includes("tm-import-tiddlers"),"The importer must use TiddlyWiki's native import review");
- assert.doesNotMatch(internal[importer.title+"/widget.js"].text,/google\\.script\\.run/);
+ assert.ok(!internal[importer.title+"/widget.js"].text.includes("google.script.run"));
 });
 
 test("Music Edition plugin packages contain unique internal titles",async()=>{
