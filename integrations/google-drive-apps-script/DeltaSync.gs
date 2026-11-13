@@ -173,6 +173,41 @@ function huSyncPull(wikiId, afterSeq, maxItems) {
   return {enabled: true, events: events, cursor: cursor + count, hasMore: cursor + count < lastSeq};
 }
 
+/**
+ * When a whole-HTML snapshot includes journal events 1..N, it already
+ * contains their tiddler contents. We still need each title's base
+ * revision, otherwise the first edit after reopening would falsely
+ * conflict with the shared journal.
+ *
+ * Read ONLY the title column up through the snapshot watermark; no fields
+ * or large attachments are transferred to the browser.
+ */
+function huSyncSnapshotHeads(wikiId, snapshotSeq) {
+  const id = huFileId_(wikiId);
+  const linked = huSyncLinkedId_(id);
+  if (!linked.sheetId) throw new Error("Synkronisering er ikke aktiveret.");
+  const book = huSyncGetBook_(id, linked.sheetId);
+  const lastSeq = Math.max(0, book.journal.getLastRow() - 1);
+  const limit = Number(snapshotSeq);
+  const diskSeq = Number(linked.wiki.properties &&
+    linked.wiki.properties[HU_SYNC_SNAPSHOT_PROPERTY] || 0);
+  if (!Number.isSafeInteger(limit) || limit < 0 || limit > lastSeq ||
+      limit !== diskSeq)
+    throw new Error("HTML-snapshot og ændringslog har forskellige versionsnumre. Genindlæs wikien.");
+  const latest = new Map();
+  if (limit > 0) {
+    // Only JSON-quoted titles are loaded, not the large field payloads.
+    // Chunking avoids large temporary arrays in the Apps Script runtime.
+    for (let start = 1; start <= limit; start += 1000) {
+      const count = Math.min(1000, limit - start + 1);
+      const titles = book.journal.getRange(start + 1, 4, count, 1).getValues();
+      titles.forEach((row, offset) => latest.set(JSON.parse(String(row[0])), start + offset));
+    }
+  }
+  return {snapshotSeq: limit,
+    heads: [...latest.entries()].map(([title, seq]) => ({title: title, seq: seq}))};
+}
+
 function huSyncValidate_(operations) {
   if (!Array.isArray(operations) || !operations.length ||
       operations.length > HU_SYNC_MAX_OPS ||
