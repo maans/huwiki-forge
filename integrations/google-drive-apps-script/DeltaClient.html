@@ -169,6 +169,24 @@
       this.active = true;
       this.bootstrapping = true;
       this.registerChangeListener();
+      if (this.cursor > 0) {
+        try {
+          const baseline = await this.rpc("huSyncSnapshotHeads", this.fileId, this.cursor);
+          if (baseline.snapshotSeq !== this.cursor || !Array.isArray(baseline.heads))
+            throw new Error("Snapshot-hovedrevisionerne er ugyldige.");
+          for (const item of baseline.heads) {
+            if (typeof item.title === "string" && Number.isSafeInteger(item.seq))
+              this.revisions.set(item.title, item.seq);
+          }
+        } catch (error) {
+          this.active = false;
+          this.bootstrapping = false;
+          this.onStatus("Kunne ikke indlæse snapshotrevisioner: " +
+            (error.message || String(error)), true);
+          this.state();
+          return false;
+        }
+      }
       this.restore();
       this.state();
       const pulled = await this.pullAll();
