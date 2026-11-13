@@ -15,7 +15,7 @@ Tryk **Byg Edition**. Forge henter automatisk den **fastlåste** TiddlyWiki-kern
 
 Et valgfrit felt til en lokal `empty.html` er bevaret til versionskontrol. Den officielle upstream-kerne overvåges i GitHub Actions, men nye versioner gemmes som **kandidater** og erstatter ikke automatisk den version, Editions bruger.
 
-**Separat plugin:** [HUWiki Trim 0.1.5](plugins/trim/dist/plugin.json) er overført med sin MIT-licens. Trim er et plugin, ikke en selvstændig Edition.
+**Separat plugin:** [HUWiki Trim 0.1.5](plugins/trim/dist/plugin.json) er overført med sin MIT-licens. Trim er et plugin, ikke en selvstændig Edition. I Edition Assembler kan du vælge det under **Ekstra plugins**, hvis det skal med i den nyoprettede wiki.
 
 Kør `npm test` (Node.js 20+) for de automatiske tests. De kontrollerer nu også HUPedia-komponenter og samling mod den fastlåste kerne. Enhedstests kan ikke erstatte reel browserafprøvning.
 
