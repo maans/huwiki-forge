@@ -57,10 +57,15 @@
       this.pollTimer = null;
       this.retryTimer = null;
       this.onlineHandler = null;
+      this.visibilityHandler = null;
       this.sequence = 0;
       this.dirtyOutsideSync = false;
       this.unsupported = new Map();
-      this.storage = options.storage === undefined ? window.localStorage : options.storage;
+      try {
+        this.storage = options.storage === undefined ? window.localStorage : options.storage;
+      } catch (_error) {
+        this.storage = null; // Some browsers block iframe/local storage access.
+      }
       this.recoveryKey = "";
       this.storageFailed = false;
       this.listenerInstalled = false;
@@ -88,7 +93,13 @@
     }
     /** Keep unsent edits across a reload; never treat this as remote persistence. */
     persist() {
-      if (!this.recoveryKey || !this.storage) return;
+      if (!this.recoveryKey || !this.storage) {
+        if (!this.storageFailed && this.recoveryKey) {
+          this.storageFailed = true;
+          this.onStatus(this.localize("Lokal gendannelse er ikke tilgængelig i denne browser. Hent en HTML-backup før du lukker.", "Local recovery is unavailable in this browser. Download an HTML backup before closing."), true);
+        }
+        return;
+      }
       const payload = {
         actor: this.actor,
         pending: [...this.pending.values()],
@@ -122,6 +133,7 @@
             typeof op.opId !== "string" ||
             (op.operation === "put" && (!op.fields || op.fields.title !== op.title))) continue;
         this.pending.set(op.title, op);
+        if (Number.isSafeInteger(op.serial)) this.sequence = Math.max(this.sequence, op.serial);
         const wiki = this.tw.wiki;
         const local = wiki.getTiddler(op.title);
         if (op.operation === "delete") {
@@ -142,6 +154,7 @@
         const title = item[0], entry = item[1];
         if (!entry || !entry.fields || entry.fields.title !== title) continue;
         this.unsupported.set(title, entry);
+        if (Number.isSafeInteger(entry.serial)) this.sequence = Math.max(this.sequence, entry.serial);
         const now = this.tw.wiki.getTiddler(title);
         if (!now || !identicalFields(plainFields(now), entry.fields)) {
           this.remoteEchoes.set(title, entry.fields);
@@ -211,6 +224,11 @@
           void this.pullAll();
         }
       }, ACTIVE_POLL_MS);
+      this.visibilityHandler = () => {
+        if (this.active && !document.hidden && navigator.onLine !== false)
+          void this.pullAll().then(ok => { if (ok) this.scheduleFlush(); });
+      };
+      document.addEventListener?.("visibilitychange", this.visibilityHandler);
       if (pulled) this.onStatus(this.localize("Baggrundssynkronisering er aktiv.", "Background synchronization is active."), false);
       this.state();
       return true;
@@ -221,7 +239,9 @@
       if (this.pollTimer) clearInterval(this.pollTimer);
       if (this.retryTimer) clearTimeout(this.retryTimer);
       if (this.onlineHandler) window.removeEventListener?.("online", this.onlineHandler);
+      if (this.visibilityHandler) document.removeEventListener?.("visibilitychange", this.visibilityHandler);
       this.onlineHandler = null;
+      this.visibilityHandler = null;
       this.state();
     }
     registerChangeListener() {
