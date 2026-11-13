@@ -124,14 +124,32 @@ async function openWiki(id) {
     const result = await rpc("huOpen", id);
     enableWorkspace(result.meta);
     const frame = $("wiki");
+    // Never allow editing an out-of-date HTML baseline before the journal
+    // has been replayed and our change listener has been installed.
+    frame.style.pointerEvents = "none";
+    frame.setAttribute("aria-busy", "true");
     frame.srcdoc = result.html;
     report("Wiki indlæst på " + result.elapsedMs + " ms. " +
       (result.meta.canEdit ? "Gemning er aktiveret." : "Du har kun læseadgang."));
-    if (result.meta.canEdit) await installSaver(frame, result.meta.id);
-    await connectDelta(frame, result.meta.id);
+    try {
+      if (result.meta.canEdit) await installSaver(frame, result.meta.id);
+      await connectDelta(frame, result.meta.id);
+    } finally {
+      frame.style.pointerEvents = "";
+      frame.removeAttribute("aria-busy");
+    }
   } catch (error) {
     report("Kunne ikke åbne wikien: " + error.message, true);
   }
+}
+
+async function waitForWiki(frame) {
+  for (let attempt = 0; attempt < 300; attempt++) {
+    const tw = frame.contentWindow && frame.contentWindow.$tw;
+    if (tw && tw.wiki && tw.saverHandler && Array.isArray(tw.saverHandler.savers)) return tw;
+    await new Promise(resolve => setTimeout(resolve, 150));
+  }
+  throw new Error("Wikien kunne ikke starte TiddlyWiki-synkroniseringen.");
 }
 
 async function installSaver(frame, fileId) {
@@ -201,7 +219,12 @@ async function installSaver(frame, fileId) {
             try {
               report("Gemmer på Google Drev…");
               const started = performance.now();
-              const result = await rpc("huSave", fileId, job.text, current.fingerprint);
+              if (job.deltaActive && (job.deltaUnsafe || !Number.isSafeInteger(job.deltaCursor))) {
+                failure(job.callbacks, "Snapshot er blokeret, mens ændringer afventer baggrundssynk. Hent eventuelt lokal backup.");
+                continue;
+              }
+              const result = await rpc("huSave", fileId, job.text, current.fingerprint,
+                job.deltaActive ? job.deltaCursor : null);
               const totalMs = Math.round(performance.now() - started);
               if (result.conflict) {
                 blockedConflict = true;
@@ -218,6 +241,7 @@ async function installSaver(frame, fileId) {
               // The native callback sets numChanges=0. Only restore dirty
               // state for save-worthy edits made AFTER this HTML snapshot.
               const unsavedAfterSnapshot = Math.max(0, changeSerial - job.serial);
+              if (delta && job.deltaActive) delta.noteSnapshotSaved(job.deltaSerial);
               if (unsavedAfterSnapshot) {
                 sh.numChanges = Math.max(sh.numChanges, unsavedAfterSnapshot);
                 sh.updateDirtyStatus();
@@ -248,11 +272,28 @@ async function installSaver(frame, fileId) {
             callback("KONFLIKT: Hent lokal sikkerhedskopi og genindlæs wikien.");
             return true;
           }
-          const job = {text, method, serial:changeSerial, callbacks:[{callback}]};
+          // Called immediately after the synchronous HTML render. The
+          // cursor and local edit serial belong to THESE rendered bytes,
+          // never to a later, already modified wiki state.
+          const syncing = !!(delta && delta.active);
+          const job = {
+            text, method, serial: changeSerial,
+            deltaActive: syncing,
+            deltaCursor: syncing ? delta.cursor : null,
+            deltaSerial: syncing ? delta.sequence : 0,
+            deltaUnsafe: syncing && (delta.bootstrapping || delta.pulling ||
+              delta.flushing || delta.pending.size > 0 ||
+              delta.conflicts.size > 0 || !delta.lastPullSucceeded),
+            callbacks: [{callback}]
+          };
           if (nextSave) {
             nextSave.text = job.text;
             nextSave.method = job.method;
             nextSave.serial = job.serial;
+            nextSave.deltaActive = job.deltaActive;
+            nextSave.deltaCursor = job.deltaCursor;
+            nextSave.deltaSerial = job.deltaSerial;
+            nextSave.deltaUnsafe = job.deltaUnsafe;
             nextSave.callbacks.push(...job.callbacks);
           } else {
             nextSave = job;
@@ -272,13 +313,13 @@ async function installSaver(frame, fileId) {
 
 async function connectDelta(frame, fileId) {
   try {
-    const tw = frame.contentWindow?.$tw;
-    if (!tw || !tw.wiki) throw new Error("TiddlyWiki er endnu ikke startet.");
+    const tw = await waitForWiki(frame);
     if (delta) delta.stop();
     delta = new window.ForgeDriveDelta({
       tw,
       fileId,
       rpc,
+      snapshotSeq: current && current.snapshotSeq || 0,
       onStatus: (message, bad) => {
         $("syncStatus").textContent = message;
         $("syncStatus").style.color = bad ? "#b42318" : "#27634e";
@@ -286,7 +327,8 @@ async function connectDelta(frame, fileId) {
       onState: state => {
         $("saveHint").textContent = state.active ?
           "Tiddlerændringer synkroniseres i baggrunden (" + state.pending +
-          " afventer). Gem på Google Drev laver en komplet HTML-kopi." :
+          " afventer, " + state.conflicts + " konflikter, " + state.unsupported +
+          " kun i HTML-snapshot). Gem på Google Drev laver en komplet HTML-kopi." :
           "Ingen baggrundssynk endnu – Gem laver en komplet HTML-kopi.";
       }
     });
@@ -330,13 +372,18 @@ $("enableSyncButton").addEventListener("click", async () => {
   }
 });
 
-$("saveButton").addEventListener("click", () => {
+$("saveButton").addEventListener("click", async () => {
   if (saving || nextSave) return;
   if (blockedConflict) {
     report("Gemning er blokeret af en konflikt. Hent en lokal kopi før genindlæsning.", true);
     return;
   }
   try {
+    if (delta && delta.active) {
+      const ready = await delta.prepareSnapshot();
+      if (!ready) throw new Error(
+        "Ikke alle tiddlerændringer er synkroniseret. Hent eventuelt lokal backup, og prøv igen.");
+    }
     const tw = $("wiki").contentWindow.$tw;
     if (!tw || !tw.saverHandler) throw new Error("Wikien er ikke klar.");
     if (!tw.saverHandler.saveWiki({method: "save"}))
