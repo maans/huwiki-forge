@@ -48,7 +48,12 @@ class ForgeShare : Form {
     [STAThread] static int Main(string[] args) {
         if (Array.IndexOf(args,"--self-test") >= 0) {
             var node=Node(); if(node==null || !File.Exists(Helper)) return 2;
-            using(var p=Process.Start(Command(node,"--check " + Quote(Helper)))) { p.WaitForExit(); return p.ExitCode; }
+            using(var p=Process.Start(Command(node,"--check " + Quote(Helper)))) { p.WaitForExit(); if(p.ExitCode!=0)return p.ExitCode; }
+            var data=new JavaScriptSerializer().Deserialize<LibraryData>("{\"entries\":[{\"id\":\"test\",\"name\":\"Notes\",\"kind\":\"html\",\"available\":true}]}");
+            if(data.entries.Length!=1 || data.entries[0].name!="Notes")return 3;
+            Application.EnableVisualStyles();
+            using(var form=new ForgeShare()) {form.CreateControl();form.PerformLayout();form.Controls[0].PerformLayout();if(form.libraryButtons.Count!=5 || form.Controls[0].Controls[form.Controls[0].Controls.Count-1].Bottom>form.Controls[0].ClientSize.Height)return 4;}
+            return 0;
         }
         Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
         Application.Run(new ForgeShare()); return 0;
@@ -57,7 +62,7 @@ class ForgeShare : Form {
         Text="ForgeShare"; Width=850; Height=800; MinimumSize=new Size(750,700); StartPosition=FormStartPosition.CenterScreen;
         Font=new Font("Segoe UI",10); Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath);
         var content=new TableLayoutPanel { Dock=DockStyle.Fill, Padding=new Padding(24), ColumnCount=1, RowCount=8 };
-        foreach(var height in new [] {50,35,48,230,35,35,140,55})content.RowStyles.Add(new RowStyle(SizeType.Absolute,height));
+        foreach(var height in new [] {50,35,48,0,35,35,0,55})content.RowStyles.Add(new RowStyle(height==0?SizeType.Percent:SizeType.Absolute,height==0?50:height));
         content.Controls.Add(new Label { Text=T("Mine wikier","My wikis"),Font=new Font("Segoe UI",25,FontStyle.Bold),AutoSize=true },0,0);
         content.Controls.Add(new Label { Text=T("Lokale og delte wikier, samlet ét sted.","Local and shared wikis, together in one place."),AutoSize=true },0,1);
         var toolbar=new FlowLayoutPanel {Dock=DockStyle.Fill,WrapContents=false};
