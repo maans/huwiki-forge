@@ -10,17 +10,13 @@
 <$action-sendmessage $message="hu-tegne-new"/>
 ＋ New drawing
 </$button>
-<$button>
-<$action-sendmessage $message="tm-save-wiki"/>
-Save wiki
-</$button>
 <$link to="Tegne · Udgivelse">Publishing drawings</$link>
 </div>
 
 <p class="hu-tegne-note">The editor is bundled with the HTML wiki and needs no Google account. Remember to save the wiki after editing.</p>
 </section>
 
-<$list filter="[{$:/temp/huwiki/tegne/selected]!is[blank]]" variable="drawing">
+<$list filter="[{$:/temp/huwiki/tegne/selected}!is[blank]]" variable="drawing">
 <section class="hu-tegne-editor">
 <header>
 <h2><$text text=<<drawing>>/></h2>

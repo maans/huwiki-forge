@@ -44,12 +44,26 @@ async function main(){
   await page.goto(pathToFileURL(filename).href,{waitUntil:"load",timeout:120000});
   await page.waitForFunction(()=>window.$tw?.wiki?.getTiddler("Farvefigurer")&&document.querySelector(".hu-tegne-app"),null,{timeout:120000});
   console.log("Boot succeeded, HUWiki Draw visible");
+  const studioText=await page.locator(".hu-tegne-app").innerText();
+  if(/Filter error|Missing closing bracket/i.test(studioText))
+    throw Error("Tegne studio displays an invalid TiddlyWiki filter: "+studioText.slice(0,400));
+  if(await page.locator(".hu-tegne-editor").count())
+    throw Error("Drawing editor must stay closed before a drawing is selected");
+  const introButtons=await page.locator(".hu-tegne-intro button").allTextContents();
+  if(introButtons.some(x=>/^(?:save wiki|gem wikien)$/i.test(x.trim())))
+    throw Error("Tegne duplicates TiddlyWiki's native Save button");
+  console.log("Tegne UI has no filter error or duplicate save control");
   const beforeNew=await page.evaluate(()=>window.$tw.wiki.getTiddlersWithTag("HUWiki/Tegning").length);
   const newButton=page.locator(".hu-tegne-intro .hu-tegne-primary").first();
   await newButton.click({timeout:30000});
   const afterNew=await page.evaluate(()=>window.$tw.wiki.getTiddlersWithTag("HUWiki/Tegning").length);
   if(afterNew!==beforeNew+1)throw Error("New drawing button did not create a TiddlyWiki drawing tiddler");
   console.log("Native new-drawing action creates an editable tiddler");
+  await page.locator(".hu-tegne-editor").waitFor({timeout:30000});
+  const newlyOpened=await page.locator(".hu-tegne-app").innerText();
+  if(/Filter error|Missing closing bracket/i.test(newlyOpened))
+    throw Error("Selecting a drawing triggered a TiddlyWiki filter error");
+
 
   const action=page.locator(".hu-tegne-card").filter({hasText:"Farvefigurer"}).locator("button").first();
   await action.click({timeout:30000});

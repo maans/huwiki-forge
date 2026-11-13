@@ -1,6 +1,6 @@
 # HUWiki Tegne Edition – portering til Forge
 
-Status: 13. november 2026 · **0.1.0-test.1**. Mac/iPad-browsertest mangler.
+Status: 13. november 2026 · **0.1.1-test.1**. Mac/iPad-browsertest mangler.
 
 ## Første testudgave
 
@@ -25,3 +25,7 @@ Den importerede editor alene fylder omtrent **26,6 MB** som JSON. Den færdige s
 Test på Mac og iPad: opret/redigér/duplikér tegninger, Gem/genåbn wiki, skift da/en via `$:/language`, eksportér `Farvefigurer` direkte og `En tegning i en artikel` gennem SitePublisher, kontroller offline SVG, transparens, skrifter og medieafhængigheder. Manglende/private filer må ikke forsvinde lydløst.
 
 Den oprindelige HUWiki 0.3.4-motor og det originale galleri/figurbibliotek skal sammenlignes og migreres separat, med fuld licens- og regressionstest.
+
+## Rettelser i 0.1.1-test.1
+
+Tegne-panelets ekstra gemmeknap er fjernet. Brug TiddlyWikis eksisterende Gem-funktion. Et ugyldigt engelsk filter i redigeringspanelet er rettet; automatikken kontrollerer nu også synlige filterfejl i den rigtige browser.

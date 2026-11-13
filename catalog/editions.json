@@ -12,7 +12,7 @@
     {
       "id": "tegne",
       "name": "HUWiki Tegne Edition (test)",
-      "version": "0.1.0-test.1",
+      "version": "0.1.1-test.1",
       "description": "Offline Excalidraw drawing studio with editable SVG scenes, SitePublisher and bilingual UI; large self-contained file; browser test pending",
       "status": "test",
       "manifest": "../editions/tegne/manifest.json",

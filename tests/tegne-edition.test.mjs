@@ -59,7 +59,7 @@ test("Vendor Excalidraw and React remain real self-contained plugins with their 
 });
 test("HUWiki Tegne standalone studio stays bilingual via the native $:/language without a custom selector",async()=>{
  const studio=edition.tiddlers.find(x=>x.title===base);
- assert.equal(studio.version,"1.1.0-test.1");
+ assert.equal(studio.version,"1.1.1-test.1");
  assert.equal(studio.dependents,"$:/plugins/itw/tw-excalidraw $:/plugins/linonetwo/tw-react");
  const t=JSON.parse(studio.text).tiddlers;
  assert.equal(t[base+"/style.css"].type,"text/css");
@@ -71,7 +71,9 @@ test("HUWiki Tegne standalone studio stays bilingual via the native $:/language 
  for(const language of ["da","en"]){
   const home=t[base+"/home-"+language].text;
   assert.match(home,/<\$excalidraw tiddler=<<drawing>>/);
-  assert.ok(home.includes('tm-save-wiki'),"Native saver not replaced");
+  assert.ok(!home.includes("tm-save-wiki"),"Do not duplicate TiddlyWiki's built-in Save control");
+  assert.ok(home.includes('filter="[{$:/temp/huwiki/tegne/selected}!is[blank]]"'),"Drawing selection must be a valid TiddlyWiki filter");
+  assert.doesNotMatch(home,/Filter error|Save wiki|Gem wikien/,"No redundant Save button or visible error should be part of a template");
   assert.ok(home.includes('hu-tegne-copy'),"Should be able to duplicate drawing");
   assert.ok(home.includes('hu-tegne-new'),"Should be able to create drawing");
  }
