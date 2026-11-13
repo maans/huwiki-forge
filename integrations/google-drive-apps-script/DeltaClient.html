@@ -537,7 +537,13 @@
         this.lastPullSucceeded = true;
       }
       for (const [title, entry] of this.unsupported.entries()) {
-        if (entry && entry.serial <= watermark) this.unsupported.delete(title);
+        if (entry && entry.serial <= watermark) {
+          // This particular oversized tiddler was included in the HTML
+          // bytes rendered before the watermark; future reconciliations
+          // must not mistake it for an unsaved new edit.
+          this.persisted.set(title, entry.fields);
+          this.unsupported.delete(title);
+        }
       }
       if (this.systemDirtySerial <= watermark) this.dirtyOutsideSync = false;
       this.persist();
