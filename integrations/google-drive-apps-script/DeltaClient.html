@@ -72,6 +72,8 @@
       this.bootstrapping = false;
       this.lastPullSucceeded = false;
       this.snapshotSeq = Number(options.snapshotSeq) || 0;
+      this.snapshotFingerprint = String(options.fingerprint || "").toLowerCase();
+      this.snapshotOutdated = false;
       this.systemDirtySerial = 0;
     }
     hasUnsynced() {
@@ -88,7 +90,8 @@
         unsupported: this.unsupported.size,
         cursor: this.cursor,
         unsynced: this.hasUnsynced(),
-        bootstrapping: this.bootstrapping
+        bootstrapping: this.bootstrapping,
+        snapshotOutdated: this.snapshotOutdated
       });
     }
     /** Keep unsent edits across a reload; never treat this as remote persistence. */
@@ -171,8 +174,12 @@
       this.canEdit = !!info.canEdit;
       // The cursor belongs to the EXACT HTML bytes loaded by huOpen, not
       // to a newer metadata read made while the iframe was booting.
-      if (Number(info.snapshotSeq || 0) !== this.snapshotSeq) {
+      if (Number(info.snapshotSeq || 0) !== this.snapshotSeq ||
+          !/^[a-f0-9]{32}$/.test(this.snapshotFingerprint) ||
+          String(info.fingerprint || "").toLowerCase() !== this.snapshotFingerprint) {
+        this.snapshotOutdated = true;
         this.onStatus(this.localize("Google Drev har et nyere HTML-snapshot. Genåbn wikien før synkronisering.", "Google Drive has a newer HTML snapshot. Reopen the wiki before syncing."), true);
+        this.state();
         return false;
       }
       this.cursor = this.snapshotSeq;
@@ -317,7 +324,8 @@
       });
     }
     scheduleFlush() {
-      if (!this.pending.size || !this.canEdit || this.bootstrapping) return;
+      if (!this.pending.size || !this.canEdit || this.bootstrapping ||
+          this.snapshotOutdated) return;
       if (![...this.pending.keys()].some(title => !this.conflicts.has(title))) return;
       if (this.flushTimer) clearTimeout(this.flushTimer);
       this.flushTimer = setTimeout(() => {
@@ -326,7 +334,8 @@
       }, QUIET_MS);
     }
     async flush() {
-      if (!this.active || this.bootstrapping || this.flushing || !this.canEdit || !this.pending.size) return;
+      if (!this.active || this.bootstrapping || this.flushing ||
+          this.snapshotOutdated || !this.canEdit || !this.pending.size) return;
       if (navigator.onLine === false) {
         this.onStatus(this.localize("Offline: dine tiddlerændringer afventer forbindelse.", "Offline: your edits are queued until the connection returns."), true);
         return;
@@ -352,8 +361,10 @@
         const result = await this.rpc("huSyncPush", this.fileId, batch.map(op => ({
           title: op.title, operation: op.operation, fields: op.fields,
           baseSeq: op.baseSeq, opId: op.opId, actor: op.actor
-        })));
-        if (result.conflict) {
+        })), this.snapshotFingerprint);
+        if (result.snapshotStale) {
+          this.markSnapshotOutdated();
+        } else if (result.conflict) {
           for (const conflict of result.conflicts || []) {
             this.conflicts.set(conflict.title, conflict);
           }
@@ -413,8 +424,14 @@
      * render-time watermark. Later changes are NOT covered by that upload.
      * Other live clients must reopen the HTML to see snapshot-only assets.
      */
-    noteSnapshotSaved(watermark) {
+    noteSnapshotSaved(watermark, fingerprint) {
       if (!Number.isSafeInteger(watermark)) return;
+      const next = String(fingerprint || "").toLowerCase();
+      if (/^[a-f0-9]{32}$/.test(next)) {
+        this.snapshotFingerprint = next;
+        this.snapshotOutdated = false;
+        this.lastPullSucceeded = true;
+      }
       for (const [title, entry] of this.unsupported.entries()) {
         if (entry && entry.serial <= watermark) this.unsupported.delete(title);
       }
@@ -428,15 +445,28 @@
      */
     async prepareSnapshot() {
       if (!this.active) return true;
-      if (navigator.onLine === false || this.bootstrapping || this.flushing)
+      if (this.snapshotOutdated || navigator.onLine === false ||
+          this.bootstrapping || this.flushing)
         return false;
       if (this.pending.size && !this.conflicts.size) await this.flush();
       if (this.pending.size || this.conflicts.size || this.flushing) return false;
       return !!(await this.pullAll()) && !this.pending.size &&
         !this.conflicts.size && !this.flushing;
     }
+    markSnapshotOutdated() {
+      if (!this.snapshotOutdated) {
+        this.snapshotOutdated = true;
+        this.lastPullSucceeded = false;
+        this.onStatus(this.localize(
+          "En anden bruger har gemt en nyere HTML-wiki. Dine lokale ændringer er bevaret, men synk er sat på pause. Hent en lokal backup, og genåbn wikien.",
+          "Another user saved a newer HTML wiki. Your local edits remain, but sync is paused. Download a local backup and reopen the wiki."
+        ), true);
+        this.state();
+      }
+    }
     async pullAll() {
-      if (!this.active || this.pulling || navigator.onLine === false) return false;
+      if (!this.active || this.pulling || this.snapshotOutdated ||
+          navigator.onLine === false) return false;
       this.pulling = true;
       const beforeLocalEdit = this.sequence;
       let appliedRemote = 0;
@@ -446,6 +476,10 @@
           const result = await this.rpc("huSyncPull", this.fileId, this.cursor, 100);
           if (!result.enabled) {
             this.onStatus(this.localize("Den delte ændringslog er ikke tilgængelig.", "The shared change log is unavailable."), true);
+            return false;
+          }
+          if (String(result.fingerprint || "").toLowerCase() !== this.snapshotFingerprint) {
+            this.markSnapshotOutdated();
             return false;
           }
           for (const event of result.events || []) {
