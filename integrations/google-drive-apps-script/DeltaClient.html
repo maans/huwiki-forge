@@ -59,6 +59,13 @@
       this.sequence = 0;
       this.dirtyOutsideSync = false;
       this.unsupported = new Map();
+      this.storage = options.storage === undefined ? window.localStorage : options.storage;
+      this.recoveryKey = "";
+      this.storageFailed = false;
+      this.listenerInstalled = false;
+      this.bootstrapping = false;
+      this.lastPullSucceeded = false;
+      this.snapshotSeq = Number(options.snapshotSeq) || 0;
     }
     hasUnsynced() {
       return this.pending.size > 0 || this.flushing ||
@@ -72,32 +79,109 @@
         pending: this.pending.size,
         conflicts: this.conflicts.size,
         unsupported: this.unsupported.size,
-        cursor: this.cursor
+        cursor: this.cursor,
+        unsynced: this.hasUnsynced(),
+        bootstrapping: this.bootstrapping
       });
+    }
+    /** Keep unsent edits across a reload; never treat this as remote persistence. */
+    persist() {
+      if (!this.recoveryKey || !this.storage) return;
+      const payload = {
+        actor: this.actor,
+        pending: [...this.pending.values()],
+        conflicts: [...this.conflicts.entries()],
+        unsupported: [...this.unsupported.entries()]
+      };
+      try {
+        if (payload.pending.length || payload.conflicts.length || payload.unsupported.length) {
+          this.storage.setItem(this.recoveryKey, JSON.stringify(payload));
+        } else {
+          this.storage.removeItem(this.recoveryKey);
+        }
+      } catch (error) {
+        if (!this.storageFailed) {
+          this.storageFailed = true;
+          this.onStatus("Browseren kunne ikke sikre lokale synkændringer. Hent straks en lokal HTML-sikkerhedskopi.", true);
+        }
+      }
+    }
+    restore() {
+      if (!this.recoveryKey || !this.storage) return;
+      let saved;
+      try { saved = JSON.parse(this.storage.getItem(this.recoveryKey) || "null"); }
+      catch (_error) { this.onStatus("Ugyldig lokal synkkø. Hent en lokal sikkerhedskopi.", true); return; }
+      if (!saved || !Array.isArray(saved.pending)) return;
+      if (typeof saved.actor === "string") this.actor = saved.actor;
+      for (const op of saved.pending) {
+        if (!op || !op.title || op.title.startsWith("$:/") ||
+            !["put","delete"].includes(op.operation) ||
+            !Number.isSafeInteger(op.baseSeq) || op.baseSeq < 0 ||
+            typeof op.opId !== "string" ||
+            (op.operation === "put" && (!op.fields || op.fields.title !== op.title))) continue;
+        this.pending.set(op.title, op);
+        const wiki = this.tw.wiki;
+        const local = wiki.getTiddler(op.title);
+        if (op.operation === "delete") {
+          if (local) {
+            this.remoteEchoes.set(op.title, null);
+            wiki.deleteTiddler(op.title);
+          }
+        } else if (!local || !identicalFields(plainFields(local), op.fields)) {
+          this.remoteEchoes.set(op.title, op.fields);
+          wiki.addTiddler(new this.tw.Tiddler(op.fields));
+        }
+      }
+      for (const item of saved.conflicts || []) {
+        if (Array.isArray(item) && this.pending.has(item[0])) this.conflicts.set(item[0], item[1]);
+      }
+      for (const item of saved.unsupported || []) {
+        if (Array.isArray(item) && typeof item[0] === "string") {
+          this.unsupported.set(item[0], item[1]);
+        }
+      }
+      if (this.pending.size || this.unsupported.size || this.conflicts.size)
+        this.onStatus("Lokale ikke-synkroniserede ændringer blev gendannet. De er endnu ikke gemt på Drev.", true);
     }
     async start(initialInfo) {
       if (this.active) return true;
       const info = initialInfo || await this.rpc("huSyncInfo", this.fileId);
       if (!info.enabled) return false;
       this.canEdit = !!info.canEdit;
+      this.cursor = Number.isSafeInteger(info.snapshotSeq) && info.snapshotSeq >= 0 ?
+        info.snapshotSeq : this.snapshotSeq;
+      this.recoveryKey = info.accountKey ?
+        "forgeDriveDelta.v1:" + this.fileId + ":" + info.accountKey : "";
+      if (!this.recoveryKey) {
+        // Without account isolation, do not risk leaking locally cached edits
+        // from one Google login to another on the same machine.
+        this.onStatus("Kontoen kunne ikke identificeres til sikker lokal gendannelse.", true);
+      }
+      const sh = this.tw.saverHandler;
+      if (sh && sh.isDirty && sh.isDirty()) this.dirtyOutsideSync = true;
       this.active = true;
+      this.bootstrapping = true;
       this.registerChangeListener();
+      this.restore();
       this.state();
-      await this.pullAll();
-      // Offline edits must resume even when the user makes no new changes.
+      const pulled = await this.pullAll();
+      this.bootstrapping = false;
+      // In particular, restarting after a failed network request must send
+      // pending drafts even if no new typing occurs.
+      if (pulled && this.pending.size) this.scheduleFlush();
       this.onlineHandler = () => {
         if (!this.active) return;
-        void this.pullAll().then(() => this.flush());
+        void this.pullAll().then(ok => { if (ok) this.scheduleFlush(); });
       };
       window.addEventListener?.("online", this.onlineHandler);
       this.pollTimer = setInterval(() => {
-        // Do not consume Apps Script quotas for an inactive/background tab.
         if (this.active && navigator.onLine !== false &&
             typeof document !== "undefined" && !document.hidden) {
           void this.pullAll();
         }
       }, ACTIVE_POLL_MS);
-      this.onStatus("Baggrundssynkronisering er aktiv.", false);
+      if (pulled) this.onStatus("Baggrundssynkronisering er aktiv.", false);
+      this.state();
       return true;
     }
     stop() {
