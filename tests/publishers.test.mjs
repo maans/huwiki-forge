@@ -37,7 +37,7 @@ for (const row of cases) {
     const plugin=await json(row.path);
     const entries=JSON.parse(plugin.text).tiddlers;
     const js=entries[Object.keys(entries).find(x=>x.endsWith("/startup.js"))].text;
-    assert.doesNotThrow(()=>new Script(js,{filename:row.id+"/startup.js"}));
+    try { new Script(js,{filename:row.id+"/startup.js"}); } catch(err) { console.error(err.stack); throw err; }
     assert.ok(js.includes('Indstillinger'),"Collapsible configuration should be present");
     assert.ok(js.includes('Overblik'),"An overview-first preview should be present");
     if(row.id==="site-publisher"){
