@@ -58,3 +58,21 @@ test("HTML app exposes local upload, Google Drive invitation and wiki saver", ()
   assert.match(ui, /huwiki-google-drive/);
   assert.match(ui, /iframe id="wiki"/);
 });
+
+test("Apps Script and HTML-service client both parse as JavaScript", async () => {
+  const vm = await import("node:vm");
+  assert.doesNotThrow(() => new vm.Script(server));
+  const scriptMatch = ui.match(/<script>([\s\S]*?)<\/script>/);
+  assert.ok(scriptMatch, "Expected one inline client script");
+  // Apps Script templates insert a JSON string before evaluating the page.
+  const browserScript = scriptMatch[1].replace(/<\?!= initialIdJson \?>/g, '""');
+  assert.doesNotThrow(() => new vm.Script(browserScript));
+});
+
+test("TiddlyWiki saver uses synchronous boolean + asynchronous callback", () => {
+  assert.match(ui, /req\.callback\(null\)/);
+  assert.match(ui, /return true;\s*\}\s*\}\);/);
+  assert.match(ui, /capabilities:\s*\["save","autosave"\]/);
+  assert.match(ui, /changeSerial\s*>\s*job\.serial/);
+  assert.match(ui, /Hent lokal sikkerhedskopi/);
+});
