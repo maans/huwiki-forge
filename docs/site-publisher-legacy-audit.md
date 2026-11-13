@@ -53,3 +53,10 @@ Den gamle `SiteWorkshop.js` er inspiceret, inklusive den komprimerede JavaScript
 ## Status: Sitelayout i Forge
 
 **0.1.12-test.1** har ét layoutvalg i det eksisterende SitePublisher-panel: Auto, Standard, Modern, Retro, Vanilla og HUPedia. Auto følger den aktive TW-theme-identitet. Stylingen ligger i særskilte CSS-tiddlere og indlejres i én HTML-fil. Der er ikke indført den gamle SiteWorkshops lange liste af detaljerede designkontroller. Auto/CSS er dækket af automatiske tests, men sammenligning i browser mangler endnu.
+
+
+## Status: CutOut og mediehåndtering i Forge
+
+**0.1.13-test.1 (13. november 2026):** Den gamle `CutOutSiteRuntime.js`, `siteCutoutWidgets()`, `cutoutAssets()` og `cutoutTitle()` er gennemgået. Én lokal read-only CutOut-læser er integreret i den nye SitePublishers fælles HTML-motor, hvor billed- og animationsreferencer valideres før udgivelse. Runtime, CutOut-JSON, CSS og interne billeddata pakkes i samme HTML-fil. Ingen editor, Google-synkronisering eller ekstra sprogknap følger med. Ligeledes kan direkte image/audio/video-tiddlere og lokale billedhenvisninger eksporteres som data-URL'er. Eksterne eller utilgængelige mediekilder giver en konkret fejl frem for en lydløs udeladelse.
+
+Den nye brugerflade, sitelayouts, HUPedia, ABC og fokusvisning er ikke bevidst ændret. **Det er en første teknisk portering, ikke en browsergodkendt version.** CutOut bør prøves med dukker, animation, indlejrede teaterscener, kamerabevægelser og flere billedvarianter på Mac/iPad samt i en afbrudt netforbindelse. Excalidraw/Tegne og komplet SVG-/video-dækning er stadig næste særskilte udviklingstrin.

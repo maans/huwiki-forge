@@ -9,7 +9,7 @@ async function json(path) {
 }
 
 const cases=[
-  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.12-test.1"},
+  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.13-test.1"},
   {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.8-test.1"}
 ];
 
@@ -210,7 +210,7 @@ test("SitePublisher exports the source matching TiddlyWiki language for HUPedia 
   const begin=source.indexOf("function articleSource(title,lang){");
   const end=source.indexOf("\nfunction embeddedArticle(",begin);
   assert.ok(begin>=0&&end>begin,"A shared article-source resolver is required");
-  assert.ok(source.includes("embeddedArticle(title,opts.lang||wikiLanguage())"),"HTML export must pass the selected language");
+  assert.ok(source.includes("embeddedArticle(title,opts.lang||wikiLanguage(),publicationContext)"),"HTML export must pass the selected language");
   assert.ok(source.includes("articleSource(e.title,lang)"),"The overview must use the same language as the HTML export");
   assert.ok(source.includes("articleSource(title,wikiLanguage())"),"Source-list selection must use the current wiki language");
 
@@ -239,7 +239,7 @@ test("SitePublisher reuses the HUPedia article template and original styling",as
  const p=await json("plugins/site-publisher/dist/plugin.json");
  const source=JSON.parse(p.text).tiddlers[p.title+"/startup.js"].text;
  const start=source.indexOf("function isHupediaArticle(title){");
- const end=source.indexOf("function embeddedArticle(title,lang){",start);
+ const end=source.indexOf("function embeddedArticle(title,lang,exportContext){",start);
  assert.ok(start>=0&&end>start,"HUPedia publication helpers must exist");
  assert.ok(source.includes("renderedPedia||$tw.wiki.renderText("),"Pedia render must be preferred over bare source text");
  assert.ok(source.includes("css+=publicationComponentsCss(entries);"),"Article component CSS must be bundled into exported HTML");
