@@ -1,0 +1,57 @@
+<div class="hu-tegne-app">
+
+<section class="hu-tegne-intro">
+<h1>HUWiki Draw</h1>
+
+<p>An editable Excalidraw studio. Shapes and strokes are stored in your own TiddlyWiki tiddlers.</p>
+
+<div class="hu-tegne-actions">
+<$button class="hu-tegne-primary">
+<$action-sendmessage $message="hu-tegne-new"/>
+＋ New drawing
+</$button>
+<$button>
+<$action-sendmessage $message="tm-save-wiki"/>
+Save wiki
+</$button>
+<$link to="Tegne · Udgivelse">Publishing drawings</$link>
+</div>
+
+<p class="hu-tegne-note">The editor is bundled with the HTML wiki and needs no Google account. Remember to save the wiki after editing.</p>
+</section>
+
+<$list filter="[{$:/temp/huwiki/tegne/selected]!is[blank]]" variable="drawing">
+<section class="hu-tegne-editor">
+<header>
+<h2><$text text=<<drawing>>/></h2>
+<div class="hu-tegne-actions">
+<$button><$action-sendmessage $message="hu-tegne-copy" $param=<<drawing>>/>Duplicate</$button>
+<$button><$action-sendmessage $message="hu-tegne-source" $param=<<drawing>>/>Download .excalidraw</$button>
+<$button><$action-sendmessage $message="hu-tegne-close"/>Close</$button>
+</div>
+</header>
+<$excalidraw tiddler=<<drawing>> width="100%" height="640px" autoFocus="no"/>
+<p class="hu-tegne-note">This is an editable drawing in your wiki. Use TiddlyWiki's Save action to keep edits in the HTML file.</p>
+</section>
+</$list>
+
+<section class="hu-tegne-library">
+<h2>Drawings in this wiki</h2>
+
+<p>Open a drawing or duplicate it to experiment without replacing the original.</p>
+
+<div class="hu-tegne-grid">
+<$list filter="[tag[HUWiki/Tegning]!has[draft.of]sort[title]]" emptyMessage="""<p>No drawings yet. Choose <strong>New drawing</strong> to begin.</p>""">
+<article class="hu-tegne-card">
+<h3><$text text=<<currentTiddler>>/></h3>
+<p><$view field="hu-description"/></p>
+<div class="hu-tegne-actions">
+<$button class="hu-tegne-primary"><$action-sendmessage $message="hu-tegne-open" $param=<<currentTiddler>>/>Open</$button>
+<$button><$action-sendmessage $message="hu-tegne-copy" $param=<<currentTiddler>>/>Duplicate</$button>
+</div>
+</article>
+</$list>
+</div>
+</section>
+
+</div>
