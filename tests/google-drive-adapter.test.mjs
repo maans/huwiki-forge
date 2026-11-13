@@ -41,7 +41,10 @@ test("Google Drive integration is strictly optional in Forge", () => {
 test("Apps Script runs as the accessing user and does not require mail or URL Fetch scopes", () => {
   assert.equal(manifest.webapp.executeAs, "USER_ACCESSING");
   assert.equal(manifest.webapp.access, "ANYONE");
-  assert.deepEqual(manifest.oauthScopes, ["https://www.googleapis.com/auth/drive"]);
+  assert.deepEqual(manifest.oauthScopes, [
+    "https://www.googleapis.com/auth/drive",
+    "https://www.googleapis.com/auth/spreadsheets"
+  ]);
   assert.equal(manifest.dependencies.enabledAdvancedServices[0].version, "v3");
   assert.doesNotMatch(server, /UrlFetchApp\s*\.|MailApp\s*\.|GmailApp\s*\./);
   assert.doesNotMatch(server, /PickerBuilder|google\.picker/);
@@ -87,6 +90,8 @@ test("TiddlyWiki saver uses synchronous boolean + asynchronous callback", () => 
   assert.match(ui, /id="saveButton"/);
   assert.match(ui, /saveWiki\(\{method:\s*"save"\}\)/);
   assert.match(ui, /beforeunload/);
+  assert.match(ui, /id="enableSyncButton"/);
+  assert.match(ui, /HtmlService\.createHtmlOutputFromFile\("DeltaClient"\)/);
   assert.doesNotMatch(ui, /savePending\s*=/);
   assert.match(ui, /Hent lokal sikkerhedskopi/);
 });
