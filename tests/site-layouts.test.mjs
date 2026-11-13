@@ -9,7 +9,7 @@ const base="$:/plugins/huwiki/site-publisher";
 const modes=["modern","retro","vanilla","hupedia"];
 test("SitePublisher bundles readable, self-contained stylesheet per legacy design",async()=>{
   const plugin=await getJson("plugins/site-publisher/dist/plugin.json");
-  assert.equal(plugin.version,"0.1.14-test.1");
+  assert.equal(plugin.version,"0.1.15-test.1");
   const t=JSON.parse(plugin.text).tiddlers;
   for(const id of modes){
     const src=t[base+"/layouts/"+id+".css"];
