@@ -14,7 +14,7 @@ For tjenester der kræver en server (fx modtagelse af offentlige formularbesvare
 
 | Pakke | Status | Kilde og resultat |
 | --- | --- | --- |
-| HUPedia Edition | **Migreret; dansk/engelsk UI og demotekster i 0.2.3-test.1; ny browsertest mangler** | Originalt plugin `$:/plugins/huwiki/hupedia` (21 tiddlere), tema `$:/themes/huwiki/hupedia` (2 tiddlere) og otte redigerbare eksempel-tiddlere. Manifest i `editions/hupedia/`. Sprog følger `$:/language` uden ekstra knapper; datafelter og tags bevares |
+| HUPedia Edition | **Migreret; dansk/engelsk UI og læsbar WikiText i 0.2.4-test.1; ny browsertest mangler** | Originalt plugin `$:/plugins/huwiki/hupedia` (21 tiddlere), tema `$:/themes/huwiki/hupedia` (2 tiddlere) og otte redigerbare eksempel-tiddlere. Manifest i `editions/hupedia/`. Sprog følger `$:/language` uden ekstra knapper; datafelter og tags bevares |
 | HUWiki Trim | **Migreret; indstillinger er vist i brugerens HUPedia-browsertest** | Version 0.1.5, MIT-licens, tre interne tiddlere. `plugins/trim/dist/plugin.json` |
 | Demo Edition | **Browsertestet** | Kontrol af boot, startup-plugin, redigering og TiddlyWikis egen Gem |
 
@@ -57,6 +57,14 @@ Ingen manglende Google-funktion må erstattes med en dummyknap eller skjult obli
 ## Sprogkontrol ved Edition-migration
 
 Når vi importerer **AI, Musik, Tegne, CutOut, Studio, Shop, Spørgeskema, Slideshow, AV, HUPin** og øvrige Editions, gennemgår vi hver editions UI-tiddlere, pluginmetadata og JavaScript for hårdkodede danske tekster. Eksisterende oversættelser bevares og tilpasses TiddlyWikis sprogmekanisme. Manglende engelske tekster oversættes og afprøves, før Editionen markeres som færdig. Det gælder også fælles plugins installeret i en anden Edition, og det skal fungere uden ekstra sprogvælgerknapper. Se også [pluginstandarden](plugin-standard.md).
+
+## Redigeringsvenlig WikiText
+
+Ved import skal **redigeringstilstand være lige så gennemtænkt som visningstilstand**: almindelige artikler med tydelige blanklinjer, overskrifter og listepunkter i kildekoden, og ingen sprogbetingede blok-widgets i artikelens egen `text`. Ved gengivelse af felter og skabeloner skal vi bruge eksplicit **`$mode="block"`**, så TiddlyWikis overskrifter og lister bevares.
+
+HUPedia 0.2.4-test.1 anvender den danske artikeltekst i `text` og den valgfrie engelske i `text-en`, med en separat flerslinjet editor. De fælles lokaliserings- og visningsregler ligger i systemtiddlere. Redaktionens statusoversigt bruger nu korrekt HTML-listestruktur i stedet for `<br/>` som linjeadskillelse. Udgangspunktet er stadig TiddlyWikis indbyggede sprogindstilling, uden ekstra sprogknapper.
+
+**Browseraccept:** Kontrollér at `!`-overskrifter, `*`-lister, paragraph-blanklinjer, faktabokse, statusoversigt og redigering af `text-en` fungerer efter en ny Edition-build og efter gem/genåbn. Automatiske tests kontrollerer format og pakning, men browserrendering skal valideres separat.
 
 ## Kernen må ikke ændres bag om ryggen på Editions
 
