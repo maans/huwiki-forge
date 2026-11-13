@@ -1,0 +1,49 @@
+name: Import pinned Tegne vendor bundles
+on:
+  push:
+    branches:
+      - feat/tegne-edition-offline-20261113
+    paths:
+      - scripts/build-tegne-vendor.mjs
+      - .github/workflows/import-tegne-vendor.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Retrieve and checksum the archived upstream releases
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+        run: node scripts/build-tegne-vendor.mjs
+      - name: Verify generated plugin contents and no truncated source
+        run: |
+          node --input-type=module <<'NODE'
+          import fs from 'node:fs';
+          for(const [filename,title,minLength] of [
+            ['plugins/tegne-excalidraw/dist/plugin.json','$:/plugins/itw/tw-excalidraw',8_000_000],
+            ['plugins/tegne-react/dist/plugin.json','$:/plugins/linonetwo/tw-react',100_000]
+          ]){
+            const plugin=JSON.parse(fs.readFileSync(filename,'utf8'));
+            const store=JSON.parse(plugin.text).tiddlers;
+            if(plugin.title!==title||plugin.text.length<minLength)throw Error('Invalid generated plugin '+title);
+            if(title.includes('excalidraw')&&!store['$:/plugins/itw/tw-excalidraw/widget.js'].text.includes('huwikiExportSvg'))throw Error('Missing SitePublisher SVG bridge');
+            console.log(filename,title,plugin.text.length,Object.keys(store).length);
+          }
+          NODE
+      - name: Commit reproducible, offline-ready plugin packages to this branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add plugins/tegne-excalidraw/dist/plugin.json plugins/tegne-react/dist/plugin.json
+          if ! git diff --cached --quiet; then
+            git commit -m "vendor(tegne): pin Excalidraw and React for offline Forge assembly"
+            git push origin HEAD:feat/tegne-edition-offline-20261113
+          fi
