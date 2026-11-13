@@ -1,0 +1,57 @@
+<div class="hu-tegne-app">
+
+<section class="hu-tegne-intro">
+<h1>HUWiki Tegne</h1>
+
+<p>Et redigerbart tegneatelier med Excalidraw. Figurer og streger gemmes i dine egne TiddlyWiki-tiddlere.</p>
+
+<div class="hu-tegne-actions">
+<$button class="hu-tegne-primary">
+<$action-sendmessage $message="hu-tegne-new"/>
+＋ Ny tegning
+</$button>
+<$button>
+<$action-sendmessage $message="tm-save-wiki"/>
+Gem wikien
+</$button>
+<$link to="Tegne · Udgivelse">Sådan udgiver du tegninger</$link>
+</div>
+
+<p class="hu-tegne-note">Tegnemotoren følger med i HTML-wikien og kræver ikke Google-login. Husk at gemme selve wikien efter redigering.</p>
+</section>
+
+<$list filter="[{$:/temp/huwiki/tegne/selected}!is[blank]]" variable="drawing">
+<section class="hu-tegne-editor">
+<header>
+<h2><$text text=<<drawing>>/></h2>
+<div class="hu-tegne-actions">
+<$button><$action-sendmessage $message="hu-tegne-copy" $param=<<drawing>>/>Duplikér</$button>
+<$button><$action-sendmessage $message="hu-tegne-source" $param=<<drawing>>/>Hent .excalidraw</$button>
+<$button><$action-sendmessage $message="hu-tegne-close"/>Luk</$button>
+</div>
+</header>
+<$excalidraw tiddler=<<drawing>> width="100%" height="640px" autoFocus="no"/>
+<p class="hu-tegne-note">Tegningen er redigerbar her i wikien. Brug TiddlyWikis Gem-funktion for at gemme ændringer til HTML-filen.</p>
+</section>
+</$list>
+
+<section class="hu-tegne-library">
+<h2>Tegninger i denne wiki</h2>
+
+<p>Åbn en tegning, eller lav en kopi, du kan ændre uden at overskrive originalen.</p>
+
+<div class="hu-tegne-grid">
+<$list filter="[tag[HUWiki/Tegning]!has[draft.of]sort[title]]" emptyMessage="""<p>Der er endnu ingen tegninger. Vælg <strong>Ny tegning</strong> for at begynde.</p>""">
+<article class="hu-tegne-card">
+<h3><$text text=<<currentTiddler>>/></h3>
+<p><$view field="hu-description"/></p>
+<div class="hu-tegne-actions">
+<$button class="hu-tegne-primary"><$action-sendmessage $message="hu-tegne-open" $param=<<currentTiddler>>/>Åbn</$button>
+<$button><$action-sendmessage $message="hu-tegne-copy" $param=<<currentTiddler>>/>Lav kopi</$button>
+</div>
+</article>
+</$list>
+</div>
+</section>
+
+</div>
