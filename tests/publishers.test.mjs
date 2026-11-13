@@ -9,8 +9,8 @@ async function json(path) {
 }
 
 const cases=[
-  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.4-test.1"},
-  {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.6-test.1"}
+  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.6-test.1"},
+  {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.7-test.1"}
 ];
 
 for (const row of cases) {
@@ -41,11 +41,20 @@ for (const row of cases) {
     assert.ok(js.includes('Indstillinger'),"Collapsible configuration should be present");
     assert.ok(js.includes('Overblik'),"An overview-first preview should be present");
     if(row.id==="site-publisher"){
-      assert.ok(js.includes('items.every(function(x){return x.kind==="article";})?"Artikler"'));
+      assert.ok(js.includes('items.every(function(x){return x.kind==="article";})?word("Artikler")'));
       assert.ok(js.includes('getTiddlerText("$:/SiteTitle")'));
       assert.ok(js.includes("renderOverview(selected)"));
+      assert.ok(js.includes('getTiddlerText("$:/language"'),"Must follow the wiki language");
+      assert.ok(js.includes("function wikiLanguage()"));
+      assert.ok(js.includes('Download HTML'),"English interface labels");
+      const downloader=js.slice(js.indexOf("function downloadHtml("),js.indexOf("function shareHtml("));
+      assert.ok(downloader.includes("link.download=filename"));
+      assert.ok(downloader.includes("link.click()"));
+      assert.doesNotMatch(downloader,/navigator\.share|showSaveFilePicker/,"Mac download cannot open the native share sheet");
+      assert.ok(js.includes("function shareHtml("),"Native sharing remains a separate action");
     } else {
       assert.ok(js.includes("huprint-overview-grid"));
+      assert.ok(js.includes('getTiddlerText("$:/language"'),"PDF Publisher must follow wiki language");
       assert.ok(js.includes("schedulePreview()"));
       assert.ok(js.includes('renderBookSpreads(lastPreviewImages)'));
       assert.ok(js.includes('if(previewMode==="overview")'));
@@ -66,6 +75,34 @@ test("both publishers are discoverable as optional add-ons and not mandatory in 
   for (const edition of catalog.editions) {
     const manifest=await json("editions/"+edition.id+"/manifest.json");
     for (const row of cases)assert.ok(!manifest.plugins.includes("../"+row.path));
+  }
+});
+
+
+test("Publisher toolbar descriptions follow TiddlyWiki language without an extra selector",async()=>{
+  for(const row of cases) {
+    const p=await json(row.path);
+    const entries=JSON.parse(p.text).tiddlers;
+    const suffix=row.id==="site-publisher"?"Toolbar":"Toolbar";
+    const toolbar=entries[p.title+"/"+suffix];
+    assert.ok(toolbar,"Toolbar tiddler missing");
+    for(const field of ["description","text"]){
+      assert.match(toolbar[field],/\$:\/language/,"Language must come from TiddlyWiki");
+      assert.match(toolbar[field],/\$:\/languages\/da/);
+    }
+    assert.ok(entries[p.title+"/readme"],"Internal README must be included");
+    assert.ok(entries[p.title+"/readme-en"],"English README must be included");
+    assert.ok(entries[p.title+"/readme-da"],"Danish README must be included");
+    const script=entries[p.title+"/startup.js"].text;
+    assert.doesNotMatch(script,/<select[^>]*(?:language|sprog)|lang(?:uage)?Switch|languageToggle/i);
+  }
+});
+
+test("both Publisher versions match catalog metadata",async()=>{
+  const catalog=await json("catalog/editions.json");
+  for(const row of cases) {
+    const entry=catalog.plugins.find(p=>p.id===row.id);
+    assert.equal(entry?.version,row.version);
   }
 });
 
