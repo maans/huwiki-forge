@@ -12,9 +12,14 @@ For tjenester der kræver en server (fx modtagelse af offentlige formularbesvare
 
 | Pakke | Status | Kilde og resultat |
 | --- | --- | --- |
-| HUPedia Edition | **Migreret, automatisk test bestået; browsertest afventer** | Originalt plugin `$:/plugins/huwiki/hupedia` (21 tiddlere), tema `$:/themes/huwiki/hupedia` (2 tiddlere) og otte redigerbare eksempel-tiddlere. Manifest i `editions/hupedia/` |
-| HUWiki Trim | **Migreret som selvstændigt plugin; browsertest afventer** | Version 0.1.5, MIT-licens, tre interne tiddlere. `plugins/trim/dist/plugin.json` |
+| HUPedia Edition | **Migreret; første browser-test bestået for artikelvisning og faktaboks** | Originalt plugin `$:/plugins/huwiki/hupedia` (21 tiddlere), tema `$:/themes/huwiki/hupedia` (2 tiddlere) og otte redigerbare eksempel-tiddlere. Manifest i `editions/hupedia/` |
+| HUWiki Trim | **Migreret; indstillinger er vist i brugerens HUPedia-browsertest** | Version 0.1.5, MIT-licens, tre interne tiddlere. `plugins/trim/dist/plugin.json` |
 | Demo Edition | **Browsertestet** | Kontrol af boot, startup-plugin, redigering og TiddlyWikis egen Gem |
+
+| HUWiki SitePublisher | **Migreret som valgfrit Forge-plugin; browser-test med HUPedia mangler** | v0.1.3-test.1 fra Musik 0.3.51, 6 plugin-tiddlere, MIT. `plugins/site-publisher/dist/plugin.json` |
+| HUWiki PDF Publisher | **Migreret som valgfrit Forge-plugin; browser-test med HUPedia mangler** | v0.2.5-test.1 fra Musik 0.3.51, 4 plugin-tiddlere, MIT. `plugins/print-article/dist/plugin.json` |
+
+**Udgivelsesværktøjerne er fælles, men endnu ikke standardinstalleret.** Se [udgivelsesplanen](publishers.md) for kompatibilitet med HUPedia, Musik og andre Editions. Den gamle HUPedia-site-skabelon er ikke længere en del af Forsiden; en ny tiddler forklarer udgivelsesmulighederne. Godkendte artikler filtreres endnu ikke automatisk ved eksport.
 
 Den gamle HUPedia-kilde er bevaret i komprimeret form i `migration/hupedia-source.b64`, så pakkens oprindelse og sammensætning kan efterprøves. De normale `plugin.json`, `theme.json` og tiddlerfiler er det, assembleren faktisk bruger.
 
