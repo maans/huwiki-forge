@@ -155,20 +155,46 @@ function huShare(fileId, recipientEmail, role) {
     throw new Error("Du må ikke dele denne fil.");
   const appUrl = ScriptApp.getService().getUrl();
   const link = appUrl ? appUrl + "?id=" + encodeURIComponent(id) : "";
-  const permission = Drive.Permissions.create(
-    {type: "user", role: role, emailAddress: email},
-    id,
-    {
-      supportsAllDrives: true,
-      sendNotificationEmail: true,
-      emailMessage: "Du er inviteret til en HUWiki. Åbn den i HUWiki Google Drev: " + link,
-      fields: "id"
+  // When delta sync is active, both the HTML wiki and its companion
+  // spreadsheet must be shared. Share the log first without an invitation
+  // so the single visible invitation comes from the HTML wiki file.
+  // Roll back the new log permission if the HTML permission fails.
+  const linked = huSyncLinkedId_(id);
+  let journalPermission = null;
+  if (linked.sheetId) {
+    journalPermission = Drive.Permissions.create(
+      {type: "user", role: role, emailAddress: email},
+      linked.sheetId,
+      {sendNotificationEmail: false, fields: "id"}
+    );
+  }
+  let permission;
+  try {
+    permission = Drive.Permissions.create(
+      {type: "user", role: role, emailAddress: email},
+      id,
+      {
+        supportsAllDrives: true,
+        sendNotificationEmail: true,
+        emailMessage: "Du er inviteret til en HUWiki. Åbn den i HUWiki Google Drev: " + link,
+        fields: "id"
+      }
+    );
+  } catch (error) {
+    if (journalPermission) {
+      try {
+        Drive.Permissions.remove(journalPermission.id, linked.sheetId);
+      } catch (rollbackError) {
+        console.error("Kunne ikke ophæve den delte ændringslog efter fejl:", rollbackError);
+      }
     }
-  );
+    throw error;
+  }
   return {
     recipient: email,
     role: role,
     permissionId: permission.id,
+    journalPermissionId: journalPermission && journalPermission.id || null,
     link: link
   };
 }
