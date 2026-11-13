@@ -32,6 +32,19 @@ HUWiki Tid viser en gennemarbejdet TiddlyTools-afledning med `license: CC-BY-NC-
 
 TiddlyWikis indbyggede `$:/language` er den **eneste sprogvælger**. Alle generelle HUWiki-plugins skal reagere på den, herunder captions, beskrivelser, værktøjstip, hjælpetekster og vinduer. **Ingen ekstra sprogvælgerknapper** i plugins eller Forge-forsiden. Egne Editions kan stadig indeholde brugerindhold på et bestemt sprog; det er en anden sag end grænsefladens sprog.
 
+## Redigerbarhed er et grundkrav
+
+**Kildeteksten skal først og fremmest være læsbar og venlig at redigere for et menneske.** Dette er et acceptkriterium for alle importerede og nyudviklede Editions, ikke blot et ønske til den færdige visning.
+
+- Skriv almindelige artikler som **ren WikiText i tiddlerens `text`-felt**, med tydelige linjeskift, en tom linje efter overskrifter, adskilte afsnit og selvstændige linjer for hvert punkt i en liste.
+- Respekter TiddlyWikis blok-/inline-parser. Overskrifter (`!`, `!!`), lister (`*`, `#`) og tabeller skal genkendes og gengives korrekt. Brug `<$transclude $mode="block"/>` ved indlejring af større WikiText-blokke.
+- **Indsæt ikke kompliceret sprogbetinget widgetkode i almindelige artikeltekster.** Læg logikken i separate systemskabeloner og hold den kort. Når en komponent findes på to sprog, så brug så vidt muligt separate, overskuelige kilde-tiddlere.
+- HUPedia bruger normalt `text` til den menneskeligt redigerbare danske WikiText og valgfrit `text-en` til en menneskeligt redigerbar engelsk tekst. Engelsk redigeres i et egentligt **flerslinjet** felt under redigering, ikke i et enlinjet metadatafelt. Visningsskabelonen vælger automatisk efter TiddlyWikis `$:/language`.
+- En brugeroprettet tiddler uden oversættelse skal stadig vises og kunne redigeres med normal TiddlyWiki-adfærd; den må ikke blive usynlig.
+- Anvend ikke `<br/>` som erstatning for korrekt listestruktur eller afsnitsopdeling. Formateret forhåndsvisning er nødvendig, men **redigeringsoverskuelighed** vægtes mindst lige så højt.
+
+Kilde for parservilkår: TiddlyWikis officielle [TranscludeWidget](https://tiddlywiki.com/static/TranscludeWidget.html) og [WikiText parser mode](https://tiddlywiki.com/static/WikiText%2520parser%2520mode%253A%2520transclusion%2520examples.html).
+
 ## Andre kvalitetskrav
 
 - Ingen obligatorisk Google Apps Script-, Drive-, Forms- eller Sheets-afhængighed i Editions.
