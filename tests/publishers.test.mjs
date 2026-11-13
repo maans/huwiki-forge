@@ -9,7 +9,7 @@ async function json(path) {
 }
 
 const cases=[
-  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.10-test.1"},
+  {id:"site-publisher",path:"plugins/site-publisher/dist/plugin.json",title:"$:/plugins/huwiki/site-publisher",version:"0.1.11-test.1"},
   {id:"pdf-publisher",path:"plugins/print-article/dist/plugin.json",title:"$:/plugins/huwiki/print-article",version:"0.2.8-test.1"}
 ];
 
@@ -233,6 +233,49 @@ test("SitePublisher exports the source matching TiddlyWiki language for HUPedia 
   assert.equal(select("Teaching","da"),legacy["huwiki-text-da"]);
   assert.equal(select("No translation","en"),plain.text,"An untranslated article must still be published");
   assert.equal(select("Missing","en"),"");
+});
+
+test("SitePublisher reuses the HUPedia article template and original styling",async()=>{
+ const p=await json("plugins/site-publisher/dist/plugin.json");
+ const source=JSON.parse(p.text).tiddlers[p.title+"/startup.js"].text;
+ const start=source.indexOf("function isHupediaArticle(title){");
+ const end=source.indexOf("function embeddedArticle(title,lang){",start);
+ assert.ok(start>=0&&end>start,"HUPedia publication helpers must exist");
+ assert.ok(source.includes("renderedPedia||$tw.wiki.renderText("),"Pedia render must be preferred over bare source text");
+ assert.ok(source.includes("css+=publicationComponentsCss(entries);"),"Article component CSS must be bundled into exported HTML");
+ const rendered='<div class="hupedia-article"><aside class="hupedia-infobox"><h3>Carl Nielsen</h3><dl><dt>Born</dt><dd>1865</dd></dl></aside><div class="hupedia-article-text"><p>English article</p></div></div>';
+ const pedia=await json("plugins/hupedia/dist/plugin.json");
+ const css=JSON.parse(pedia.text).tiddlers["$:/plugins/huwiki/hupedia/style.css"].text;
+ const values={
+  "Carl Nielsen":{title:"Carl Nielsen",tags:["PediaArtikel","HUPedia/Person"]},
+  "HUPedia Start":{title:"HUPedia Start",tags:["HUPedia/Localized"]},
+  "Plain":{title:"Plain",tags:[]}
+ };
+ const calls=[];
+ const tw={wiki:{
+  getTiddler(title){return values[title]?{fields:values[title]}:null;},
+  getTiddlerText(title,fallback){
+   if(title==="$:/plugins/huwiki/hupedia/article-view")return "<div class='hupedia-article'></div>";
+   if(title==="$:/plugins/huwiki/hupedia/style.css")return css;
+   return fallback;
+  },
+  renderTiddler(outputType,title,options){
+   calls.push({outputType,title,options});
+   return rendered;
+  }
+ }};
+ const helpers=new Function("$tw","namesOf",source.slice(start,end)+"\nreturn {isHupediaArticle,hupediaArticleHtml,publicationComponentsCss};")(tw,x=>x);
+ assert.equal(helpers.isHupediaArticle("Carl Nielsen"),true);
+ assert.equal(helpers.isHupediaArticle("HUPedia Start"),false,"Static guide tiddlers should not acquire an infobox");
+ assert.equal(helpers.isHupediaArticle("Plain"),false);
+ assert.equal(helpers.hupediaArticleHtml("Carl Nielsen"),rendered);
+ assert.equal(calls[0].title,"$:/plugins/huwiki/hupedia/article-view");
+ assert.equal(calls[0].options.variables.currentTiddler,"Carl Nielsen");
+ assert.match(helpers.publicationComponentsCss([{title:"Carl Nielsen"}]),/\.hupedia-infobox/);
+ assert.equal(helpers.publicationComponentsCss([{title:"Plain"}]),"");
+ assert.equal(helpers.hupediaArticleHtml("Plain"),"");
+ tw.wiki.renderTiddler=()=>"<div>No infobox</div>";
+ assert.throws(()=>helpers.hupediaArticleHtml("Carl Nielsen"),/infobox was not rendered/,"Never silently drop an infobox");
 });
 
 test("HUPedia no longer refers users to the obsolete site template files", async () => {
