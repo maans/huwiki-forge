@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "id": "music",
+  "name": "HUWiki Musik Edition",
+  "version": "0.1.0-test.1",
+  "coreVersion": "5.4.1",
+  "tiddlers": [
+    "tiddlers/config.json"
+  ],
+  "plugins": [
+    "../../themes/modern/dist/theme.json",
+    "../../plugins/abc/dist/plugin.json",
+    "../../plugins/music/dist/plugin.json",
+    "../../plugins/musescore-import/dist/plugin.json",
+    "../../plugins/lessons-basic/dist/plugin.json",
+    "../../plugins/lessons-jazz/dist/plugin.json",
+    "../../plugins/lessons-rhythm/dist/plugin.json",
+    "../../plugins/lessons-balkan/dist/plugin.json",
+    "../../plugins/lessons-india/dist/plugin.json",
+    "../../plugins/lessons-folk/dist/plugin.json",
+    "../../plugins/site-publisher/dist/plugin.json",
+    "../../plugins/print-article/dist/plugin.json"
+  ]
+}
