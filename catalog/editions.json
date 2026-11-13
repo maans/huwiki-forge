@@ -23,6 +23,17 @@
       ]
     },
     {
+      "id": "hupin",
+      "name": "HUWiki HUPin Edition (test)",
+      "description": "Interactive pins on images and SVG; optional PasteUp and online map integrations. English UI migration pending / Klikbare billeder og SVG",
+      "status": "test",
+      "manifest": "../editions/hupin/manifest.json",
+      "version": "0.1.0-test.1",
+      "bundledPlugins": [
+        "hupin"
+      ]
+    },
+    {
       "id": "demo",
       "name": "Demo Edition",
       "description": "Minimal test af TiddlyWiki-plugin og før-boot-indlæsning.",
@@ -61,6 +72,14 @@
       "version": "0.1.4-beta.1",
       "description": "Independent MusicXML/MuseScore to ABC importer; automatically included in Music Edition; preview and native TiddlyWiki import",
       "file": "../plugins/musescore-import/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "hupin",
+      "name": "HUWiki HUPin",
+      "version": "0.3.3",
+      "description": "Image/SVG hotspots with optional PasteUp; no Google service required for core use / Billedpins og klikbare områder",
+      "file": "../plugins/hupin/dist/plugin.json",
       "status": "test"
     }
   ]
