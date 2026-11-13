@@ -40,7 +40,8 @@ function huPublicMeta_(meta) {
     modifiedTime: meta.modifiedTime || null,
     canEdit: !!(meta.capabilities && meta.capabilities.canEdit),
     canShare: !!(meta.capabilities && meta.capabilities.canShare),
-    snapshotSeq: Number(meta.properties && meta.properties["forgeDriveSnapshotSeq"] || 0)
+    snapshotSeq: Number(meta.properties && meta.properties["forgeDriveSnapshotSeq"] || 0),
+    syncEnabled: !!(meta.properties && meta.properties["forgeDriveSyncSheetId"])
   };
 }
 
