@@ -31,52 +31,52 @@
 </head>
 <body>
   <header>
-    <strong>HUWiki Google Drev <small>Eksperimentel gemme- og deleadapter</small></strong>
+    <strong>HUWiki Google Drev <small data-i18n="subtitle">Eksperimentel gemme- og deleadapter</small></strong>
     <span id="fileName"></span>
-    <a id="driveLink" target="_blank" rel="noopener" hidden>Vis på Drev</a>
+    <a id="driveLink" target="_blank" rel="noopener" data-i18n="driveLink" hidden>Vis på Drev</a>
   </header>
-  <div id="status" role="status" aria-live="polite">Klar til at forbinde en wiki.</div>
+  <div id="status" role="status" aria-live="polite" data-i18n="ready">Klar til at forbinde en wiki.</div>
 
   <main id="start">
-    <p>Denne testadapter bruger <strong>din Google-konto</strong> til at åbne, gemme og dele en almindelig HTML-wiki. Ingen Google Picker og ingen URL Fetch.</p>
+    <p data-i18n="intro">Denne testadapter bruger din Google-konto til at åbne, gemme og dele en almindelig HTML-wiki. Ingen Google Picker og ingen URL Fetch.</p>
     <fieldset>
-      <legend><strong>Opret en ny wiki på mit Google Drev</strong></legend>
-      <p>Vælg den færdige HTML-wiki, du byggede i Forge. Det er en lokal filvælger, ikke Google Picker.</p>
+      <legend><strong data-i18n="create">Opret en ny wiki på mit Google Drev</strong></legend>
+      <p data-i18n="choose">Vælg den færdige HTML-wiki, du byggede i Forge. Det er en lokal filvælger, ikke Google Picker.</p>
       <form id="uploadForm">
         <input name="wikiFile" type="file" accept=".html,text/html" required>
-        <button type="submit">Upload og åbn</button>
+        <button type="submit" data-i18n="upload">Upload og åbn</button>
       </form>
     </fieldset>
     <fieldset>
-      <legend><strong>Åbn en eksisterende delt wiki</strong></legend>
-      <label for="fileId">Google Drive-fil-ID</label>
-      <input id="fileId" type="text" autocomplete="off" placeholder="ID fra en delt wiki">
-      <button id="openButton" type="button">Åbn wiki</button>
+      <legend><strong data-i18n="openExisting">Åbn en eksisterende delt wiki</strong></legend>
+      <label for="fileId" data-i18n="fileId">Google Drive-fil-ID</label>
+      <input id="fileId" type="text" autocomplete="off" data-i18n-placeholder="idPlaceholder" placeholder="ID fra en delt wiki">
+      <button id="openButton" type="button" data-i18n="open">Åbn wiki</button>
     </fieldset>
-    <p class="warning">Indtil vi har afprøvet deling og konflikter med to konti, bør du kun bruge kopier af dine wikier. Ingen data flettes automatisk.</p>
+    <p class="warning" data-i18n="warning">Indtil vi har afprøvet deling og konflikter med to konti, bør du kun bruge kopier af dine wikier. Ingen data flettes automatisk.</p>
   </main>
 
   <section id="workspace" hidden>
     <header>
-      <button type="button" id="saveButton" disabled>Gem på Google Drev</button>
-      <small id="saveHint">Ingen baggrundssynk endnu – Gem laver en komplet HTML-kopi.</small>
-      <button type="button" id="enableSyncButton" disabled>Aktivér tiddler-synk</button>
-      <small id="syncStatus" role="status">Tiddler-synk er endnu ikke aktiveret.</small>
+      <button type="button" id="saveButton" data-i18n="save" disabled>Gem på Google Drev</button>
+      <small id="saveHint" data-i18n="saveHint">Ingen baggrundssynk endnu – Gem laver en komplet HTML-kopi.</small>
+      <button type="button" id="enableSyncButton" data-i18n="enableSync" disabled>Aktivér tiddler-synk</button>
+      <small id="syncStatus" role="status" data-i18n="syncOff">Tiddler-synk er endnu ikke aktiveret.</small>
     </header>
     <header>
       <div id="sharing">
-        <label for="recipient">Del med</label>
-        <input id="recipient" type="email" placeholder="modtager@gmail.com">
+        <label for="recipient" data-i18n="shareWith">Del med</label>
+        <input id="recipient" type="email" data-i18n-placeholder="recipientPlaceholder" placeholder="modtager@gmail.com">
         <select id="role" aria-label="Adgang">
-          <option value="writer">Redaktør</option>
-          <option value="reader">Læser</option>
+          <option value="writer" data-i18n="writer">Redaktør</option>
+          <option value="reader" data-i18n="reader">Læser</option>
         </select>
-        <button id="shareButton" type="button">Del og send invitation</button>
+        <button id="shareButton" type="button" data-i18n="share">Del og send invitation</button>
       </div>
     </header>
     <div style="padding:.5rem 1rem;background:#fff;border-top:1px solid #cad3d9">
-      <button id="backupButton" type="button">Hent lokal sikkerhedskopi</button>
-      <small>Hvis gemning fejler, bevares ændringerne i den åbne wiki. Hent en kopi, før du genindlæser siden.</small>
+      <button id="backupButton" type="button" data-i18n="backup">Hent lokal sikkerhedskopi</button>
+      <small data-i18n="backupHelp">Hvis gemning fejler, bevares ændringerne i den åbne wiki. Hent en kopi, før du genindlæser siden.</small>
     </div>
     <iframe id="wiki" title="HUWiki" style="height:calc(100dvh - 196px)"></iframe>
   </section>
@@ -86,6 +86,59 @@
 "use strict";
 const START_ID = <?!= initialIdJson ?>;
 const $ = (id) => document.getElementById(id);
+let language = "da";
+const I18N = {
+  da: {
+    subtitle:"Eksperimentel gemme- og deleadapter",driveLink:"Vis på Drev",
+    ready:"Klar til at forbinde en wiki.",
+    intro:"Denne testadapter bruger din Google-konto til at åbne, gemme og dele en almindelig HTML-wiki. Ingen Google Picker og ingen URL Fetch.",
+    create:"Opret en ny wiki på mit Google Drev",
+    choose:"Vælg den færdige HTML-wiki fra Forge. Det er en lokal filvælger, ikke Google Picker.",
+    upload:"Upload og åbn",openExisting:"Åbn en eksisterende delt wiki",fileId:"Google Drive-fil-ID",
+    idPlaceholder:"ID fra en delt wiki",open:"Åbn wiki",
+    warning:"Indtil deling og konflikter er testet med to konti, bør du kun bruge kopier af dine wikier. Ingen data flettes automatisk.",
+    save:"Gem på Google Drev",saveHint:"Ingen baggrundssynk endnu – Gem laver en komplet HTML-kopi.",
+    enableSync:"Aktivér tiddler-synk",syncOff:"Tiddler-synk er endnu ikke aktiveret.",
+    shareWith:"Del med",recipientPlaceholder:"modtager@gmail.com",
+    writer:"Redaktør",reader:"Læser",share:"Del og send invitation",
+    backup:"Hent lokal sikkerhedskopi",backupHelp:"Hvis gemning fejler, bevares ændringerne i den åbne wiki. Hent en kopi, før du genindlæser siden."
+  },
+  en: {
+    subtitle:"Experimental save and sharing adapter",driveLink:"View in Drive",
+    ready:"Ready to connect a wiki.",
+    intro:"This adapter uses your own Google account to open, save and share a normal HTML wiki. No Google Picker or URL Fetch.",
+    create:"Create a wiki in my Google Drive",
+    choose:"Select your finished Forge HTML wiki with a local file picker (not Google Picker).",
+    upload:"Upload and open",openExisting:"Open an existing shared wiki",fileId:"Google Drive file ID",
+    idPlaceholder:"ID of a shared wiki",open:"Open wiki",
+    warning:"Until sharing and conflicts have been tested with two accounts, use copies of your wikis only. Changes are not automatically merged.",
+    save:"Save to Google Drive",saveHint:"No background sync yet – Save uploads the complete HTML file.",
+    enableSync:"Enable tiddler sync",syncOff:"Tiddler sync is not yet enabled.",
+    shareWith:"Share with",recipientPlaceholder:"recipient@gmail.com",
+    writer:"Editor",reader:"Reader",share:"Share and send invitation",
+    backup:"Download local backup",backupHelp:"If saving fails, your edits remain in the open wiki. Download a copy before reloading the page."
+  }
+};
+const loc = (da, en) => language === "da" ? da : en;
+function updateLanguage(tw) {
+  if (!tw || !tw.wiki) return;
+  const chosen = String(tw.wiki.getTiddlerText("$:/language", "$:/languages/da-DK"));
+  const next = chosen === "$:/languages/da-DK" ? "da" : "en";
+  if (language === next) return;
+  language = next;
+  document.documentElement.lang = next;
+  for (const node of document.querySelectorAll("[data-i18n]")) {
+    const value = I18N[next][node.getAttribute("data-i18n")];
+    if (value) node.textContent = value;
+  }
+  for (const node of document.querySelectorAll("[data-i18n-placeholder]")) {
+    node.placeholder = I18N[next][node.getAttribute("data-i18n-placeholder")] || "";
+  }
+  if (current) $("fileName").textContent = current.name +
+    (current.canEdit ? "" : loc(" (kun læsning)", " (read-only)"));
+  if (delta) delta.state();
+}
+
 let current = null;
 let saving = false;
 let nextSave = null;
