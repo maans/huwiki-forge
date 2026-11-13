@@ -123,6 +123,10 @@ async function loadCatalog() {
     option.textContent=edition.name;
     select.append(option);
   }
+  // Community cards open the same Assembler with an Edition preselected.
+  // Only IDs already validated against this catalog are accepted.
+  const requested=new URL(location.href).searchParams.get("edition");
+  if(requested&&editions.some(item=>item.id===requested))select.value=requested;
   select.disabled=false;
   button.disabled=false;
   updateDescription();
