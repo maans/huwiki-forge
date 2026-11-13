@@ -45,6 +45,16 @@ function huPublicMeta_(meta) {
   };
 }
 
+/**
+ * Official Apps Script /exec deep link. Never derive it from the sandboxed
+ * HTML Service iframe origin (script.googleusercontent.com).
+ */
+function huLaunchUrl_(fileId) {
+  const base = ScriptApp.getService().getUrl() || "";
+  return base ? base + (base.includes("?") ? "&" : "?") +
+    "id=" + encodeURIComponent(huFileId_(fileId)) : "";
+}
+
 function doGet(e) {
   const view = HtmlService.createTemplateFromFile("Index");
   const requested = e && e.parameter && e.parameter.id || "";
@@ -72,6 +82,7 @@ function huOpen(fileId) {
   return {
     meta: huPublicMeta_(verified),
     html: html,
+    launchLink: huLaunchUrl_(verified.id),
     elapsedMs: Date.now() - started
   };
 }
@@ -216,7 +227,14 @@ function huGrantShare_(fileId, email, role, notify, invitationLink) {
     sendNotificationEmail: notify
   };
   if (notify) {
-    options.emailMessage = "Du er inviteret til en HUWiki. Åbn den i HUWiki Google Drev: " + invitationLink;
+    // Google's automatically generated file card always opens the raw Drive
+    // preview. Place the ForgeDrive /exec link on its own line and explain
+    // this difference explicitly in both languages.
+    options.emailMessage =
+      "Åbn wikien i ForgeDrive / Open the wiki in ForgeDrive:\n" +
+      invitationLink +
+      "\n\nBrug dette link, ikke Googles filkort (Demo.html), som kun viser HTML-forhåndsvisning." +
+      "\nUse this app link, not the Google Drive file card, which only previews the HTML.";
   }
   const created = Drive.Permissions.create(
     {type: "user", role: role, emailAddress: email},
@@ -242,8 +260,7 @@ function huShare(fileId, recipientEmail, role) {
     const meta = huFile_(id);
     if (!meta.capabilities || !meta.capabilities.canShare)
       throw new Error("Du må ikke dele denne fil.");
-    const appUrl = ScriptApp.getService().getUrl();
-    const link = appUrl ? appUrl + "?id=" + encodeURIComponent(id) : "";
+    const link = huLaunchUrl_(id);
     const sheetId = meta.properties && meta.properties["forgeDriveSyncSheetId"];
     let journal = null;
     if (sheetId) journal = huGrantShare_(huFileId_(sheetId), email, role, false, "");
