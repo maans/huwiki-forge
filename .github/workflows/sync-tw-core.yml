@@ -8,6 +8,7 @@ on:
     paths:
       - ".github/workflows/sync-tw-core.yml"
       - "scripts/sync-tw-core.mjs"
+      - "tests/assembler.test.mjs"
 
 permissions:
   contents: write
