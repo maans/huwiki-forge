@@ -31,7 +31,7 @@ Den gamle HUPedia-kilde er bevaret i komprimeret form i `migration/hupedia-sourc
 | --- | --- | --- |
 | AI Edition | `AIEdition.js`, `PrivateVault.js` | Flyt den eksisterende pluginpakke, og erstat alle `google.script.run`-kald til privat boks, modelkald og billedgenerering med et lokalt/browserbaseret AI-connection API. Tokens uden for tiddlere/HTML. Se `ai-connections.md` |
 | Musik – resterende arbejde | Nyere Musik-wiki og `MusicOfflineAssets.js` | Editionens kerne er flyttet. Test afspilning, MIDI, SoundFont, import, iPad og kompatibilitet med de seneste Musik-kilder; lydfonte må kun ligge i backup/lokal runtime og aldrig wiki-restore |
-| Tegne | `TegneEdition.js`, `TegneAsset*.js`, `TegnePackage*.js` | Rekonstruér plugin-assets og versioner, selvstændigt hostede browserbiblioteker, og test uden Apps Script |
+| Tegne | `TegneEdition.js`, `TegneAsset*.js`, `TegnePackage*.js` | **Første Forge-test 0.1.0-test.1 oprettet:** Offentlig Excalidraw 0.3.0 + React 1.0.0, eget HUWiki-panel og SitePublisher som offline HTML. Den gamle HUWiki-motor 0.3.4, fuldt galleri/figurbibliotek og Mac/iPad-browseraccept mangler. Se [Tegne-migration](tegne-migration.md). |
 | CutOut | `CutOutEdition.js`, `CutOutAsset*.js`, `CutOutSiteRuntime.js` | Rekonstruér plugin og runtime; fjern eventuelle serverbaserede publish-kald |
 | Studio | `StudioEdition.js`, `Studio.js`, `StudioPublish.js` | Bevar lokalt design- og pluginværksted; publicering som enkelte GitHub-filer bliver en særskilt, frivillig Publisher |
 | Shop | `ShopEdition.js` | Erstat eksisterende server/ordreflow med lokale skabeloner og en valgfri selvhostet modtagertjeneste til offentlige ordrer |

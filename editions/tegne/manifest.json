@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "tegne",
+  "name": "HUWiki Tegne Edition",
+  "version": "0.1.0-test.1",
+  "coreVersion": "5.4.1",
+  "tiddlers": [
+    "tiddlers/seed.json",
+    "tiddlers/config.json"
+  ],
+  "plugins": [
+    "../../themes/modern/dist/theme.json",
+    "../../plugins/tegne-react/dist/plugin.json",
+    "../../plugins/tegne-excalidraw/dist/plugin.json",
+    "../../plugins/tegne/dist/plugin.json",
+    "../../plugins/site-publisher/dist/plugin.json"
+  ]
+}
