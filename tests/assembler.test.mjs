@@ -19,7 +19,7 @@ test("inserts the edition store before the HUWiki Library modules marker", () =>
 test("escapes HTML-breaking strings inside JSON scripts", () => {
   const html = assembleHtml(empty, [{ title: "Attack", text: "</script><script>alert(1)</script>&" }]);
   assert.ok(!html.includes('text":"</script>'));
-  assert.ok(html.includes("\\u003c/script>"));
+  assert.ok(html.includes("\\u003c/script\\u003e"));
   assert.ok(html.includes("\\u0026"));
 });
 
