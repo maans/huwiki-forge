@@ -18,7 +18,7 @@ For tjenester der kræver en server (fx modtagelse af offentlige formularbesvare
 | HUWiki Musik Edition | **Samlet som 0.1.0-test.1; automatiske tests bestået, ny browsertest mangler** | ABC 0.3.31-test.8, Musik 0.3.17-test.1, seks undervisningspakker, Modern-temaet, MuseScore Importer 0.1.4-beta.1 samt SitePublisher og PDF Publisher. Manifest i `editions/music/`. Ingen Google-login påkrævet for samlingen. |\n| HUWiki Trim | **Migreret; indstillinger er vist i brugerens HUPedia-browsertest** | Version 0.1.5, MIT-licens, tre interne tiddlere. `plugins/trim/dist/plugin.json` |
 | Demo Edition | **Browsertestet** | Kontrol af boot, startup-plugin, redigering og TiddlyWikis egen Gem |
 
-| HUWiki SitePublisher | **Migreret som valgfrit Forge-plugin; browsertest af nyeste version mangler** | v0.1.12-test.1, baseret på Musik 0.3.51, med justeret toolbar, MIT. `plugins/site-publisher/dist/plugin.json` |
+| HUWiki SitePublisher | **Migreret som valgfrit Forge-plugin; browsertest af nyeste version mangler** | v0.1.13-test.1, med offline CutOut-læser og mediekontrol (browsertest udestår), baseret på Musik 0.3.51, med justeret toolbar, MIT. `plugins/site-publisher/dist/plugin.json` |
 | HUWiki PDF Publisher | **Migreret som valgfrit Forge-plugin; browser-test med HUPedia mangler** | v0.2.8-test.1, baseret på Musik 0.3.51, med justeret toolbar, MIT. `plugins/print-article/dist/plugin.json` |
 
 **Udgivelsesværktøjerne er fælles; de er med i Musik Edition og valgfrie i HUPedia.** Se [udgivelsesplanen](publishers.md) for kompatibilitet med HUPedia, Musik og andre Editions. Den gamle HUPedia-site-skabelon er ikke længere en del af Forsiden; en ny tiddler forklarer udgivelsesmulighederne. Godkendte artikler filtreres endnu ikke automatisk ved eksport.
