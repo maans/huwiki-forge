@@ -68,6 +68,16 @@ test("CutOut rejects missing image assets, circular scene references and unreada
  rows.Photo.type="image/png";delete rows.Photo.text;
  assert.throws(()=>api.publicationDataUrl("Photo","image"),/private file URI/);
 });
+test("Malformed CutOut part hierarchy is rejected rather than partially rendered",()=>{
+ const rows=fixtures(),api=adapterFor(rows);
+ rows.Film.text=scene([{id:"loop",type:"rect",parent:"loop"}]);
+ assert.throws(()=>api.collectCutout("Film",{rows:{},used:false},[]),/circular CutOut part hierarchy/);
+ rows.Film.text=scene([{id:"missing",type:"rect",parent:"not-here"}]);
+ assert.throws(()=>api.collectCutout("Film",{rows:{},used:false},[]),/parent part is missing/);
+ rows.Film.text=scene([{id:"duplicate",type:"rect"},{id:"duplicate",type:"rect"}]);
+ assert.throws(()=>api.collectCutout("Film",{rows:{},used:false},[]),/duplicate part ID/);
+});
+
 test("Direct images, scalable SVG, audio and video are embedded as data URLs",()=>{
  const api=adapterFor(fixtures());
  assert.match(api.publicationMediaArticle("Vector"),/data:image\/svg\+xml;charset=utf-8/);
