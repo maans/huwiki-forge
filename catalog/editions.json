@@ -29,8 +29,8 @@
     {
       "id": "site-publisher",
       "name": "HUWiki SitePublisher",
-      "version": "0.1.11-test.1",
-      "description": "Standalone HTML sites: preserves rendered HUPedia infoboxes, bilingual article text, and Mac/iPad controls",
+      "version": "0.1.12-test.1",
+      "description": "HTML publishing with native HUPedia infoboxes and selectable Standard, Modern, Retro, Vanilla or HUPedia layouts",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
     },
