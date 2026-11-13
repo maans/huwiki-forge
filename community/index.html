@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Public HUWiki Forge Editions and curated community wikis, hosted on GitHub Pages.">
+<title>HUWiki Community · Forge</title>
+<style>
+:root{color-scheme:light;font-family:system-ui,-apple-system,"Segoe UI",sans-serif;color:#183e34;background:#f7faf8}
+*{box-sizing:border-box}body{margin:0}header{background:#174f42;color:white;padding:clamp(1rem,4vw,2.8rem)}
+header .inner,main,footer{max-width:1050px;margin:auto}
+header h1{font-size:clamp(2rem,5vw,3.2rem);margin:0 0 .2em}header p{max-width:720px;margin:.5em 0;line-height:1.6}
+a{color:#10634d;text-decoration-thickness:1px;text-underline-offset:3px}header a{color:white}
+main{padding:clamp(1rem,4vw,2rem)}section{margin-bottom:2.8em}
+h2{margin-bottom:.35em;font-size:1.5em}p{line-height:1.6}.intro{color:#45645a}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:16px;margin-top:18px}
+.card{padding:18px;background:white;border:1px solid #d8e6dd;border-radius:12px}
+.card h3{margin:0 0 8px;font-size:1.1em}
+.card p{color:#385c50;margin:10px 0}
+.meta{font-size:.85em;color:#687d73}
+.links{display:flex;gap:15px;flex-wrap:wrap;margin-top:18px}
+.card a:focus-visible{outline:3px solid #186f55;outline-offset:3px;border-radius:3px}
+.empty{color:#50685d;background:white;border:1px solid #d8e6dd;padding:16px;border-radius:10px;margin-top:18px}
+footer{padding:1.5em 2em 3em;color:#4c665b;border-top:1px solid #d8e6dd}
+</style>
+</head>
+<body>
+<header><div class="inner">
+<a href="../" id="back">HUWiki Forge</a>
+<h1>HUWiki Community</h1>
+<p id="tagline">Offentlige Editions og frivilligt delte TiddlyWikier – direkte fra GitHub.</p>
+</div></header>
+<main>
+<section aria-labelledby="edition-title">
+<h2 id="edition-title">Forge Editions</h2>
+<p class="intro" id="edition-intro">En Edition er en skabelon. Byg din egen redigerbare HTML-wiki med Edition Assembler.</p>
+<div id="editions" class="grid" aria-live="polite"></div>
+</section>
+<section aria-labelledby="wikis-title">
+<h2 id="wikis-title">Offentligt delte wikier</h2>
+<p class="intro" id="wikis-intro">Kun wikier, som deres ejere har valgt at offentliggøre, kan vises her.</p>
+<div id="wikis" class="grid" aria-live="polite"></div>
+</section>
+<section>
+<h2 id="about-title">Hvordan virker deling?</h2>
+<p id="about">GitHub Pages leverer kataloget og Edition-filerne uden en særskilt server. Samarbejde eller publicering fra en kørende wiki kan tilbydes separat via eksempelvis Tailscale Funnel, men kræver passende adgangsstyring.</p>
+<p><a id="plugin-library" href="../library/plugins/">HUWiki Plugin Library</a> · <a id="repo-link" href="https://github.com/maans/huwiki-forge">GitHub-repository</a></p>
+</section>
+</main>
+<footer><p id="footer-text">Kataloget henter kun offentlige oplysninger. Der kan ikke uploades eller redigeres wikier her.</p></footer>
+<script type="module">
+const da=/(?:^|-)da(?:-|$)/i.test(navigator.language||"");
+document.documentElement.lang=da?"da":"en";
+const words=da?{
+ tagline:"Offentlige Editions og frivilligt delte TiddlyWikier – direkte fra GitHub.",
+ editionIntro:"En Edition er en skabelon. Byg din egen redigerbare HTML-wiki med Edition Assembler.",
+ wikisTitle:"Offentligt delte wikier",
+ wikisIntro:"Kun wikier, som deres ejere har valgt at offentliggøre, kan vises her.",
+ aboutTitle:"Hvordan virker deling?",
+ about:"GitHub Pages leverer kataloget og Edition-filerne uden en særskilt server. Samarbejde eller publicering fra en kørende wiki kan tilbydes separat via eksempelvis Tailscale Funnel, men kræver passende adgangsstyring.",
+ footer:"Kataloget henter kun offentlige oplysninger. Der kan ikke uploades eller redigeres wikier her.",
+ build:"Byg denne Edition",source:"Se manifest",status:"Status",test:"Testudgave",
+ empty:"Der er endnu ingen offentligt delte brugerwikier i kataloget.",
+ loading:"Henter offentligt katalog …",failed:"Kunne ikke hente Community-kataloget."
+}:{
+ tagline:"Public Editions and voluntarily shared TiddlyWikis, straight from GitHub.",
+ editionIntro:"An Edition is a template. Build your own editable HTML wiki using Edition Assembler.",
+ wikisTitle:"Publicly shared wikis",wikisIntro:"Only wikis whose owners explicitly choose public sharing can be listed here.",
+ aboutTitle:"How does sharing work?",
+ about:"GitHub Pages serves the catalog and Edition files without a dedicated server. Hosting a live shared wiki with a service such as Tailscale Funnel is optional and requires suitable access controls.",
+ footer:"This catalog only reads public data. It cannot upload or edit wikis.",
+ build:"Build this Edition",source:"View manifest",status:"Status",test:"Test release",
+ empty:"No public user wikis are listed yet.",loading:"Loading public catalog …",failed:"Could not load the Community catalog."
+};
+const $=id=>document.getElementById(id);
+for(const [id,key] of [["tagline","tagline"],["edition-intro","editionIntro"],["wikis-title","wikisTitle"],["wikis-intro","wikisIntro"],["about-title","aboutTitle"],["about","about"],["footer-text","footer"]])$(id).textContent=words[key];
+function link(label,url){
+ const a=document.createElement("a");a.href=url;a.textContent=label;return a;
+}
+function card(title,description,meta,links){
+ const el=document.createElement("article");el.className="card";
+ const heading=document.createElement("h3");heading.textContent=title;
+ const p=document.createElement("p");p.textContent=description;
+ const small=document.createElement("p");small.className="meta";small.textContent=meta;
+ const nav=document.createElement("div");nav.className="links";
+ for(const [name,url] of links)nav.append(link(name,url));
+ el.append(heading,p,small,nav);return el;
+}
+const editions=$("editions"),wikis=$("wikis");
+const notice=document.createElement("p");notice.className="empty";notice.textContent=words.loading;
+editions.append(notice);
+try{
+ const base=new URL("../",location.href);
+ const [edResponse,communityResponse]=await Promise.all([
+  fetch(new URL("catalog/editions.json",base),{cache:"no-cache"}),
+  fetch(new URL("catalog/community.json",base),{cache:"no-cache"})
+ ]);
+ if(!edResponse.ok||!communityResponse.ok)throw Error("HTTP catalog fetch");
+ const cat=await edResponse.json(),publicCatalog=await communityResponse.json();
+ if(cat.schemaVersion!==1||!Array.isArray(cat.editions)||publicCatalog.schemaVersion!==1||!Array.isArray(publicCatalog.publicWikis))
+  throw Error("Invalid catalog format");
+ const editionPrefix=new URL("editions/",base).pathname;
+ editions.replaceChildren();
+ for(const item of cat.editions){
+  if(!item||!/^[a-z0-9-]+$/.test(item.id||""))continue;
+  const manifest=new URL(item.manifest,new URL("catalog/editions.json",base));
+  if(manifest.origin!==location.origin||!manifest.pathname.startsWith(editionPrefix))continue;
+  const build=new URL("assembler/",base);
+  build.searchParams.set("edition",item.id);
+  const meta=(item.status==="test"?words.test:(item.status||words.status))+(item.version?" · "+item.version:"");
+  editions.append(card(item.name||item.id,item.description||"",meta,[
+   [words.build,build.href],[words.source,manifest.href]
+  ]));
+ }
+ if(!editions.children.length)throw Error("No valid Edition links");
+ wikis.replaceChildren();
+ for(const wiki of publicCatalog.publicWikis){
+  if(!wiki||typeof wiki.title!=="string"||typeof wiki.url!=="string")continue;
+  const href=new URL(wiki.url);
+  if(href.protocol!=="https:"||href.username||href.password||/^(?:localhost|127\.0\.0\.1|0\.0\.0\.0)$/i.test(href.hostname))continue;
+  wikis.append(card(wiki.title,da?(wiki.description_da||wiki.description||""):(wiki.description_en||wiki.description||""),wiki.author||"",[
+   [da?"Åbn wiki":"Open wiki",href.href]
+  ]));
+ }
+ if(!wikis.children.length){
+  const empty=document.createElement("p");empty.className="empty";empty.textContent=words.empty;wikis.append(empty);
+ }
+}catch(error){
+ console.error("HUWiki Community:",error);
+ notice.textContent=words.failed;
+ editions.replaceChildren(notice);
+}
+</script>
+</body>
+</html>
