@@ -1,0 +1,35 @@
+name: Build Forge Plugin Library registry
+
+on:
+  push:
+    branches:
+      - feat/forge-github-libraries-20261113
+    paths:
+      - scripts/build-forge-plugin-library.mjs
+      - .github/workflows/build-forge-plugin-registry.yml
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  index:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Build metadata-only registry from all repository plugin and theme bundles
+        run: node scripts/build-forge-plugin-library.mjs
+      - name: Save the versioned registry to the feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add library/plugins/registry.json
+          if ! git diff --cached --quiet; then
+            git commit -m "build(libraries): index current Forge plugin and theme versions"
+            git push origin HEAD:feat/forge-github-libraries-20261113
+          fi

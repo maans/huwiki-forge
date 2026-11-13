@@ -6,7 +6,8 @@
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/seed.json",
-    "tiddlers/config.json"
+    "tiddlers/config.json",
+    "../shared/libraries.json"
   ],
   "plugins": [
     "../../themes/modern/dist/theme.json",

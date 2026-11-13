@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>HUWiki Plugin Library · Forge</title>
+<style>
+body{font:1rem/1.6 system-ui,sans-serif;max-width:52rem;margin:3rem auto;padding:0 1.25rem;color:#203b33}
+a{color:#146c53}.note{border-left:3px solid #146c53;background:#f0f8f4;padding:12px 16px}
+code{overflow-wrap:anywhere}#count{font-weight:600}
+</style>
+<script>
+/*
+ * Static GitHub Pages adapter for TiddlyWiki 5.4.1's native plugin library.
+ * Uses the same GET / GET-RESPONSE protocol as official libraryserver.js.
+ * Index metadata comes from Forge's pinned plugin/theme packages; bytes are
+ * read from their canonical dist paths only when a user requests installation.
+ *
+ * No Google, database, uploader, cookies, secrets or build-time CDN.
+ */
+(function(){
+"use strict";
+const listingUrl=new URL("./registry.json",location.href);
+const pathPrefixes=[
+ new URL("../../plugins/",location.href).pathname,
+ new URL("../../themes/",location.href).pathname
+];
+const registryPromise=fetch(listingUrl.href,{cache:"no-cache",credentials:"omit"})
+ .then(response=>{if(!response.ok)throw Error("Registry HTTP "+response.status);return response.json();})
+ .then(reg=>{
+   if(reg.schemaVersion!==1||!Array.isArray(reg.items))throw Error("Invalid registry");
+   const entries=new Map();
+   for(const item of reg.items){
+     if(!item||!item.fields||typeof item.fields.title!=="string"||typeof item.path!=="string")
+       throw Error("Malformed plugin entry");
+     const url=new URL(item.path,location.href);
+     if(url.origin!==location.origin||!pathPrefixes.some(p=>url.pathname.startsWith(p))||
+        !url.pathname.endsWith(".json")||entries.has(item.fields.title))
+       throw Error("Unsafe or duplicate plugin path");
+     entries.set(item.fields.title,{url:url.href,fields:item.fields});
+   }
+   const counter=document.getElementById("count");
+   if(counter)counter.textContent=String(entries.size)+" available packages";
+   return entries;
+ });
+function respond(event,request,code,body,type){
+ if(!event.source||typeof event.source.postMessage!=="function")return;
+ // file:// TiddlyWikis have an opaque ("null") origin; they cannot be named
+ // as a targetOrigin. Reply only to the requesting parent window.
+ const targetOrigin=event.origin&&event.origin!=="null"?event.origin:"*";
+ event.source.postMessage({
+   verb:"GET-RESPONSE",status:String(code),cookies:request.cookies,
+   url:request.url,type:type||"application/json",body:body
+ },targetOrigin);
+}
+window.addEventListener("message",async function(event){
+ if(event.source!==window.parent||!event.data||event.data.verb!=="GET")return;
+ const request=event.data;
+ const requested=String(request.url||"");
+ try{
+   const registry=await registryPromise;
+   if(requested==="recipes/library/tiddlers.json"){
+     respond(event,request,200,JSON.stringify([...registry.values()].map(item=>item.fields)));
+     return;
+   }
+   const prefix="recipes/library/tiddlers/";
+   if(!requested.startsWith(prefix)||!requested.endsWith(".json")){
+     respond(event,request,404,"Unknown library request","text/plain");return;
+   }
+   const encodedTitle=requested.slice(prefix.length,-5);
+   let title;
+   try{title=decodeURIComponent(encodedTitle);}catch(_){respond(event,request,400,"Invalid plugin title","text/plain");return;}
+   const entry=registry.get(title);
+   if(!entry){respond(event,request,404,"Plugin not found","text/plain");return;}
+   const response=await fetch(entry.url,{credentials:"omit",cache:"no-store"});
+   if(!response.ok)throw Error("Plugin HTTP "+response.status);
+   const json=await response.json();
+   if(!json||json.title!==title||!["plugin","theme"].includes(json["plugin-type"]))
+     throw Error("Unexpected plugin identity");
+   respond(event,request,200,JSON.stringify(json));
+ }catch(error){
+   console.error("HUWiki Plugin Library:",error);
+   respond(event,request,503,"HUWiki Forge library unavailable: "+String(error&&error.message||error),"text/plain");
+ }
+},false);
+registryPromise.catch(error=>{
+ console.error(error);
+ const notice=document.getElementById("count");
+ if(notice)notice.textContent="Unable to read the Forge plugin registry.";
+});
+})();
+</script>
+</head>
+<body>
+<h1>HUWiki Plugin Library</h1>
+<p class="note">This is a read-only plugin library hosted on GitHub Pages. In TiddlyWiki, open <strong>Control Panel → Plugins → Get More Plugins → HUWiki Plugin Library</strong> to browse and install plugins.</p>
+<p id="count">Loading the Forge plugin registry …</p>
+<p>Source: <a href="https://github.com/maans/huwiki-forge/tree/main/plugins">Forge plugins on GitHub</a>. You can also explore the <a href="../../community/">HUWiki Community Editions</a>.</p>
+<p>Libraries are public and require no account. Saving plugins into your own wiki uses TiddlyWiki's existing Save mechanism.</p>
+</body>
+</html>

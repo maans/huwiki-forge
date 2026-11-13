@@ -1,0 +1,24 @@
+[
+  {
+    "title": "$:/config/HUWikiPluginLibrary",
+    "tags": "$:/tags/PluginLibrary",
+    "caption": "HUWiki Plugin Library",
+    "type": "text/vnd.tiddlywiki",
+    "url": "https://forge.måns.dk/library/plugins/index.html",
+    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">\nDette bibliotek henter installerbare plugins og temaer direkte fra HUWiki Forge på GitHub Pages.\n\n- Åbn biblioteket med TiddlyWikis eksisterende //Get More Plugins//-funktion.\n- Pakker installeres i din egen wiki og gemmes med TiddlyWikis normale Gem-funktion.\n- Der er ingen upload, konto eller Google-tjeneste bag biblioteket.\n\n[[Se kildekoden på GitHub|https://github.com/maans/huwiki-forge/tree/main/plugins]]\n</$list>\n\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">\nBrowse installable plugins and themes from HUWiki Forge on GitHub Pages.\n\n- Use TiddlyWiki's existing //Get More Plugins// control.\n- Packages are installed into your own wiki and saved with TiddlyWiki's native Save action.\n- No upload server, account or Google service is required.\n\n[[Browse the GitHub source|https://github.com/maans/huwiki-forge/tree/main/plugins]]\n</$list>"
+  },
+  {
+    "title": "$:/config/HUWikiCommunity",
+    "caption": "HUWiki Community",
+    "type": "text/vnd.tiddlywiki",
+    "url": "https://forge.måns.dk/community/",
+    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n! HUWiki Community\n\nHer finder du de offentlige HUWiki Forge Editions, som kan bygges og downloades direkte fra GitHub.\n\n[[Åbn HUWiki Community|https://forge.måns.dk/community/]]\n\nEn Edition er en selvstændig wiki-skabelon. Den er ikke en uploadt brugerwiki. Offentlige wiki-links kan senere føjes til kataloget efter ejerens tilladelse.\n\nTailscale Funnel kan bruges til at dele en levende wiki separat, men er ikke nødvendig for at hente Editions.\n</$list>\n\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n! HUWiki Community\n\nDiscover public HUWiki Forge Editions that you can build and download from GitHub.\n\n[[Open HUWiki Community|https://forge.måns.dk/community/]]\n\nAn Edition is a standalone wiki template, not a user-uploaded wiki. Public wiki links can be curated later with their owners' permission.\n\nTailscale Funnel is an optional way to share a running wiki, not a requirement for downloading Editions.\n</$list>"
+  },
+  {
+    "title": "HUWiki Community",
+    "caption": "HUWiki Community",
+    "tags": "$:/tags/SideBar",
+    "type": "text/vnd.tiddlywiki",
+    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n! HUWiki Community\n\nHer finder du de offentlige HUWiki Forge Editions, som kan bygges og downloades direkte fra GitHub.\n\n[[Åbn HUWiki Community|https://forge.måns.dk/community/]]\n\nEn Edition er en selvstændig wiki-skabelon. Den er ikke en uploadt brugerwiki. Offentlige wiki-links kan senere føjes til kataloget efter ejerens tilladelse.\n\nTailscale Funnel kan bruges til at dele en levende wiki separat, men er ikke nødvendig for at hente Editions.\n</$list>\n\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n! HUWiki Community\n\nDiscover public HUWiki Forge Editions that you can build and download from GitHub.\n\n[[Open HUWiki Community|https://forge.måns.dk/community/]]\n\nAn Edition is a standalone wiki template, not a user-uploaded wiki. Public wiki links can be curated later with their owners' permission.\n\nTailscale Funnel is an optional way to share a running wiki, not a requirement for downloading Editions.\n</$list>"
+  }
+]

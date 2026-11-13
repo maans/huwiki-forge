@@ -1,0 +1,5 @@
+{
+  "schemaVersion": 1,
+  "description": "Curated links to publicly shared community wikis. Editions are read from catalog/editions.json; no uploads or server.",
+  "publicWikis": []
+}
