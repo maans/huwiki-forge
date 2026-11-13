@@ -602,3 +602,39 @@ test("initial pull failure never unlocks stale HTML for editing", async () => {
   assert.equal(client.lastPullSucceeded, false);
   client.stop();
 });
+
+test("recovered drafts from an older HTML snapshot remain local and cannot overwrite new media", async () => {
+  const f = backendFixture();
+  enable(f);
+  const data = new Map();
+  const storage = {
+    getItem: key => data.get(key) || null,
+    setItem: (key, value) => data.set(key, value),
+    removeItem: key => data.delete(key)
+  };
+  const Delta = clientClass();
+  const rpc = async (name, ...args) => f.ctx[name](...args);
+  const oldFingerprint = f.file.md5Checksum;
+  const A = fakeWiki();
+  const a = new Delta({tw:A, fileId:f.file.id, rpc, storage, fingerprint:oldFingerprint});
+  assert.equal(await a.start(), true);
+  A.wiki.addTiddler(new A.Tiddler({title:"Offline draft",text:"keep my edits"}));
+  assert.equal(a.pending.size,1);
+  a.stop();
+
+  const updated = f.ctx.huSave(f.file.id,
+    "<html>new shared media</html>", oldFingerprint, 0);
+  assert.equal(updated.ok,true);
+  assert.notEqual(f.file.md5Checksum,oldFingerprint);
+  const B = fakeWiki();
+  const b = new Delta({tw:B, fileId:f.file.id, rpc, storage,
+    fingerprint:f.file.md5Checksum, snapshotSeq:updated.meta.snapshotSeq});
+  assert.equal(await b.start(),false, "stale recovered drafts must stop bootstrap");
+  assert.equal(b.snapshotOutdated,true);
+  assert.equal(B.wiki.getTiddler("Offline draft").fields.text,"keep my edits");
+  assert.equal(b.pending.size,1);
+  assert.equal(data.size,1, "recovery data must remain available for manual backup");
+  await b.flush();
+  assert.equal(f.ctx.huSyncPull(f.file.id,0,10).events.length,0);
+  b.stop();
+});
