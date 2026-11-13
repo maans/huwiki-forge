@@ -105,6 +105,7 @@
       }
       const payload = {
         actor: this.actor,
+        snapshotFingerprint: this.snapshotFingerprint,
         pending: [...this.pending.values()],
         conflicts: [...this.conflicts.entries()],
         unsupported: [...this.unsupported.entries()]
@@ -129,6 +130,12 @@
       catch (_error) { this.onStatus(this.localize("Ugyldig lokal synkkø. Hent en lokal sikkerhedskopi.", "Invalid local sync queue. Download an HTML backup."), true); return; }
       if (!saved || !Array.isArray(saved.pending)) return;
       if (typeof saved.actor === "string") this.actor = saved.actor;
+      // Pending drafts were captured from the HTML file that was open then.
+      // If another user saved a newer full HTML snapshot, its large/system
+      // tiddlers may have changed without any journal revision. Restore
+      // drafts for a local HTML backup, but NEVER silently push them.
+      const sourceFingerprint = String(saved.snapshotFingerprint || "").toLowerCase();
+      const snapshotMismatch = sourceFingerprint !== this.snapshotFingerprint;
       for (const op of saved.pending) {
         if (!op || !op.title || op.title.startsWith("$:/") ||
             !["put","delete"].includes(op.operation) ||
@@ -164,8 +171,17 @@
           this.tw.wiki.addTiddler(new this.tw.Tiddler(entry.fields));
         }
       }
-      if (this.pending.size || this.unsupported.size || this.conflicts.size)
+      if (snapshotMismatch &&
+          (this.pending.size || this.unsupported.size || this.conflicts.size)) {
+        this.snapshotOutdated = true;
+        this.lastPullSucceeded = false;
+        this.onStatus(this.localize(
+          "Lokale ændringer blev gendannet fra et ældre HTML-snapshot. De er kun i denne browser. Hent en lokal backup, før du genåbner wikien.",
+          "Local edits from an older HTML snapshot were recovered. They exist only in this browser. Download a local backup before reopening the wiki."
+        ), true);
+      } else if (this.pending.size || this.unsupported.size || this.conflicts.size) {
         this.onStatus(this.localize("Lokale ikke-synkroniserede ændringer blev gendannet. De er endnu ikke gemt på Drev.", "Unsynced local edits were recovered. They are not yet saved to Drive."), true);
+      }
     }
     async start(initialInfo) {
       if (this.active) return true;
