@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "tegne",
   "name": "HUWiki Tegne Edition",
-  "version": "0.1.0-test.1",
+  "version": "0.1.1-test.1",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/seed.json",
