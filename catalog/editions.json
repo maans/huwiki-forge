@@ -53,8 +53,8 @@
     {
       "id": "site-publisher",
       "name": "HUWiki SitePublisher",
-      "version": "0.1.13-test.1",
-      "description": "Offline HTML publishing with native HUPedia infoboxes, CutOut animation reader, embedded media and selectable layouts",
+      "version": "0.1.14-test.1",
+      "description": "Offline HTML publishing with CutOut, Excalidraw SVG drawings, local media, HUPedia infoboxes and selectable layouts",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
     },
