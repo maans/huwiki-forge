@@ -205,7 +205,7 @@
         "title": "$:/plugins/huwiki/musical",
         "type": "application/json",
         "name": "Musical · CutOut + ABC",
-        "description": "Musical Studio workspace: integrated stage/score above multitrack timeline, camera cuts as keyframes, direct CutOut element inspector and ABC crossfades",
+        "description": "Compact Musical Studio: stage, live ABC score, editable camera and animation tracks, independent song crossfades",
         "author": "HUWiki Forge",
         "version": "0.5.0-test.1",
         "plugin-type": "plugin",
