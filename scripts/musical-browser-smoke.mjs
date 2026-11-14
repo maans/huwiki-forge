@@ -111,6 +111,24 @@ try{
  await page.screenshot({path:path.join(root,"dist-musical/Musical-Studio-Layout-0.5.png"),fullPage:false});
  await player.locator(".huw-musical-focus-button").click();
  assert.ok(!(await player.evaluate(el=>el.classList.contains("huw-musical--focus"))));
+ // A scene element can be moved by the contextual CutOut editor and
+ // persisted back to its original scene tiddler without restarting Musical.
+ const moved=await page.evaluate(function(){
+  function locate(w){
+   if(w&&w._editor&&w.host&&w.host.classList.contains("huw-musical"))return w;
+   for(const c of w.children||[]){var result=locate(c);if(result)return result;}return null;
+  }
+  var widget=locate($tw.rootWidget),title="Musical – Tændstikorkestret (scene)",
+   before=$tw.wiki.getTiddlerText(title);
+  widget._editor.selectPart("drummer-root");
+  var drag=widget._editor.beginPartMove("drummer-root",0);
+  if(!drag)throw Error("Could not select CutOut musician for keyframe editing");
+  drag.update(12,5);drag.commit();
+  var after=$tw.wiki.getTiddlerText(title);
+  return {changed:before!==after,selected:widget.host.classList.contains("huw-musical--inspector-open"),
+   name:JSON.parse(after).parts.find(x=>x.id==="drummer-root").name};
+ });
+ assert.ok(moved.changed&&moved.selected,"CutOut position edits are persisted without replacing the editor");
  await player.locator(".huw-musical-inspector-close").click();
  const tracks=player.locator(".huw-musical-track");
  assert.ok(await tracks.count()>=15,"Each complete ABC tune needs its own track");
