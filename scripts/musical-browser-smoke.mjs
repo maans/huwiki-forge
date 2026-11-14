@@ -122,6 +122,35 @@ try{
  await player.locator(".huw-musical-speed").selectOption("75");
  await player.locator(".huw-musical-stop").click();
  assert.equal(Number(await slider.inputValue()),0);
+ // Exercise two simultaneous controllers without downloading a SoundFont:
+ // go/play/pause are mocked, but the real Musical transport and session run.
+ const concurrent=await page.evaluate(async function(){
+  function locate(w){if(w&&w._songStates&&w.host&&w.host.classList.contains("huw-musical"))return w;
+   for(const c of w.children||[]){var found=locate(c);if(found)return found;}return null;}
+  var musical=locate($tw.rootWidget),songs=musical._songStates,events=[];
+  if(songs.length!==2)throw Error("Expected two independently loaded ABC scores");
+  songs.forEach(function(song,i){
+   var c=song.controller;
+   c.isStarted=false;c.isLoaded=true;c.timer=null;
+   c.go=function(){events.push("prepare:"+i);return Promise.resolve();};
+   c.play=function(){c.isStarted=true;events.push("play:"+i);return Promise.resolve({status:"mocked"});};
+   c.pause=function(){c.isStarted=false;events.push("pause:"+i);};
+   c.huwikiStop=function(){c.isStarted=false;events.push("stop:"+i);};
+   c.midiBuffer={setVolumes:function(){events.push("gain:"+i);}};
+  });
+  var slider=musical.host.querySelector(".huw-musical-range");
+  slider.value="15";slider.dispatchEvent(new Event("input",{bubbles:true}));
+  musical.host.querySelector(".huw-musical-play").click();
+  await new Promise(function(resolve){setTimeout(resolve,90);});
+  var started=songs.map(function(s){return s.controller.isStarted;});
+  musical.host.querySelector(".huw-musical-play").click();
+  await new Promise(function(resolve){setTimeout(resolve,15);});
+  var paused=songs.map(function(s){return !s.controller.isStarted;});
+  return {started:started,paused:paused,events:events,selected:musical.host.dataset.activeSongCount};
+ });
+ assert.deepEqual(concurrent.started,[true,true],"Both whole-song controllers play concurrently at the overlap");
+ assert.deepEqual(concurrent.paused,[true,true],"One Pause stops both audio streams together");
+ assert.ok(concurrent.events.includes("play:0")&&concurrent.events.includes("play:1"));
  assert.equal(await page.locator(".tc-error-form").count(),0);
  assert.deepEqual(errors,[]);
  console.log("PASS Musical: two independently placed ABC tracks, equal-power crossfade, dual notation, mixer gain updates, CutOut camera and one transport");
