@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "musical",
   "name": "Musical Edition",
-  "version": "0.1.0-test.1",
+  "version": "0.2.0-test.1",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",
