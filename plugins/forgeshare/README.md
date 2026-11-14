@@ -170,3 +170,11 @@ Regression tests cover occupied Funnel → private/LAN/local retry, cancelled vi
 ### Reusing a stopped wiki or site (0.1.13)
 
 Private Tailscale sharing checks the saved addresses on each start. If an old route still holds one, ForgeShare selects unused local and private HTTPS addresses without replacing that route or any other service. Only a successful start updates the saved addresses. The current link is available under Copy address; previous invitations may need a new link. A running listener on the old local address blocks startup so that the helper does not create a second writer for the same wiki. Funnel still requires a free supported port (443, 8443 or 10000) and never takes over another service.
+
+### macOS 0.1.15 stabilization and Gatekeeper
+
+This test build deliberately reuses the proven native 0.1.13 Mac launcher and icon; it **does not** roll back the 0.1.15 JavaScript library, local Wiki Node.js server, read-only static Site HTTP server, sharing modes, or per-row Stop. macOS Tailscale discovery again prefers `/usr/local/bin/tailscale` and `/opt/homebrew/bin/tailscale` before the Tailscale.app executable fallback. Command subprocesses explicitly request CLI mode. Foreground Serve process-group cleanup and conflict-safe port recovery remain in place.
+
+A real GUI launch check on a macOS CI runner verifies a visible ForgeShare library window in addition to the native self-test. It does **not** substitute for acceptance on the user's particular Mac or a second Tailscale device.
+
+**Important:** The Mac ZIP is ad-hoc signed only, not Apple Developer ID-signed or notarized. A downloaded copy can trigger the standard Gatekeeper warning; the warning is not by itself a malware finding. Do not disable system-wide security to run it. A frictionless public Mac distribution requires Developer ID signing and Apple notarization. More details: https://support.apple.com/da-dk/102445.
