@@ -207,7 +207,7 @@
         "name": "Musical · CutOut + ABC",
         "description": "Synchronized ABC music, CutOut animation and virtual camera / Synkroniseret musik, animation og kamera",
         "author": "HUWiki Forge",
-        "version": "0.2.0-test.1",
+        "version": "0.3.0-test.1",
         "plugin-type": "plugin",
         "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/abc",
         "stability": "experimental",
