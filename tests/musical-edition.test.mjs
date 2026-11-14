@@ -49,10 +49,10 @@ test("Orchestra has animated players, original ABC score, and editable film came
  assert.ok(actors.every(p=>p.keys.length>=30));
  assert.equal(stage.kind,"scene");
  assert.equal(film.kind,"theatre");
- assert.equal(film.scenes.length,1);
+ assert.equal(film.scenes.length,2);
  assert.equal(film.scenes[0].sourceId,stage.id);
  assert.equal(film.scenes[0].duration,16);
- assert.equal(film.camera.keys.length,9);
+ assert.equal(film.camera.keys.length,15);
  assert.ok(film.camera.keys.every(k=>Number.isFinite(k.t)&&Number.isFinite(k.x)&&Number.isFinite(k.y)&&k.zoom>=.25&&k.zoom<=16));
  assert.ok(film.camera.keys.some(k=>k.zoom>1.8));
  assert.ok(film.camera.keys.some(k=>k.zoom===1));
@@ -120,16 +120,61 @@ test("Musical Studio supports live notes, whole songs, lighting and editable cam
  new vm.Script(editor.text).runInNewContext(ctx);
  const rows=await json("editions/musical/tiddlers/seed.json");
  const movie=JSON.parse(rows.find(t=>t.title==="Musical – Tændstikorkestret (film)").text);
- assert.equal(movie.musical.songs.length,1);
+ assert.equal(movie.musical.songs.length,2);
  assert.equal(movie.musical.songs[0].score,"Musical – Tændstikorkestret (ABC)");
  assert.match(editor.text,/markOwnWrite/);
  assert.match(widget,/this\._ownWritten/);
  assert.equal(movie.musical.songs[0].kind,"complete-abc");
+ assert.equal(movie.musical.songs[1].score,"Musical – Tændstikorkestret (Finale ABC)");
+ assert.equal(movie.musical.songs[1].start,16);
  assert.ok(movie.musical.cameraB.keys.length>=3);
  assert.ok(movie.musical.cuts.some(k=>k.camera==="A"));
  assert.ok(movie.musical.cuts.some(k=>k.camera==="B"));
  assert.ok(movie.musical.lighting.keys.length>=3);
  const model=ctx.exports.ensureMusical(movie);
- assert.equal(model.cuts.length,5);
+ assert.equal(model.cuts.length,10);
  assert.equal(ctx.exports.interpolate([{t:0,intensity:0},{t:4,intensity:1}],2,"intensity",0),.5);
+});
+
+test("A single transport maps two complete ABC tunes to absolute global time",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const sh=JSON.parse(plugin.text).tiddlers;
+ const source=sh["$:/plugins/huwiki/musical/playlist.js"];
+ assert.equal(source["module-type"],"library");
+ const context={exports:{}};
+ new vm.Script(source.text).runInNewContext(context);
+ const Playlist=context.exports;
+ const items=Playlist.reflow([
+  {id:"one",score:"First complete song",duration:16},
+  {id:"two",score:"Second complete song",duration:11.5},
+  {id:"three",score:"Third complete song",duration:8}
+ ],"First complete song");
+ assert.equal(Playlist.total(items),35.5);
+ assert.equal(items[0].start,0);
+ assert.equal(items[1].start,16);
+ assert.equal(items[2].start,27.5);
+ assert.equal(Playlist.locate(items,15.99).index,0);
+ assert.equal(Playlist.locate(items,16).index,1);
+ assert.equal(Playlist.locate(items,27.49).index,1);
+ assert.equal(Playlist.locate(items,27.5).index,2);
+ assert.equal(Playlist.locate(items,35.5).local,8);
+ assert.equal(Playlist.at(items,1,3.5),19.5);
+ const widget=sh["$:/plugins/huwiki/musical/widget.js"].text;
+ const editor=sh["$:/plugins/huwiki/musical/editor.js"].text;
+ new vm.Script(widget);new vm.Script(editor);
+ assert.match(widget,/switchSong\(index\+1,clips\[index\+1\]\.start,true\)/);
+ assert.match(widget,/StartPosition\.seek\(c,song\.tune/);
+ assert.match(widget,/timeline\.beatPosition\(Playlist\.at/);
+ assert.match(widget,/data-song-index/);
+ assert.match(editor,/huw-musical-add-song/);
+ assert.match(editor,/huw-musical-remove-song/);
+ assert.match(editor,/huw-musical-move-song-earlier/);
+ assert.match(editor,/huw-musical-move-song-later/);
+ const rows=await json("editions/musical/tiddlers/seed.json");
+ const titles=new Set(rows.filter(x=>x["abc-source"]).map(x=>x.title));
+ const movie=JSON.parse(rows.find(x=>x.title==="Musical – Tændstikorkestret (film)").text);
+ assert.equal(movie.scenes.length,2);
+ for(const song of movie.musical.songs)assert.ok(titles.has(song.score));
+ assert.equal(movie.scenes.reduce((sum,x)=>sum+x.duration,0),32);
+ assert.equal(movie.musical.songs.reduce((sum,x)=>sum+x.duration,0),32);
 });
