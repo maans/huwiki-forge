@@ -99,3 +99,34 @@ test("Forge catalog, home card and native Plugin Library publish Musical",async(
  const registry=await json("library/plugins/registry.json");
  assert.ok(registry.items.some(x=>x.fields.title==="$:/plugins/huwiki/musical"));
 });
+
+
+test("Musical Studio supports live notes, whole songs, lighting and editable camera cuts",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const shadows=JSON.parse(plugin.text).tiddlers;
+ const editor=shadows["$:/plugins/huwiki/musical/editor.js"];
+ assert.equal(editor["module-type"],"library");
+ const widget=shadows["$:/plugins/huwiki/musical/widget.js"].text;
+ new vm.Script(editor.text);
+ new vm.Script(widget);
+ assert.match(widget,/onEvent:function\(evt\)/);
+ assert.match(widget,/showNotes\(t\)/);
+ assert.match(widget,/Editor\.attach/);
+ assert.match(widget,/externalChange\(this\._stageTitle\)/);
+ assert.match(editor.text,/setPointerCapture/);
+ assert.match(editor.text,/wiki\.addTiddler/);
+ assert.match(editor.text,/cameraState/);
+ const ctx={exports:{},require:()=>({})};
+ new vm.Script(editor.text).runInNewContext(ctx);
+ const rows=await json("editions/musical/tiddlers/seed.json");
+ const movie=JSON.parse(rows.find(t=>t.title==="Musical – Tændstikorkestret (film)").text);
+ assert.equal(movie.musical.songs.length,1);
+ assert.equal(movie.musical.songs[0].kind,"complete-abc");
+ assert.ok(movie.musical.cameraB.keys.length>=3);
+ assert.ok(movie.musical.cuts.some(k=>k.camera==="A"));
+ assert.ok(movie.musical.cuts.some(k=>k.camera==="B"));
+ assert.ok(movie.musical.lighting.keys.length>=3);
+ const model=ctx.exports.ensureMusical(movie);
+ assert.equal(model.cuts.length,5);
+ assert.equal(ctx.exports.interpolate([{t:0,intensity:0},{t:4,intensity:1}],2,"intensity",0),.5);
+});
