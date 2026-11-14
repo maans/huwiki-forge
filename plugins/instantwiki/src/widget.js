@@ -89,14 +89,16 @@ Instant.prototype.documentTiddlers=async function(existing){let sourceAsset=null
  if(this.result.requireSource){const doc=output.tiddlers[0],part=output.tiddlers[1];part['instant-source-file']=doc['instant-source-file'];part.text='<$transclude tiddler={{!!instant-source-file}}/>';}
  return output;
 };
-Instant.prototype.importHere=async function(){const output=await this.documentTiddlers(this.wiki.filterTiddlers('[all[tiddlers+shadows]]'));this.dispatchEvent({type:'tm-import-tiddlers',param:JSON.stringify(output.tiddlers),autoOpenOnImport:'yes'});this.notice=this.t('Kontrollér tiddlerne i importvinduet.','Review the tiddlers in the import window.');};
+// TiddlyWiki's JSON importer only normalizes built-in list fields. Serialize
+// custom lists too, so titles containing spaces survive native import.
+function stringifyFields(t){return Object.fromEntries(Object.entries(t).filter(([,v])=>v!==undefined).map(([k,v])=>[k,Array.isArray(v)?$tw.utils.stringifyList(v):String(v)]));}
+Instant.prototype.importHere=async function(){const output=await this.documentTiddlers(this.wiki.filterTiddlers('[all[tiddlers+shadows]]'));this.dispatchEvent({type:'tm-import-tiddlers',param:JSON.stringify(output.tiddlers.map(stringifyFields)),autoOpenOnImport:'yes'});this.notice=this.t('Kontrollér tiddlerne i importvinduet.','Review the tiddlers in the import window.');};
 Instant.prototype.createWiki=async function(){
  if(!this.choices)await this.loadChoices();
  const composed=await this.composer.composeWiki({choices:this.choices,editionId:this.edition||'',packageTitles:[PLUGIN],name:this.name,language:this.lang()==='da'?'da-DK':'en-GB'});
  const titles=new Set(composed.tiddlers.map(t=>t.title));for(const p of composed.tiddlers.filter(t=>t['plugin-type']))for(const t of Object.keys(JSON.parse(p.text).tiddlers||{}))titles.add(t);
  const output=await this.documentTiddlers([...titles]);
- const stringify=t=>Object.fromEntries(Object.entries(t).filter(([,v])=>v!==undefined).map(([k,v])=>[k,Array.isArray(v)?$tw.utils.stringifyList(v):String(v)]));
- composed.tiddlers.push(...output.tiddlers.map(stringify));
+ composed.tiddlers.push(...output.tiddlers.map(stringifyFields));
  const defaults=composed.tiddlers.find(t=>t.title==='$:/DefaultTiddlers');defaults.text=$tw.utils.stringifyList([output.root]);
  const core=await this.assembler.loadOfficialCore(this.base());const html=this.assembler.assembleHtml(core.html,composed.tiddlers);
  const url=URL.createObjectURL(new Blob([html],{type:'text/html;charset=utf-8'}));const a=this.el('a','',null,{href:url,download:(this.name||'InstantWiki').replace(/[^\p{L}\p{N} _-]/gu,'').slice(0,80)+'.html'});a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);

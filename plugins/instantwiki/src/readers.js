@@ -64,7 +64,7 @@ async function pdf(file,options,report){
  const task=api.getDocument({data:new Uint8Array(await file.arrayBuffer()),isEvalSupported:false,useSystemFonts:true,useWasm:false,useWorkerFetch:false,stopAtErrors:true});task.onPassword=()=>task.destroy();let doc;
  try{doc=await task.promise;if(doc.numPages>150)throw Error('pdf-too-many-pages');const blocks=[];let empty=0,total=0;
   for(let i=1;i<=doc.numPages;i++){report(i+'/'+doc.numPages);const page=await doc.getPage(i),content=await page.getTextContent();let text='';content.items.forEach(t=>{text+=String(t.str||'')+(t.hasEOL?'\n':' ');});total+=text.length;if(total>MAX_TEXT)throw Error('too-large');if(!text.trim())empty++;
-   blocks.push({plain:text,html:'<h2>'+esc((options.en?'Page ':'Side ')+i)+'</h2><p>'+esc(text).replace(/\n/g,'<br>')+'</p>',level:1});page.cleanup();}
+   blocks.push({plain:text,html:'<p>'+esc(text).replace(/\n/g,'<br>')+'</p>',level:1});page.cleanup();}
   const sourceOnly=options.pdfMode==='source'||options.pdfMode!=='text'&&empty===doc.numPages;
   if(sourceOnly)return {sections:[{title:file.name,text:'',mergeText:'',level:1,path:[],tocType:'document'}],modeUsed:'pdf-source',warning:'pdf-source',requireSource:true};
   return {sections:blocks.map((b,i)=>({title:(options.en?'Page ':'Side ')+(i+1),text:b.html,mergeText:b.html,level:1,path:[],tocType:'page'})),modeUsed:'pages',warning:empty?'pdf-missing-text':'pdf-text'};
