@@ -205,7 +205,7 @@
         "title": "$:/plugins/huwiki/musical",
         "type": "application/json",
         "name": "Musical · CutOut + ABC",
-        "description": "Live ABC score cursor, CutOut animation tracks, keyframes, lighting and camera cuts",
+        "description": "Synchronized ABC music, CutOut animation and virtual camera / Synkroniseret musik, animation og kamera",
         "author": "HUWiki Forge",
         "version": "0.2.0-test.1",
         "plugin-type": "plugin",

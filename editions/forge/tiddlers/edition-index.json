@@ -90,9 +90,9 @@
     "heading-da": "Lav din egen musikvideo",
     "heading-en": "Create your own music video",
     "description-da": "Lav en musikvideo med levende nodeark, musikeranimationer, belysning og to virtuelle kameraer.",
-    "description-en": "Create a music video with live notation, performer animation, lighting and two virtual cameras.",
-    "note-da": "Musical Studio test. Lydsynkronisering og Safari/iPad kræver manuel afprøvning.",
-    "note-en": "Musical Studio test. Audio sync and Safari/iPad require manual testing."
+    "description-en": "Create a music video with a live score, animated performers, lighting and two virtual cameras.",
+    "note-da": "Musical Studio test. Safari/iPad og synkron lyd skal stadig prøves manuelt.",
+    "note-en": "Musical Studio test. Audio synchronisation and Safari/iPad need manual checks."
   },
   {
     "title": "$:/huwiki/forge/edition/hupin",
