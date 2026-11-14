@@ -9,10 +9,10 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using System.Reflection;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.6.0")]
+[assembly: AssemblyVersion("0.1.7.0")]
 
 class Session {
-    public Process Process; public string Name, Url = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady;
+    public Process Process; public string Name, Url = "", OwnerUrl = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady;
     public FlowLayoutPanel Row; public Label Label; public Button Copy, Stop;
 }
 class LibraryEntry {
@@ -122,7 +122,7 @@ class ForgeShare : Form {
                 UI(()=> { if(!sessions.Contains(session)) return;
                     if(data.ContainsKey("name")) session.Name=data["name"];
                     Uri address;
-                    if(data.ContainsKey("event") && data["event"]=="ready" && data.ContainsKey("url") && Uri.TryCreate(data["url"],UriKind.Absolute,out address) && PermittedAddress(address)) { session.Mode=data.ContainsKey("mode")?data["mode"]:"";session.Access=data.ContainsKey("access")?data["access"]:"login";session.Url=data["url"]; session.Copy.Enabled=true; if(session.OpenWhenReady){session.OpenWhenReady=false;Process.Start(new ProcessStartInfo(session.Url){UseShellExecute=true});} ReloadLibrary(); AdvanceShareQueue(session.Id); }
+                    if(data.ContainsKey("event") && data["event"]=="ready" && data.ContainsKey("url") && Uri.TryCreate(data["url"],UriKind.Absolute,out address) && PermittedAddress(address)) { session.Mode=data.ContainsKey("mode")?data["mode"]:"";session.Access=data.ContainsKey("access")?data["access"]:"login";session.Url=data["url"]; Uri own; if(data.ContainsKey("ownerUrl") && Uri.TryCreate(data["ownerUrl"],UriKind.Absolute,out own) && own.Scheme=="http" && own.Host=="127.0.0.1")session.OwnerUrl=data["ownerUrl"]; session.Copy.Enabled=true; if(session.OpenWhenReady){session.OpenWhenReady=false;Process.Start(new ProcessStartInfo(session.OwnerUrl.Length>0?session.OwnerUrl:session.Url){UseShellExecute=true});} ReloadLibrary(); AdvanceShareQueue(session.Id); }
                     Update(session);
                 });
             } catch { }
@@ -156,7 +156,7 @@ class ForgeShare : Form {
         LibraryCommand(action,new {},text=>{
             try {
                 if(text==null)throw new Exception();var data=new JavaScriptSerializer().Deserialize<LibraryData>(text);
-                if(data.sharing!=null)sharingLabel.Text=T("Deling: ","Sharing: ")+(data.sharing.mode=="lan"?T("Hjemmenetværk","Home network"):"Tailscale")+" · "+(data.sharing.allowAnonymous?T("uden wiki-login","no wiki login"):T("med wiki-login","with wiki login"));
+                if(data.sharing!=null)sharingLabel.Text=T("Deling: ","Sharing: ")+(data.sharing.mode=="lan"?T("Hjemmenetværk","Home network"):data.sharing.mode=="funnel"?"Funnel":"Tailscale")+" · "+(data.sharing.mode=="funnel"?T("læser- og redaktørkode","reader and editor codes"):data.sharing.allowAnonymous?T("uden wiki-login","no wiki login"):T("med wiki-login","with wiki login"));
                 library.Items.Clear();foreach(var e in data.entries)library.Items.Add(e,selected.Contains(e.id));
                 if(checkStartup){checkStartup=false;LibraryCommand("startup-status",new {},value=>{
                     if(value==null)return;var setting=new JavaScriptSerializer().Deserialize<StartupData>(value).startup;
@@ -203,14 +203,14 @@ class ForgeShare : Form {
         }
         var existing=sessions.Find(s=>s.Id==e.id);
         if(existing!=null) {
-            if(local && existing.Url.Length>0)Process.Start(new ProcessStartInfo(existing.Url){UseShellExecute=true});
+            if(local && existing.Url.Length>0)Process.Start(new ProcessStartInfo(existing.OwnerUrl.Length>0?existing.OwnerUrl:existing.Url){UseShellExecute=true});
             else MessageBox.Show(T("Denne wiki kører allerede. Stop den først for at ændre delingen.","This wiki is already running. Stop it first to change sharing."),"ForgeShare");return;
         }
         nextID=e.id;nextLocal=local;StartWiki();
     }
     void Update(Session s) {
-        var network=s.Local?T("kun lokalt","local only"):s.Mode=="lan"?T("hjemmenetværk","home network"):"Tailscale";
-        var login=s.Access=="open"?T("uden login","no login"):T("med login","with login");
+        var network=s.Local?T("kun lokalt","local only"):s.Mode=="lan"?T("hjemmenetværk","home network"):s.Mode=="funnel"?"Funnel":"Tailscale";
+        var login=s.Mode=="funnel"?T("læser- og redaktørkode","reader and editor codes"):s.Access=="open"?T("uden login","no login"):T("med login","with login");
         s.Label.Text=s.Name+(s.Stopping?T(" — stopper…"," — stopping…"):s.Url.Length==0?"":" — "+network+" · "+login)+(s.Url.Length==0?"":"\n"+s.Url);
     }
     void Stop(Session s) { if(s.Stopping) return; s.Stopping=true; s.Stop.Enabled=false; Update(s);

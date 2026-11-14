@@ -1,6 +1,6 @@
-# HUWiki Forge: Plugin Library og Community
+# HUWiki Forge: Plugin Library og TiddlyWiki Community
 
-Begge biblioteker leveres direkte fra [Forge på GitHub](https://github.com/maans/huwiki-forge) gennem GitHub Pages. Der kræves **ingen Google Apps Script-server, uploadservice, database, nøgle eller konto** for at browse/hente offentlige pakker.
+HUWiki Plugin Library leveres direkte fra [Forge på GitHub](https://github.com/maans/huwiki-forge) gennem GitHub Pages. Der kræves **ingen Google Apps Script-server, uploadservice, database, nøgle eller konto** for at browse/hente offentlige pakker.
 
 ## HUWiki Plugin Library (installerbare pakker)
 
@@ -15,14 +15,20 @@ Adresse: **https://forge.måns.dk/library/plugins/index.html**
 
 **Hvorfor ikke en GitHub-mappe som plugin-URL?** TiddlyWikis indbyggede bibliotek viser og installerer plugins ved hjælp af en enkel iframe-forespørgselsprotokol; et almindeligt \`github.com/.../tree/main/plugins\`-link understøtter ikke dette. Forge's statiske Pages-side er adapteren, men alle kildefiler ligger stadig i det offentlige GitHub-repository.
 
-## HUWiki Community (Editions og offentlige wikier)
+## TiddlyWiki Community
 
-Adresse: **https://forge.måns.dk/community/**
+Adresse: **https://tiddlywiki.com/#Community**
 
-- Community viser **Forge Editions** direkte fra \`catalog/editions.json\`, med link til manifest og \`/assembler/?edition=<id>\`. Assembler vælger den relevante Edition, som brugeren derefter selv bygger og gemmer.
-- Valgfrie links til **offentligt delte brugerwikier** kan tilføjes i \`catalog/community.json\` efter ejerens tilladelse. Der er ingen automatiske private wiki-opslag, brugerupload, selvbetjening til publicering eller påstand om serverbaseret deling.
-- Den fælles \`$:/config/HUWikiCommunity\` angiver Community-URL'en og et læsbart \`HUWiki Community\`-panel ligger i wikiens sidebjælke. Det har **ikke** tag \`$:/tags/PluginLibrary\`, fordi Editions ikke skal optræde som installerbare plugins.
-- Teksten i TiddlyWiki følger eksisterende \`$:/language\` (dansk/engelsk). Den statiske Community-side viser dansk/engelsk efter browserens sprog, uden ekstra sprogvælger.
+- Forge henviser til TiddlyWikis eksisterende fællesskab. Det tidligere ekstra Edition-katalog på `/community/` er erstattet med en viderestilling.
+- Community har ingen `$:/tags/SideBar`-markering og vises derfor ikke som en fane i nye Editions.
+- De gamle tiddlertitler `HUWiki Community` og `$:/config/HUWikiCommunity` bevares kun for kompatibilitet med gemte wikier. Deres tekst og adresse peger nu på TiddlyWiki; begge har tomme tags.
+- Teksten følger TiddlyWikis `$:/language`. HUWiki Plugin Library bevarer sin normale plads i pluginbiblioteket.
+
+## Læsetilstand og eksisterende kopier
+
+- Den fælles sidebar-tilpasning skjuler Tools via den eksisterende `$:/temp/HUWiki/AuthorReadingMode`-tilstand. Den tilføjer hverken en ny læseknap eller en ny standardtilstand.
+- Hvis Tools var valgt, skifter sidepanelet til Open ved aktivering af læsetilstand. Tools vender tilbage i redigeringstilstand. Kontrolpanelet og Gem bevares.
+- Allerede gemte HTML-wikier opdateres ikke automatisk. Importér den opdaterede fælles konfiguration, gem og genåbn, eller hent en ny Edition. Eksisterende indhold skal ikke overskrives.
 
 ## Tailscale Serve/Funnel
 
@@ -31,5 +37,5 @@ Adresse: **https://forge.måns.dk/community/**
 ## Status og manuel afprøvning
 
 - CI validerer sammensætning af de fem Editions, metadata, versionssynkronisering og \`GET\`/\`GET-RESPONSE\`-protokollen.
-- Kontrollér manuelt i den **downloadede** HTML-wiki på Mac/iPad: *Get More Plugins* → HUWiki Plugin Library → vælg og installer en mindre pluginpakke → Gem/genåbn wiki. Afprøv også Community-fanen og dens links til Edition Assembler.
+- Kontrollér manuelt i den **downloadede** HTML-wiki på Mac/iPad: *Get More Plugins* → HUWiki Plugin Library → vælg og installer en mindre pluginpakke → Gem/genåbn wiki. Kontrollér at Community-fanen er væk, og at Tools skjules i læsetilstand.
 - Gemte wikier fra **før** denne ændring opdateres ikke automatisk; byg en ny Edition eller importér den fælles biblioteks-konfiguration.

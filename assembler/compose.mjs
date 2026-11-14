@@ -67,7 +67,7 @@ Tilføj en ny tiddler med plusknappen. Brug TiddlyWikis Gem-knap til at gemme di
 <$list filter="[all[tiddlers]!is[system]!is[draft]!match[Min wiki / My wiki]]"><$link/><br/></$list>
 
 !! Dine værktøjer
-Plugins og deres vejledninger findes i [[Kontrolpanel|$:/ControlPanel]]. F-knappen fører tilbage til Forge; HUWiki Community og Plugin Library følger med.
+Plugins og deres vejledninger findes i [[Kontrolpanel|$:/ControlPanel]]. F-knappen fører tilbage til Forge. HUWiki Plugin Library findes i kontrolpanelet.
 </$list>
 <$list filter="[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]" variable="locale">
 ! Your wiki is ready
@@ -78,7 +78,7 @@ Use the plus button to add a tiddler. Use TiddlyWiki’s Save button to save you
 <$list filter="[all[tiddlers]!is[system]!is[draft]!match[Min wiki / My wiki]]"><$link/><br/></$list>
 
 !! Your tools
-Find plugins and their guides in the [[Control Panel|$:/ControlPanel]]. F takes you back to Forge; HUWiki Community and Plugin Library are included.
+Find plugins and their guides in the [[Control Panel|$:/ControlPanel]]. F takes you back to Forge. HUWiki Plugin Library is available in the Control Panel.
 </$list>`};
 export async function composeWiki({choices,editionId='',packageTitles=[],contentIds=[],theme='',name='',language='en-GB'},fetcher=fetch){
  if(!['en-GB','da-DK'].includes(language))throw Error('Unsupported language');

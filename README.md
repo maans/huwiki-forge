@@ -23,11 +23,11 @@ Kør `npm test` (Node.js 20+) for de automatiske tests. De kontrollerer nu også
 Se [migrationsstatus](docs/migration-status.md), [overførselsinventar fra OAuthLab](docs/oauthlab-transfer-inventory.md), [det lette materialekatalog](catalog/materials.json), [AI Editionens forbindelsesdesign](docs/ai-connections.md) og [HUWiki-kildeanalysen](docs/huwiki-source-analysis.md).
 **Nyt valgfrit testplugin:** [ForgeShare](plugins/forgeshare/README.md) guider privat samarbejde via TiddlyWiki og Tailscale. Indeholder dansk/engelsk vejledning samt valgfrie hjælpere til Mac, Windows og Linux med navngivne wikier, automatisk portvalg og flere samtidige wikier. Ingen Edition får det automatisk; produktion afventer godkendelse.
 
-## HUWiki Plugin Library og HUWiki Community
+## HUWiki Plugin Library og TiddlyWiki Community
 
 **[HUWiki Plugin Library](https://forge.måns.dk/library/plugins/index.html)** integrerer med TiddlyWikis egen *Get More Plugins*-dialog. Den tilbyder alle de installerbare Forge-plugins og temaer, som ligger under `plugins/` og `themes/` i dette GitHub-repository. Pakkerne hentes ved installation, ikke alle på én gang.
 
-**[HUWiki Community](https://forge.måns.dk/community/)** viser offentlige Editions fra dette repository og frivilligt delte offentlige wiki-links. Det er et statisk katalog; der er ingen wiki-uploadserver. Valgfri delt redigering via en anden host, fx Tailscale Funnel, holdes adskilt.
+**[TiddlyWiki Community](https://tiddlywiki.com/#Community)** er indgangen til TiddlyWikis eget fællesskab. Den tidligere `/community/`-side viderestiller dertil. Der tilføjes ingen Community-fane i sidepanelet.
 
 Alle Editions bruger de **samme** TiddlyWiki-biblioteksadresser fra `editions/shared/libraries.json`. TiddlyWikis officielle pluginbibliotek bevares. Se [bibliotekernes arkitektur og opdatering](docs/forge-libraries.md).
 

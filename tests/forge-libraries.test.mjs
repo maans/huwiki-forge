@@ -10,11 +10,11 @@ const read=async p=>readFile(new URL(p,root),"utf8");
 const json=async p=>JSON.parse(await read(p));
 const ids=(await json("catalog/editions.json")).editions.map(e=>e.id);
 const pluginUrl="https://forge.måns.dk/library/plugins/index.html";
-const communityUrl="https://forge.måns.dk/community/";
+const communityUrl="https://tiddlywiki.com/#Community";
 
-test("Every Edition shares the native HUWiki Plugin Library and separate Community address",async()=>{
+test("Every Edition keeps the native library and links to TiddlyWiki Community without a sidebar tab",async()=>{
  const config=await json("editions/shared/libraries.json");
- assert.equal(config.length,4);
+ assert.equal(config.length,6);
  const plugin=config.find(t=>t.title==="$:/config/HUWikiPluginLibrary");
  const community=config.find(t=>t.title==="$:/config/HUWikiCommunity");
  const card=config.find(t=>t.title==="HUWiki Community");
@@ -31,10 +31,11 @@ test("Every Edition shares the native HUWiki Plugin Library and separate Communi
  assert.equal(plugin.caption,"HUWiki Plugin Library");
  assert.equal(community.url,communityUrl);
  assert.ok(!String(community.tags||"").includes("$:/tags/PluginLibrary"),"Community Editions aren't TiddlyWiki plugins");
- assert.ok(card.tags.includes("$:/tags/SideBar"),"The community link must be discoverable");
+ assert.ok(!card.tags.includes("$:/tags/SideBar"),"Community must not be a sidebar tab");
+ assert.match(card.text,/https:\/\/tiddlywiki.com\/#Community/);
  for(const t of config){
-  assert.equal(t.type,"text/vnd.tiddlywiki");
-  if(t.title!=="$:/huwiki/forge/page-control")assert.ok(t.text.includes("$:/language"),"Language follows TiddlyWiki setting");
+  assert.equal(t.type,t["module-type"]==="startup"?"application/javascript":"text/vnd.tiddlywiki");
+  if(!t.title.startsWith("$:/huwiki/forge/"))assert.ok(t.text.includes("$:/language"),"Language follows TiddlyWiki setting");
   assert.doesNotMatch(t.text,/google\.script|DriveApp|<select|languageToggle/i);
  }
  const all=await json("catalog/editions.json");
@@ -110,19 +111,10 @@ test("Native TiddlyWiki GET/GET-RESPONSE plugin library protocol works without a
  assert.equal(postMessages.length,n,"Requests not from the embedding parent must be ignored");
 });
 
-test("Community only lists published Forge Editions and opt-in public wiki links",async()=>{
- const html=await read("community/index.html"),editions=await json("catalog/editions.json"),community=await json("catalog/community.json");
- assert.ok(html.includes("catalog/editions.json"),"Community must derive Editions from live Forge catalog");
- assert.ok(html.includes("catalog/community.json"),"User wikis must be separate from Editions");
- assert.ok(html.includes("assembler/"),"Edition cards link to native assembler");
- assert.ok(html.includes('build.searchParams.set("edition",item.id)'));
- assert.ok(html.includes("manifest.pathname.startsWith(editionPrefix)"),"Only same-origin Edition manifests");
- assert.ok(html.includes("href.protocol!==\"https:\""),"Only public HTTPS user wikis");
- assert.equal(community.schemaVersion,1);
- assert.deepEqual(community.publicWikis,[],"No public user wikis may be invented without owner consent");
- assert.ok(editions.editions.length>=6);
- const assembler=await read("assembler/ui.mjs");
- assert.ok(assembler.includes('new URL(location.href).searchParams.get("edition")'),"Community deep links should preselect the Edition");
- assert.ok(assembler.includes("editions.some(item=>item.id===requested)"),"Unknown Edition IDs must be ignored");
- assert.doesNotMatch(html,/google\.script\.run|DriveApp|\/api\/community\/upload/i,"Community is static, not a hidden upload service");
+test("Old Community links redirect to TiddlyWiki instead of duplicating the Forge catalog",async()=>{
+ const html=await read("community/index.html");
+ assert.ok(html.includes('http-equiv="refresh"'));
+ assert.ok(html.includes('url=https://tiddlywiki.com/#Community'));
+ assert.ok(html.includes('href="https://tiddlywiki.com/#Community"'));
+ assert.doesNotMatch(html,/catalog\/editions|catalog\/community|assembler\//);
 });
