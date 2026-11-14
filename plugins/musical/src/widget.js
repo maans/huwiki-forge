@@ -14,6 +14,7 @@ var Accompaniment=require("$:/plugins/huwiki/abc/accompaniment.js");
 var StartPosition=require("$:/plugins/huwiki/abc/start-position.js");
 var Timeline=require("$:/plugins/huwiki/musical/sync.js").Timeline;
 var Editor=require("$:/plugins/huwiki/musical/editor.js");
+var Workspace=require("$:/plugins/huwiki/musical/workspace.js");
 var Playlist=require("$:/plugins/huwiki/musical/playlist.js");
 function Musical(tree,options){this.initialise(tree,options);}
 Musical.prototype=new Widget();
@@ -90,8 +91,6 @@ Musical.prototype.render=function(parent,next){
  });speed.value="100";
  var state=node(doc,"p","huw-musical-status",L.loading,host);
  state.setAttribute("role","status");state.setAttribute("aria-live","polite");
- var shots=node(doc,"div","huw-musical-shots",host);
- node(doc,"strong","",L.camera+": ",shots);
  var links=node(doc,"div","huw-musical-links",host),scoreLink=null;
  [[L.editScene,"HUWiki CutOut – Studio"],[L.editScore,this.scoreTitle]].forEach(function(row){
   var a=node(doc,"a","",row[0],links);if(row[1]===self.scoreTitle)scoreLink=a;
@@ -106,7 +105,7 @@ Musical.prototype.render=function(parent,next){
  function alive(){return !self._dead&&host.isConnected!==false;}
  function timeLabel(n){var s=Math.floor(Math.max(0,n));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
  var duration=Math.max(.1,Playlist.total(clips),Number(scene.duration)||0),timeline=null,ready=false,controller=null,activeIndex=0,stopping=false,changingSpeed=false;
- var editor=null,session=null,preparing=false,generation=0,lastGainUpdate=0,visibleKey="";
+ var editor=null,workspace=null,session=null,preparing=false,generation=0,lastGainUpdate=0,visibleKey="";
  this._stageTitle=scene.scenes&&scene.scenes[0]&&scene.scenes[0].source||null;
  songs.forEach(function(s){s.cursor={index:-1,notes:[],line:null};s.gain=0;s.appliedGain=-1;s.starting=false;s.finished=false;});
  function clearNotes(index){
@@ -300,14 +299,8 @@ Musical.prototype.render=function(parent,next){
    if(wasRunning){timeline.play();setPlaying(true);syncAudio(position);}
   }).catch(function(err){if(stamp!==generation)return;changingSpeed=false;fail(err);});
  });
- (scene.camera&&scene.camera.keys||[]).forEach(function(key,i){
-  var at=Math.max(0,Math.min(duration,Number(key.t)||0));
-  var btn=node(doc,"button","huw-musical-shot",key.label||("◆ "+(i+1)),shots);
-  btn.type="button";btn.title=at.toFixed(2)+" s";
-  btn.onclick=function(){seek(at);};
- });
  this._shutdown=function(){
-  self._dead=true;generation++;stopFrames();clearNotes();if(editor)editor.dispose();
+  self._dead=true;generation++;stopFrames();clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
   if(session)Playback.unregister(session);
   songs.forEach(function(song){
    var c=song.controller;if(!c)return;c._disposed=true;
@@ -320,15 +313,23 @@ Musical.prototype.render=function(parent,next){
   updateClips:function(updated){
    clips=Playlist.reflow(updated,self.scoreTitle);
    songs.forEach(function(song,i){if(clips[i]&&clips[i].id===song.clip.id)song.clip=clips[i];
-    else{var match=clips.find(function(c){return c.id===song.clip.id;});if(match)song.clip=match;}}
+    else{var match=clips.find(function(c){return c.id===song.clip.id;});if(match)song.clip=match;}});
    duration=Math.max(.1,Playlist.total(clips),scene.duration);
    timeline.duration=duration;time.max=String(duration);applyGains(timeline.value(),true);
   },
   seek:seek,repaint:function(){paint(timeline.value());},
+  onSelect:function(){if(workspace)workspace.showInspector();},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}
  });
  this._editor=editor;
+ workspace=Workspace.mount({
+  doc:doc,host:host,wiki:this.wiki,project:scene.name||"Musical",
+  layout:layout,transport:transport,play:play,view:view,editor:editor,
+  seek:seek,position:function(){return timeline.value();},
+  pause:function(){if(timeline.running)pauseAll();}
+ });
+ this._workspace=workspace;
  Loader.load().then(function(ABC){
   if(!alive())return;
   if(!ABC.synth||!ABC.synth.supportsAudio||!ABC.synth.supportsAudio())
