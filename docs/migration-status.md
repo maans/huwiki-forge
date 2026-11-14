@@ -1,6 +1,6 @@
 # Overførsel af HUWiki Editions til Forge
 
-Status: 13. november 2026. Dette dokument beskriver den konkrete migration af den indsendte `HUWiki-OAuthLab-backup.zip` (132 arkivposter), ikke en påstand om at alle Editions allerede er færdige.
+Status: 14. november 2026. Dette dokument beskriver den konkrete migration af den indsendte `HUWiki-OAuthLab-backup.zip` (132 arkivposter), ikke en påstand om at alle Editions allerede er færdige.
 
 ## Ufravigeligt princip
 
@@ -9,6 +9,14 @@ Status: 13. november 2026. Dette dokument beskriver den konkrete migration af de
 For tjenester der kræver en server (fx modtagelse af offentlige formularbesvarelser eller onlineordrer), må Forge tilbyde en selvhostet backend som valgfri komponent. GitHub Pages kan ikke i sig selv skrive eller modtage data.
 
 **Ny HUPedia-browsertest:** Kontroller dansk/engelsk i faktabokse, formularer, sidepanel, starter-artikler og siteundertitel. Visnings- og redigeringstiddlere bruger særskilt locale-variabel, så sprogomskiftningen ikke overtager `currentTiddler` eller ændrer felt-id’er. Test også SitePublisher og PDF Publisher: ingen synlig `\\whitespace trim`, beskrivelser i TiddlyWikis værktøjsmenu, korrekt mål-tiddler og separat Mac-download. Automatiske tests erstatter ikke browserkontrollen.
+
+## Forge-forside og fælles navigation, 14. november 2026
+
+Forge er nu en selvstændig TiddlyWiki bygget fra `editions/forge/`. Fælles F-link til `https://forge.måns.dk/` i alle Editions; eksisterende HUWiki Plugin Library og HUWiki Community bevares. Forsiden viser Edition-kort afledt af det samme katalog, med teststatus og konkrete begrænsninger. Ingen build ved hvert besøg.
+
+**Lokalt verificeret:** 71 automatiske tests; rigtig Chromium-browser: hængelås i Mere-menuen, dansk/engelsk via TiddlyWikis kontrolpanel, native Gem, offline genåbning, redigering, endnu en Gem/genåbning og layout ved 1440/768/390 px. Eksisterende browserkontrol af pluginbiblioteket består også. CI og Pages kontrolleres særskilt ved udgivelsen. Se [forside, licenser og ejerens lokale redigeringsflow](forge-home.md).
+
+Denne forsidekontrol ændrer ikke acceptstatus for de øvrige Editions nedenfor. ForgeShare holdes adskilt.
 
 ## Første konkrete overførsel
 

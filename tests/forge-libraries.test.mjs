@@ -8,16 +8,24 @@ import {loadEdition} from "../assembler/assemble.mjs";
 const root=new URL("../",import.meta.url);
 const read=async p=>readFile(new URL(p,root),"utf8");
 const json=async p=>JSON.parse(await read(p));
-const ids=["hupedia","tegne","music","hupin","demo"];
+const ids=["forge","hupedia","tegne","music","hupin","demo"];
 const pluginUrl="https://forge.måns.dk/library/plugins/index.html";
 const communityUrl="https://forge.måns.dk/community/";
 
 test("Every Edition shares the native HUWiki Plugin Library and separate Community address",async()=>{
  const config=await json("editions/shared/libraries.json");
- assert.equal(config.length,3);
+ assert.equal(config.length,4);
  const plugin=config.find(t=>t.title==="$:/config/HUWikiPluginLibrary");
  const community=config.find(t=>t.title==="$:/config/HUWikiCommunity");
  const card=config.find(t=>t.title==="HUWiki Community");
+ const fButton=config.find(t=>t.title==="$:/huwiki/forge/page-control");
+ assert.ok(fButton,"A shared F link must be present in all Editions");
+ assert.ok(fButton.tags.includes("$:/tags/PageControls"));
+ assert.match(fButton.text,/href="https:\/\/forge\.måns\.dk\/"/);
+ assert.match(fButton.text,/aria-label="HUWiki Forge"/);
+ assert.match(fButton.text,/>F<\/a>/);
+ assert.doesNotMatch(fButton.text,/ForgeShare|Tailscale|Mine wikier|Delt med mig/,"F is only a home link");
+
  assert.equal(plugin.url,pluginUrl);
  assert.ok(plugin.tags.includes("$:/tags/PluginLibrary"));
  assert.equal(plugin.caption,"HUWiki Plugin Library");
@@ -26,7 +34,7 @@ test("Every Edition shares the native HUWiki Plugin Library and separate Communi
  assert.ok(card.tags.includes("$:/tags/SideBar"),"The community link must be discoverable");
  for(const t of config){
   assert.equal(t.type,"text/vnd.tiddlywiki");
-  assert.ok(t.text.includes("$:/language"),"Language follows TiddlyWiki setting");
+  if(t.title!=="$:/huwiki/forge/page-control")assert.ok(t.text.includes("$:/language"),"Language follows TiddlyWiki setting");
   assert.doesNotMatch(t.text,/google\.script|DriveApp|<select|languageToggle/i);
  }
  const all=await json("catalog/editions.json");
@@ -112,7 +120,7 @@ test("Community only lists published Forge Editions and opt-in public wiki links
  assert.ok(html.includes("href.protocol!==\"https:\""),"Only public HTTPS user wikis");
  assert.equal(community.schemaVersion,1);
  assert.deepEqual(community.publicWikis,[],"No public user wikis may be invented without owner consent");
- assert.ok(editions.editions.length>=5);
+ assert.ok(editions.editions.length>=6);
  const assembler=await read("assembler/index.html");
  assert.ok(assembler.includes('new URL(location.href).searchParams.get("edition")'),"Community deep links should preselect the Edition");
  assert.ok(assembler.includes("editions.some(item=>item.id===requested)"),"Unknown Edition IDs must be ignored");
