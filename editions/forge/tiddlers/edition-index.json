@@ -82,17 +82,17 @@
     "edition-id": "musical",
     "name": "Musical Edition (test)",
     "status": "test",
-    "version": "0.2.0-test.1",
+    "version": "0.3.0-test.1",
     "order": "02.5",
     "build-url": "https://forge.måns.dk/assembler/?edition=musical",
     "build-url-da": "https://forge.måns.dk/assembler/?edition=musical&lang=da",
     "build-url-en": "https://forge.måns.dk/assembler/?edition=musical&lang=en",
     "heading-da": "Lav din egen musikvideo",
     "heading-en": "Create your own music video",
-    "description-da": "Lav en musikvideo med levende nodeark, musikeranimationer, belysning og to virtuelle kameraer.",
-    "description-en": "Create a music video with a live score, animated performers, lighting and two virtual cameras.",
-    "note-da": "Musical Studio test. Safari/iPad og synkron lyd skal stadig prøves manuelt.",
-    "note-en": "Musical Studio test. Audio synchronisation and Safari/iPad need manual checks."
+    "description-da": "Lav en musikvideo med flere hele musiknumre, levende noder, animationer og kameraer.",
+    "description-en": "Create a music video with complete songs, live notation, animation and multiple cameras.",
+    "note-da": "Testudgave: Numre spiller i rækkefølge uden overlap. Lyd og Safari/iPad skal prøves manuelt.",
+    "note-en": "Test release: Songs are sequential, not overlapping. Audio and Safari/iPad need manual tests."
   },
   {
     "title": "$:/huwiki/forge/edition/hupin",
