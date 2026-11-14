@@ -112,6 +112,23 @@
         "noteEn": "Minimal test edition.",
         "order": "05"
       }
+    },
+    {
+      "id": "cutout",
+      "name": "HUWiki CutOut Edition (test)",
+      "version": "0.6.2-test.1",
+      "status": "test",
+      "manifest": "../editions/cutout/manifest.json",
+      "description": "Dukker, nøglebilleder, scener og lokal eksport fra den oprindelige CutOut-motor.",
+      "home": {
+        "headingDa": "Dukker, scener og animation",
+        "headingEn": "Puppets, scenes and animation",
+        "descriptionDa": "Byg dukker, animér med nøglebilleder og hent en selvstændig visningskopi.",
+        "descriptionEn": "Build puppets, animate with keyframes and download a standalone viewing copy.",
+        "noteDa": "Afgrænset offline-test. Fuld eksempelsamling, tegnebro, Slideshow og touchaccept udestår.",
+        "noteEn": "Limited offline test. Full examples, drawing bridge, Slideshow and touch acceptance are pending.",
+        "order": "07"
+      }
     }
   ],
   "plugins": [

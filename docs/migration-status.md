@@ -14,7 +14,7 @@ For tjenester der kræver en server (fx modtagelse af offentlige formularbesvare
 
 Forge er nu en selvstændig TiddlyWiki bygget fra `editions/forge/`. Fælles F-link til `https://forge.måns.dk/` i alle Editions; eksisterende HUWiki Plugin Library og HUWiki Community bevares. Forsiden viser Edition-kort afledt af det samme katalog, med teststatus og konkrete begrænsninger. Ingen build ved hvert besøg.
 
-**Lokalt verificeret:** 76 automatiske tests; rigtig Chromium-browser: hængelås i Mere-menuen, dansk/engelsk via TiddlyWikis kontrolpanel, native Gem, offline genåbning, redigering, endnu en Gem/genåbning og layout ved 1440/768/390 px. Eksisterende browserkontrol af pluginbiblioteket består også. CI og Pages kontrolleres særskilt ved udgivelsen. Se [forside, licenser og ejerens lokale redigeringsflow](forge-home.md).
+**Lokalt verificeret:** 79 automatiske tests; rigtig Chromium-browser: hængelås i Mere-menuen, dansk/engelsk via TiddlyWikis kontrolpanel, native Gem, offline genåbning, redigering, endnu en Gem/genåbning og layout ved 1440/768/390 px. Eksisterende browserkontrol af pluginbiblioteket består også. CI og Pages kontrolleres særskilt ved udgivelsen. Se [forside, licenser og ejerens lokale redigeringsflow](forge-home.md).
 
 Forsiden har desuden tre kort på brede skærme og skjult, genåbneligt sidepanel. Assembleren tilbyder egne kombinationer fra de eksisterende kataloger med automatisk afhængighedskontrol. Browserprøver af to kombinationer og native lokal gemning består; alle kombinationer er ikke afprøvet.
 
@@ -42,7 +42,7 @@ Den gamle HUPedia-kilde er bevaret i komprimeret form i `migration/hupedia-sourc
 | AI Edition | `AIEdition.js`, `PrivateVault.js` | Flyt den eksisterende pluginpakke, og erstat alle `google.script.run`-kald til privat boks, modelkald og billedgenerering med et lokalt/browserbaseret AI-connection API. Tokens uden for tiddlere/HTML. Se `ai-connections.md` |
 | Musik – resterende arbejde | Nyere Musik-wiki og `MusicOfflineAssets.js` | Editionens kerne er flyttet. Test afspilning, MIDI, SoundFont, import, iPad og kompatibilitet med de seneste Musik-kilder; lydfonte må kun ligge i backup/lokal runtime og aldrig wiki-restore |
 | Tegne | `TegneEdition.js`, `TegneAsset*.js`, `TegnePackage*.js` | **Første Forge-test 0.1.0-test.1 oprettet:** Offentlig Excalidraw 0.3.0 + React 1.0.0, eget HUWiki-panel og SitePublisher som offline HTML. Den gamle HUWiki-motor 0.3.4, fuldt galleri/figurbibliotek og Mac/iPad-browseraccept mangler. Se [Tegne-migration](tegne-migration.md). |
-| CutOut | `CutOutEdition.js`, `CutOutAsset*.js`, `CutOutSiteRuntime.js` | Rekonstruér plugin og runtime; fjern eventuelle serverbaserede publish-kald |
+| CutOut | `CutOutEdition.js`, `CutOutAsset01_000.js` | **Afgrænset offline-test 0.6.2-test.1:** oprindelig motor og tændstikmandsdemo, native sprogvalg og lokal ZIP. Fuld samling, tegnebro, Slideshow, scene-/teateraccept og touch udestår. [Kilde, licens og browseraccept](cutout-migration.md). |
 | Studio | `StudioEdition.js`, `Studio.js`, `StudioPublish.js` | Bevar lokalt design- og pluginværksted; publicering som enkelte GitHub-filer bliver en særskilt, frivillig Publisher |
 | Shop | `ShopEdition.js` | Erstat eksisterende server/ordreflow med lokale skabeloner og en valgfri selvhostet modtagertjeneste til offentlige ordrer |
 | Spørgeskema | `SurveyEdition.js`, `SurveyLive.js` | Erstat Forms/Sheets med lokal spørgeskemaredigering, delbare formularer og en valgfri selvhostet modtager |
@@ -79,3 +79,9 @@ HUPedia 0.2.4-test.1 anvender den danske artikeltekst i `text` og den valgfrie e
 ## Kernen må ikke ændres bag om ryggen på Editions
 
 `core/empty.html` er den version, browseren bruger. `scripts/sync-tw-core.mjs` undersøger officiel upstream og gemmer eventuelle ændringer i `core/candidate-empty.html` og `core/candidate-version.json`, **ikke** over den fastlåste kerne. En ny kerne skal testes og godkendes manuelt før opdatering.
+
+## Kildeaudit af resterende Editions, 14. november 2026
+
+50 relevante kildefiler fra de 132 arkivposter er nu registreret med SHA-256 i `migration/oauthlab-source-audit.json`. `scripts/audit-oauthlab.py` læser arkivet uden at udføre Apps Script; den registrerer også læsbare gzip-payloads og direkte servicereferencer. Opdelte vendorblokke kræver særskilt rekonstruktion, så manglende fund er ikke en garanti om uafhængighed.
+
+Konkrete udeståender: Studio har serverkald i både værksted og publicering; AI har serverkald til forbindelser/modelarbejde; Shop og Spørgeskema bruger Forms/Sheets/Drive i deres ordre-/svarflow; Slideshow har serverbaseret import, bibliotekshentning og publicering; AV har Drive-baseret filadgang/medieflow. De udgaver er fortsat under migration og tilbydes ikke som færdige downloads. CutOuts selvstændige motor var udtrykkeligt understøttet af originalkilden og er derfor behandlet som et afgrænset første trin.
