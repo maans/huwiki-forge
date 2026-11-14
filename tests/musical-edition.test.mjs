@@ -110,7 +110,7 @@ test("Musical Studio supports live notes, whole songs, lighting and editable cam
  new vm.Script(editor.text);
  new vm.Script(widget);
  assert.match(widget,/onEvent:function\(evt\)/);
- assert.match(widget,/showNotes\(t\)/);
+ assert.match(widget,/showNotes\(index,t\)/);
  assert.match(widget,/Editor\.attach/);
  assert.match(widget,/externalChange\(this\._stageTitle\)/);
  assert.match(editor.text,/setPointerCapture/);
@@ -126,7 +126,9 @@ test("Musical Studio supports live notes, whole songs, lighting and editable cam
  assert.match(widget,/this\._ownWritten/);
  assert.equal(movie.musical.songs[0].kind,"complete-abc");
  assert.equal(movie.musical.songs[1].score,"Musical – Tændstikorkestret (Finale ABC)");
- assert.equal(movie.musical.songs[1].start,16);
+ assert.equal(movie.musical.songs[1].start,14);
+ assert.equal(movie.musical.songs[0].fadeOut,2);
+ assert.equal(movie.musical.songs[1].fadeIn,2);
  assert.ok(movie.musical.cameraB.keys.length>=3);
  assert.ok(movie.musical.cuts.some(k=>k.camera==="A"));
  assert.ok(movie.musical.cuts.some(k=>k.camera==="B"));
@@ -162,7 +164,11 @@ test("A single transport maps two complete ABC tunes to absolute global time",as
  const widget=sh["$:/plugins/huwiki/musical/widget.js"].text;
  const editor=sh["$:/plugins/huwiki/musical/editor.js"].text;
  new vm.Script(widget);new vm.Script(editor);
- assert.match(widget,/switchSong\(index\+1,clips\[index\+1\]\.start,true\)/);
+ assert.match(widget,/Playback\.start\(session\)/);
+ assert.doesNotMatch(widget,/Playback\.start\(c\)/);
+ assert.match(widget,/midiBuffer\.setVolumes\(\)/);
+ assert.match(widget,/function syncAudio\(t\)/);
+ assert.match(widget,/getConfig:function\(\)\{return trackConfig\(song\);\}/);
  assert.match(widget,/StartPosition\.seek\(c,song\.tune/);
  assert.match(widget,/timeline\.beatPosition\(Playlist\.at/);
  assert.match(widget,/data-song-index/);
@@ -175,6 +181,44 @@ test("A single transport maps two complete ABC tunes to absolute global time",as
  const movie=JSON.parse(rows.find(x=>x.title==="Musical – Tændstikorkestret (film)").text);
  assert.equal(movie.scenes.length,2);
  for(const song of movie.musical.songs)assert.ok(titles.has(song.score));
- assert.equal(movie.scenes.reduce((sum,x)=>sum+x.duration,0),32);
+ assert.equal(movie.scenes.reduce((sum,x)=>sum+x.duration,0),30);
  assert.equal(movie.musical.songs.reduce((sum,x)=>sum+x.duration,0),32);
+ assert.equal(Playlist.total(movie.musical.songs),30);
+ assert.equal(Playlist.overlap(movie.musical.songs[0],movie.musical.songs[1]),2);
+ assert.equal(Playlist.activeAt(movie.musical.songs,15).length,2);
+ assert.equal(Playlist.activeAt(movie.musical.songs,20).length,1);
+ assert.equal(Playlist.gainAt(movie.musical.songs[0],13),1);
+ assert.equal(Playlist.gainAt(movie.musical.songs[1],13),0);
+ assert.equal(Playlist.gainAt(movie.musical.songs[0],16),0);
+ assert.equal(Playlist.gainAt(movie.musical.songs[1],16),1);
+ const g1=Playlist.gainAt(movie.musical.songs[0],15),g2=Playlist.gainAt(movie.musical.songs[1],15);
+ assert.ok(Math.abs(g1*g1+g2*g2-1)<.005,"Equal-power crossfade must not dip in the middle");
+ assert.equal(Playlist.locate(movie.musical.songs,14.3).index,0);
+ assert.equal(Playlist.locate(movie.musical.songs,15.7).index,1);
+ assert.match(editor,/songTracks\(\)\.concat\(tracks\.filter/);
+ assert.match(editor,/huw-musical-fade-handle/);
+ assert.match(editor,/updateClips\(m\.songs\)/);
+});
+
+
+test("Independent score tracks preserve placement and volume even when they overlap or leave gaps",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const source=JSON.parse(plugin.text).tiddlers["$:/plugins/huwiki/musical/playlist.js"].text;
+ const ctx={exports:{}};new vm.Script(source).runInNewContext(ctx);
+ const P=ctx.exports;
+ const clips=P.reflow([
+  {id:"first",score:"A",start:0,duration:10,fadeIn:0,fadeOut:4,volume:1},
+  {id:"second",score:"B",start:7,duration:20,fadeIn:3,fadeOut:0,volume:.75},
+  {id:"third",score:"C",start:35,duration:2,muted:true}
+ ],"A");
+ assert.equal(P.total(clips),37);
+ assert.equal(clips[1].start,7,"Reflow must never silently serialize overlapping songs");
+ assert.equal(clips[2].start,35,"Song placements must survive discontiguous gaps");
+ assert.equal(P.overlap(clips[0],clips[1]),3);
+ assert.equal(P.activeAt(clips,8).length,2);
+ assert.equal(P.activeAt(clips,32).length,0);
+ assert.equal(P.gainAt(clips[2],36),0,"Muting one song must not mute others");
+ assert.ok(P.gainAt(clips[0],8)>.5&&P.gainAt(clips[1],8)>.2);
+ assert.equal(P.locate(clips,8).index,0);
+ assert.equal(P.locate(clips,9).index,1);
 });
