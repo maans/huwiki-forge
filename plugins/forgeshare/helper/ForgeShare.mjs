@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.14 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.15 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {validateSite,siteWorker} from './Site.mjs';
 import {configureLogin} from './Startup.mjs';
 import {Vault,vaultDialog,invitation,privateCommand} from './Vault.mjs';
@@ -461,9 +461,11 @@ export async function startNamedSession(profile, options, deps = {}) {
 export async function findTailscale({platform=process.platform,env=process.env,exists=access,optional=false}={}) {
   const executable = platform === 'win32' ? 'tailscale.exe' : 'tailscale';
   const candidates = (env.PATH || '').split(path.delimiter).filter(Boolean).map(dir => path.join(dir, executable));
-  // Prefer the app's executable over shell wrappers, so its lifetime belongs
-  // directly to this helper. Do not edit a user's installed wrapper.
-  if(platform==='darwin')candidates.unshift('/Applications/Tailscale.app/Contents/MacOS/Tailscale','/usr/local/bin/tailscale','/opt/homebrew/bin/tailscale');
+  // Mac regression fix: restore the known working CLI-first resolution used
+  // before 0.1.13. The app executable is only a fallback and is still forced
+  // into CLI mode by tailscaleCLIOptions in status and Serve subprocesses.
+  // Keep foreground Serve in its own process group for owned-tree shutdown.
+  if(platform==='darwin')candidates.unshift('/usr/local/bin/tailscale','/opt/homebrew/bin/tailscale');
   candidates.push('/Applications/Tailscale.app/Contents/MacOS/Tailscale',
     path.join(env.ProgramFiles || 'C:\\Program Files', 'Tailscale', 'tailscale.exe'));
   for (const candidate of candidates) {

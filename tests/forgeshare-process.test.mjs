@@ -12,17 +12,22 @@ import {findTailscale,startSession,stopChild} from '../plugins/forgeshare/helper
 const execute=promisify(execFile),pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 const appBinary='/Applications/Tailscale.app/Contents/MacOS/Tailscale';
 
-test('Mac discovery prefers the direct Tailscale app binary over PATH and standard shell wrappers',async()=>{
+test('Mac discovery restores the working CLI-first behavior even if the Tailscale app is installed',async()=>{
  const checked=[];
  const found=await findTailscale({platform:'darwin',env:{PATH:'/custom/bin:/usr/local/bin:/opt/homebrew/bin'},exists:async(file,mode)=>{checked.push(file);assert.equal(mode,constants.X_OK);}});
- assert.equal(found,appBinary);assert.deepEqual(checked,[appBinary]);
+ assert.equal(found,'/usr/local/bin/tailscale');assert.deepEqual(checked,['/usr/local/bin/tailscale']);
 });
 
 test('Mac discovery falls back to installed CLI and makes missing Tailscale optional only when requested',async()=>{
  const checked=[];
  const exists=async(file,mode)=>{checked.push(file);assert.equal(mode,constants.X_OK);if(file!=='/usr/local/bin/tailscale')throw Object.assign(Error('not installed'),{code:'ENOENT'});};
  assert.equal(await findTailscale({platform:'darwin',env:{PATH:''},exists}),'/usr/local/bin/tailscale');
- assert.deepEqual(checked,[appBinary,'/usr/local/bin/tailscale']);
+ assert.deepEqual(checked,['/usr/local/bin/tailscale']);
+ const fallbackChecked=[];
+ assert.equal(await findTailscale({platform:'darwin',env:{PATH:''},exists:async file=>{
+   fallbackChecked.push(file);if(file!==appBinary)throw Object.assign(Error('not installed'),{code:'ENOENT'});
+ }}),appBinary);
+ assert.deepEqual(fallbackChecked,['/usr/local/bin/tailscale','/opt/homebrew/bin/tailscale',appBinary]);
  const missing={platform:'darwin',env:{PATH:''},exists:async()=>{throw Object.assign(Error('not installed'),{code:'ENOENT'});}};
  assert.equal(await findTailscale({...missing,optional:true}),null);
  await assert.rejects(findTailscale(missing));

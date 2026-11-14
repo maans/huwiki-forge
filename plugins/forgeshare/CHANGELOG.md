@@ -1,3 +1,10 @@
+# 0.1.15 — restore Mac launcher and Tailscale discovery
+
+- Reuse the byte-for-byte native Mac executable and icon from the last Mac app whose interface opened successfully (0.1.13). This avoids the unnecessary recompilation with a different macOS SDK used for the 0.1.14 test archive. The existing native library, Wiki/Site labels, Stop, sharing, vault, and HTML-site server remain intact.
+- Restore the pre-0.1.13 CLI-first Tailscale discovery order on macOS; retain explicit CLI mode for commands including direct-app fallback. Keep process-group shutdown and safe address recovery.
+- Sign the complete rebuilt app archive ad hoc after bundling the new helper and version info; verify its resource seal and run the native self-test. This is NOT an Apple Developer ID signature or notarization. A freshly downloaded ZIP can still trigger Gatekeeper. A signed/notarized public release requires developer credentials.
+- Add Mac GUI launch smoke testing on the CI runner to check the application window, not only --self-test; keep all releases as drafts pending real-device acceptance.
+
 # 0.1.14 — macOS Tailscale CLI launch fix
 
 - Force Tailscale command-line mode for both status checks and foreground Serve/Funnel when ForgeShare launches from Finder. Tailscale's macOS app otherwise sometimes opens its GUI instead of returning status.

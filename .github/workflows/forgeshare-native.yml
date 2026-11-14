@@ -23,16 +23,30 @@ jobs:
         with:
           name: ForgeShare-Windows-native
           path: plugins/forgeshare/native/compiled
-      - run: python3 scripts/build-forgeshare-mac.py
+      # Reuse the native 0.1.13 executable that opened successfully on the user's Mac.
+      - run: python3 scripts/build-forgeshare-mac.py --reuse-tested-launcher
       - run: node scripts/build-forgeshare.mjs
+      - run: npm ci --ignore-scripts
+      - run: node --test tests/forgeshare*.test.mjs
       - run: |
           mkdir -p "$RUNNER_TEMP/ForgeShare-native"
           ditto -x -k plugins/forgeshare/dist/ForgeShare-mac.zip "$RUNNER_TEMP/ForgeShare-native"
           codesign --verify --strict "$RUNNER_TEMP/ForgeShare-native/ForgeShare.app"
           "$RUNNER_TEMP/ForgeShare-native/ForgeShare.app/Contents/MacOS/ForgeShare" --self-test
+      # Test the *real* app lifecycle, not only the UI-free --self-test.
+      - name: Launch main window in macOS session
+        run: |
+          APP="$RUNNER_TEMP/ForgeShare-native/ForgeShare.app"
+          open "$APP"
+          sleep 3
+          PID=$(pgrep -f "$APP/Contents/MacOS/ForgeShare" | head -1)
+          if [ -z "$PID" ]; then echo "ForgeShare did not remain running"; exit 1; fi
+          swift scripts/forgeshare-mac-window-smoke.swift "$PID"
+          kill "$PID" || true
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: ForgeShare-0.1.14-test-builds
+          name: ForgeShare-0.1.15-stable-launcher-test-builds
           retention-days: 14
           path: |
             plugins/forgeshare/dist/
