@@ -33,7 +33,8 @@ try {
  assert.equal(await page.getByRole('button',{name:'show sidebar',exact:true}).isVisible(),true);
  const columns=await page.locator('.forge-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
  assert.equal(columns,3,'Three Edition cards across at 1440px');
- assert.equal(await page.locator('.forge-custom a').getAttribute('href'),'https://forge.måns.dk/assembler/?lang=en');
+ assert.equal(await page.getByRole('link',{name:'Forge your own wiki ↗',exact:true}).getAttribute('href'),'https://forge.måns.dk/assembler/?lang=en');
+ assert.equal(await page.getByRole('link',{name:'Open InstantWiki ↗',exact:true}).getAttribute('href'),'https://forge.måns.dk/instantwiki/');
  assert.equal(await page.locator('.forge-grid > p .forge-card[data-edition]').count(),catalog.editions.length);
  assert.equal(await page.getByRole('button',{name:'Edit this tiddler',exact:true}).isVisible(),false,'HTTP guest view hides edit');
  await page.getByRole('button',{name:'show sidebar',exact:true}).click();

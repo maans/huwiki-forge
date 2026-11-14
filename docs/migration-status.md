@@ -100,3 +100,8 @@ CutOut og Slideshow er udvidet som beskrevet i [den samlede acceptoversigt](crea
 ## Shop: manuel opsætning og kundeside
 
 Efter brugerens præcisering er Shop nu en testudgave med valgfri Google Forms/Sheets-opsætning, hvor ejeren selv logger ind og udfører handlingerne. Lokal katalogredigering og eksport kræver ikke Google. Den nye [Shop-acceptoversigt](shop-migration.md) erstatter de ældre Shop-afgrænsninger ovenfor. Google Sites-publicering og en inkognito-prøvebestilling til privat Sheets-ark er nu afprøvet med ejerens konto. Guiden har billeder fra forløbet. Offentlig Funnel er nu afprøvet på computer. Fysisk mobiltest er fortsat udestående; guiden og katalogkortet siger dette tydeligt.
+
+
+## InstantWiki · 0.1.0-test.1
+
+Migreret til selvstændigt plugin og `/instantwiki/` med indgang fra Forge-forsiden. Genbruger den eksisterende Edition Assembler og Plugin Library. Lokal fil eller offentligt HTTPS-dokumentlink, gennemgang af afsnit, titelrettelser, sammenlægning uden teksttab, valgfri Edition og TiddlyWikis native import/gem. Google er ikke nødvendigt. Se [kildegennemgang, formatgrænser og test](instantwiki-migration.md). Billed-/layoutfidelitet, OCR, gamle DOC-filer og fysisk mobilaccept er ikke færdig migreret; udgaven er tydeligt markeret som test.

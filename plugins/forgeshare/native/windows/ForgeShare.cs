@@ -111,7 +111,7 @@ class ForgeShare : Form {
                 form.library.Items.Add(data.entries[0]);form.library.SelectedIndex=0;form.RefreshLibraryState();if(form.library.SelectionMode!=SelectionMode.One||!form.start.Enabled)return 7;
                 var session=new Session {Id="test"};form.sessions.Add(session);form.RefreshLibraryState();if(form.start.Enabled||form.LibraryStatus("test")!=T("Starter…","Starting…"))return 8;
                 session.Url="http://127.0.0.1:20000";session.Local=true;form.RefreshLibraryState();if(!form.library.Stops["test"].Enabled||form.LibraryStatus("test")!=T("Kører lokalt","Running locally"))return 9;
-                if(form.LibrarySharing("test")!="")return 12;session.Local=false;session.Mode="tailscale";if(form.LibrarySharing("test")!="Tailscale")return 13;session.Mode="funnel";if(form.LibrarySharing("test")!="Funnel")return 14;session.Mode="lan";if(form.LibrarySharing("test")!=T("Hjemmenetværk","Home network"))return 15;
+                if(form.LibrarySharing("test")!=""||form.HasSharing())return 12;session.Local=false;session.Mode="tailscale";if(form.LibrarySharing("test")!="Tailscale"||!form.HasSharing())return 13;session.Mode="funnel";if(form.LibrarySharing("test")!="Funnel")return 14;session.Mode="lan";if(form.LibrarySharing("test")!=T("Hjemmenetværk","Home network"))return 15;
                 session.Stopping=true;form.RefreshLibraryState();if(form.library.Stops["test"].Enabled)return 10;form.sessions.Clear();form.RefreshLibraryState();if(form.library.Stops.Count!=0||!form.start.Enabled)return 11;}
             foreach(var value in new[]{"http://127.0.0.1:20000","http://192.168.1.8:20000","http://10.0.0.8:20000","https://example.ts.net:21000"})if(!PermittedAddress(new Uri(value)))return 5;
             foreach(var value in new[]{"http://0.0.0.0:20000","http://8.8.8.8:20000","http://100.64.0.1:20000","file:///C:/wiki"})if(PermittedAddress(new Uri(value)))return 6;
@@ -143,7 +143,7 @@ class ForgeShare : Form {
         libraryPage.Controls.Add(new Label {Text=T("Vælg en wiki eller et site.","Choose a wiki or site."),AutoSize=true,Location=new Point(0,155),ForeColor=SystemColors.GrayText});library.HorizontalScrollbar=true;library.SetBounds(0,185,740,310);library.Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;libraryPage.Controls.Add(library);
         sharingLabel.Text=T("Finder dine wikier…","Finding your wikis…");sharingLabel.SetBounds(0,510,740,30);sharingLabel.Anchor=AnchorStyles.Bottom|AnchorStyles.Left;libraryPage.Controls.Add(sharingLabel);
         var sharePage=makePage(T("Aktive delinger","Active sharing"),T("Kopiér adressen, eller send en invitation.","Copy an address or send an invitation."));
-        empty.Text=T("Ingen delinger kører endnu.","Nothing is shared yet.");empty.AutoSize=true;empty.Location=new Point(0,120);sharePage.Controls.Add(empty);
+        empty.Text=T("Intet deles endnu. Vælg Del i biblioteket.","Nothing is shared yet. Choose Share in the library.");empty.AutoSize=true;empty.Location=new Point(0,120);sharePage.Controls.Add(empty);
         rows.SetBounds(0,160,740,330);rows.Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;rows.FlowDirection=FlowDirection.TopDown;rows.WrapContents=false;rows.AutoScroll=true;sharePage.Controls.Add(rows);
         sharePage.Controls.Add(new Label {Text=T("Computeren skal være tændt. Du kan lukke vinduet; ForgeShare fortsætter ved uret.","Keep this computer on. You can close the window; ForgeShare stays in the system tray."),Location=new Point(0,510),Width=730,Height=50,Anchor=AnchorStyles.Bottom|AnchorStyles.Left,ForeColor=SystemColors.GrayText});
         var connections=makePage(T("Dine forbindelser","Your connections"),T("Gem AI-forbindelser og adgangskoder i computerens nøgleboks. Du bestemmer, hvem der må bruge dem.","Save AI connections and passwords in this computer’s vault. You decide who may use them."));
@@ -198,10 +198,10 @@ class ForgeShare : Form {
         };
         // Drain stderr without exposing subprocess output or passwords in the UI.
         session.Process.ErrorDataReceived+=(s,e)=>{};
-        session.Process.Exited+=(s,e)=>UI(()=> { if(sharingID==session.Id){sharingID=null;shareQueue.Clear();} rows.Controls.Remove(session.Row); sessions.Remove(session); RefreshLibraryState(); session.Row.Dispose(); session.Process.Dispose(); empty.Visible=sessions.Count==0; if(!quitting)ReloadLibrary(); if(quitting && sessions.Count==0) Close(); });
+        session.Process.Exited+=(s,e)=>UI(()=> { if(sharingID==session.Id){sharingID=null;shareQueue.Clear();} rows.Controls.Remove(session.Row); sessions.Remove(session); RefreshLibraryState(); session.Row.Dispose(); session.Process.Dispose(); empty.Visible=!sessions.Exists(x=>!x.Local&&x.Url.Length>0); if(!quitting)ReloadLibrary(); if(quitting && sessions.Count==0) Close(); });
         try { sessions.Add(session); rows.Controls.Add(session.Row); empty.Visible=false; Update(session);
             session.Process.Start(); session.Process.BeginOutputReadLine(); session.Process.BeginErrorReadLine();
-        } catch { sharingID=null;shareQueue.Clear();sessions.Remove(session); rows.Controls.Remove(session.Row); session.Row.Dispose(); session.Process.Dispose(); empty.Visible=sessions.Count==0;
+        } catch { sharingID=null;shareQueue.Clear();sessions.Remove(session); rows.Controls.Remove(session.Row); session.Row.Dispose(); session.Process.Dispose(); empty.Visible=!sessions.Exists(x=>!x.Local&&x.Url.Length>0);
             MessageBox.Show(T("Wikien kunne ikke startes. Kontroller Node.js-installationen.","The wiki could not start. Check your Node.js installation."),"ForgeShare"); }
     }
     List<LibraryEntry> SelectedEntries() {var list=new List<LibraryEntry>();if(library.SelectedItem!=null)list.Add((LibraryEntry)library.SelectedItem);return list;}
@@ -292,7 +292,10 @@ class ForgeShare : Form {
         TextRenderer.DrawText(e.Graphics,entry.kind=="site"?"Site":"Wiki",Font,new Rectangle(e.Bounds.Right-280,e.Bounds.Top,50,40),foreground,flags);
         TextRenderer.DrawText(e.Graphics,entry.available?LibrarySharing(entry.id):T("Filen mangler","File missing"),Font,new Rectangle(e.Bounds.Right-225,e.Bounds.Top,130,40),foreground,flags);e.DrawFocusRectangle();
     }
+    bool HasSharing() {return sessions.Exists(s=>!s.Local&&s.Url.Length>0);}
     void RefreshLibraryState() {
+        foreach(var s in sessions)if(s.Row!=null)s.Row.Visible=!s.Local&&s.Url.Length>0;
+        empty.Visible=!HasSharing();
         library.RefreshStops();library.Invalidate();if(libraryButtons.Count!=5)return;
         var entry=library.SelectedItem as LibraryEntry;var session=entry==null?null:sessions.Find(s=>s.Id==entry.id);
         libraryButtons[0].Enabled=!libraryBusy;
