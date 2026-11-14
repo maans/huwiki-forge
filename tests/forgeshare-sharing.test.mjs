@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {PassThrough} from 'node:stream';
 import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,writeFile,readFile,rm} from 'node:fs/promises';
 import path from 'node:path';import os from 'node:os';
@@ -49,7 +50,7 @@ test('occupied Funnel asks no codes; retry can choose private or home network, w
   assert.equal(info,1);assert.equal(await readSharing(root,entry.id),null);assert.equal((await readSharing(root,other.id)).mode,'tailscale');
   let choices=0,started=0,stopped=0;
   await guiMain({...common,localOnly:next==='local',networkInterfaces:()=>({WiFi:[{address:'192.168.1.8',family:'IPv4',internal:false}]}),openAddress:async()=>{},
-   findTailscale:async()=>{assert.equal(next,'tailscale');return '/mock';},
+   findTailscale:async options=>{if(next!=='tailscale'){assert.equal(options.optional,true);return null;}return '/mock';},
    dialog:async(kind,message,options)=>{if(kind==='choice'){choices++;return options[choices===1?(next==='lan'?1:0):0];}assert.equal(kind,'text',message);return '';},
    startSession:async options=>{started++;assert.equal(options.funnel,false);assert.equal(options.localOnly,next==='local');assert.equal(!!options.lanHost,next==='lan');return sessionResult(options,()=>stopped++);}
   });
@@ -60,13 +61,14 @@ test('occupied Funnel asks no codes; retry can choose private or home network, w
 test('cancelled codes and failed launch release the saved choice and allow a successful retry',async t=>{
  for(const failure of ['cancel','launch'])await t.test(failure,async t=>{
   const {root,add}=await setup(t),entry=await add('Retry');await saveSharing(root,{mode:'funnel',allowAnonymous:false},entry.id);
-  let codes=0,errors=0;
+  let codes=0,errors=0;const reports=[];
   await guiMain({root,libraryId:entry.id,quick:true,findTailscale:async()=>'/mock',readJSON:async()=>({}),checkAddressPort:async()=>{},
-   dialog:async(kind,message,options)=>{if(kind==='password'){codes++;if(failure==='cancel')throw Object.assign(Error('Cancelled'),{cancelled:true});return 'visitor';}if(kind==='choice')return options[0];assert.equal(kind,'info');errors++;},
+   appMode:true,input:new PassThrough(),report:event=>reports.push(event),
+   dialog:async(kind,message,options)=>{if(kind==='password'){codes++;if(failure==='cancel')throw Object.assign(Error('Cancelled'),{cancelled:true});return 'visitor';}if(kind==='choice')return options[0];assert.equal(kind,'info');assert.equal(reports.at(-1).event,'failed','Failure reaches the app before the dialog');errors++;},
    startSession:async()=>{throw Error('Simulated start failure');}
   });assert.equal(codes,1);assert.equal(errors,failure==='cancel'?0:1);assert.equal(await readSharing(root,entry.id),null);
   // Register/start locks from the failed attempt must not block the next local opening.
-  let started=false;await guiMain({root,libraryId:entry.id,quick:true,localOnly:true,checkAddressPort:async()=>{},openAddress:async()=>{},dialog:async(kind,message)=>{assert.equal(kind,'text',message);return '';},startSession:async options=>{started=true;return sessionResult(options);}});assert.ok(started);
+  let started=false;await guiMain({root,libraryId:entry.id,quick:true,localOnly:true,findTailscale:async()=>null,checkAddressPort:async()=>{},openAddress:async()=>{},dialog:async(kind,message)=>{assert.equal(kind,'text',message);return '';},startSession:async options=>{started=true;return sessionResult(options);}});assert.ok(started);
  });
 });
 test('failure recovery leaves a newer per-item choice intact',async t=>{

@@ -440,7 +440,7 @@ test('named wiki registration skips OS/Serve/Funnel/service conflicts, remembers
   assert.equal(await readFile(path.join(root, 'wikis.json'), 'utf8'), '{invalid', 'Corruption must not reset saved addresses');
 });
 
-test('a running named wiki cannot be started twice; its saved address is never silently replaced', async () => {
+test('a running named wiki cannot be started twice; a stopped wiki can move away from an occupied sharing address', async () => {
   const root = path.join(temp, 'locked catalogue');
   const profile = await registerWiki({root, wiki: await preparedWiki('locked wiki'), name: 'Same wiki', tailscale: 'fake'},
     {readJSON: async () => ai, checkAddressPort: async () => {}});
@@ -450,10 +450,14 @@ test('a running named wiki cannot be started twice; its saved address is never s
   await assert.rejects(startNamedSession(profile, {root}, deps), /already running/);
   assert.equal(starts, 1);
   await session.stop(); await session.finished;
-  const mock = mockSession({configs: [{TCP: {[profile.httpsPort]: {HTTPS: true}}}]});
-  await assert.rejects(startNamedSession(profile, {root, tailscale: 'fake'}, mock.deps), /already in use/);
-  assert.deepEqual((await readRegistry(root)).wikis[0], profile);
-  assert.equal(mock.server.kills.length, 0);
+  let chosen;
+  const moved = await startNamedSession(profile, {root, tailscale: 'fake'}, {
+    ...deps, readJSON: async () => ({TCP: {[profile.httpsPort]: {HTTPS: true}}}), checkAddressPort: async () => {},
+    startSession: async options => { chosen = options; return deps.startSession(); }
+  });
+  assert.notEqual(chosen.httpsPort, profile.httpsPort);
+  assert.equal((await readRegistry(root)).wikis[0].httpsPort, chosen.httpsPort);
+  await moved.stop(); await moved.finished;
   const release = await acquireLock(root, 'wiki-' + profile.id, 1); await release();
 });
 
@@ -551,6 +555,7 @@ test('returning GUI users choose the saved name without choosing a folder or por
   let chosen = false, started = false;
   await guiMain({root,
     findTailscale: async () => 'fake', findTiddlyWiki: async () => path.dirname(require.resolve('tiddlywiki/package.json')),
+    readJSON: async () => ai, checkAddressPort: async () => {},
     dialog: async (kind, message, initial) => {
       if (kind === 'confirm') return '';
       if (kind === 'choice' && !initial.some(v=>v.startsWith('Wiki:')))return initial[0];

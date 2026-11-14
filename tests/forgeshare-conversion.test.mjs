@@ -78,7 +78,7 @@ test('Share uses remembered network settings and starts without intermediate dia
  assert.equal(await readSharing(f.root,f.id),null);
  await saveSharing(f.root,{mode:'lan',allowAnonymous:true},f.id);assert.deepEqual(await readSharing(f.root,f.id),{mode:'lan',allowAnonymous:true});
  const input=new PassThrough();let finish,started=false;const finished=new Promise(r=>finish=r);
- await guiMain({root:f.root,libraryId:f.id,quick:true,appMode:true,input,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(path.dirname(boot)),networkInterfaces:()=>({WiFi:[{address:'192.168.1.8',family:'IPv4',internal:false}]}),findTailscale:async()=>assert.fail('No Tailscale for LAN'),
+ await guiMain({root:f.root,libraryId:f.id,quick:true,appMode:true,input,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(path.dirname(boot)),networkInterfaces:()=>({WiFi:[{address:'192.168.1.8',family:'IPv4',internal:false}]}),findTailscale:async()=>null,
  dialog:async(kind,message)=>assert.fail('No intermediate dialog: '+message),startSession:async options=>{started=true;assert.equal(options.allowAnonymous,true);assert.equal(options.lanHost,'192.168.1.8');return {url:'http://192.168.1.8:'+options.port,finished,stop:async()=>finish()};},report:event=>{if(event.event==='ready')input.end();}});
  assert.equal(started,true);
 });
@@ -100,7 +100,7 @@ test('Open prepares an HTML wiki automatically and starts locally with bridge ac
  const input=new PassThrough();let finish,started=false,ready=false;const finished=new Promise(r=>finish=r);
  await guiMain({root:f.root,libraryId:f.id,localOnly:true,quick:true,appMode:true,input,
   findTiddlyWiki:async()=>path.dirname(path.dirname(boot)),trash:async file=>rename(file,file+'.test-trash'),checkAddressPort:async()=>{},
-  findTailscale:async()=>assert.fail('Open must not contact Tailscale'),dialog:async(kind,message)=>assert.fail('Open must not ask about sharing or conversion: '+message),
+  findTailscale:async()=>null,dialog:async(kind,message)=>assert.fail('Open must not ask about sharing or conversion: '+message),
   startSession:async options=>{started=true;assert.equal((await listLibrary(f.root)).entries[0].kind,'folder');assert.equal(options.localOnly,true);assert.equal(options.allowAnonymous,true);assert.equal(options.funnel,false);assert.equal(options.lanHost,undefined);assert.equal(options.bridge.wikiId,f.id);return {url:'http://127.0.0.1:'+options.port,finished,stop:async()=>finish()};},
   report:event=>{if(event.event==='ready'){ready=true;assert.equal(event.mode,'local');assert.match(event.url,/^http:\/\/127\.0\.0\.1:/);input.end();}}});
  assert.ok(started&&ready);assert.equal((await listLibrary(f.root)).entries[0].shareUrl,undefined);assert.equal((await readSharing(f.root,f.id)).mode,'funnel');
@@ -116,7 +116,7 @@ test('Open starts a static site locally without TiddlyWiki or Tailscale, and ope
  const {guiMain}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');const dir=path.join(temp,'open-site');await mkdir(dir);await writeFile(path.join(dir,'index.html'),'<h1>Site</h1>');
  const root=path.join(temp,'site-settings');const entry=await addLibraryEntry({root,location:dir,kind:'site',name:'Site'});let opened,started=false,finish;const finished=new Promise(r=>finish=r);
  await guiMain({root,libraryId:entry.id,localOnly:true,quick:true,checkAddressPort:async()=>{},
-  findTiddlyWiki:async()=>assert.fail('A site needs no wiki runtime'),findTailscale:async()=>assert.fail('Local only'),
+  findTiddlyWiki:async()=>assert.fail('A site needs no wiki runtime'),findTailscale:async()=>null,
   openAddress:async url=>{opened=url;},dialog:async kind=>assert.equal(kind,'text'),
   startSession:async options=>{started=true;assert.equal(options.kind,'site');assert.equal(options.localOnly,true);assert.equal(options.bridge,undefined);return {url:'http://127.0.0.1:'+options.port,finished,stop:async()=>finish()};}});
  assert.ok(started);assert.match(opened,/^http:\/\/127\.0\.0\.1:/);

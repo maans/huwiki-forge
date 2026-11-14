@@ -1,4 +1,4 @@
-ForgeShare 0.1.12 — testudgave / test release
+ForgeShare 0.1.13 — testudgave / test release
 
 DANSK
 Pak hele ZIP-filen ud. Åbn ForgeShare.app (Mac), ForgeShare.exe (Windows)
@@ -6,6 +6,7 @@ eller Start-ForgeShare.sh (Linux). Behold pakkens filer samlet.
 
 Bibliotek: Åbn klargør og åbner kun på din computer. Del giver andre adgang. Stop står på den kørende række.
 Delinger: kopiér linket, eller invitér med en mailkladde.
+Ved Tailscale finder hjælperen selv en ledig adresse. Kopiér linket igen, hvis det er ændret.
 Forbindelser: gem AI-forbindelser i nøgleboksen og godkend andre enheder.
 Indstillinger: vælg deling, start ved login, Tailscale eller Hjælp.
 
@@ -20,6 +21,7 @@ or Start-ForgeShare.sh (Linux). Keep all package files together.
 
 Library: Open prepares and opens only on your computer. Share gives others access. Each running row has a Stop button.
 Sharing: copy the link or prepare an email invitation.
+For Tailscale, the helper finds an available address. Copy the link again if it has changed.
 Connections: save AI connections in the vault and approve other devices.
 Settings: sharing preferences, login startup, Tailscale and Help.
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.9 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.13 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {validateSite,siteWorker} from './Site.mjs';
 import {configureLogin} from './Startup.mjs';
 import {Vault,vaultDialog,invitation,privateCommand} from './Vault.mjs';
@@ -295,6 +295,33 @@ export function usedServePorts(config) {
   collect(config);
   return used;
 }
+// A stopped backend can still have a live Serve/Funnel route pointing at it.
+// Never revive that route by binding a new session to its target port.
+function serveTargetPorts(config) {
+  validateServe(config, false, -1);
+  const ports = new Set();
+  function visit(value) {
+    if (!object(value)) return;
+    for (const [key, target] of Object.entries(value)) {
+      if (['Proxy', 'TCPForward'].includes(key) && typeof target === 'string') {
+        try {
+          const url = new URL(target.includes('://') ? target.replace(/^https\+insecure:/, 'https:') : 'tcp://' + target);
+          const port = Number(url.port || (url.protocol === 'https:' ? 443 : url.protocol === 'http:' ? 80 : 0));
+          if (port > 0 && port <= 65535) ports.add(port);
+        } catch { /* Non-network targets do not reserve a TCP port. */ }
+      } else visit(target);
+    }
+  }
+  visit(config); return ports;
+}
+async function chooseFreePort(range, preferred, used, check) {
+  const candidates = [preferred, ...Array.from({length: range[1] - range[0] + 1}, (_, i) => range[0] + i)];
+  for (const port of new Set(candidates)) {
+    if (used.has(port)) continue;
+    try { await check(port); return port; } catch {}
+  }
+  fail('No free address was found. No services changed.', 'Ingen ledig adresse fundet. Ingen tjenester ændret.');
+}
 const profileKey = value => value.normalize('NFC').toLocaleLowerCase('en-US');
 const wikiKey = value => process.platform === 'win32' ? value.toLowerCase() : value;
 export function validateRegistry(data) {
@@ -369,7 +396,7 @@ export async function registerWiki({root = appFolder(), wiki: input, name, tails
     validateRegistry({version: 1, wikis: [entry]});
     if (registry.wikis.some(item => profileKey(item.name) === profileKey(entry.name))) throw Error(ui('Choose a different wiki name', 'Vælg et andet wikinavn.'));
     const config = localOnly ? {} : await (deps.readJSON || jsonCommand)(tailscale, ['serve', 'status', '--json']);
-    const used = usedServePorts(config);
+    const used = new Set([...usedServePorts(config), ...serveTargetPorts(config)]);
     for (const item of registry.wikis) { used.add(item.port); used.add(item.httpsPort); }
     const check = deps.checkAddressPort || checkAddressPort;
     async function choose([first, last]) {
@@ -390,26 +417,54 @@ export async function startNamedSession(profile, options, deps = {}) {
   let releaseCatalog;
   try {
     releaseCatalog = await acquireLock(root, 'catalog');
-    const saved = (await readRegistry(root)).wikis.find(entry => entry.id === profile.id);
+    const registry = await readRegistry(root);
+    const saved = registry.wikis.find(entry => entry.id === profile.id);
     if (!saved || JSON.stringify(saved) !== JSON.stringify(profile) || wikiKey(await realpath(profile.wiki)) !== wikiKey(profile.wiki))
       throw Error(ui('Wiki selection changed. Choose it again.', 'Wikivalget er ændret. Vælg igen.'));
-    const selected={...options,...profile};
-    if(options.funnel)selected.httpsPort=(await planFunnel(await (deps.readJSON||jsonCommand)(options.tailscale,['serve','status','--json']),profile.port,deps.checkAddressPort||checkAddressPort)).port;
+    const localMode=options.localOnly || !!options.lanHost;
+    const tailscale=options.tailscale || (localMode ? await (deps.findTailscale || findTailscale)({optional:true}) : undefined);
+    const selected={...options,...profile,...(tailscale ? {tailscale} : {})};
+    if(tailscale) {
+      const config = await (deps.readJSON || jsonCommand)(tailscale, ['serve', 'status', '--json']);
+      const used = new Set([...usedServePorts(config), ...serveTargetPorts(config)]);
+      const check = deps.checkAddressPort || checkAddressPort;
+      // A live old backend may be writing this same wiki. Do not evade it by
+      // starting another writer on a different local port.
+      await check(profile.port);
+      for (const entry of registry.wikis) if (entry.id !== profile.id) { used.add(entry.port); used.add(entry.httpsPort); }
+      selected.port = await chooseFreePort(localRange, profile.port, used, check);
+      used.add(selected.port);
+      if(!localMode)selected.httpsPort = options.funnel
+        ? (await planFunnel(config, selected.port, check)).port
+        : await chooseFreePort(shareRange, profile.httpsPort, used, check);
+    }
     const session = await (deps.startSession || startSession)(selected, deps);
+    try {
+      // Remember only a successful allocation. A failed attempt leaves the
+      // stored profile intact; the next attempt probes again under these locks.
+      if (selected.port !== profile.port || (!options.funnel && selected.httpsPort !== profile.httpsPort)) {
+        saved.port = selected.port;
+        if (!options.funnel) saved.httpsPort = selected.httpsPort;
+        await writeRegistry(root, registry);
+      }
+    } catch (error) { await session.stop(); throw error; }
     const finished = session.finished.finally(releaseWiki);
     return {...session, finished, stop: async () => { await session.stop(); await releaseWiki(); }};
   } catch (error) { await releaseWiki(); throw error; }
   finally { if (releaseCatalog) await releaseCatalog(); }
 }
-export async function findTailscale({platform=process.platform,env=process.env,exists=access}={}) {
+export async function findTailscale({platform=process.platform,env=process.env,exists=access,optional=false}={}) {
   const executable = platform === 'win32' ? 'tailscale.exe' : 'tailscale';
   const candidates = (env.PATH || '').split(path.delimiter).filter(Boolean).map(dir => path.join(dir, executable));
-  if(platform==='darwin')candidates.unshift('/usr/local/bin/tailscale','/opt/homebrew/bin/tailscale');
+  // Prefer the app's executable over shell wrappers, so its lifetime belongs
+  // directly to this helper. Do not edit a user's installed wrapper.
+  if(platform==='darwin')candidates.unshift('/Applications/Tailscale.app/Contents/MacOS/Tailscale','/usr/local/bin/tailscale','/opt/homebrew/bin/tailscale');
   candidates.push('/Applications/Tailscale.app/Contents/MacOS/Tailscale',
     path.join(env.ProgramFiles || 'C:\\Program Files', 'Tailscale', 'tailscale.exe'));
   for (const candidate of candidates) {
     try { await exists(candidate, platform === 'win32' ? constants.F_OK : constants.X_OK); return candidate; } catch {}
   }
+  if(optional)return null;
   fail('Tailscale is missing. Install it from https://tailscale.com/download and sign in.', 'Tailscale mangler. Installer fra https://tailscale.com/download og log ind.');
 }
 export async function findTiddlyWiki() {
@@ -450,19 +505,59 @@ export function startWiki({boot, wiki, credentials, port = 8080,allowAnonymous=f
   });
   return {child,ready:ready.then(address=>{if(bridge)child.send({type:'bridge-origins',origins:bridge.origins||[`http://${lanHost||'127.0.0.1'}:${port}`]});return address;})};
 }
+const ownedServeGroups = new WeakSet();
+const stoppingChildren = new WeakMap();
 export async function stopChild(child) {
-  if (!child || child.exitCode !== null || child.signalCode !== null) return;
-  await new Promise(resolve => {
-    const timer = setTimeout(() => { child.kill('SIGKILL'); }, 35000);
-    child.once('exit', () => { clearTimeout(timer); resolve(); });
-    if (child.connected && child.send) child.send({type: 'shutdown'}, error => { if (error) child.kill('SIGTERM'); });
-    else child.kill('SIGTERM');
-  });
+  if (!child) return;
+  if(stoppingChildren.has(child))return stoppingChildren.get(child);
+  const stopping=(async()=>{
+    if(ownedServeGroups.has(child)) {
+      // A shell wrapper may exit before its descendants. Keep ownership until
+      // the whole isolated group has stopped, even if the leader exited early.
+      const groupSignal=name=>{
+        try { process.kill(-child.pid,name);return true; }
+        catch(error){if(error.code==='ESRCH')return false;if(name===0 && error.code==='EPERM')return true;throw error;}
+      };
+      const waitForGroup=async milliseconds=>{
+        const deadline=Date.now()+milliseconds;
+        while(groupSignal(0)) {if(Date.now()>=deadline)return false;await sleep(25);}
+        return true;
+      };
+      if(!groupSignal('SIGTERM'))return;
+      if(!await waitForGroup(2000)) {
+        groupSignal('SIGKILL');
+        // Some systems retain already-dead descendants briefly as zombies.
+        // Their reaping must not keep the helper's Stop action waiting forever.
+        await waitForGroup(500);
+      }
+      return;
+    }
+    if(child.exitCode!==null || child.signalCode!==null)return;
+    await new Promise((resolve,reject)=>{
+      const finish=error=>{clearTimeout(timer);child.off('exit',exited);child.off('error',failed);error?reject(error):resolve();};
+      const signal=name=>{try{child.kill(name);}catch(error){finish(error);}};
+      const exited=()=>finish(),failed=error=>finish(error);
+      const timer=setTimeout(()=>signal('SIGKILL'),35000);
+      child.once('exit',exited);child.once('error',failed);
+      if(child.connected && child.send)child.send({type:'shutdown'},error=>{if(error)signal('SIGTERM');});
+      else signal('SIGTERM');
+    });
+  })();
+  // Retain the promise after completion, so repeated Stop calls cannot signal
+  // a process group ID that the operating system has since reused.
+  stoppingChildren.set(child,stopping);
+  return stopping;
 }
 export async function startLocalSession(options,deps={}) {
   const port=options.port??8080,host=options.lanHost||'127.0.0.1';
   if(options.lanHost && (options.localOnly || !isPrivateIPv4(host) || !homeNetworkAddresses((deps.networkInterfaces||os.networkInterfaces)()).some(e=>e.address===host)))
     fail('The selected home network is unavailable. Choose it again.', 'Det valgte hjemmenetværk er ikke tilgængeligt. Vælg igen.');
+  const checkSharing=async()=>{
+    if(!options.tailscale)return;
+    const config=await (deps.readJSON || jsonCommand)(options.tailscale,['serve','status','--json']);
+    if(serveTargetPorts(config).has(port))fail('An older sharing route still uses this address. Please try Open again.', 'En ældre deling bruger stadig adressen. Prøv Åbn igen.');
+  };
+  await checkSharing();
   await (deps.checkPort||checkAddressPort)(port);
   const started=(deps.startWiki||startWiki)(options),child=started.child;
   let stopping;const stop=()=>stopping ||= stopChild(child);
@@ -471,6 +566,7 @@ export async function startLocalSession(options,deps={}) {
     if(address.address!==host || address.port!==port)throw Error(ui('Unexpected local address', 'Uventet lokal adresse.'));
     const status=await (deps.probe||(()=>fetch(`http://${host}:${port}/status`,{signal:AbortSignal.timeout(5000)}).then(r=>r.status)))();
     if(status!==(options.allowAnonymous===true?200:401))fail('The wiki does not match the selected login setting.', 'Wikien følger ikke det valgte loginvalg.');
+    await checkSharing();
     if(child.exitCode!==null || child.signalCode!==null)throw Error(ui('Wiki stopped', 'Wikien stoppede.'));
     const finished=new Promise(resolve=>child.once('exit',resolve));
     return {url:`http://${host}:${port}`,stop,finished};
@@ -485,6 +581,7 @@ export async function startSession(options, deps = {}) {
   const portCheck = deps.checkPort || checkAddressPort;
   const probe = deps.probe || (async () => (await fetch(`http://127.0.0.1:${port}/status`, {signal: AbortSignal.timeout(5000)})).status);
   const before = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), true, httpsPort);
+  if (serveTargetPorts(before).has(port)) fail('An older sharing route still uses this address. Please try Share again.', 'En ældre deling bruger stadig adressen. Prøv Del igen.');
   const status = await readJSON(options.tailscale, ['status', '--json']);
   const hostname = status.Self?.DNSName?.replace(/\.$/, '');
   if (status.BackendState !== 'Running' || !hostname || !/^[a-z0-9.-]+\.ts\.net$/i.test(hostname))
@@ -497,9 +594,11 @@ export async function startSession(options, deps = {}) {
     closed = true;
     stopping = (async () => {
     // End foreground Serve first so nothing can be exposed after stopping our wiki.
-    await stopChild(serve);
-    if(gateway)await gateway.stop();
-    await stopChild(server);
+    let firstError;
+    for(const cleanup of [()=>stopChild(serve),()=>gateway?.stop(),()=>stopChild(server)]) {
+      try { await cleanup(); } catch(error) { firstError ||= error; }
+    }
+    if(firstError)throw firstError;
     })();
     return stopping;
   };
@@ -515,8 +614,11 @@ export async function startSession(options, deps = {}) {
     const targetPort=gateway?.port||port;
     // Recheck immediately before Serve. No --yes: concurrent changes cannot be silently approved.
     const current = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), true, httpsPort);
-    if (JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(current, httpsPort))) throw Error(ui('Serve changed during startup', 'Serve blev ændret under start.'));
-    serve = startServe(options.tailscale, (options.funnel?['funnel',`--https=${httpsPort}`,`http://127.0.0.1:${targetPort}`]:makeServeArgs(port, httpsPort)), {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit'], windowsHide: true});
+    if (serveTargetPorts(current).has(port) || JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(current, httpsPort))) throw Error(ui('Serve changed during startup', 'Serve blev ændret under start.'));
+    // Isolate only our foreground Serve process tree. A PATH entry can be a
+    // shell wrapper; stopping its parent alone would leave the sharing alive.
+    serve = startServe(options.tailscale, (options.funnel?['funnel',`--https=${httpsPort}`,`http://127.0.0.1:${targetPort}`]:makeServeArgs(port, httpsPort)), {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit'], windowsHide: true, detached:process.platform!=='win32'});
+    if(process.platform!=='win32' && serve.pid)ownedServeGroups.add(serve);
     let serveError;
     serve.once('error', error => { serveError = error; });
     for (let attempt = 0; attempt < 40; attempt++) {
@@ -527,8 +629,8 @@ export async function startSession(options, deps = {}) {
       if (JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(after, httpsPort)))
         fail('Unrelated Serve settings changed; stopping our processes without restoring someone else’s settings.', 'Andre Serve-indstillinger blev ændret; stopper egne processer uden at overskrive andres opsætning.');
       if (options.funnel?verifyFunnelRoute(before,after,hostname,targetPort,httpsPort):hasWikiRoute(after, hostname, port, httpsPort)) {
-        const finished = new Promise(resolve => {
-          const exit = () => { stop().then(resolve); };
+        const finished = new Promise((resolve,reject) => {
+          const exit = () => { stop().then(resolve,reject); };
           server.once('exit', exit); serve.once('exit', exit);
         });
         return {url: `https://${hostname}:${httpsPort}`, ...(gateway?{ownerUrl:gateway.ownerUrl}:{}), stop, finished};
@@ -1358,7 +1460,7 @@ export async function guiMain(deps = {}) {
     if(loginToSave && !savedLogin)await saveSessionCodes(root,libraryId,loginToSave,ask);
     const network=mode==='local'?ui('Only this computer', 'Kun denne computer'):mode==='lan'?ui('Home network', 'Hjemmenetværk'):mode==='funnel'?'Funnel':'Tailscale';
     const accessText=libraryEntry?.kind==='site'?ui('Visitors can read the site. Files cannot be edited through sharing.','Besøgende kan læse hjemmesiden. Filer kan ikke redigeres gennem delingen.'):mode==='funnel'?ui('Reader and editor codes. Open in ForgeShare gives you editing access.','Læser- og redaktørkode. Åbn i ForgeShare giver dig redigeringsadgang.'):allowAnonymous?ui('No wiki login — anyone with network access can read and edit.', 'Uden wiki-login — alle med netværksadgang kan læse og redigere.'):ui('Wiki login is required.', 'Wiki-login er påkrævet.');
-    const note=mode==='lan'?'\n\n'+ui('For your trusted home network. This connection uses HTTP, without encryption.', 'Til dit eget betroede hjemmenetværk. Forbindelsen bruger HTTP uden kryptering.'):mode==='tailscale'?ui(`\n\nAccess is controlled in Tailscale. Limit guests to this wiki (TCP ${profile.httpsPort}).`,`\n\nAdgangen styres i Tailscale. Begræns gæster til denne wiki (TCP ${profile.httpsPort}).`):'';
+    const note=mode==='lan'?'\n\n'+ui('For your trusted home network. This connection uses HTTP, without encryption.', 'Til dit eget betroede hjemmenetværk. Forbindelsen bruger HTTP uden kryptering.'):mode==='tailscale'?ui('\n\nAccess is controlled in Tailscale.','\n\nAdgangen styres i Tailscale.'):'';
     if(!startup && !quick)await ask('confirm',`Start “${displayName}”?\n${network}\n\n${accessText}${note}`);
     if (interrupted) return;
     session = await startNamedSession(profile, {...files, boot: runtime.boot, tailscale, root, localOnly,lanHost,allowAnonymous,funnel:mode==='funnel',codeRoles:mode==='funnel',codeAccess,bridge:libraryId && libraryEntry?.kind!=='site'?{root,wikiId:libraryId}:undefined}, {
@@ -1378,6 +1480,7 @@ export async function guiMain(deps = {}) {
   } catch (error) {
     if (session) await session.stop();
     if (!error.cancelled && !interrupted) {
+      report({event:'failed',...(libraryId?{id:libraryId}:{})});
       // Avoid displaying subprocess output that might contain sensitive content.
       await ask('info', (localOnly?ui('Could not open this item.','Kunne ikke åbne denne wiki eller dette site.'):ui('Sharing did not start. Choose Share to try again or change the sharing method.','Delingen blev ikke startet. Vælg Del for at prøve igen eller vælge en anden måde at dele på.')) + '\n\n' + (error.cmd ? ui('A required program failed. Check installation and Tailscale HTTPS setup.', 'Et nødvendigt program fejlede. Kontroller installation og Tailscale HTTPS.') : error.message));
     }

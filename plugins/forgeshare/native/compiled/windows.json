@@ -1,10 +1,10 @@
 {
   "platform": "windows",
   "sources": {
-    "windows/ForgeShare.cs": "6f1ae2e0c7afc9b33f8a6d3317570677b0ad8d81ca01a51231d6455bf1fd886f",
+    "windows/ForgeShare.cs": "12953a742260e66fa76920c34279669e45fde1cadfd3739d8281b8d4f1195290",
     "windows/build.ps1": "02e45fb985bb2269f311fa9085da8a657660576478042630cad4ad5628ec5101"
   },
   "artifacts": {
-    "ForgeShare.exe": "6637c000f121a2b74487bc5afae6b7772a78c6c31a22f474a8eb8291f7ba4b9b"
+    "ForgeShare.exe": "ba41942cc4ce9e38b5568cac7770d9f509fc30dce840062a06c1f58900e37d93"
   }
 }

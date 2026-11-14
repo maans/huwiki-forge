@@ -59,7 +59,7 @@ Funnel — del via internettet
 
 Tryk <b>Del</b>, og vælg <b>Funnel</b>. Vælg én kode til læsere og en anden til redaktører. Gæster åbner linket fra <b>Kopiér adresse</b> og indtaster kun deres kode; de behøver ikke Tailscale. <b>Åbn</b> i hjælperen giver dig selv redigeringsadgang. Et site kræver kun én kode til besøgende og kan ikke redigeres gennem delingen. Koderne gælder hele wikien eller sitet. Giv kun redaktørkoden til personer, du stoler på. Du kan vælge at huske delingskoderne i nøgleboksen. Login varer højst otte timer og ophører, når du stopper delingen. Åbn <code>/_forgeshare/login</code> på wikiens adresse for at bruge en anden kode.
 
-Funnel kræver HTTPS og tilladelse til Funnel i Tailscale. Den kan kun bruge 443, 8443 eller 10000. ForgeShare vælger en ledig port og overtager aldrig eksisterende tjenester. Hvis alle tre er optaget, starter Funnel ikke. Tryk <b>Del</b> igen for at vælge Tailscale eller hjemmenetværk. <b>Åbn</b> virker stadig på din egen computer. Tailscale-deling er privat; Funnel-adressen er offentlig og beskyttes af koderne. Gentagne loginforsøg begrænses. Vælg koder, der ikke er lette at gætte. Automatisk opstart af Funnel er ikke med i denne udgave.
+Funnel kræver HTTPS og tilladelse til Funnel i Tailscale. ForgeShare bruger kun ledige Funnel-adresser og overtager aldrig andre tjenester. Er der ingen ledig adresse, starter Funnel ikke. Tryk <b>Del</b> igen for at vælge Tailscale eller hjemmenetværk. <b>Åbn</b> virker stadig på din egen computer. Tailscale-deling er privat; Funnel-adressen er offentlig og beskyttes af koderne. Gentagne loginforsøg begrænses. Vælg koder, der ikke er lette at gætte. Automatisk opstart af Funnel er ikke med i denne udgave.
 
 </div>
 </details>
@@ -98,12 +98,12 @@ Mac- og Windows-apps åbner ikke Terminal. Slå ikke computerens generelle besky
 </div>
 </details>
 <details class="hu-share-detail">
-<summary>Flere wikier — uden portnumre</summary>
+<summary>Flere wikier og sites</summary>
 <div class="hu-share-detail-body">
 
-Markér en anden wikimappe, og vælg ''Åbn'' eller ''Del''. Stoppede wikier bliver på listen. Hver wiki får sin egen adresse og sit eget login. Stop en kørende wiki med knappen på dens række i biblioteket: ''Stop''. Statuslyset viser, om den kører. På Linux åbner du hjælperen igen; hver wiki har sit eget statusvindue.
+Vælg en anden wiki eller et site, og tryk ''Åbn'' eller ''Del''. Stoppede wikier og sites bliver på listen. Hver får sin egen adresse og valgfrit login. Brug ''Stop'' på den kørende række i biblioteket. Statuslyset viser, om den kører. På Linux har hver kørende wiki og hvert site sit eget statusvindue.
 
-Hjælperen husker navne, mapper og adresser på denne computer, men ikke adgangskoder. Den bruger ledige forbindelser og bevarer andre tjenester. Hvis en gemt adresse er optaget, forklarer den konflikten. Den flytter ikke wikien i stilhed.
+Hjælperen husker navne, mapper og adresser. Ved privat Tailscale-deling finder den en ledig adresse, også når en gammel deling optager den tidligere. Andre tjenester bliver bevaret. Brug ''Kopiér adresse'' til det aktuelle link.
 
 Flere enheder kan åbne samme wiki. Der skal kun køre én server for wikien. Start derfor ikke samme mappe i en anden server samtidig. Værtscomputerens Tailscale-navn eller domæne kan ændre adressen.
 

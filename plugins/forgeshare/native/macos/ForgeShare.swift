@@ -45,7 +45,7 @@ func permittedAddress(_ url:URL) -> Bool {
 final class LibraryStack: NSStackView { override var isFlipped:Bool {true} }
 final class Session {
     let process = Process(), input = Pipe(), output = Pipe()
-    var id="", local=false, openWhenReady=false, mode="", access=""
+    var id="", local=false, openWhenReady=false, mode="", access="", failed=false
     var name = tr("Vælger wiki…", "Choosing a wiki…"), url = "", ownerUrl = "", pending = Data(), stopping = false
     let row = NSStackView(), label = NSTextField(labelWithString: "")
     let copy = NSButton(title: tr("Kopiér adresse", "Copy address"), target: nil, action: nil)
@@ -187,7 +187,8 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
                     let line=s.pending.prefix(upTo:end); s.pending.removeSubrange(...end)
                     if let data=try? JSONSerialization.jsonObject(with:line) as? [String:String] {
                         if let name=data["name"] { s.name=name }
-                        if data["event"] == "ready", let address=data["url"], let url=URL(string:address), permittedAddress(url) { s.mode=data["mode"] ?? "";s.access=data["access"] ?? "login";s.url=address; if let own=data["ownerUrl"],let u=URL(string:own),u.scheme=="http",u.host=="127.0.0.1" {s.ownerUrl=own}; s.copy.isEnabled=true;s.invite.isEnabled = !s.local; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(URL(string:s.ownerUrl.isEmpty ? s.url:s.ownerUrl)!)};self.reloadLibrary();self.advanceShareQueue(s.id) }
+                        if data["event"] == "failed" {self.markFailed(s)}
+                        if data["event"] == "ready", !s.failed, let address=data["url"], let url=URL(string:address), permittedAddress(url) { s.mode=data["mode"] ?? "";s.access=data["access"] ?? "login";s.url=address; if let own=data["ownerUrl"],let u=URL(string:own),u.scheme=="http",u.host=="127.0.0.1" {s.ownerUrl=own}; s.copy.isEnabled=true;s.invite.isEnabled = !s.local; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(URL(string:s.ownerUrl.isEmpty ? s.url:s.ownerUrl)!)};self.reloadLibrary();self.advanceShareQueue(s.id) }
                         self.update(s)
                     }
                 }
@@ -241,8 +242,15 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }
         }
     }
+    func markFailed(_ s:Session) {
+        s.failed=true;s.url="";s.ownerUrl="";s.openWhenReady=false
+        s.copy.isEnabled=false;s.invite.isEnabled=false;s.stop.isEnabled=false
+        // Keep the session until its error dialog closes and the helper exits.
+        refreshLibraryState()
+    }
     func stateOf(_ id:String)->(String,NSColor) {
         guard let s=sessions.first(where:{$0.id==id}) else{return (tr("Stoppet","Stopped"),.secondaryLabelColor)}
+        if s.failed{return (tr("Kunne ikke starte","Could not start"),.systemRed)}
         if s.stopping{return (tr("Stopper…","Stopping…"),.systemOrange)}
         if s.url.isEmpty{return (tr("Starter…","Starting…"),.systemOrange)}
         if s.local{return (tr("Kører lokalt","Running locally"),.systemGreen)}
@@ -250,6 +258,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     func sharingOf(_ id:String)->String {
         guard let s=sessions.first(where:{$0.id==id}) else{return ""}
+        if s.failed{return tr("Kunne ikke starte","Could not start")}
         if s.stopping{return tr("Stopper…","Stopping…")}
         if s.url.isEmpty{return tr("Starter…","Starting…")}
         if s.local{return ""}
@@ -260,13 +269,13 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         refreshLibraryState()
     }
     func refreshLibraryState() {
-        for session in sessions {session.row.isHidden=session.local || session.url.isEmpty}
-        empty.isHidden=sessions.contains{!$0.local && !$0.url.isEmpty}
+        for session in sessions {session.row.isHidden=session.failed || session.local || session.url.isEmpty}
+        empty.isHidden=sessions.contains{!$0.failed && !$0.local && !$0.url.isEmpty}
         for (entry,button) in libraryChecks {
             let id=entry["id"] as? String ?? "",state=stateOf(id),selected=button.state == .on
             button.layer?.backgroundColor=(selected ? NSColor.selectedContentBackgroundColor : NSColor.controlBackgroundColor).cgColor
             button.contentTintColor=selected ? .alternateSelectedControlTextColor : .labelColor
-            if let stop=libraryStops[id] {let session=sessions.first(where:{$0.id==id});stop.isHidden=session==nil;stop.isEnabled=session != nil && !session!.stopping}
+            if let stop=libraryStops[id] {let session=sessions.first(where:{$0.id==id});stop.isHidden=session==nil || session!.failed;stop.isEnabled=session != nil && !session!.failed && !session!.stopping}
             if let indicator=libraryIndicators[id] {indicator.textColor=state.1;indicator.toolTip=state.0;indicator.setAccessibilityLabel(state.0)}
             if let status=libraryStatus[id] {status.stringValue=entry["available"] as? Bool == false ? tr("Filen mangler","File missing") : sharingOf(id)}
         }
@@ -274,7 +283,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let selected=selectedEntries(),entry=selected.first,id=entry?["id"] as? String ?? ""
         let session=sessions.first(where:{$0.id==id}),available=entry?["available"] as? Bool != false
         libraryButtons[0].isEnabled = !libraryBusy
-        libraryButtons[1].isEnabled = !libraryBusy && selected.count==1 && available && (session==nil || (!session!.url.isEmpty && !session!.stopping))
+        libraryButtons[1].isEnabled = !libraryBusy && selected.count==1 && available && (session==nil || (!session!.failed && !session!.url.isEmpty && !session!.stopping))
         libraryButtons[2].isEnabled = !libraryBusy && sharingID==nil && selected.count==1 && available && session==nil
         libraryButtons[3].isEnabled = !libraryBusy && selected.count==1
         libraryButtons[4].isEnabled = !libraryBusy && !libraryChecks.isEmpty
@@ -355,7 +364,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         s.label.stringValue += s.url.isEmpty ? "" : "\n"+s.url;s.label.toolTip=s.label.stringValue
         refreshLibraryState()
     }
-    func stopSession(_ s: Session) { guard !s.stopping else { return }; s.stopping=true; s.stop.isEnabled=false; update(s)
+    func stopSession(_ s: Session) { guard !s.failed && !s.stopping else { return }; s.stopping=true; s.stop.isEnabled=false; update(s)
         do { try s.input.fileHandleForWriting.write(contentsOf:Data("STOP\n".utf8)) } catch { showError(tr("Kunne ikke bede wikien stoppe. Brug wikiens statusdialog.", "Could not request a stop. Use the wiki's status dialog.")) }
     }
     @objc func stopClicked(_ sender:NSButton) { if let s=sessions.first(where:{$0.stop === sender}) { stopSession(s) } }
@@ -392,7 +401,15 @@ if CommandLine.arguments.contains("--self-test") {
     for mode in ["tailscale","funnel","lan"] {session.mode=mode;testApp.refreshLibraryState();precondition(testApp.libraryStatus["first"]!.stringValue == (mode=="tailscale" ? "Tailscale" : mode=="funnel" ? "Funnel" : tr("Hjemmenetværk","Home network")))}
     precondition(!session.row.isHidden && testApp.empty.isHidden)
     session.mode="funnel";precondition(testApp.stateOf("first").0.contains("Funnel"));session.stopping=true;testApp.refreshLibraryState();precondition(!testApp.libraryStops["first"]!.isEnabled)
-    testApp.sessions=[];testApp.refreshLibraryState();precondition(testApp.libraryStops["first"]!.isHidden && testApp.start.isEnabled && testApp.stateOf("first").0==tr("Stoppet","Stopped"))
+    session.stopping=false;session.ownerUrl="http://127.0.0.1:20001";session.openWhenReady=true;session.copy.isEnabled=true;session.invite.isEnabled=true
+    testApp.sharingID="first";testApp.shareQueue=["second"];testApp.markFailed(session)
+    precondition(testApp.stateOf("first").0==tr("Kunne ikke starte","Could not start") && testApp.stateOf("first").1 == .systemRed)
+    precondition(testApp.libraryStatus["first"]!.stringValue==tr("Kunne ikke starte","Could not start") && testApp.libraryStops["first"]!.isHidden)
+    precondition(session.url.isEmpty && session.ownerUrl.isEmpty && !session.openWhenReady && !session.copy.isEnabled && !session.invite.isEnabled && !session.stop.isEnabled)
+    precondition(session.row.isHidden && !testApp.empty.isHidden && !testApp.start.isEnabled && !testApp.libraryButtons[1].isEnabled)
+    precondition(testApp.sharingID=="first" && testApp.shareQueue==["second"]);testApp.stopSession(session);precondition(!session.stopping)
+    testApp.sharingID=nil;testApp.shareQueue=[];testApp.sessions=[];testApp.refreshLibraryState();precondition(testApp.libraryStops["first"]!.isHidden && testApp.start.isEnabled && testApp.libraryButtons[1].isEnabled && testApp.stateOf("first").0==tr("Stoppet","Stopped"))
+    session.failed=false;session.url="https://example.ts.net:21000"
     let export=ExportSelection(entries:fixture,selected:[]);precondition(!export.alert.buttons[0].isEnabled);export.toggleAll();precondition(export.checks.allSatisfy{$0.1.state == .on} && export.toggle.title==tr("Vælg ingen","Select none"));export.toggleAll();precondition(export.checks.allSatisfy{$0.1.state == .off})
     testApp.renderLibrary(fixture,selected:["first"]);testApp.sessions=[session];session.stopping=false;session.mode="tailscale";testApp.refreshLibraryState()
     for size in [NSSize(width:1000,height:660),NSSize(width:900,height:600)] {

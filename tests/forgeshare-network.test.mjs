@@ -44,6 +44,28 @@ test('LAN validates the actual binding and login mode without ever calling Tails
  }
  await assert.rejects(startSession({lanHost:'192.168.1.20',port:20000},{networkInterfaces:()=>({}),startWiki:()=>assert.fail('A disappeared interface must not start')}));
 });
+for(const mode of ['local','lan'])test(`${mode} start checks installed Tailscale before binding and again before reporting ready`,async()=>{
+ const host=mode==='local'?'127.0.0.1':'192.168.1.20';
+ const options={...(mode==='local'?{localOnly:true}:{lanHost:host}),tailscale:'/mock/tailscale',port:20000,allowAnonymous:true};
+ const stale={Foreground:{old:{TCP:{10000:{HTTPS:true}},Web:{'mac.example.ts.net:10000':{Handlers:{'/':{Proxy:'http://127.0.0.1:20000'}}}},AllowFunnel:{'mac.example.ts.net:10000':true}}}};
+ for(const when of ['before','during','unknown','unavailable','clear']) {
+  const child=new Child();let reads=0,starts=0;
+  const deps={networkInterfaces:()=>interfaces,checkPort:async()=>{},readJSON:async(executable,args)=>{
+   assert.equal(executable,options.tailscale);assert.deepEqual(args,['serve','status','--json']);reads++;
+   if(when==='before' || when==='during' && reads===2)return structuredClone(stale);
+   if(when==='unknown' && reads===2)return {UnknownField:{}};
+   if(when==='unavailable' && reads===2)throw Error('Sharing status unavailable');
+   return {};
+  },startWiki:()=>{starts++;return {child,ready:Promise.resolve({address:host,port:20000})};},probe:async()=>200,spawn:()=>assert.fail('Local opening must not change Tailscale routes')};
+  if(when==='clear') {
+   const session=await startSession(options,deps);assert.equal(reads,2);assert.equal(starts,1);assert.equal(child.killed,false);
+   await session.stop();await session.finished;assert.equal(child.killed,true);
+  }else {
+   await assert.rejects(startSession(options,deps));
+   assert.equal(starts,when==='before'?0:1);assert.equal(child.killed,when!=='before');
+  }
+ }
+});
 test('real no-login wiki allows read/write but keeps CSRF protection; tests bind loopback only',async()=>{
  const folder=await wiki('open wiki'),listener=net.createServer();await new Promise(resolve=>listener.listen(0,'127.0.0.1',resolve));const port=listener.address().port;await new Promise(resolve=>listener.close(resolve));
  const session=await startSession({wiki:folder,boot,port,localOnly:true,allowAnonymous:true});
@@ -56,10 +78,10 @@ test('real no-login wiki allows read/write but keeps CSRF protection; tests bind
   assert.equal((await (await fetch(url)).json()).text,'Saved without a wiki login');
  }finally{await session.stop();await session.finished;}
 });
-test('graphical LAN sharing skips Tailscale and login prompts, confirms the selected mode and exports the last LAN link only on request',async()=>{
+test('graphical LAN sharing works without Tailscale and skips login prompts, confirms the selected mode and exports the last LAN link only on request',async()=>{
  const folder=await wiki('LAN GUI'),root=path.join(temp,'LAN settings');const entry=await addLibraryEntry({root,location:folder,name:'Home wiki',kind:'folder'});
  const input=new PassThrough(),reports=[];let finish,started=false,confirmed=false;const finished=new Promise(resolve=>{finish=resolve;});
- await guiMain({root,libraryId:entry.id,appMode:true,input,networkInterfaces:()=>interfaces,checkAddressPort:async()=>{},readJSON:async()=>assert.fail('No Tailscale configuration'),findTailscale:async()=>assert.fail('No Tailscale installation needed'),findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
+ await guiMain({root,libraryId:entry.id,appMode:true,input,networkInterfaces:()=>interfaces,checkAddressPort:async()=>{},readJSON:async()=>assert.fail('No Tailscale configuration'),findTailscale:async()=>null,findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
   dialog:async(kind,message,choices)=>{
    if(kind==='confirm'){if(message.startsWith('Start')){assert.match(message,/Home network/);assert.match(message,/No wiki login/);confirmed=true;}return '';}
    if(kind==='choice')return choices.find(value=>value.startsWith(message.startsWith('Where')?'Home network':'Without'));
@@ -75,7 +97,7 @@ test('graphical LAN sharing skips Tailscale and login prompts, confirms the sele
 test('a short chosen password works in the helper and its temporary file is removed',async()=>{
  const folder=await wiki('short password'),root=path.join(temp,'short settings');const entry=await addLibraryEntry({root,location:folder,name:'Private wiki',kind:'folder'});
  let credentials;
- await guiMain({root,libraryId:entry.id,localOnly:true,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
+ await guiMain({root,libraryId:entry.id,localOnly:true,findTailscale:async()=>null,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
   dialog:async(kind,message,initial)=>{if(kind==='confirm')return '';if(kind==='choice')return initial.find(v=>v.startsWith('With wiki'));if(kind==='password')return 'pw';if(kind==='text')return initial.startsWith('http:')?'':'wiki';assert.fail(message);},
   startSession:async options=>{credentials=options.credentials;assert.equal(await readFile(credentials,'utf8'),'username,password\nwiki,pw\n');return {url:'http://127.0.0.1:'+options.port,finished:new Promise(()=>{}),stop:async()=>{}};}
  });
@@ -91,14 +113,14 @@ test('startup is off by default, accepts only a known server wiki and never stor
  for(const invalid of [{...setting,password:'secret'},{...setting,mode:'public'},{...setting,wikiId:'unknown'},{...setting,allowAnonymous:'true'}])await assert.rejects(saveStartup(root,invalid));
  assert.deepEqual(await readStartup(root),setting);await saveStartup(root,null);assert.equal(await readStartup(root),null);
 });
-test('approved local startup starts just the selected wiki, skips dialogs and Tailscale, and obeys STOP',async()=>{
+test('approved local startup needs no Tailscale, starts only the selected wiki without dialogs and obeys STOP',async()=>{
  const {saveStartup,readStartup}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');
  const folder=await wiki('Automatic local'),root=path.join(temp,'Automatic local settings');
  const e=await addLibraryEntry({root,location:folder,name:'Auto',kind:'folder'});
  await saveStartup(root,{wikiId:e.id,mode:'local',allowAnonymous:true});
  const input=new PassThrough();let finish,started=false;const finished=new Promise(r=>finish=r);
  await guiMain({root,startup:await readStartup(root),appMode:true,input,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
-  dialog:async(kind,message)=>assert.fail('No dialog expected: '+message),findTailscale:async()=>assert.fail('No Tailscale'),
+  dialog:async(kind,message)=>assert.fail('No dialog expected: '+message),findTailscale:async()=>null,
   startSession:async options=>{started=true;assert.equal(options.localOnly,true);assert.equal(options.allowAnonymous,true);assert.equal(options.credentials,undefined);return {url:'http://127.0.0.1:'+options.port,finished,stop:async()=>finish()};},
   report:event=>{if(event.event==='ready')input.end();}
  });assert.ok(started);
@@ -107,7 +129,7 @@ test('startup with login asks for credentials and never silently downgrades to a
  const folder=await wiki('Automatic authenticated'),root=path.join(temp,'Automatic auth settings');
  const e=await addLibraryEntry({root,location:folder,name:'Protected',kind:'folder'});
  let credentials,passwords=0,started=false;
- await guiMain({root,startup:{wikiId:e.id,mode:'local',allowAnonymous:false},appMode:false,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
+ await guiMain({root,startup:{wikiId:e.id,mode:'local',allowAnonymous:false},appMode:false,findTailscale:async()=>null,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
   dialog:async(kind,message,initial)=>{if(kind==='choice')return initial[0];if(kind==='password'){passwords++;return 'pw';}if(kind==='text')return initial.startsWith('http:')?'':'owner';assert.fail(message);},
   startSession:async options=>{started=true;assert.equal(options.allowAnonymous,false);credentials=options.credentials;assert.match(await readFile(credentials,'utf8'),/owner,pw/);return {url:'http://127.0.0.1:'+options.port,finished:new Promise(()=>{}),stop:async()=>{}};}
  });assert.ok(started);assert.equal(passwords,2);await assert.rejects(readFile(credentials),{code:'ENOENT'});

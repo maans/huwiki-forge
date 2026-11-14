@@ -59,7 +59,7 @@ Funnel — share over the internet
 
 Press <b>Share</b> and choose <b>Funnel</b>. Choose one reader code and a different editor code. Guests open the link from <b>Copy address</b> and enter only their code; they do not need Tailscale. <b>Open</b> in the helper gives you editing access. A site needs only one visitor code and cannot be edited through sharing. Codes apply to the whole wiki or site. Give editor access only to people you trust. You can choose to remember sharing codes in the vault. Login lasts up to eight hours and ends when sharing stops. Open <code>/_forgeshare/login</code> at the wiki address to use another code.
 
-Funnel needs HTTPS and Funnel permission in Tailscale. It supports only 443, 8443 or 10000. ForgeShare selects a free port and never replaces existing services. If all three are occupied, Funnel cannot start. Press <b>Share</b> again to choose Tailscale or your home network. <b>Open</b> still works on your own computer. Tailscale sharing is private; a Funnel address is public and protected by the codes. Repeated login attempts are limited. Choose codes that are not easy to guess. Automatic Funnel startup is not included in this version.
+Funnel needs HTTPS and Funnel permission in Tailscale. ForgeShare uses only available Funnel addresses and never replaces other services. If no address is free, Funnel cannot start. Press <b>Share</b> again to choose Tailscale or your home network. <b>Open</b> still works on your own computer. Tailscale sharing is private; a Funnel address is public and protected by the codes. Repeated login attempts are limited. Choose codes that are not easy to guess. Automatic Funnel startup is not included in this version.
 
 </div>
 </details>
@@ -98,12 +98,12 @@ The Mac and Windows apps do not open a terminal. Do not disable your computer’
 </div>
 </details>
 <details class="hu-share-detail">
-<summary>Several wikis — no port numbers</summary>
+<summary>Several wikis and sites</summary>
 <div class="hu-share-detail-body">
 
-Select another wiki folder and choose ''Open'' or ''Share''. Stopped wikis stay in the list. Each wiki has its own address and optional login. Stop a running wiki using the button on its library row: ''Stop''. Its status light shows whether it is running. On Linux, open the helper again; each wiki has its own status window.
+Select another wiki or site and choose ''Open'' or ''Share''. Stopped wikis and sites stay in the list. Each has its own address and optional login. Use ''Stop'' on its running library row. The status light shows whether it is running. On Linux, each running wiki or site has its own status window.
 
-The helper remembers names, folders and addresses on this computer, not passwords. It finds unused connections and preserves other services. If a saved address is occupied, it explains the conflict instead of silently moving the wiki.
+The helper remembers names, folders and addresses. For private Tailscale sharing, it finds an available address even if an old route holds the previous one. Other services remain untouched. Use ''Copy address'' for the current link.
 
 Several devices can open the same wiki. Only one server is needed for that wiki. Do not run its folder in another server at the same time. Changes to the host’s Tailscale name or domain can change its address.
 
