@@ -27,7 +27,19 @@ try{
  await ctx.route("**/*",route=>route.request().url().startsWith("file:")?route.continue():route.abort());
  await page.goto(pathToFileURL(file).href);
  const player=page.locator(".huw-musical");
- await player.waitFor();
+ try{await player.waitFor();}catch(error){
+ console.log("DEBUG page title:",await page.title());
+ console.log("DEBUG errors:",errors);
+ console.log("DEBUG body:",(await page.locator("body").innerText()).slice(0,7000));
+ console.log("DEBUG TiddlyWiki:",await page.evaluate(()=>typeof $tw==="undefined"?"not booted":{
+  language:$tw.wiki.getTiddlerText("$:/language"),
+  defaultTiddlers:$tw.wiki.getTiddlerText("$:/DefaultTiddlers"),
+  plugin:!!$tw.wiki.getTiddler("$:/plugins/huwiki/musical"),
+  start:!!$tw.wiki.getTiddler("Musical – Start"),
+  widget:typeof $tw.modules.types.widget?.["musical-stage"]
+ }));
+ throw error;
+}
  await player.locator(".huw-musical-canvas svg").first().waitFor();
  await player.locator(".huw-musical-paper svg").first().waitFor();
  assert.equal(await player.locator(".huw-musical-shot").count(),9);
