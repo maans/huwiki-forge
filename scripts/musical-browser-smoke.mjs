@@ -40,7 +40,16 @@ try{
  }));
  throw error;
 }
- await player.locator(".huw-musical-canvas svg").first().waitFor();
+ try{await player.locator(".huw-musical-canvas svg").first().waitFor();}catch(e){
+ console.log("DEBUG Musical stage:",(await player.innerText()).slice(0,3500));
+ console.log("DEBUG startup errors:",errors);
+ console.log("DEBUG source fields:",await page.evaluate(()=>{
+  const score=$tw.wiki.getTiddler("Musical – Tændstikorkestret (ABC)"),
+    film=$tw.wiki.getTiddler("Musical – Tændstikorkestret (film)");
+  return {scoreFields:score?Object.keys(score.fields):[],filmFields:film?Object.keys(film.fields):[],scoreSourceLength:score?.fields["abc-source"]?.length||0,filmTextStart:film?.fields.text?.slice(0,120)};
+ }));
+ throw e;
+}
  await player.locator(".huw-musical-paper svg").first().waitFor();
  assert.equal(await player.locator(".huw-musical-shot").count(),9);
  assert.equal(await player.locator(".huw-musical-play").count(),1);
