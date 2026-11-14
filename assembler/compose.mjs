@@ -67,7 +67,7 @@ Tilføj en ny tiddler med plusknappen. Brug TiddlyWikis Gem-knap til at gemme di
 <$list filter="[all[tiddlers]!is[system]!is[draft]!match[Min wiki / My wiki]]"><$link/><br/></$list>
 
 !! Dine værktøjer
-Plugins og deres vejledninger findes i [[Kontrolpanel|$:/ControlPanel]]. F-knappen fører tilbage til Forge. HUWiki Plugin Library findes i kontrolpanelet.
+Plugins og deres vejledninger findes i [[Kontrolpanel|$:/ControlPanel]]. F-knappen fører tilbage til Forge. Plugin Library findes i kontrolpanelet.
 </$list>
 <$list filter="[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]" variable="locale">
 ! Your wiki is ready
@@ -78,7 +78,7 @@ Use the plus button to add a tiddler. Use TiddlyWiki’s Save button to save you
 <$list filter="[all[tiddlers]!is[system]!is[draft]!match[Min wiki / My wiki]]"><$link/><br/></$list>
 
 !! Your tools
-Find plugins and their guides in the [[Control Panel|$:/ControlPanel]]. F takes you back to Forge. HUWiki Plugin Library is available in the Control Panel.
+Find plugins and their guides in the [[Control Panel|$:/ControlPanel]]. F takes you back to Forge. Plugin Library is available in the Control Panel.
 </$list>`};
 export async function composeWiki({choices,editionId='',packageTitles=[],contentIds=[],theme='',name='',language='en-GB'},fetcher=fetch){
  if(!['en-GB','da-DK'].includes(language))throw Error('Unsupported language');
@@ -107,7 +107,7 @@ export async function composeWiki({choices,editionId='',packageTitles=[],content
  const shared=await readJson(new URL('editions/shared/libraries.json',choices.root),fetcher);mergeTiddlers(tiddlers,shared);
  if(!tiddlers.some(t=>t.title==='$:/languages/da-DK'))mergeTiddlers(tiddlers,[await readJson(new URL('languages/da-DK/plugin.json',choices.root),fetcher)]);
  function set(title,text){const i=tiddlers.findIndex(t=>t.title===title);if(i<0)tiddlers.push({title,text});else tiddlers[i]={...tiddlers[i],text};}
- if(!editionId){mergeTiddlers(tiddlers,[starter]);set('$:/DefaultTiddlers','[[Min wiki / My wiki]]');set('$:/SiteSubtitle','TiddlyWiki · HUWiki Forge');}
+ if(!editionId){mergeTiddlers(tiddlers,[starter]);set('$:/DefaultTiddlers','[[Min wiki / My wiki]]');set('$:/SiteSubtitle','TiddlyWiki · TiddlyWiki Forge');}
  if(theme){const p=choices.packages.find(p=>p.title===theme);if(!p||p['plugin-type']!=='theme')throw Error('Invalid theme');set('$:/theme',theme);}
  if(name.trim())set('$:/SiteTitle',name.trim());else if(!editionId)set('$:/SiteTitle',language==='da-DK'?'Min wiki':'My wiki');
  set('$:/language','$:/languages/'+language);

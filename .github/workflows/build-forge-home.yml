@@ -27,3 +27,7 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/composer-browser-smoke.mjs
+      - name: Test public names and first-boot language in every Edition
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/public-names-browser-smoke.mjs

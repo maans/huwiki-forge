@@ -24,7 +24,7 @@ test("HUPedia Edition retains canonical articles and has working bilingual plugi
   const {manifest,tiddlers}=await loadEdition(
     "https://forge.example/huwiki-forge/editions/hupedia/manifest.json",localFetch);
   assert.equal(manifest.id,"hupedia");
-  assert.equal(tiddlers.length,20); // 14 original components + 6 shared Forge tiddlers
+  assert.equal(tiddlers.length,24); // 14 original components + 10 shared Forge tiddlers
   const byTitle=new Map(tiddlers.map(item=>[item.title,item]));
   for(const title of ["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community","$:/huwiki/forge/page-control"])assert.ok(byTitle.has(title),title+" missing from Edition");
   for(const title of [

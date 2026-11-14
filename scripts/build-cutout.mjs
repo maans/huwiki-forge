@@ -1,4 +1,5 @@
 /** Reproducible standalone CutOut from the exact OAuthLab 0.6.2 source. */
+import {renamePackage,publicWikiText} from './public-names.mjs';
 import {readFile,writeFile} from 'node:fs/promises';
 import {gunzipSync} from 'node:zlib';
 const source=JSON.parse(gunzipSync(Buffer.from((await readFile('migration/cutout/original-plugin.b64','utf8')).trim(),'base64')));
@@ -62,6 +63,16 @@ ZIP export is local. The original examples, Excalidraw, PasteUp, Theatre and Sli
 rows[prefix+'OriginalREADME']={...rows[prefix+'README'],title:prefix+'OriginalREADME'};rows[prefix+'README']=readme;
 rows[prefix+'Provenance']={title:prefix+'Provenance',text:'HUWiki CutOut 0.6.2, author HUWiki, recovered from HUWiki-OAuthLab-backup.zip / HU_CUTOUT_ASSET_01_000_. Original bundle declares no top-level license. No new license is inferred. Original source and hashes: migration/cutout/. JSZip retains its original dual MIT/GPL license in '+prefix+'vendor/jszip-license. Forge adaptation: native language only, local ZIP adapter, unavailable optional UI omitted.'};
 const result={...source,version:'0.6.2-test.2',description:'Offline animation workshop · Dukker, animationer og lokal ZIP · Test',stability:'experimental',text:JSON.stringify({tiddlers:rows})};
+// Preserve translation lookup keys and canonical page IDs while changing their labels.
+const i18n=rows[prefix+'i18n.js'];
+const start=i18n.text.indexOf('var DATA=')+9,end=i18n.text.indexOf(';\n',start);
+const labels=JSON.parse(i18n.text.slice(start,end));
+for(const key of Object.keys(labels.en))labels.en[key]=publicWikiText(labels.en[key]);
+for(const page of Object.values(labels.pages||{}))for(const key of ['da','en','titleEn'])if(typeof page[key]==='string')page[key]=publicWikiText(page[key]);
+i18n.text=i18n.text.slice(0,start)+JSON.stringify(labels)+i18n.text.slice(end);
+i18n.text=i18n.text.replace("return language(w)==='en'&&p&&item&&item.fields['cutout-ui-title-en']?p.titleEn:t;", "return language(w)==='en'&&p&&item&&item.fields['cutout-ui-title-en']?item.fields['cutout-ui-title-en']:(item&&item.fields['forge-display-name']||t);");
+result.text=JSON.stringify({tiddlers:rows});
+renamePackage(result);
 const content=JSON.stringify(result,null,2)+'\n';
 if(process.argv.includes('--check')){if(await readFile('plugins/cutout/dist/plugin.json','utf8')!==content)throw Error('Stale CutOut bundle');}
 else{await writeFile('plugins/cutout/dist/plugin.json',content);await writeFile('plugins/cutout/licenses/JSZip.txt',rows[prefix+'vendor/jszip-license'].text);}

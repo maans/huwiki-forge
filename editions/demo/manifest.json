@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "demo",
-  "name": "HUWiki Forge Demo Edition",
+  "name": "TiddlyWiki Forge Demo Edition",
   "version": "0.0.1",
   "coreVersion": "5.4.1",
   "tiddlers": [

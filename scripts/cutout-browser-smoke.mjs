@@ -16,7 +16,7 @@ try{
  const context=await browser.newContext({acceptDownloads:true,viewport:{width:1440,height:1000}}),page=await context.newPage();page.setDefaultTimeout(15000);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await context.route('**/*',route=>route.request().url().startsWith('file:')?route.continue():route.abort());
- await page.goto(pathToFileURL(file).href);await page.getByRole('heading',{name:'HUWiki CutOut — offline test release',exact:true}).waitFor();
+ await page.goto(pathToFileURL(file).href);await page.getByRole('heading',{name:'CutOut — offline test release',exact:true}).waitFor();
  assert.equal(await page.locator('.tc-error-form').count(),0);
  await page.getByRole('link',{name:'Open workshop',exact:true}).click();
  await page.locator('.co-studio').waitFor();

@@ -4,7 +4,7 @@ Forsiden er en statisk, selvstændig TiddlyWiki 5.4.1. GitHub Pages leverer den 
 
 ## Indhold og design
 
-Edition-kort og status stammer fra `catalog/editions.json`. De danske/engelske præsentationstekster ligger i hvert elements `home`-felt. Bygget afleder `editions/forge/tiddlers/edition-index.json` fra dette katalog; det er ikke et nyt katalog. Lokale kopier beholder deres snapshot og har links til TiddlyWikis eget fællesskab og HUWiki Plugin Library.
+Edition-kort og status stammer fra `catalog/editions.json`. De danske/engelske præsentationstekster ligger i hvert elements `home`-felt. Bygget afleder `editions/forge/tiddlers/edition-index.json` fra dette katalog; det er ikke et nyt katalog. Lokale kopier beholder deres snapshot og har links til TiddlyWikis eget fællesskab og Plugin Library.
 
 `seed.json` indeholder redigerbare danske/engelske forsider og kortskabeloner. `design.json` er forsidens stylesheet. Dansk er den uændrede officielle TiddlyWiki 5.4.1-pakke med BSD-licens. Valget følger kun `$:/language` i TiddlyWikis kontrolpanel.
 
@@ -39,3 +39,11 @@ Forsiden starter med den indbyggede `$:/state/sidebar` sat til `no`. Den normale
 Assembleren bruger `catalog/editions.json`, Plugin Librarys `registry.json` og det eksisterende `catalog/materials.json`. Besøgende kan vælge en eksisterende Edition eller en tom wiki, dernæst værktøjer, indhold og tema. Nødvendige hjælpepakker medtages automatisk. Manglende/cirkulære afhængigheder, uoverensstemmende pakkeversioner og modstridende tiddlere afvises før download. Pakker og deres licenser bevares. F og begge biblioteksindgange følger altid med.
 
 Sammensætninger er testudgaver, ikke en garanti for alle kombinationer. `scripts/composer-browser-smoke.mjs` afprøver dansk musik + jazzundervisning + Modern, native gem/genåbn offline og en engelsk HUPedia + Tegne-eksempler med automatisk Excalidraw/React. `tests/compose.test.mjs` kontrollerer desuden alle eksisterende Editions og fejltilfælde. Browserkontrollen kører i CI sammen med forsidekontrollen. `FORGE_HOME_URL` kan pege på Pages for samme kontrol efter deployment.
+
+## Synlige navne og opstartssprog, 14. november 2026
+
+Forge omtales som TiddlyWiki Forge. Synlige Edition-, plugin- og temanavne har ikke længere HUWiki-præfikset. Tilpassede tredjepartsværktøjer beholder tydelig identitet: PasteUp Forge og Excalidraw Forge. Tekniske plugin-id’er, kanoniske tiddlertitler, afhængigheder, ophav og licenser bevares. `scripts/public-names.mjs` ændrer præsentationsfelter og viste linketiketter; linkmål og kodeeksempler bevares. En native title-filter-skabelon og etiketter i Open-listen viser navnene uden at omdøbe de sider, links peger på. Originaldokumentation, licenser og kildearkiver forbliver uændrede.
+
+Browserens sprog vælges før TiddlyWikis `startup`-modul opretter den native sprogskifter. Det tidligere StartupAction-valg kunne efterlade dansk i `$:/language`, mens kerneknapperne stadig var engelske indtil et nyt manuelt sprogvalg. Kun en førstegangsvisning uden et gemt `$:/language` får browserens dansk/engelsk som udgangspunkt. Gemte eller eksplicit valgte sprog bevares.
+
+`scripts/public-names-browser-smoke.mjs` åbner alle otte Editions offline på begge sprog, kontrollerer de faktisk viste sidebar-faner og kontrolpanelknappen, navnene og kanoniske links. PasteUp Forge kontrolleres med bevaret ophav.

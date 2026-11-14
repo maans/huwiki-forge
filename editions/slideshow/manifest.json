@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "slideshow",
-  "name": "HUWiki Slideshow Edition",
+  "name": "Slideshow Edition",
   "version": "0.8.39-test.1",
   "coreVersion": "5.4.1",
   "tiddlers": [

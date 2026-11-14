@@ -38,7 +38,7 @@ export async function collectForgePlugins(root=process.cwd()){
  }
  entries.sort((a,b)=>a.fields["plugin-type"].localeCompare(b.fields["plugin-type"])||
   (a.fields.name||"").localeCompare(b.fields.name||"","en"));
- return {schemaVersion:1,source:"HUWiki Forge on GitHub",items:entries};
+ return {schemaVersion:1,source:"TiddlyWiki Forge on GitHub",items:entries};
 }
 async function main(){
  const root=process.cwd();
