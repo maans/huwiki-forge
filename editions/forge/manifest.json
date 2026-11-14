@@ -10,7 +10,8 @@
     "../shared/libraries.json",
     "tiddlers/edition-index.json",
     "tiddlers/design.json",
-    "tiddlers/reader.json"
+    "tiddlers/reader.json",
+    "tiddlers/featured-plugins.json"
   ],
   "plugins": [
     "../../themes/modern/dist/theme.json",

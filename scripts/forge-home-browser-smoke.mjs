@@ -19,17 +19,22 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base=process.env.FORGE_HOME_URL||`http://127.0.0.1:${server.address().port}/`;
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',headless:true});
 try {
- const context=await browser.newContext({acceptDownloads:true,viewport:{width:1440,height:1000}});
+ for(const [locale,expected]of [['da-DK','da-DK'],['da','da-DK'],['en-US','en-GB'],['de-DE','en-GB']]){const languageContext=await browser.newContext({locale});const probe=await languageContext.newPage();await probe.goto(base);await probe.locator('.forge-home').waitFor();assert.equal(await probe.evaluate(()=>$tw.wiki.getTiddlerText('$:/language')),'$:/languages/'+expected);await languageContext.close();}
+ console.log('PASS browser-language startup via native TiddlyWiki actions, Danish variants and English fallback');
+ const context=await browser.newContext({locale:'en-US',acceptDownloads:true,viewport:{width:1440,height:1000}});
  const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const response=await page.goto(base);assert.equal(response.status(),200);
  await page.waitForSelector('.forge-card');
+ await page.locator('[data-plugin="forgeshare"]').getByRole('heading',{name:'Share your wikis'}).waitFor();
+ const featured=JSON.parse(await readFile(path.join(root,'editions/forge/tiddlers/featured-plugins.json'),'utf8'))[0];
+ assert.equal(await page.locator('[data-plugin="forgeshare"] a').count(),featured.available==='yes'?1:0);
  const catalog=JSON.parse(await readFile(path.join(root,'catalog/editions.json'),'utf8'));
- assert.equal(await page.locator('.forge-card').count(),catalog.editions.length);
+ assert.equal(await page.locator('.forge-card[data-edition]').count(),catalog.editions.length);
  assert.equal(await page.getByRole('button',{name:'show sidebar',exact:true}).isVisible(),true);
  const columns=await page.locator('.forge-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
  assert.equal(columns,3,'Three Edition cards across at 1440px');
  assert.equal(await page.locator('.forge-custom a').getAttribute('href'),'https://forge.måns.dk/assembler/?lang=en');
- assert.equal(await page.locator('.forge-grid > p .forge-card').count(),catalog.editions.length);
+ assert.equal(await page.locator('.forge-grid > p .forge-card[data-edition]').count(),catalog.editions.length);
  assert.equal(await page.getByRole('button',{name:'Edit this tiddler',exact:true}).isVisible(),false,'HTTP guest view hides edit');
  const homeFrame=page.locator('[data-tiddler-title="HUWiki Forge"]');
  await homeFrame.getByRole('button',{name:'more',exact:true}).click();
@@ -60,12 +65,12 @@ try {
  const dir=await mkdtemp(path.join(tmpdir(),'forge-home-'));const saved=path.join(dir,'Forge.html');await download.saveAs(saved);
  assert.ok((await readFile(saved,'utf8')).length>2_000_000);
  await context.close();
- const offline=await browser.newContext({viewport:{width:1440,height:1000}});
+ const offline=await browser.newContext({locale:'en-US',viewport:{width:1440,height:1000}});
  await offline.route('**/*',r=>r.request().url().startsWith('file:')?r.continue():r.abort());
  const local=await offline.newPage();local.setDefaultTimeout(15000);local.on('pageerror',e=>errors.push(e.message));
  await local.goto(pathToFileURL(saved).href);
  await local.getByRole('heading',{name:'Form din næste wiki.',exact:true}).waitFor();
- assert.equal(await local.locator('.forge-card').count(),catalog.editions.length);
+ assert.equal(await local.locator('.forge-card[data-edition]').count(),catalog.editions.length);
  const frame=local.locator('[data-tiddler-title="HUWiki Forge"]');
  const edit=frame.locator('button[class*="Buttons%2Fedit"]');assert.equal(await edit.isVisible(),true,'Saved local copy is editable');
  // Exercise native draft editor and commit, then save/reopen the actual download.
@@ -73,9 +78,9 @@ try {
  const draft=local.locator('.tc-tiddler-edit-frame');
  const editor=draft.locator('textarea.tc-edit-texteditor').first();
  // TiddlyWiki may use an iframe-backed text editor; interact with the native body editor.
- const textareas=await draft.locator('textarea').count();
- if(textareas){const body=draft.locator('textarea').last();await body.fill((await body.inputValue())+'\n\nFORGE-OFFLINE-EDIT');}
- else {const body=draft.frameLocator('iframe').locator('textarea');await body.fill((await body.inputValue())+'\n\nFORGE-OFFLINE-EDIT');}
+ await local.waitForFunction(()=>{const frame=document.querySelector('.tc-tiddler-edit-frame');return !!frame?.querySelector('iframe')?.contentDocument?.querySelector('textarea')||Array.from(frame?.querySelectorAll('textarea.tc-edit-texteditor-body')||[]).some(e=>e.offsetWidth>0);});
+ if(await draft.locator('iframe').count()){const body=draft.frameLocator('iframe').locator('textarea');await body.fill((await body.inputValue())+'\n\nFORGE-OFFLINE-EDIT');}
+ else {const body=draft.locator('textarea.tc-edit-texteditor-body:visible');await body.fill((await body.inputValue())+'\n\nFORGE-OFFLINE-EDIT');}
  await draft.locator('button[class*="Buttons%2Fsave"]:not([class*="save-wiki"])').click();
  await local.getByText('FORGE-OFFLINE-EDIT',{exact:false}).first().waitFor();
  await local.waitForFunction(()=>!document.querySelector('.tc-tiddler-edit-frame')&&document.querySelectorAll('.forge-home').length===1);
