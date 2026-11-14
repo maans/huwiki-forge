@@ -9,10 +9,10 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using System.Reflection;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.3.0")]
+[assembly: AssemblyVersion("0.1.4.0")]
 
 class Session {
-    public Process Process; public string Name, Url = "", Id=""; public bool Stopping, Local, OpenWhenReady;
+    public Process Process; public string Name, Url = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady;
     public FlowLayoutPanel Row; public Label Label; public Button Copy, Stop;
 }
 class LibraryEntry {
@@ -45,6 +45,15 @@ class ForgeShare : Form {
         info.EnvironmentVariables.Remove("NODE_OPTIONS"); info.EnvironmentVariables.Remove("NODE_PATH"); return info;
     }
     static string Quote(string path) { return "\"" + path + "\""; }
+    static bool PermittedAddress(Uri address) {
+        if(!String.IsNullOrEmpty(address.UserInfo))return false;
+        if(address.Scheme=="https")return address.Host.EndsWith(".ts.net",StringComparison.OrdinalIgnoreCase);
+        if(address.Scheme!="http")return false;
+        if(address.Host=="127.0.0.1")return true;
+        System.Net.IPAddress ip;
+        if(!System.Net.IPAddress.TryParse(address.Host,out ip) || ip.AddressFamily!=System.Net.Sockets.AddressFamily.InterNetwork)return false;
+        var p=ip.GetAddressBytes();return p[0]==10 || (p[0]==172 && p[1]>=16 && p[1]<=31) || (p[0]==192 && p[1]==168);
+    }
     [STAThread] static int Main(string[] args) {
         if (Array.IndexOf(args,"--self-test") >= 0) {
             var node=Node(); if(node==null || !File.Exists(Helper)) return 2;
@@ -53,6 +62,8 @@ class ForgeShare : Form {
             if(data.entries.Length!=1 || data.entries[0].name!="Notes")return 3;
             Application.EnableVisualStyles();
             using(var form=new ForgeShare()) {form.CreateControl();form.PerformLayout();form.Controls[0].PerformLayout();if(form.libraryButtons.Count!=5 || form.Controls[0].Controls[form.Controls[0].Controls.Count-1].Bottom>form.Controls[0].ClientSize.Height)return 4;}
+            foreach(var value in new[]{"http://127.0.0.1:20000","http://192.168.1.8:20000","http://10.0.0.8:20000","https://example.ts.net:21000"})if(!PermittedAddress(new Uri(value)))return 5;
+            foreach(var value in new[]{"http://0.0.0.0:20000","http://8.8.8.8:20000","http://100.64.0.1:20000","file:///C:/wiki"})if(PermittedAddress(new Uri(value)))return 6;
             return 0;
         }
         Application.EnableVisualStyles(); Application.SetCompatibleTextRenderingDefault(false);
@@ -100,7 +111,7 @@ class ForgeShare : Form {
                 UI(()=> { if(!sessions.Contains(session)) return;
                     if(data.ContainsKey("name")) session.Name=data["name"];
                     Uri address;
-                    if(data.ContainsKey("event") && data["event"]=="ready" && data.ContainsKey("url") && Uri.TryCreate(data["url"],UriKind.Absolute,out address) && (address.Scheme=="https" || (address.Scheme=="http" && address.Host=="127.0.0.1"))) { session.Url=data["url"]; session.Copy.Enabled=true; if(session.OpenWhenReady){session.OpenWhenReady=false;Process.Start(new ProcessStartInfo(session.Url){UseShellExecute=true});} ReloadLibrary(); }
+                    if(data.ContainsKey("event") && data["event"]=="ready" && data.ContainsKey("url") && Uri.TryCreate(data["url"],UriKind.Absolute,out address) && PermittedAddress(address)) { session.Mode=data.ContainsKey("mode")?data["mode"]:"";session.Access=data.ContainsKey("access")?data["access"]:"login";session.Url=data["url"]; session.Copy.Enabled=true; if(session.OpenWhenReady){session.OpenWhenReady=false;Process.Start(new ProcessStartInfo(session.Url){UseShellExecute=true});} ReloadLibrary(); }
                     Update(session);
                 });
             } catch { }
@@ -158,7 +169,11 @@ class ForgeShare : Form {
         }
         nextID=e.id;nextLocal=local;StartWiki();
     }
-    void Update(Session s) { s.Label.Text=s.Name+(s.Stopping?T(" — stopper…"," — stopping…"):s.Url.Length==0?"":s.Local?T(" — kun lokalt"," — local only"):T(" — deler"," — sharing")) + (s.Url.Length==0?"":"\n"+s.Url); }
+    void Update(Session s) {
+        var network=s.Local?T("kun lokalt","local only"):s.Mode=="lan"?T("hjemmenetværk","home network"):"Tailscale";
+        var login=s.Access=="open"?T("uden login","no login"):T("med login","with login");
+        s.Label.Text=s.Name+(s.Stopping?T(" — stopper…"," — stopping…"):s.Url.Length==0?"":" — "+network+" · "+login)+(s.Url.Length==0?"":"\n"+s.Url);
+    }
     void Stop(Session s) { if(s.Stopping) return; s.Stopping=true; s.Stop.Enabled=false; Update(s);
         try { s.Process.StandardInput.Write("STOP\n"); s.Process.StandardInput.Flush(); }
         catch { MessageBox.Show(T("Brug wikiens statusdialog til at stoppe delingen.","Use the wiki's status dialog to stop sharing."),"ForgeShare"); }
