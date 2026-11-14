@@ -28,8 +28,6 @@ På Linux: følg vejledningen til din distribution. Dialogboksene kræver også 
 <summary>Jeg har kun en HTML-fil</summary>
 <div class="hu-share-detail-body">
 
-En lokal HTML-wiki kan tilføjes og åbnes direkte. Den åbner i din sædvanlige browser og bruger wikiens egen gemmemetode. Hjælperen overtager ikke gemningen.
-
 Tryk Åbn eller Del. Hjælperen klargør HTML-wikien automatisk og beholder den samme post i biblioteket. Gem og luk HTML-wikien først. Efter kontrol flyttes originalen til papirkurven. Du kan fortsat eksportere en HTML-kopi til offlinebrug.
 
 </div>

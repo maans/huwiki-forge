@@ -28,8 +28,6 @@ On Linux, follow the instructions for your distribution. The dialogs also need Z
 <summary>I only have an HTML file</summary>
 <div class="hu-share-detail-body">
 
-A local HTML wiki can be added and opened directly. It opens in your usual browser and uses the wiki’s existing save method. The helper does not take over saving.
-
 Press Open or Share. The helper prepares the HTML wiki automatically and keeps the same library entry. Save and close the HTML wiki first. After verification, the original moves to Trash. You can still export HTML for offline use.
 
 </div>
