@@ -57,7 +57,7 @@ try{
  throw e;
 }
  await player.locator(".huw-musical-paper svg").first().waitFor();
- assert.equal(await player.locator(".huw-musical-shot").count(),9);
+ assert.equal(await player.locator(".huw-musical-shot").count(),15);
  assert.equal(await player.locator(".huw-musical-play").count(),1);
  assert.equal(await player.locator(".huw-cutout-player").count(),0,"No second CutOut transport");
  const stage=player.locator(".huw-musical-canvas > svg");
@@ -72,6 +72,16 @@ try{
  await slider.fill("11");await slider.dispatchEvent("input");
  assert.notEqual(await dancer.getAttribute("transform"),startingPose,"The figures should dance when scrubbing");
  assert.notEqual(await stage.getAttribute("viewBox"),close,"Camera should follow the film timeline");
+ const tracks=player.locator(".huw-musical-track");
+ assert.ok(await tracks.count()>=14,"Whole-song and CutOut tracks must be shown");
+ assert.equal(await player.locator(".huw-musical-song-clip").count(),2,"Two full ABC songs are on the one track");
+ await player.locator(".huw-musical-song-clip").nth(1).click();
+ assert.match(await player.getAttribute("data-active-song"),/Finale ABC/,"Selecting the second clip switches notation");
+ assert.equal(await player.locator('.huw-musical-score-page[data-song-index="1"]').isVisible(),true);
+ assert.equal(await player.locator('.huw-musical-score-page[data-song-index="0"]').isVisible(),false);
+ assert.ok(Number(await slider.inputValue())>=15,"Scrubbing uses global song time");
+ await player.locator(".huw-musical-song-clip").first().click();
+ assert.match(await player.getAttribute("data-active-song"),/\\(ABC\\)/);
  const play=player.locator(".huw-musical-play");
  await play.waitFor({state:"visible"});
  await page.waitForFunction(()=>!document.querySelector(".huw-musical-play").disabled,{timeout:25000});
