@@ -65,6 +65,8 @@ test("Orchestra has animated players, original ABC score, and editable film came
 test("Musical clock follows audio callbacks; pause and tempo do not advance a second clock",async()=>{
  const plugin=await json("plugins/musical/dist/plugin.json");
  const shadows=JSON.parse(plugin.text).tiddlers;
+ assert.equal(shadows["$:/plugins/huwiki/musical/sync.js"]["module-type"],"library");
+ assert.equal(shadows["$:/plugins/huwiki/musical/widget.js"]["module-type"],"widget");
  const p=shadows["$:/plugins/huwiki/musical/sync.js"].text;
  const w=shadows["$:/plugins/huwiki/musical/widget.js"].text;
  new vm.Script(p);new vm.Script(w);
