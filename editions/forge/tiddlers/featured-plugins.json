@@ -3,7 +3,7 @@
     "title": "$:/huwiki/forge/forgeshare",
     "text": "",
     "available": "yes",
-    "version": "0.1.13",
+    "version": "0.1.15",
     "plugin-title": "$:/plugins/huwiki/forgeshare",
     "download-url": "https://forge.xn--mns-ula.dk/plugins/forgeshare/dist/plugin.json"
   }
