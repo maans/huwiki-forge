@@ -1,4 +1,4 @@
-ForgeShare — testudgave / test release 0.1.5
+ForgeShare — testudgave / test release 0.1.6
 
 DANSK
 
@@ -7,9 +7,9 @@ DANSK
    Windows: åbn ForgeShare.exe. Lad ForgeShare.mjs blive i samme mappe.
    Linux: åbn Start-ForgeShare.sh; tillad om nødvendigt kørsel i filens
    egenskaber. Linux-dialogerne kræver Zenity.
-2. Tryk “Tilføj” for at gemme en HTML-fil eller wikimappe på listen.
-   Markér én wiki: “Åbn” åbner den lokalt; “Del” starter særskilt deling
-   af en forberedt serverwiki. “Redigér” ændrer navn og beskrivelse.
+2. Dine wikier findes automatisk. Vælg dem, og tryk “Del”.
+   HTML-wikier klargøres i baggrunden. Delingsindstillinger huskes.
+   “Åbn” åbner én wiki lokalt. “Tilføj” finder en manglende wiki.
 3. Markér de wikier, du vil have med i en oversigt. Tryk “Eksportér valgte”.
    Vælg om delingsadresser skal med, og gem en ny JSON-fil.
    Træk filen ind i din wiki, gennemse importen, og vælg “Importér”.
@@ -33,8 +33,10 @@ Testappen har endnu intet udgivercertifikat:
   computerens politik kan blokere den helt.
 Slå ikke generel beskyttelse fra. Få hjælp, hvis appen fortsat blokeres.
 
-For at DELE en HTML-wiki skal en kopi først klargøres som servermappe.
-Se hjælpen i ForgeShare. Originalen kan stadig åbnes lokalt.
+Gem og luk HTML-wikien før deling. Efter kontrolleret klargøring flyttes
+originalen til papirkurven. Biblioteket beholder kun den klargjorte wiki.
+Du kan fortsat eksportere HTML til offlinebrug. Standarddeling er Tailscale
+uden ekstra wiki-login. Skift netværk og adgang under “Deling”.
 Ved Tailscale-deling skal deltagerne have Tailscale. Begræns gæsteadgang
 til den ønskede wiki før invitation. Tag backup, og aftal hvem der redigerer samme artikel.
 
@@ -45,9 +47,9 @@ ENGLISH
    Windows: open ForgeShare.exe. Keep ForgeShare.mjs in the same folder.
    Linux: open Start-ForgeShare.sh; allow execution in its properties
    if needed. Linux dialogs require Zenity.
-2. Select “Add” to keep an HTML file or wiki folder in the list.
-   Check one wiki: “Open” opens it locally; “Share” separately starts
-   sharing a prepared server wiki. “Edit” changes its name/description.
+2. Your wikis are found automatically. Select them and press “Share”.
+   HTML wikis are prepared in the background. Sharing settings are remembered.
+   “Open” opens one wiki locally. Use “Add” for a missing wiki.
 3. Check the wikis to include in an overview. Select “Export selected”.
    Choose whether to include shared addresses and save a new JSON file.
    Drag it into your wiki, review the import and select “Import”.
@@ -69,8 +71,10 @@ The test app has no publisher certificate yet:
   it entirely.
 Do not disable general protections. Get help if it stays blocked.
 
-To SHARE an HTML wiki, prepare a copy in a server folder first. See
-ForgeShare help. The original can still be opened locally.
+Save and close an HTML wiki before sharing. After verified preparation,
+the original moves to Trash; the library keeps just the prepared wiki.
+You can still export HTML for offline use. Default sharing is Tailscale
+without extra wiki login. Change network and access under “Sharing”.
 For Tailscale sharing, invitees need Tailscale. Restrict guest access to
 the intended wiki before inviting. Keep backups and agree who edits each article.
 

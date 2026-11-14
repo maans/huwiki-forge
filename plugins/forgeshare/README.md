@@ -1,6 +1,6 @@
 # ForgeShare / Tailscale-samarbejde
 
-Optional, standalone TiddlyWiki 5 plugin, `0.1.5`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
+Optional, standalone TiddlyWiki 5 plugin, `0.1.6`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
 
 Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeShare** or the plugin readme. Forge's **Extra plugins** catalog lists it as an optional test package; no Edition includes it automatically. HTML/offline use and native savers remain available.
 
@@ -8,8 +8,8 @@ Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeS
 
 1. Install Node.js for the helper. Tailscale is needed only for the Tailscale sharing option. Linux additionally needs Zenity for dialogs.
 2. Download and extract the helper, then open ForgeShare.app (Mac), ForgeShare.exe (Windows) or the Linux launcher.
-3. Choose Add → Find wiki folders to search common locations and accept selected suggestions. Alternatively, choose an HTML file or folder yourself. Existing shared profiles appear automatically. Adding starts no server or Tailscale process. Edit changes a name/description without changing assigned ports.
-4. Open an HTML file with the default browser and its existing save method. Open a prepared server folder locally with loopback access and optional wiki login; this does not query or start Tailscale. Share separately offers Tailscale or home network, then optional wiki login. Without login all reachable users can read and edit; password length is user-selected. Optional pinned TiddlyWiki installation requires explicit approval. HTML-to-server conversion is not automatic.
+3. The library discovers wikis automatically. Select the desired entries; use Add if a wiki is missing. Discovery starts no server or Tailscale process. Edit changes a name/description without changing assigned ports.
+4. Open opens one wiki locally. Share prepares HTML in the background and starts selected wikis using remembered Sharing settings. The default is private Tailscale without additional wiki login. No silent LAN fallback. With wiki login enabled, credentials are requested at each start and never stored. Optional pinned TiddlyWiki installation still requires explicit approval.
 5. Select entries and Export selected. Choose names/descriptions only (default) or include last shared Tailscale or home-network addresses. Save a new JSON file and import it normally in a wiki. The localized overview and individual plain-text entry tiddlers use stable IDs for reimport. No paths, ports, credentials, unselected entries or wiki content are exported. Snapshots never claim live status; old imported entries are not automatically deleted.
 6. Active servers have independent Copy address and Stop controls; stopping leaves the library entry intact. Quitting asks before ending active sessions. Linux provides the library actions through dialogs and a separate status dialog per running wiki.
 
@@ -79,7 +79,7 @@ For later trusted Mac distribution: enroll in the Apple Developer Program, creat
 
 Windows distribution can later use Authenticode signing; even a valid signature does not promise immediate SmartScreen reputation. See [Microsoft’s distribution guidance](https://learn.microsoft.com/windows/apps/package-and-deploy/smartscreen-reputation).
 
-Version 0.1.5 intentionally increments the patch number: TW 5.4.1’s import comparison ignores prerelease suffixes such as `-test.2` and `-test.3`. The actual core comparator is tested so the new package upgrades those earlier test builds.
+Version 0.1.6 intentionally increments the patch number: TW 5.4.1’s import comparison ignores prerelease suffixes such as `-test.2` and `-test.3`. The actual core comparator is tested so the new package upgrades those earlier test builds.
 
 The headless browser check also uses the core import review and Import button, then reimports to verify stable identities and removal of previously included addresses.
 
@@ -91,10 +91,16 @@ The Mac self-test now exercises the actual library row rendering with empty, pop
 
 Home-network sharing uses HTTP, not TLS, and is intended for a trusted network. The helper excludes known VPN/virtual adapters and public, wildcard, loopback, IPv6 and Tailscale CGNAT addresses from LAN choices; if multiple eligible interfaces exist the user chooses one. It verifies the selected interface remains present before startup. It does not promise discovery across every VPN/platform adapter naming scheme. No firewall, router, port-forwarding or UPnP changes are made. Other devices need a browser on a network that can reach that interface; guest-network isolation or a firewall can prevent access. LAN addresses can change with DHCP. Actual cross-device LAN/firewall acceptance remains manual; automated integration uses isolated loopback servers.
 
-### Helper language, help and startup (0.1.5)
+### Helper language, help and startup (0.1.6)
 
 The helper follows OS UI language (Danish, English fallback); the plugin and exported page bodies follow TiddlyWiki `$:/language`. Help is bundled as offline HTML and opens only when chosen. Startup is off by default. It stores only a library entry ID, network mode and login choice in the private library metadata; no passwords. The native app checks this once per launch. Wiki login requires entering credentials at launch; anonymous startup requires explicit opt-in. The normal listener, port ownership and Tailscale checks remain mandatory. This does not register a service or change OS startup settings: Help explains how users add/remove the app at login. Linux performs the same saved startup before its library menu.
 
 Export asks for a readable overview name. Use distinct names for separate libraries. Names are retained for future exports even after wiki renames; IDs remain inert metadata. Reimport uses TiddlyWiki's usual review; no existing wiki is modified directly. Legacy UUID-titled exports are not deleted automatically.
 
 Official startup references: [Apple](https://support.apple.com/guide/mac-help/mh15189/mac), [Microsoft](https://support.microsoft.com/en-us/windows/experience/startup-boot/configure-startup-applications-in-windows), [Ubuntu](https://help.ubuntu.com/stable/ubuntu-help/startup-applications.html.en).
+
+### Automatic preparation and sharing (0.1.6)
+
+The native apps discover HTML and server folders on launch (bounded search in Wikis/Documents/Desktop/Downloads, no symlink traversal). Share prepares selected HTML wikis in a fresh sibling folder and queues selected sessions. Running sessions are skipped. Sharing preferences are separate and remembered; default is private Tailscale with anonymous wiki access, with no silent fallback to LAN. Optional wiki login still prompts for credentials at start because passwords are not stored.
+
+The isolated importer uses the installed, trusted TiddlyWiki HTML deserializer; it never boots incoming plugins. It writes numeric JSON filenames, verifies all saved fields by reloading, and preserves the library identity. Source changes, newer cores and local external attachments stop conversion without deleting the source. Only after the library commits does the original move to OS Trash. Trash failure retains the source and reports it. No permanent deletion fallback. HTML offline export remains available.

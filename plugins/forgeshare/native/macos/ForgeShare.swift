@@ -29,7 +29,9 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var window: NSWindow!, rows: NSStackView!, empty: NSTextField!, start: NSButton!
     var sessions: [Session] = [], quitting = false
     var libraryView:NSStackView!,libraryChecks:[([String:Any],NSButton)]=[],libraryButtons:[NSButton]=[],libraryBusy=false
-    var nextID="",nextLocal=false,nextStartup=false,checkStartup=true
+    let sharingLabel=NSTextField(labelWithString:"")
+    var shareQueue:[String]=[], sharingID:String?
+    var nextID="",nextLocal=false,nextStartup=false,checkStartup=true,checkDiscovery=true
     func applicationDidFinishLaunching(_ notification: Notification) {
         window = NSWindow(contentRect: NSRect(x: 0,y: 0,width: 760,height: 580),
                           styleMask: [.titled,.closable,.miniaturizable,.resizable], backing: .buffered, defer: false)
@@ -52,9 +54,10 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let header=NSStackView();header.orientation = .horizontal;header.spacing=12
         let spacer=NSView();spacer.setContentHuggingPriority(.defaultLow,for:.horizontal)
         let startupButton=NSButton(title:tr("Opstart…","Startup…"),target:self,action:#selector(configureStartup));startupButton.bezelStyle = .rounded
+        let sharingButton=NSButton(title:tr("Deling…","Sharing…"),target:self,action:#selector(configureSharing));sharingButton.bezelStyle = .rounded
         let helpButton=NSButton(title:tr("Hjælp","Help"),target:self,action:#selector(openHelp));helpButton.bezelStyle = .rounded
-        for view in [title,spacer,startupButton,helpButton] {header.addArrangedSubview(view)}
-        let intro = NSTextField(wrappingLabelWithString: tr("Dine wikier, samlet ét sted.", "Your wikis, together in one place."))
+        for view in [title,spacer,sharingButton,startupButton,helpButton] {header.addArrangedSubview(view)}
+        let intro=sharingLabel;intro.stringValue=tr("Finder dine wikier…","Finding your wikis…")
         intro.textColor = .secondaryLabelColor
         let toolbar=NSStackView();toolbar.orientation = .horizontal;toolbar.spacing=8
         let actions:[(String,String,Selector)]=[("Tilføj…","Add…",#selector(addToLibrary)),("Åbn","Open",#selector(openSelected)),("Del…","Share…",#selector(shareSelected)),("Redigér…","Edit…",#selector(editSelected)),("Eksportér valgte…","Export selected…",#selector(exportSelected))]
@@ -102,11 +105,11 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             let a=NSAlert(); a.messageText=tr("Installer Node.js først", "Install Node.js first")
             a.informativeText=tr("Node.js er motoren til wikien. Hent installationsprogrammet fra den officielle hjemmeside, og åbn derefter ForgeShare igen.", "Node.js runs the wiki. Download its installer from the official website, then reopen ForgeShare.")
             a.addButton(withTitle:tr("Luk", "Close")); a.addButton(withTitle:tr("Hent Node.js", "Get Node.js"))
-            if a.runModal() == .alertSecondButtonReturn { NSWorkspace.shared.open(URL(string:"https://nodejs.org/en/download")!) }; return
+            if a.runModal() == .alertSecondButtonReturn { NSWorkspace.shared.open(URL(string:"https://nodejs.org/en/download")!) }; sharingID=nil;shareQueue.removeAll();return
         }
-        guard let helper=Bundle.main.url(forResource:"ForgeShare",withExtension:"mjs") else { showError(tr("Appen er ufuldstændig. Pak hele den originale ZIP ud igen.", "The app is incomplete. Extract the complete original ZIP again.")); return }
+        guard let helper=Bundle.main.url(forResource:"ForgeShare",withExtension:"mjs") else { sharingID=nil;shareQueue.removeAll();showError(tr("Appen er ufuldstændig. Pak hele den originale ZIP ud igen.", "The app is incomplete. Extract the complete original ZIP again.")); return }
         let session=Session(); session.id=nextID;session.local=nextLocal;session.openWhenReady=nextLocal && !startupLaunch;nextID="";nextLocal=false; session.process.executableURL=URL(fileURLWithPath:node)
-        session.process.arguments=[helper.path,"--gui","--app"] + (session.id.isEmpty ? [] : ["--profile",session.id]) + (session.local ? ["--local"] : []) + (startupLaunch ? ["--startup"] : []); session.process.currentDirectoryURL=helper.deletingLastPathComponent()
+        session.process.arguments=[helper.path,"--gui","--app","--quick"] + (session.id.isEmpty ? [] : ["--profile",session.id]) + (session.local ? ["--local"] : []) + (startupLaunch ? ["--startup"] : []); session.process.currentDirectoryURL=helper.deletingLastPathComponent()
         var env=ProcessInfo.processInfo.environment; env.removeValue(forKey:"NODE_OPTIONS"); env.removeValue(forKey:"NODE_PATH")
         env["PATH"]="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"; env["FORGESHARE_LANGUAGE"]=danish ? "da" : "en"; session.process.environment=env
         session.process.standardInput=session.input; session.process.standardOutput=session.output; session.process.standardError=FileHandle.nullDevice
@@ -124,7 +127,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
                     let line=s.pending.prefix(upTo:end); s.pending.removeSubrange(...end)
                     if let data=try? JSONSerialization.jsonObject(with:line) as? [String:String] {
                         if let name=data["name"] { s.name=name }
-                        if data["event"] == "ready", let address=data["url"], let url=URL(string:address), permittedAddress(url) { s.mode=data["mode"] ?? "";s.access=data["access"] ?? "login";s.url=address; s.copy.isEnabled=true; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(url)};self.reloadLibrary() }
+                        if data["event"] == "ready", let address=data["url"], let url=URL(string:address), permittedAddress(url) { s.mode=data["mode"] ?? "";s.access=data["access"] ?? "login";s.url=address; s.copy.isEnabled=true; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(url)};self.reloadLibrary();self.advanceShareQueue(s.id) }
                         self.update(s)
                     }
                 }
@@ -133,12 +136,13 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         session.process.terminationHandler = { [weak self, weak session] _ in DispatchQueue.main.async {
             guard let self=self, let s=session else { return }; s.output.fileHandleForReading.readabilityHandler=nil
             try? s.input.fileHandleForWriting.close(); self.rows.removeArrangedSubview(s.row); s.row.removeFromSuperview()
+            if self.sharingID==s.id {self.sharingID=nil;self.shareQueue.removeAll()}
             self.sessions.removeAll { $0 === s }; self.empty.isHidden = !self.sessions.isEmpty;if !self.quitting {self.reloadLibrary()}
             if self.quitting && self.sessions.isEmpty { NSApp.reply(toApplicationShouldTerminate:true) }
         }}
         do { try session.process.run(); sessions.append(session); rows.addArrangedSubview(session.row)
             session.row.widthAnchor.constraint(equalTo:rows.widthAnchor).isActive=true; empty.isHidden=true; update(session)
-        } catch { showError(tr("Wikien kunne ikke startes. Kontroller Node.js-installationen.", "The wiki could not start. Check your Node.js installation.")) }
+        } catch { sharingID=nil;shareQueue.removeAll();showError(tr("Wikien kunne ikke startes. Kontroller Node.js-installationen.", "The wiki could not start. Check your Node.js installation.")) }
     }
     func selectedEntries() -> [[String:Any]] { libraryChecks.filter{$0.1.state == .on}.map{$0.0} }
     func oneEntry() -> [String:Any]? {
@@ -162,9 +166,11 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     func reloadLibrary() {
         let selected=Set(selectedEntries().compactMap{$0["id"] as? String})
-        libraryCommand("list") { result in
+        let action=checkDiscovery ? "discover-auto" : "list";checkDiscovery=false
+        libraryCommand(action) { result in
             guard let entries=result?["entries"] as? [[String:Any]] else {self.showError(tr("Wikibiblioteket kunne ikke læses. Ingen filer er ændret.","The wiki library could not be read. No files were changed."));return}
             self.renderLibrary(entries,selected:selected)
+            if let sharing=result?["sharing"] as? [String:Any] {self.sharingLabel.stringValue=tr("Deling: ","Sharing: ")+(sharing["mode"] as? String == "lan" ? tr("Hjemmenetværk","Home network") : "Tailscale")+" · "+(sharing["allowAnonymous"] as? Bool == true ? tr("uden wiki-login","no wiki login") : tr("med wiki-login","with wiki login"))}
             if self.checkStartup {
                 self.checkStartup=false
                 self.libraryCommand("startup-status") { result in
@@ -191,6 +197,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }
     }
 
+    @objc func configureSharing() {libraryCommand("sharing"){_ in self.reloadLibrary()}}
     @objc func configureStartup() {libraryCommand("startup"){_ in}}
     @objc func openHelp() {
         if let file=Bundle.main.url(forResource:danish ? "help-da" : "help-en",withExtension:"html") {NSWorkspace.shared.open(file)}
@@ -199,7 +206,23 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc func addToLibrary() {libraryCommand("add"){_ in self.reloadLibrary()}}
     @objc func editSelected() {guard let e=oneEntry() else{return};libraryCommand("edit",["id":e["id"]!]){_ in self.reloadLibrary()}}
     @objc func exportSelected() {let ids=selectedEntries().compactMap{$0["id"] as? String};if ids.isEmpty {showError(tr("Markér de wikier, der skal med i oversigten.","Select the wikis to include in the overview."));return};libraryCommand("export",["ids":ids]){_ in}}
-    @objc func shareSelected() {launchSelected(local:false)}
+    @objc func shareSelected() {
+        guard sharingID==nil && !libraryBusy else{return}
+        let ids=selectedEntries().compactMap{$0["id"] as? String}.filter{id in !sessions.contains{$0.id==id}}
+        if ids.isEmpty {showError(tr("Vælg en wiki, der ikke allerede kører.","Select a wiki that is not already running."));return}
+        start.title=tr("Klargør…","Preparing…")
+        libraryCommand("prepare",["ids":ids]) { result in
+            self.start.title=tr("Del…","Share…")
+            guard result?["ok"] as? Bool == true else{self.reloadLibrary();return}
+            self.shareQueue=ids;self.advanceShareQueue(nil)
+        }
+    }
+    func advanceShareQueue(_ completed:String?) {
+        guard !quitting,sharingID==completed else{return}
+        sharingID=nil
+        guard !shareQueue.isEmpty else{return}
+        let id=shareQueue.removeFirst();sharingID=id;nextID=id;nextLocal=false;startWiki()
+    }
     @objc func openSelected() {launchSelected(local:true)}
     func launchSelected(local:Bool) {
         guard let e=oneEntry(),let id=e["id"] as? String,let location=e["location"] as? String else{return}

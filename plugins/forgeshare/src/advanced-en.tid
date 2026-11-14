@@ -3,6 +3,8 @@ type: text/vnd.tiddlywiki
 
 !! 1. Prepare a server wiki
 
+The helper prepares HTML wikis automatically when you press Share. Save and close the HTML file first. The original moves to Trash after verified conversion. The following is an optional manual alternative for technical users.
+
 * Back up your HTML wiki first. Keep the original as an offline copy.
 * Install Node.js 20 or later, TiddlyWiki (tested with 5.4.1), and Tailscale from their official sources. Sign in to Tailscale on the host and the devices that will access the wiki. The helper can offer a separately approved TiddlyWiki installation; it does not change your Tailscale login.
 * Create a ''new'' server folder with TiddlyWiki's standard command:
@@ -79,7 +81,7 @@ Use TiddlyWiki's built-in ''Download save''/HTML export to keep a standalone off
 
 !! Sources and version
 
-ForgeShare 0.1.5. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
+ForgeShare 0.1.6. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]

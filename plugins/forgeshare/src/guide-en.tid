@@ -22,19 +22,19 @@ On Linux, follow the instructions for your distribution. The dialogs also need Z
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Collect your wikis</h2><p>Extract the ZIP and open ForgeShare. Choose <strong>Add → Find wiki folders</strong> and select from the suggestions. You can also choose an HTML file or folder yourself. Select a wiki and choose <strong>Open</strong>.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Collect your wikis</h2><p>Open ForgeShare. Your wikis are found automatically and shown in the list. Use <strong>Add</strong> if one is missing.</p>
 <details class="hu-share-detail">
 <summary>I only have an HTML file</summary>
 <div class="hu-share-detail-body">
 
 A local HTML wiki can be added and opened directly. It opens in your usual browser and uses the wiki’s existing save method. The helper does not take over saving.
 
-To share an HTML wiki, first prepare a copy in a server folder. Keep the original. See step 1 in ''Advanced help''; you may want assistance with this first step.
+Press Share. The helper prepares the HTML wiki automatically and keeps the same library entry. Save and close the HTML wiki first. After verification, the original moves to Trash. You can still export HTML for offline use.
 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select a server wiki and choose <strong>Share</strong>. Choose <strong>Tailscale</strong> or <strong>Home network</strong>, with or without wiki login. Use <strong>Copy address</strong> to get the link for others.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select your wikis and press <strong>Share</strong>. Settings under <strong>Sharing</strong> are remembered; the default is Tailscale without additional wiki login. Use <strong>Copy address</strong> to get the link for others.</p>
 <p class="hu-share-access">A Tailscale invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
 <summary>On your home network — without Tailscale</summary>
 <div class="hu-share-detail-body">

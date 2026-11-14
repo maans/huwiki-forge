@@ -22,19 +22,19 @@ På Linux: følg vejledningen til din distribution. Dialogboksene kræver også 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Saml dine wikier</h2><p>Pak ZIP-filen ud, og åbn ForgeShare. Vælg <strong>Tilføj → Find wikimapper</strong>, og vælg blandt forslagene. Du kan også vælge en HTML-fil eller mappe selv. Markér en wiki, og tryk <strong>Åbn</strong>.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Saml dine wikier</h2><p>Åbn ForgeShare. Dine wikier findes automatisk og vises på listen. Brug <strong>Tilføj</strong>, hvis en wiki mangler.</p>
 <details class="hu-share-detail">
 <summary>Jeg har kun en HTML-fil</summary>
 <div class="hu-share-detail-body">
 
 En lokal HTML-wiki kan tilføjes og åbnes direkte. Den åbner i din sædvanlige browser og bruger wikiens egen gemmemetode. Hjælperen overtager ikke gemningen.
 
-Vil du dele HTML-wikien, skal en kopi først klargøres som servermappe. Bevar originalen. Se trin 1 i ''Avanceret hjælp''; få eventuelt hjælp til dette første trin.
+Tryk Del. Hjælperen klargør HTML-wikien automatisk og beholder den samme post i biblioteket. Gem og luk HTML-wikien først. Efter kontrol flyttes originalen til papirkurven. Du kan fortsat eksportere en HTML-kopi til offlinebrug.
 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Markér en serverwiki, og tryk <strong>Del</strong>. Vælg <strong>Tailscale</strong> eller <strong>Hjemmenetværk</strong>, med eller uden wiki-login. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Vælg dine wikier og tryk <strong>Del</strong>. Indstillingerne under <strong>Deling</strong> huskes; standarden er Tailscale uden ekstra wiki-login. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre.</p>
 <p class="hu-share-access">Ved Tailscale-deling gælder invitationen computeren. Begræns gæsternes adgang til wikien, før du inviterer.</p><details class="hu-share-detail">
 <summary>På hjemmenetværket — uden Tailscale</summary>
 <div class="hu-share-detail-body">

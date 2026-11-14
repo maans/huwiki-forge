@@ -3,6 +3,8 @@ type: text/vnd.tiddlywiki
 
 !! 1. Forbered en serverwiki
 
+Hjælperen klargør HTML-wikier automatisk, når du trykker Del. Gem og luk HTML-filen først. Originalen flyttes til papirkurven efter kontrolleret overførsel. Nedenstående er et valgfrit, manuelt alternativ for tekniske brugere.
+
 * Tag en kopi af din HTML-wiki først. Bevar originalen som offline-kopi.
 * Installer Node.js 20 eller nyere, TiddlyWiki (testet med 5.4.1) og Tailscale fra deres officielle kilder. Log ind i Tailscale på værtscomputeren og de enheder, der skal åbne wikien. Hjælperen kan tilbyde særskilt godkendt installation af TiddlyWiki; den ændrer ikke dit Tailscale-login.
 * Opret en ''ny'' servermappe med TiddlyWikis almindelige kommando:
@@ -79,7 +81,7 @@ Brug TiddlyWikis indbyggede ''Download save''/HTML-eksport til en selvstændig o
 
 !! Kilder og version
 
-ForgeShare 0.1.5. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
+ForgeShare 0.1.6. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]

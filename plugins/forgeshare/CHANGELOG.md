@@ -1,3 +1,10 @@
+# 0.1.6
+
+- Automatically discover HTML and folder wikis on app startup.
+- Share uses remembered settings and prepares HTML in the background. Verified conversion preserves library IDs, tiddler fields, embedded images and plugins; only then moves the original to OS Trash. Failures retain it.
+- Accept .html/.Html/.HTML without Finder type filtering; queue multiple selected wikis and skip running sessions.
+- Default sharing is private Tailscale without extra wiki login; network/login settings remain explicit under Sharing. No automatic sharing during discovery.
+
 # Changelog
 
 ## 0.1.5 — Clear choices, readable exports and optional startup
