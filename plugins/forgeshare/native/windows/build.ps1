@@ -15,7 +15,7 @@ $g.FillEllipse($green,41,13,9,9);$g.FillEllipse($green,49,26,9,9);$g.FillEllipse
 $handle=$bitmap.GetHicon();$image=[Drawing.Icon]::FromHandle($handle)
 $stream=[IO.File]::Create($icon);$image.Save($stream);$stream.Dispose();$image.Dispose();$g.Dispose();$bitmap.Dispose()
 $compiler=Join-Path $env:WINDIR 'Microsoft.NET/Framework64/v4.0.30319/csc.exe'
-& $compiler /nologo /target:winexe /platform:anycpu /optimize+ /codepage:65001 "/win32icon:$icon" "/out:$out/ForgeShare.exe" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Web.Extensions.dll (Join-Path $PSScriptRoot 'ForgeShare.cs')
+& $compiler /nologo /target:winexe /platform:anycpu /optimize+ /codepage:65001 "/win32icon:$icon" "/out:$out/ForgeShare.exe" /reference:System.Windows.Forms.dll /reference:System.Drawing.dll /reference:System.Web.Extensions.dll /reference:System.Security.dll (Join-Path $PSScriptRoot 'ForgeShare.cs')
 if($LASTEXITCODE -ne 0) { throw 'Windows application build failed' }
 Remove-Item $icon
 node (Join-Path $PSScriptRoot '../../../../scripts/native-manifest.mjs') windows

@@ -8,16 +8,17 @@ using System.Text;
 using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using System.Reflection;
+using System.Security.Cryptography;
 [assembly: AssemblyTitle("ForgeShare")]
 [assembly: AssemblyVersion("0.1.7.0")]
 
 class Session {
     public Process Process; public string Name, Url = "", OwnerUrl = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady;
-    public FlowLayoutPanel Row; public Label Label; public Button Copy, Stop;
+    public FlowLayoutPanel Row; public Label Label; public Button Copy, Stop, Invite;
 }
 class LibraryEntry {
     public string id,name,kind,location,description,shareUrl;public bool available;
-    public override string ToString() {bool da=CultureInfo.CurrentUICulture.TwoLetterISOLanguageName=="da";return name+"  ·  "+(!available?(da?"Filen mangler":"File missing"):kind=="html"?(da?"Lokal HTML-fil":"Local HTML file"):(da?"Wikimappe":"Wiki folder"))+(String.IsNullOrEmpty(description)?"":" — "+description);}
+    public override string ToString() {bool da=CultureInfo.CurrentUICulture.TwoLetterISOLanguageName=="da";return name+"  ·  "+(!available?(da?"Filen mangler":"File missing"):kind=="site"?"Site":kind=="html"?(da?"Lokal HTML-fil":"Local HTML file"):(da?"Wikimappe":"Wiki folder"))+(String.IsNullOrEmpty(description)?"":" — "+description);}
 }
 class StartupChoice {public string wikiId,mode;public bool allowAnonymous;}
 class StartupData {public StartupChoice startup;}
@@ -25,6 +26,21 @@ class PrepareData {public bool ok;public LibraryEntry[] entries;}
 class SharingData {public string mode;public bool allowAnonymous;}
 class LibraryData {public SharingData sharing;public string id;public LibraryEntry[] entries;}
 class ForgeShare : Form {
+    static int VaultCommand(string command) {
+        try {
+            Console.InputEncoding=Encoding.UTF8;Console.OutputEncoding=new UTF8Encoding(false);
+            string folder=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"ForgeShare");
+            string file=Path.Combine(folder,"vault.dpapi");
+            if(command=="read") {Console.Write(File.Exists(file)?Encoding.UTF8.GetString(ProtectedData.Unprotect(File.ReadAllBytes(file),null,DataProtectionScope.CurrentUser)):"{}");return 0;}
+            if(command!="write")return 1;
+            string input=Console.In.ReadToEnd();if(input.Length>1048576)return 1;
+            new JavaScriptSerializer().DeserializeObject(input);
+            Directory.CreateDirectory(folder);string temp=file+"."+Guid.NewGuid().ToString();
+            File.WriteAllBytes(temp,ProtectedData.Protect(Encoding.UTF8.GetBytes(input),null,DataProtectionScope.CurrentUser));
+            if(File.Exists(file))File.Replace(temp,file,null);else File.Move(temp,file);return 0;
+        }catch{return 1;}
+    }
+    readonly NotifyIcon tray=new NotifyIcon();bool explicitQuit=false;
     static bool Danish = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "da";
     static string T(string da, string en) { return Danish ? da : en; }
     readonly Queue<string> shareQueue=new Queue<string>();string sharingID=null;
@@ -47,7 +63,7 @@ class ForgeShare : Form {
         var info = new ProcessStartInfo(node,args) { UseShellExecute=false, CreateNoWindow=true,
             RedirectStandardInput=true, RedirectStandardOutput=true, RedirectStandardError=true,
             StandardOutputEncoding=Encoding.UTF8, WorkingDirectory=AppDomain.CurrentDomain.BaseDirectory };
-        info.EnvironmentVariables.Remove("NODE_OPTIONS"); info.EnvironmentVariables.Remove("NODE_PATH"); info.EnvironmentVariables["FORGESHARE_LANGUAGE"]=Danish?"da":"en"; return info;
+        info.EnvironmentVariables["FORGESHARE_NATIVE"]=Application.ExecutablePath;info.EnvironmentVariables["FORGESHARE_APP"]=Application.ExecutablePath;info.EnvironmentVariables.Remove("NODE_OPTIONS"); info.EnvironmentVariables.Remove("NODE_PATH"); info.EnvironmentVariables["FORGESHARE_LANGUAGE"]=Danish?"da":"en"; return info;
     }
     static string Quote(string path) { return "\"" + path + "\""; }
     static bool PermittedAddress(Uri address) {
@@ -60,13 +76,15 @@ class ForgeShare : Form {
         var p=ip.GetAddressBytes();return p[0]==10 || (p[0]==172 && p[1]>=16 && p[1]<=31) || (p[0]==192 && p[1]==168);
     }
     [STAThread] static int Main(string[] args) {
+        if(args.Length==1 && args[0]=="--mail"){Console.InputEncoding=Encoding.UTF8;string uri=Console.In.ReadToEnd();if(!uri.StartsWith("mailto:")||uri.Length>32000)return 1;Process.Start(new ProcessStartInfo(uri){UseShellExecute=true});return 0;}
+        if(args.Length==2 && args[0]=="--vault")return VaultCommand(args[1]);
         if (Array.IndexOf(args,"--self-test") >= 0) {
             var node=Node(); if(node==null || !File.Exists(Helper)) return 2;
             using(var p=Process.Start(Command(node,"--check " + Quote(Helper)))) { p.WaitForExit(); if(p.ExitCode!=0)return p.ExitCode; }
             var data=new JavaScriptSerializer().Deserialize<LibraryData>("{\"entries\":[{\"id\":\"test\",\"name\":\"Notes\",\"kind\":\"html\",\"available\":true}]}");
             if(data.entries.Length!=1 || data.entries[0].name!="Notes")return 3;
             Application.EnableVisualStyles();
-            using(var form=new ForgeShare()) {form.CreateControl();form.PerformLayout();form.Controls[0].PerformLayout();if(form.libraryButtons.Count!=5 || form.Controls[0].Controls[form.Controls[0].Controls.Count-1].Bottom>form.Controls[0].ClientSize.Height)return 4;}
+            using(var form=new ForgeShare()) {form.CreateControl();form.PerformLayout();form.Controls[0].PerformLayout();if(form.libraryButtons.Count!=5 || form.libraryButtons[4].Right>740)return 4;}
             foreach(var value in new[]{"http://127.0.0.1:20000","http://192.168.1.8:20000","http://10.0.0.8:20000","https://example.ts.net:21000"})if(!PermittedAddress(new Uri(value)))return 5;
             foreach(var value in new[]{"http://0.0.0.0:20000","http://8.8.8.8:20000","http://100.64.0.1:20000","file:///C:/wiki"})if(PermittedAddress(new Uri(value)))return 6;
             return 0;
@@ -75,28 +93,48 @@ class ForgeShare : Form {
         Application.Run(new ForgeShare()); return 0;
     }
     ForgeShare() {
-        Text="ForgeShare"; Width=850; Height=650; MinimumSize=new Size(750,620); StartPosition=FormStartPosition.CenterScreen;
-        Font=new Font("Segoe UI",10); Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath);
-        var content=new TableLayoutPanel { Dock=DockStyle.Fill, Padding=new Padding(24), ColumnCount=1, RowCount=8 };
-        foreach(var height in new [] {50,35,48,0,35,35,100,55})content.RowStyles.Add(new RowStyle(height==0?SizeType.Percent:SizeType.Absolute,height==0?100:height));
-        var header=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=4,RowCount=1};
-        header.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,110));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,80));header.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,100));
-        header.Controls.Add(new Label {Text="ForgeShare",Font=new Font("Segoe UI",25,FontStyle.Bold),AutoSize=true},0,0);
-        var sharingButton=new Button {Text=T("Deling…","Sharing…"),Dock=DockStyle.Fill};sharingButton.Click+=(sender,args)=>LibraryCommand("sharing",new {},text=>ReloadLibrary());header.Controls.Add(sharingButton,3,0);
-        var startupButton=new Button {Text=T("Opstart…","Startup…"),Dock=DockStyle.Fill};startupButton.Click+=(sender,args)=>LibraryCommand("startup",new {},text=>{});header.Controls.Add(startupButton,1,0);
-        var helpButton=new Button {Text=T("Hjælp","Help"),Dock=DockStyle.Fill};helpButton.Click+=(sender,args)=>OpenHelp();header.Controls.Add(helpButton,2,0);content.Controls.Add(header,0,0);
-        sharingLabel.Text=T("Finder dine wikier…","Finding your wikis…");content.Controls.Add(sharingLabel,0,1);
-        var toolbar=new FlowLayoutPanel {Dock=DockStyle.Fill,WrapContents=false};
-        string[] labels={T("Tilføj…","Add…"),T("Åbn","Open"),T("Del…","Share…"),T("Redigér…","Edit…"),T("Eksportér valgte…","Export selected…")};
+        Text="ForgeShare";Width=1100;Height=720;MinimumSize=new Size(1000,660);StartPosition=FormStartPosition.CenterScreen;
+        Font=new Font("Segoe UI",10);Icon=Icon.ExtractAssociatedIcon(Application.ExecutablePath);
+        var shell=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=2,RowCount=1};shell.ColumnStyles.Add(new ColumnStyle(SizeType.Absolute,180));shell.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
+        var sidebar=new FlowLayoutPanel {Dock=DockStyle.Fill,FlowDirection=FlowDirection.TopDown,WrapContents=false,Padding=new Padding(12),BackColor=SystemColors.Control};
+        sidebar.Controls.Add(new Label {Text="ForgeShare",Font=new Font(Font.FontFamily,18,FontStyle.Bold),AutoSize=true,Margin=new Padding(0,12,0,20)});
+        var detail=new Panel {Dock=DockStyle.Fill,Padding=new Padding(24)};shell.Controls.Add(sidebar,0,0);shell.Controls.Add(detail,1,0);Controls.Add(shell);
+        var pages=new List<Panel>();
+        Func<string,string,Panel> makePage=(title,description)=>{
+            var p=new Panel {Dock=DockStyle.Fill};
+            p.Controls.Add(new Label {Text=title,Font=new Font(Font.FontFamily,25,FontStyle.Bold),AutoSize=true,Location=new Point(0,0)});
+            p.Controls.Add(new Label {Text=description,Location=new Point(0,55),Width=730,Height=60,ForeColor=SystemColors.GrayText});detail.Controls.Add(p);pages.Add(p);return p;
+        };
+        var libraryPage=makePage(T("Dit bibliotek","Your library"),T("Wikier og sites, samlet ét sted.","Wikis and sites, together in one place."));
+        var toolbar=new FlowLayoutPanel {Location=new Point(0,110),Width=740,Height=45,WrapContents=false};
+        string[] labels={T("Tilføj…","Add…"),T("Åbn","Open"),T("Del…","Share…"),T("Redigér…","Edit…"),T("Eksportér…","Export…")};
         Action[] actions={AddToLibrary,()=>LaunchSelected(true),ShareSelected,EditSelected,ExportSelected};
         for(int i=0;i<labels.Length;i++){var a=actions[i];var button=i==2?start:new Button();button.Text=labels[i];button.AutoSize=true;button.Click+=(sender,args)=>a();toolbar.Controls.Add(button);libraryButtons.Add(button);}
-        content.Controls.Add(toolbar,0,2);
-        library.Dock=DockStyle.Fill;library.CheckOnClick=true;library.HorizontalScrollbar=true;content.Controls.Add(library,0,3);
-        content.Controls.Add(new Label {Text=T("Aktive serverwikier","Active server wikis"),AutoSize=true,Font=new Font(Font,FontStyle.Bold)},0,4);
-        empty.Text=T("Ingen serverwikier kører endnu.","No server wikis are running yet.");empty.AutoSize=true;content.Controls.Add(empty,0,5);
-        rows.Dock=DockStyle.Fill;rows.FlowDirection=FlowDirection.TopDown;rows.WrapContents=false;rows.AutoScroll=true;content.Controls.Add(rows,0,6);
-        content.Controls.Add(new Label {Text=T("Deling virker, mens computeren er tændt og ForgeShare kører.\nStop afslutter kun den valgte wiki.","Sharing works while this computer is on and ForgeShare is running.\nStop ends only the selected wiki."),Dock=DockStyle.Fill,ForeColor=SystemColors.GrayText},0,7);
-        Controls.Add(content);FormClosing+=OnClosing;Shown+=(sender,args)=>ReloadLibrary();
+        libraryPage.Controls.Add(toolbar);library.CheckOnClick=true;library.HorizontalScrollbar=true;library.SetBounds(0,165,740,330);library.Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;libraryPage.Controls.Add(library);
+        sharingLabel.Text=T("Finder dine wikier…","Finding your wikis…");sharingLabel.SetBounds(0,510,740,30);sharingLabel.Anchor=AnchorStyles.Bottom|AnchorStyles.Left;libraryPage.Controls.Add(sharingLabel);
+        var sharePage=makePage(T("Aktive delinger","Active sharing"),T("Kopiér adressen, eller send en invitation. Stop afslutter kun den valgte deling.","Copy an address or send an invitation. Stop ends only the selected item."));
+        empty.Text=T("Ingen delinger kører endnu.","Nothing is shared yet.");empty.AutoSize=true;empty.Location=new Point(0,120);sharePage.Controls.Add(empty);
+        rows.SetBounds(0,160,740,330);rows.Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;rows.FlowDirection=FlowDirection.TopDown;rows.WrapContents=false;rows.AutoScroll=true;sharePage.Controls.Add(rows);
+        sharePage.Controls.Add(new Label {Text=T("Computeren skal være tændt. Du kan lukke vinduet; ForgeShare fortsætter ved uret.","Keep this computer on. You can close the window; ForgeShare stays in the system tray."),Location=new Point(0,510),Width=730,Height=50,Anchor=AnchorStyles.Bottom|AnchorStyles.Left,ForeColor=SystemColors.GrayText});
+        var connections=makePage(T("Dine forbindelser","Your connections"),T("Gem AI-forbindelser og adgangskoder i computerens nøgleboks. Du bestemmer, hvem der må bruge dem.","Save AI connections and passwords in this computer’s vault. You decide who may use them."));
+        Action<Panel,string,int,Action> addButton=(panel,label,y,action)=>{var button=new Button {Text=label,Location=new Point(0,y),Size=new Size(260,44)};button.Click+=(sender,args)=>action();panel.Controls.Add(button);};
+        addButton(connections,T("Åbn nøgleboks…","Open vault…"),130,()=>LibraryCommand("vault",new {},text=>{}));
+        addButton(connections,T("Tailscale-enheder…","Tailscale devices…"),190,()=>LibraryCommand("devices",new {},text=>{}));
+        var settings=makePage(T("Indstillinger","Settings"),T("Vælg, hvordan ForgeShare skal starte og dele.","Choose how ForgeShare starts and shares."));
+        addButton(settings,T("Delingsindstillinger…","Sharing settings…"),130,()=>LibraryCommand("sharing",new {},text=>ReloadLibrary()));
+        addButton(settings,T("Start ved login…","Start at login…"),190,()=>LibraryCommand("startup",new {},text=>{}));
+        addButton(settings,T("Åbn Tailscale","Open Tailscale"),250,()=>{
+            string file=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ProgramFiles),"Tailscale","tailscale-ipn.exe");
+            if(File.Exists(file))Process.Start(new ProcessStartInfo(file){UseShellExecute=true});
+            else if(MessageBox.Show(T("Hent Tailscale fra den officielle hjemmeside?","Get Tailscale from the official website?"),"ForgeShare",MessageBoxButtons.OKCancel)==DialogResult.OK)Process.Start(new ProcessStartInfo("https://tailscale.com/download"){UseShellExecute=true});
+        });
+        addButton(settings,T("Hjælp","Help"),310,OpenHelp);
+        string[] names={T("Bibliotek","Library"),T("Delinger","Sharing"),T("Forbindelser","Connections"),T("Indstillinger","Settings")};
+        for(int i=0;i<names.Length;i++){int index=i;var button=new Button {Text=names[i],Size=new Size(148,44),TextAlign=ContentAlignment.MiddleLeft};button.Click+=(sender,args)=>{for(int j=0;j<pages.Count;j++)pages[j].Visible=j==index;};sidebar.Controls.Add(button);}
+        for(int i=0;i<pages.Count;i++)pages[i].Visible=i==0;
+        sidebar.Controls.Add(new Label {Text=T("Fortsætter, når du lukker vinduet.","Keeps running when you close the window."),Width=148,Height=80,ForeColor=SystemColors.GrayText});
+        var menu=new ContextMenuStrip();menu.Items.Add(T("Åbn ForgeShare","Open ForgeShare"),null,(s,e)=>{Show();WindowState=FormWindowState.Normal;Activate();});menu.Items.Add(T("Afslut ForgeShare","Quit ForgeShare"),null,(s,e)=>{explicitQuit=true;Close();});tray.Icon=Icon;tray.Text="ForgeShare";tray.ContextMenuStrip=menu;tray.DoubleClick+=(s,e)=>{Show();Activate();};
+        FormClosing+=OnClosing;Shown+=(sender,args)=>{tray.Visible=true;ReloadLibrary();};FormClosed+=(s,e)=>tray.Dispose();
     }
     void UI(Action action) { if (!IsDisposed && IsHandleCreated) BeginInvoke(action); }
     void StartWiki() {
@@ -114,7 +152,8 @@ class ForgeShare : Form {
         session.Copy=new Button { Text=T("Kopiér adresse","Copy address"),AutoSize=true,Enabled=false };
         session.Stop=new Button { Text="Stop",AutoSize=true };
         session.Copy.Click+=(s,e)=>Clipboard.SetText(session.Url); session.Stop.Click+=(s,e)=>Stop(session);
-        session.Row.Controls.AddRange(new Control[] { session.Label,session.Copy,session.Stop });
+        session.Invite=new Button {Text=T("Invitér…","Invite…"),AutoSize=true,Enabled=false};session.Invite.Click+=(sender,args)=>LibraryCommand("invite",new {id=session.Id},text=>{});
+        session.Row.Controls.AddRange(new Control[] { session.Label,session.Copy,session.Invite,session.Stop });
         session.Process=new Process { StartInfo=Command(node,Quote(Helper)+" --gui --app --quick"+(session.Id.Length==0?"":" --profile "+session.Id)+(session.Local?" --local":"")+(startupLaunch?" --startup":"")),EnableRaisingEvents=true };
         session.Process.OutputDataReceived+=(s,e)=> {
             if(e.Data==null || e.Data.Length>65536) return;
@@ -122,7 +161,7 @@ class ForgeShare : Form {
                 UI(()=> { if(!sessions.Contains(session)) return;
                     if(data.ContainsKey("name")) session.Name=data["name"];
                     Uri address;
-                    if(data.ContainsKey("event") && data["event"]=="ready" && data.ContainsKey("url") && Uri.TryCreate(data["url"],UriKind.Absolute,out address) && PermittedAddress(address)) { session.Mode=data.ContainsKey("mode")?data["mode"]:"";session.Access=data.ContainsKey("access")?data["access"]:"login";session.Url=data["url"]; Uri own; if(data.ContainsKey("ownerUrl") && Uri.TryCreate(data["ownerUrl"],UriKind.Absolute,out own) && own.Scheme=="http" && own.Host=="127.0.0.1")session.OwnerUrl=data["ownerUrl"]; session.Copy.Enabled=true; if(session.OpenWhenReady){session.OpenWhenReady=false;Process.Start(new ProcessStartInfo(session.OwnerUrl.Length>0?session.OwnerUrl:session.Url){UseShellExecute=true});} ReloadLibrary(); AdvanceShareQueue(session.Id); }
+                    if(data.ContainsKey("event") && data["event"]=="ready" && data.ContainsKey("url") && Uri.TryCreate(data["url"],UriKind.Absolute,out address) && PermittedAddress(address)) { session.Mode=data.ContainsKey("mode")?data["mode"]:"";session.Access=data.ContainsKey("access")?data["access"]:"login";session.Url=data["url"]; Uri own; if(data.ContainsKey("ownerUrl") && Uri.TryCreate(data["ownerUrl"],UriKind.Absolute,out own) && own.Scheme=="http" && own.Host=="127.0.0.1")session.OwnerUrl=data["ownerUrl"]; session.Copy.Enabled=true;if(session.Invite!=null)session.Invite.Enabled=!session.Local; if(session.OpenWhenReady){session.OpenWhenReady=false;Process.Start(new ProcessStartInfo(session.OwnerUrl.Length>0?session.OwnerUrl:session.Url){UseShellExecute=true});} ReloadLibrary(); AdvanceShareQueue(session.Id); }
                     Update(session);
                 });
             } catch { }
@@ -218,10 +257,11 @@ class ForgeShare : Form {
         catch { MessageBox.Show(T("Brug wikiens statusdialog til at stoppe delingen.","Use the wiki's status dialog to stop sharing."),"ForgeShare"); }
     }
     void OnClosing(object sender,FormClosingEventArgs e) {
-        if(libraryBusy){e.Cancel=true;MessageBox.Show(T("Afslut først biblioteksdialogen.","Finish the library dialog first."),"ForgeShare");return;}
+        if(e.CloseReason==CloseReason.UserClosing && !explicitQuit){e.Cancel=true;Hide();return;}
+        if(libraryBusy){explicitQuit=false;e.Cancel=true;MessageBox.Show(T("Afslut først biblioteksdialogen.","Finish the library dialog first."),"ForgeShare");return;}
         if(sessions.Count==0) return; e.Cancel=true;
         if(quitting) return;
-        if(MessageBox.Show(T("Stop alle wikier startet i dette vindue og afslut? Vent først på, at ændringer er gemt.","Stop all wikis started in this window and quit? Wait for your edits to save first."),"ForgeShare",MessageBoxButtons.OKCancel)!=DialogResult.OK) return;
+        if(MessageBox.Show(T("Stop alle wikier startet i dette vindue og afslut? Vent først på, at ændringer er gemt.","Stop all wikis started in this window and quit? Wait for your edits to save first."),"ForgeShare",MessageBoxButtons.OKCancel)!=DialogResult.OK) {explicitQuit=false;return;}
         quitting=true; start.Enabled=false; foreach(var s in sessions.ToArray()) Stop(s);
     }
 }
