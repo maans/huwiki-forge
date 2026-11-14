@@ -89,7 +89,7 @@ export async function startCodeGateway({port,origin,readerCode,editorCode,reader
   const text=(en,da)=>language==='da'?da:en;
   const cookieName=owner=>(owner?'ForgeShareOwner-':'__Host-ForgeShare-')+port;
   const cookie=(owner,value,age=28800)=>`${cookieName(owner)}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${age}${owner?'':'; Secure'}`;
-  const page=(error='')=>`<!doctype html><html lang="${language==='da'?'da':'en'}"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ForgeShare</title><style>body{margin:0;background:#f2f5f7;color:#183545;font:18px system-ui;display:grid;min-height:100vh;place-items:center}main{box-sizing:border-box;width:min(92vw,420px);padding:36px;background:white;border-radius:24px;box-shadow:0 12px 48px #18354518}h1{font-size:28px}input,button{box-sizing:border-box;width:100%;padding:14px;font:inherit;border-radius:10px;margin-top:12px}input{border:1px solid #8a9ea9}button{border:0;background:#146bc4;color:white;cursor:pointer}p{line-height:1.5}.error{color:#a32424}</style><main><h1>${text('Open the wiki','Åbn wikien')}</h1><p>${text('Enter the code you received.','Indtast den kode, du har fået.')}</p>${error?'<p class="error">'+error+'</p>':''}<form method="post" action="/_forgeshare/login"><label for="code">${text('Access code','Adgangskode')}</label><input id="code" name="code" type="password" autocomplete="current-password" maxlength="256" required autofocus><button>${text('Open wiki','Åbn wiki')}</button></form></main></html>`;
+  const page=(error='')=>`<!doctype html><html lang="${language==='da'?'da':'en'}"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ForgeShare</title><style>body{margin:0;background:#f2f5f7;color:#183545;font:18px system-ui;display:grid;min-height:100vh;place-items:center}main{box-sizing:border-box;width:min(92vw,420px);padding:36px;background:white;border-radius:24px;box-shadow:0 12px 48px #18354518}h1{font-size:28px}input,button{box-sizing:border-box;width:100%;padding:14px;font:inherit;border-radius:10px;margin-top:12px}input{border:1px solid #8a9ea9}button{border:0;background:#146bc4;color:white;cursor:pointer}p{line-height:1.5}.error{color:#a32424}</style><main><h1>${site?text('Open the site','Åbn hjemmesiden'):text('Open the wiki','Åbn wikien')}</h1><p>${text('Enter the code you received.','Indtast den kode, du har fået.')}</p>${error?'<p class="error">'+error+'</p>':''}<form method="post" action="/_forgeshare/login"><label for="code">${text('Access code','Adgangskode')}</label><input id="code" name="code" type="password" autocomplete="current-password" maxlength="256" required autofocus><button>${site?text('Open site','Åbn hjemmeside'):text('Open wiki','Åbn wiki')}</button></form></main></html>`;
   const handler=owner=>async(req,res)=>{
     const expected=owner?ownerOrigin:publicOrigin;
     const send=(status,body='',headers={})=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':owner?'no-referrer':'same-origin','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",...headers});res.end(body);};
@@ -122,7 +122,7 @@ export async function startCodeGateway({port,origin,readerCode,editorCode,reader
         issue(editor?'editor':'reader');return;
       }
       if(!owner && url.pathname==='/_forgeshare/login' && req.method==='GET')return send(200,page());
-      if(!role)return send(401,owner?text('Open this wiki from ForgeShare.','Åbn denne wiki fra ForgeShare.'):page());
+      if(!role)return send(401,owner?(site?text('Open this site from ForgeShare.','Åbn denne hjemmeside fra ForgeShare.'):text('Open this wiki from ForgeShare.','Åbn denne wiki fra ForgeShare.')):page());
       const isBridge=bridge && url.pathname.startsWith(bridgePath);
       if(role==='reader' && unsafe && !isBridge)return send(403);
       // Expose the core wiki API only, never custom server/admin/plugin routes.
@@ -162,7 +162,7 @@ export async function planFunnel(config,localPort,checkAddress) {
     try {await checkAddress(port);}catch{continue;}
     return {port,args:['funnel',`--https=${port}`,`http://127.0.0.1:${localPort}`]};
   }
-  throw Error(ui('Funnel needs a free address on 443, 8443 or 10000. Existing services were not changed.','Funnel kræver en ledig adresse på 443, 8443 eller 10000. Eksisterende tjenester er ikke ændret.'));
+  throw Error(ui('Funnel has no free internet address. Existing sharing is unchanged. Choose Share again to use Tailscale or your home network, or Open to use it only on this computer.','Funnel har ingen ledig internetadresse. Eksisterende delinger er urørte. Vælg Del igen for at bruge Tailscale eller hjemmenetværket, eller Åbn for kun at bruge denne computer.'));
 }
 export function verifyFunnelRoute(before,after,hostname,localPort,port) {
   if(!funnelPorts.includes(port))throw Error('Invalid Funnel port');
@@ -795,6 +795,13 @@ export async function saveSharing(root,value,id) {
     entry.sharing=choice;return choice;
   });
 }
+export async function forgetFailedSharing(root,id,attempted) {
+  return libraryTransaction(root,data=>{
+    const entry=data.entries.find(e=>e.id===id);
+    // Do not undo a newer choice made in another window.
+    if(entry?.sharing && JSON.stringify(validateSharing(entry.sharing))===JSON.stringify(validateSharing(attempted)))delete entry.sharing;
+  });
+}
 export async function chooseSharing(root,id,ask) {
   const entry=(await loadLibrary(root)).entries.find(e=>e.id===id);if(!entry)throw Error('Unknown wiki');
   const modes=[ui('Tailscale — private connection','Tailscale — privat forbindelse'),ui('Home network — without Tailscale','Hjemmenetværk — uden Tailscale'),ui('Funnel — internet link with access codes','Funnel — internetlink med adgangskoder')];
@@ -1249,7 +1256,7 @@ export async function guiMain(deps = {}) {
   const root = deps.root || appFolder();
   let localOnly=deps.localOnly ?? process.argv.includes('--local');
   let libraryId=deps.libraryId || (process.argv.includes('--profile')?process.argv[process.argv.indexOf('--profile')+1]:null);
-  let session, privateDir;
+  let session, privateDir, attemptedSharing, sharingReady=false;
   const children = new Set();
   let interrupted = false;
   const interrupt = () => { interrupted = true; shutdown.abort(); if (session) void session.stop(); else for (const child of children) void stopChild(child); };
@@ -1266,6 +1273,7 @@ export async function guiMain(deps = {}) {
     const quick=deps.quick || process.argv.includes('--quick');
     let sharing=quick && libraryId?await readSharing(root,libraryId):null;
     if(quick && libraryId && !localOnly && !startup && !sharing)sharing=await chooseSharing(root,libraryId,ask);
+    if(quick && libraryId && !localOnly && !startup)attemptedSharing=sharing;
     sharing ||= {mode:'tailscale',allowAnonymous:true};
     if(!startup && !quick)await ask('confirm', localOnly ? ui('Open this wiki only on your computer. You choose whether to use wiki login.', 'Åbn kun wikien på denne computer. Du vælger selv, om der skal være wiki-login.') : ui('Share a wiki. Choose the network and whether to use wiki login. Nothing starts before the final confirmation.', 'Del en wiki. Vælg netværk og eventuelt wiki-login. Intet starter før den sidste bekræftelse.'));
     if (Number(process.versions.node.split('.')[0]) < 20) fail('Install Node.js 20 or later.', 'Installer Node.js 20 eller nyere.');
@@ -1312,6 +1320,9 @@ export async function guiMain(deps = {}) {
       const name = await ask('text', ui('Give this wiki a name, for example Family or Garden.', 'Giv wikien et navn, for eksempel Familie eller Have.'), path.basename(wiki));
       profile = await registerWiki({root, wiki, name, tailscale, localOnly:!['tailscale','funnel'].includes(mode)}, deps);
     }
+    // Fail before asking for codes. startNamedSession rechecks under its lock,
+    // because another program may claim an address while the dialogs are open.
+    if(mode==='funnel')await planFunnel(await (deps.readJSON||jsonCommand)(tailscale,['serve','status','--json']),profile.port,deps.checkAddressPort||checkAddressPort);
     const displayName=libraryEntry?.name||profile.name;
     report({event:'selected',name:displayName,...(libraryId?{id:libraryId}:{})});
     const withLogin=ui('With wiki login', 'Med wiki-login'),withoutLogin=ui('Without wiki login', 'Uden wiki-login');
@@ -1357,6 +1368,7 @@ export async function guiMain(deps = {}) {
     });
     if (interrupted) return;
     if(!localOnly)await rememberSharedAddress(profile.wiki,session.url,root);
+    sharingReady=true;
     report({event:'ready',name:displayName,url:session.url,...(session.ownerUrl?{ownerUrl:session.ownerUrl}:{}),mode,access:allowAnonymous?'open':'login',...(libraryId?{id:libraryId}:{})});
     if (appMode) { await session.finished; return; }
     if(localOnly && quick && !startup)await (deps.openAddress || (url=>execute(process.platform==='darwin'?'/usr/bin/open':process.platform==='win32'?'explorer.exe':'xdg-open',[url])))(session.ownerUrl||session.url);
@@ -1367,11 +1379,12 @@ export async function guiMain(deps = {}) {
     if (session) await session.stop();
     if (!error.cancelled && !interrupted) {
       // Avoid displaying subprocess output that might contain sensitive content.
-      await ask('info', ui('ForgeShare stopped. Nothing new is being shared.', 'ForgeShare stoppede. Ingen ny deling er aktiv.') + '\n\n' + (error.cmd ? ui('A required program failed. Check installation and Tailscale HTTPS setup.', 'Et nødvendigt program fejlede. Kontroller installation og Tailscale HTTPS.') : error.message));
+      await ask('info', (localOnly?ui('Could not open this item.','Kunne ikke åbne denne wiki eller dette site.'):ui('Sharing did not start. Choose Share to try again or change the sharing method.','Delingen blev ikke startet. Vælg Del for at prøve igen eller vælge en anden måde at dele på.')) + '\n\n' + (error.cmd ? ui('A required program failed. Check installation and Tailscale HTTPS setup.', 'Et nødvendigt program fejlede. Kontroller installation og Tailscale HTTPS.') : error.message));
     }
   } finally {
     if (session) await session.stop();
     for (const child of children) await stopChild(child);
+    if(attemptedSharing && !sharingReady)await forgetFailedSharing(root,libraryId,attemptedSharing);
     if (privateDir) await rm(privateDir, {recursive: true, force: true});
     if (appMode) { inputStream.off('data', inputData); inputStream.off('end', interrupt); inputStream.pause(); }
     for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.off(signal, interrupt);

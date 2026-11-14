@@ -1,20 +1,20 @@
 {
   "platform": "mac",
   "sources": {
-    "macos/ForgeShare.swift": "db490764e31068ad3074eb919359d09aac4885a01a58beb48cd6d4d68f9ba48e",
+    "macos/ForgeShare.swift": "3e187b8733864d204f54253461d3754de84537852a236aa83ee3aa55dc39e9db",
     "macos/Icon.swift": "e7a372a3807a9d5cf7c79b9225752f309282bb8c71b3982964635a5025ab192c",
-    "macos/Info.plist": "d016f9ccabd7f7c9b7f1e8827ae0eaf7d35ff6da6d40ee69b44c7dcbee1a1841",
-    "../helper/ForgeShare.mjs": "6a3b744cdcfa006560a05cb6b00b4cd8a70491a13fd344843e329849e0f994d0",
+    "macos/Info.plist": "0f02d60794ac7f22b67a8d6eba9cb1cb86664daf61c7a9752a45b05747973e18",
+    "../helper/ForgeShare.mjs": "aef2f0be388ff3d7e035cd54f97cc7f19daf89a9899d17cced43cfb6e3795aa7",
     "../helper/Vault.mjs": "9bc41cef64a12d6de766946049392f5548d89f8a21096093207f0b1edcabdb8c",
     "../helper/Bridge.mjs": "dc3467006843669da1901d4397ec2706af4d8d2b11ae7583f0899cfa3655b86c",
     "../helper/Startup.mjs": "fbb3bb2787bb2953fad681adfd78c68b1e582a78a177fb8916c0ada804fe54a4",
     "../helper/Site.mjs": "a1f9cea8eadae7b45ba2a170c42ec6c4f814e99f6c38381125798b3e6d3f184e",
-    "../helper/help-da.html": "ba9b464f5e9a0821200b96fb06961778abc374767f754d219202600df79ae4fb",
-    "../helper/help-en.html": "3c29aabdd33fddcdd854e2208513d0174ffffcacb7b3d72b212df275ecff7eaa"
+    "../helper/help-da.html": "2d238936ee00aa5a6dcfb931ca87cd7ee5f7102fafadf6876fc4289d732911f0",
+    "../helper/help-en.html": "23da198beec6ff0ee2b72b9f65d6930f506f15571bfad4d3064ac6a26b48b401"
   },
   "artifacts": {
-    "ForgeShare": "57d1ab084525cf93cc02b72ee4a0687eb166a9e1f50168256d7747b1c3b72f1b",
+    "ForgeShare": "1f46ed536cd5fc6abd47c787b731d14f4bef534358c3e4a4923b70fe5c38861e",
     "ForgeShare.icns": "f0c2c6854267bb0af6ea4377305fdd5c310de005bf906118aa6f6aa68e958cb2",
-    "CodeResources": "81065db8d01ee2b35b7503489b37047e08583353e7881226fb641428a1292b97"
+    "CodeResources": "ae850f611e7e6c1ee4a14c4394bfe626ad6f6567c16ea26c35a3a437ac9e73c8"
   }
 }

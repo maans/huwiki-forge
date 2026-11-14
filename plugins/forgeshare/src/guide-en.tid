@@ -33,7 +33,7 @@ Press Open or Share. The helper prepares the HTML wiki automatically and keeps t
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Open or share</h2><p><strong>Open</strong> prepares and opens the item only on your computer. Select a wiki or site and press <strong>Share</strong>. Choose sharing for each wiki on its first start. Each wiki remembers its own choice. Change it under <strong>Settings → Sharing settings</strong>. Use <strong>Copy address</strong> to get the link for others. The status light shows what is running. Stop it with the button on its row.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Open or share</h2><p><strong>Open</strong> prepares and opens the item only on your computer. Select a wiki or site and press <strong>Share</strong>. Choose sharing for each wiki on its first start. Each wiki remembers its own choice. Change it under <strong>Settings → Sharing settings</strong>. Use <strong>Copy address</strong> to get the link for others. A green light shows what is running. Shared items show Tailscale, Home network or Funnel on the same line. Stop with the button beside the name. Sharing lists only items shared with others; copy their link or choose Invite there.</p>
 <p class="hu-share-access">A Tailscale invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
 <summary>On your home network — without Tailscale</summary>
 <div class="hu-share-detail-body">
@@ -57,9 +57,9 @@ Wiki login is optional. With login you share one username and a password you cho
 
 Funnel — share over the internet
 
-Choose <b>Sharing → Funnel</b>, then <b>Share</b> for your wiki. Choose one reader code and a different editor code. Guests open the link from <b>Copy address</b> and enter only their code; they do not need Tailscale. <b>Open</b> in the helper gives you editing access. Codes apply to the whole wiki. Give editor access only to people you trust. Codes are requested at each start and never saved. Login lasts up to eight hours and ends when sharing stops. Open <code>/_forgeshare/login</code> at the wiki address to use another code.
+Press <b>Share</b> and choose <b>Funnel</b>. Choose one reader code and a different editor code. Guests open the link from <b>Copy address</b> and enter only their code; they do not need Tailscale. <b>Open</b> in the helper gives you editing access. A site needs only one visitor code and cannot be edited through sharing. Codes apply to the whole wiki or site. Give editor access only to people you trust. You can choose to remember sharing codes in the vault. Login lasts up to eight hours and ends when sharing stops. Open <code>/_forgeshare/login</code> at the wiki address to use another code.
 
-Funnel needs HTTPS and Funnel permission in Tailscale. It supports only 443, 8443 or 10000. ForgeShare selects a free port and never replaces existing services. If all three are occupied, Funnel cannot start on this computer until one is freed. Tailscale sharing is private; a Funnel address is public and protected by the codes. Repeated login attempts are limited. Choose codes that are not easy to guess. Automatic Funnel startup is not included in this version.
+Funnel needs HTTPS and Funnel permission in Tailscale. It supports only 443, 8443 or 10000. ForgeShare selects a free port and never replaces existing services. If all three are occupied, Funnel cannot start. Press <b>Share</b> again to choose Tailscale or your home network. <b>Open</b> still works on your own computer. Tailscale sharing is private; a Funnel address is public and protected by the codes. Repeated login attempts are limited. Choose codes that are not easy to guess. Automatic Funnel startup is not included in this version.
 
 </div>
 </details>

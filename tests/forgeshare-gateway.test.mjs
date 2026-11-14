@@ -74,3 +74,37 @@ test('graphical Funnel asks only for codes, preserves private port assignment an
   await assert.rejects(readFile(credentials),{code:'ENOENT'});
  }finally{await rm(root,{recursive:true,force:true});}
 });
+
+test('real site gateway serves nested pages and assets, protects every file, stays read-only and releases addresses on stop',async t=>{
+ const {startSite}=await import('../plugins/forgeshare/helper/Site.mjs');
+ const {readFile}=await import('node:fs/promises');
+ const root=await mkdtemp(path.join(os.tmpdir(),'forgeshare-site-gateway-')),site=path.join(root,'site'),credentials=path.join(root,'credentials.csv');
+ let upstream,gateway;
+ t.after(async()=>{if(gateway)await gateway.stop();if(upstream)await new Promise(r=>{upstream.close(r);upstream.closeAllConnections();});await rm(root,{recursive:true,force:true});});
+ await mkdir(path.join(site,'assets'),{recursive:true});await mkdir(path.join(site,'about'));
+ await writeFile(path.join(site,'index.html'),'<h1>My site</h1><link rel="stylesheet" href="assets/style.css"><img src="assets/icon.svg">');
+ await writeFile(path.join(site,'assets/style.css'),'h1 {color: teal}');await writeFile(path.join(site,'assets/icon.svg'),'<svg xmlns="http://www.w3.org/2000/svg"/>');await writeFile(path.join(site,'about/index.html'),'<h1>About</h1>');
+ await writeFile(credentials,'username,password\nreader,rs\neditor,es\n',{mode:0o600});
+ upstream=await startSite({wiki:site,port:0,credentials});const port=upstream.address().port;
+ const options={port,origin:'https://site.test.ts.net:10000',readerCode:'visit',editorCode:'owner-code',readerSecret:'rs',editorSecret:'es',site:true};
+ gateway=await startCodeGateway(options);const base='http://127.0.0.1:'+gateway.port;
+ const request=(url,opts={})=>new Promise((resolve,reject)=>{const q=httpRequest(base+url,{method:opts.method||'GET',headers:{host:'site.test.ts.net:10000',...opts.headers}},r=>{const chunks=[];r.on('data',c=>chunks.push(c));r.on('end',()=>resolve({status:r.statusCode,headers:r.headers,text:Buffer.concat(chunks).toString()}));});q.on('error',reject);q.end(opts.body);});
+ for(const url of ['/','/assets/style.css','/assets/icon.svg','/about/']){const response=await request(url);assert.equal(response.status,401);assert.match(response.text,/Open the site/);assert.doesNotMatch(response.text,/Open the wiki/);}
+ const login=await request('/_forgeshare/login',{method:'POST',headers:{origin:options.origin,'content-type':'application/x-www-form-urlencoded'},body:'code=visit'});assert.equal(login.status,303);
+ const cookie=login.headers['set-cookie'][0].split(';')[0];
+ for(const [url,mime,body] of [['/','text/html','My site'],['/assets/style.css','text/css','teal'],['/assets/icon.svg','image/svg+xml','svg'],['/about/','text/html','About']]){
+  const response=await request(url,{headers:{cookie}});assert.equal(response.status,200);assert.ok(response.headers['content-type'].startsWith(mime));assert.ok(response.text.includes(body));
+ }
+ const head=await request('/assets/style.css',{method:'HEAD',headers:{cookie}});assert.equal(head.status,200);assert.equal(head.text,'');
+ for(const url of ['/.env','/missing.html','/_forgeshare/bridge/connections'])assert.equal((await request(url,{headers:{cookie}})).status,404);
+ assert.equal((await request('/index.html',{method:'PUT',headers:{cookie,origin:options.origin},body:'changed'})).status,403);
+ const owner=new URL(gateway.ownerUrl),open=await fetch(owner,{redirect:'manual'});assert.equal(open.status,303);const ownerCookie=open.headers.get('set-cookie').split(';')[0];
+ assert.equal((await fetch(owner.origin+'/index.html',{method:'PUT',headers:{cookie:ownerCookie,origin:owner.origin},body:'changed'})).status,405);
+ assert.match(await readFile(path.join(site,'index.html'),'utf8'),/My site/);
+ await gateway.stop();gateway=undefined;await assert.rejects(fetch(base));await assert.rejects(fetch(owner.origin));
+ // Stopping sharing leaves the static server under its own owner's control.
+ assert.equal((await fetch('http://127.0.0.1:'+port)).status,401);
+ await new Promise(r=>{upstream.close(r);upstream.closeAllConnections();});upstream=undefined;
+ await assert.rejects(fetch('http://127.0.0.1:'+port));
+ upstream=await startSite({wiki:site,port,allowAnonymous:true});assert.match(await (await fetch('http://127.0.0.1:'+port)).text(),/My site/);
+});

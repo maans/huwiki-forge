@@ -1,6 +1,6 @@
 # ForgeShare / Tailscale-samarbejde
 
-Optional, standalone TiddlyWiki 5 plugin, `0.1.11`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
+Optional, standalone TiddlyWiki 5 plugin, `0.1.12`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
 
 Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeShare** or the plugin readme. Forge's **Extra plugins** catalog lists it as an optional test package; no Edition includes it automatically. HTML/offline use and native savers remain available.
 
@@ -154,3 +154,15 @@ The native library selects one item at a time. Every row identifies Wiki or Site
 
 ### Automatic local opening (0.1.11)
 Open now prepares HTML wikis through the same verified conversion used for sharing, starts a loopback-only server, and opens the local address. It does not use the saved sharing mode or request sharing credentials. Existing sharing preferences remain unchanged. Static sites open locally without installing TiddlyWiki. Failed conversion never starts a server or removes the original.
+
+### Compact library rows (0.1.12)
+
+Each native library row keeps its status light, name, Wiki/Site type, active sharing method and Stop button on one line. Local and stopped states use the indicator without repeated visible status sentences; Mac accessibility labels and tooltips retain the full state. Only a running shared session shows Tailscale, Home network or Funnel. Names truncate when needed; Stop stays at the right edge.
+
+The Sharing page lists only ready shared sessions. Local sessions remain in the library; the empty sharing page points to Share in the library instead of showing disabled invitation buttons for local addresses.
+
+### Recovering from cancelled or failed sharing (0.1.12)
+
+A failed or cancelled manual start clears only that item's attempted sharing choice, so the next Share offers Tailscale, home network and Funnel again. A newer choice made elsewhere is preserved. Successful sessions keep their choice; local Open and automatic startup do not clear it. Funnel availability is checked before requesting codes and checked again under the startup lock. Existing Tailscale services are never removed by this recovery.
+
+Regression tests cover occupied Funnel → private/LAN/local retry, cancelled visitor codes, failed launches, lock release and preservation of another item's choices. Real static-site tests cover authenticated nested pages and assets, HEAD, rejected writes, owner access, stop and restart. Site login uses site-specific wording.

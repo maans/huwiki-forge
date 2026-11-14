@@ -74,7 +74,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var statusItem:NSStatusItem?
     var pages:[NSView]=[],navigation:[NSButton]=[]
     var libraryView:NSStackView!,libraryChecks:[([String:Any],NSButton)]=[],libraryButtons:[NSButton]=[],libraryBusy=false
-    var libraryStatus:[String:NSTextField]=[:],libraryStops:[String:NSButton]=[:]
+    var libraryStatus:[String:NSTextField]=[:],libraryIndicators:[String:NSTextField]=[:],libraryStops:[String:NSButton]=[:]
     let sharingLabel=NSTextField(labelWithString:"")
     var shareQueue:[String]=[], sharingID:String?
     var nextID="",nextLocal=false,nextStartup=false,checkStartup=true,checkDiscovery=true
@@ -119,11 +119,11 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let actions:[(String,String,Selector)]=[("Tilføj…","Add…",#selector(addToLibrary)),("Åbn","Open",#selector(openSelected)),("Del…","Share…",#selector(shareSelected)),("Redigér…","Edit…",#selector(editSelected)),("Eksportér…","Export…",#selector(exportSelected))]
         for (i,item) in actions.enumerated() {let (da,en,action)=item;let b=button(da,en,action);b.image=NSImage(systemSymbolName:["plus","arrow.up.forward.square","square.and.arrow.up","pencil","square.and.arrow.down"][i],accessibilityDescription:nil);b.imagePosition = .imageLeading;toolbar.addArrangedSubview(b);libraryButtons.append(b)};start=libraryButtons[2];libraryPage.addArrangedSubview(toolbar)
         let selectionHint=NSTextField(labelWithString:tr("Vælg en wiki eller et site.","Choose a wiki or site."));selectionHint.textColor = .secondaryLabelColor;selectionHint.font = .systemFont(ofSize:12);libraryPage.addArrangedSubview(selectionHint)
-        libraryView=LibraryStack();libraryView.orientation = .vertical;libraryView.alignment = .leading;libraryView.spacing=16;libraryView.translatesAutoresizingMaskIntoConstraints=false
+        libraryView=LibraryStack();libraryView.orientation = .vertical;libraryView.alignment = .leading;libraryView.spacing=4;libraryView.translatesAutoresizingMaskIntoConstraints=false
         let scroll=NSScrollView();scroll.hasVerticalScroller=true;scroll.documentView=libraryView;scroll.drawsBackground=false;libraryPage.addArrangedSubview(scroll);scroll.widthAnchor.constraint(equalTo:libraryPage.widthAnchor).isActive=true;libraryView.widthAnchor.constraint(equalTo:scroll.contentView.widthAnchor).isActive=true;scroll.heightAnchor.constraint(greaterThanOrEqualToConstant:120).isActive=true
         sharingLabel.textColor = .secondaryLabelColor;sharingLabel.font = .systemFont(ofSize:12);libraryPage.addArrangedSubview(sharingLabel)
         let sharingPage=page(tr("Aktive delinger","Active sharing"),tr("Adressen er klar til at blive kopieret.","Copy an address to share it."))
-        empty=NSTextField(labelWithString:tr("Ingen delinger kører endnu.","Nothing is shared yet."));empty.textColor = .secondaryLabelColor;sharingPage.addArrangedSubview(empty)
+        empty=NSTextField(labelWithString:tr("Intet deles endnu. Vælg Del i biblioteket.","Nothing is shared yet. Choose Share in the library."));empty.textColor = .secondaryLabelColor;sharingPage.addArrangedSubview(empty)
         rows=LibraryStack();rows.orientation = .vertical;rows.alignment = .leading;rows.spacing=18;rows.translatesAutoresizingMaskIntoConstraints=false
         let activeScroll=NSScrollView();activeScroll.documentView=rows;activeScroll.hasVerticalScroller=true;activeScroll.drawsBackground=false;sharingPage.addArrangedSubview(activeScroll);activeScroll.widthAnchor.constraint(equalTo:sharingPage.widthAnchor).isActive=true;rows.widthAnchor.constraint(equalTo:activeScroll.contentView.widthAnchor).isActive=true
         let hint=NSTextField(wrappingLabelWithString:tr("Computeren skal være tændt. Du kan lukke dette vindue; ForgeShare fortsætter i menulinjen.","Keep this computer on. You can close this window; ForgeShare stays in the menu bar."));hint.textColor = .secondaryLabelColor;hint.font = .systemFont(ofSize:12);sharingPage.addArrangedSubview(hint);hint.widthAnchor.constraint(equalTo:sharingPage.widthAnchor).isActive=true
@@ -197,7 +197,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             guard let self=self, let s=session else { return }; s.output.fileHandleForReading.readabilityHandler=nil
             try? s.input.fileHandleForWriting.close(); self.rows.removeArrangedSubview(s.row); s.row.removeFromSuperview()
             if self.sharingID==s.id {self.sharingID=nil;self.shareQueue.removeAll()}
-            self.sessions.removeAll { $0 === s }; self.refreshLibraryState(); self.empty.isHidden = !self.sessions.isEmpty;if !self.quitting {self.reloadLibrary()}
+            self.sessions.removeAll { $0 === s }; self.refreshLibraryState(); if !self.quitting {self.reloadLibrary()}
             if self.quitting && self.sessions.isEmpty { NSApp.reply(toApplicationShouldTerminate:true) }
         }}
         do { try session.process.run(); sessions.append(session); rows.addArrangedSubview(session.row)
@@ -248,17 +248,27 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if s.local{return (tr("Kører lokalt","Running locally"),.systemGreen)}
         return (tr("Delt via ","Shared via ")+(s.mode=="lan" ? tr("hjemmenetværk","home network") : s.mode=="funnel" ? "Funnel" : "Tailscale"),.systemGreen)
     }
+    func sharingOf(_ id:String)->String {
+        guard let s=sessions.first(where:{$0.id==id}) else{return ""}
+        if s.stopping{return tr("Stopper…","Stopping…")}
+        if s.url.isEmpty{return tr("Starter…","Starting…")}
+        if s.local{return ""}
+        return s.mode=="tailscale" ? "Tailscale" : s.mode=="funnel" ? "Funnel" : s.mode=="lan" ? tr("Hjemmenetværk","Home network") : ""
+    }
     @objc func selectLibraryRow(_ sender:NSButton) {
         for (_,button) in libraryChecks {button.state=button === sender ? .on : .off}
         refreshLibraryState()
     }
     func refreshLibraryState() {
+        for session in sessions {session.row.isHidden=session.local || session.url.isEmpty}
+        empty.isHidden=sessions.contains{!$0.local && !$0.url.isEmpty}
         for (entry,button) in libraryChecks {
             let id=entry["id"] as? String ?? "",state=stateOf(id),selected=button.state == .on
             button.layer?.backgroundColor=(selected ? NSColor.selectedContentBackgroundColor : NSColor.controlBackgroundColor).cgColor
             button.contentTintColor=selected ? .alternateSelectedControlTextColor : .labelColor
             if let stop=libraryStops[id] {let session=sessions.first(where:{$0.id==id});stop.isHidden=session==nil;stop.isEnabled=session != nil && !session!.stopping}
-            if let status=libraryStatus[id] {status.stringValue="● "+state.0;status.textColor=state.1;status.setAccessibilityLabel(state.0)}
+            if let indicator=libraryIndicators[id] {indicator.textColor=state.1;indicator.toolTip=state.0;indicator.setAccessibilityLabel(state.0)}
+            if let status=libraryStatus[id] {status.stringValue=entry["available"] as? Bool == false ? tr("Filen mangler","File missing") : sharingOf(id)}
         }
         guard libraryButtons.count==5 else{return}
         let selected=selectedEntries(),entry=selected.first,id=entry?["id"] as? String ?? ""
@@ -271,20 +281,22 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     @objc func stopLibraryRow(_ sender:NSButton){if let id=sender.identifier?.rawValue,let s=sessions.first(where:{$0.id==id}){stopSession(s)}}
     func renderLibrary(_ entries:[[String:Any]],selected:Set<String>=[]) {
-        libraryView.arrangedSubviews.forEach {libraryView.removeArrangedSubview($0);$0.removeFromSuperview()};libraryChecks=[];libraryStatus=[:];libraryStops=[:]
+        libraryView.arrangedSubviews.forEach {libraryView.removeArrangedSubview($0);$0.removeFromSuperview()};libraryChecks=[];libraryStatus=[:];libraryIndicators=[:];libraryStops=[:]
         var hasSelection=false
         if entries.isEmpty {libraryView.addArrangedSubview(NSTextField(labelWithString:tr("Tryk Tilføj for at finde dine wikier.","Choose Add to find your wikis.")))}
         for entry in entries {
             let id=entry["id"] as? String ?? "",name=entry["name"] as? String ?? "",kind=entry["kind"] as? String ?? ""
             let selectedRow = !hasSelection && selected.contains(id);if selectedRow{hasSelection=true}
-            let box=NSButton(title:name+"  ·  "+(kind=="site" ? "Site" : "Wiki"),target:self,action:#selector(selectLibraryRow(_:)));box.setButtonType(.pushOnPushOff);box.isBordered=false;box.alignment = .left;box.font = .systemFont(ofSize:15,weight:.semibold);box.state=selectedRow ? .on : .off;box.wantsLayer=true;box.layer?.cornerRadius=7;box.image=NSImage(systemSymbolName:kind=="site" ? "globe" : "doc.text",accessibilityDescription:nil);box.imagePosition = .imageLeading
-            box.cell?.lineBreakMode = .byTruncatingMiddle;box.setContentCompressionResistancePriority(.defaultLow,for:.horizontal)
-            let row=NSStackView();row.orientation = .vertical;row.alignment = .leading;row.spacing=4;libraryView.addArrangedSubview(row);row.widthAnchor.constraint(equalTo:libraryView.widthAnchor,constant:-8).isActive=true;let heading=NSStackView();heading.orientation = .horizontal;heading.spacing=8;row.addArrangedSubview(heading);heading.widthAnchor.constraint(equalTo:row.widthAnchor).isActive=true;heading.addArrangedSubview(box)
-            let stop=NSButton(title:"Stop",target:self,action:#selector(stopLibraryRow(_:)));stop.bezelStyle = .rounded;stop.image=NSImage(systemSymbolName:"stop.fill",accessibilityDescription:nil);stop.imagePosition = .imageLeading;stop.identifier=NSUserInterfaceItemIdentifier(id);stop.setAccessibilityLabel(tr("Stop ","Stop ")+name);libraryStops[id]=stop;heading.addArrangedSubview(stop);stop.setContentHuggingPriority(.required,for:.horizontal);libraryChecks.append((entry,box));box.setContentHuggingPriority(.defaultLow,for:.horizontal);box.heightAnchor.constraint(equalToConstant:32).isActive=true
-            let detail=NSStackView();detail.orientation = .horizontal;detail.spacing=12
-            let status=NSTextField(labelWithString:"");status.font = .systemFont(ofSize:12,weight:.medium);libraryStatus[id]=status;detail.addArrangedSubview(status)
-            if entry["available"] as? Bool == false {let info=NSTextField(labelWithString:tr("Filen mangler","File missing"));info.textColor = .secondaryLabelColor;info.font = .systemFont(ofSize:12);detail.addArrangedSubview(info)};row.addArrangedSubview(detail)
-            if let description=entry["description"] as? String,!description.isEmpty {let text=NSTextField(wrappingLabelWithString:description);text.textColor = .secondaryLabelColor;text.font = .systemFont(ofSize:12);row.addArrangedSubview(text);text.widthAnchor.constraint(equalTo:row.widthAnchor).isActive=true}
+            let row=NSStackView();row.orientation = .horizontal;row.alignment = .centerY;row.spacing=10
+            libraryView.addArrangedSubview(row);row.widthAnchor.constraint(equalTo:libraryView.widthAnchor,constant:-8).isActive=true;row.heightAnchor.constraint(equalToConstant:36).isActive=true
+            let indicator=NSTextField(labelWithString:"●");indicator.font = .systemFont(ofSize:14);indicator.alignment = .center;indicator.widthAnchor.constraint(equalToConstant:16).isActive=true;row.addArrangedSubview(indicator);libraryIndicators[id]=indicator
+            let box=NSButton(title:name,target:self,action:#selector(selectLibraryRow(_:)));box.setButtonType(.pushOnPushOff);box.isBordered=false;box.alignment = .left;box.font = .systemFont(ofSize:15,weight:.semibold);box.state=selectedRow ? .on : .off;box.wantsLayer=true;box.layer?.cornerRadius=7;box.image=NSImage(systemSymbolName:kind=="site" ? "globe" : "doc.text",accessibilityDescription:nil);box.imagePosition = .imageLeading
+            box.cell?.lineBreakMode = .byTruncatingMiddle;box.setContentCompressionResistancePriority(.defaultLow,for:.horizontal);box.setContentHuggingPriority(.defaultLow,for:.horizontal);box.heightAnchor.constraint(equalToConstant:32).isActive=true;box.toolTip=([name,entry["description"] as? String ?? ""].filter{!$0.isEmpty}).joined(separator:"\n");row.addArrangedSubview(box);box.widthAnchor.constraint(equalTo:row.widthAnchor,constant:-296).isActive=true;libraryChecks.append((entry,box))
+            let type=NSTextField(labelWithString:kind=="site" ? "Site" : "Wiki");type.textColor = .secondaryLabelColor;type.widthAnchor.constraint(equalToConstant:44).isActive=true;row.addArrangedSubview(type)
+            let status=NSTextField(labelWithString:"");status.font = .systemFont(ofSize:12,weight:.medium);status.textColor = .secondaryLabelColor;status.widthAnchor.constraint(equalToConstant:120).isActive=true;row.addArrangedSubview(status);libraryStatus[id]=status
+            let stopSpace=NSView();stopSpace.translatesAutoresizingMaskIntoConstraints=false;stopSpace.widthAnchor.constraint(equalToConstant:76).isActive=true;stopSpace.heightAnchor.constraint(equalToConstant:32).isActive=true;row.addArrangedSubview(stopSpace)
+            let stop=NSButton(title:"Stop",target:self,action:#selector(stopLibraryRow(_:)));stop.bezelStyle = .rounded;stop.image=NSImage(systemSymbolName:"stop.fill",accessibilityDescription:nil);stop.imagePosition = .imageLeading;stop.identifier=NSUserInterfaceItemIdentifier(id);stop.setAccessibilityLabel(tr("Stop ","Stop ")+name);stop.translatesAutoresizingMaskIntoConstraints=false;stopSpace.addSubview(stop);NSLayoutConstraint.activate([stop.leadingAnchor.constraint(equalTo:stopSpace.leadingAnchor),stop.trailingAnchor.constraint(equalTo:stopSpace.trailingAnchor),stop.centerYAnchor.constraint(equalTo:stopSpace.centerYAnchor)]);libraryStops[id]=stop
+
         }
         refreshLibraryState()
     }
@@ -375,17 +387,32 @@ if CommandLine.arguments.contains("--self-test") {
     testApp.selectLibraryRow(testApp.libraryChecks[0].1)
     let session=Session();session.id="first";testApp.sessions.append(session);testApp.refreshLibraryState();precondition(testApp.stateOf("first").0==tr("Starter…","Starting…") && !testApp.start.isEnabled)
     session.url="http://127.0.0.1:20000";session.local=true;testApp.refreshLibraryState();precondition(testApp.stateOf("first").0==tr("Kører lokalt","Running locally") && testApp.libraryStops["first"]!.isEnabled)
-    session.local=false;session.mode="funnel";precondition(testApp.stateOf("first").0.contains("Funnel"));session.stopping=true;testApp.refreshLibraryState();precondition(!testApp.libraryStops["first"]!.isEnabled)
+    precondition(testApp.libraryStatus["first"]!.stringValue.isEmpty && session.row.isHidden && !testApp.empty.isHidden)
+    session.local=false
+    for mode in ["tailscale","funnel","lan"] {session.mode=mode;testApp.refreshLibraryState();precondition(testApp.libraryStatus["first"]!.stringValue == (mode=="tailscale" ? "Tailscale" : mode=="funnel" ? "Funnel" : tr("Hjemmenetværk","Home network")))}
+    precondition(!session.row.isHidden && testApp.empty.isHidden)
+    session.mode="funnel";precondition(testApp.stateOf("first").0.contains("Funnel"));session.stopping=true;testApp.refreshLibraryState();precondition(!testApp.libraryStops["first"]!.isEnabled)
     testApp.sessions=[];testApp.refreshLibraryState();precondition(testApp.libraryStops["first"]!.isHidden && testApp.start.isEnabled && testApp.stateOf("first").0==tr("Stoppet","Stopped"))
     let export=ExportSelection(entries:fixture,selected:[]);precondition(!export.alert.buttons[0].isEnabled);export.toggleAll();precondition(export.checks.allSatisfy{$0.1.state == .on} && export.toggle.title==tr("Vælg ingen","Select none"));export.toggleAll();precondition(export.checks.allSatisfy{$0.1.state == .off})
-    testApp.renderLibrary([],selected:[]);precondition(testApp.libraryChecks.isEmpty)
+    testApp.renderLibrary(fixture,selected:["first"]);testApp.sessions=[session];session.stopping=false;session.mode="tailscale";testApp.refreshLibraryState()
     for size in [NSSize(width:1000,height:660),NSSize(width:900,height:600)] {
         testApp.window.setContentSize(size);testApp.window.contentView!.layoutSubtreeIfNeeded()
         precondition(testApp.libraryButtons.count==5)
+        let box=testApp.libraryChecks[0].1, status=testApp.libraryStatus["first"]!, stop=testApp.libraryStops["first"]!
+        let a=box.convert(box.bounds,to:testApp.window.contentView!),b=status.convert(status.bounds,to:testApp.window.contentView!),c=stop.convert(stop.bounds,to:testApp.window.contentView!)
+        precondition(abs(a.midY-b.midY)<3 && abs(a.midY-c.midY)<3 && a.maxX<b.minX && b.maxX<c.minX && c.maxX<size.width && c.maxX>size.width-50)
+        precondition(testApp.libraryView.arrangedSubviews.allSatisfy{$0.frame.height<=36})
         for button in testApp.libraryButtons {
             let frame=button.convert(button.bounds,to:testApp.window.contentView!)
             precondition(frame.minX>=0 && frame.maxX<=size.width && frame.minY>=0 && frame.maxY<=size.height)
         }
+    }
+    if let output=ProcessInfo.processInfo.environment["FORGESHARE_PREVIEW"] {
+        let examples:[[String:Any]]=[["id":"first","name":"Projektwiki","kind":"folder","available":true],["id":"site","name":"Mit musiksite","kind":"site","available":true],["id":"local","name":"Mine noter","kind":"html","available":true],["id":"stopped","name":"Opskrifter","kind":"folder","available":true]]
+        let site=Session();site.id="site";site.mode="funnel";site.url="https://example.ts.net"
+        let local=Session();local.id="local";local.local=true;local.url="http://127.0.0.1:20002"
+        testApp.sessions=[session,site,local];testApp.renderLibrary(examples,selected:["first"]);testApp.window.setContentSize(NSSize(width:1000,height:660));testApp.window.contentView!.layoutSubtreeIfNeeded()
+        let view=testApp.window.contentView!,bitmap=view.bitmapImageRepForCachingDisplay(in:view.bounds)!;view.cacheDisplay(in:view.bounds,to:bitmap);try bitmap.representation(using:.png,properties:[:])!.write(to:URL(fileURLWithPath:output))
     }
     for value in ["http://127.0.0.1:20000","http://192.168.1.8:20000","http://10.0.0.8:20000","https://example.ts.net:21000"] {precondition(permittedAddress(URL(string:value)!))}
     for value in ["http://0.0.0.0:20000","http://8.8.8.8:20000","http://100.64.0.1:20000","file:///tmp/wiki"] {precondition(!permittedAddress(URL(string:value)!))}
