@@ -1,0 +1,18 @@
+! PasteUp — dit kreative værksted
+
+Lav plakater, collager og interaktive plader med de oprindelige PasteUp-felter.
+
+# Åbn [[PasteUp]] og lav din egen retroplakat eller TWingo-plade.
+# Lås pladen op med hængelåsen. Dobbeltklik på et element for at redigere det.
+# Træk elementer og hjørner for at ændre placering og størrelse. Værktøjskassen giver adgang til lag, udseende og klikhandlinger.
+# Gem hele wikien med TiddlyWikis Gem-knap.
+
+!! Billeder og deling
+
+Importér billeder med TiddlyWikis almindelige import. Brug et indlejret billede i et felt, eksempelvis `<$image source="Mit billede"/>`. Så følger billedet med den gemte HTML-wiki; der kræves ikke Drev.
+
+Udskriftsknappen åbner en udgave til papir eller browserens PDF-udskrift. Plakatens download-knap eksporterer dens data; til en komplet kopi med billeder skal du gemme hele wikien. Slideshow kan bruge pladen som slide, baggrund eller interaktivt layout.
+
+!! Ophav
+
+Bygger på [[TiddlyTools PasteUp|https://tiddlytools.com/#TiddlyTools/PasteUp/Info]] af Eric L. Shulman. HUWiki har tilpasset den og tilføjet eksempler. Licens: CC BY-NC-SA 4.0. Original dokumentation og licens er bevaret i pakken.

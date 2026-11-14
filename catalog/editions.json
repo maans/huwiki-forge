@@ -116,18 +116,35 @@
     {
       "id": "cutout",
       "name": "HUWiki CutOut Edition (test)",
-      "version": "0.6.2-test.1",
+      "version": "0.6.2-test.2",
       "status": "test",
       "manifest": "../editions/cutout/manifest.json",
-      "description": "Dukker, nøglebilleder, scener og lokal eksport fra den oprindelige CutOut-motor.",
+      "description": "Original CutOut workshop, examples, Excalidraw drawing bridge, scenes, theatre, PasteUp and Slideshow; local export and native Dansk/English",
       "home": {
         "headingDa": "Dukker, scener og animation",
         "headingEn": "Puppets, scenes and animation",
-        "descriptionDa": "Byg dukker, animér med nøglebilleder og hent en selvstændig visningskopi.",
-        "descriptionEn": "Build puppets, animate with keyframes and download a standalone viewing copy.",
-        "noteDa": "Afgrænset offline-test. Fuld eksempelsamling, tegnebro, Slideshow og touchaccept udestår.",
-        "noteEn": "Limited offline test. Full examples, drawing bridge, Slideshow and touch acceptance are pending.",
+        "descriptionDa": "Byg dukker, tegn dele og skab animationer, scener og forestillinger. De oprindelige eksempler følger med.",
+        "descriptionEn": "Build puppets, draw parts and create animations, scenes and performances. Includes the original examples.",
+        "noteDa": "Afprøvet i Chrome på computer. Mobil/touch er endnu ikke accepteret.",
+        "noteEn": "Tested in desktop Chrome. Mobile/touch acceptance is pending.",
         "order": "07"
+      }
+    },
+    {
+      "id": "slideshow",
+      "name": "HUWiki Slideshow Edition (test)",
+      "version": "0.8.39-test.1",
+      "status": "test",
+      "manifest": "../editions/slideshow/manifest.json",
+      "description": "Original Slideshow and PasteUp, seven example stories, local document import, PDF, interactive sites and editable wiki backup; native Dansk/English",
+      "home": {
+        "headingDa": "Fortællinger, slides og plakater",
+        "headingEn": "Stories, slides and posters",
+        "descriptionDa": "Giv dine tiddlere en scene. Brug PasteUp, syv fortællinger og lokal dokumentimport som begyndelse.",
+        "descriptionEn": "Give your tiddlers a stage. Start with PasteUp, seven stories or a locally imported document.",
+        "noteDa": "Visuel Office-import kræver valgfri lokal LibreOffice-hjælper eller en PDF. Mobil/touch udestår.",
+        "noteEn": "Visual Office import uses an optional local LibreOffice helper or a PDF. Mobile/touch testing is pending.",
+        "order": "08"
       }
     }
   ],
@@ -170,6 +187,54 @@
       "version": "0.3.3",
       "description": "Image/SVG hotspots with optional PasteUp; no Google service required for core use / Billedpins og klikbare områder",
       "file": "../plugins/hupin/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "cutout",
+      "name": "HUWiki CutOut",
+      "version": "0.6.2-test.2",
+      "description": "Offline animation workshop · Dukker, animationer og lokal ZIP · Test",
+      "file": "../plugins/cutout/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "slideshow",
+      "name": "HUWiki Slideshow",
+      "version": "0.8.39-test.1",
+      "description": "Slideshow, PasteUp, local documents, PDF and editable ZIP · Dansk / English",
+      "file": "../plugins/slideshow/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "pasteup",
+      "name": "HUWiki PasteUp",
+      "version": "0.1.8-test.1",
+      "description": "Plakater og interaktive plader / Posters and interactive boards · native Dansk / English",
+      "file": "../plugins/pasteup/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "theatre",
+      "name": "HUWiki Teater / Theatre",
+      "version": "0.6.1-test.1",
+      "description": "Forestillinger med PasteUp og CutOut / Performances with PasteUp and CutOut",
+      "file": "../plugins/theatre/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "cutout-excalidraw",
+      "name": "CutOut ↔ Excalidraw",
+      "version": "0.1.0-test.1",
+      "description": "Redigerbare tegninger til CutOut / Editable drawings for CutOut",
+      "file": "../plugins/cutout-excalidraw/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "cutout-examples",
+      "name": "CutOut · Demoer og eksempler / Examples",
+      "version": "0.6.2-test.1",
+      "description": "Original CutOut examples, guide and exercises · original dansk/engelsk",
+      "file": "../plugins/cutout-examples/dist/plugin.json",
       "status": "test"
     },
     {

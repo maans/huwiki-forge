@@ -3,8 +3,10 @@ on:
   pull_request:
     paths:
       - editions/cutout/**
-      - plugins/cutout/**
-      - migration/cutout/**
+      - plugins/**
+      - migration/**
+      - scripts/build-creative.mjs
+      - scripts/build-slideshow.mjs
       - scripts/build-cutout.mjs
       - scripts/cutout-browser-smoke.mjs
       - assembler/**

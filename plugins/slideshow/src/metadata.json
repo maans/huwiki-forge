@@ -1,0 +1,53 @@
+{
+  "exports.js": {
+    "title": "$:/plugins/huwiki/slideshow/exports.js",
+    "type": "application/javascript",
+    "module-type": "startup"
+  },
+  "import.js": {
+    "title": "$:/plugins/huwiki/slideshow/import.js",
+    "type": "application/javascript",
+    "module-type": "startup"
+  },
+  "layouts.js": {
+    "title": "$:/plugins/huwiki/slideshow/layouts.js",
+    "type": "application/javascript",
+    "module-type": "startup"
+  },
+  "image-filter.js": {
+    "title": "$:/plugins/huwiki/slideshow/image-filter.js",
+    "type": "application/javascript",
+    "module-type": "filteroperator"
+  },
+  "package.js": {
+    "title": "$:/plugins/huwiki/slideshow/package.js",
+    "type": "application/javascript",
+    "module-type": "startup"
+  },
+  "site.js": {
+    "title": "$:/plugins/huwiki/slideshow/site.js",
+    "type": "application/javascript",
+    "module-type": "startup"
+  },
+  "list-source.js": {
+    "title": "$:/plugins/huwiki/slideshow/list-source.js",
+    "type": "application/javascript",
+    "module-type": "library"
+  },
+  "startup.js": {
+    "title": "$:/plugins/huwiki/slideshow/startup.js",
+    "type": "application/javascript",
+    "module-type": "startup"
+  },
+  "vendors.js": {
+    "title": "$:/plugins/huwiki/slideshow/vendors.js",
+    "type": "application/javascript",
+    "module-type": "startup"
+  },
+  "examples/Startup.js": {
+    "title": "$:/plugins/huwiki/slideshow/examples/Startup.js",
+    "type": "application/javascript",
+    "module-type": "startup",
+    "huwiki-example-resource": "yes"
+  }
+}

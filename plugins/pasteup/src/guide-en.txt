@@ -1,0 +1,18 @@
+! PasteUp — your creative workshop
+
+Make posters, collages and interactive boards with the original PasteUp fields.
+
+# Open [[PasteUp]] and create your own retro poster or TWingo board.
+# Unlock the board with its padlock. Double-click an element to edit it.
+# Drag elements and corners to change position and size. The toolbox controls layers, appearance and click actions.
+# Save the whole wiki with TiddlyWiki’s Save button.
+
+!! Pictures and sharing
+
+Import images with TiddlyWiki’s normal import. Use an embedded image in a field, for example `<$image source="My image"/>`. The image is then included in the saved HTML wiki; no Drive account is required.
+
+The print button opens a version for paper or your browser’s PDF printer. The poster’s download button exports its data; save the whole wiki for a complete copy with images. Slideshow can use the board as a slide, background or interactive layout.
+
+!! Credits
+
+Based on [[TiddlyTools PasteUp|https://tiddlytools.com/#TiddlyTools/PasteUp/Info]] by Eric L. Shulman. Adapted with examples by HUWiki. License: CC BY-NC-SA 4.0. Original documentation and license are retained in the package.

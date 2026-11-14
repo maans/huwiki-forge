@@ -14,6 +14,7 @@
     "../../plugins/tegne-react/dist/plugin.json",
     "../../plugins/tegne-excalidraw/dist/plugin.json",
     "../../plugins/tegne/dist/plugin.json",
-    "../../plugins/site-publisher/dist/plugin.json"
+    "../../plugins/site-publisher/dist/plugin.json",
+    "../../plugins/tegne-da/dist/plugin.json"
   ]
 }

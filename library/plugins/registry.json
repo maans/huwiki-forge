@@ -4,6 +4,32 @@
   "items": [
     {
       "fields": {
+        "title": "$:/plugins/huwiki/cutout-examples",
+        "type": "application/json",
+        "name": "CutOut · Demoer og eksempler / Examples",
+        "description": "Original CutOut examples, guide and exercises · original dansk/engelsk",
+        "author": "HUWiki",
+        "version": "0.6.2-test.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/theatre $:/plugins/huwiki/pasteup $:/plugins/huwiki/slideshow $:/plugins/huwiki/cutout-excalidraw"
+      },
+      "path": "../../plugins/cutout-examples/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/cutout-excalidraw",
+        "type": "application/json",
+        "name": "CutOut ↔ Excalidraw",
+        "description": "Redigerbare tegninger til CutOut / Editable drawings for CutOut",
+        "author": "HUWiki",
+        "version": "0.1.0-test.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/cutout $:/plugins/itw/tw-excalidraw $:/plugins/linonetwo/tw-react"
+      },
+      "path": "../../plugins/cutout-excalidraw/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/forgeshare",
         "type": "application/json",
         "name": "ForgeShare",
@@ -130,12 +156,24 @@
         "name": "HUWiki CutOut",
         "description": "Offline animation workshop · Dukker, animationer og lokal ZIP · Test",
         "author": "HUWiki",
-        "version": "0.6.2-test.1",
+        "version": "0.6.2-test.2",
         "plugin-type": "plugin",
         "stability": "experimental",
         "core-version": ">=5.3.0"
       },
       "path": "../../plugins/cutout/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/tegne-da",
+        "type": "application/json",
+        "name": "HUWiki Dansk",
+        "description": "Danske tegnetekster / Danish drawing strings · native $:/language",
+        "author": "HUWiki",
+        "version": "1.0.1-test.1",
+        "plugin-type": "plugin"
+      },
+      "path": "../../plugins/tegne-da/dist/plugin.json"
     },
     {
       "fields": {
@@ -188,6 +226,20 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/pasteup",
+        "type": "application/json",
+        "name": "HUWiki PasteUp",
+        "description": "Plakater og interaktive plader / Posters and interactive boards · native Dansk / English",
+        "author": "Eric L. Shulman; dansk tilpasning: HUWiki",
+        "version": "0.1.8-test.1",
+        "plugin-type": "plugin",
+        "license": "CC-BY-NC-SA-4.0",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/pasteup/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/print-article",
         "type": "application/json",
         "name": "HUWiki Publisher",
@@ -213,6 +265,33 @@
         "core-version": ">=5.2.0"
       },
       "path": "../../plugins/site-publisher/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/slideshow",
+        "type": "application/json",
+        "name": "HUWiki Slideshow",
+        "description": "Slideshow, PasteUp, local documents, PDF and editable ZIP · Dansk / English",
+        "author": "HUWiki",
+        "version": "0.8.39-test.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/pasteup"
+      },
+      "path": "../../plugins/slideshow/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/theatre",
+        "type": "application/json",
+        "name": "HUWiki Teater / Theatre",
+        "description": "Forestillinger med PasteUp og CutOut / Performances with PasteUp and CutOut",
+        "author": "HUWiki",
+        "version": "0.6.1-test.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/pasteup",
+        "core-version": ">=5.3.0"
+      },
+      "path": "../../plugins/theatre/dist/plugin.json"
     },
     {
       "fields": {
@@ -261,11 +340,11 @@
       "fields": {
         "title": "$:/plugins/itw/tw-excalidraw",
         "type": "application/json",
-        "description": "A whiteboard plugin using Excalidraw.",
+        "description": "HUWiki Excalidraw · native Dansk / English · original 0.3.4 drawing and library APIs",
         "author": "ItsTheWhale",
-        "version": "0.3.0",
+        "version": "0.3.4",
         "plugin-type": "plugin",
-        "dependents": "$:/plugins/linonetwo/tw-react",
+        "dependents": "$:/plugins/linonetwo/tw-react $:/plugins/huwiki/tegne-da",
         "stability": "STABILITY_1_EXPERIMENTAL",
         "core-version": ">=5.3.2",
         "name": "tw-excalidraw"
