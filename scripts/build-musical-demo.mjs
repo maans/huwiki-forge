@@ -5,7 +5,7 @@ import {loadEdition,assembleHtml} from "../assembler/assemble.mjs";
 const root=path.resolve(import.meta.dirname,"..");
 const fetchLocal=async url=>{
  const u=new URL(url);
- if(u.origin!=="https://forge.test" || !u.pathname.startsWith("/editions/"))
+ if(u.origin!=="https://forge.test" || !["/editions/","/plugins/","/themes/","/languages/"].some(prefix=>u.pathname.startsWith(prefix)))
   return {ok:false,status:403};
  try{
   const file=path.join(root,u.pathname.slice(1));
