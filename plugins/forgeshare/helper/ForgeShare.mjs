@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.3 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.4 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {readFile, realpath, stat, lstat, opendir, access, mkdir, mkdtemp, writeFile, rm, rename, open} from 'node:fs/promises';
 import {randomUUID} from 'node:crypto';
 import {constants} from 'node:fs';
@@ -59,9 +59,27 @@ export function hasWikiRoute(config, hostname, port = 8080, httpsPort = 10000) {
     item.TCP?.[httpsPort]?.HTTPS === true &&
     item.Web?.[hostname + ':' + httpsPort]?.Handlers?.['/']?.Proxy === 'http://127.0.0.1:' + port);
 }
-export function serverArgs(wiki, credentials, port = 8080) {
-  return [wiki, '--listen', 'host=127.0.0.1', `port=${port}`, `credentials=${credentials}`,
-    'readers=(authenticated)', 'writers=(authenticated)', 'csrf-disable=no'];
+export function isPrivateIPv4(address) {
+  if(net.isIP(address)!==4)return false;
+  const [a,b]=address.split('.').map(Number);
+  return a===10 || (a===172 && b>=16 && b<=31) || (a===192 && b===168);
+}
+export function homeNetworkAddresses(interfaces=os.networkInterfaces()) {
+  const result=[],seen=new Set();
+  for(const [name,addresses] of Object.entries(interfaces)) {
+    if(/^(utun|tun|tap|tailscale|wg|docker|veth|virbr|vmnet|vbox)/i.test(name))continue;
+    for(const entry of addresses||[])if(!entry.internal && isPrivateIPv4(entry.address) && !seen.has(entry.address)) {
+      result.push({name,address:entry.address});seen.add(entry.address);
+    }
+  }
+  return result;
+}
+export function serverArgs(wiki, credentials, port = 8080, {allowAnonymous=false,lanHost}={}) {
+  if(lanHost && !isPrivateIPv4(lanHost))fail('Choose a private home-network address.', 'Vælg en privat hjemmenetværksadresse.');
+  if(allowAnonymous!==true && !credentials)fail('Choose wiki login or explicitly choose no login.', 'Vælg wiki-login, eller vælg udtrykkeligt uden login.');
+  return [wiki, '--listen', `host=${lanHost||'127.0.0.1'}`, `port=${port}`,
+    ...(allowAnonymous===true?['readers=(anon)']:[`credentials=${credentials}`,'readers=(authenticated)']),
+    `writers=${allowAnonymous===true?'(anon)':'(authenticated)'}`, 'csrf-disable=no'];
 }
 export function validateCredentials(text) {
   const lines = text.replace(/^\uFEFF/, '').trimEnd().split(/\r?\n/);
@@ -70,26 +88,29 @@ export function validateCredentials(text) {
   const names = new Set();
   for (const line of lines) {
     const parts = line.split(',');
-    if (parts.length !== 2 || !/^[A-Za-z0-9_.@-]+$/.test(parts[0]) || parts[1].length < 12 || /["\r\n\x00-\x1f]/.test(parts[1]) || names.has(parts[0]))
-      fail('Invalid credentials row. Use unique simple usernames and passwords of 12+ characters without commas/quotes.', 'Ugyldig loginlinje. Brug unikke enkle brugernavne og adgangskoder på mindst 12 tegn uden komma/anførselstegn.');
+    if (parts.length !== 2 || !/^[A-Za-z0-9_.@-]+$/.test(parts[0]) || !parts[1].length || /["\r\n\x00-\x1f]/.test(parts[1]) || names.has(parts[0]))
+      fail('Use a simple unique username and a nonempty password without commas, quotes or line breaks.', 'Brug et enkelt unikt brugernavn og en adgangskode uden komma, anførselstegn eller linjeskift. Adgangskoden må ikke være tom.');
     names.add(parts[0]);
   }
   return names.size;
 }
 export async function validateFiles(wikiInput, credentialsInput, platform = process.platform) {
-  const wiki = await realpath(wikiInput), credentials = await realpath(credentialsInput);
+  const {wiki} = await validateWikiFolder(wikiInput), credentials = await realpath(credentialsInput);
   const relative = path.relative(wiki, credentials);
   if (!relative || (!relative.startsWith('..' + path.sep) && relative !== '..' && !path.isAbsolute(relative)))
     fail('Keep credentials outside the wiki folder.', 'Opbevar loginfilen uden for wikimappen.');
-  const info = JSON.parse(await readFile(path.join(wiki, 'tiddlywiki.info'), 'utf8'));
-  for (const plugin of ['tiddlywiki/tiddlyweb', 'tiddlywiki/filesystem'])
-    if (!info.plugins?.includes(plugin)) fail('Server wiki is missing ' + plugin, 'Serverwikien mangler ' + plugin);
   const attrs = await stat(credentials);
   if (!attrs.isFile() || attrs.size > 1024 * 1024) fail('Invalid credentials file.', 'Ugyldig loginfil.');
   if (platform !== 'win32' && ((attrs.mode & 0o077) || attrs.uid !== process.getuid()))
     fail('Credentials must be owned by you with permissions 600. Run chmod 600 on that file.', 'Loginfilen skal ejes af dig med rettighed 600. Kør chmod 600 på filen.');
   validateCredentials(await readFile(credentials, 'utf8'));
   return {wiki, credentials};
+}
+export async function validateWikiFolder(wikiInput) {
+  const wiki=await realpath(wikiInput),info=JSON.parse(await readFile(path.join(wiki,'tiddlywiki.info'),'utf8'));
+  for(const plugin of ['tiddlywiki/tiddlyweb','tiddlywiki/filesystem'])
+    if(!info.plugins?.includes(plugin))fail('Server wiki is missing '+plugin, 'Serverwikien mangler '+plugin);
+  return {wiki};
 }
 export function checkPort(port = 8080, host = '127.0.0.1') {
   return new Promise((resolve, reject) => {
@@ -278,8 +299,8 @@ export async function validateRuntime(folder) {
   await access(path.join(root, 'boot/boot.js'));
   return {boot: path.join(root, 'boot/boot.js'), version: pkg.version};
 }
-export function startWiki({boot, wiki, credentials, port = 8080}) {
-  const child = fork(self, ['--worker', boot, ...serverArgs(wiki, credentials, port)], {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit', 'ipc']});
+export function startWiki({boot, wiki, credentials, port = 8080,allowAnonymous=false,lanHost}) {
+  const child = fork(self, ['--worker', boot, ...serverArgs(wiki, credentials, port,{allowAnonymous,lanHost})], {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit', 'ipc']});
   const ready = new Promise((resolve, reject) => {
     const timer = setTimeout(() => done(Error('Server start timed out / Serverstart tog for lang tid.')), 30000);
     const done = (error, address) => { clearTimeout(timer); child.off('message', message); child.off('error', errorEvent); child.off('exit', exitEvent); error ? reject(error) : resolve(address); };
@@ -300,22 +321,24 @@ export async function stopChild(child) {
   });
 }
 export async function startLocalSession(options,deps={}) {
-  const port=options.port;
+  const port=options.port??8080,host=options.lanHost||'127.0.0.1';
+  if(options.lanHost && (options.localOnly || !isPrivateIPv4(host) || !homeNetworkAddresses((deps.networkInterfaces||os.networkInterfaces)()).some(e=>e.address===host)))
+    fail('The selected home network is unavailable. Choose it again.', 'Det valgte hjemmenetværk er ikke tilgængeligt. Vælg igen.');
   await (deps.checkPort||checkAddressPort)(port);
   const started=(deps.startWiki||startWiki)(options),child=started.child;
   let stopping;const stop=()=>stopping ||= stopChild(child);
   try {
     const address=await started.ready;
-    if(address.address!=='127.0.0.1' || address.port!==port)throw Error('Unexpected local address / Uventet lokal adresse.');
-    const status=await (deps.probe||(()=>fetch(`http://127.0.0.1:${port}/status`,{signal:AbortSignal.timeout(5000)}).then(r=>r.status)))();
-    if(status!==401)fail('Local wiki login check failed.', 'Kontrol af lokalt wiki-login fejlede.');
+    if(address.address!==host || address.port!==port)throw Error('Unexpected local address / Uventet lokal adresse.');
+    const status=await (deps.probe||(()=>fetch(`http://${host}:${port}/status`,{signal:AbortSignal.timeout(5000)}).then(r=>r.status)))();
+    if(status!==(options.allowAnonymous===true?200:401))fail('The wiki does not match the selected login setting.', 'Wikien følger ikke det valgte loginvalg.');
     if(child.exitCode!==null || child.signalCode!==null)throw Error('Wiki stopped / Wikien stoppede.');
     const finished=new Promise(resolve=>child.once('exit',resolve));
-    return {url:`http://127.0.0.1:${port}`,stop,finished};
+    return {url:`http://${host}:${port}`,stop,finished};
   }catch(error){await stop();throw error;}
 }
 export async function startSession(options, deps = {}) {
-  if(options.localOnly)return startLocalSession(options,deps);
+  if(options.localOnly || options.lanHost)return startLocalSession(options,deps);
   const port = options.port ?? 8080, httpsPort = options.httpsPort ?? 10000;
   const readJSON = deps.readJSON || jsonCommand;
   const startServer = deps.startWiki || startWiki;
@@ -344,7 +367,7 @@ export async function startSession(options, deps = {}) {
     const started = startServer(options); server = started.child;
     const address = await started.ready;
     if (closed || address.address !== '127.0.0.1' || address.port !== port) throw Error('Unexpected server address / Uventet serveradresse.');
-    if (await probe() !== 401) fail('Anonymous access is not blocked. Sharing refused.', 'Anonym adgang er ikke blokeret. Deling afvist.');
+    if (await probe() !== (options.allowAnonymous===true?200:401)) fail('The wiki does not match the selected login setting. Sharing refused.', 'Wikien følger ikke det valgte loginvalg. Deling afvist.');
     // Recheck immediately before Serve. No --yes: concurrent changes cannot be silently approved.
     const current = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), true, httpsPort);
     if (JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(current, httpsPort))) throw Error('Serve changed during startup / Serve blev ændret under start.');
@@ -379,7 +402,7 @@ function cleanLabel(value, maximum = 80, optional = false) {
   return value.trim().normalize('NFC');
 }
 function validShareURL(value) {
-  try { const u=new URL(value);return u.protocol==='https:' && /^[a-z0-9.-]+\.ts\.net$/i.test(u.hostname) && !u.username && !u.password && !u.search && !u.hash && (u.pathname==='/' || !u.pathname); } catch {return false;}
+  try { const u=new URL(value);return ((u.protocol==='https:' && /^[a-z0-9.-]+\.ts\.net$/i.test(u.hostname)) || (u.protocol==='http:' && isPrivateIPv4(u.hostname))) && !u.username && !u.password && !u.search && !u.hash && (u.pathname==='/' || !u.pathname); } catch {return false;}
 }
 export function validateLibrary(data) {
   if(!object(data) || data.version!==1 || !uuidPattern.test(data.id) || !Array.isArray(data.entries) || data.entries.length>500)
@@ -597,7 +620,7 @@ export async function libraryMain(action,encoded='',deps={}) {
       if(picked===add)return libraryMain('add','',deps);
       if(picked===exp){const names=(await ask('choices','Select wikis to export / Vælg wikier til eksport',library.entries.map(e=>e.name))).split('\n');const ids=library.entries.filter(e=>names.includes(e.name)).map(e=>e.id);return libraryMain('export',Buffer.from(JSON.stringify({ids})).toString('base64'),deps);}
       const entry=library.entries.find(e=>'Wiki: '+e.name===picked);if(!entry)return;
-      const op=await ask('choice',entry.name,['Open / Åbn','Edit name/description / Redigér navn/beskrivelse',...(entry.kind==='folder'?['Share with Tailscale / Del med Tailscale']:[])]);
+      const op=await ask('choice',entry.name,['Open / Åbn','Edit name/description / Redigér navn/beskrivelse',...(entry.kind==='folder'?['Share / Del']:[])]);
       if(op.startsWith('Edit'))return libraryMain('edit',Buffer.from(JSON.stringify({id:entry.id})).toString('base64'),deps);
       if(entry.kind==='html'){await (deps.openFile || (file=>execute('xdg-open',[file])))(entry.location);return;}
       return guiMain({...deps,libraryId:entry.id,localOnly:op.startsWith('Open')});
@@ -831,9 +854,27 @@ export async function guiMain(deps = {}) {
   if (appMode) { inputStream.on('data', inputData); inputStream.once('end', interrupt); }
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, interrupt);
   try {
-    await ask('confirm', localOnly ? 'Open this wiki only on your computer. A temporary login protects it from other local users.\nÅbn kun wikien på denne computer. Et midlertidigt login beskytter den mod andre lokale brugere.' : 'Choose a wiki to share privately. Open this helper again to run another wiki alongside it. Your computer must stay on. Nothing is shared until the final confirmation.\n\nVælg en wiki til privat deling. Åbn hjælperen igen for at køre endnu en wiki samtidig. Computeren skal forblive tændt. Intet deles før sidste bekræftelse.');
+    await ask('confirm', localOnly ? 'Open this wiki only on your computer. You choose whether to use wiki login.\nÅbn kun wikien på denne computer. Du vælger selv, om der skal være wiki-login.' : 'Share a wiki. Choose the network and whether to use wiki login. Nothing starts before the final confirmation.\nDel en wiki. Vælg netværk og eventuelt wiki-login. Intet starter før den sidste bekræftelse.');
     if (Number(process.versions.node.split('.')[0]) < 20) fail('Install Node.js 20 or later.', 'Installer Node.js 20 eller nyere.');
-    const tailscale = localOnly ? undefined : await (deps.findTailscale || findTailscale)();
+    let mode='local',lanHost;
+    if(!localOnly) {
+      const methods=['Tailscale — invited people / inviterede personer','Home network — same Wi-Fi or network / Hjemmenetværk — samme Wi-Fi eller netværk'];
+      const method=await ask('choice','Where should the wiki be shared? / Hvor skal wikien deles?',methods);
+      if(!methods.includes(method))throw Object.assign(Error('Cancelled'),{cancelled:true});
+      mode=method===methods[0]?'tailscale':'lan';
+    }
+    if(mode==='lan') {
+      const addresses=homeNetworkAddresses((deps.networkInterfaces||os.networkInterfaces)());
+      if(!addresses.length)fail('No home network found. Connect to your Wi-Fi or wired network and try again.', 'Intet hjemmenetværk fundet. Forbind til dit Wi-Fi eller kabelnetværk, og prøv igen.');
+      if(addresses.length===1)lanHost=addresses[0].address;
+      else {
+        const choices=addresses.map(e=>e.name+' — '+e.address);
+        const picked=await ask('choice','Choose the network your guests use / Vælg det netværk, gæsterne bruger',choices);
+        lanHost=addresses[choices.indexOf(picked)]?.address;
+        if(!lanHost)throw Object.assign(Error('Cancelled'),{cancelled:true});
+      }
+    }
+    const tailscale = mode==='tailscale' ? await (deps.findTailscale || findTailscale)() : undefined;
     const installed = await (deps.findTiddlyWiki || findTiddlyWiki)();
     const runtime = installed ? await validateRuntime(installed) : await (deps.installRuntime || installRuntime)(ask);
     const libraryEntry=libraryId?(await listLibrary(root)).entries.find(e=>e.id===libraryId):null;
@@ -841,40 +882,51 @@ export async function guiMain(deps = {}) {
     const choices = (await readRegistry(root)).wikis;
     const add = '＋ Add another wiki / Tilføj en wiki';
     const picked = libraryEntry ? '' : choices.length ? await ask('choice', 'Choose your wiki / Vælg din wiki', [...choices.map(item => 'Wiki: ' + item.name), add]) : add;
-    let profile = libraryEntry ? await registerWiki({root,wiki:libraryEntry.location,name:libraryEntry.name,tailscale,localOnly},deps) : choices.find(item => 'Wiki: ' + item.name === picked);
+    let profile = libraryEntry ? await registerWiki({root,wiki:libraryEntry.location,name:libraryEntry.name,tailscale,localOnly:mode!=='tailscale'},deps) : choices.find(item => 'Wiki: ' + item.name === picked);
     if (!profile && picked !== add) throw Error('Unknown wiki selection / Ukendt wikivalg.');
     if (!profile) {
       const wiki = await realpath(await ask('folder', 'Choose the prepared wiki folder / Vælg den forberedte wikimappe'));
       try { await access(path.join(wiki, 'tiddlywiki.info')); }
       catch { fail('This is not a prepared wiki folder. Follow “First setup” in ForgeShare; an HTML file must first be copied into a server wiki.', 'Dette er ikke en forberedt wikimappe. Følg “Første opsætning” i ForgeShare; en HTML-fil skal først kopieres til en serverwiki.'); }
       const name = await ask('text', 'Give this wiki a name, for example Family or Garden.\nGiv wikien et navn, for eksempel Familie eller Have.', path.basename(wiki));
-      profile = await registerWiki({root, wiki, name, tailscale, localOnly}, deps);
+      profile = await registerWiki({root, wiki, name, tailscale, localOnly:mode!=='tailscale'}, deps);
     }
     const displayName=libraryEntry?.name||profile.name;
     report({event:'selected',name:displayName,...(libraryId?{id:libraryId}:{})});
-    const username = await ask('text', localOnly ? 'Choose a local wiki login / Vælg et lokalt wiki-login' : 'Choose the login name for this session.\nVælg brugernavn til denne deling.', 'wiki');
-    const password = await ask('password', localOnly ? 'Choose a password of 12+ characters for the local wiki.\nVælg en adgangskode på mindst 12 tegn til den lokale wiki.' : 'Choose a password of 12+ characters. Share it privately with your collaborator.\nVælg en adgangskode på mindst 12 tegn. Giv den privat til din samarbejdspartner.');
-    const confirm = await ask('password', 'Repeat the password / Gentag adgangskoden');
-    if (password !== confirm) fail('Passwords did not match. Please start again.', 'Adgangskoderne var forskellige. Start igen.');
-    validateCredentials(`username,password\n${username},${password}\n`);
-    privateDir = await privateSessionDirectory();
-    const credentials = path.join(privateDir, 'login.csv');
-    await writeFile(credentials, `username,password\n${username},${password}\n`, {mode: 0o600, flag: 'wx'});
-    const files = await validateFiles(profile.wiki, credentials);
-    await ask('confirm', localOnly ? `Open “${displayName}” only on this computer? No Tailscale sharing will start.\nÅbn “${displayName}” kun på denne computer? Der startes ingen Tailscale-deling.` : `Start sharing “${profile.name}”?\nStart deling af “${profile.name}”?\n\n${profile.wiki}\n\nPeople allowed by your Tailscale rules AND this login can read and edit. Limit guest access to this wiki first (access-rule reference: TCP ${profile.httpsPort}). Existing services stay unchanged.\n\nPersoner med Tailscale-adgang OG dette login kan læse og redigere. Begræns først gæsters adgang til denne wiki (til adgangsreglen: TCP ${profile.httpsPort}). Eksisterende tjenester bevares.\n\nNo browser opens automatically. / Ingen browser åbnes automatisk.`);
+    const withLogin='With wiki login / Med wiki-login',withoutLogin='Without wiki login / Uden wiki-login';
+    const login=await ask('choice','Wiki login? Without it, everyone with network access can read and edit.\nWiki-login? Uden login kan alle med netværksadgang læse og redigere.',mode==='tailscale'?[withLogin,withoutLogin]:[withoutLogin,withLogin]);
+    if(![withLogin,withoutLogin].includes(login))throw Object.assign(Error('Cancelled'),{cancelled:true});
+    const allowAnonymous=login===withoutLogin;
+    let files;
+    if(allowAnonymous)files=await validateWikiFolder(profile.wiki);
+    else {
+      const username=await ask('text','Choose a wiki username / Vælg wikiens brugernavn','wiki');
+      const password=await ask('password','Choose a password. You decide its length. / Vælg en adgangskode. Du bestemmer længden.');
+      const confirm=await ask('password','Repeat the password / Gentag adgangskoden');
+      if(password!==confirm)fail('Passwords did not match. Please start again.', 'Adgangskoderne var forskellige. Start igen.');
+      validateCredentials(`username,password\n${username},${password}\n`);
+      privateDir=await privateSessionDirectory();
+      const credentials=path.join(privateDir,'login.csv');
+      await writeFile(credentials,`username,password\n${username},${password}\n`,{mode:0o600,flag:'wx'});
+      files=await validateFiles(profile.wiki,credentials);
+    }
+    const network=mode==='local'?'Only this computer / Kun denne computer':mode==='lan'?'Home network / Hjemmenetværk':'Tailscale';
+    const accessText=allowAnonymous?'No wiki login — anyone with network access can read and edit.\nUden wiki-login — alle med netværksadgang kan læse og redigere.':'Wiki login is required. / Wiki-login er påkrævet.';
+    const note=mode==='lan'?'\n\nFor your trusted home network. This connection uses HTTP, without encryption.\nTil dit eget betroede hjemmenetværk. Forbindelsen bruger HTTP uden kryptering.':mode==='tailscale'?`\n\nAccess is controlled in Tailscale. Limit guests to this wiki (TCP ${profile.httpsPort}).\nAdgangen styres i Tailscale. Begræns gæster til denne wiki (TCP ${profile.httpsPort}).`:'';
+    await ask('confirm',`Start “${displayName}”?\n${network}\n\n${accessText}${note}`);
     if (interrupted) return;
-    session = await startNamedSession(profile, {...files, boot: runtime.boot, tailscale, root, localOnly}, {
+    session = await startNamedSession(profile, {...files, boot: runtime.boot, tailscale, root, localOnly,lanHost,allowAnonymous}, {
       ...deps,
       startWiki: options => { const value = startWiki(options); children.add(value.child); if (interrupted) void stopChild(value.child); return value; },
       spawn: (...args) => { const child = spawn(...args); children.add(child); if (interrupted) void stopChild(child); return child; }
     });
     if (interrupted) return;
     if(!localOnly)await rememberSharedAddress(profile.wiki,session.url,root);
-    report({event:'ready',name:displayName,url:session.url,...(libraryId?{id:libraryId}:{})});
+    report({event:'ready',name:displayName,url:session.url,mode,access:allowAnonymous?'open':'login',...(libraryId?{id:libraryId}:{})});
     if (appMode) { await session.finished; return; }
     const statusDialog = new AbortController();
     session.finished.then(() => statusDialog.abort());
-    await ask('text', localOnly ? `“${displayName}” — local wiki. Copy the address. OK/Cancel stops this wiki.\nLokal wiki. Kopiér adressen. OK/Annuller stopper wikien.` : `“${profile.name}” — sharing is active. Copy this address and leave this window open. OK/Cancel stops ONLY this wiki. Open the helper again to start another.\n\n“${profile.name}” — deling er aktiv. Kopiér adressen, og lad vinduet stå åbent. OK/Annuller stopper KUN denne wiki. Åbn hjælperen igen for at starte endnu en.\n\nThe other person needs Tailscale and the login.\nDen anden skal bruge Tailscale og login.`, session.url, statusDialog.signal);
+    await ask('text',`“${displayName}” — ${network}\n${accessText}\n\nCopy the address. Keep this window open; OK/Cancel stops this wiki.\nKopiér adressen. Lad vinduet stå åbent; OK/Annuller stopper denne wiki.`,session.url,statusDialog.signal);
   } catch (error) {
     if (session) await session.stop();
     if (!error.cancelled && !interrupted) {

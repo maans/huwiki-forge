@@ -36,7 +36,7 @@ test('bundle is reproducible, standalone and opt-in in the catalog', async () =>
   assert.deepEqual((await build()).plugin, plugin);
   assert.equal(plugin.title, base);
   // TW 5.4.1 compares only major/minor/patch when deciding whether to import.
-  for (const previous of ['0.1.0-test.1','0.1.0-test.2','0.1.0-test.3','0.1.1','0.1.2'])
+  for (const previous of ['0.1.0-test.1','0.1.0-test.2','0.1.0-test.3','0.1.1','0.1.2','0.1.3'])
     assert.ok(tw.utils.compareVersions(plugin.version,previous)>0,'The actual TW importer must accept this upgrade');
   assert.equal(plugin.dependents, undefined);
   assert.ok(Object.keys(shadows).every(title => title.startsWith(base + '/')));
@@ -205,7 +205,7 @@ test('Serve guard preserves AI mappings and refuses occupied ports, foreground a
 });
 test('credentials require actual accounts, safe CSV and unique names', () => {
   assert.equal(validateCredentials('username,password\nalice,a-long-password\nbob,another-long-password\n'), 2);
-  for (const text of ['', 'username,password', 'username,password\na,short', 'username,password\na,password,with,commas',
+  for (const text of ['', 'username,password', 'username,password\na,', 'username,password\na,password,with,commas',
     'username,password\na,password"quotes', 'username,password\na,longpassword12\na,longpassword34', 'username,password\n(anon),passwordlong'])
     assert.throws(() => validateCredentials(text));
 });
@@ -249,6 +249,14 @@ test('safe session adds only foreground 10000, preserves AI and stops only owned
   assert.ok(!mock.calls.flat().some(x => ['reset', 'off', '--bg', '--yes', 'funnel'].includes(x)));
   await session.stop(); await session.finished;
   assert.deepEqual(mock.serve.kills, ['SIGTERM']); assert.deepEqual(mock.server.kills, ['SIGTERM']);
+});
+test('Tailscale no-login requires an explicit choice and preserves foreground ownership checks',async()=>{
+  const mock=mockSession({probe:200});
+  const session=await startSession({tailscale:'/test/tailscale',allowAnonymous:true},mock.deps);
+  assert.equal(session.url,'https://host.example.ts.net:10000');await session.stop();await session.finished;
+  assert.deepEqual(mock.serve.kills,['SIGTERM']);
+  const wrong=mockSession({probe:401});await assert.rejects(startSession({tailscale:'/test/tailscale',allowAnonymous:true},wrong.deps));
+  assert.ok(!wrong.calls.some(args=>args.includes('--https=10000')));
 });
 test('no sharing when anonymous access succeeds, configuration changes, or Serve fails', async () => {
   const modified = structuredClone(ai); modified.TCP['443'] = {TCPForward: 'elsewhere'};
@@ -309,6 +317,7 @@ test('graphical flow uses native choices and private temporary credentials, then
     findTiddlyWiki: async () => path.dirname(require.resolve('tiddlywiki/package.json')),
     dialog: async (kind, message, initial) => {
       shown.push(message);
+      if (kind === 'choice') return initial[0];
       if (kind === 'folder') return wiki;
       if (kind === 'password') return 'a-private-password';
       if (kind === 'confirm') { confirmations++; return ''; }
@@ -358,6 +367,7 @@ test('native app reports names and addresses only, drains owned session on STOP 
       readJSON:async()=>ai,checkAddressPort:async()=>{},
       findTailscale:async()=>'/test/tailscale',findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
       dialog:async(kind,message,initial)=>{
+        if(kind==='choice')return initial[0];
         if(kind==='folder')return wiki;
         if(kind==='password')return 'a-private-password';
         if(kind==='confirm')return '';
@@ -367,7 +377,7 @@ test('native app reports names and addresses only, drains owned session on STOP 
       startSession:async options=>{credentials=options.credentials;return {url:'https://host.example.ts.net:21000',finished,stop:async()=>{stopped++;finish();}};},
       report:item=>{ reports.push(item); if(item.event==='ready')queueMicrotask(()=>eof?input.end():input.write('STOP\n')); }
     });
-    assert.deepEqual(reports,[{event:'selected',name:'My wiki'},{event:'ready',name:'My wiki',url:'https://host.example.ts.net:21000'}]);
+    assert.deepEqual(reports,[{event:'selected',name:'My wiki'},{event:'ready',name:'My wiki',url:'https://host.example.ts.net:21000',mode:'tailscale',access:'login'}]);
     assert.ok(stopped>=1);
     await assert.rejects(readFile(credentials),{code:'ENOENT'});
     assert.equal(input.listenerCount('data'),0);
@@ -542,6 +552,7 @@ test('returning GUI users choose the saved name without choosing a folder or por
     findTailscale: async () => 'fake', findTiddlyWiki: async () => path.dirname(require.resolve('tiddlywiki/package.json')),
     dialog: async (kind, message, initial) => {
       if (kind === 'confirm') return '';
+      if (kind === 'choice' && !initial.some(v=>v.startsWith('Wiki:')))return initial[0];
       if (kind === 'choice') { assert.ok(initial.includes('Wiki: Familie & børn')); chosen = true; return 'Wiki: Familie & børn'; }
       if (kind === 'password') return 'a-private-password';
       if (kind === 'text') return initial.startsWith('https:') ? '' : 'alice';

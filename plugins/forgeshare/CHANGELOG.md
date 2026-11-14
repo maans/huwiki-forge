@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.4 — Home network and optional wiki login
+
+- Share via Tailscale or the home network. LAN sharing binds one selected private IPv4 interface and does not inspect or start Tailscale, change firewall/router rules, or bind all interfaces.
+- Choose with or without wiki login for each session. Password length is the user's choice; no-login is an explicit choice. All participants retain read/write access; separate guest roles are deferred.
+- Show network and login mode beside the copyable address. Selected metadata exports can include the last LAN address as well as the Tailscale address.
+- Verify the actual listener and selected login behavior before reporting ready. Keep CSRF and owned-process cleanup in both modes.
+
 ## 0.1.3 — Find existing wiki folders
 
 - Add → Find wiki folders proposes existing wikis from common folders; users choose what to add. Search another folder remains available without typing paths.

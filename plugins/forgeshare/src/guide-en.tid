@@ -13,7 +13,7 @@ type: text/vnd.tiddlywiki
 <summary>First time? Install these first</summary>
 <div class="hu-share-detail-body">
 
-Install Node.js for the helper. Tailscale is needed only to share a server wiki. Use the official installers. The helper can offer to install TiddlyWiki when you open a server wiki.
+Install Node.js for the helper. Tailscale is needed only when you choose sharing through Tailscale. Home network needs no Tailscale. Use the official installers. The helper can offer to install TiddlyWiki when you open a server wiki.
 
 <div class="hu-share-install-links"><a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">Get Node.js ↗</a> <a href="https://tailscale.com/download" target="_blank" rel="noopener noreferrer">Get Tailscale ↗</a></div>
 
@@ -34,19 +34,29 @@ To share an HTML wiki, first prepare a copy in a server folder. Keep the origina
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select a server wiki and choose <strong>Share</strong>. Invite through Tailscale and send the address and wiki login privately. <strong>Add</strong> and <strong>Open</strong> do not start Tailscale sharing.</p>
-<p class="hu-share-access">An invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
-<summary>How to invite people</summary>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select a server wiki and choose <strong>Share</strong>. Choose <strong>Tailscale</strong> or <strong>Home network</strong>, with or without wiki login. Use <strong>Copy address</strong> to get the link for others.</p>
+<p class="hu-share-access">A Tailscale invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
+<summary>On your home network — without Tailscale</summary>
+<div class="hu-share-detail-body">
+
+Choose ''Share → Home network''. Others open the link in a browser on the same network. Choose whether the wiki needs login. Everyone with access can read and edit. You choose the password length.
+
+Use this on your trusted network: the connection uses HTTP without encryption. A guest network or the computer firewall may block access. The app changes no firewall or router settings.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Invite through Tailscale</summary>
 <div class="hu-share-detail-body">
 
 # Participants install Tailscale and sign in to their own accounts. They need only Tailscale and a browser.
 # Open Tailscale administration, select the host computer and use ''Share''. Personal invitations and reusable invitation links can invite several people.
 # Check access rules: guests should reach this wiki while other private services remain inaccessible. See ''Verify wiki-only access'' under Advanced help; get assistance if needed. ForgeShare does not edit these rules.
-# Once the invitation is accepted, send the wiki address and login in separate private messages. Try one participant first.
+# Once the invitation is accepted, send the wiki address and optional login in separate private messages. Try one participant first.
 
-The app uses one shared wiki login per session, separate from participants' Tailscale accounts. Multiple wiki accounts need advanced setup.
+Wiki login is optional. With login you share one username and a password you choose. Without login everyone with Tailscale access to the wiki can read and edit. The app does not remember passwords between starts.
 
-This setup requires Tailscale on participants' devices. Tailscale Funnel can provide public internet access, but ForgeShare does not activate it.
+The Tailscale option requires Tailscale on participants' devices. Tailscale Funnel can provide public internet access, but ForgeShare does not activate it.
 
 </div>
 </details>
@@ -88,7 +98,7 @@ The Mac and Windows apps do not open a terminal. Do not disable your computer’
 <summary>Several wikis — no port numbers</summary>
 <div class="hu-share-detail-body">
 
-Select another wiki folder and choose ''Open'' or ''Share''. Stopped wikis stay in the list. Each wiki has its own address and login. Copy its address or stop it from its row in the app. On Linux, open the helper again; each wiki has its own status window.
+Select another wiki folder and choose ''Open'' or ''Share''. Stopped wikis stay in the list. Each wiki has its own address and optional login. Copy its address or stop it from its row in the app. On Linux, open the helper again; each wiki has its own status window.
 
 The helper remembers names, folders and addresses on this computer, not passwords. It finds unused connections and preserves other services. If a saved address is occupied, it explains the conflict instead of silently moving the wiki.
 

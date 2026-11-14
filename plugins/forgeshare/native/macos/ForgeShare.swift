@@ -7,10 +7,19 @@ func nodeExecutable() -> String? {
         (ProcessInfo.processInfo.environment["PATH"] ?? "").split(separator: ":").map { String($0) + "/node" }
     return paths.first { FileManager.default.isExecutableFile(atPath: $0) }
 }
+func permittedAddress(_ url:URL) -> Bool {
+    guard let host=url.host,url.user==nil,url.password==nil else{return false}
+    if url.scheme=="https" {return host.hasSuffix(".ts.net")}
+    guard url.scheme=="http" else{return false}
+    if host=="127.0.0.1" {return true}
+    let parts=host.split(separator:".").compactMap{Int($0)}
+    guard parts.count==4,parts.allSatisfy({$0>=0 && $0<=255}) else{return false}
+    return parts[0]==10 || (parts[0]==172 && parts[1]>=16 && parts[1]<=31) || (parts[0]==192 && parts[1]==168)
+}
 final class LibraryStack: NSStackView { override var isFlipped:Bool {true} }
 final class Session {
     let process = Process(), input = Pipe(), output = Pipe()
-    var id="", local=false, openWhenReady=false
+    var id="", local=false, openWhenReady=false, mode="", access=""
     var name = tr("Vælger wiki…", "Choosing a wiki…"), url = "", pending = Data(), stopping = false
     let row = NSStackView(), label = NSTextField(labelWithString: "")
     let copy = NSButton(title: tr("Kopiér adresse", "Copy address"), target: nil, action: nil)
@@ -47,7 +56,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         rows = LibraryStack(); rows.orientation = .vertical; rows.alignment = .leading; rows.spacing = 12; rows.translatesAutoresizingMaskIntoConstraints=false
         let activeScroll=NSScrollView();activeScroll.hasVerticalScroller=true;activeScroll.documentView=rows;activeScroll.heightAnchor.constraint(equalToConstant:120).isActive=true
         empty = NSTextField(wrappingLabelWithString: tr("Ingen serverwikier kører endnu.", "No server wikis are running yet.")); empty.textColor = .secondaryLabelColor
-        let help = NSTextField(wrappingLabelWithString: tr("Computeren skal være tændt, mens I arbejder. Stop afslutter kun den valgte wiki. Adgang for andre styres i Tailscale.", "Keep this computer on while collaborating. Stop ends only the selected wiki. Access for other people is managed in Tailscale.")); help.font = .systemFont(ofSize: 12); help.textColor = .secondaryLabelColor
+        let help = NSTextField(wrappingLabelWithString: tr("Computeren skal være tændt, mens I arbejder. Stop afslutter kun den valgte wiki. Vælg Tailscale eller hjemmenetværk under Del.", "Keep this computer on while collaborating. Stop ends only the selected wiki. Choose Tailscale or home network under Share.")); help.font = .systemFont(ofSize: 12); help.textColor = .secondaryLabelColor
         for view in [title,intro,libraryHeading,toolbar,libraryScroll,heading,empty,activeScroll,help] as [NSView] { content.addArrangedSubview(view) }
         rows.widthAnchor.constraint(equalTo: activeScroll.contentView.widthAnchor).isActive = true
         activeScroll.widthAnchor.constraint(equalTo:content.widthAnchor).isActive=true
@@ -99,7 +108,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
                     let line=s.pending.prefix(upTo:end); s.pending.removeSubrange(...end)
                     if let data=try? JSONSerialization.jsonObject(with:line) as? [String:String] {
                         if let name=data["name"] { s.name=name }
-                        if data["event"] == "ready", let address=data["url"], let url=URL(string:address), url.scheme == "https" || (url.scheme == "http" && url.host == "127.0.0.1") { s.url=address; s.copy.isEnabled=true; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(url)};self.reloadLibrary() }
+                        if data["event"] == "ready", let address=data["url"], let url=URL(string:address), permittedAddress(url) { s.mode=data["mode"] ?? "";s.access=data["access"] ?? "login";s.url=address; s.copy.isEnabled=true; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(url)};self.reloadLibrary() }
                         self.update(s)
                     }
                 }
@@ -177,7 +186,12 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         nextID=id;nextLocal=local;startWiki()
     }
-    func update(_ s: Session) { s.label.stringValue=s.name + (s.stopping ? tr(" — stopper…", " — stopping…") : s.url.isEmpty ? "" : s.local ? tr(" — kun lokalt"," — local only") : tr(" — deler", " — sharing")); s.label.stringValue += s.url.isEmpty ? "" : "\n" + s.url; s.label.toolTip=s.url }
+    func update(_ s: Session) {
+        let network=s.local ? tr("kun lokalt","local only") : s.mode=="lan" ? tr("hjemmenetværk","home network") : "Tailscale"
+        let login=s.access=="open" ? tr("uden login","no login") : tr("med login","with login")
+        s.label.stringValue=s.name+(s.stopping ? tr(" — stopper…"," — stopping…") : s.url.isEmpty ? "" : " — "+network+" · "+login)
+        s.label.stringValue += s.url.isEmpty ? "" : "\n"+s.url;s.label.toolTip=s.label.stringValue
+    }
     func stopSession(_ s: Session) { guard !s.stopping else { return }; s.stopping=true; s.stop.isEnabled=false; update(s)
         do { try s.input.fileHandleForWriting.write(contentsOf:Data("STOP\n".utf8)) } catch { showError(tr("Kunne ikke bede wikien stoppe. Brug wikiens statusdialog.", "Could not request a stop. Use the wiki's status dialog.")) }
     }
@@ -203,6 +217,8 @@ if CommandLine.arguments.contains("--self-test") {
     testApp.renderLibrary(fixture,selected:["second"])
     precondition(testApp.libraryChecks.count==2 && testApp.selectedEntries().first?["id"] as? String == "second")
     testApp.renderLibrary([],selected:[]);precondition(testApp.libraryChecks.isEmpty)
+    for value in ["http://127.0.0.1:20000","http://192.168.1.8:20000","http://10.0.0.8:20000","https://example.ts.net:21000"] {precondition(permittedAddress(URL(string:value)!))}
+    for value in ["http://0.0.0.0:20000","http://8.8.8.8:20000","http://100.64.0.1:20000","file:///tmp/wiki"] {precondition(!permittedAddress(URL(string:value)!))}
     exit(0)
 }
 let app = NSApplication.shared

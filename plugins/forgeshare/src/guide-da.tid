@@ -13,7 +13,7 @@ type: text/vnd.tiddlywiki
 <summary>Første gang? Det skal være installeret</summary>
 <div class="hu-share-detail-body">
 
-Installer Node.js til hjælperen. Tailscale behøves kun, når du vil dele en serverwiki. Brug de officielle installationsprogrammer. Hjælperen kan tilbyde at installere TiddlyWiki, når du åbner en serverwiki.
+Installer Node.js til hjælperen. Tailscale behøves kun, når du vælger deling via Tailscale. Hjemmenetværk kræver ingen Tailscale. Brug de officielle installationsprogrammer. Hjælperen kan tilbyde at installere TiddlyWiki, når du åbner en serverwiki.
 
 <div class="hu-share-install-links"><a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">Hent Node.js ↗</a> <a href="https://tailscale.com/download" target="_blank" rel="noopener noreferrer">Hent Tailscale ↗</a></div>
 
@@ -34,19 +34,29 @@ Vil du dele HTML-wikien, skal en kopi først klargøres som servermappe. Bevar o
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Markér en serverwiki, og tryk <strong>Del</strong>. Invitér via Tailscale, og send adressen og wiki-login privat. <strong>Tilføj</strong> og <strong>Åbn</strong> starter ingen Tailscale-deling.</p>
-<p class="hu-share-access">Invitationen gælder computeren. Begræns gæsternes adgang til wikien, før du inviterer.</p><details class="hu-share-detail">
-<summary>Sådan inviterer du andre</summary>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Markér en serverwiki, og tryk <strong>Del</strong>. Vælg <strong>Tailscale</strong> eller <strong>Hjemmenetværk</strong>, med eller uden wiki-login. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre.</p>
+<p class="hu-share-access">Ved Tailscale-deling gælder invitationen computeren. Begræns gæsternes adgang til wikien, før du inviterer.</p><details class="hu-share-detail">
+<summary>På hjemmenetværket — uden Tailscale</summary>
+<div class="hu-share-detail-body">
+
+Vælg ''Del → Hjemmenetværk''. De andre åbner linket i deres browser på samme netværk. Vælg selv, om wikien skal kræve login. Alle med adgang kan læse og redigere. Du bestemmer adgangskodens længde.
+
+Brug dette på dit eget betroede netværk: forbindelsen bruger HTTP uden kryptering. Et gæstenetværk eller computerens firewall kan blokere forbindelsen. Appen ændrer ingen firewall- eller routerindstillinger.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Invitér via Tailscale</summary>
 <div class="hu-share-detail-body">
 
 # Deltagerne installerer Tailscale og logger ind på deres egne konti. De behøver kun Tailscale og en browser.
 # Åbn Tailscales administration, vælg værtscomputeren, og brug ''Share''. Personlige invitationer og genanvendelige invitationslinks kan bruges til flere deltagere.
 # Kontroller adgangsreglerne: gæster skal kunne nå denne wiki, mens øvrige private tjenester er utilgængelige. Se ''Kontrollér kun-wiki-adgang'' under Avanceret hjælp; få hjælp ved behov. ForgeShare ændrer ikke disse regler.
-# Når invitationen er accepteret, sender du wikiens adresse og wiki-login via separate private beskeder. Prøv først med én deltager.
+# Når invitationen er accepteret, sender du wikiens adresse og eventuelt wiki-login via separate private beskeder. Prøv først med én deltager.
 
-Appen bruger ét fælles wiki-login pr. deling. Det er adskilt fra deltagernes Tailscale-konti. Flere wiki-konti kræver avanceret opsætning.
+Wiki-login er valgfrit. Med login bruger I ét fælles brugernavn og en adgangskode, som du vælger. Uden login kan alle med Tailscale-adgang til wikien læse og redigere. Appen husker ikke adgangskoden mellem starter.
 
-Denne løsning kræver Tailscale hos deltagerne. Tailscale Funnel kan give offentlig internetadgang, men aktiveres ikke af ForgeShare.
+Tailscale-valget kræver Tailscale hos deltagerne. Tailscale Funnel kan give offentlig internetadgang, men aktiveres ikke af ForgeShare.
 
 </div>
 </details>

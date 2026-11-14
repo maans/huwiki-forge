@@ -23,15 +23,15 @@ Open `http://127.0.0.1:8080` yourself. This preparation is local only; without a
 
 <a href={{$:/plugins/huwiki/forgeshare/download/script}} download="ForgeShare.mjs">Download standalone ForgeShare.mjs</a>
 
-Run `node ForgeShare.mjs` for terminal mode or `node ForgeShare.mjs --gui` for dialogs. Terminal mode needs an existing private credentials CSV, installs nothing and requires typing `START` after the summary. Dialog mode can install TiddlyWiki 5.4.1 locally after separate approval, uses a temporary login and stops when the status dialog closes. Neither mode opens a browser.
+Run `node ForgeShare.mjs` for terminal mode or `node ForgeShare.mjs --gui` for dialogs. Terminal mode needs an existing private credentials CSV, installs nothing and requires typing `START` after the summary. Dialog mode can install TiddlyWiki 5.4.1 locally after separate approval, offers an optional temporary login and stops when the status dialog closes. Neither mode opens a browser.
 
 !! 3. Authentication and safe sharing
 
-Create a private UTF-8 CSV file ''outside the wiki folder'', with header `username,password` and one user per line. Use unique passwords of at least 12 characters. The simple helper does not accept commas, quotation marks or line breaks in values. On Mac/Linux the file must be owned by you and accessible only to you (`chmod 600`). On Windows, restrict its file permissions to your account; the helper cannot verify Windows ACLs. Never store the file in the wiki, Git or a shared folder.
+Create a private UTF-8 CSV file ''outside the wiki folder'', with header `username,password` and one user per line. Choose the password length yourself. The password cannot be empty. The simple helper does not accept commas, quotation marks or line breaks in values. On Mac/Linux the file must be owned by you and accessible only to you (`chmod 600`). On Windows, restrict its file permissions to your account; the helper cannot verify Windows ACLs. Never store the file in the wiki, Git or a shared folder.
 
 The helper grants read and write access to every account in that file. For different permissions, start manually using TiddlyWiki's `readers`/`writers`. Tailnet access and wiki authentication are separate controls. Restrict Tailscale grants/ACLs to the intended people and ''this wiki’s HTTPS port shown in the confirmation'', especially when sharing the host: sharing can otherwise expose other services too. The helper does not change grants/ACLs.
 
-Each new named wiki gets a free local port from 20000–20999 and a free HTTPS port from 21000–21999. These are candidate ranges, not reserved ports: the helper skips existing OS listeners, Serve/Funnel entries, foreground sessions, Services entries and saved wiki assignments. Existing services on 443, 8443, 8080 and 10000 remain untouched. The Node server listens only on `127.0.0.1`.
+Each new named wiki gets a free local port from 20000–20999 and a free HTTPS port from 21000–21999. These are candidate ranges, not reserved ports: the helper skips existing OS listeners, Serve/Funnel entries, foreground sessions, Services entries and saved wiki assignments. Existing services on 443, 8443, 8080 and 10000 remain untouched. For local opening and Tailscale the Node server listens only on `127.0.0.1`. Home network instead binds one selected private IPv4 address. It does not use Tailscale; access depends on the home network and computer firewall.
 
 Names, canonical folder paths and stable port assignments are stored in `wikis.json` under the current user's ForgeShare application-data folder: `~/Library/Application Support/ForgeShare` on Mac, `%LOCALAPPDATA%/ForgeShare` on Windows, and `$XDG_DATA_HOME/ForgeShare` (normally `~/.local/share/ForgeShare`) on Linux. No passwords are stored in this list. Local locks serialize startup and prevent duplicate helper starts for a folder. Do not run the same folder in another server manually.
 
@@ -79,7 +79,7 @@ Use TiddlyWiki's built-in ''Download save''/HTML export to keep a standalone off
 
 !! Sources and version
 
-ForgeShare 0.1.3. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
+ForgeShare 0.1.4. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]

@@ -1,4 +1,4 @@
-ForgeShare — testudgave / test release 0.1.3
+ForgeShare — testudgave / test release 0.1.4
 
 DANSK
 
@@ -20,7 +20,7 @@ DANSK
 
 Mac og Windows åbner ikke Terminal. Lokale HTML-filer bruger fortsat
 browserens/wikiens egen gemmemetode. Appen overtager ikke gemningen.
-Installer Node.js til hjælperen. Tailscale behøves kun ved deling:
+Installer Node.js til hjælperen. Tailscale behøves kun ved deling via Tailscale:
 https://nodejs.org/en/download
 https://tailscale.com/download
 
@@ -35,8 +35,8 @@ Slå ikke generel beskyttelse fra. Få hjælp, hvis appen fortsat blokeres.
 
 For at DELE en HTML-wiki skal en kopi først klargøres som servermappe.
 Se hjælpen i ForgeShare. Originalen kan stadig åbnes lokalt.
-Deltagerne skal have Tailscale. Begræns gæsteadgang til den ønskede wiki
-før invitation. Tag backup, og aftal hvem der redigerer samme artikel.
+Ved Tailscale-deling skal deltagerne have Tailscale. Begræns gæsteadgang
+til den ønskede wiki før invitation. Tag backup, og aftal hvem der redigerer samme artikel.
 
 ENGLISH
 
@@ -58,7 +58,7 @@ ENGLISH
 
 Mac and Windows do not open a terminal. Local HTML files still use the
 browser/wiki’s existing save method; the app does not take over saving.
-Install Node.js for the helper. Tailscale is needed only for sharing.
+Install Node.js for the helper. Tailscale is needed only for sharing through Tailscale.
 
 The test app has no publisher certificate yet:
 • Mac: if blocked as unidentified, you can approve this particular app
@@ -71,8 +71,8 @@ Do not disable general protections. Get help if it stays blocked.
 
 To SHARE an HTML wiki, prepare a copy in a server folder first. See
 ForgeShare help. The original can still be opened locally.
-Invitees need Tailscale. Restrict guest access to the intended wiki before
-inviting. Keep backups and agree who edits each article.
+For Tailscale sharing, invitees need Tailscale. Restrict guest access to
+the intended wiki before inviting. Keep backups and agree who edits each article.
 
 Official help / Officiel hjælp:
 https://support.apple.com/en-us/102445
@@ -84,3 +84,7 @@ Find eksisterende wikier / Find existing wikis
 Tilføj → Find wikimapper søger i Wikis, Dokumenter, Skrivebord og Overførsler. Vælg de fundne mapper, du vil have på listen. Søg i en anden mappe er også muligt.
 Add → Find wiki folders searches Wikis, Documents, Desktop and Downloads. Select the suggestions to add. Search another folder is also available.
 Søgningen starter ingen wiki eller deling. / Searching starts no wiki or sharing.
+
+Del / Share
+Vælg Tailscale eller Hjemmenetværk, og vælg med eller uden wiki-login. Du bestemmer selv adgangskodens længde. Alle med adgang kan læse og redigere. Appen viser linket og Kopiér adresse. Hjemmenetværk kræver ingen Tailscale og bruger HTTP uden kryptering; brug det kun på et betroet netværk.
+Choose Tailscale or Home network, then with or without wiki login. You choose the password length. Everyone with access can read and edit. The app shows the link and Copy address. Home network needs no Tailscale and uses unencrypted HTTP; use it only on a trusted network.

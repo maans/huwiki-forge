@@ -23,15 +23,15 @@ tiddlywiki MySharedWiki --listen host=127.0.0.1 port=8080
 
 <a href={{$:/plugins/huwiki/forgeshare/download/script}} download="ForgeShare.mjs">Hent selvstændigt ForgeShare.mjs</a>
 
-Kør `node ForgeShare.mjs` for terminalversionen eller `node ForgeShare.mjs --gui` for dialogbokse. Terminalversionen kræver en eksisterende privat CSV-loginfil og installerer intet. Du skal skrive `START` efter oversigten. Dialogversionen kan installere TiddlyWiki 5.4.1 lokalt efter særskilt godkendelse, bruger et midlertidigt login og stopper, når statusdialogen lukkes. Ingen af versionerne åbner browseren.
+Kør `node ForgeShare.mjs` for terminalversionen eller `node ForgeShare.mjs --gui` for dialogbokse. Terminalversionen kræver en eksisterende privat CSV-loginfil og installerer intet. Du skal skrive `START` efter oversigten. Dialogversionen kan installere TiddlyWiki 5.4.1 lokalt efter særskilt godkendelse, tilbyder valgfrit midlertidigt login og stopper, når statusdialogen lukkes. Ingen af versionerne åbner browseren.
 
 !! 3. Login og sikker deling
 
-Opret en privat UTF-8 CSV-fil ''uden for servermappen'', med første linje `username,password` og én bruger pr. linje. Brug unikke adgangskoder på mindst 12 tegn. Den enkle hjælper accepterer ikke kommaer, anførselstegn eller linjeskift i værdier. På Mac/Linux skal filen ejes af dig og kun være læsbar/skrivbar af dig (`chmod 600`). På Windows skal filens adgangsrettigheder begrænses til din konto; hjælperen kan ikke kontrollere Windows-ACL'er. Gem aldrig loginfilen i wikien, Git eller en delt mappe.
+Opret en privat UTF-8 CSV-fil ''uden for servermappen'', med første linje `username,password` og én bruger pr. linje. Vælg selv adgangskodens længde. Adgangskoden må ikke være tom. Den enkle hjælper accepterer ikke kommaer, anførselstegn eller linjeskift i værdier. På Mac/Linux skal filen ejes af dig og kun være læsbar/skrivbar af dig (`chmod 600`). På Windows skal filens adgangsrettigheder begrænses til din konto; hjælperen kan ikke kontrollere Windows-ACL'er. Gem aldrig loginfilen i wikien, Git eller en delt mappe.
 
 Alle brugere i denne fil får læse- og skriveret med hjælperen. Ved forskellige rettigheder: brug manuel start og TiddlyWikis `readers`/`writers`. Tailscale-netadgang og wiki-login er to forskellige kontroller. Begræns Tailscale grants/ACL til de tiltænkte personer og ''denne wikis HTTPS-port fra bekræftelsen'', især ved deling af værtscomputeren: deling kan ellers også give adgang til andre tjenester. Hjælperen ændrer ingen grants/ACL'er.
 
-Hver ny navngivet wiki får en ledig lokal port fra 20000–20999 og en ledig HTTPS-port fra 21000–21999. Områderne er kandidater, ikke reserverede porte: hjælperen springer eksisterende lokale tjenester, Serve/Funnel, aktive forgrundssessioner, Services og gemte wikiporte over. Eksisterende tjenester på 443, 8443, 8080 og 10000 bevares. Node-serveren lytter kun på `127.0.0.1`.
+Hver ny navngivet wiki får en ledig lokal port fra 20000–20999 og en ledig HTTPS-port fra 21000–21999. Områderne er kandidater, ikke reserverede porte: hjælperen springer eksisterende lokale tjenester, Serve/Funnel, aktive forgrundssessioner, Services og gemte wikiporte over. Eksisterende tjenester på 443, 8443, 8080 og 10000 bevares. Ved lokal åbning og Tailscale lytter Node-serveren kun på `127.0.0.1`. Ved Hjemmenetværk lytter den på én valgt privat IPv4-adresse. Tailscale bruges ikke i denne tilstand; adgangen afhænger af hjemmenetværket og computerens firewall.
 
 Navne, fulde mappestier og faste portvalg gemmes i `wikis.json` i din kontos ForgeShare-programmappe: `~/Library/Application Support/ForgeShare` på Mac, `%LOCALAPPDATA%/ForgeShare` på Windows og `$XDG_DATA_HOME/ForgeShare` (normalt `~/.local/share/ForgeShare`) på Linux. Listen indeholder ingen adgangskoder. Lokale låse koordinerer opstart og forhindrer, at hjælperen starter samme mappe to gange. Kør ikke samme mappe i en anden server manuelt.
 
@@ -79,7 +79,7 @@ Brug TiddlyWikis indbyggede ''Download save''/HTML-eksport til en selvstændig o
 
 !! Kilder og version
 
-ForgeShare 0.1.3. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
+ForgeShare 0.1.4. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
