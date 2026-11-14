@@ -78,6 +78,23 @@
       }
     },
     {
+      "id": "musical",
+      "name": "Musical Edition (test)",
+      "version": "0.1.0-test.1",
+      "status": "test",
+      "manifest": "../editions/musical/manifest.json",
+      "description": "CutOut stick-figure orchestra, ABC music, synchronized camera and a single playback transport",
+      "home": {
+        "headingDa": "Lav din egen musikvideo",
+        "headingEn": "Create your own music video",
+        "descriptionDa": "Lad tændstikmusikere spille og danse, mens kameraet klipper i takt med ABC-musikken.",
+        "descriptionEn": "Animate stick-figure performers while a virtual camera follows the ABC soundtrack.",
+        "noteDa": "Prototype. Fælles lyd/billede, kamera og iPad mangler browsertest.",
+        "noteEn": "Prototype. Sound/image timing, camera and iPad still need browser testing.",
+        "order": "02.5"
+      }
+    },
+    {
       "id": "hupin",
       "name": "HUPin Edition (test)",
       "description": "Interactive pins on images and SVG; optional PasteUp and online map integrations. English UI migration pending / Klikbare billeder og SVG",
@@ -260,6 +277,14 @@
       "version": "0.2.0-test.3",
       "description": "Shop Site and setup checklist · native Dansk / English · Google Sites and public Funnel tested on desktop; physical mobile acceptance pending",
       "file": "../plugins/shop/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "musical",
+      "name": "Musical · CutOut + ABC",
+      "version": "0.1.0-test.1",
+      "description": "Synchronize ABC soundtrack, CutOut characters and virtual camera / Musikvideoafspiller",
+      "file": "../plugins/musical/dist/plugin.json",
       "status": "test"
     }
   ]
