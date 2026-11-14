@@ -1,6 +1,6 @@
 # Shop Edition: Shop Site og guidet opsætning
 
-Version: 0.2.0-test.2. Kilde: `HUWiki-OAuthLab-backup.zip`, `ShopEdition.js`, oprindelig Shop 0.1.2. Den originale kilde ligger komprimeret i `migration/shop/source.b64`, med SHA-256 og ophav i `provenance.json`. Det tekniske plugin-id er fortsat `$:/plugins/huwiki/shop`, og ophavet HUWiki bevares. Originalen angiver ingen top-level-licens; vi opfinder ikke en.
+Version: 0.2.0-test.3. Kilde: `HUWiki-OAuthLab-backup.zip`, `ShopEdition.js`, oprindelig Shop 0.1.2. Den originale kilde ligger komprimeret i `migration/shop/source.b64`, med SHA-256 og ophav i `provenance.json`. Det tekniske plugin-id er fortsat `$:/plugins/huwiki/shop`, og ophavet HUWiki bevares. Originalen angiver ingen top-level-licens; vi opfinder ikke en.
 
 Brugeren har bedt om at erstatte den automatiske Google-opsætning med en enkel guide, hvor ejeren selv logger ind og opretter formular og regneark. Google er derfor en valgfri, udtrykkelig opsætningsvej for Shop. Katalog, redigering, forhåndsvisning, kundesideeksport og gemning fungerer lokalt. Et katalog uden formular og et link til en anden offentlig formular er også muligt.
 
@@ -42,7 +42,7 @@ Erfaringer fra prøven:
 - Brug **Kopiér link til udgivet website** og hele adressen, inklusive fx `/start`.
 - Googles forslag om login for at gemme kladden er valgfrit; den reelle afsendelse uden login er det afgørende tjek.
 
-**Udestående før fuld accept:** offentlig Funnel på ejerens computer/netværk, fysiske telefoner/iPad, Safari, Firefox og større kataloger/billeder. Mobilbredde er afprøvet for lokal Shop i browserprøven; det er ikke accept på en fysisk telefon eller af Google Sites på mobil. Udgivelsen er fortsat en testudgave.
+**Udestående før fuld accept:** fysiske telefoner/iPad og en separat mobilnetforbindelse, Safari, Firefox og større kataloger/billeder. Mobilbredde er afprøvet for lokal Shop i browserprøven; det er ikke accept på en fysisk telefon eller af Google Sites på mobil. Udgivelsen er fortsat en testudgave.
 
 ## Kontrollerede officielle vejledninger
 
@@ -57,3 +57,14 @@ Kontrolleret 14. november 2026. Knapnavne kan variere med sprog og kontotype.
 - [Funnel-eksempler](https://tailscale.com/docs/reference/examples/funnel)
 - [Tailscale på Mac](https://tailscale.com/docs/install/mac)
 - [Node.js-installation](https://nodejs.org/en/download)
+
+
+### Funnel acceptance — 14 November 2026
+
+Shop 0.2.0-test.3 uses TiddlyWiki’s standard sidebar save button; the duplicate guide button has been removed. Browser acceptance exercises the native saver. Funnel instructions now check existing Serve ports before publishing and provide separate public-access and stop/restart checks.
+
+The real customer export was downloaded through the Shop UI and served on loopback port 8787. Private wiki paths and the helper source returned 404. With the owner's explicit permission, one occupied HTTPS port (10000) was temporarily freed; the other private services remained unchanged. Funnel reported public availability. HTTPS through a publicly resolved ingress IP returned HTTP 200 with valid certificate verification and byte-identical exported HTML. Chrome displayed the public catalog and its Order button opened the existing Google Form. No additional order was submitted in this Funnel pass; the preceding signed-out Google Sites order remains the form-to-sheet acceptance evidence.
+
+Ctrl+C stopped public access (public ingress request timed out), restarting returned HTTP 200, and Funnel was stopped again. The original private Serve configuration was restored and compared structurally equal to the saved configuration. The local Shop server was stopped too. Account-specific hostnames and configuration backups remain outside the repository.
+
+The Funnel screenshot is embedded for offline use with Danish/English captions. Physical mobile/mobile-data acceptance and Firefox/Safari remain pending. The public ingress test was performed from this Mac with public DNS routing explicitly selected; it does not constitute a physical separate-network test.

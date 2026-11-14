@@ -264,7 +264,7 @@
         "name": "Shop",
         "description": "Shop Site · guided Forms/Sheets setup, Google Sites and Funnel · Dansk / English · Test",
         "author": "HUWiki",
-        "version": "0.2.0-test.2",
+        "version": "0.2.0-test.3",
         "plugin-type": "plugin"
       },
       "path": "../../plugins/shop/dist/plugin.json"
