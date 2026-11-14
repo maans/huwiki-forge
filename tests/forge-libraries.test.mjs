@@ -8,7 +8,7 @@ import {loadEdition} from "../assembler/assemble.mjs";
 const root=new URL("../",import.meta.url);
 const read=async p=>readFile(new URL(p,root),"utf8");
 const json=async p=>JSON.parse(await read(p));
-const ids=["forge","hupedia","tegne","music","hupin","demo"];
+const ids=(await json("catalog/editions.json")).editions.map(e=>e.id);
 const pluginUrl="https://forge.måns.dk/library/plugins/index.html";
 const communityUrl="https://forge.måns.dk/community/";
 

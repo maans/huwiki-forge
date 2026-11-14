@@ -1,0 +1,31 @@
+name: CutOut offline browser acceptance
+on:
+  pull_request:
+    paths:
+      - editions/cutout/**
+      - plugins/cutout/**
+      - migration/cutout/**
+      - scripts/build-cutout.mjs
+      - scripts/cutout-browser-smoke.mjs
+      - assembler/**
+      - .github/workflows/cutout-browser-smoke.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Reproduce original-source adaptation
+        run: node scripts/build-cutout.mjs --check
+      - name: Install browser controller
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Check animation editing, languages, export and native save offline
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/cutout-browser-smoke.mjs
