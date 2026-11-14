@@ -7,8 +7,28 @@ test('Funnel plans only free supported ports, preserves AI services and never en
  const original=structuredClone(existing),checked=[];
  const plan=await planFunnel(existing,20000,async port=>checked.push(port));
  assert.deepEqual(plan,{port:10000,args:['funnel','--https=10000','http://127.0.0.1:20000']});assert.deepEqual(checked,[10000]);assert.deepEqual(existing,original);
- await assert.rejects(planFunnel({...existing,Foreground:{privateWiki:publicRoute}},20000,async()=>assert.fail('No occupied port may be reused')));
- await assert.rejects(planFunnel(existing,20000,async()=>{throw Error('Another listener');}));
+ await assert.rejects(
+   planFunnel({...existing,Foreground:{privateWiki:publicRoute}},20000,async()=>assert.fail('No occupied port may be reused')),
+   error=>[443,8443,10000].every(port=>error.message.includes(String(port)+' — already used by Tailscale')) &&
+     error.message.includes('Existing connections were not changed')
+ );
+ const checks=[];
+ await assert.rejects(
+   planFunnel(existing,20000,async port=>{checks.push(port);throw Error('Another listener');}),
+   error=>error.message.includes('10000 — local port occupied or unavailable') &&
+     error.message.includes('8443 — already used by Tailscale') &&
+     error.message.includes('443 — already used by Tailscale')
+ );
+ assert.deepEqual(checks,[10000],'Tailscale-owned ports must not be probed or reassigned');
+});
+test('Funnel diagnostics distinguish local conflicts from existing Tailscale routing',async()=>{
+ const original={};const checked=[];
+ await assert.rejects(
+   planFunnel(original,20008,async port=>{checked.push(port);throw Object.assign(Error('busy'),{code:'EADDRINUSE'});}),
+   error=>[443,8443,10000].every(port=>error.message.includes(String(port)+' — local port occupied or unavailable'))
+ );
+ assert.deepEqual(checked,[10000,8443,443]);
+ assert.deepEqual(original,{},'Diagnostic checks must never mutate Tailscale');
 });
 test('public readiness requires the owned foreground proxy and explicit Funnel flag, with unrelated settings unchanged',()=>{
  const after={...structuredClone(existing),Foreground:{owned:structuredClone(publicRoute)}};

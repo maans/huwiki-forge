@@ -1,3 +1,11 @@
+# 0.1.16 — remembered sharing choice and Funnel diagnostics
+
+- Share asks whether to reuse the saved connection, choose another method, or cancel for each wiki and static site. Open remains local. Stop is available on the running library row; active shares are never silently switched.
+- Changing the method applies only to the selected item. A failed or cancelled trial retains its previous saved choice; concurrent newer choices are preserved.
+- When Funnel cannot start, explain the state of each supported HTTPS port (443, 8443, 10000) individually: reserved by existing Serve/Funnel or occupied on the local machine. Never reset, replace, disable or change existing connections.
+- Update Danish and English guide/help with the actual behavior and the wiki versus static-site distinction. Refresh the plugin's visual design with clear server-type cards and responsive instructions.
+- Preserve the pinned tested native Mac launcher and the existing Wiki/Site server architecture; run normal-window and integration tests again. This remains a draft test build.
+
 # 0.1.15 — restore Mac launcher and Tailscale discovery
 
 - Reuse the byte-for-byte native Mac executable and icon from the last Mac app whose interface opened successfully (0.1.13). This avoids the unnecessary recompilation with a different macOS SDK used for the 0.1.14 test archive. The existing native library, Wiki/Site labels, Stop, sharing, vault, and HTML-site server remain intact.

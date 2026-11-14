@@ -33,3 +33,54 @@ type: text/css
 .hu-forgeshare pre { overflow-x: auto; padding: .8em; }
 .hu-forgeshare table { width: 100%; }
 @media (max-width: 420px) { .hu-forgeshare .hu-share-hero { padding: 1.2em; } .hu-forgeshare .hu-share-step { gap: .7em; } .hu-forgeshare .hu-share-downloads a { flex: 1 1 6em; } }
+
+/* ForgeShare presentation – wiki/site identity and a calm, responsive guide. */
+.hu-forgeshare { --hu-share-blue:#315fa5; max-width:min(56em,calc(100vw - 3em)); }
+.hu-forgeshare .hu-share-hero {
+  position:relative; overflow:hidden;
+  padding:clamp(1.5em,4vw,2.5em); margin-bottom:1em;
+  border:1px solid #50749b; border-radius:20px;
+  background:linear-gradient(132deg,#152b44 0%,#234d75 55%,#367f91 100%);
+  box-shadow:0 12px 28px #152b441b;
+}
+.hu-forgeshare .hu-share-hero::after {
+  content:""; pointer-events:none; position:absolute; width:15em; height:15em;
+  border-radius:50%; top:-9em; right:-4em; border:2.5em solid #ffffff0c;
+}
+.hu-forgeshare .hu-share-hero h1 {font-size:clamp(1.9em,4vw,2.65em);max-width:16em;position:relative}
+.hu-forgeshare .hu-share-hero p {position:relative;font-size:1.03em}
+.hu-forgeshare .hu-share-types {
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85em;margin:0 0 1.8em;
+}
+.hu-forgeshare .hu-share-type {
+  display:flex;align-items:flex-start;gap:.9em;padding:1em 1.1em;
+  border:1px solid color-mix(in srgb,currentColor 18%,transparent);
+  border-radius:15px;background:color-mix(in srgb,currentColor 3%,transparent);
+}
+.hu-forgeshare .hu-share-type-icon {
+  display:grid;place-items:center;flex:0 0 2.15em;height:2.15em;
+  border-radius:11px;background:#dcebee;color:#153e4b;font-size:1.15em;font-weight:700;
+}
+.hu-forgeshare .hu-share-type h2{font-size:1.04em;margin:0 0 .25em;line-height:1.3}
+.hu-forgeshare .hu-share-type p{font-size:.9em;line-height:1.45;margin:0}
+.hu-forgeshare .hu-share-steps{gap:1em}
+.hu-forgeshare .hu-share-step {
+  border:1px solid color-mix(in srgb,currentColor 14%,transparent);
+  background:color-mix(in srgb,currentColor 2%,transparent);
+  border-radius:16px;padding:1.25em;
+}
+.hu-forgeshare .hu-share-number {
+  background:#e4edfa;color:#1a4e8c;border:1px solid #bdd0e8;
+  border-radius:11px;flex-basis:2.25em;height:2.25em;
+}
+.hu-forgeshare .hu-share-downloads a{background:#285b9a;box-shadow:none;min-height:2.75em;transition:background .14s}
+.hu-forgeshare .hu-share-downloads a:hover{background:#153f77;transform:none}
+.hu-forgeshare .hu-share-access {background:color-mix(in srgb,currentColor 4%,transparent);border-radius:0 8px 8px 0;padding:.6em .9em}
+.hu-forgeshare .hu-share-detail summary{border-radius:6px}
+.hu-forgeshare .hu-share-footer{border:1px solid color-mix(in srgb,currentColor 12%,transparent)}
+@media(max-width:540px){
+  .hu-forgeshare .hu-share-types{grid-template-columns:1fr}
+  .hu-forgeshare .hu-share-step{padding:.95em;gap:.8em}
+  .hu-forgeshare .hu-share-type{padding:.8em}
+  .hu-forgeshare .hu-share-hero{padding:1.45em}
+}

@@ -1,4 +1,4 @@
-ForgeShare 0.1.15 — testudgave / test release
+ForgeShare 0.1.16 — testudgave / test release
 
 DANSK
 Pak hele ZIP-filen ud. Åbn ForgeShare.app (Mac), ForgeShare.exe (Windows)

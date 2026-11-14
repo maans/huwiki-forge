@@ -1,7 +1,11 @@
 title: $:/plugins/huwiki/forgeshare/guide-en
 type: text/vnd.tiddlywiki
 
-<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Tailscale collaboration<span class="hu-share-badge">Test release</span></div><h1>Your wiki. Together.</h1><p>From a computer, phone or tablet — with the people you invite.</p></div>
+<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Wikis, sites and secure sharing<span class="hu-share-badge">Test release</span></div><h1>Your content. Your connections.</h1><p>Open on your computer. Share with others when you choose.</p></div>
+<div class="hu-share-types">
+<section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">▤</span><div><h2>Wiki</h2><p>Edit together using the wiki’s own TiddlyWiki server.</p></div></section>
+<section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">◈</span><div><h2>Site</h2><p>Serve static HTML pages through ForgeShare’s own server.</p></div></section>
+</div>
 <p><$link to="$:/plugins/huwiki/forgeshare/library">Open your wiki library</$link></p>
 <div class="hu-share-steps">
 <section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">1</span><div class="hu-share-step-body"><h2>Get the helper</h2><p>Choose the computer that will host your wiki.</p>
@@ -33,7 +37,7 @@ Press Open or Share. The helper prepares the HTML wiki automatically and keeps t
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Open or share</h2><p><strong>Open</strong> prepares and opens the item only on your computer. Select a wiki or site and press <strong>Share</strong>. Choose sharing for each wiki on its first start. Each wiki remembers its own choice. Change it under <strong>Settings → Sharing settings</strong>. Use <strong>Copy address</strong> to get the link for others. A green light shows what is running. Shared items show Tailscale, Home network or Funnel on the same line. Stop with the button beside the name. Sharing lists only items shared with others; copy their link or choose Invite there.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Open or share</h2><p><strong>Open</strong> prepares and opens the item only on your computer. Select a wiki or site and press <strong>Share</strong>. Choose sharing for each wiki or site the first time. On the next <strong>Share</strong>, reuse that connection or choose another. You can also change it under <strong>Settings → Sharing settings</strong>. To switch an active share, first use its row’s <strong>Stop</strong> button. Use <strong>Copy address</strong> to get the link for others. A green light shows what is running. Shared items show Tailscale, Home network or Funnel on the same line. Stop with the button beside the name. Sharing lists only items shared with others; copy their link or choose Invite there.</p>
 <p class="hu-share-access">A Tailscale invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
 <summary>On your home network — without Tailscale</summary>
 <div class="hu-share-detail-body">
@@ -59,7 +63,7 @@ Funnel — share over the internet
 
 Press <b>Share</b> and choose <b>Funnel</b>. Choose one reader code and a different editor code. Guests open the link from <b>Copy address</b> and enter only their code; they do not need Tailscale. <b>Open</b> in the helper gives you editing access. A site needs only one visitor code and cannot be edited through sharing. Codes apply to the whole wiki or site. Give editor access only to people you trust. You can choose to remember sharing codes in the vault. Login lasts up to eight hours and ends when sharing stops. Open <code>/_forgeshare/login</code> at the wiki address to use another code.
 
-Funnel needs HTTPS and Funnel permission in Tailscale. ForgeShare uses only available Funnel addresses and never replaces other services. If no address is free, Funnel cannot start. Press <b>Share</b> again to choose Tailscale or your home network. <b>Open</b> still works on your own computer. Tailscale sharing is private; a Funnel address is public and protected by the codes. Repeated login attempts are limited. Choose codes that are not easy to guess. Automatic Funnel startup is not included in this version.
+Funnel needs HTTPS and Funnel permission in Tailscale. The only supported public HTTPS ports are <strong>443, 8443 and 10000</strong>. If existing Tailscale routes or local services occupy them, ForgeShare shows the reason for each port. It never changes existing sharing automatically. Press <b>Share</b> again to reuse or choose a different method. Funnel needs a free port or a separate Tailscale device. <b>Open</b> still works on your own computer. Tailscale sharing is private; a Funnel address is public and protected by the codes. Repeated login attempts are limited. Choose codes that are not easy to guess. Automatic Funnel startup is not included in this version.
 
 </div>
 </details>

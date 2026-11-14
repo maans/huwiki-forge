@@ -1,7 +1,11 @@
 title: $:/plugins/huwiki/forgeshare/guide-da
 type: text/vnd.tiddlywiki
 
-<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Tailscale-samarbejde<span class="hu-share-badge">Testudgave</span></div><h1>Din wiki. Sammen.</h1><p>Fra computer, telefon eller tablet — med dem, du inviterer.</p></div>
+<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Wikier, sites og sikker deling<span class="hu-share-badge">Testudgave</span></div><h1>Dit indhold. Dine forbindelser.</h1><p>Åbn på din computer. Del med andre, når du selv vælger det.</p></div>
+<div class="hu-share-types">
+<section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">▤</span><div><h2>Wiki</h2><p>Redigér sammen via wikiens egen TiddlyWiki-server.</p></div></section>
+<section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">◈</span><div><h2>Site</h2><p>Udgiv statiske HTML-sider via ForgeShares egen server.</p></div></section>
+</div>
 <p><$link to="$:/plugins/huwiki/forgeshare/library">Åbn dit wikibibliotek</$link></p>
 <div class="hu-share-steps">
 <section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">1</span><div class="hu-share-step-body"><h2>Hent hjælperen</h2><p>Vælg computeren, hvor wikien skal ligge.</p>
@@ -33,7 +37,7 @@ Tryk Åbn eller Del. Hjælperen klargør HTML-wikien automatisk og beholder den 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Åbn eller del</h2><p><strong>Åbn</strong> klargør og åbner kun på din computer. Vælg en wiki eller et site og tryk <strong>Del</strong>. Første gang vælger du delingsform for hver wiki. Valget huskes kun for den wiki. Du kan ændre det under <strong>Indstillinger → Delingsindstillinger</strong>. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre. Grønt lys viser, hvad der kører. Ved deling står Tailscale, Hjemmenetværk eller Funnel på samme linje. Stop med knappen ud for navnet. Fanen Delinger viser kun det, der deles med andre; her kan du kopiere linket eller vælge Invitér.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Åbn eller del</h2><p><strong>Åbn</strong> klargør og åbner kun på din computer. Vælg en wiki eller et site og tryk <strong>Del</strong>. Første gang vælger du delingsform for hver wiki eller hvert site. Ved næste <strong>Del</strong> kan du genbruge forbindelsen eller vælge en anden. Du kan også ændre valget under <strong>Indstillinger → Delingsindstillinger</strong>. En kørende deling skal stoppes med rækkens <strong>Stop</strong>, før du skifter. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre. Grønt lys viser, hvad der kører. Ved deling står Tailscale, Hjemmenetværk eller Funnel på samme linje. Stop med knappen ud for navnet. Fanen Delinger viser kun det, der deles med andre; her kan du kopiere linket eller vælge Invitér.</p>
 <p class="hu-share-access">Ved Tailscale-deling gælder invitationen computeren. Begræns gæsternes adgang til wikien, før du inviterer.</p><details class="hu-share-detail">
 <summary>På hjemmenetværket — uden Tailscale</summary>
 <div class="hu-share-detail-body">
@@ -59,7 +63,7 @@ Funnel — del via internettet
 
 Tryk <b>Del</b>, og vælg <b>Funnel</b>. Vælg én kode til læsere og en anden til redaktører. Gæster åbner linket fra <b>Kopiér adresse</b> og indtaster kun deres kode; de behøver ikke Tailscale. <b>Åbn</b> i hjælperen giver dig selv redigeringsadgang. Et site kræver kun én kode til besøgende og kan ikke redigeres gennem delingen. Koderne gælder hele wikien eller sitet. Giv kun redaktørkoden til personer, du stoler på. Du kan vælge at huske delingskoderne i nøgleboksen. Login varer højst otte timer og ophører, når du stopper delingen. Åbn <code>/_forgeshare/login</code> på wikiens adresse for at bruge en anden kode.
 
-Funnel kræver HTTPS og tilladelse til Funnel i Tailscale. ForgeShare bruger kun ledige Funnel-adresser og overtager aldrig andre tjenester. Er der ingen ledig adresse, starter Funnel ikke. Tryk <b>Del</b> igen for at vælge Tailscale eller hjemmenetværk. <b>Åbn</b> virker stadig på din egen computer. Tailscale-deling er privat; Funnel-adressen er offentlig og beskyttes af koderne. Gentagne loginforsøg begrænses. Vælg koder, der ikke er lette at gætte. Automatisk opstart af Funnel er ikke med i denne udgave.
+Funnel kræver HTTPS og tilladelse til Funnel i Tailscale. De eneste understøttede offentlige HTTPS-porte er <strong>443, 8443 og 10000</strong>. Hvis de er optaget af eksisterende Tailscale-tjenester eller lokale programmer, viser ForgeShare årsagen for hver port. Ingen eksisterende delinger ændres automatisk. Tryk <b>Del</b> igen for at genbruge eller vælge en ny delingsform. Funnel kræver en ledig port eller en separat Tailscale-enhed. <b>Åbn</b> virker stadig på din egen computer. Tailscale-deling er privat; Funnel-adressen er offentlig og beskyttes af koderne. Gentagne loginforsøg begrænses. Vælg koder, der ikke er lette at gætte. Automatisk opstart af Funnel er ikke med i denne udgave.
 
 </div>
 </details>

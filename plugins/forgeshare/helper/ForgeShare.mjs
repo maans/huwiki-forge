@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.15 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.16 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {validateSite,siteWorker} from './Site.mjs';
 import {configureLogin} from './Startup.mjs';
 import {Vault,vaultDialog,invitation,privateCommand} from './Vault.mjs';
@@ -161,13 +161,26 @@ export async function startCodeGateway({port,origin,readerCode,editorCode,reader
 export const funnelPorts=Object.freeze([10000,8443,443]);
 export async function planFunnel(config,localPort,checkAddress) {
   if(!Number.isInteger(localPort)||localPort<1||localPort>65535)throw Error('Invalid local port');
-  const used=usedServePorts(config);
+  const used=usedServePorts(config),blocked=[];
   for(const port of funnelPorts) {
-    if(used.has(port))continue;
-    try {await checkAddress(port);}catch{continue;}
+    if(used.has(port)){
+      blocked.push(port+' — '+ui('already used by Tailscale Serve/Funnel','allerede brugt af Tailscale Serve/Funnel'));
+      continue;
+    }
+    try {await checkAddress(port);}
+    catch {
+      blocked.push(port+' — '+ui('local port occupied or unavailable','lokal port optaget eller utilgængelig'));
+      continue;
+    }
     return {port,args:['funnel',`--https=${port}`,`http://127.0.0.1:${localPort}`]};
   }
-  throw Error(ui('Funnel has no free internet address. Existing sharing is unchanged. Choose Share again to use Tailscale or your home network, or Open to use it only on this computer.','Funnel har ingen ledig internetadresse. Eksisterende delinger er urørte. Vælg Del igen for at bruge Tailscale eller hjemmenetværket, eller Åbn for kun at bruge denne computer.'));
+  throw Error(ui(
+    'No available Funnel HTTPS port on this device (only 443, 8443 and 10000 are supported).',
+    'Ingen ledig Funnel-HTTPS-port på denne enhed (kun 443, 8443 og 10000 understøttes).'
+  )+'\n\n'+blocked.join('\n')+'\n\n'+ui(
+    'Existing connections were not changed. Choose Share again to try another method. To use Funnel here, first free a port deliberately, or host the public Funnel on another Tailscale device.',
+    'Eksisterende forbindelser er ikke ændret. Vælg Del igen for at prøve en anden delingsform. Funnel kræver, at du selv frigør en af portene eller bruger en anden Tailscale-enhed til den offentlige deling.'
+  ));
 }
 export function verifyFunnelRoute(before,after,hostname,localPort,port) {
   if(!funnelPorts.includes(port))throw Error('Invalid Funnel port');
@@ -904,11 +917,15 @@ export async function saveSharing(root,value,id) {
     entry.sharing=choice;return choice;
   });
 }
-export async function forgetFailedSharing(root,id,attempted) {
+export async function forgetFailedSharing(root,id,attempted,previous=null) {
   return libraryTransaction(root,data=>{
     const entry=data.entries.find(e=>e.id===id);
-    // Do not undo a newer choice made in another window.
-    if(entry?.sharing && JSON.stringify(validateSharing(entry.sharing))===JSON.stringify(validateSharing(attempted)))delete entry.sharing;
+    // Restore the user's last working preference after a failed trial. If
+    // another dialog changed this item meanwhile, never overwrite that choice.
+    if(entry?.sharing && JSON.stringify(validateSharing(entry.sharing))===JSON.stringify(validateSharing(attempted))) {
+      if(previous)entry.sharing=validateSharing(previous);
+      else delete entry.sharing;
+    }
   });
 }
 export async function chooseSharing(root,id,ask) {
@@ -924,6 +941,23 @@ export async function chooseSharing(root,id,ask) {
     allowAnonymous=login===0;
   }
   return saveSharing(root,{mode:['tailscale','lan','funnel'][selected],allowAnonymous},id);
+}
+export async function confirmSavedSharing(root,id,saved,ask) {
+  const entry=(await loadLibrary(root)).entries.find(e=>e.id===id);
+  if(!entry)throw Error('Unknown wiki');
+  const mode=saved.mode==='tailscale'?'Tailscale':saved.mode==='funnel'?'Funnel':ui('home network','hjemmenetværk');
+  const access=saved.mode==='funnel'
+    ? ui('visitor access codes','adgangskoder')
+    : saved.allowAnonymous ? ui('no additional login','uden ekstra login') : ui('with login','med login');
+  const choices=[
+    ui('Use previous: ','Brug forrige: ')+mode+' · '+access,
+    ui('Choose another sharing method…','Vælg en anden delingsform…'),
+    ui('Cancel','Annuller')
+  ];
+  const picked=await ask('choice',ui('Share “','Del “')+entry.name+ui('” — use the previous connection or change it?','” — brug den tidligere forbindelse eller skift?'),choices);
+  if(picked===choices[0])return validateSharing(saved);
+  if(picked===choices[1])return chooseSharing(root,id,ask);
+  throw Object.assign(Error('Cancelled'),{cancelled:true});
 }
 async function discoverLibrary(ask,root,deps) {
   let roots=deps.discoveryRoots;
@@ -1365,7 +1399,7 @@ export async function guiMain(deps = {}) {
   const root = deps.root || appFolder();
   let localOnly=deps.localOnly ?? process.argv.includes('--local');
   let libraryId=deps.libraryId || (process.argv.includes('--profile')?process.argv[process.argv.indexOf('--profile')+1]:null);
-  let session, privateDir, attemptedSharing, sharingReady=false;
+  let session, privateDir, attemptedSharing, previousSharing, sharingReady=false;
   const children = new Set();
   let interrupted = false;
   const interrupt = () => { interrupted = true; shutdown.abort(); if (session) void session.stop(); else for (const child of children) void stopChild(child); };
@@ -1380,9 +1414,14 @@ export async function guiMain(deps = {}) {
     const startup=deps.startup || (process.argv.includes('--startup')?await readStartup(root):null);
     if(startup){validateStartup(startup,await loadLibrary(root));libraryId=startup.wikiId;localOnly=startup.mode==='local';}
     const quick=deps.quick || process.argv.includes('--quick');
-    let sharing=quick && libraryId?await readSharing(root,libraryId):null;
-    if(quick && libraryId && !localOnly && !startup && !sharing)sharing=await chooseSharing(root,libraryId,ask);
-    if(quick && libraryId && !localOnly && !startup)attemptedSharing=sharing;
+    previousSharing=quick && libraryId && !localOnly && !startup?await readSharing(root,libraryId):null;
+    let sharing=previousSharing;
+    if(quick && libraryId && !localOnly && !startup) {
+      sharing=previousSharing
+        ? await confirmSavedSharing(root,libraryId,previousSharing,ask)
+        : await chooseSharing(root,libraryId,ask);
+      attemptedSharing=sharing;
+    }
     sharing ||= {mode:'tailscale',allowAnonymous:true};
     if(!startup && !quick)await ask('confirm', localOnly ? ui('Open this wiki only on your computer. You choose whether to use wiki login.', 'Åbn kun wikien på denne computer. Du vælger selv, om der skal være wiki-login.') : ui('Share a wiki. Choose the network and whether to use wiki login. Nothing starts before the final confirmation.', 'Del en wiki. Vælg netværk og eventuelt wiki-login. Intet starter før den sidste bekræftelse.'));
     if (Number(process.versions.node.split('.')[0]) < 20) fail('Install Node.js 20 or later.', 'Installer Node.js 20 eller nyere.');
@@ -1494,7 +1533,7 @@ export async function guiMain(deps = {}) {
   } finally {
     if (session) await session.stop();
     for (const child of children) await stopChild(child);
-    if(attemptedSharing && !sharingReady)await forgetFailedSharing(root,libraryId,attemptedSharing);
+    if(attemptedSharing && !sharingReady)await forgetFailedSharing(root,libraryId,attemptedSharing,previousSharing);
     if (privateDir) await rm(privateDir, {recursive: true, force: true});
     if (appMode) { inputStream.off('data', inputData); inputStream.off('end', interrupt); inputStream.pause(); }
     for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.off(signal, interrupt);
