@@ -1,0 +1,260 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+import path from "node:path";
+import vm from "node:vm";
+import {loadEdition} from "../assembler/assemble.mjs";
+import {checkShadowConflicts} from "../assembler/compose.mjs";
+
+const root=path.resolve(import.meta.dirname,"..");
+const read=p=>readFile(path.join(root,p),"utf8");
+const json=async p=>JSON.parse(await read(p));
+async function localFetch(url){
+ const u=new URL(url);
+ if(u.origin!=="https://forge.example"||!u.pathname.startsWith("/huwiki-forge/"))
+  return {ok:false,status:403};
+ try{
+  const body=await read(u.pathname.slice("/huwiki-forge/".length));
+  return {ok:true,status:200,json:async()=>JSON.parse(body)};
+ }catch(_){return {ok:false,status:404};}
+}
+
+test("Musical combines the complete CutOut and Music toolchains without conflicts",async()=>{
+ const {manifest,tiddlers}=await loadEdition("https://forge.example/huwiki-forge/editions/musical/manifest.json",localFetch);
+ assert.equal(manifest.id,"musical");
+ assert.equal(manifest.coreVersion,"5.4.1");
+ assert.equal(manifest.tiddlers.filter(t=>t==="../shared/libraries.json").length,1);
+ assert.ok(manifest.plugins.some(t=>t.includes("plugins/musical/")));
+ assert.equal(manifest.plugins.filter(t=>t.includes("plugins/abc/")).length,1);
+ assert.equal(manifest.plugins.filter(t=>t.includes("plugins/cutout/")).length,1);
+ for(const name of ["basic","jazz","rhythm","balkan","india","folk"])
+  assert.ok(manifest.plugins.some(x=>x.includes("plugins/lessons-"+name+"/")),name);
+ const names=tiddlers.map(t=>t.title);
+ assert.equal(names.length,new Set(names).size);
+ checkShadowConflicts(tiddlers,"$:/themes/huwiki/modern");
+ const byTitle=new Map(tiddlers.map(t=>[t.title,t]));
+ for(const key of ["$:/plugins/huwiki/abc","$:/plugins/huwiki/cutout","$:/plugins/huwiki/musical","$:/plugins/huwiki/music","$:/themes/huwiki/modern","Musical – Start"])assert.ok(byTitle.has(key),key);
+ assert.equal(byTitle.get("$:/DefaultTiddlers").text,"[[Musical – Start]]");
+ assert.equal(byTitle.get("$:/plugins/huwiki/musical").dependents,"$:/plugins/huwiki/cutout $:/plugins/huwiki/abc");
+});
+
+test("Orchestra has animated players, original ABC score, and editable film camera",async()=>{
+ const rows=await json("editions/musical/tiddlers/seed.json");
+ const byTitle=new Map(rows.map(t=>[t.title,t]));
+ const stage=JSON.parse(byTitle.get("Musical – Tændstikorkestret (scene)").text);
+ const film=JSON.parse(byTitle.get("Musical – Tændstikorkestret (film)").text);
+ const score=byTitle.get("Musical – Tændstikorkestret (ABC)");
+ const actors=stage.parts.filter(p=>p.id.endsWith("-root"));
+ assert.equal(actors.length,6);
+ assert.ok(actors.every(p=>p.keys.length>=30));
+ assert.equal(stage.kind,"scene");
+ assert.equal(film.kind,"theatre");
+ assert.equal(film.scenes.length,2);
+ assert.equal(film.scenes[0].sourceId,stage.id);
+ assert.equal(film.scenes[0].duration,16);
+ assert.equal(film.camera.keys.length,15);
+ assert.ok(film.camera.keys.every(k=>Number.isFinite(k.t)&&Number.isFinite(k.x)&&Number.isFinite(k.y)&&k.zoom>=.25&&k.zoom<=16));
+ assert.ok(film.camera.keys.some(k=>k.zoom>1.8));
+ assert.ok(film.camera.keys.some(k=>k.zoom===1));
+ assert.ok(score["abc-source"].includes("V:1"));
+ assert.ok(score["abc-source"].includes("V:2"));
+ assert.ok(score["abc-source"].includes("V:3"));
+ assert.match(byTitle.get("Musical – Start").text,/\$musical-stage/);
+});
+
+test("Musical clock follows audio callbacks; pause and tempo do not advance a second clock",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const shadows=JSON.parse(plugin.text).tiddlers;
+ assert.equal(shadows["$:/plugins/huwiki/musical/sync.js"]["module-type"],"library");
+ assert.equal(shadows["$:/plugins/huwiki/musical/widget.js"]["module-type"],"widget");
+ const p=shadows["$:/plugins/huwiki/musical/sync.js"].text;
+ const w=shadows["$:/plugins/huwiki/musical/widget.js"].text;
+ new vm.Script(p);new vm.Script(w);
+ let millis=0,painted=-1;const ctx={exports:{}};
+ new vm.Script(p).runInNewContext(ctx);
+ const time=new ctx.exports.Timeline(16,v=>painted=v,()=>millis);
+ time.play();millis=1000;
+ assert.equal(time.value(),1);
+ time.beat(2,32);
+ assert.equal(time.value(),1);
+ time.setRate(.75);millis=2000;assert.equal(time.value(),1.75);
+ time.pause();millis=5000;assert.equal(time.value(),1.75);
+ time.seek(12);assert.equal(painted,12);
+ time.play();millis=6000;assert.equal(time.value(),12.75);
+ time.finish();assert.equal(time.value(),16);
+ assert.match(w,/Audio\.install/);
+ assert.match(w,/Playback\.start/);
+ assert.match(w,/timeline\.beat/);
+ assert.match(w,/Engine\.paint/);
+ assert.match(w,/fields\["abc-source"\]/);
+});
+
+test("Forge catalog, home card and native Plugin Library publish Musical",async()=>{
+ const catalog=await json("catalog/editions.json");
+ const manifest=await json("editions/musical/manifest.json");
+ assert.equal(catalog.editions.find(e=>e.id==="musical").manifest,"../editions/musical/manifest.json");
+ assert.equal(manifest.version,catalog.editions.find(e=>e.id==="musical").version);
+ const cards=await json("editions/forge/tiddlers/edition-index.json");
+ assert.ok(cards.some(x=>x["edition-id"]==="musical"&&x["heading-da"]&&x["heading-en"]));
+ const registry=await json("library/plugins/registry.json");
+ assert.ok(registry.items.some(x=>x.fields.title==="$:/plugins/huwiki/musical"));
+});
+
+
+test("Musical Studio supports live notes, whole songs, lighting and editable camera cuts",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const shadows=JSON.parse(plugin.text).tiddlers;
+ const editor=shadows["$:/plugins/huwiki/musical/editor.js"];
+ assert.equal(editor["module-type"],"library");
+ const widget=shadows["$:/plugins/huwiki/musical/widget.js"].text;
+ new vm.Script(editor.text);
+ new vm.Script(widget);
+ assert.match(widget,/onEvent:function\(evt\)/);
+ assert.match(widget,/showNotes\(index,t\)/);
+ assert.match(widget,/Editor\.attach/);
+ assert.match(widget,/externalChange\(this\._stageTitle\)/);
+ assert.match(editor.text,/setPointerCapture/);
+ assert.match(editor.text,/wiki\.addTiddler/);
+ assert.match(editor.text,/cameraState/);
+ const ctx={exports:{},require:()=>({})};
+ new vm.Script(editor.text).runInNewContext(ctx);
+ const rows=await json("editions/musical/tiddlers/seed.json");
+ const movie=JSON.parse(rows.find(t=>t.title==="Musical – Tændstikorkestret (film)").text);
+ assert.equal(movie.musical.songs.length,2);
+ assert.equal(movie.musical.songs[0].score,"Musical – Tændstikorkestret (ABC)");
+ assert.match(editor.text,/markOwnWrite/);
+ assert.match(widget,/this\._ownWritten/);
+ assert.equal(movie.musical.songs[0].kind,"complete-abc");
+ assert.equal(movie.musical.songs[1].score,"Musical – Tændstikorkestret (Finale ABC)");
+ assert.equal(movie.musical.songs[1].start,14);
+ assert.equal(movie.musical.songs[0].fadeOut,2);
+ assert.equal(movie.musical.songs[1].fadeIn,2);
+ assert.ok(movie.musical.cameraB.keys.length>=3);
+ assert.ok(movie.musical.cuts.some(k=>k.camera==="A"));
+ assert.ok(movie.musical.cuts.some(k=>k.camera==="B"));
+ assert.ok(movie.musical.lighting.keys.length>=3);
+ const model=ctx.exports.ensureMusical(movie);
+ assert.equal(model.cuts.length,10);
+ assert.equal(ctx.exports.interpolate([{t:0,intensity:0},{t:4,intensity:1}],2,"intensity",0),.5);
+});
+
+test("A single transport maps two complete ABC tunes to absolute global time",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const sh=JSON.parse(plugin.text).tiddlers;
+ const source=sh["$:/plugins/huwiki/musical/playlist.js"];
+ assert.equal(source["module-type"],"library");
+ const context={exports:{}};
+ new vm.Script(source.text).runInNewContext(context);
+ const Playlist=context.exports;
+ const items=Playlist.reflow([
+  {id:"one",score:"First complete song",duration:16},
+  {id:"two",score:"Second complete song",duration:11.5},
+  {id:"three",score:"Third complete song",duration:8}
+ ],"First complete song");
+ assert.equal(Playlist.total(items),35.5);
+ assert.equal(items[0].start,0);
+ assert.equal(items[1].start,16);
+ assert.equal(items[2].start,27.5);
+ assert.equal(Playlist.locate(items,15.99).index,0);
+ assert.equal(Playlist.locate(items,16).index,1);
+ assert.equal(Playlist.locate(items,27.49).index,1);
+ assert.equal(Playlist.locate(items,27.5).index,2);
+ assert.equal(Playlist.locate(items,35.5).local,8);
+ assert.equal(Playlist.at(items,1,3.5),19.5);
+ const widget=sh["$:/plugins/huwiki/musical/widget.js"].text;
+ const editor=sh["$:/plugins/huwiki/musical/editor.js"].text;
+ new vm.Script(widget);new vm.Script(editor);
+ assert.match(widget,/Playback\.start\(session\)/);
+ assert.doesNotMatch(widget,/^\s*Playback\.start\(c\)/m);
+ assert.match(widget,/midiBuffer\.setVolumes\(\)/);
+ assert.match(widget,/function syncAudio\(t\)/);
+ assert.match(widget,/getConfig:function\(\)\{return trackConfig\(song\);\}/);
+ assert.match(widget,/StartPosition\.seek\(c,song\.tune/);
+ assert.match(widget,/timeline\.beatPosition\(Playlist\.at/);
+ assert.match(widget,/data-song-index/);
+ assert.match(editor,/huw-musical-add-song/);
+ assert.match(editor,/huw-musical-remove-song/);
+ assert.match(editor,/huw-musical-move-song-earlier/);
+ assert.match(editor,/huw-musical-move-song-later/);
+ const rows=await json("editions/musical/tiddlers/seed.json");
+ const titles=new Set(rows.filter(x=>x["abc-source"]).map(x=>x.title));
+ const movie=JSON.parse(rows.find(x=>x.title==="Musical – Tændstikorkestret (film)").text);
+ assert.equal(movie.scenes.length,2);
+ for(const song of movie.musical.songs)assert.ok(titles.has(song.score));
+ assert.equal(movie.scenes.reduce((sum,x)=>sum+x.duration,0),30);
+ assert.equal(movie.musical.songs.reduce((sum,x)=>sum+x.duration,0),32);
+ assert.equal(Playlist.total(movie.musical.songs),30);
+ assert.equal(Playlist.overlap(movie.musical.songs[0],movie.musical.songs[1]),2);
+ assert.equal(Playlist.activeAt(movie.musical.songs,15).length,2);
+ assert.equal(Playlist.activeAt(movie.musical.songs,20).length,1);
+ assert.equal(Playlist.gainAt(movie.musical.songs[0],13),1);
+ assert.equal(Playlist.gainAt(movie.musical.songs[1],13),0);
+ assert.equal(Playlist.gainAt(movie.musical.songs[0],16),0);
+ assert.equal(Playlist.gainAt(movie.musical.songs[1],16),1);
+ const g1=Playlist.gainAt(movie.musical.songs[0],15),g2=Playlist.gainAt(movie.musical.songs[1],15);
+ assert.ok(Math.abs(g1*g1+g2*g2-1)<.005,"Equal-power crossfade must not dip in the middle");
+ assert.equal(Playlist.locate(movie.musical.songs,14.3).index,0);
+ assert.equal(Playlist.locate(movie.musical.songs,15.7).index,1);
+ assert.match(editor,/songTracks\(\)\.concat\(tracks\.filter/);
+ assert.match(editor,/huw-musical-fade-handle/);
+ assert.match(editor,/updateClips\(m\.songs\)/);
+});
+
+
+test("Independent score tracks preserve placement and volume even when they overlap or leave gaps",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const source=JSON.parse(plugin.text).tiddlers["$:/plugins/huwiki/musical/playlist.js"].text;
+ const ctx={exports:{}};new vm.Script(source).runInNewContext(ctx);
+ const P=ctx.exports;
+ const clips=P.reflow([
+  {id:"first",score:"A",start:0,duration:10,fadeIn:0,fadeOut:4,volume:1},
+  {id:"second",score:"B",start:7,duration:20,fadeIn:3,fadeOut:0,volume:.75},
+  {id:"third",score:"C",start:35,duration:2,muted:true}
+ ],"A");
+ assert.equal(P.total(clips),37);
+ assert.equal(clips[1].start,7,"Reflow must never silently serialize overlapping songs");
+ assert.equal(clips[2].start,35,"Song placements must survive discontiguous gaps");
+ assert.equal(P.overlap(clips[0],clips[1]),3);
+ assert.equal(P.activeAt(clips,8).length,2);
+ assert.equal(P.activeAt(clips,32).length,0);
+ assert.equal(P.gainAt(clips[2],36),0,"Muting one song must not mute others");
+ assert.ok(P.gainAt(clips[0],8)>.5&&P.gainAt(clips[1],8)>.2);
+ assert.equal(P.locate(clips,8).index,0);
+ assert.equal(P.locate(clips,9).index,1);
+});
+
+
+test("Musical Studio 0.5 is a viewport-fit editor, not a scroll-through article of camera buttons",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const s=JSON.parse(plugin.text).tiddlers;
+ const widget=s["$:/plugins/huwiki/musical/widget.js"].text;
+ const editor=s["$:/plugins/huwiki/musical/editor.js"].text;
+ const workspace=s["$:/plugins/huwiki/musical/workspace.js"];
+ const styles=s["$:/plugins/huwiki/musical/styles.css"].text;
+ assert.equal(workspace["module-type"],"library");
+ new vm.Script(workspace.text);new vm.Script(widget);new vm.Script(editor);
+ assert.match(widget,/Workspace\.mount\(/);
+ assert.match(workspace.text,/huw-musical-workbench/);
+ assert.match(workspace.text,/huw-musical-appbar/);
+ assert.match(workspace.text,/huw-musical-timeline-pane/);
+ assert.match(workspace.text,/huw-musical-inspector-drawer/);
+ assert.match(workspace.text,/host\.classList\.toggle\("huw-musical--focus"/);
+ assert.match(workspace.text,/editor\.selectPart\(id\)/);
+ assert.match(workspace.text,/editor\.beginPartMove\(id,o\.position\(\)\)/);
+ assert.match(editor,/function selectPart\(id\)/);
+ assert.match(editor,/function beginPartMove\(id,globalTime\)/);
+ assert.match(editor,/huw-musical-timeline-ruler/);
+ assert.match(editor,/huw-musical-cut-point/);
+ assert.match(editor,/function setFilter\(value\)/);
+ assert.match(editor,/formText\(k,L\.name,"label"\)/);
+ assert.match(editor,/item\.fill=color\.value/);
+ assert.match(styles,/\.huw-musical--workspace \.huw-musical-layout/);
+ assert.match(styles,/--musical-preview-height/);
+ assert.match(styles,/\.huw-musical-inspector-drawer/);
+ assert.doesNotMatch(widget,/var shots=node\(/);
+ assert.doesNotMatch(widget,/huw-musical-shot/);
+ const rows=await json("editions/musical/tiddlers/seed.json");
+ const start=rows.find(x=>x.title==="Musical – Start").text;
+ assert.match(start,/Fokusvisning/);
+ assert.match(start,/Focus view/);
+});
