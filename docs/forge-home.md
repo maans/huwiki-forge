@@ -31,3 +31,11 @@ ReadOnly-stylesheetet er en tilpasning af Eric L. Shulmans TiddlyTools ReadOnly 
 `node scripts/build-forge-home.mjs --check` afviser forældet HTML eller Edition-kort. CI verificerer det på alle PR'er og main uden automatiske bot-commits til en navngiven udviklingsgren.
 
 `CHROME_BIN=/sti/til/chrome node scripts/forge-home-browser-smoke.mjs` tester: reversibel hængelås i Mere-menuen, dansk/engelsk via native kontrolpanel, F-link, katalogkort, native download, offline genåbning, faktisk redigering og endnu en gem/genåbning, samt bredder 1440/768/390 px. Sæt `FORGE_HOME_URL=https://forge.måns.dk/` for at kontrollere den udgivne side. Testen skriver aldrig til GitHub eller den offentlige wiki.
+
+## Bred forside og egne sammensætninger
+
+Forsiden starter med den indbyggede `$:/state/sidebar` sat til `no`. Den normale sidepanelknap åbner det igen. Ved mindst 1100 px og skjult sidepanel vises tre Edition-kort pr. række; små skærme viser ét. Dansk/engelsk følger fortsat kun `$:/language`; linkene sender det valgte sprog videre til Assembleren.
+
+Assembleren bruger `catalog/editions.json`, Plugin Librarys `registry.json` og det eksisterende `catalog/materials.json`. Besøgende kan vælge en eksisterende Edition eller en tom wiki, dernæst værktøjer, indhold og tema. Nødvendige hjælpepakker medtages automatisk. Manglende/cirkulære afhængigheder, uoverensstemmende pakkeversioner og modstridende tiddlere afvises før download. Pakker og deres licenser bevares. F og begge biblioteksindgange følger altid med.
+
+Sammensætninger er testudgaver, ikke en garanti for alle kombinationer. `scripts/composer-browser-smoke.mjs` afprøver dansk musik + jazzundervisning + Modern, native gem/genåbn offline og en engelsk HUPedia + Tegne-eksempler med automatisk Excalidraw/React. `tests/compose.test.mjs` kontrollerer desuden alle eksisterende Editions og fejltilfælde. Browserkontrollen kører i CI sammen med forsidekontrollen. `FORGE_HOME_URL` kan pege på Pages for samme kontrol efter deployment.
