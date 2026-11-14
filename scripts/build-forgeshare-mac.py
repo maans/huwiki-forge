@@ -17,10 +17,14 @@ with tempfile.TemporaryDirectory(prefix='forgeshare-build-') as tmp:
             'ForgeShare':'f5b93529f1966fc93b02af3cc1228bb993d8e623b9e7c5225a0db51727bb3493',
             'ForgeShare.icns':'f0c2c6854267bb0af6ea4377305fdd5c310de005bf906118aa6f6aa68e958cb2',
         }
+        stable=native/'known-good'
         for name, digest in expected.items():
-            actual=hashlib.sha256((out/name).read_bytes()).hexdigest()
+            source=stable/name
+            actual=hashlib.sha256(source.read_bytes()).hexdigest()
             if actual != digest:
                 raise RuntimeError(f'Known-good {name} changed; refusing to package an untested launcher.')
+            shutil.copy2(source,out/name)
+        (out/'ForgeShare').chmod(0o755)
     else:
         for arch in ('arm64','x86_64'):
             subprocess.run(['xcrun','swiftc','-O','-target',arch+'-apple-macosx13.0',str(native/'macos/ForgeShare.swift'),'-o',str(tmp/arch)],check=True)

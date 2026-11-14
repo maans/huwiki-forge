@@ -89,3 +89,33 @@ jobs:
           path: |
             plugins/forgeshare/native/compiled/ForgeShare.exe
             plugins/forgeshare/native/compiled/windows.json
+
+  sync-artifacts:
+    # Commit only validated test bundles to the same draft feature branch.
+    # Never commit from forks, merge the PR, or publish the public site.
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feat/forgeshare-tailscale' }}
+    needs: mac
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: ForgeShare-0.1.15-stable-launcher-test-builds
+          path: .forgeshare-tested
+      - name: Verify and commit tested bundles to draft branch
+        run: |
+          set -euo pipefail
+          cp -R .forgeshare-tested/dist/. plugins/forgeshare/dist/
+          cp -R .forgeshare-tested/native/compiled/. plugins/forgeshare/native/compiled/
+          node scripts/build-forgeshare.mjs --check
+          git add plugins/forgeshare/dist plugins/forgeshare/native/compiled
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Sync validated ForgeShare 0.1.15 test bundles'
+          git push origin HEAD:feat/forgeshare-tailscale

@@ -4,7 +4,7 @@ import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 export const nativeRoot=fileURLToPath(new URL('../plugins/forgeshare/native/',import.meta.url));
 const sha=bytes=>createHash('sha256').update(bytes).digest('hex');
-export const sourceFiles={mac:['macos/ForgeShare.swift','macos/Icon.swift','macos/Info.plist','../helper/ForgeShare.mjs','../helper/Vault.mjs','../helper/Bridge.mjs','../helper/Startup.mjs','../helper/Site.mjs','../helper/help-da.html','../helper/help-en.html'],windows:['windows/ForgeShare.cs','windows/build.ps1']};
+export const sourceFiles={mac:['macos/ForgeShare.swift','macos/Icon.swift','macos/Info.plist','known-good/ForgeShare','known-good/ForgeShare.icns','../helper/ForgeShare.mjs','../helper/Vault.mjs','../helper/Bridge.mjs','../helper/Startup.mjs','../helper/Site.mjs','../helper/help-da.html','../helper/help-en.html'],windows:['windows/ForgeShare.cs','windows/build.ps1']};
 export const binaries={mac:['ForgeShare','ForgeShare.icns','CodeResources'],windows:['ForgeShare.exe']};
 export async function manifest(platform) {
   const sources={},artifacts={};
