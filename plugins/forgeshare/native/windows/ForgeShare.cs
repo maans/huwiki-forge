@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Security.Cryptography;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.11.0")]
+[assembly: AssemblyVersion("0.1.12.0")]
 
 class Session {
     public Process Process; public string Name, Url = "", OwnerUrl = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady;
@@ -38,7 +38,7 @@ class LibraryListBox : ListBox {
                 string id=entry.id;button=new Button {Text="■ Stop",AccessibleName="Stop "+entry.name,Width=85,Height=30};
                 button.Click+=(s,e)=>StopItem(id);Stops.Add(id,button);Controls.Add(button);
             }
-            var rect=GetItemRectangle(i);button.SetBounds(ClientSize.Width-95,rect.Top+14,85,30);button.Enabled=state==1;
+            var rect=GetItemRectangle(i);button.SetBounds(ClientSize.Width-95,rect.Top+5,85,30);button.Enabled=state==1;
             button.Visible=rect.Top>=0&&rect.Bottom<=ClientSize.Height;
         }
         foreach(var id in new List<string>(Stops.Keys))if(!present.Contains(id)){Controls.Remove(Stops[id]);Stops[id].Dispose();Stops.Remove(id);}
@@ -111,6 +111,7 @@ class ForgeShare : Form {
                 form.library.Items.Add(data.entries[0]);form.library.SelectedIndex=0;form.RefreshLibraryState();if(form.library.SelectionMode!=SelectionMode.One||!form.start.Enabled)return 7;
                 var session=new Session {Id="test"};form.sessions.Add(session);form.RefreshLibraryState();if(form.start.Enabled||form.LibraryStatus("test")!=T("Starter…","Starting…"))return 8;
                 session.Url="http://127.0.0.1:20000";session.Local=true;form.RefreshLibraryState();if(!form.library.Stops["test"].Enabled||form.LibraryStatus("test")!=T("Kører lokalt","Running locally"))return 9;
+                if(form.LibrarySharing("test")!="")return 12;session.Local=false;session.Mode="tailscale";if(form.LibrarySharing("test")!="Tailscale")return 13;session.Mode="funnel";if(form.LibrarySharing("test")!="Funnel")return 14;session.Mode="lan";if(form.LibrarySharing("test")!=T("Hjemmenetværk","Home network"))return 15;
                 session.Stopping=true;form.RefreshLibraryState();if(form.library.Stops["test"].Enabled)return 10;form.sessions.Clear();form.RefreshLibraryState();if(form.library.Stops.Count!=0||!form.start.Enabled)return 11;}
             foreach(var value in new[]{"http://127.0.0.1:20000","http://192.168.1.8:20000","http://10.0.0.8:20000","https://example.ts.net:21000"})if(!PermittedAddress(new Uri(value)))return 5;
             foreach(var value in new[]{"http://0.0.0.0:20000","http://8.8.8.8:20000","http://100.64.0.1:20000","file:///C:/wiki"})if(PermittedAddress(new Uri(value)))return 6;
@@ -138,7 +139,7 @@ class ForgeShare : Form {
         Action[] actions={AddToLibrary,()=>LaunchSelected(true),ShareSelected,EditSelected,ExportSelected};
         for(int i=0;i<labels.Length;i++){var a=actions[i];var button=i==2?start:new Button();button.Text=new[]{"＋ ","↗ ","⇧ ","✎ ","⇩ "}[i]+labels[i];button.AutoSize=true;button.Click+=(sender,args)=>a();toolbar.Controls.Add(button);libraryButtons.Add(button);}
         library.StopState=id=>{var s=sessions.Find(x=>x.Id==id);return s==null?0:s.Stopping?2:1;};library.StopItem=id=>{var s=sessions.Find(x=>x.Id==id);if(s!=null)Stop(s);};
-        libraryPage.Controls.Add(toolbar);library.SelectionMode=SelectionMode.One;library.SelectedIndexChanged+=(s,e)=>RefreshLibraryState();library.DrawMode=DrawMode.OwnerDrawFixed;library.ItemHeight=58;library.DrawItem+=DrawLibraryRow;
+        libraryPage.Controls.Add(toolbar);library.SelectionMode=SelectionMode.One;library.SelectedIndexChanged+=(s,e)=>RefreshLibraryState();library.DrawMode=DrawMode.OwnerDrawFixed;library.ItemHeight=40;library.DrawItem+=DrawLibraryRow;
         libraryPage.Controls.Add(new Label {Text=T("Vælg en wiki eller et site.","Choose a wiki or site."),AutoSize=true,Location=new Point(0,155),ForeColor=SystemColors.GrayText});library.HorizontalScrollbar=true;library.SetBounds(0,185,740,310);library.Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;libraryPage.Controls.Add(library);
         sharingLabel.Text=T("Finder dine wikier…","Finding your wikis…");sharingLabel.SetBounds(0,510,740,30);sharingLabel.Anchor=AnchorStyles.Bottom|AnchorStyles.Left;libraryPage.Controls.Add(sharingLabel);
         var sharePage=makePage(T("Aktive delinger","Active sharing"),T("Kopiér adressen, eller send en invitation.","Copy an address or send an invitation."));
@@ -271,18 +272,25 @@ class ForgeShare : Form {
         if(s.Stopping)return T("Stopper…","Stopping…");if(s.Url.Length==0)return T("Starter…","Starting…");
         if(s.Local)return T("Kører lokalt","Running locally");return T("Delt via ","Shared via ")+(s.Mode=="lan"?T("hjemmenetværk","home network"):s.Mode=="funnel"?"Funnel":"Tailscale");
     }
+    string LibrarySharing(string id) {
+        var s=sessions.Find(x=>x.Id==id);if(s==null||s.Local)return "";
+        if(s.Stopping)return T("Stopper…","Stopping…");if(s.Url.Length==0)return T("Starter…","Starting…");
+        return s.Mode=="tailscale"?"Tailscale":s.Mode=="funnel"?"Funnel":s.Mode=="lan"?T("Hjemmenetværk","Home network"):"";
+    }
     void DrawLibraryRow(object sender,DrawItemEventArgs e) {
         if(e.Index<0)return;e.DrawBackground();var entry=(LibraryEntry)library.Items[e.Index];var session=sessions.Find(x=>x.Id==entry.id);
         var color=session==null?Color.Gray:session.Stopping||session.Url.Length==0?Color.DarkOrange:Color.ForestGreen;
-        using(var brush=new SolidBrush(color))e.Graphics.FillEllipse(brush,e.Bounds.Left+10,e.Bounds.Top+23,10,10);
+        using(var brush=new SolidBrush(color))e.Graphics.FillEllipse(brush,e.Bounds.Left+10,e.Bounds.Top+15,10,10);
         var foreground=(e.State&DrawItemState.Selected)!=0?SystemColors.HighlightText:SystemColors.WindowText;
         using(var pen=new Pen(foreground,1.3f)) {
-            int x=e.Bounds.Left+31,y=e.Bounds.Top+9;
+            int x=e.Bounds.Left+31,y=e.Bounds.Top+12;
             if(entry.kind=="site") {e.Graphics.DrawEllipse(pen,x,y,15,15);e.Graphics.DrawEllipse(pen,x+4,y,7,15);e.Graphics.DrawLine(pen,x,y+7,x+15,y+7);}
             else {e.Graphics.DrawRectangle(pen,x+2,y,11,15);e.Graphics.DrawLine(pen,x+5,y+5,x+11,y+5);e.Graphics.DrawLine(pen,x+5,y+9,x+11,y+9);}
         }
-        using(var font=new Font(Font,FontStyle.Bold))TextRenderer.DrawText(e.Graphics,entry.ToString(),font,new Rectangle(e.Bounds.Left+53,e.Bounds.Top+6,e.Bounds.Width-163,22),foreground,TextFormatFlags.EndEllipsis);
-        TextRenderer.DrawText(e.Graphics,LibraryStatus(entry.id)+(entry.available?"":T(" · Filen mangler"," · File missing")),Font,new Rectangle(e.Bounds.Left+30,e.Bounds.Top+30,e.Bounds.Width-140,22),foreground,TextFormatFlags.EndEllipsis);e.DrawFocusRectangle();
+        var flags=TextFormatFlags.EndEllipsis|TextFormatFlags.VerticalCenter|TextFormatFlags.Left|TextFormatFlags.SingleLine;
+        using(var font=new Font(Font,FontStyle.Bold))TextRenderer.DrawText(e.Graphics,entry.name,font,new Rectangle(e.Bounds.Left+53,e.Bounds.Top,e.Bounds.Width-345,40),foreground,flags);
+        TextRenderer.DrawText(e.Graphics,entry.kind=="site"?"Site":"Wiki",Font,new Rectangle(e.Bounds.Right-280,e.Bounds.Top,50,40),foreground,flags);
+        TextRenderer.DrawText(e.Graphics,entry.available?LibrarySharing(entry.id):T("Filen mangler","File missing"),Font,new Rectangle(e.Bounds.Right-225,e.Bounds.Top,130,40),foreground,flags);e.DrawFocusRectangle();
     }
     void RefreshLibraryState() {
         library.RefreshStops();library.Invalidate();if(libraryButtons.Count!=5)return;
