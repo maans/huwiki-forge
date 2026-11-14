@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Security.Cryptography;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.7.0")]
+[assembly: AssemblyVersion("0.1.8.0")]
 
 class Session {
     public Process Process; public string Name, Url = "", OwnerUrl = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady;
@@ -176,8 +176,18 @@ class ForgeShare : Form {
     }
     List<LibraryEntry> SelectedEntries() {var list=new List<LibraryEntry>();foreach(var item in library.CheckedItems)list.Add((LibraryEntry)item);return list;}
     LibraryEntry OneEntry() {var items=SelectedEntries();if(items.Count!=1){MessageBox.Show(T("Markér én wiki på listen.","Select one wiki in the list."),"ForgeShare");return null;}return items[0];}
+    string RequireNode() {
+        var node=Node();if(node!=null)return node;
+        if(MessageBox.Show(T("ForgeShare mangler Node.js. Åbn den officielle downloadside?","ForgeShare needs Node.js. Open the official download page?"),"ForgeShare",MessageBoxButtons.YesNo)==DialogResult.Yes)
+            Process.Start(new ProcessStartInfo("https://nodejs.org/en/download") {UseShellExecute=true});
+        while(MessageBox.Show(T("Installer Node.js, og vælg Prøv igen.","Install Node.js, then choose Retry."),"ForgeShare",MessageBoxButtons.RetryCancel)==DialogResult.Retry) {
+            node=Node();if(node!=null)return node;
+        }
+        return null;
+    }
     void LibraryCommand(string action,object input,Action<string> done) {
-        if(libraryBusy)return;var node=Node();
+        if(libraryBusy)return;var node=RequireNode();
+        if(node==null)return;
         if(node==null || !File.Exists(Helper)){MessageBox.Show(T("Installer Node.js for at bruge wikibiblioteket.","Install Node.js to use the wiki library."),"ForgeShare");return;}
         libraryBusy=true;foreach(var b in libraryButtons)b.Enabled=false;
         var data=Convert.ToBase64String(Encoding.UTF8.GetBytes(new JavaScriptSerializer().Serialize(input)));
