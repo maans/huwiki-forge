@@ -222,3 +222,39 @@ test("Independent score tracks preserve placement and volume even when they over
  assert.equal(P.locate(clips,8).index,0);
  assert.equal(P.locate(clips,9).index,1);
 });
+
+
+test("Musical Studio 0.5 is a viewport-fit editor, not a scroll-through article of camera buttons",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const s=JSON.parse(plugin.text).tiddlers;
+ const widget=s["$:/plugins/huwiki/musical/widget.js"].text;
+ const editor=s["$:/plugins/huwiki/musical/editor.js"].text;
+ const workspace=s["$:/plugins/huwiki/musical/workspace.js"];
+ const styles=s["$:/plugins/huwiki/musical/styles.css"].text;
+ assert.equal(workspace["module-type"],"library");
+ new vm.Script(workspace.text);new vm.Script(widget);new vm.Script(editor);
+ assert.match(widget,/Workspace\.mount\(/);
+ assert.match(workspace.text,/huw-musical-workbench/);
+ assert.match(workspace.text,/huw-musical-appbar/);
+ assert.match(workspace.text,/huw-musical-timeline-pane/);
+ assert.match(workspace.text,/huw-musical-inspector-drawer/);
+ assert.match(workspace.text,/host\.classList\.toggle\("huw-musical--focus"/);
+ assert.match(workspace.text,/editor\.selectPart\(id\)/);
+ assert.match(workspace.text,/editor\.beginPartMove\(id,o\.position\(\)\)/);
+ assert.match(editor,/function selectPart\(id\)/);
+ assert.match(editor,/function beginPartMove\(id,globalTime\)/);
+ assert.match(editor,/huw-musical-timeline-ruler/);
+ assert.match(editor,/huw-musical-cut-point/);
+ assert.match(editor,/function setFilter\(value\)/);
+ assert.match(editor,/formText\(k,L\.name,"label"\)/);
+ assert.match(editor,/item\.fill=color\.value/);
+ assert.match(styles,/\.huw-musical--workspace \.huw-musical-layout/);
+ assert.match(styles,/--musical-preview-height/);
+ assert.match(styles,/\.huw-musical-inspector-drawer/);
+ assert.doesNotMatch(widget,/var shots=node\(/);
+ assert.doesNotMatch(widget,/huw-musical-shot/);
+ const rows=await json("editions/musical/tiddlers/seed.json");
+ const start=rows.find(x=>x.title==="Musical – Start").text;
+ assert.match(start,/Fokusvisning/);
+ assert.match(start,/Focus view/);
+});
