@@ -109,7 +109,8 @@ test('Windows discovery includes OneDrive Documents as well as ordinary Document
  await mkdir(wiki,{recursive:true});
  await writeFile(path.join(wiki,'tiddlywiki.info'),'{}');
  const found=await discoverWikiFolders({roots,timeoutMs:10000});
- assert.ok(found.entries.some(e=>e.location===await realpath(wiki)),
+ const canonical=await realpath(wiki);
+ assert.ok(found.entries.some(e=>e.location===canonical),
    'A wiki under redirected Documents/Wikis must be found');
 });
 test('native Windows dialogs stay visible and pass user input only through private pipes',()=>{
