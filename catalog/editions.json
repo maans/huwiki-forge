@@ -150,7 +150,7 @@
     {
       "id": "shop",
       "name": "Shop Edition (test)",
-      "version": "0.2.0-test.2",
+      "version": "0.2.0-test.3",
       "status": "test",
       "manifest": "../editions/shop/manifest.json",
       "description": "Nine original Shop templates, offline customer-site export and a manual Forms/Sheets, Google Sites and Funnel setup guide",
@@ -159,8 +159,8 @@
         "headingEn": "Your own shop, step by step",
         "descriptionDa": "Lav et Shop Site og følg opsætningen af formular, ordreark og udgivelse. Ni skabeloner følger med.",
         "descriptionEn": "Create a Shop Site and follow the form, order sheet and publishing setup. Includes nine templates.",
-        "noteDa": "Testudgave. Google Sites og prøveordre til privat Sheets-ark afprøvet i Chrome. Offentlig Funnel og fysisk mobiltest udestår.",
-        "noteEn": "Test edition. Google Sites and a test order into a private Sheet verified in Chrome. Public Funnel and physical mobile testing remain pending.",
+        "noteDa": "Testudgave. Google Sites, prøveordre til privat Sheets-ark og offentlig Funnel afprøvet på computer. Fysisk mobiltest udestår.",
+        "noteEn": "Test edition. Google Sites, a test order into a private Sheet and public Funnel verified on desktop. Physical mobile testing remains pending.",
         "order": "09"
       }
     }
@@ -257,8 +257,8 @@
     {
       "id": "shop",
       "name": "Shop",
-      "version": "0.2.0-test.2",
-      "description": "Shop Site and setup checklist · native Dansk / English · Google Sites tested in Chrome; public Funnel acceptance pending",
+      "version": "0.2.0-test.3",
+      "description": "Shop Site and setup checklist · native Dansk / English · Google Sites and public Funnel tested on desktop; physical mobile acceptance pending",
       "file": "../plugins/shop/dist/plugin.json",
       "status": "test"
     }

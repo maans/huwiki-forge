@@ -28,7 +28,7 @@
 | **AV** | `AVEdition.js`, `AVWorkshopAsset.js` | Afspilnings- og redigerings-UI er delvis browserbaseret | Pakke/medieasset-udtræk, codec/offline-tests og evt. serverdel |
 | **Studio** | `Studio.js` 0.6.1, `StudioEdition.js`, `StudioCommunity.js`, `StudioPublish.js` | Lokal pakning, design og plugin-arbejde kan flyttes | Udskift Google-publicering med statiske udgivelser; genbrug Studios eksisterende versions-/metadata-logik |
 | **AI** | `AIEdition.js` 0.3.6 (53 interne tiddlere) | Lokal model/klientkode er mulig | Fjern Google Script/PrivateVault-forbindelsen, sikker håndtering af API-nøgler |
-| **Shop** | `ShopEdition.js` | Test 0.2.0-test.2: ni skabeloner, lokal kundeside og manuel opsætningsguide | Valgfrie Forms/Sheets; Google Sites og inkognito-prøveordre afprøvet; offentlig Funnel og fysisk mobiltest udestår. [Detaljer](shop-migration.md) |
+| **Shop** | `ShopEdition.js` | Test 0.2.0-test.3: ni skabeloner, lokal kundeside og manuel opsætningsguide | Valgfrie Forms/Sheets; Google Sites og inkognito-prøveordre afprøvet; offentlig Funnel afprøvet på computer; fysisk mobiltest udestår. [Detaljer](shop-migration.md) |
 | **Spørgeskema** | `SurveyEdition.js`, `SurveyLive.js`, `SurveyResultSite.js` | Spørgsmål, skabeloner og lokal redigering kan flyttes | Erstat Google Forms/Sheets til indsamling og opbevaring |
 | **Personal/Workspace sync** | `Code.js`, `PrivateVault.js`, Hub/Sync/OAuth-filer | Ikke som en ukritisk kopi | Hold synkronisering/adgangsstyring som valgfrie separate moduler. **Ingen tokens, konti eller private data på GitHub** |
 
