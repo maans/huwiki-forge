@@ -90,9 +90,9 @@
     "heading-da": "Lav din egen musikvideo",
     "heading-en": "Create your own music video",
     "description-da": "Hvert helt musiknummer har sit eget spor med start, overlap, crossfade og levende nodeark.",
-    "description-en": "Each complete tune has its own track with independent start, overlaps, crossfades and live notation.",
-    "note-da": "Testudgave: Samtidige numre og crossfades kræver lydtest på Mac og iPad.",
-    "note-en": "Test release: Overlapping tunes and crossfades need listening tests on Mac and iPad."
+    "description-en": "Each complete tune has its own track, with independent start, overlaps, crossfades and live notation.",
+    "note-da": "Testudgave med ægte ABC-lydspor og fades. Skal afprøves med lyd på Mac og iPad.",
+    "note-en": "Test release with independent ABC soundtracks and fades. Requires actual listening tests on Mac and iPad."
   },
   {
     "title": "$:/huwiki/forge/edition/hupin",
