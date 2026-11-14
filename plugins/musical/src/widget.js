@@ -91,19 +91,20 @@ Musical.prototype.render=function(parent,next){
  state.setAttribute("role","status");state.setAttribute("aria-live","polite");
  var shots=node(doc,"div","huw-musical-shots",host);
  node(doc,"strong","",L.camera+": ",shots);
- var links=node(doc,"div","huw-musical-links",host);
+ var links=node(doc,"div","huw-musical-links",host),scoreLink=null;
  [[L.editScene,"HUWiki CutOut – Studio"],[L.editScore,this.scoreTitle]].forEach(function(row){
-  var a=node(doc,"a","",row[0],links);
+  var a=node(doc,"a","",row[0],links);if(row[1]===self.scoreTitle)scoreLink=a;
   a.setAttribute("href","#"+encodeURIComponent(row[1]));
   a.setAttribute("data-tiddler-title",row[1]);
   a.addEventListener("click",function(event){
    event.preventDefault();
-   if($tw.rootWidget)$tw.rootWidget.dispatchEvent({type:"tm-navigate",navigateTo:row[1],navigateFromTitle:self.scoreTitle});
+   var title=row[1]===self.scoreTitle?songs[activeIndex].title:row[1];
+   if($tw.rootWidget)$tw.rootWidget.dispatchEvent({type:"tm-navigate",navigateTo:title,navigateFromTitle:self.scoreTitle});
   });
  });
  function alive(){return !self._dead&&host.isConnected!==false;}
  function timeLabel(n){var s=Math.floor(Math.max(0,n));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
- var duration=Math.max(.1,Playlist.total(clips)),timeline=null,ready=false,controller=null,activeIndex=0,stopping=false;
+ var duration=Math.max(.1,Playlist.total(clips)),timeline=null,ready=false,controller=null,activeIndex=0,stopping=false,changingSpeed=false;
  var editor=null,noteIndex=-1,notes=[],cursorLine=null;
  this._stageTitle=scene.scenes&&scene.scenes[0]&&scene.scenes[0].source||null;
  function clearNotes(){
@@ -136,6 +137,7 @@ Musical.prototype.render=function(parent,next){
  function showSong(index){
   songs.forEach(function(song,i){song.page.hidden=i!==index;});
   host.dataset.activeSong=songs[index].title;
+  if(scoreLink){scoreLink.setAttribute("href","#"+encodeURIComponent(songs[index].title));scoreLink.setAttribute("data-tiddler-title",songs[index].title);}
   noteIndex=-1;clearNotes();showNotes(timeline?timeline.value():0);
  }
  function paint(t){
@@ -208,9 +210,19 @@ Musical.prototype.render=function(parent,next){
  };
  time.addEventListener("input",function(){seek(Number(time.value));});
  speed.addEventListener("change",function(){
-  var rate=Number(speed.value)/100;
+  var rate=Number(speed.value)/100,wasPlaying=!!(controller&&controller.isStarted),position=timeline.value();
+  // Audio.install rebuilds the buffer on a tempo change, reporting a
+  // temporary onStop(false). Do not mistake it for a user stop/reset.
+  changingSpeed=true;self._pendingSeek=position;timeline.pause();setPlaying(false);
   timeline.setRate(rate);
-  songs.forEach(function(song){if(song.controller)song.controller.setWarp(Number(speed.value)).catch(fail);});
+  var tasks=songs.map(function(song){
+   return song.controller?song.controller.setWarp(Number(speed.value)):Promise.resolve();
+  });
+  Promise.all(tasks).then(function(){
+   changingSpeed=false;
+   if(!alive())return;
+   if(!wasPlaying){timeline.seek(position);showNotes(position);}
+  }).catch(function(error){changingSpeed=false;fail(error);});
  });
  (scene.camera&&scene.camera.keys||[]).forEach(function(key,i){
   var at=Math.max(0,Math.min(scene.duration,Number(key.t)||0));
@@ -269,7 +281,7 @@ Musical.prototype.render=function(parent,next){
     },
     onError:fail,
     onStop:function(paused){
-     if(!alive()||stopping||index!==activeIndex)return;
+     if(!alive()||stopping||changingSpeed||index!==activeIndex)return;
      timeline.pause();setPlaying(false);
      if(!paused){timeline.seek(0);noteIndex=-1;clearNotes();}
     }
