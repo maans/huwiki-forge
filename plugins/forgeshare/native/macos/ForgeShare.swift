@@ -328,12 +328,8 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     @objc func openSelected() {launchSelected(local:true)}
     func launchSelected(local:Bool) {
-        guard let e=oneEntry(),let id=e["id"] as? String,let location=e["location"] as? String else{return}
+        guard let e=oneEntry(),let id=e["id"] as? String else{return}
         if e["available"] as? Bool == false {showError(tr("Filen findes ikke længere på den gemte placering.","The file is no longer at its saved location."));return}
-        if e["kind"] as? String == "html" {
-            if local {NSWorkspace.shared.open(URL(fileURLWithPath:location))}
-            else {showError(tr("En HTML-fil skal først kopieres til en serverwiki. Se hjælpen i ForgeShare. Originalen kan fortsat bruges lokalt.","An HTML file first needs copying into a server wiki. See ForgeShare help. The original can still be used locally."))};return
-        }
         if let existing=sessions.first(where:{$0.id==id}) {
             if local && !existing.url.isEmpty {NSWorkspace.shared.open(URL(string:existing.ownerUrl.isEmpty ? existing.url:existing.ownerUrl)!)}
             else {showError(tr("Denne wiki kører allerede. Stop den først, hvis du vil ændre delingen.","This wiki is already running. Stop it first to change sharing."))};return

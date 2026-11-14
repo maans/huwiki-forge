@@ -30,12 +30,12 @@ On Linux, follow the instructions for your distribution. The dialogs also need Z
 
 A local HTML wiki can be added and opened directly. It opens in your usual browser and uses the wiki’s existing save method. The helper does not take over saving.
 
-Press Share. The helper prepares the HTML wiki automatically and keeps the same library entry. Save and close the HTML wiki first. After verification, the original moves to Trash. You can still export HTML for offline use.
+Press Open or Share. The helper prepares the HTML wiki automatically and keeps the same library entry. Save and close the HTML wiki first. After verification, the original moves to Trash. You can still export HTML for offline use.
 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select a wiki or site and press <strong>Share</strong>. Choose sharing for each wiki on its first start. Each wiki remembers its own choice. Change it under <strong>Settings → Sharing settings</strong>. Use <strong>Copy address</strong> to get the link for others. The status light shows what is running. Stop it with the button on its row.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Open or share</h2><p><strong>Open</strong> prepares and opens the item only on your computer. Select a wiki or site and press <strong>Share</strong>. Choose sharing for each wiki on its first start. Each wiki remembers its own choice. Change it under <strong>Settings → Sharing settings</strong>. Use <strong>Copy address</strong> to get the link for others. The status light shows what is running. Stop it with the button on its row.</p>
 <p class="hu-share-access">A Tailscale invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
 <summary>On your home network — without Tailscale</summary>
 <div class="hu-share-detail-body">

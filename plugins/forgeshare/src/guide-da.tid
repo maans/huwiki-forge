@@ -30,12 +30,12 @@ På Linux: følg vejledningen til din distribution. Dialogboksene kræver også 
 
 En lokal HTML-wiki kan tilføjes og åbnes direkte. Den åbner i din sædvanlige browser og bruger wikiens egen gemmemetode. Hjælperen overtager ikke gemningen.
 
-Tryk Del. Hjælperen klargør HTML-wikien automatisk og beholder den samme post i biblioteket. Gem og luk HTML-wikien først. Efter kontrol flyttes originalen til papirkurven. Du kan fortsat eksportere en HTML-kopi til offlinebrug.
+Tryk Åbn eller Del. Hjælperen klargør HTML-wikien automatisk og beholder den samme post i biblioteket. Gem og luk HTML-wikien først. Efter kontrol flyttes originalen til papirkurven. Du kan fortsat eksportere en HTML-kopi til offlinebrug.
 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Vælg en wiki eller et site og tryk <strong>Del</strong>. Første gang vælger du delingsform for hver wiki. Valget huskes kun for den wiki. Du kan ændre det under <strong>Indstillinger → Delingsindstillinger</strong>. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre. Statuslyset viser, hvad der kører. Stop med knappen på den kørende række.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Åbn eller del</h2><p><strong>Åbn</strong> klargør og åbner kun på din computer. Vælg en wiki eller et site og tryk <strong>Del</strong>. Første gang vælger du delingsform for hver wiki. Valget huskes kun for den wiki. Du kan ændre det under <strong>Indstillinger → Delingsindstillinger</strong>. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre. Statuslyset viser, hvad der kører. Stop med knappen på den kørende række.</p>
 <p class="hu-share-access">Ved Tailscale-deling gælder invitationen computeren. Begræns gæsternes adgang til wikien, før du inviterer.</p><details class="hu-share-detail">
 <summary>På hjemmenetværket — uden Tailscale</summary>
 <div class="hu-share-detail-body">

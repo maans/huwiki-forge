@@ -1011,11 +1011,6 @@ export async function libraryMain(action,encoded='',deps={}) {
       const entry=library.entries.find(e=>'Wiki: '+e.name===picked);if(!entry)return;
       const op=await ask('choice',entry.name,[ui('Open', 'Åbn'),ui('Edit name/description','Redigér navn/beskrivelse'),ui('Share','Del')]);
       if(op===ui('Edit name/description','Redigér navn/beskrivelse'))return libraryMain('edit',Buffer.from(JSON.stringify({id:entry.id})).toString('base64'),deps);
-      if(entry.kind==='html' && op===ui('Share','Del')) {
-        let prepared;await libraryMain('prepare',Buffer.from(JSON.stringify({ids:[entry.id]})).toString('base64'),{...deps,report:value=>{prepared=value;}});
-        if(prepared?.ok)return guiMain({...deps,libraryId:entry.id,quick:true});return;
-      }
-      if(entry.kind==='html'){await (deps.openFile || (file=>execute('xdg-open',[file])))(entry.location);return;}
       return guiMain({...deps,libraryId:entry.id,quick:true,localOnly:op===ui('Open','Åbn')});
     } else fail('Unknown library action.', 'Ukendt biblioteksfunktion.');
     report({ok:true});
@@ -1293,10 +1288,17 @@ export async function guiMain(deps = {}) {
       }
     }
     const tailscale = ['tailscale','funnel'].includes(mode) ? await (deps.findTailscale || findTailscale)() : undefined;
-    const libraryEntry=libraryId?(await listLibrary(root)).entries.find(e=>e.id===libraryId):null;
+    let libraryEntry=libraryId?(await listLibrary(root)).entries.find(e=>e.id===libraryId):null;
     const installed = libraryEntry?.kind==='site'?null:await (deps.findTiddlyWiki || findTiddlyWiki)();
     if(startup && !installed && libraryEntry?.kind!=='site')fail('Set up TiddlyWiki using Open or Share first. Automatic startup did not install anything.','Klargør først TiddlyWiki med Åbn eller Del. Automatisk opstart har ikke installeret noget.');
     const runtime = libraryEntry?.kind==='site'?{}:installed ? await validateRuntime(installed) : await (deps.installRuntime || installRuntime)(ask);
+    if(libraryEntry?.kind==='html') {
+      if(interrupted)return;
+      const prepared=await prepareHTML({root,id:libraryId,boot:runtime.boot},deps);
+      libraryEntry=prepared.entry;
+      if(prepared.originalKept)await ask('info',ui('The wiki is ready. The original could not be moved to Trash. Use the wiki in ForgeShare from now on.','Wikien er klar. Originalen kunne ikke flyttes til papirkurven. Brug wikien i ForgeShare fremover.'));
+      if(interrupted)return;
+    }
     if(libraryId && (!libraryEntry || !['folder','site'].includes(libraryEntry.kind)))fail('Choose a server wiki folder.', 'Vælg en serverwikimappe.');
     const choices = (await readRegistry(root)).wikis;
     const add = ui('＋ Add another wiki', 'Tilføj en wiki');
@@ -1313,11 +1315,11 @@ export async function guiMain(deps = {}) {
     const displayName=libraryEntry?.name||profile.name;
     report({event:'selected',name:displayName,...(libraryId?{id:libraryId}:{})});
     const withLogin=ui('With wiki login', 'Med wiki-login'),withoutLogin=ui('Without wiki login', 'Uden wiki-login');
-    const login=mode==='funnel'?withLogin:startup ? (startup.allowAnonymous?withoutLogin:withLogin) : quick ? (sharing.allowAnonymous?withoutLogin:withLogin) : await ask('choice',ui('Wiki login? Without it, everyone with network access can read and edit.', 'Wiki-login? Uden login kan alle med netværksadgang læse og redigere.'),mode==='tailscale'?[withLogin,withoutLogin]:[withoutLogin,withLogin]);
+    const login=mode==='funnel'?withLogin:startup ? (startup.allowAnonymous?withoutLogin:withLogin) : quick ? (localOnly || sharing.allowAnonymous?withoutLogin:withLogin) : await ask('choice',ui('Wiki login? Without it, everyone with network access can read and edit.', 'Wiki-login? Uden login kan alle med netværksadgang læse og redigere.'),mode==='tailscale'?[withLogin,withoutLogin]:[withoutLogin,withLogin]);
     if(![withLogin,withoutLogin].includes(login))throw Object.assign(Error('Cancelled'),{cancelled:true});
     const allowAnonymous=login===withoutLogin;
     let files,codeAccess,savedLogin,loginToSave;
-    if(libraryId){try {const ids=JSON.parse(await readFile(path.join(root,'saved-logins.json'),'utf8'));if(ids.includes(libraryId))savedLogin=(await createVault(root).read()).wikiLogins[libraryId];}catch(error){if(error.code!=='ENOENT')throw error;}}
+    if(libraryId && !allowAnonymous){try {const ids=JSON.parse(await readFile(path.join(root,'saved-logins.json'),'utf8'));if(ids.includes(libraryId))savedLogin=(await createVault(root).read()).wikiLogins[libraryId];}catch(error){if(error.code!=='ENOENT')throw error;}}
     if(savedLogin && (mode==='funnel'?!savedLogin.readerCode:!savedLogin.password))savedLogin=undefined;
     if(allowAnonymous)files=libraryEntry?.kind==='site'?{wiki:await validateSite(profile.wiki)}:await validateWikiFolder(profile.wiki);
     else if(mode==='funnel') {
@@ -1357,6 +1359,7 @@ export async function guiMain(deps = {}) {
     if(!localOnly)await rememberSharedAddress(profile.wiki,session.url,root);
     report({event:'ready',name:displayName,url:session.url,...(session.ownerUrl?{ownerUrl:session.ownerUrl}:{}),mode,access:allowAnonymous?'open':'login',...(libraryId?{id:libraryId}:{})});
     if (appMode) { await session.finished; return; }
+    if(localOnly && quick && !startup)await (deps.openAddress || (url=>execute(process.platform==='darwin'?'/usr/bin/open':process.platform==='win32'?'explorer.exe':'xdg-open',[url])))(session.ownerUrl||session.url);
     const statusDialog = new AbortController();
     session.finished.then(() => statusDialog.abort());
     await ask('text',`“${displayName}” — ${network}\n${accessText}\n\n${ui('Copy the address. Keep this window open; OK/Cancel stops this wiki.','Kopiér adressen. Lad vinduet stå åbent; OK/Annuller stopper denne wiki.')}`,session.url,statusDialog.signal);

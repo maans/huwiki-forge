@@ -93,3 +93,31 @@ test('the actual Forge Music Edition converts with every supplied plugin and fie
  const saved=[];for(const file of await readdir(path.join(result.entry.location,'tiddlers')))saved.push(...JSON.parse(await readFile(path.join(result.entry.location,'tiddlers',file),'utf8')));
  for(const original of tiddlers){const actual=saved.find(t=>t.title===original.title);assert.ok(actual,original.title);for(const [key,value] of Object.entries(original))assert.equal(actual[key],value,original.title+':'+key);}
 });
+
+test('Open prepares an HTML wiki automatically and starts locally with bridge access, ignoring saved public sharing',async()=>{
+ const {guiMain,saveSharing,readSharing}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');const {PassThrough}=await import('node:stream');
+ const f=await fixture('open-html');await saveSharing(f.root,{mode:'funnel',allowAnonymous:false},f.id);
+ const input=new PassThrough();let finish,started=false,ready=false;const finished=new Promise(r=>finish=r);
+ await guiMain({root:f.root,libraryId:f.id,localOnly:true,quick:true,appMode:true,input,
+  findTiddlyWiki:async()=>path.dirname(path.dirname(boot)),trash:async file=>rename(file,file+'.test-trash'),checkAddressPort:async()=>{},
+  findTailscale:async()=>assert.fail('Open must not contact Tailscale'),dialog:async(kind,message)=>assert.fail('Open must not ask about sharing or conversion: '+message),
+  startSession:async options=>{started=true;assert.equal((await listLibrary(f.root)).entries[0].kind,'folder');assert.equal(options.localOnly,true);assert.equal(options.allowAnonymous,true);assert.equal(options.funnel,false);assert.equal(options.lanHost,undefined);assert.equal(options.bridge.wikiId,f.id);return {url:'http://127.0.0.1:'+options.port,finished,stop:async()=>finish()};},
+  report:event=>{if(event.event==='ready'){ready=true;assert.equal(event.mode,'local');assert.match(event.url,/^http:\/\/127\.0\.0\.1:/);input.end();}}});
+ assert.ok(started&&ready);assert.equal((await listLibrary(f.root)).entries[0].shareUrl,undefined);assert.equal((await readSharing(f.root,f.id)).mode,'funnel');
+});
+test('Open failure keeps the original HTML and never starts a server',async()=>{
+ const {guiMain}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');const f=await fixture('open-failure');const bytes=await readFile(f.location);let info=false;
+ await guiMain({root:f.root,libraryId:f.id,localOnly:true,quick:true,findTiddlyWiki:async()=>path.dirname(path.dirname(boot)),
+  convert:async()=>{throw Error('Cannot prepare');},trash:async()=>assert.fail('Original stays'),startSession:async()=>assert.fail('No server on failed preparation'),
+  dialog:async kind=>{assert.equal(kind,'info');info=true;}});
+ assert.ok(info);assert.deepEqual(await readFile(f.location),bytes);assert.equal((await listLibrary(f.root)).entries[0].kind,'html');
+});
+test('Open starts a static site locally without TiddlyWiki or Tailscale, and opens its local address',async()=>{
+ const {guiMain}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');const dir=path.join(temp,'open-site');await mkdir(dir);await writeFile(path.join(dir,'index.html'),'<h1>Site</h1>');
+ const root=path.join(temp,'site-settings');const entry=await addLibraryEntry({root,location:dir,kind:'site',name:'Site'});let opened,started=false,finish;const finished=new Promise(r=>finish=r);
+ await guiMain({root,libraryId:entry.id,localOnly:true,quick:true,checkAddressPort:async()=>{},
+  findTiddlyWiki:async()=>assert.fail('A site needs no wiki runtime'),findTailscale:async()=>assert.fail('Local only'),
+  openAddress:async url=>{opened=url;},dialog:async kind=>assert.equal(kind,'text'),
+  startSession:async options=>{started=true;assert.equal(options.kind,'site');assert.equal(options.localOnly,true);assert.equal(options.bridge,undefined);return {url:'http://127.0.0.1:'+options.port,finished,stop:async()=>finish()};}});
+ assert.ok(started);assert.match(opened,/^http:\/\/127\.0\.0\.1:/);
+});
