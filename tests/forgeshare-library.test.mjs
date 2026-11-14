@@ -113,6 +113,41 @@ test('Windows discovery includes OneDrive Documents as well as ordinary Document
  assert.ok(found.entries.some(e=>e.location===canonical),
    'A wiki under redirected Documents/Wikis must be found');
 });
+test('Windows app dialog bridge shows the requested choice and carries private input only by stdin',async()=>{
+ const {bridgedDialog}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');
+ const {PassThrough}=await import('node:stream');
+ const input=new PassThrough(),output=new PassThrough();
+ const requests=[];
+ output.on('data',data=>{
+   for(const line of data.toString().trim().split('\n')){
+     const request=JSON.parse(line);requests.push(request);
+     assert.equal(request.event,'dialog');
+     assert.equal(request.kind,'choice');
+     assert.deepEqual(request.initial,['Tailscale','Funnel']);
+     const secret='Funnel';
+     const reply=Buffer.from(JSON.stringify({id:request.id,value:secret,cancelled:false})).toString('base64');
+     input.write('DIALOG_REPLY '+reply+'\n');
+   }
+ });
+ const choice=await bridgedDialog('choice','Where should the wiki be shared?',['Tailscale','Funnel'],undefined,{input,output});
+ assert.equal(choice,'Funnel');
+ assert.equal(requests.length,1);
+ assert.ok(!JSON.stringify(requests).includes('DIALOG_REPLY'),'User selection belongs only to stdin');
+ input.end();output.end();
+});
+test('native dialog cancellation is not interpreted as a backend failure',async()=>{
+ const {bridgedDialog}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');
+ const {PassThrough}=await import('node:stream');
+ const input=new PassThrough(),output=new PassThrough();
+ output.on('data',data=>{
+   const request=JSON.parse(data.toString());
+   assert.equal(request.kind,'password');
+   const reply=Buffer.from(JSON.stringify({id:request.id,value:'',cancelled:true})).toString('base64');
+   input.write('DIALOG_REPLY '+reply+'\n');
+ });
+ await assert.rejects(bridgedDialog('password','Choose a code','',undefined,{input,output}),e=>e.cancelled===true);
+ input.end();output.end();
+});
 test('native Windows dialogs stay visible and pass user input only through private pipes',()=>{
  const native='C:\\Program Files\\ForgeShare\\ForgeShare.exe';
  const prompt='A \"quote\" and a secret code';

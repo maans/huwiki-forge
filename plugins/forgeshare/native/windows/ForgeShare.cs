@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Security.Cryptography;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.17.0")]
+[assembly: AssemblyVersion("0.1.18.0")]
 
 class Session {
     public Process Process; public string Name, Url = "", OwnerUrl = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady, Failed;
@@ -83,7 +83,17 @@ class ForgeShare : Form {
             Console.Write(result);Console.Out.Flush();return 0;
         }catch{return 1;}
     }
-    static string ShowNativeDialog(string kind,string message,object initial,string cancel) {
+    static string ShowNativeDialog(string kind,string message,object initial,string cancel,IWin32Window parent=null) {
+        if(parent!=null && (kind=="file" || kind=="folder" || kind=="save")) {
+            if(kind=="folder")using(var d=new FolderBrowserDialog {Description=message})
+                return d.ShowDialog(parent)==DialogResult.OK?d.SelectedPath:null;
+            if(kind=="file")using(var d=new OpenFileDialog {Title=message,
+                Filter="HTML (*.html;*.htm)|*.html;*.htm|All files (*.*)|*.*"})
+                return d.ShowDialog(parent)==DialogResult.OK?d.FileName:null;
+            using(var d=new SaveFileDialog {Title=message,FileName=Convert.ToString(initial),
+                Filter="JSON (*.json)|*.json",DefaultExt="json",AddExtension=true,OverwritePrompt=true})
+                return d.ShowDialog(parent)==DialogResult.OK?d.FileName:null;
+        }
         if(kind=="file" || kind=="folder" || kind=="save") {
             // The topmost owner brings CommonDialog in front of the ForgeShare window.
             using(var owner=new Form {Text="ForgeShare",TopMost=true,ShowInTaskbar=true,
@@ -106,8 +116,8 @@ class ForgeShare : Form {
             }
         }
         using(var form=new Form {Text="ForgeShare",Size=new Size(680,430),
-                   StartPosition=FormStartPosition.CenterScreen,TopMost=true,
-                   ShowInTaskbar=true,Font=new Font("Segoe UI",10),
+                   StartPosition=parent==null?FormStartPosition.CenterScreen:FormStartPosition.CenterParent,
+                   TopMost=parent==null,ShowInTaskbar=parent==null,Font=new Font("Segoe UI",10),
                    MinimumSize=new Size(540,300)}) {
             var prompt=new TextBox {Text=message,ReadOnly=true,Multiline=true,
                 ScrollBars=ScrollBars.Vertical,Dock=DockStyle.Top,Height=115,
@@ -149,7 +159,7 @@ class ForgeShare : Form {
                 var ok=new Button {Text="OK",Width=115,Height=32,
                     DialogResult=DialogResult.OK};buttons.Controls.Add(ok);
                 form.AcceptButton=ok;
-                if(form.ShowDialog()!=DialogResult.OK)return null;
+                if((parent==null?form.ShowDialog():form.ShowDialog(parent))!=DialogResult.OK)return null;
                 if(kind=="choices") {
                     var selected=new List<string>();
                     foreach(var value in ((CheckedListBox)list).CheckedItems)
@@ -168,14 +178,14 @@ class ForgeShare : Form {
                     DialogResult=DialogResult.OK};
                 buttons.Controls.Add(ok);form.AcceptButton=ok;
                 form.Shown+=(sender,args)=>field.Focus();
-                return form.ShowDialog()==DialogResult.OK?field.Text:null;
+                return (parent==null?form.ShowDialog():form.ShowDialog(parent))==DialogResult.OK?field.Text:null;
             }
             if(kind=="confirm" || kind=="info") {
                 var ok=new Button {Text="OK",Width=115,Height=32,
                     DialogResult=DialogResult.OK};buttons.Controls.Add(ok);
                 form.AcceptButton=ok;
                 if(kind=="info"){cancelButton.Visible=false;form.CancelButton=null;}
-                return form.ShowDialog()==DialogResult.OK?"":null;
+                return (parent==null?form.ShowDialog():form.ShowDialog(parent))==DialogResult.OK?"":null;
             }
             return null;
         }
@@ -203,7 +213,7 @@ class ForgeShare : Form {
         var info = new ProcessStartInfo(node,args) { UseShellExecute=false, CreateNoWindow=true,
             RedirectStandardInput=true, RedirectStandardOutput=true, RedirectStandardError=true,
             StandardOutputEncoding=Encoding.UTF8, WorkingDirectory=AppDomain.CurrentDomain.BaseDirectory };
-        info.EnvironmentVariables["FORGESHARE_NATIVE"]=Application.ExecutablePath;info.EnvironmentVariables["FORGESHARE_APP"]=Application.ExecutablePath;info.EnvironmentVariables.Remove("NODE_OPTIONS"); info.EnvironmentVariables.Remove("NODE_PATH"); info.EnvironmentVariables["FORGESHARE_LANGUAGE"]=Danish?"da":"en"; return info;
+        info.EnvironmentVariables["FORGESHARE_NATIVE"]=Application.ExecutablePath;info.EnvironmentVariables["FORGESHARE_APP"]=Application.ExecutablePath;info.EnvironmentVariables.Remove("NODE_OPTIONS"); info.EnvironmentVariables.Remove("NODE_PATH"); info.EnvironmentVariables["FORGESHARE_LANGUAGE"]=Danish?"da":"en"; info.EnvironmentVariables["FORGESHARE_DIALOG_BRIDGE"]="1"; return info;
     }
     static string Quote(string path) { return "\"" + path + "\""; }
     static bool PermittedAddress(Uri address) {
@@ -292,6 +302,46 @@ class ForgeShare : Form {
         FormClosing+=OnClosing;Shown+=(sender,args)=>{tray.Visible=true;ReloadLibrary();};FormClosed+=(s,e)=>tray.Dispose();
     }
     void UI(Action action) { if (!IsDisposed && IsHandleCreated) BeginInvoke(action); }
+    // A modal dialog belongs to this window. No second GUI process is launched
+    // to ask about Share, Funnel, folders or passwords. Replies stay in stdin.
+    bool HandleDialogRequest(Process source,string line) {
+        if(String.IsNullOrEmpty(line)||line.Length>262144)return false;
+        Dictionary<string,object> data;
+        try {data=new JavaScriptSerializer().Deserialize<Dictionary<string,object>>(line);}
+        catch {return false;}
+        object value;
+        if(!data.TryGetValue("event",out value)||Convert.ToString(value)!="dialog")return false;
+        string id=data.ContainsKey("id")?Convert.ToString(data["id"]):"";
+        Guid parsed;
+        if(!Guid.TryParse(id,out parsed))return true;
+        string kind=data.ContainsKey("kind")?Convert.ToString(data["kind"]):"";
+        string message=data.ContainsKey("message")?Convert.ToString(data["message"]):"";
+        object initial=data.ContainsKey("initial")?data["initial"]:"";
+        UI(()=>{
+            string result=null;
+            try {
+                if(message.Length<=8192)
+                    result=ShowNativeDialog(kind,message,initial,T("Annuller","Cancel"),this);
+            }catch {}
+            // JSON/Base64 framing avoids interpreting user text as the STOP
+            // command and never puts access codes in process arguments.
+            var reply=new Dictionary<string,object> {
+                {"id",id},{"cancelled",result==null},{"value",result??""}
+            };
+            string serialized=new JavaScriptSerializer().Serialize(reply);
+            string frame="DIALOG_REPLY "+Convert.ToBase64String(Encoding.UTF8.GetBytes(serialized));
+            try {
+                lock(source) {
+                    if(!source.HasExited){
+                        source.StandardInput.WriteLine(frame);
+                        source.StandardInput.Flush();
+                    }
+                }
+            }catch {}
+        });
+        return true;
+    }
+
     void StartWiki() {
         bool startupLaunch=nextStartup;nextStartup=false;
         var node=Node();
@@ -311,7 +361,8 @@ class ForgeShare : Form {
         session.Row.Controls.AddRange(new Control[] { session.Label,session.Copy,session.Invite });
         session.Process=new Process { StartInfo=Command(node,Quote(Helper)+" --gui --app --quick"+(session.Id.Length==0?"":" --profile "+session.Id)+(session.Local?" --local":"")+(startupLaunch?" --startup":"")),EnableRaisingEvents=true };
         session.Process.OutputDataReceived+=(s,e)=> {
-            if(e.Data==null || e.Data.Length>65536) return;
+            if(e.Data==null || e.Data.Length>262144) return;
+            if(HandleDialogRequest(session.Process,e.Data))return;
             try { var data=new JavaScriptSerializer().Deserialize<Dictionary<string,string>>(e.Data);
                 UI(()=> { if(!sessions.Contains(session)) return;
                     if(data.ContainsKey("name")) session.Name=data["name"];
@@ -350,7 +401,16 @@ class ForgeShare : Form {
         System.Threading.Tasks.Task.Run(()=>{
             string output=null;
             try {using(var p=new Process {StartInfo=Command(node,Quote(Helper)+" --gui --library "+action+" "+data)}) {
-                p.ErrorDataReceived+=(s,e)=>{};p.Start();p.BeginErrorReadLine();var text=p.StandardOutput.ReadToEnd();p.WaitForExit();if(p.ExitCode==0)output=text;
+                string lastReport=null;
+                p.OutputDataReceived+=(s,e)=>{
+                    if(e.Data==null || e.Data.Length>262144)return;
+                    if(HandleDialogRequest(p,e.Data))return;
+                    lastReport=e.Data;
+                };
+                p.ErrorDataReceived+=(s,e)=>{};
+                p.Start();p.BeginOutputReadLine();p.BeginErrorReadLine();
+                p.WaitForExit();
+                if(p.ExitCode==0)output=lastReport;
             }}catch{}
             UI(()=>{libraryBusy=false;RefreshLibraryState();
                 if(output==null && action!="list")

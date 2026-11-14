@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.17 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.18 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {validateSite,siteWorker} from './Site.mjs';
 import {configureLogin} from './Startup.mjs';
 import {Vault,vaultDialog,invitation,privateCommand} from './Vault.mjs';
@@ -1357,7 +1357,53 @@ switch ($d.kind) {
   }
   throw Error(ui('Supported systems: Mac, Windows, Linux','Understøttede systemer: Mac, Windows, Linux.'));
 }
+// Native Windows dialogs are owned by the visible ForgeShare window, not by
+// launching a second GUI executable or a hidden PowerShell process. Requests
+// use the normal stdout event stream; replies are private framed stdin data.
+export async function bridgedDialog(kind,message,initial='',signal,{input=process.stdin,output=process.stdout}={}) {
+  const id=randomUUID(), request={event:'dialog',id,kind,message,initial};
+  return new Promise((resolve,reject)=>{
+    let settled=false,pending='';
+    const cleanup=()=>{
+      input.off('data',onData);input.off('end',onEnd);
+      signal?.removeEventListener('abort',onAbort);
+    };
+    const finish=(value,error)=>{
+      if(settled)return;settled=true;cleanup();
+      if(error)reject(error);else resolve(value);
+    };
+    const cancelled=()=>Object.assign(Error(ui('Cancelled','Annulleret')),{cancelled:true});
+    const onAbort=()=>finish(null,cancelled());
+    const onEnd=()=>finish(null,cancelled());
+    const onData=chunk=>{
+      pending+=chunk.toString('utf8');
+      if(pending.length>131072) {
+        finish(null,Error(ui('The dialog response was too large.','Dialogsvaret var for stort.')));return;
+      }
+      let end;
+      while((end=pending.indexOf('\n'))!==-1) {
+        const line=pending.slice(0,end).trimEnd();pending=pending.slice(end+1);
+        if(line==='STOP'){finish(null,cancelled());return;}
+        if(!line.startsWith('DIALOG_REPLY '))continue;
+        let reply;
+        try {reply=JSON.parse(Buffer.from(line.slice(13),'base64').toString('utf8'));}
+        catch {finish(null,Error(ui('Invalid dialog reply.','Ugyldigt dialogsvar.')));return;}
+        if(reply?.id!==id)continue;
+        if(reply.cancelled===true){finish(null,cancelled());return;}
+        if(typeof reply.value!=='string'){finish(null,Error(ui('Invalid dialog reply.','Ugyldigt dialogsvar.')));return;}
+        finish(reply.value);return;
+      }
+    };
+    input.on('data',onData);input.once('end',onEnd);
+    signal?.addEventListener('abort',onAbort,{once:true});
+    if(signal?.aborted){onAbort();return;}
+    try {output.write(JSON.stringify(request)+'\n');input.resume();}
+    catch {finish(null,Error(ui('Could not open a native dialog.','Kunne ikke åbne en lokal dialog.')));}
+  });
+}
 export async function dialog(kind, message, initial = '', signal) {
+  if(process.platform==='win32' && process.env.FORGESHARE_DIALOG_BRIDGE==='1')
+    return bridgedDialog(kind,message,initial,signal);
   const [command, args, input] = dialogCommand(process.platform, kind, message, initial);
   try {
     const stdout = await new Promise((resolve,reject)=>{
@@ -1426,7 +1472,16 @@ export async function guiMain(deps = {}) {
   const inputStream = deps.input || process.stdin;
   const report = data => { if (appMode) (deps.report || (item => process.stdout.write(JSON.stringify(item) + '\n')))(data); };
   let input = '';
-  const inputData = chunk => { input += chunk.toString(); if (input.includes('STOP\n') || input.length > 1024) interrupt(); };
+  const inputData = chunk => {
+    input += chunk.toString('utf8');
+    if(input.length>131072){input='';return;}
+    let end;
+    while((end=input.indexOf('\n'))!==-1) {
+      const line=input.slice(0,end).trimEnd();input=input.slice(end+1);
+      // Base64-framed dialog replies must never be interpreted as Stop.
+      if(line==='STOP')interrupt();
+    }
+  };
   if (appMode) { inputStream.on('data', inputData); inputStream.once('end', interrupt); }
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, interrupt);
   try {

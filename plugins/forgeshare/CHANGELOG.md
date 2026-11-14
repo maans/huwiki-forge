@@ -1,3 +1,11 @@
+# 0.1.18 — Windows Share/Add dialog reliability
+
+- Windows Share, Add, file/folder selection, code entry and error dialogs are displayed by the already-open ForgeShare app as owned, modal windows. No additional hidden PowerShell or GUI helper is needed for normal Windows app operation.
+- The Node helper sends dialog requests over the existing stdout event stream. Responses return over the private stdin pipe as JSON/Base64 frames with request IDs, never in command-line arguments. This prevents false Stop commands from user text and avoids focus flicker.
+- Keep the standalone helper's PowerShell fallback when no native Windows app is running.
+- Add regression tests for dialog choice, cancellation and private framing. Preserve local TiddlyWiki Node.js server, static Site server, Tailscale/Funnel settings and the known working Mac program.
+- This remains a test release. Native Windows interactive dialog behavior needs physical Windows acceptance before merging.
+
 # 0.1.17 — Windows native dialog and OneDrive discovery fixes
 
 - Windows ForgeShare opens Add, sharing/login, help and error dialogs in its own visible foreground WinForms process. The main library can disable controls while a modal choice is open, but it must never silently wait on an invisible PowerShell window.
