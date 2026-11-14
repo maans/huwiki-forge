@@ -4,7 +4,7 @@ on:
     paths:
       - plugins/forgeshare/**
       - scripts/build-forgeshare.mjs
-      - tests/forgeshare.test.mjs
+      - tests/forgeshare*.test.mjs
       - package.json
       - package-lock.json
       - .github/workflows/forgeshare-test.yml
@@ -24,4 +24,4 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --ignore-scripts
-      - run: node --test tests/forgeshare.test.mjs
+      - run: node --test tests/forgeshare.test.mjs tests/forgeshare-library.test.mjs

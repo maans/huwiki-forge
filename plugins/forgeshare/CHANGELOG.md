@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.2 (test release)
+
+- Add a persistent wiki library for local HTML files and wiki folders. Adding a wiki starts no sharing. Existing server profiles appear automatically; names and descriptions can be edited.
+- Open HTML with the existing browser/save workflow, or run a prepared server folder locally without querying/starting Tailscale. Sharing is a separate action.
+- Export checked entries as ordinary importable tiddlers plus a localized overview. Addresses are opt-in; file paths, credentials and unselected entries are omitted. Stable IDs support reimport; snapshots explicitly do not claim live status or automatic synchronization.
+- Add library, selection, migration, literal-text rendering, exclusive export-file creation and real local-only server tests.
+
 ## 0.1.1 (test release)
 
 - Replace Mac/Windows terminal launchers with native apps: icon, active wiki names/addresses, copy and individual Stop. Mac is universal and ad-hoc sealed, without Developer ID/notarization; Windows is an unsigned GUI .exe. Node.js/Tailscale remain prerequisites.

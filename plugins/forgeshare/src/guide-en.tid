@@ -13,7 +13,7 @@ type: text/vnd.tiddlywiki
 <summary>First time? Install these first</summary>
 <div class="hu-share-detail-body">
 
-Install Node.js and Tailscale on the computer hosting the wiki. Use their installers and sign in to Tailscale. The helper can then offer to install TiddlyWiki.
+Install Node.js for the helper. Tailscale is needed only to share a server wiki. Use the official installers. The helper can offer to install TiddlyWiki when you open a server wiki.
 
 <div class="hu-share-install-links"><a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">Get Node.js ↗</a> <a href="https://tailscale.com/download" target="_blank" rel="noopener noreferrer">Get Tailscale ↗</a></div>
 
@@ -22,17 +22,19 @@ On Linux, follow the instructions for your distribution. The dialogs also need Z
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Choose your wiki</h2><p>Extract the ZIP, open ForgeShare and select <strong>Start a wiki</strong>. Choose a saved name or add a wiki folder.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Collect your wikis</h2><p>Extract the ZIP and open ForgeShare. Select <strong>Add</strong> to keep an HTML file or wiki folder in the list. Select a wiki and choose <strong>Open</strong>.</p>
 <details class="hu-share-detail">
 <summary>I only have an HTML file</summary>
 <div class="hu-share-detail-body">
 
-Keep the HTML file as your offline copy. First, its content needs copying into a prepared server folder; this test release cannot yet do that automatically. You may want help with this step. See step 1 in ''Advanced help'' below. If you already have a server wiki, choose its folder.
+A local HTML wiki can be added and opened directly. It opens in your usual browser and uses the wiki’s existing save method. The helper does not take over saving.
+
+To share an HTML wiki, first prepare a copy in a server folder. Keep the original. See step 1 in ''Advanced help''; you may want assistance with this first step.
 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share the address</h2><p>Invite people through Tailscale. Copy the wiki address from the app and share it and a wiki login through private messages.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select a server wiki and choose <strong>Share</strong>. Invite through Tailscale and send the address and wiki login privately. <strong>Add</strong> and <strong>Open</strong> do not start Tailscale sharing.</p>
 <p class="hu-share-access">An invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
 <summary>How to invite people</summary>
 <div class="hu-share-detail-body">
@@ -54,6 +56,21 @@ This setup requires Tailscale on participants' devices. Tailscale Funnel can pro
 <h2 class="hu-share-help-heading">Help when you need it</h2>
 <div class="hu-share-help">
 <details class="hu-share-detail">
+<summary>Bring the library into a wiki</summary>
+<div class="hu-share-detail-body">
+
+# Check the wikis you want to include in the helper’s list.
+# Choose ''Export selected''. Names and descriptions are the default; shared addresses are optional. File paths and passwords are never included.
+# Save a new JSON file. Drag it into your chosen wiki, review the import and select ''Import''.
+# Open ''Mine wikier / My wikis'' from the import list. The overview follows the wiki’s Danish/English setting.
+
+This is a snapshot from the export time. Addresses are last known sharing addresses, not a sign that a wiki is currently running. There is no automatic update. Reimporting updates the same entries but does not delete previously imported entries.
+
+Use ''Edit'' in the helper for names and descriptions. Changes in an imported overview are not sent back to the helper.
+
+</div>
+</details>
+<details class="hu-share-detail">
 <summary>If your computer blocks the app</summary>
 <div class="hu-share-detail-body">
 
@@ -71,7 +88,7 @@ The Mac and Windows apps do not open a terminal. Do not disable your computer’
 <summary>Several wikis — no port numbers</summary>
 <div class="hu-share-detail-body">
 
-Select ''Start a wiki'' again. Choose, for example, Family or Garden. Each wiki has its own address and login. Copy its address or stop it from its row in the app. On Linux, open the helper again; each wiki has its own status window.
+Select another wiki folder and choose ''Open'' or ''Share''. Stopped wikis stay in the list. Each wiki has its own address and login. Copy its address or stop it from its row in the app. On Linux, open the helper again; each wiki has its own status window.
 
 The helper remembers names, folders and addresses on this computer, not passwords. It finds unused connections and preserves other services. If a saved address is occupied, it explains the conflict instead of silently moving the wiki.
 

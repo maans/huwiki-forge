@@ -36,7 +36,7 @@ test('bundle is reproducible, standalone and opt-in in the catalog', async () =>
   assert.deepEqual((await build()).plugin, plugin);
   assert.equal(plugin.title, base);
   // TW 5.4.1 compares only major/minor/patch when deciding whether to import.
-  for (const previous of ['0.1.0-test.1','0.1.0-test.2','0.1.0-test.3'])
+  for (const previous of ['0.1.0-test.1','0.1.0-test.2','0.1.0-test.3','0.1.1'])
     assert.ok(tw.utils.compareVersions(plugin.version,previous)>0,'The actual TW importer must accept this upgrade');
   assert.equal(plugin.dependents, undefined);
   assert.ok(Object.keys(shadows).every(title => title.startsWith(base + '/')));

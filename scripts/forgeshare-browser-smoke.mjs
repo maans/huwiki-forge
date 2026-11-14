@@ -5,6 +5,7 @@ import path from 'node:path';
 import {pathToFileURL} from 'node:url';
 import assert from 'node:assert/strict';
 import {assembleHtml} from '../assembler/assemble.mjs';
+import {libraryExport} from '../plugins/forgeshare/helper/ForgeShare.mjs';
 const {chromium}=await import(process.env.PLAYWRIGHT_MODULE || 'playwright-core');
 const root=path.resolve(import.meta.dirname,'..');
 const plugin=JSON.parse(await readFile(path.join(root,'plugins/forgeshare/dist/plugin.json'),'utf8'));
@@ -12,6 +13,7 @@ const title='$:/plugins/huwiki/forgeshare/home';
 const html=assembleHtml(await readFile(path.join(root,'core/empty.html'),'utf8'),[plugin,
   {title:'$:/DefaultTiddlers',text:'[['+title+']]'},
   {title:'$:/language',text:'$:/languages/huwiki-da-DK'},
+  {title:'$:/config/AutoSave',text:'no'},
   {title:'$:/state/sidebar',text:'no'}]);
 const dir=await mkdtemp(path.join(tmpdir(),'forgeshare-preview-'));
 const file=path.join(dir,'preview.html');await writeFile(file,html);
@@ -46,6 +48,32 @@ try {
  await page.waitForFunction(()=>document.querySelector('.hu-forgeshare h1')?.textContent==='Your wiki. Together.');
  assert.equal(await panel.locator('.hu-share-downloads').count(),1,'Language refresh must not duplicate content');
  await page.setViewportSize({width:1100,height:1200});await capture('ForgeShare-english');
+ // Exercise the normal core import review and Import button with a selected export.
+ const library={id:'11111111-1111-4111-8111-111111111111',entries:[
+  {id:'22222222-2222-4222-8222-222222222222',name:'Projektwiki',description:'Fælles noter og idéer',kind:'folder',location:'/private/project',shareUrl:'https://example.example.ts.net:21000'},
+  {id:'33333333-3333-4333-8333-333333333333',name:'Private noter',description:'Skal ikke eksporteres',kind:'html',location:'/private/notes.html'}]};
+ const importSelected=async exported=>{
+  await page.evaluate(tiddlers=>{
+   const find=w=>w.parseTreeNode?.type==='navigator'?w:(w.children||[]).map(find).find(Boolean);
+   const navigator=find(window.$tw.rootWidget);if(!navigator)throw Error('Navigator not found');
+   navigator.dispatchEvent({type:'tm-import-tiddlers',param:JSON.stringify(tiddlers)});
+  },exported);
+  await page.getByRole('button',{name:'Import',exact:true}).first().click();
+  await page.waitForFunction(()=>window.$tw.wiki.getTiddler('$:/Import')?.fields.status==='complete');
+ };
+ let exported=libraryExport(library,[library.entries[0].id],{includeAddresses:true});
+ await importSelected(exported);
+ await page.evaluate(title=>window.$tw.wiki.setText('$:/StoryList','list',undefined,[title]),exported[0].title);
+ const overview=page.locator('.tc-tiddler-frame').filter({has:page.locator('h2',{hasText:'My wikis'})});
+ await overview.waitFor();assert.ok((await overview.innerText()).includes('Projektwiki'));
+ assert.ok(!(await overview.innerText()).includes('Private noter'));
+ assert.equal(await overview.getByRole('link',{name:'Open shared address'}).getAttribute('href'),library.entries[0].shareUrl);
+ library.entries[0].description='Opdateret beskrivelse';exported=libraryExport(library,[library.entries[0].id]);
+ await importSelected(exported);
+ await page.evaluate(title=>window.$tw.wiki.setText('$:/StoryList','list',undefined,[title]),exported[0].title);
+ await page.waitForFunction(()=>document.body.textContent.includes('Opdateret beskrivelse'));
+ assert.equal(await overview.getByRole('link',{name:'Open shared address'}).count(),0,'A fresh private export clears a previously imported address');
+ assert.equal(await page.evaluate(()=>window.$tw.wiki.filterTiddlers('[prefix[ForgeShare/Wiki/]]').length),1,'Reimport updates the existing entry');
  assert.deepEqual(errors,[]);
- console.log('Headless guide: Danish/English live refresh, three exact downloads, keyboard disclosures, mobile layout passed');
+ console.log('Headless guide and library: language refresh, downloads, mobile layout, selected import and stable reimport passed');
 } finally {await browser.close();}

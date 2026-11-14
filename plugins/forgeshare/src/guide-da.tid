@@ -13,7 +13,7 @@ type: text/vnd.tiddlywiki
 <summary>Første gang? Det skal være installeret</summary>
 <div class="hu-share-detail-body">
 
-På computeren med wikien skal du installere Node.js og Tailscale. Brug deres installationsprogrammer, og log ind i Tailscale. Hjælperen kan derefter tilbyde at installere TiddlyWiki.
+Installer Node.js til hjælperen. Tailscale behøves kun, når du vil dele en serverwiki. Brug de officielle installationsprogrammer. Hjælperen kan tilbyde at installere TiddlyWiki, når du åbner en serverwiki.
 
 <div class="hu-share-install-links"><a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">Hent Node.js ↗</a> <a href="https://tailscale.com/download" target="_blank" rel="noopener noreferrer">Hent Tailscale ↗</a></div>
 
@@ -22,17 +22,19 @@ På Linux: følg vejledningen til din distribution. Dialogboksene kræver også 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Vælg din wiki</h2><p>Pak ZIP-filen ud, åbn ForgeShare, og tryk <strong>Start en wiki</strong>. Vælg et gemt navn, eller tilføj en wikimappe.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Saml dine wikier</h2><p>Pak ZIP-filen ud, og åbn ForgeShare. Tryk <strong>Tilføj</strong> for at gemme en HTML-fil eller wikimappe på listen. Markér en wiki, og tryk <strong>Åbn</strong>.</p>
 <details class="hu-share-detail">
 <summary>Jeg har kun en HTML-fil</summary>
 <div class="hu-share-detail-body">
 
-Bevar HTML-filen som din offline-kopi. Første gang skal indholdet kopieres til en forberedt servermappe; denne testudgave gør det endnu ikke automatisk. Få eventuelt hjælp til dette trin. Se trin 1 i ''Avanceret hjælp'' nedenfor. Har du allerede en serverwiki, kan du vælge dens mappe.
+En lokal HTML-wiki kan tilføjes og åbnes direkte. Den åbner i din sædvanlige browser og bruger wikiens egen gemmemetode. Hjælperen overtager ikke gemningen.
+
+Vil du dele HTML-wikien, skal en kopi først klargøres som servermappe. Bevar originalen. Se trin 1 i ''Avanceret hjælp''; få eventuelt hjælp til dette første trin.
 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del adressen</h2><p>Invitér via Tailscale. Kopiér wikiens adresse fra appen, og send den sammen med et wiki-login via private beskeder.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Markér en serverwiki, og tryk <strong>Del</strong>. Invitér via Tailscale, og send adressen og wiki-login privat. <strong>Tilføj</strong> og <strong>Åbn</strong> starter ingen Tailscale-deling.</p>
 <p class="hu-share-access">Invitationen gælder computeren. Begræns gæsternes adgang til wikien, før du inviterer.</p><details class="hu-share-detail">
 <summary>Sådan inviterer du andre</summary>
 <div class="hu-share-detail-body">
@@ -54,6 +56,21 @@ Denne løsning kræver Tailscale hos deltagerne. Tailscale Funnel kan give offen
 <h2 class="hu-share-help-heading">Hjælp, når du har brug for den</h2>
 <div class="hu-share-help">
 <details class="hu-share-detail">
+<summary>Få wikibiblioteket ind i en wiki</summary>
+<div class="hu-share-detail-body">
+
+# Markér de wikier, du vil have med i hjælperens liste.
+# Vælg ''Eksportér valgte''. Navne og beskrivelser er standard; delingsadresser kan tilvælges. Filstier og adgangskoder kommer aldrig med.
+# Gem en ny JSON-fil. Træk den ind i den ønskede wiki, gennemse importen, og tryk ''Importér''.
+# Åbn ''Mine wikier / My wikis'' fra importlisten. Oversigten følger wikiens dansk/engelsk-valg.
+
+Det er en oversigt fra eksporttidspunktet. Adresser er sidst kendte delingsadresser; de er ikke et tegn på, at en wiki kører nu. Ingen automatisk opdatering. Gentagen import opdaterer de samme poster, men sletter ikke tidligere importerede poster.
+
+Brug ''Redigér'' i hjælperen til navn og beskrivelse. Ændringer i en importeret oversigt sendes ikke tilbage til hjælperen.
+
+</div>
+</details>
+<details class="hu-share-detail">
 <summary>Hvis computeren blokerer appen</summary>
 <div class="hu-share-detail-body">
 
@@ -71,7 +88,7 @@ Mac- og Windows-apps åbner ikke Terminal. Slå ikke computerens generelle besky
 <summary>Flere wikier — uden portnumre</summary>
 <div class="hu-share-detail-body">
 
-Tryk ''Start en wiki'' igen. Vælg f.eks. Familie eller Have. Hver wiki får sin egen adresse og sit eget login. Kopiér adressen eller stop wikien på dens række i appen. På Linux åbner du hjælperen igen; hver wiki har sit eget statusvindue.
+Markér en anden wikimappe, og vælg ''Åbn'' eller ''Del''. Stoppede wikier bliver på listen. Hver wiki får sin egen adresse og sit eget login. Kopiér adressen eller stop wikien på dens række i appen. På Linux åbner du hjælperen igen; hver wiki har sit eget statusvindue.
 
 Hjælperen husker navne, mapper og adresser på denne computer, men ikke adgangskoder. Den bruger ledige forbindelser og bevarer andre tjenester. Hvis en gemt adresse er optaget, forklarer den konflikten. Den flytter ikke wikien i stilhed.
 
