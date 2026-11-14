@@ -28,7 +28,7 @@ try {
  assert.equal(await panel.locator('.hu-share-downloads a').count(),3);
  assert.equal(await panel.locator('details[open]').count(),0);
  const download=await panel.locator('.hu-share-downloads').boundingBox();
- assert.ok(download.y<500,'Downloads must appear before long help text');
+ assert.ok(download.y<700,'Downloads must remain near the top, after the server-type cards and before long help text');
  const capture=async name=>{if(process.env.FORGESHARE_PREVIEW_DIR){await mkdir(process.env.FORGESHARE_PREVIEW_DIR,{recursive:true});await panel.screenshot({path:path.join(process.env.FORGESHARE_PREVIEW_DIR,name+'.png')});}};
  await capture('ForgeShare-dansk');
  // The browser checks actual downloadable bytes for all three platforms.
