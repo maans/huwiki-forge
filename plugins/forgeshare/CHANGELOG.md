@@ -1,3 +1,11 @@
+# 0.1.17 — Windows native dialog and OneDrive discovery fixes
+
+- Windows ForgeShare opens Add, sharing/login, help and error dialogs in its own visible foreground WinForms process. The main library can disable controls while a modal choice is open, but it must never silently wait on an invisible PowerShell window.
+- On Windows, dialog input/output travels on inherited pipes instead of command-line arguments; saved credentials and other sensitive values remain out of process listings. Bare `ForgeShare.mjs` still supports the existing PowerShell fallback.
+- Automatic discovery includes explicitly configured OneDrive Documents directories in addition to ordinary Documents and Wikis; symlinks, hidden folders and existing wiki contents remain excluded.
+- Failures of a library action show an explanatory error instead of leaving a silent disabled interface. No changes to Mac UI, Tailscale routes, existing libraries or the static Site/TiddlyWiki server architecture.
+- The app remains an unsigned test build. Verify real Windows Add/dialog, local Wiki Open and private sharing before any release or merge.
+
 # 0.1.16 — remembered sharing choice and Funnel diagnostics
 
 - Share asks whether to reuse the saved connection, choose another method, or cancel for each wiki and static site. Open remains local. Stop is available on the running library row; active shares are never silently switched.

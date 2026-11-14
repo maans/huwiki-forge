@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.16 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.17 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {validateSite,siteWorker} from './Site.mjs';
 import {configureLogin} from './Startup.mjs';
 import {Vault,vaultDialog,invitation,privateCommand} from './Vault.mjs';
@@ -824,8 +824,19 @@ export async function prepareHTML({root=appFolder(),id,boot},deps={}) {
   } finally {if(destination && !committed)await rm(destination,{recursive:true,force:true});await release();}
 }
 
-export function defaultDiscoveryRoots(home=os.homedir()) {
-  return ['Wikis','Documents','Desktop','Downloads'].map(name=>path.join(home,name));
+export function defaultDiscoveryRoots(home=os.homedir(),{platform=process.platform,env=process.env}={}) {
+  const roots=['Wikis','Documents','Desktop','Downloads'].map(name=>path.join(home,name));
+  // Windows can redirect Documents to OneDrive. The home/Documents path may
+  // not exist even though File Explorer shows a normal "Documents" folder.
+  // Probe only explicit known OneDrive roots, never an entire cloud drive.
+  if(platform==='win32') {
+    const cloudRoots=[env.OneDrive,env.OneDriveConsumer,env.OneDriveCommercial,
+      path.join(home,'OneDrive')].filter(Boolean);
+    for(const base of cloudRoots) {
+      roots.push(path.join(base,'Documents'),path.join(base,'Wikis'));
+    }
+  }
+  return [...new Set(roots.map(value=>path.resolve(value)))];
 }
 // Read-only, bounded folder discovery. Never follows directory symlinks or executes wiki code.
 export async function discoverWikiFolders({includeHTML=false,roots=defaultDiscoveryRoots(),known=[],maxDepth=5,maxDirectories=1500,maxEntries=20000,maxResults=100,timeoutMs=5000}={}) {
@@ -1268,7 +1279,15 @@ if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === imp
 
 // Native dialogs keep the ordinary flow out of the terminal. Arguments are data,
 // never interpolated into shell commands. No browser or website is opened.
-export function dialogCommand(platform, kind, message, initial = '') {
+export function dialogCommand(platform, kind, message, initial = '', env = process.env) {
+  // The Windows app owns and displays these dialogs itself. The prompt, selected
+  // paths and passwords travel only over inherited stdin/stdout pipes.
+  // The PowerShell fallback remains for users launching the bare .mjs helper.
+  if(platform === 'win32' && env.FORGESHARE_NATIVE &&
+      path.basename(env.FORGESHARE_NATIVE).toLowerCase() === 'forgeshare.exe') {
+    return [env.FORGESHARE_NATIVE, ['--dialog'],
+      JSON.stringify({kind,message,initial,cancel:ui('Cancel','Annuller')})];
+  }
   if (platform === 'darwin') {
     if(kind==='choice' && initial.length<=6) {
       // AppKit's NSAlert buttons are visible before focus, support keyboard activation,

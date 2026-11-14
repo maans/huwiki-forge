@@ -95,6 +95,36 @@ test('discovery finds wiki folders without following links, scanning contents or
  assert.deepEqual((await discoverWikiFolders({roots:[base],known:[folder,second],timeoutMs:60000})).entries,[]);
  assert.deepEqual(defaultDiscoveryRoots(base),['Wikis','Documents','Desktop','Downloads'].map(name=>path.join(base,name)));
 });
+test('Windows discovery includes OneDrive Documents as well as ordinary Documents',async()=>{
+ const home=path.join(temp,'Windows home');
+ const cloud=path.join(home,'OneDrive');
+ const work=path.join(home,'OneDrive - School');
+ const options={platform:'win32',env:{OneDrive:cloud,OneDriveCommercial:work}};
+ const roots=defaultDiscoveryRoots(home,options);
+ assert.ok(roots.includes(path.join(home,'Documents')));
+ assert.ok(roots.includes(path.join(cloud,'Documents')));
+ assert.ok(roots.includes(path.join(work,'Documents')));
+ assert.equal(new Set(roots).size,roots.length,'Redundant OneDrive aliases must not duplicate roots');
+ const wiki=path.join(work,'Documents','Wikis','Lesson');
+ await mkdir(wiki,{recursive:true});
+ await writeFile(path.join(wiki,'tiddlywiki.info'),'{}');
+ const found=await discoverWikiFolders({roots,timeoutMs:10000});
+ assert.ok(found.entries.some(e=>e.location===await realpath(wiki)),
+   'A wiki under redirected Documents/Wikis must be found');
+});
+test('native Windows dialogs stay visible and pass user input only through private pipes',()=>{
+ const native='C:\\Program Files\\ForgeShare\\ForgeShare.exe';
+ const prompt='A \"quote\" and a secret code';
+ for(const kind of ['choice','choices','password','folder','text','info']) {
+  const initial=kind==='choice'||kind==='choices'?['Wiki #1','Other wiki']:kind==='password'?'':'café';
+  const [exe,args,input]=dialogCommand('win32',kind,prompt,initial,{FORGESHARE_NATIVE:native});
+  assert.equal(exe,native);
+  assert.deepEqual(args,['--dialog']);
+  assert.deepEqual(JSON.parse(input),{kind,message:prompt,initial,cancel:'Cancel'});
+  assert.ok(!args.join(' ').includes(prompt));
+  assert.ok(!args.join(' ').includes('café'));
+ }
+});
 test('discovery respects depth, directory, entry, result and time limits',async()=>{
  const {folder}=await fixture('search limits'),base=path.dirname(folder);
  for(const options of [{maxDepth:0},{maxDirectories:1},{maxEntries:1},{maxResults:0},{timeoutMs:0}]) {

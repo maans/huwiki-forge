@@ -46,7 +46,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: ForgeShare-0.1.16-test-builds
+          name: ForgeShare-0.1.17-test-builds
           retention-days: 14
           path: |
             plugins/forgeshare/dist/
@@ -107,7 +107,7 @@ jobs:
           node-version: 22
       - uses: actions/download-artifact@v4
         with:
-          name: ForgeShare-0.1.16-test-builds
+          name: ForgeShare-0.1.17-test-builds
           path: .forgeshare-tested
       - name: Verify and commit tested bundles to draft branch
         run: |

@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Security.Cryptography;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.16.0")]
+[assembly: AssemblyVersion("0.1.17.0")]
 
 class Session {
     public Process Process; public string Name, Url = "", OwnerUrl = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady, Failed;
@@ -63,6 +63,123 @@ class ForgeShare : Form {
             if(File.Exists(file))File.Replace(temp,file,null);else File.Move(temp,file);return 0;
         }catch{return 1;}
     }
+    // ForgeShare's own visible Windows dialogs. A background Node process cannot
+    // safely own the original window; launching hidden PowerShell forms left
+    // the library disabled while the modal window was invisible.
+    // All prompts and secrets arrive on stdin, never on the command line.
+    static int NativeDialogCommand() {
+        try {
+            Console.InputEncoding=Encoding.UTF8;Console.OutputEncoding=new UTF8Encoding(false);
+            string payload=Console.In.ReadToEnd();
+            if(payload.Length>262144)return 1;
+            var data=new JavaScriptSerializer().Deserialize<Dictionary<string,object>>(payload);
+            string kind=Convert.ToString(data["kind"]),message=Convert.ToString(data["message"]);
+            string cancel=data.ContainsKey("cancel")?Convert.ToString(data["cancel"]):"Cancel";
+            object initial=data.ContainsKey("initial")?data["initial"]:"";
+            if(message.Length>8192)return 1;
+            Application.EnableVisualStyles();Application.SetCompatibleTextRenderingDefault(false);
+            string result=ShowNativeDialog(kind,message,initial,cancel);
+            if(result==null)return 2;
+            Console.Write(result);Console.Out.Flush();return 0;
+        }catch{return 1;}
+    }
+    static string ShowNativeDialog(string kind,string message,object initial,string cancel) {
+        if(kind=="file" || kind=="folder" || kind=="save") {
+            // The topmost owner brings CommonDialog in front of the ForgeShare window.
+            using(var owner=new Form {Text="ForgeShare",TopMost=true,ShowInTaskbar=true,
+                   StartPosition=FormStartPosition.CenterScreen,Size=new Size(260,90)}) {
+                owner.Show();
+                try {
+                    if(kind=="folder")using(var d=new FolderBrowserDialog {Description=message}) {
+                        return d.ShowDialog(owner)==DialogResult.OK?d.SelectedPath:null;
+                    }
+                    if(kind=="file")using(var d=new OpenFileDialog {Title=message,
+                             Filter="HTML (*.html;*.htm)|*.html;*.htm|All files (*.*)|*.*"}) {
+                        return d.ShowDialog(owner)==DialogResult.OK?d.FileName:null;
+                    }
+                    using(var d=new SaveFileDialog {Title=message,FileName=Convert.ToString(initial),
+                            Filter="JSON (*.json)|*.json",DefaultExt="json",AddExtension=true,
+                            OverwritePrompt=true}) {
+                        return d.ShowDialog(owner)==DialogResult.OK?d.FileName:null;
+                    }
+                }finally{owner.Close();}
+            }
+        }
+        using(var form=new Form {Text="ForgeShare",Size=new Size(680,430),
+                   StartPosition=FormStartPosition.CenterScreen,TopMost=true,
+                   ShowInTaskbar=true,Font=new Font("Segoe UI",10),
+                   MinimumSize=new Size(540,300)}) {
+            var prompt=new TextBox {Text=message,ReadOnly=true,Multiline=true,
+                ScrollBars=ScrollBars.Vertical,Dock=DockStyle.Top,Height=115,
+                BorderStyle=BorderStyle.None,BackColor=SystemColors.Control,
+                TabStop=false};
+            var buttons=new FlowLayoutPanel {Dock=DockStyle.Bottom,Height=52,
+                FlowDirection=FlowDirection.RightToLeft,WrapContents=false,
+                Padding=new Padding(8)};
+            var cancelButton=new Button {Text=cancel,Width=115,Height=32,
+                DialogResult=DialogResult.Cancel};
+            buttons.Controls.Add(cancelButton);
+            form.CancelButton=cancelButton;
+            var layout=new TableLayoutPanel {Dock=DockStyle.Fill,ColumnCount=1,RowCount=3};
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute,115));
+            layout.RowStyles.Add(new RowStyle(SizeType.Percent,100));
+            layout.RowStyles.Add(new RowStyle(SizeType.Absolute,52));
+            layout.Controls.Add(prompt,0,0);layout.Controls.Add(buttons,0,2);
+            form.Controls.Add(layout);
+            form.Shown+=(sender,args)=>{form.Activate();form.BringToFront();};
+            if(kind=="choice" || kind=="choices") {
+                var values=new List<string>();
+                if(initial is System.Collections.IEnumerable && !(initial is string))
+                    foreach(var value in (System.Collections.IEnumerable)initial)
+                        values.Add(Convert.ToString(value));
+                if(values.Count>400)return null;
+                var list=kind=="choices"
+                    ?(ListControl)new CheckedListBox {CheckOnClick=true}
+                    :new ListBox();
+                var control=(Control)list;
+                control.Dock=DockStyle.Fill;
+                if(kind=="choices"){
+                    var check=(CheckedListBox)list;check.HorizontalScrollbar=true;
+                    foreach(var value in values)check.Items.Add(value);
+                }else{
+                    var single=(ListBox)list;single.HorizontalScrollbar=true;
+                    foreach(var value in values)single.Items.Add(value);
+                }
+                layout.Controls.Add(control,0,1);
+                var ok=new Button {Text="OK",Width=115,Height=32,
+                    DialogResult=DialogResult.OK};buttons.Controls.Add(ok);
+                form.AcceptButton=ok;
+                if(form.ShowDialog()!=DialogResult.OK)return null;
+                if(kind=="choices") {
+                    var selected=new List<string>();
+                    foreach(var value in ((CheckedListBox)list).CheckedItems)
+                        selected.Add(Convert.ToString(value));
+                    return selected.Count>0?String.Join("\n",selected.ToArray()):null;
+                }
+                return ((ListBox)list).SelectedItem==null?null:
+                    Convert.ToString(((ListBox)list).SelectedItem);
+            }
+            if(kind=="text" || kind=="optional" || kind=="password") {
+                var field=new TextBox {Dock=DockStyle.Top,Height=30,
+                    UseSystemPasswordChar=kind=="password",
+                    Text=kind=="password"?"":Convert.ToString(initial)};
+                layout.Controls.Add(field,0,1);
+                var ok=new Button {Text="OK",Width=115,Height=32,
+                    DialogResult=DialogResult.OK};
+                buttons.Controls.Add(ok);form.AcceptButton=ok;
+                form.Shown+=(sender,args)=>field.Focus();
+                return form.ShowDialog()==DialogResult.OK?field.Text:null;
+            }
+            if(kind=="confirm" || kind=="info") {
+                var ok=new Button {Text="OK",Width=115,Height=32,
+                    DialogResult=DialogResult.OK};buttons.Controls.Add(ok);
+                form.AcceptButton=ok;
+                if(kind=="info"){cancelButton.Visible=false;form.CancelButton=null;}
+                return form.ShowDialog()==DialogResult.OK?"":null;
+            }
+            return null;
+        }
+    }
     readonly NotifyIcon tray=new NotifyIcon();bool explicitQuit=false;
     static bool Danish = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "da";
     static string T(string da, string en) { return Danish ? da : en; }
@@ -101,6 +218,7 @@ class ForgeShare : Form {
     [STAThread] static int Main(string[] args) {
         if(args.Length==1 && args[0]=="--mail"){Console.InputEncoding=Encoding.UTF8;string uri=Console.In.ReadToEnd();if(!uri.StartsWith("mailto:")||uri.Length>32000)return 1;Process.Start(new ProcessStartInfo(uri){UseShellExecute=true});return 0;}
         if(args.Length==2 && args[0]=="--vault")return VaultCommand(args[1]);
+        if(args.Length==1 && args[0]=="--dialog")return NativeDialogCommand();
         if (Array.IndexOf(args,"--self-test") >= 0) {
             var node=Node(); if(node==null || !File.Exists(Helper)) return 2;
             using(var p=Process.Start(Command(node,"--check " + Quote(Helper)))) { p.WaitForExit(); if(p.ExitCode!=0)return p.ExitCode; }
@@ -234,7 +352,11 @@ class ForgeShare : Form {
             try {using(var p=new Process {StartInfo=Command(node,Quote(Helper)+" --gui --library "+action+" "+data)}) {
                 p.ErrorDataReceived+=(s,e)=>{};p.Start();p.BeginErrorReadLine();var text=p.StandardOutput.ReadToEnd();p.WaitForExit();if(p.ExitCode==0)output=text;
             }}catch{}
-            UI(()=>{libraryBusy=false;RefreshLibraryState();done(output);});
+            UI(()=>{libraryBusy=false;RefreshLibraryState();
+                if(output==null && action!="list")
+                    MessageBox.Show(this,T("Handlingen blev ikke fuldført. Kontrollér, at dialogvinduet kan åbnes, og prøv igen.","The action could not complete. Check that the dialog window is accessible and try again."),"ForgeShare");
+                done(output);
+            });
         });
     }
     void ReloadLibrary() {
