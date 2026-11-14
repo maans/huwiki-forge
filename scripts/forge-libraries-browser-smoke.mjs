@@ -64,6 +64,16 @@ async function main(){
   if(await page.locator('[data-tab-title="HUWiki Community"]').count())throw Error("Community sidebar tab must not be shipped");
   console.log("Native libraries retained; Community points to TiddlyWiki without a sidebar tab");
 
+  // Editions without Forge's own reading startup can still use HUWiki's existing mode.
+  const tools=page.locator('.tc-sidebar-header [data-tab-title="$:/core/ui/SideBar/Tools"]');
+  await tools.click();
+  await page.evaluate(()=>$tw.wiki.addTiddler({title:"$:/temp/HUWiki/AuthorReadingMode",text:"reading"}));
+  await tools.waitFor({state:"hidden"});
+  await page.locator('[data-tab-title="$:/core/ui/SideBar/Open"][aria-selected="true"]').waitFor();
+  await page.evaluate(()=>$tw.wiki.addTiddler({title:"$:/temp/HUWiki/AuthorReadingMode",text:"editing"}));
+  await tools.waitFor({state:"visible"});
+  console.log("Tools follows reading mode even without the Forge landing startup module");
+
   await page.evaluate(url=>$tw.rootWidget.dispatchEvent({type:"tm-load-plugin-library",paramObject:{url}}),lib);
   const pluginTitle="$:/plugins/huwiki/trim";
   await page.waitForFunction(({url,title})=>{
