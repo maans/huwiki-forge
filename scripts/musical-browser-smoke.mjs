@@ -1,6 +1,6 @@
 /** Musical Edition: first-boot, score, real CutOut camera and single transport. */
 import assert from "node:assert/strict";
-import {readFile,writeFile,mkdtemp} from "node:fs/promises";
+import {readFile,writeFile,mkdtemp,mkdir} from "node:fs/promises";
 import {tmpdir} from "node:os";
 import path from "node:path";
 import {pathToFileURL} from "node:url";
@@ -104,12 +104,14 @@ try{
  assert.ok(await player.evaluate(el=>el.classList.contains("huw-musical--inspector-open")),
   "Clicking a musician selects a real CutOut element");
  assert.ok(await player.locator('.huw-musical-track.is-selected[data-group="animation"]').count()>=1);
- await player.locator(".huw-musical-inspector-close").click();
- // Focus mode gives the editor the full browser viewport.
+ // Focus shows the preview, timeline and selected CutOut properties together.
  await player.locator(".huw-musical-focus-button").click();
  assert.ok(await player.evaluate(el=>el.classList.contains("huw-musical--focus")));
+ await mkdir(path.join(root,"dist-musical"),{recursive:true});
+ await page.screenshot({path:path.join(root,"dist-musical/Musical-Studio-Layout-0.5.png"),fullPage:false});
  await player.locator(".huw-musical-focus-button").click();
  assert.ok(!(await player.evaluate(el=>el.classList.contains("huw-musical--focus"))));
+ await player.locator(".huw-musical-inspector-close").click();
  const tracks=player.locator(".huw-musical-track");
  assert.ok(await tracks.count()>=15,"Each complete ABC tune needs its own track");
  assert.equal(await player.locator(".huw-musical-song-clip").count(),2,"Two complete ABC tracks are visible");
