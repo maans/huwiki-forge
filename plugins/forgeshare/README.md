@@ -178,3 +178,5 @@ This test build deliberately reuses the proven native 0.1.13 Mac launcher and ic
 A real GUI launch check on a macOS CI runner verifies a visible ForgeShare library window in addition to the native self-test. It does **not** substitute for acceptance on the user's particular Mac or a second Tailscale device.
 
 **Important:** The Mac ZIP is ad-hoc signed only, not Apple Developer ID-signed or notarized. A downloaded copy can trigger the standard Gatekeeper warning; the warning is not by itself a malware finding. Do not disable system-wide security to run it. A frictionless public Mac distribution requires Developer ID signing and Apple notarization. More details: https://support.apple.com/da-dk/102445.
+
+**Release gate:** The draft must not be merged or deployed until the freshly downloaded, quarantined app starts from Finder on the target Mac and both private Tailscale and an optional external Funnel route are manually verified without disturbing existing Tailscale services.
