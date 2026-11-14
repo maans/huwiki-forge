@@ -24,7 +24,7 @@ try {
  await page.route('**/*',route=>/^(file:|data:)/.test(route.request().url())?route.continue():route.abort());
  await page.goto(pathToFileURL(file).href);
  const panel=page.locator('.hu-forgeshare'); await panel.waitFor();
- assert.equal(await panel.locator('h1').innerText(),'Din wiki. Sammen.');
+ assert.equal(await panel.locator('h1').innerText(),'Dit indhold. Dine forbindelser.');
  assert.equal(await panel.locator('.hu-share-downloads a').count(),3);
  assert.equal(await panel.locator('details[open]').count(),0);
  const download=await panel.locator('.hu-share-downloads').boundingBox();
@@ -45,7 +45,7 @@ try {
  const firstSummary=panel.locator('summary').first();await firstSummary.focus();await page.keyboard.press('Enter');
  assert.equal(await panel.locator('details[open]').count(),1,'Help supports native keyboard activation');
  await page.evaluate(()=>window.$tw.wiki.setText('$:/language','text',undefined,'$:/languages/en-GB'));
- await page.waitForFunction(()=>document.querySelector('.hu-forgeshare h1')?.textContent==='Your wiki. Together.');
+ await page.waitForFunction(()=>document.querySelector('.hu-forgeshare h1')?.textContent==='Your content. Your connections.');
  assert.equal(await panel.locator('.hu-share-downloads').count(),1,'Language refresh must not duplicate content');
  await page.setViewportSize({width:1100,height:1200});await capture('ForgeShare-english');
  // Exercise the normal core import review and Import button with a selected export.

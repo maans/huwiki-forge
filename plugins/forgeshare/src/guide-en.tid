@@ -1,7 +1,7 @@
 title: $:/plugins/huwiki/forgeshare/guide-en
 type: text/vnd.tiddlywiki
 
-<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Wikis, sites and secure sharing<span class="hu-share-badge">Test release</span></div><h1>Your content. Your connections.</h1><p>Open on your computer. Share with others when you choose.</p></div>
+<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Tailscale collaboration · Wikis and sites<span class="hu-share-badge">Test release</span></div><h1>Your content. Your connections.</h1><p>Open on your computer. Share with others when you choose.</p></div>
 <div class="hu-share-types">
 <section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">▤</span><div><h2>Wiki</h2><p>Edit together using the wiki’s own TiddlyWiki server.</p></div></section>
 <section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">◈</span><div><h2>Site</h2><p>Serve static HTML pages through ForgeShare’s own server.</p></div></section>

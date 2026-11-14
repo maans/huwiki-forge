@@ -1,7 +1,7 @@
 title: $:/plugins/huwiki/forgeshare/guide-da
 type: text/vnd.tiddlywiki
 
-<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Wikier, sites og sikker deling<span class="hu-share-badge">Testudgave</span></div><h1>Dit indhold. Dine forbindelser.</h1><p>Åbn på din computer. Del med andre, når du selv vælger det.</p></div>
+<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Tailscale-samarbejde · Wikier og sites<span class="hu-share-badge">Testudgave</span></div><h1>Dit indhold. Dine forbindelser.</h1><p>Åbn på din computer. Del med andre, når du selv vælger det.</p></div>
 <div class="hu-share-types">
 <section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">▤</span><div><h2>Wiki</h2><p>Redigér sammen via wikiens egen TiddlyWiki-server.</p></div></section>
 <section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">◈</span><div><h2>Site</h2><p>Udgiv statiske HTML-sider via ForgeShares egen server.</p></div></section>
