@@ -1,0 +1,8 @@
+{
+  "title": "HUWiki AI · TiddlyWiki-ekspert",
+  "tags": "HUWikiAI",
+  "caption": "TiddlyWiki-ekspert",
+  "type": "text/vnd.tiddlywiki",
+  "text": "\\procedure huwAIExample(navn:\"Verden\")\n''Hej <<navn>>'' – dette er en rigtig procedure.\n\\end\n\n! <$huwiki-ai-label key=\"297\"/>\n\nNår AI hjælper med WikiText, bør den først kende ''den aktuelle TiddlyWiki-version'' og de konkrete widgets, funktioner og filtre. Den må ikke opfinde parametre.\n\n!! Verificerede kilder\n\n* [[TiddlyWiki – officiel reference|https://tiddlywiki.com/]]\n* [[TiddlyWiki/Dev – moduler og pluginudvikling|https://tiddlywiki.com/dev/]]\n* [[Procedures|https://tiddlywiki.com/static/Procedures.html]]\n* [[Call Syntax|https://tiddlywiki.com/static/Call%2520Syntax.html]]\n* [[Conditional Shortcut Syntax|https://tiddlywiki.com/static/Conditional%2520Shortcut%2520Syntax.html]]\n* [[Macro Pitfalls|https://tiddlywiki.com/static/Macro%2520Pitfalls.html]]\n\n!! Hvad AI skal være opmærksom på\n\n* Fra 5.3.0: `\\procedure`, `\\function`, `\\widget` og parameteriseret transklusion. Brug ikke gamle makroer per automatik.\n* Fra 5.3.2: kortform til betingelser: `<%if%>`, `<%else%>`, `<%endif%>`.\n* Fra 5.4.0: udvidede dynamiske parametre i `<<...>>`-kald. Kontrollér den præcise grammatik.\n* Makroer bruger tekstsubstitution og kan være skrøbelige. Et widget kan have helt andre attributter end et andet widget.\n* Udfør kodeeksempler i en testwiki; HTML-output må ikke ende med ufortolkede `<$list>`- eller `<$view>`-widgets.\n\n!! Små demonstrationer med rigtige widgets\n\n\n\n<<huwAIExample navn:\"HUWiki\">>\n\n<$list filter=\"[tag[HUWikiAI]sort[title]limit[5]]\">\n* <$link/>\n</$list>\n\n<$huwiki-ai-label key=\"298\"/>\n",
+  "ai-ui-caption-en": "TiddlyWiki expert"
+}

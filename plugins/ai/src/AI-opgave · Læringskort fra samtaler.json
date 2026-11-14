@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Læringskort fra samtaler",
+  "caption": "Læringskort fra samtaler",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Samtaler og vidensbank",
+  "description": "Gør lange diskussioner til kort, søgbar viden",
+  "ai-prompt": "Udtræk vigtige begreber fra samtalen og foreslå korte, selvstændige tiddlere, hver med definition, eksempel og links til relaterede begreber. Vis en godkendelsesliste før du opretter dem.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"451\"/></h2><p><$huwiki-ai-label key=\"452\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Learning cards from conversations",
+  "ai-ui-description-en": "Turn long discussions into concise, searchable knowledge",
+  "ai-ui-category-en": "Conversations and knowledge"
+}

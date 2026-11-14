@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Slideshow ud fra tiddlere",
+  "caption": "Slideshow ud fra tiddlere",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Kreative Editions",
+  "description": "Brug eksisterende tiddlere som præsentationsslides",
+  "ai-prompt": "Foreslå en præsentation med 7 slides, der genbruger mine eksisterende tiddlere. Opret en tydelig rækkefølge, overgange og korte speaker notes. Design for HUWikis Slideshow Edition frem for at kopiere al tekst.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"469\"/></h2><p><$huwiki-ai-label key=\"470\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Slideshow from tiddlers",
+  "ai-ui-description-en": "Use existing tiddlers as presentation slides",
+  "ai-ui-category-en": "Creative Editions"
+}

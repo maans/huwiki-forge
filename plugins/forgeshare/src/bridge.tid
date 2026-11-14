@@ -1,0 +1,14 @@
+title: $:/plugins/huwiki/forgeshare/bridge.js
+type: application/javascript
+module-type: library
+
+exports.call=function(operation,input){
+ if(!/^https?:$/.test(window.location.protocol))return Promise.reject(Error(exports.danish($tw.wiki)?'Åbn wikien fra ForgeShare':'Open the wiki from ForgeShare'));
+ return fetch('/_forgeshare/bridge/'+operation,{method:'POST',credentials:'same-origin',headers:{'Content-Type':'application/json','X-ForgeShare':'1'},body:JSON.stringify(input||{})}).then(function(response){if(!response.ok)throw Error(exports.danish($tw.wiki)?'Godkend adgang i ForgeShare → Nøgleboks':'Approve access in ForgeShare → Vault');return response.json();});
+};
+exports.danish=function(wiki){return /(?:da-DK|huwiki-da|Dansk)/i.test(wiki.getTiddlerText('$:/language',''));};
+exports.pair=function(){
+ var da=exports.danish($tw.wiki),label=window.prompt(da?'Navn på denne enhed eller person':'Name this device or person');
+ if(!label)return Promise.resolve();
+ return exports.call('pair',{label:label}).then(function(data){window.alert((da?'Åbn Nøgleboks i ForgeShare, vælg Godkend en enhed, og kontrollér denne kode: ':'Open Vault in ForgeShare, choose Approve a device and match this code: ')+data.code);});
+};

@@ -1,0 +1,5 @@
+{
+  "title": "HUWiki AI · Kom i gang",
+  "tags": "[[HUWiki AI · Navigation]]",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"337\"/></h2><p><$huwiki-ai-label key=\"338\"/></p></div>\n<$huwiki-ai-connection-status/>\n<div class=\"huw-ai-steps\">\n<div class=\"huw-ai-step\"><div><strong><$huwiki-ai-label key=\"339\"/></strong><small><$huwiki-ai-label key=\"340\"/></small><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Værksted\"><$huwiki-ai-label key=\"341\"/></$link></div></div>\n<div class=\"huw-ai-step\"><div><strong><$huwiki-ai-label key=\"342\"/></strong><small><$huwiki-ai-label key=\"343\"/></small><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Forbindelser\"><$huwiki-ai-label key=\"344\"/></$link></div></div>\n<div class=\"huw-ai-step\"><div><strong><$huwiki-ai-label key=\"345\"/></strong><small><$huwiki-ai-label key=\"346\"/></small><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"347\"/></$link></div></div>\n</div>\n<div class=\"huw-ai-note\"><$huwiki-ai-label key=\"348\"/></div></div>\n"
+}

@@ -1,4 +1,30 @@
 import AppKit
+import Security
+
+
+// Private IPC: secrets are read/written only over inherited pipes, never arguments.
+func vaultCommand(_ command:String) -> Int32 {
+    let query:[String:Any] = [kSecClass as String:kSecClassGenericPassword,
+        kSecAttrService as String:"org.huwiki.ForgeShare",kSecAttrAccount as String:"vault-v1"]
+    if command == "read" {
+        var q=query;q[kSecReturnData as String]=true;q[kSecMatchLimit as String]=kSecMatchLimitOne
+        var result:CFTypeRef?;let status=SecItemCopyMatching(q as CFDictionary,&result)
+        if status == errSecItemNotFound {FileHandle.standardOutput.write(Data("{}".utf8));return 0}
+        guard status == errSecSuccess,let data=result as? Data else{return 1}
+        FileHandle.standardOutput.write(data);return 0
+    }
+    guard command == "write" else{return 1}
+    let data=FileHandle.standardInput.readDataToEndOfFile()
+    guard data.count <= 1048576,(try? JSONSerialization.jsonObject(with:data)) != nil else{return 1}
+    var status=SecItemUpdate(query as CFDictionary,[kSecValueData as String:data] as CFDictionary)
+    if status == errSecItemNotFound {
+        var q=query;q[kSecValueData as String]=data
+        q[kSecAttrAccessible as String]=kSecAttrAccessibleWhenUnlockedThisDeviceOnly
+        status=SecItemAdd(q as CFDictionary,nil)
+    }
+    return status == errSecSuccess ? 0:1
+}
+if CommandLine.arguments.count == 3 && CommandLine.arguments[1] == "--vault" {exit(vaultCommand(CommandLine.arguments[2]))}
 
 let danish = Locale.preferredLanguages.first?.hasPrefix("da") == true
 func tr(_ da: String, _ en: String) -> String { danish ? da : en }
@@ -23,71 +49,80 @@ final class Session {
     var name = tr("Vælger wiki…", "Choosing a wiki…"), url = "", ownerUrl = "", pending = Data(), stopping = false
     let row = NSStackView(), label = NSTextField(labelWithString: "")
     let copy = NSButton(title: tr("Kopiér adresse", "Copy address"), target: nil, action: nil)
+    let invite = NSButton(title:tr("Invitér…","Invite…"),target:nil,action:nil)
     let stop = NSButton(title: tr("Stop", "Stop"), target: nil, action: nil)
 }
 final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     var window: NSWindow!, rows: NSStackView!, empty: NSTextField!, start: NSButton!
     var sessions: [Session] = [], quitting = false
+    var statusItem:NSStatusItem?
+    var pages:[NSView]=[],navigation:[NSButton]=[]
     var libraryView:NSStackView!,libraryChecks:[([String:Any],NSButton)]=[],libraryButtons:[NSButton]=[],libraryBusy=false
     let sharingLabel=NSTextField(labelWithString:"")
     var shareQueue:[String]=[], sharingID:String?
     var nextID="",nextLocal=false,nextStartup=false,checkStartup=true,checkDiscovery=true
     func applicationDidFinishLaunching(_ notification: Notification) {
-        window = NSWindow(contentRect: NSRect(x: 0,y: 0,width: 760,height: 580),
+        window = NSWindow(contentRect: NSRect(x: 0,y: 0,width: 1000,height: 660),
                           styleMask: [.titled,.closable,.miniaturizable,.resizable], backing: .buffered, defer: false)
-        window.title = "ForgeShare"; window.minSize = NSSize(width: 650,height: 540); window.delegate = self
+        window.title = "ForgeShare"; window.minSize = NSSize(width: 900,height: 600); window.delegate = self
         buildContent()
         reloadLibrary()
         let menu = NSMenu(), item = NSMenuItem(), appMenu = NSMenu()
         appMenu.addItem(withTitle: tr("Afslut ForgeShare", "Quit ForgeShare"),action:#selector(NSApplication.terminate(_:)),keyEquivalent:"q")
         item.submenu = appMenu; menu.addItem(item); NSApp.mainMenu = menu
+        statusItem=NSStatusBar.system.statusItem(withLength:NSStatusItem.squareLength)
+        statusItem?.button?.image=NSImage(systemSymbolName:"books.vertical",accessibilityDescription:"ForgeShare")
+        let statusMenu=NSMenu()
+        let openItem=NSMenuItem(title:tr("Åbn ForgeShare","Open ForgeShare"),action:#selector(showLibrary),keyEquivalent:"");openItem.target=self;statusMenu.addItem(openItem)
+        statusMenu.addItem(NSMenuItem.separator())
+        statusMenu.addItem(withTitle:tr("Afslut ForgeShare","Quit ForgeShare"),action:#selector(NSApplication.terminate(_:)),keyEquivalent:"")
+        statusItem?.menu=statusMenu
         window.center(); window.makeKeyAndOrderFront(nil); NSApp.activate(ignoringOtherApps:true)
     }
     func buildContent() {
-        let content = NSStackView(); content.orientation = .vertical; content.alignment = .leading; content.spacing = 12
-        content.translatesAutoresizingMaskIntoConstraints = false; window.contentView!.addSubview(content)
-        NSLayoutConstraint.activate([content.leadingAnchor.constraint(equalTo: window.contentView!.leadingAnchor,constant: 24),
-          content.trailingAnchor.constraint(equalTo: window.contentView!.trailingAnchor,constant: -24),
-          content.topAnchor.constraint(equalTo: window.contentView!.topAnchor,constant: 24),
-          content.bottomAnchor.constraint(equalTo: window.contentView!.bottomAnchor,constant: -24)])
-        let title = NSTextField(labelWithString: "ForgeShare"); title.font = .systemFont(ofSize: 30,weight: .bold)
-        let header=NSStackView();header.orientation = .horizontal;header.spacing=12
-        let spacer=NSView();spacer.setContentHuggingPriority(.defaultLow,for:.horizontal)
-        let startupButton=NSButton(title:tr("Opstart…","Startup…"),target:self,action:#selector(configureStartup));startupButton.bezelStyle = .rounded
-        let sharingButton=NSButton(title:tr("Deling…","Sharing…"),target:self,action:#selector(configureSharing));sharingButton.bezelStyle = .rounded
-        let helpButton=NSButton(title:tr("Hjælp","Help"),target:self,action:#selector(openHelp));helpButton.bezelStyle = .rounded
-        for view in [title,spacer,sharingButton,startupButton,helpButton] {header.addArrangedSubview(view)}
-        let intro=sharingLabel;intro.stringValue=tr("Finder dine wikier…","Finding your wikis…")
-        intro.textColor = .secondaryLabelColor
+        window.contentView!.wantsLayer=true
+        let shell=NSStackView();shell.orientation = .horizontal;shell.alignment = .top;shell.spacing=0;shell.translatesAutoresizingMaskIntoConstraints=false;window.contentView!.addSubview(shell)
+        NSLayoutConstraint.activate([shell.leadingAnchor.constraint(equalTo:window.contentView!.leadingAnchor),shell.trailingAnchor.constraint(equalTo:window.contentView!.trailingAnchor),shell.topAnchor.constraint(equalTo:window.contentView!.topAnchor),shell.bottomAnchor.constraint(equalTo:window.contentView!.bottomAnchor)])
+        let sidebar=NSStackView();sidebar.orientation = .vertical;sidebar.alignment = .leading;sidebar.spacing=10;sidebar.edgeInsets=NSEdgeInsets(top:24,left:16,bottom:20,right:16);sidebar.wantsLayer=true;sidebar.layer?.backgroundColor=NSColor.windowBackgroundColor.cgColor
+        let brand=NSTextField(labelWithString:"ForgeShare");brand.font = .systemFont(ofSize:20,weight:.bold);sidebar.addArrangedSubview(brand)
+        let destinations=[("Bibliotek","Library","books.vertical"),("Delinger","Sharing","network"),("Forbindelser","Connections","key"),("Indstillinger","Settings","gearshape")]
+        for (index,item) in destinations.enumerated(){let button=NSButton(title:tr(item.0,item.1),target:self,action:#selector(selectPage(_:)));button.tag=index;button.bezelStyle = .rounded;button.image=NSImage(systemSymbolName:item.2,accessibilityDescription:nil);button.imagePosition = .imageLeading;button.alignment = .left;sidebar.addArrangedSubview(button);button.widthAnchor.constraint(equalToConstant:148).isActive=true;button.heightAnchor.constraint(equalToConstant:40).isActive=true;navigation.append(button)}
+        let sideNote=NSTextField(wrappingLabelWithString:tr("Fortsætter, når du lukker vinduet.","Keeps running when you close the window."));sideNote.font = .systemFont(ofSize:11);sideNote.textColor = .secondaryLabelColor;sidebar.addArrangedSubview(sideNote);sideNote.widthAnchor.constraint(equalToConstant:148).isActive=true
+        shell.addArrangedSubview(sidebar);sidebar.widthAnchor.constraint(equalToConstant:180).isActive=true;sidebar.heightAnchor.constraint(equalTo:shell.heightAnchor).isActive=true
+        let detail=NSView();detail.wantsLayer=true;detail.layer?.backgroundColor=NSColor.controlBackgroundColor.cgColor;detail.translatesAutoresizingMaskIntoConstraints=false;shell.addArrangedSubview(detail);detail.heightAnchor.constraint(equalTo:shell.heightAnchor).isActive=true;detail.widthAnchor.constraint(equalTo:shell.widthAnchor,constant:-180).isActive=true
+        func page(_ title:String,_ subtitle:String)->NSStackView {
+            let v=NSStackView();v.orientation = .vertical;v.alignment = .leading;v.spacing=16;v.translatesAutoresizingMaskIntoConstraints=false;detail.addSubview(v)
+            NSLayoutConstraint.activate([v.leadingAnchor.constraint(equalTo:detail.leadingAnchor,constant:28),v.trailingAnchor.constraint(equalTo:detail.trailingAnchor,constant:-28),v.topAnchor.constraint(equalTo:detail.topAnchor,constant:28),v.bottomAnchor.constraint(equalTo:detail.bottomAnchor,constant:-28)])
+            let h=NSTextField(labelWithString:title);h.font = .systemFont(ofSize:28,weight:.bold);v.addArrangedSubview(h)
+            let sub=NSTextField(wrappingLabelWithString:subtitle);sub.textColor = .secondaryLabelColor;v.addArrangedSubview(sub);sub.widthAnchor.constraint(equalTo:v.widthAnchor).isActive=true;pages.append(v);return v
+        }
+        func button(_ da:String,_ en:String,_ action:Selector)->NSButton {let b=NSButton(title:tr(da,en),target:self,action:action);b.bezelStyle = .rounded;return b}
+        let libraryPage=page(tr("Dit bibliotek","Your library"),tr("Wikier og sites, samlet ét sted.","Wikis and sites, together in one place."))
         let toolbar=NSStackView();toolbar.orientation = .horizontal;toolbar.spacing=8
-        let actions:[(String,String,Selector)]=[("Tilføj…","Add…",#selector(addToLibrary)),("Åbn","Open",#selector(openSelected)),("Del…","Share…",#selector(shareSelected)),("Redigér…","Edit…",#selector(editSelected)),("Eksportér valgte…","Export selected…",#selector(exportSelected))]
-        for (da,en,action) in actions {let button=NSButton(title:tr(da,en),target:self,action:action);button.bezelStyle = .rounded;toolbar.addArrangedSubview(button);libraryButtons.append(button)}
-        start=libraryButtons[2]
-        let libraryHeading=NSTextField(labelWithString:tr("Mine wikier","My wikis"));libraryHeading.font = .boldSystemFont(ofSize:14)
-        libraryView=LibraryStack();libraryView.orientation = .vertical;libraryView.alignment = .leading;libraryView.spacing=8;libraryView.translatesAutoresizingMaskIntoConstraints=false
-        let libraryScroll=NSScrollView();libraryScroll.hasVerticalScroller=true;libraryScroll.documentView=libraryView
-        libraryScroll.heightAnchor.constraint(greaterThanOrEqualToConstant:100).isActive=true
-        libraryScroll.setContentHuggingPriority(.defaultLow,for:.vertical)
-        libraryView.widthAnchor.constraint(equalTo:libraryScroll.contentView.widthAnchor).isActive=true
-        let heading = NSTextField(labelWithString: tr("Aktive wikier", "Active wikis")); heading.font = .boldSystemFont(ofSize: 14)
-        rows = LibraryStack(); rows.orientation = .vertical; rows.alignment = .leading; rows.spacing = 12; rows.translatesAutoresizingMaskIntoConstraints=false
-        let activeScroll=NSScrollView();activeScroll.hasVerticalScroller=true;activeScroll.documentView=rows;activeScroll.heightAnchor.constraint(equalToConstant:100).isActive=true
-        empty = NSTextField(wrappingLabelWithString: tr("Ingen serverwikier kører endnu.", "No server wikis are running yet.")); empty.textColor = .secondaryLabelColor
-        let help = NSTextField(wrappingLabelWithString: tr("Deling virker, mens computeren er tændt og ForgeShare kører. Stop afslutter kun den valgte wiki.", "Sharing works while this computer is on and ForgeShare is running. Stop ends only the selected wiki.")); help.font = .systemFont(ofSize: 12); help.textColor = .secondaryLabelColor
-        let status=NSStackView();status.orientation = .vertical;status.alignment = .leading;status.spacing=8
-        status.edgeInsets=NSEdgeInsets(top:16,left:16,bottom:16,right:16)
-        status.wantsLayer=true;status.layer?.cornerRadius=12;status.layer?.backgroundColor=NSColor.controlBackgroundColor.cgColor
-        for view in [heading,help,empty,activeScroll] as [NSView] {status.addArrangedSubview(view)}
-        for view in [header,intro,libraryHeading,toolbar,libraryScroll,status] as [NSView] { content.addArrangedSubview(view) }
-        header.widthAnchor.constraint(equalTo:content.widthAnchor).isActive=true
-        rows.widthAnchor.constraint(equalTo: activeScroll.contentView.widthAnchor).isActive = true
-        activeScroll.widthAnchor.constraint(equalTo:status.widthAnchor,constant:-32).isActive=true
-        libraryScroll.widthAnchor.constraint(equalTo:content.widthAnchor).isActive=true
-        status.widthAnchor.constraint(equalTo:content.widthAnchor).isActive=true
-        help.widthAnchor.constraint(equalTo:status.widthAnchor,constant:-32).isActive=true
+        let actions:[(String,String,Selector)]=[("Tilføj…","Add…",#selector(addToLibrary)),("Åbn","Open",#selector(openSelected)),("Del…","Share…",#selector(shareSelected)),("Redigér…","Edit…",#selector(editSelected)),("Eksportér…","Export…",#selector(exportSelected))]
+        for (da,en,action) in actions {let b=button(da,en,action);toolbar.addArrangedSubview(b);libraryButtons.append(b)};start=libraryButtons[2];libraryPage.addArrangedSubview(toolbar)
+        libraryView=LibraryStack();libraryView.orientation = .vertical;libraryView.alignment = .leading;libraryView.spacing=16;libraryView.translatesAutoresizingMaskIntoConstraints=false
+        let scroll=NSScrollView();scroll.hasVerticalScroller=true;scroll.documentView=libraryView;scroll.drawsBackground=false;libraryPage.addArrangedSubview(scroll);scroll.widthAnchor.constraint(equalTo:libraryPage.widthAnchor).isActive=true;libraryView.widthAnchor.constraint(equalTo:scroll.contentView.widthAnchor).isActive=true;scroll.heightAnchor.constraint(greaterThanOrEqualToConstant:120).isActive=true
+        sharingLabel.textColor = .secondaryLabelColor;sharingLabel.font = .systemFont(ofSize:12);libraryPage.addArrangedSubview(sharingLabel)
+        let sharingPage=page(tr("Aktive delinger","Active sharing"),tr("Adressen er klar til at blive kopieret. Stop afslutter kun den valgte deling.","Copy an address to share it. Stop ends only the selected item."))
+        empty=NSTextField(labelWithString:tr("Ingen delinger kører endnu.","Nothing is shared yet."));empty.textColor = .secondaryLabelColor;sharingPage.addArrangedSubview(empty)
+        rows=LibraryStack();rows.orientation = .vertical;rows.alignment = .leading;rows.spacing=18;rows.translatesAutoresizingMaskIntoConstraints=false
+        let activeScroll=NSScrollView();activeScroll.documentView=rows;activeScroll.hasVerticalScroller=true;activeScroll.drawsBackground=false;sharingPage.addArrangedSubview(activeScroll);activeScroll.widthAnchor.constraint(equalTo:sharingPage.widthAnchor).isActive=true;rows.widthAnchor.constraint(equalTo:activeScroll.contentView.widthAnchor).isActive=true
+        let hint=NSTextField(wrappingLabelWithString:tr("Computeren skal være tændt. Du kan lukke dette vindue; ForgeShare fortsætter i menulinjen.","Keep this computer on. You can close this window; ForgeShare stays in the menu bar."));hint.textColor = .secondaryLabelColor;hint.font = .systemFont(ofSize:12);sharingPage.addArrangedSubview(hint);hint.widthAnchor.constraint(equalTo:sharingPage.widthAnchor).isActive=true
+        let connections=page(tr("Dine forbindelser","Your connections"),tr("Gem AI-forbindelser og adgangskoder i computerens nøgleboks. Du bestemmer, hvilke enheder og personer der må bruge dem.","Save AI connections and passwords in this computer’s vault. You decide which devices and people may use them."))
+        connections.addArrangedSubview(button("Åbn nøgleboks…","Open vault…",#selector(openVault)))
+        connections.addArrangedSubview(button("Tailscale-enheder…","Tailscale devices…",#selector(showDevices)))
+        let connectionNote=NSTextField(wrappingLabelWithString:tr("Enheder i Tailscale har ikke automatisk adgang til dine AI-konti. Godkend hver anmodning i nøgleboksen.","Tailscale devices do not automatically have access to your AI accounts. Approve each request in the vault."));connections.addArrangedSubview(connectionNote);connectionNote.widthAnchor.constraint(equalTo:connections.widthAnchor).isActive=true;connections.addArrangedSubview(NSView())
+        let settings=page(tr("Indstillinger","Settings"),tr("Vælg, hvordan ForgeShare skal starte og dele.","Choose how ForgeShare starts and shares."))
+        for b in [button("Delingsindstillinger…","Sharing settings…",#selector(configureSharing)),button("Start ved login…","Start at login…",#selector(configureStartup)),button("Åbn Tailscale","Open Tailscale",#selector(openTailscale)),button("Hjælp","Help",#selector(openHelp))]{settings.addArrangedSubview(b)};settings.addArrangedSubview(NSView())
+        showPage(0)
     }
+    func showPage(_ index:Int){for (i,page) in pages.enumerated(){page.isHidden=i != index};for(i,b) in navigation.enumerated(){b.state=i==index ? .on:.off;b.contentTintColor=i==index ? .controlAccentColor:.labelColor}}
+    @objc func selectPage(_ sender:NSButton){showPage(sender.tag)}
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows: Bool) -> Bool { window.makeKeyAndOrderFront(nil); return true }
-    func windowShouldClose(_ sender: NSWindow) -> Bool { NSApp.terminate(nil); return false }
+    @objc func showLibrary() { window.makeKeyAndOrderFront(nil);NSApp.activate(ignoringOtherApps:true) }
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender:NSApplication) -> Bool {false}
+    func windowShouldClose(_ sender: NSWindow) -> Bool { sender.orderOut(nil); return false }
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if libraryBusy {showError(tr("Afslut først den åbne biblioteksdialog.","Finish the open library dialog first."));return .terminateCancel}
         if sessions.isEmpty { return .terminateNow }
@@ -99,23 +134,30 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         quitting = true; start.isEnabled = false; sessions.forEach { stopSession($0) }; return .terminateLater
     }
     func showError(_ text: String) { let a=NSAlert(); a.messageText="ForgeShare"; a.informativeText=text; a.runModal() }
+    func requireNode() -> String? {
+        if let node=nodeExecutable(){return node}
+        while true {
+            let a=NSAlert();a.messageText=tr("ForgeShare mangler Node.js","ForgeShare needs Node.js")
+            a.informativeText=tr("Installer Node.js fra den officielle hjemmeside. Vend tilbage hertil, og vælg Prøv igen.","Install Node.js from the official website, then return here and choose Try again.")
+            a.addButton(withTitle:tr("Hent Node.js","Get Node.js"));a.addButton(withTitle:tr("Prøv igen","Try again"));a.addButton(withTitle:tr("Senere","Later"))
+            let result=a.runModal()
+            if result == .alertFirstButtonReturn {NSWorkspace.shared.open(URL(string:"https://nodejs.org/en/download")!)}
+            else if result == .alertSecondButtonReturn {if let node=nodeExecutable(){return node}}
+            else {return nil}
+        }
+    }
     @objc func startWiki() {
         let startupLaunch=nextStartup;nextStartup=false
-        guard let node = nodeExecutable() else {
-            let a=NSAlert(); a.messageText=tr("Installer Node.js først", "Install Node.js first")
-            a.informativeText=tr("Node.js er motoren til wikien. Hent installationsprogrammet fra den officielle hjemmeside, og åbn derefter ForgeShare igen.", "Node.js runs the wiki. Download its installer from the official website, then reopen ForgeShare.")
-            a.addButton(withTitle:tr("Luk", "Close")); a.addButton(withTitle:tr("Hent Node.js", "Get Node.js"))
-            if a.runModal() == .alertSecondButtonReturn { NSWorkspace.shared.open(URL(string:"https://nodejs.org/en/download")!) }; sharingID=nil;shareQueue.removeAll();return
-        }
+        guard let node = requireNode() else {sharingID=nil;shareQueue.removeAll();return}
         guard let helper=Bundle.main.url(forResource:"ForgeShare",withExtension:"mjs") else { sharingID=nil;shareQueue.removeAll();showError(tr("Appen er ufuldstændig. Pak hele den originale ZIP ud igen.", "The app is incomplete. Extract the complete original ZIP again.")); return }
         let session=Session(); session.id=nextID;session.local=nextLocal;session.openWhenReady=nextLocal && !startupLaunch;nextID="";nextLocal=false; session.process.executableURL=URL(fileURLWithPath:node)
         session.process.arguments=[helper.path,"--gui","--app","--quick"] + (session.id.isEmpty ? [] : ["--profile",session.id]) + (session.local ? ["--local"] : []) + (startupLaunch ? ["--startup"] : []); session.process.currentDirectoryURL=helper.deletingLastPathComponent()
         var env=ProcessInfo.processInfo.environment; env.removeValue(forKey:"NODE_OPTIONS"); env.removeValue(forKey:"NODE_PATH")
-        env["PATH"]="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"; env["FORGESHARE_LANGUAGE"]=danish ? "da" : "en"; session.process.environment=env
+        env["PATH"]="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"; env["FORGESHARE_NATIVE"]=Bundle.main.executableURL?.path;env["FORGESHARE_APP"]=Bundle.main.bundleURL.path;env["FORGESHARE_LANGUAGE"]=danish ? "da" : "en"; session.process.environment=env
         session.process.standardInput=session.input; session.process.standardOutput=session.output; session.process.standardError=FileHandle.nullDevice
         session.row.orientation = .horizontal; session.row.spacing=10; session.label.lineBreakMode = .byTruncatingMiddle; session.label.maximumNumberOfLines = 2
         session.label.setContentCompressionResistancePriority(.defaultLow,for:.horizontal)
-        session.row.addArrangedSubview(session.label); session.row.addArrangedSubview(session.copy); session.row.addArrangedSubview(session.stop)
+        session.row.addArrangedSubview(session.label); session.row.addArrangedSubview(session.copy);session.row.addArrangedSubview(session.invite);session.invite.target=self;session.invite.action=#selector(inviteSession(_:));session.invite.isEnabled=false; session.row.addArrangedSubview(session.stop)
         session.copy.target=self; session.copy.action=#selector(copyAddress(_:)); session.copy.isEnabled=false
         session.stop.target=self; session.stop.action=#selector(stopClicked(_:))
         session.output.fileHandleForReading.readabilityHandler = { [weak self, weak session] handle in
@@ -127,7 +169,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
                     let line=s.pending.prefix(upTo:end); s.pending.removeSubrange(...end)
                     if let data=try? JSONSerialization.jsonObject(with:line) as? [String:String] {
                         if let name=data["name"] { s.name=name }
-                        if data["event"] == "ready", let address=data["url"], let url=URL(string:address), permittedAddress(url) { s.mode=data["mode"] ?? "";s.access=data["access"] ?? "login";s.url=address; if let own=data["ownerUrl"],let u=URL(string:own),u.scheme=="http",u.host=="127.0.0.1" {s.ownerUrl=own}; s.copy.isEnabled=true; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(URL(string:s.ownerUrl.isEmpty ? s.url:s.ownerUrl)!)};self.reloadLibrary();self.advanceShareQueue(s.id) }
+                        if data["event"] == "ready", let address=data["url"], let url=URL(string:address), permittedAddress(url) { s.mode=data["mode"] ?? "";s.access=data["access"] ?? "login";s.url=address; if let own=data["ownerUrl"],let u=URL(string:own),u.scheme=="http",u.host=="127.0.0.1" {s.ownerUrl=own}; s.copy.isEnabled=true;s.invite.isEnabled = !s.local; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(URL(string:s.ownerUrl.isEmpty ? s.url:s.ownerUrl)!)};self.reloadLibrary();self.advanceShareQueue(s.id) }
                         self.update(s)
                     }
                 }
@@ -150,12 +192,13 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
     func libraryCommand(_ action:String,_ input:[String:Any]=[:],completion:@escaping ([String:Any]?)->Void) {
         guard !libraryBusy else {return}
-        guard let node=nodeExecutable(),let helper=Bundle.main.url(forResource:"ForgeShare",withExtension:"mjs") else {showError(tr("Installer Node.js for at bruge wikibiblioteket.","Install Node.js to use the wiki library."));return}
+        guard let node=requireNode() else {return}
+        guard let helper=Bundle.main.url(forResource:"ForgeShare",withExtension:"mjs") else {showError(tr("Appen er ufuldstændig. Hent hele pakken igen.","The app is incomplete. Download the complete package again."));return}
         libraryBusy=true;libraryButtons.forEach{$0.isEnabled=false}
         let p=Process(),out=Pipe();p.executableURL=URL(fileURLWithPath:node)
         let data=(try? JSONSerialization.data(withJSONObject:input)) ?? Data("{}".utf8)
         p.arguments=[helper.path,"--gui","--library",action,data.base64EncodedString()];p.standardOutput=out;p.standardError=FileHandle.nullDevice
-        var env=ProcessInfo.processInfo.environment;env.removeValue(forKey:"NODE_OPTIONS");env.removeValue(forKey:"NODE_PATH");env["FORGESHARE_LANGUAGE"]=danish ? "da" : "en";p.environment=env
+        var env=ProcessInfo.processInfo.environment;env.removeValue(forKey:"NODE_OPTIONS");env.removeValue(forKey:"NODE_PATH");env["FORGESHARE_NATIVE"]=Bundle.main.executableURL?.path;env["FORGESHARE_APP"]=Bundle.main.bundleURL.path;env["FORGESHARE_LANGUAGE"]=danish ? "da" : "en";p.environment=env
         DispatchQueue.global().async {
             var result:[String:Any]?
             do {try p.run();let bytes=out.fileHandleForReading.readDataToEndOfFile();p.waitUntilExit()
@@ -186,7 +229,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             for entry in entries {
                 let name=entry["name"] as? String ?? "",kind=entry["kind"] as? String ?? ""
                 let missing=entry["available"] as? Bool == false
-                let label=name+"  ·  "+(missing ? tr("Filen mangler","File missing") : kind=="html" ? tr("Lokal HTML-fil","Local HTML file") : tr("Wikimappe","Wiki folder"))
+                let label=name+"  ·  "+(missing ? tr("Filen mangler","File missing") : kind=="site" ? tr("Site","Site") : kind=="html" ? tr("Lokal HTML-fil","Local HTML file") : tr("Wikimappe","Wiki folder"))
                 let box=NSButton(checkboxWithTitle:label,target:nil,action:nil);box.state=selected.contains(entry["id"] as? String ?? "") ? .on : .off
                 box.cell?.lineBreakMode = .byTruncatingMiddle
                 box.setContentCompressionResistancePriority(.defaultLow,for:.horizontal)
@@ -197,6 +240,13 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }
     }
 
+    @objc func openTailscale() {
+        for id in ["io.tailscale.ipn.macsys","io.tailscale.ipn.macos"] {if let url=NSWorkspace.shared.urlForApplication(withBundleIdentifier:id){NSWorkspace.shared.openApplication(at:url,configuration:NSWorkspace.OpenConfiguration());return}}
+        let alert=NSAlert();alert.messageText=tr("Installer Tailscale","Install Tailscale");alert.addButton(withTitle:tr("Annuller","Cancel"));alert.addButton(withTitle:tr("Hent Tailscale","Get Tailscale"));if alert.runModal() == .alertSecondButtonReturn {NSWorkspace.shared.open(URL(string:"https://tailscale.com/download")!)}
+    }
+    @objc func showDevices(){libraryCommand("devices"){_ in}}
+    @objc func openVault() {libraryCommand("vault"){_ in}}
+    @objc func inviteMail() {guard let e=oneEntry() else{return};libraryCommand("invite",["id":e["id"]!]){_ in}}
     @objc func configureSharing() {libraryCommand("sharing"){_ in self.reloadLibrary()}}
     @objc func configureStartup() {libraryCommand("startup"){_ in}}
     @objc func openHelp() {
@@ -247,6 +297,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         do { try s.input.fileHandleForWriting.write(contentsOf:Data("STOP\n".utf8)) } catch { showError(tr("Kunne ikke bede wikien stoppe. Brug wikiens statusdialog.", "Could not request a stop. Use the wiki's status dialog.")) }
     }
     @objc func stopClicked(_ sender:NSButton) { if let s=sessions.first(where:{$0.stop === sender}) { stopSession(s) } }
+    @objc func inviteSession(_ sender:NSButton){if let s=sessions.first(where:{$0.invite === sender}){libraryCommand("invite",["id":s.id]){_ in}}}
     @objc func copyAddress(_ sender:NSButton) { if let s=sessions.first(where:{$0.copy === sender}) { NSPasteboard.general.clearContents(); NSPasteboard.general.setString(s.url,forType:.string) } }
 }
 if CommandLine.arguments.contains("--self-test") {
@@ -257,7 +308,7 @@ if CommandLine.arguments.contains("--self-test") {
     // Exercise the production row-rendering code without windows, dialogs, or user data.
     let application=NSApplication.shared;application.setActivationPolicy(.prohibited)
     let testApp=App()
-    testApp.window=NSWindow(contentRect:NSRect(x:0,y:0,width:760,height:580),styleMask:[.titled],backing:.buffered,defer:false)
+    testApp.window=NSWindow(contentRect:NSRect(x:0,y:0,width:1000,height:660),styleMask:[.titled],backing:.buffered,defer:false)
     testApp.buildContent()
     let fixture:[[String:Any]]=[
         ["id":"first","name":"Projektwiki","description":"En beskrivelse","kind":"folder","available":true],
@@ -270,7 +321,7 @@ if CommandLine.arguments.contains("--self-test") {
     testApp.renderLibrary(fixture,selected:["second"])
     precondition(testApp.libraryChecks.count==2 && testApp.selectedEntries().first?["id"] as? String == "second")
     testApp.renderLibrary([],selected:[]);precondition(testApp.libraryChecks.isEmpty)
-    for size in [NSSize(width:760,height:580),NSSize(width:650,height:540)] {
+    for size in [NSSize(width:1000,height:660),NSSize(width:900,height:600)] {
         testApp.window.setContentSize(size);testApp.window.contentView!.layoutSubtreeIfNeeded()
         precondition(testApp.libraryButtons.count==5)
         for button in testApp.libraryButtons {

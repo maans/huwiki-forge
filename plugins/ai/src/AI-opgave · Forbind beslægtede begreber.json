@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Forbind beslægtede begreber",
+  "caption": "Forbind beslægtede begreber",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "TiddlyWiki og automatisering",
+  "description": "Skab navigation på tværs af emner",
+  "ai-prompt": "Find naturlige forbindelser mellem mine begrebstiddlere. Foreslå interne links og felter til relationer. Undgå at tilføje forbindelser, der ikke kan begrundes i indholdet.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"459\"/></h2><p><$huwiki-ai-label key=\"460\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Connect related concepts",
+  "ai-ui-description-en": "Create navigation across topics",
+  "ai-ui-category-en": "TiddlyWiki and automation"
+}

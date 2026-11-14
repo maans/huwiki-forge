@@ -64,7 +64,7 @@ test('graphical Funnel asks only for codes, preserves private port assignment an
  const input=new PassThrough();let credentials,finish,ready,passwords=0;const finished=new Promise(r=>finish=r);
  try {
   await guiMain({root,libraryId:entry.id,quick:true,appMode:true,input,readJSON:async()=>({}),checkAddressPort:async()=>{},findTailscale:async()=>'/mock',findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
-   dialog:async(kind,message)=>{assert.equal(kind,'password',message);return passwords++===0?'reader-code':'editor-code';},
+   dialog:async(kind,message,initial)=>{if(kind==='choice')return initial[0];assert.equal(kind,'password',message);return passwords++===0?'reader-code':'editor-code';},
    startSession:async opts=>{assert.equal(opts.funnel,true);assert.equal(opts.codeRoles,true);assert.equal(opts.allowAnonymous,false);assert.equal(opts.httpsPort,10000);assert.equal(opts.codeAccess.readerCode,'reader-code');credentials=opts.credentials;const csv=await readFile(credentials,'utf8');assert.ok(!csv.includes('reader-code'));assert.match(csv,/reader,[a-f0-9]{64}/);return {url:'https://wiki.test.ts.net:10000',ownerUrl:'http://127.0.0.1:43210/_forgeshare/owner?token=private-owner-token',finished,stop:async()=>finish()};},
    report:event=>{if(event.event==='ready'){ready=event;input.end();}}
   });

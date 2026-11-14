@@ -19,6 +19,18 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/ai",
+        "type": "application/json",
+        "name": "AI Forge",
+        "description": "AI text conversations through approved ForgeShare connections",
+        "author": "HUWiki",
+        "version": "0.4.0",
+        "plugin-type": "plugin"
+      },
+      "path": "../../plugins/ai/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/lessons-balkan",
         "type": "application/json",
         "name": "Balkan / Balkan",
@@ -130,7 +142,7 @@
         "name": "ForgeShare",
         "description": "Tailscale collaboration / Tailscale-samarbejde",
         "author": "HUWiki",
-        "version": "0.1.7",
+        "version": "0.1.8",
         "plugin-type": "plugin",
         "core-version": ">=5.4.1"
       },

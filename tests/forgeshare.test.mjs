@@ -145,12 +145,12 @@ test('native 3000 action changes only the requested config; read-only view hides
   assert.equal(tw.wiki.getTiddlerText('$:/config/SyncPollingInterval'), '3000');
   tw.wiki.deleteTiddler('$:/config/SyncPollingInterval');
 });
-test('all downloadable ZIP files embed the exact standalone reviewed script', async () => {
+test('all downloadable ZIP files embed the reviewed helper and all required modules', async () => {
   const source = await read('plugins/forgeshare/helper/ForgeShare.mjs');
   for (const platform of ['mac', 'windows', 'linux']) {
     const bytes = Buffer.from(shadows[base + '/download/' + platform].text.split(',')[1], 'base64');
     assert.equal(bytes.readUInt32LE(), 0x04034b50);
-    const count = bytes.readUInt16LE(bytes.length - 22 + 10); assert.equal(count, platform==='mac'?8:5);
+    const count = bytes.readUInt16LE(bytes.length - 22 + 10); assert.equal(count, platform==='mac'?12:9);
     let offset = 0; const files = {};
     while (bytes.readUInt32LE(offset) === 0x04034b50) {
       const size = bytes.readUInt32LE(offset + 18), length = bytes.readUInt16LE(offset + 26);
@@ -159,6 +159,7 @@ test('all downloadable ZIP files embed the exact standalone reviewed script', as
       offset += 30 + length + size;
     }
     assert.equal(files[platform==='mac'?'ForgeShare.app/Contents/Resources/ForgeShare.mjs':'ForgeShare.mjs'].toString(), source);
+    for(const module of ['Vault.mjs','Bridge.mjs','Startup.mjs','Site.mjs'])assert.equal(files[(platform==='mac'?'ForgeShare.app/Contents/Resources/':'')+module].toString(),await read('plugins/forgeshare/helper/'+module));
     assert.ok(files['README.txt']);
     assert.doesNotMatch(files['README.txt'].toString(), /chmod|node ForgeShare|TECHNICAL \/ TEKNISK/);
     // Mac/Linux users should receive an executable launcher from the ZIP,
@@ -185,7 +186,7 @@ test('all downloadable ZIP files embed the exact standalone reviewed script', as
       assert.equal(exe.readUInt16LE(pe+24+68),2,'GUI subsystem: no console window');
     }
   }
-  assert.equal(Buffer.from(shadows[base + '/download/script'].text.split(',')[1], 'base64').toString(), source);
+  assert.equal(shadows[base + '/download/script'], undefined, 'No broken standalone download without its modules');
 });
 test('plugin assembles into pinned standalone HTML without remote dependency', async () => {
   const html = assembleHtml(await read('core/empty.html'), [plugin]);

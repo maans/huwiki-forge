@@ -1,5 +1,7 @@
 #!/bin/sh
 cd "$(dirname "$0")" || exit 1
+FORGESHARE_APP="$(pwd)/Start-ForgeShare.sh"
+export FORGESHARE_APP
 case "${LANGUAGE:-${LC_ALL:-${LC_MESSAGES:-${LANG:-en}}}}" in
   da*) export FORGESHARE_LANGUAGE=da; missing_zenity='Installer Zenity via din programbutik.'; missing_node='Installer først Node.js: https://nodejs.org/en/download' ;;
   *) export FORGESHARE_LANGUAGE=en; missing_zenity='Install Zenity using your software manager.'; missing_node='Install Node.js first: https://nodejs.org/en/download' ;;

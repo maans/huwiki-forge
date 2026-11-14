@@ -1,0 +1,10 @@
+{
+  "title": "$:/plugins/huwiki/ai/send-to-chat",
+  "tags": "$:/tags/ViewToolbar",
+  "caption": "Spørg AI",
+  "description": "Åbn denne tiddler som kladde i HUWiki AI Chat",
+  "list-after": "$:/core/ui/Buttons/edit",
+  "text": "<%if [<currentTiddler>!is[system]] %>\n<$button class=\"tc-btn-invisible\" tooltip={{{ [huwiki-ai-label[301]] }}}>\n  <$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-source\" text=<<currentTiddler>>/>\n  <$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{{ [<currentTiddler>get[text]] }}}/>\n  <$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/>\n  <span class=\"huw-ai-action-icon\">✦</span>\n</$button>\n<%endif%>\n",
+  "ai-ui-caption-en": "Ask AI",
+  "ai-ui-description-en": "Open this tiddler as a draft in HUWiki AI Chat"
+}

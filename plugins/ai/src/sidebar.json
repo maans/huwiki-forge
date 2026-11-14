@@ -1,0 +1,7 @@
+{
+  "title": "$:/plugins/huwiki/ai/sidebar",
+  "tags": "$:/tags/SideBar",
+  "caption": "HUWiki AI",
+  "list-after": "$:/core/ui/SideBar/More",
+  "text": "<div class=\"huw-ai-side\">\n<div class=\"huw-ai-side-heading\">✦ HUWiki AI</div>\n<$link to=\"HUWiki AI · Forside\"><$huwiki-ai-label key=\"302\"/></$link>\n<$link to=\"HUWiki AI · Chatbibliotek\"><$huwiki-ai-label key=\"303\"/></$link>\n<$link to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"304\"/></$link>\n<$link to=\"HUWiki AI · Værksted\"><$huwiki-ai-label key=\"305\"/></$link>\n<$link to=\"HUWiki AI · Import\"><$huwiki-ai-label key=\"120\"/></$link>\n<$link to=\"HUWiki AI · Forbindelser\"><$huwiki-ai-label key=\"306\"/></$link>\n</div>\n"
+}

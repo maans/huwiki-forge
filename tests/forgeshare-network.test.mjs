@@ -108,7 +108,7 @@ test('startup with login asks for credentials and never silently downgrades to a
  const e=await addLibraryEntry({root,location:folder,name:'Protected',kind:'folder'});
  let credentials,passwords=0,started=false;
  await guiMain({root,startup:{wikiId:e.id,mode:'local',allowAnonymous:false},appMode:false,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
-  dialog:async(kind,message,initial)=>{if(kind==='password'){passwords++;return 'pw';}if(kind==='text')return initial.startsWith('http:')?'':'owner';assert.fail(message);},
+  dialog:async(kind,message,initial)=>{if(kind==='choice')return initial[0];if(kind==='password'){passwords++;return 'pw';}if(kind==='text')return initial.startsWith('http:')?'':'owner';assert.fail(message);},
   startSession:async options=>{started=true;assert.equal(options.allowAnonymous,false);credentials=options.credentials;assert.match(await readFile(credentials,'utf8'),/owner,pw/);return {url:'http://127.0.0.1:'+options.port,finished:new Promise(()=>{}),stop:async()=>{}};}
  });assert.ok(started);assert.equal(passwords,2);await assert.rejects(readFile(credentials),{code:'ENOENT'});
 });

@@ -2,6 +2,7 @@ title: $:/plugins/huwiki/forgeshare/guide-en
 type: text/vnd.tiddlywiki
 
 <div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Tailscale collaboration<span class="hu-share-badge">Test release</span></div><h1>Your wiki. Together.</h1><p>From a computer, phone or tablet — with the people you invite.</p></div>
+<p><$link to="$:/plugins/huwiki/forgeshare/library">Open your wiki library</$link></p>
 <div class="hu-share-steps">
 <section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">1</span><div class="hu-share-step-body"><h2>Get the helper</h2><p>Choose the computer that will host your wiki.</p>
 <div class="hu-share-downloads">

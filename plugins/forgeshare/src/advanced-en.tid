@@ -23,7 +23,6 @@ Open `http://127.0.0.1:8080` yourself. This preparation is local only; without a
 
 !! 2. Technical start without dialogs
 
-<a href={{$:/plugins/huwiki/forgeshare/download/script}} download="ForgeShare.mjs">Download standalone ForgeShare.mjs</a>
 
 Run `node ForgeShare.mjs` for terminal mode or `node ForgeShare.mjs --gui` for dialogs. Terminal mode needs an existing private credentials CSV, installs nothing and requires typing `START` after the summary. Dialog mode can install TiddlyWiki 5.4.1 locally after separate approval, offers an optional temporary login and stops when the status dialog closes. Neither mode opens a browser.
 
@@ -81,7 +80,7 @@ Use TiddlyWiki's built-in ''Download save''/HTML export to keep a standalone off
 
 !! Sources and version
 
-ForgeShare 0.1.7. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
+ForgeShare 0.1.8. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]

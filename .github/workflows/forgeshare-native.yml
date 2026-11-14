@@ -3,6 +3,7 @@ on:
   pull_request:
     paths:
       - plugins/forgeshare/**
+      - plugins/ai/**
       - scripts/*forgeshare*
       - scripts/native-manifest.mjs
       - .github/workflows/forgeshare-native.yml
@@ -36,6 +37,7 @@ jobs:
       - run: node scripts/forgeshare-browser-smoke.mjs
       - run: npm install --no-save --no-package-lock --ignore-scripts tiddlywiki@5.4.1 playwright-core@1.56.1
       - run: node scripts/forgeshare-funnel-browser-smoke.mjs
+      - run: node scripts/forgeshare-vault-browser-smoke.mjs
   windows:
     runs-on: windows-latest
     timeout-minutes: 10

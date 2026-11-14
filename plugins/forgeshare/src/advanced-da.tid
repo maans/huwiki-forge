@@ -23,7 +23,6 @@ tiddlywiki MySharedWiki --listen host=127.0.0.1 port=8080
 
 !! 2. Teknisk start uden dialogbokse
 
-<a href={{$:/plugins/huwiki/forgeshare/download/script}} download="ForgeShare.mjs">Hent selvstændigt ForgeShare.mjs</a>
 
 Kør `node ForgeShare.mjs` for terminalversionen eller `node ForgeShare.mjs --gui` for dialogbokse. Terminalversionen kræver en eksisterende privat CSV-loginfil og installerer intet. Du skal skrive `START` efter oversigten. Dialogversionen kan installere TiddlyWiki 5.4.1 lokalt efter særskilt godkendelse, tilbyder valgfrit midlertidigt login og stopper, når statusdialogen lukkes. Ingen af versionerne åbner browseren.
 
@@ -81,7 +80,7 @@ Brug TiddlyWikis indbyggede ''Download save''/HTML-eksport til en selvstændig o
 
 !! Kilder og version
 
-ForgeShare 0.1.7. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
+ForgeShare 0.1.8. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]

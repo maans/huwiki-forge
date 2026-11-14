@@ -4,25 +4,48 @@
 <dict>
 	<key>files</key>
 	<dict>
+		<key>Resources/Bridge.mjs</key>
+		<data>
+		1WUoGCFv4BhvplVPAe3KJWPjer4=
+		</data>
 		<key>Resources/ForgeShare.icns</key>
 		<data>
 		OEf3unNeHXo0HumypDG57Mfo0a8=
 		</data>
 		<key>Resources/ForgeShare.mjs</key>
 		<data>
-		2vsZJSSpsBbIYUPBv76PRvz3zwQ=
+		CDDEYH33FDI3s9q0PLn8gVWD87U=
+		</data>
+		<key>Resources/Site.mjs</key>
+		<data>
+		pET8wBwJnqkU7U+8AzV2yzdut+A=
+		</data>
+		<key>Resources/Startup.mjs</key>
+		<data>
+		9LD98fLMUQXSF2XINK0tyrZciCI=
+		</data>
+		<key>Resources/Vault.mjs</key>
+		<data>
+		CFJJiWLarbc/P9dfT1OBqAmA4Mo=
 		</data>
 		<key>Resources/help-da.html</key>
 		<data>
-		q46krUA4OO1DBKU9rpTAKih2a5c=
+		xPSsau8OwZmvsY7r0yIyaxF+eD0=
 		</data>
 		<key>Resources/help-en.html</key>
 		<data>
-		jkq1QLkK1kmbS8Y/IPRPR39LjCY=
+		R7+OgZ4GEUDHO2hv8YOaqLc9JFY=
 		</data>
 	</dict>
 	<key>files2</key>
 	<dict>
+		<key>Resources/Bridge.mjs</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			3DRnAGhDZp2hkB1Dl+wnBq9NjSsRrnWD8Imc+jZVuGw=
+			</data>
+		</dict>
 		<key>Resources/ForgeShare.icns</key>
 		<dict>
 			<key>hash2</key>
@@ -34,21 +57,42 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			Vcwl/KVFt9C9RdPbE4h1JEH7U9+rcNHtZcpMlXHJsbo=
+			t3MamEgkqbnWsOcVfFcM1pVL+D4OqN40Tyteh62U91c=
+			</data>
+		</dict>
+		<key>Resources/Site.mjs</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			ofnOqOra57RboqFwxC7GxPgU6Z9sODgRJXmLPm0/GE4=
+			</data>
+		</dict>
+		<key>Resources/Startup.mjs</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			+7O7J4e7KVP61oGt/XjGix5YKnihd/uJFsCtqAT+VKQ=
+			</data>
+		</dict>
+		<key>Resources/Vault.mjs</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			m8Qc72ShLW3nZpRgSTkvVUjYn4ohCWCTIH8LHtyr24w=
 			</data>
 		</dict>
 		<key>Resources/help-da.html</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			q1Rl9SCWPsrjemSbWZeGDlnsaaJa+OVO4VuL5swWeWQ=
+			IDNl3vPLzoajJBf4OTtGjSLiOR2n7Bw2CPtBCxhsY+0=
 			</data>
 		</dict>
 		<key>Resources/help-en.html</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			xfCBx8St4rKtqzlZBGMUE+FIpLBTemWxP7WyAI1qyiY=
+			wh/97C3g6GbKieh+xkAcr5TAXWrporIf++ATJqnqnz0=
 			</data>
 		</dict>
 	</dict>

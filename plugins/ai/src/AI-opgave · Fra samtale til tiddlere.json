@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Fra samtale til tiddlere",
+  "caption": "Fra samtale til tiddlere",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Samtaler og vidensbank",
+  "description": "Omdan en længere AI-samtale til redigerbare noter",
+  "ai-prompt": "Læs samtalen og udpeg 3-6 selvstændige vidensnoter. For hver note: foreslå titel, en kort tekst, relevante tags og links til de andre noter. Gentag ikke indhold og opfind ikke oplysninger. Vent med at gemme, til jeg har godkendt hvert forslag.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"433\"/></h2><p><$huwiki-ai-label key=\"434\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "From conversation to tiddlers",
+  "ai-ui-description-en": "Turn a longer AI conversation into editable notes",
+  "ai-ui-category-en": "Conversations and knowledge"
+}

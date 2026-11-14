@@ -1,0 +1,9 @@
+{
+  "title": "$:/plugins/huwiki/ai",
+  "type": "application/json",
+  "plugin-type": "plugin",
+  "name": "AI Forge",
+  "description": "AI text conversations through approved ForgeShare connections",
+  "version": "0.4.0",
+  "author": "HUWiki"
+}

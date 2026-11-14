@@ -84,10 +84,11 @@ try {
  for(const language of ['da','en']) {
   await page.goto(pathToFileURL(path.join(root,'plugins/forgeshare/helper/help-'+language+'.html')).href);
   assert.equal(await page.locator('html').getAttribute('lang'),language);
-  assert.equal(await page.locator('details').count(),10);
+  assert.equal(await page.locator('details').count(),16);
   await page.locator('summary').nth(5).focus();await page.keyboard.press('Enter');
   assert.ok(await page.locator('details').nth(5).getAttribute('open')!==null);
-  assert.ok((await page.locator('details').nth(5).innerText()).includes('shell:startup'));
+  assert.ok((await page.locator('details').nth(5).innerText()).includes(language==='da'?'Start ved login':'Start at login'));
+  assert.ok((await page.locator('body').innerText()).includes(language==='da'?'AI og nøgleboks':'AI and the vault'));
   await page.setViewportSize({width:390,height:844});
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
   if(process.env.FORGESHARE_PREVIEW_DIR)await page.screenshot({path:path.join(process.env.FORGESHARE_PREVIEW_DIR,'ForgeShare-help-'+language+'.png'),fullPage:false});
