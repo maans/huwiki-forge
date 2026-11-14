@@ -86,6 +86,22 @@ try{
  await play.waitFor({state:"visible"});
  await page.waitForFunction(()=>!document.querySelector(".huw-musical-play").disabled,{timeout:25000});
  assert.equal(await player.locator(".huw-musical-error").count(),0);
+ const simulated=await page.evaluate(function(){
+  function locate(w){
+   if(w&&w.host&&w.host.classList&&w.host.classList.contains("huw-musical"))return w;
+   for(const child of (w&&w.children)||[]){var result=locate(child);if(result)return result;}
+   return null;
+  }
+  var widget=locate($tw.rootWidget);
+  if(!widget||!widget._songStates||widget._songStates.length!==2)throw Error("Musical song controllers not found");
+  var first=widget._songStates[0].controller,second=widget._songStates[1].controller;
+  if(!first||!second||!first.cursorControl||!second.cursorControl)throw Error("ABC callbacks missing");
+  second.play=function(){second.cursorControl.onStart();return Promise.resolve({status:"simulated"});};
+  first.cursorControl.onFinished();
+  return {active:widget.host.dataset.activeSong,position:Number(widget.host.querySelector(".huw-musical-range").value)};
+ });
+ assert.match(simulated.active,/Finale ABC/,"Finishing song one activates song two");
+ assert.ok(simulated.position>=15,"The second tune starts at its global position");
  await player.locator(".huw-musical-speed").selectOption("75");
  await player.locator(".huw-musical-stop").click();
  assert.equal(Number(await slider.inputValue()),0);
