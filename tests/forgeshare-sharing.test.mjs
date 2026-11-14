@@ -101,7 +101,7 @@ test('occupied Funnel asks no codes; retry can choose private or home network, w
    startSession:async options=>{started++;assert.equal(options.funnel,false);assert.equal(options.localOnly,next==='local');assert.equal(!!options.lanHost,next==='lan');return sessionResult(options,()=>stopped++);}
   });
   assert.equal(started,1);assert.ok(stopped>0);assert.equal(choices,next==='local'?0:3);
-  assert.equal((await readSharing(root,entry.id))?.mode||null,next==='local'?null:next);
+  assert.equal((await readSharing(root,entry.id))?.mode||null,next==='local'?'funnel':next);
  });
 });
 test('cancelled codes and failed launch release the saved choice and allow a successful retry',async t=>{

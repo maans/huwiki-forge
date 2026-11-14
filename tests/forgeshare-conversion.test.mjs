@@ -72,15 +72,15 @@ test('automatic discovery lists HTML and server wikis once without starting or c
  assert.equal(first.entries.length,2);assert.deepEqual(first.entries.map(e=>e.id),second.entries.map(e=>e.id));assert.equal(first.entries.find(e=>e.id===f.id).kind,'html');
  assert.ok((await readFile(f.location)).length>0);
 });
-test('Share uses remembered network settings and starts without intermediate dialogs',async()=>{
+test('Share offers the saved connection explicitly and starts without unnecessary setup dialogs',async()=>{
  const {saveSharing,readSharing,guiMain}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');const {PassThrough}=await import('node:stream');
  const f=await fixture('quick');await prepareHTML(f,{trash:async()=>{}});
  assert.equal(await readSharing(f.root,f.id),null);
  await saveSharing(f.root,{mode:'lan',allowAnonymous:true},f.id);assert.deepEqual(await readSharing(f.root,f.id),{mode:'lan',allowAnonymous:true});
- const input=new PassThrough();let finish,started=false;const finished=new Promise(r=>finish=r);
+ const input=new PassThrough();let finish,started=false,offered=0;const finished=new Promise(r=>finish=r);
  await guiMain({root:f.root,libraryId:f.id,quick:true,appMode:true,input,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(path.dirname(boot)),networkInterfaces:()=>({WiFi:[{address:'192.168.1.8',family:'IPv4',internal:false}]}),findTailscale:async()=>null,
- dialog:async(kind,message)=>assert.fail('No intermediate dialog: '+message),startSession:async options=>{started=true;assert.equal(options.allowAnonymous,true);assert.equal(options.lanHost,'192.168.1.8');return {url:'http://192.168.1.8:'+options.port,finished,stop:async()=>finish()};},report:event=>{if(event.event==='ready')input.end();}});
- assert.equal(started,true);
+ dialog:async(kind,message,options)=>{assert.equal(kind,'choice');assert.match(message,/previous connection/);offered++;return options[0];},startSession:async options=>{started=true;assert.equal(options.allowAnonymous,true);assert.equal(options.lanHost,'192.168.1.8');return {url:'http://192.168.1.8:'+options.port,finished,stop:async()=>finish()};},report:event=>{if(event.event==='ready')input.end();}});
+ assert.equal(started,true);assert.equal(offered,1);
 });
 
 test('the actual Forge Music Edition converts with every supplied plugin and field intact',async()=>{
