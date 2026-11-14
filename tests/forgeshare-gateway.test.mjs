@@ -60,7 +60,7 @@ test('graphical Funnel asks only for codes, preserves private port assignment an
  const {readFile}=await import('node:fs/promises'),{PassThrough}=await import('node:stream');
  const root=await realpath(await mkdtemp(path.join(os.tmpdir(),'forgeshare-funnel-ui-'))),wiki=path.join(root,'wiki');
  await mkdir(wiki);await writeFile(path.join(wiki,'tiddlywiki.info'),JSON.stringify({plugins:['tiddlywiki/filesystem','tiddlywiki/tiddlyweb']}));
- const entry=await addLibraryEntry({root,location:wiki,kind:'folder',name:'Public test'});await saveSharing(root,{mode:'funnel',allowAnonymous:false});
+ const entry=await addLibraryEntry({root,location:wiki,kind:'folder',name:'Public test'});await saveSharing(root,{mode:'funnel',allowAnonymous:false},entry.id);
  const input=new PassThrough();let credentials,finish,ready,passwords=0;const finished=new Promise(r=>finish=r);
  try {
   await guiMain({root,libraryId:entry.id,quick:true,appMode:true,input,readJSON:async()=>({}),checkAddressPort:async()=>{},findTailscale:async()=>'/mock',findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),

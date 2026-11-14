@@ -35,7 +35,7 @@ Tryk Del. Hjælperen klargør HTML-wikien automatisk og beholder den samme post 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Vælg dine wikier og tryk <strong>Del</strong>. Indstillingerne under <strong>Deling</strong> huskes; standarden er Tailscale uden ekstra wiki-login. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Vælg dine wikier og tryk <strong>Del</strong>. Første gang vælger du delingsform for hver wiki. Valget huskes kun for den wiki. Du kan ændre det under <strong>Indstillinger → Delingsindstillinger</strong>. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre.</p>
 <p class="hu-share-access">Ved Tailscale-deling gælder invitationen computeren. Begræns gæsternes adgang til wikien, før du inviterer.</p><details class="hu-share-detail">
 <summary>På hjemmenetværket — uden Tailscale</summary>
 <div class="hu-share-detail-body">

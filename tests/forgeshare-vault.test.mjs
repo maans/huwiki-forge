@@ -59,7 +59,7 @@ test('sharing an HTML site needs no TiddlyWiki installation and Funnel asks only
  const {guiMain,saveSharing}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');
  const {root}=await fixture(t),site=path.join(root,'Website');await mkdir(site);await writeFile(path.join(site,'index.html'),'<h1>Public page</h1>');
  const entry=await addLibraryEntry({root,location:site,name:'Website',kind:'site'});let requested=0,started=false;
- await saveSharing(root,{mode:'funnel',allowAnonymous:false});
+ await saveSharing(root,{mode:'funnel',allowAnonymous:false},entry.id);
  await guiMain({root,libraryId:entry.id,quick:true,appMode:false,findTailscale:async()=>'/mock/tailscale',readJSON:async()=>({}),checkAddressPort:async()=>{},findTiddlyWiki:async()=>assert.fail('Sites do not need TW'),
   dialog:async(kind,message,initial)=>{if(kind==='password'){requested++;return 'visitor';}if(kind==='choice')return initial[0];if(kind==='text'||kind==='optional')return '';assert.fail(message);},
   startSession:async options=>{started=true;assert.equal(options.kind,'site');assert.equal(options.codeAccess.readerCode,'visitor');assert.notEqual(options.codeAccess.editorCode,'visitor');return {url:'https://example.test.ts.net:10000',finished:new Promise(()=>{}),stop:async()=>{}};}

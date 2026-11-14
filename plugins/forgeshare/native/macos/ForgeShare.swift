@@ -153,7 +153,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let session=Session(); session.id=nextID;session.local=nextLocal;session.openWhenReady=nextLocal && !startupLaunch;nextID="";nextLocal=false; session.process.executableURL=URL(fileURLWithPath:node)
         session.process.arguments=[helper.path,"--gui","--app","--quick"] + (session.id.isEmpty ? [] : ["--profile",session.id]) + (session.local ? ["--local"] : []) + (startupLaunch ? ["--startup"] : []); session.process.currentDirectoryURL=helper.deletingLastPathComponent()
         var env=ProcessInfo.processInfo.environment; env.removeValue(forKey:"NODE_OPTIONS"); env.removeValue(forKey:"NODE_PATH")
-        env["PATH"]="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"; env["FORGESHARE_NATIVE"]=Bundle.main.executableURL?.path;env["FORGESHARE_APP"]=Bundle.main.bundleURL.path;env["FORGESHARE_LANGUAGE"]=danish ? "da" : "en"; session.process.environment=env
+        env["PATH"]="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";env["FORGESHARE_NATIVE"]=Bundle.main.executableURL?.path;env["FORGESHARE_APP"]=Bundle.main.bundleURL.path;env["FORGESHARE_LANGUAGE"]=danish ? "da" : "en"; session.process.environment=env
         session.process.standardInput=session.input; session.process.standardOutput=session.output; session.process.standardError=FileHandle.nullDevice
         session.row.orientation = .horizontal; session.row.spacing=10; session.label.lineBreakMode = .byTruncatingMiddle; session.label.maximumNumberOfLines = 2
         session.label.setContentCompressionResistancePriority(.defaultLow,for:.horizontal)
@@ -195,10 +195,10 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         guard let node=requireNode() else {return}
         guard let helper=Bundle.main.url(forResource:"ForgeShare",withExtension:"mjs") else {showError(tr("Appen er ufuldstændig. Hent hele pakken igen.","The app is incomplete. Download the complete package again."));return}
         libraryBusy=true;libraryButtons.forEach{$0.isEnabled=false}
-        let p=Process(),out=Pipe();p.executableURL=URL(fileURLWithPath:node)
+        let p=Process(),out=Pipe();p.executableURL=URL(fileURLWithPath:node);p.currentDirectoryURL=helper.deletingLastPathComponent()
         let data=(try? JSONSerialization.data(withJSONObject:input)) ?? Data("{}".utf8)
         p.arguments=[helper.path,"--gui","--library",action,data.base64EncodedString()];p.standardOutput=out;p.standardError=FileHandle.nullDevice
-        var env=ProcessInfo.processInfo.environment;env.removeValue(forKey:"NODE_OPTIONS");env.removeValue(forKey:"NODE_PATH");env["FORGESHARE_NATIVE"]=Bundle.main.executableURL?.path;env["FORGESHARE_APP"]=Bundle.main.bundleURL.path;env["FORGESHARE_LANGUAGE"]=danish ? "da" : "en";p.environment=env
+        var env=ProcessInfo.processInfo.environment;env.removeValue(forKey:"NODE_OPTIONS");env.removeValue(forKey:"NODE_PATH");env["PATH"]="/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin";env["FORGESHARE_NATIVE"]=Bundle.main.executableURL?.path;env["FORGESHARE_APP"]=Bundle.main.bundleURL.path;env["FORGESHARE_LANGUAGE"]=danish ? "da" : "en";p.environment=env
         DispatchQueue.global().async {
             var result:[String:Any]?
             do {try p.run();let bytes=out.fileHandleForReading.readDataToEndOfFile();p.waitUntilExit()
@@ -213,7 +213,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         libraryCommand(action) { result in
             guard let entries=result?["entries"] as? [[String:Any]] else {self.showError(tr("Wikibiblioteket kunne ikke læses. Ingen filer er ændret.","The wiki library could not be read. No files were changed."));return}
             self.renderLibrary(entries,selected:selected)
-            if let sharing=result?["sharing"] as? [String:Any] {self.sharingLabel.stringValue=tr("Deling: ","Sharing: ")+(sharing["mode"] as? String == "lan" ? tr("Hjemmenetværk","Home network") : sharing["mode"] as? String == "funnel" ? "Funnel" : "Tailscale")+" · "+(sharing["mode"] as? String == "funnel" ? tr("læser- og redaktørkode","reader and editor codes") : sharing["allowAnonymous"] as? Bool == true ? tr("uden wiki-login","no wiki login") : tr("med wiki-login","with wiki login"))}
+            self.sharingLabel.stringValue=tr("Delingsvalg huskes for hver wiki og hvert site.","Sharing choices are remembered for each wiki and site.")
             if self.checkStartup {
                 self.checkStartup=false
                 self.libraryCommand("startup-status") { result in
@@ -230,7 +230,10 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 let name=entry["name"] as? String ?? "",kind=entry["kind"] as? String ?? ""
                 let missing=entry["available"] as? Bool == false
                 let label=name+"  ·  "+(missing ? tr("Filen mangler","File missing") : kind=="site" ? tr("Site","Site") : kind=="html" ? tr("Lokal HTML-fil","Local HTML file") : tr("Wikimappe","Wiki folder"))
-                let box=NSButton(checkboxWithTitle:label,target:nil,action:nil);box.state=selected.contains(entry["id"] as? String ?? "") ? .on : .off
+                let choice=entry["sharing"] as? [String:Any]
+                let mode=choice?["mode"] as? String
+                let sharing=mode=="lan" ? tr("Hjemmenetværk","Home network") : mode=="funnel" ? "Funnel" : mode=="tailscale" ? "Tailscale" : tr("Vælg deling ved første start","Choose sharing on first start")
+                let box=NSButton(checkboxWithTitle:label+" · "+sharing,target:nil,action:nil);box.state=selected.contains(entry["id"] as? String ?? "") ? .on : .off
                 box.cell?.lineBreakMode = .byTruncatingMiddle
                 box.setContentCompressionResistancePriority(.defaultLow,for:.horizontal)
                 libraryView.addArrangedSubview(box);libraryChecks.append((entry,box))

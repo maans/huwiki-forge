@@ -35,7 +35,7 @@ Press Share. The helper prepares the HTML wiki automatically and keeps the same 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select your wikis and press <strong>Share</strong>. Settings under <strong>Sharing</strong> are remembered; the default is Tailscale without additional wiki login. Use <strong>Copy address</strong> to get the link for others.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select your wikis and press <strong>Share</strong>. Choose sharing for each wiki on its first start. Each wiki remembers its own choice. Change it under <strong>Settings → Sharing settings</strong>. Use <strong>Copy address</strong> to get the link for others.</p>
 <p class="hu-share-access">A Tailscale invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
 <summary>On your home network — without Tailscale</summary>
 <div class="hu-share-detail-body">

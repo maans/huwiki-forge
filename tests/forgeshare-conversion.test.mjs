@@ -75,8 +75,8 @@ test('automatic discovery lists HTML and server wikis once without starting or c
 test('Share uses remembered network settings and starts without intermediate dialogs',async()=>{
  const {saveSharing,readSharing,guiMain}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');const {PassThrough}=await import('node:stream');
  const f=await fixture('quick');await prepareHTML(f,{trash:async()=>{}});
- assert.deepEqual(await readSharing(f.root),{mode:'tailscale',allowAnonymous:true});
- await saveSharing(f.root,{mode:'lan',allowAnonymous:true});assert.deepEqual(await readSharing(f.root),{mode:'lan',allowAnonymous:true});
+ assert.equal(await readSharing(f.root,f.id),null);
+ await saveSharing(f.root,{mode:'lan',allowAnonymous:true},f.id);assert.deepEqual(await readSharing(f.root,f.id),{mode:'lan',allowAnonymous:true});
  const input=new PassThrough();let finish,started=false;const finished=new Promise(r=>finish=r);
  await guiMain({root:f.root,libraryId:f.id,quick:true,appMode:true,input,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(path.dirname(boot)),networkInterfaces:()=>({WiFi:[{address:'192.168.1.8',family:'IPv4',internal:false}]}),findTailscale:async()=>assert.fail('No Tailscale for LAN'),
  dialog:async(kind,message)=>assert.fail('No intermediate dialog: '+message),startSession:async options=>{started=true;assert.equal(options.allowAnonymous,true);assert.equal(options.lanHost,'192.168.1.8');return {url:'http://192.168.1.8:'+options.port,finished,stop:async()=>finish()};},report:event=>{if(event.event==='ready')input.end();}});

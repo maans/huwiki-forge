@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.8 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.9 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {validateSite,siteWorker} from './Site.mjs';
 import {configureLogin} from './Startup.mjs';
 import {Vault,vaultDialog,invitation,privateCommand} from './Vault.mjs';
@@ -239,9 +239,15 @@ export function checkPort(port = 8080, host = '127.0.0.1') {
     server.listen({host, port, exclusive: true}, () => server.close(resolve));
   });
 }
-async function jsonCommand(executable, args) {
-  const {stdout} = await execute(executable, args, {timeout: 10000, maxBuffer: 1024 * 1024, windowsHide: true});
-  return JSON.parse(stdout);
+export async function jsonCommand(executable, args, run=execute) {
+  try {
+    const {stdout} = await run(executable, args, {timeout: 10000, maxBuffer: 1024 * 1024, windowsHide: true});
+    const value=JSON.parse(stdout);
+    if(!object(value))throw Error('Invalid status');
+    return value;
+  } catch {
+    fail('Could not read Tailscale status. Open Tailscale, check that it is connected, then try again.', 'Kunne ikke hente status fra Tailscale. Åbn Tailscale, kontrollér at den er forbundet, og prøv igen.');
+  }
 }
 
 // Avoid well-known ports and the usual OS ephemeral ranges. These ranges are
@@ -395,13 +401,14 @@ export async function startNamedSession(profile, options, deps = {}) {
   } catch (error) { await releaseWiki(); throw error; }
   finally { if (releaseCatalog) await releaseCatalog(); }
 }
-export async function findTailscale() {
-  const executable = process.platform === 'win32' ? 'tailscale.exe' : 'tailscale';
-  const candidates = (process.env.PATH || '').split(path.delimiter).filter(Boolean).map(dir => path.join(dir, executable));
+export async function findTailscale({platform=process.platform,env=process.env,exists=access}={}) {
+  const executable = platform === 'win32' ? 'tailscale.exe' : 'tailscale';
+  const candidates = (env.PATH || '').split(path.delimiter).filter(Boolean).map(dir => path.join(dir, executable));
+  if(platform==='darwin')candidates.unshift('/usr/local/bin/tailscale','/opt/homebrew/bin/tailscale');
   candidates.push('/Applications/Tailscale.app/Contents/MacOS/Tailscale',
-    path.join(process.env.ProgramFiles || 'C:\\Program Files', 'Tailscale', 'tailscale.exe'));
+    path.join(env.ProgramFiles || 'C:\\Program Files', 'Tailscale', 'tailscale.exe'));
   for (const candidate of candidates) {
-    try { await access(candidate, process.platform === 'win32' ? constants.F_OK : constants.X_OK); return candidate; } catch {}
+    try { await exists(candidate, platform === 'win32' ? constants.F_OK : constants.X_OK); return candidate; } catch {}
   }
   fail('Tailscale is missing. Install it from https://tailscale.com/download and sign in.', 'Tailscale mangler. Installer fra https://tailscale.com/download og log ind.');
 }
@@ -563,11 +570,12 @@ export function validateLibrary(data) {
   if(data.exportTitle!==undefined)cleanLabel(data.exportTitle,100);
   const ids=new Set(),locations=new Set(),names=new Set();
   for(const e of data.entries) {
-    if(!object(e) || Object.keys(e).some(k=>!['id','name','kind','location','description','shareUrl','exportTitle'].includes(k)) ||
+    if(!object(e) || Object.keys(e).some(k=>!['id','name','kind','location','description','shareUrl','exportTitle','sharing'].includes(k)) ||
        !uuidPattern.test(e.id) || !['html','folder','site'].includes(e.kind) || typeof e.location!=='string' || !path.isAbsolute(e.location) ||
        ids.has(e.id) || locations.has(wikiKey(e.location)) || names.has(profileKey(e.name || '')) ||
        (e.shareUrl && !validShareURL(e.shareUrl)))fail('Invalid wiki library entry. Nothing changed.', 'Ugyldig post i wikibiblioteket. Intet ændret.');
     cleanLabel(e.name);cleanLabel(e.description,500,true);
+    if(e.sharing!==undefined)validateSharing(e.sharing);
     if(e.exportTitle!==undefined)cleanLabel(e.exportTitle,240);
     ids.add(e.id);locations.add(wikiKey(e.location));names.add(profileKey(e.name));
   }
@@ -584,6 +592,8 @@ async function loadLibrary(root) {
     if(data.entries.some(e=>profileKey(e.name)===profileKey(name)))name=name.slice(0,65)+' ('+p.id.slice(0,8)+')';
     data.entries.push({id:p.id,name,kind:p.kind==='site'?'site':'folder',location:p.wiki,description:''});
   }
+  // Freeze the old global choice onto existing entries once. New entries choose independently.
+  if(data.sharing!==undefined){for(const entry of data.entries)if(!entry.sharing)entry.sharing=validateSharing(data.sharing);delete data.sharing;}
   return validateLibrary(data);
 }
 async function libraryTransaction(root,change) {
@@ -599,7 +609,7 @@ async function libraryTransaction(root,change) {
 }
 export async function listLibrary(root=appFolder()) {
   // Persist the library ID once, so repeated exports update the same overview.
-  return libraryTransaction(root,async data=>({id:data.id,sharing:validateSharing(data.sharing || {mode:"tailscale",allowAnonymous:true}),entries:await Promise.all(data.entries.map(async entry=>{
+  return libraryTransaction(root,async data=>({id:data.id,sharing:null,entries:await Promise.all(data.entries.map(async entry=>{
     let available=true;try {const info=await stat(entry.location);available=entry.kind==='html'?info.isFile():info.isDirectory();}catch {available=false;}
     return {...entry,available};
   }))}));
@@ -771,8 +781,34 @@ export function validateSharing(value) {
   if(!object(value) || !['tailscale','lan','funnel'].includes(value.mode) || typeof value.allowAnonymous!=='boolean')throw Error('Invalid sharing settings');
   return {mode:value.mode,allowAnonymous:value.mode==='funnel'?false:value.allowAnonymous};
 }
-export async function readSharing(root=appFolder()) {return validateSharing((await loadLibrary(root)).sharing || {mode:'tailscale',allowAnonymous:true});}
-export async function saveSharing(root,value) {return libraryTransaction(root,data=>{data.sharing=validateSharing(value);return data.sharing;});}
+export async function readSharing(root=appFolder(),id) {
+  const data=await loadLibrary(root);
+  if(!id)throw Error('Choose a wiki or site');
+  const entry=data.entries.find(e=>e.id===id);if(!entry)throw Error('Unknown wiki');
+  return entry.sharing?validateSharing(entry.sharing):null;
+}
+export async function saveSharing(root,value,id) {
+  return libraryTransaction(root,data=>{
+    const choice=validateSharing(value);
+    if(!id)throw Error('Choose a wiki or site');
+    const entry=data.entries.find(e=>e.id===id);if(!entry)throw Error('Unknown wiki');
+    entry.sharing=choice;return choice;
+  });
+}
+export async function chooseSharing(root,id,ask) {
+  const entry=(await loadLibrary(root)).entries.find(e=>e.id===id);if(!entry)throw Error('Unknown wiki');
+  const modes=[ui('Tailscale — private connection','Tailscale — privat forbindelse'),ui('Home network — without Tailscale','Hjemmenetværk — uden Tailscale'),ui('Funnel — internet link with access codes','Funnel — internetlink med adgangskoder')];
+  const selected=modes.indexOf(await ask('choice',ui('How should “','Hvordan skal “')+entry.name+ui('” be shared? This choice is remembered only for this item.','” deles? Valget huskes kun for denne wiki eller dette site.'),modes));
+  if(selected<0)throw Object.assign(Error('Cancelled'),{cancelled:true});
+  let allowAnonymous=false;
+  if(selected!==2){
+    const logins=[ui('Network access is enough','Netværksadgang er nok'),ui('Also require login','Kræv også login')];
+    const login=logins.indexOf(await ask('choice',ui('Should visitors also log in?','Skal besøgende også logge ind?'),logins));
+    if(login<0)throw Object.assign(Error('Cancelled'),{cancelled:true});
+    allowAnonymous=login===0;
+  }
+  return saveSharing(root,{mode:['tailscale','lan','funnel'][selected],allowAnonymous},id);
+}
 async function discoverLibrary(ask,root,deps) {
   let roots=deps.discoveryRoots;
   for(;;) {
@@ -887,7 +923,8 @@ export async function libraryMain(action,encoded='',deps={}) {
     if(action==='startup-status'){report({startup:await readStartup(root)});return;}
     const input=encoded?JSON.parse(Buffer.from(encoded,'base64').toString('utf8')):{};
     if(action==='devices'){
-      const executable=await findTailscale(),status=await jsonCommand(executable,['status','--json']);
+      const executable=await (deps.findTailscale||findTailscale)(),status=await (deps.readJSON||jsonCommand)(executable,['status','--json']);
+      if(status.BackendState!=='Running')fail('Tailscale is not connected. Open Tailscale and connect first.','Tailscale er ikke forbundet. Åbn Tailscale og forbind først.');
       const entries=[status.Self,...Object.values(status.Peer||{})].filter(Boolean);
       await ask('info',ui('Tailscale devices — this is not a list of wiki visitors.','Tailscale-enheder — dette er ikke en liste over wikibesøgende.')+'\n\n'+entries.map(e=>(e.HostName||e.DNSName||'?')+' · '+(e.Online?ui('Online','Online'):ui('Offline','Offline'))).join('\n'));
     }else if(action==='vault'){await vaultDialog(createVault(root),ask,ui);}
@@ -896,14 +933,13 @@ export async function libraryMain(action,encoded='',deps={}) {
       const file=path.join(path.dirname(self),'help-'+uiLanguage+'.html');
       await (deps.openHelp || (file=>execute(process.platform==='darwin'?'/usr/bin/open':process.platform==='win32'?'explorer.exe':'xdg-open',[file])))(file);
     } else if(action==='sharing') {
-      const modes=[ui('Tailscale — private connection','Tailscale — privat forbindelse'),ui('Home network — without Tailscale','Hjemmenetværk — uden Tailscale'),ui('Funnel — internet link with access codes','Funnel — internetlink med adgangskoder')];
-      const selected=modes.indexOf(await ask('choice',ui('Sharing settings — used when you press Share','Delingsindstillinger — bruges, når du trykker Del'),modes));
-      if(selected<0)throw Object.assign(Error('Cancelled'),{cancelled:true});
-      if(selected===2){await saveSharing(root,{mode:'funnel',allowAnonymous:false});report({ok:true});return;}
-      const logins=[ui('Network access is enough','Netværksadgang er nok'),ui('Also require wiki login','Kræv også wiki-login')];
-      const login=logins.indexOf(await ask('choice',ui('People with access can read and edit. Wiki passwords are requested when starting, never stored.','Personer med adgang kan læse og redigere. Wiki-adgangskoder spørges ved start og gemmes ikke.'),logins));
-      if(login<0)throw Object.assign(Error('Cancelled'),{cancelled:true});
-      await saveSharing(root,{mode:selected===0?'tailscale':'lan',allowAnonymous:login===0});
+      const entries=(await listLibrary(root)).entries;
+      if(!entries.length){await ask('info',ui('Add a wiki or site first.','Tilføj først en wiki eller et site.'));return;}
+      const entry=input.id?entries.find(e=>e.id===input.id):undefined;
+      let id=entry?.id;
+      if(!id){const name=await ask('choice',ui('Choose the wiki or site whose sharing you want to change.','Vælg den wiki eller det site, du vil ændre deling for.'),entries.map(e=>e.name));id=entries.find(e=>e.name===name)?.id;}
+      if(!id)throw Object.assign(Error('Cancelled'),{cancelled:true});
+      await chooseSharing(root,id,ask);
     } else if(action==='startup') {
       const options=[ui('Start when I log in','Start, når jeg logger ind'),ui('Do not start at login','Start ikke ved login'),ui('Choose a wiki to start','Vælg en wiki, der skal starte')];
       const choice=await ask('choice',ui('Startup','Opstart'),options);
@@ -1233,7 +1269,9 @@ export async function guiMain(deps = {}) {
     const startup=deps.startup || (process.argv.includes('--startup')?await readStartup(root):null);
     if(startup){validateStartup(startup,await loadLibrary(root));libraryId=startup.wikiId;localOnly=startup.mode==='local';}
     const quick=deps.quick || process.argv.includes('--quick');
-    const sharing=quick?await readSharing(root):null;
+    let sharing=quick && libraryId?await readSharing(root,libraryId):null;
+    if(quick && libraryId && !localOnly && !startup && !sharing)sharing=await chooseSharing(root,libraryId,ask);
+    sharing ||= {mode:'tailscale',allowAnonymous:true};
     if(!startup && !quick)await ask('confirm', localOnly ? ui('Open this wiki only on your computer. You choose whether to use wiki login.', 'Åbn kun wikien på denne computer. Du vælger selv, om der skal være wiki-login.') : ui('Share a wiki. Choose the network and whether to use wiki login. Nothing starts before the final confirmation.', 'Del en wiki. Vælg netværk og eventuelt wiki-login. Intet starter før den sidste bekræftelse.'));
     if (Number(process.versions.node.split('.')[0]) < 20) fail('Install Node.js 20 or later.', 'Installer Node.js 20 eller nyere.');
     let mode=startup?.mode || (quick && !localOnly?sharing.mode:'local'),lanHost;
