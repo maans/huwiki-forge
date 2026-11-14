@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "shop",
   "name": "Shop Edition",
-  "version": "0.2.0-test.2",
+  "version": "0.2.0-test.3",
   "coreVersion": "5.4.1",
   "tiddlers": ["tiddlers/config.json", "../shared/libraries.json"],
   "plugins": ["../../themes/modern/dist/theme.json", "../../languages/da-DK/plugin.json", "../../plugins/shop/dist/plugin.json"]
