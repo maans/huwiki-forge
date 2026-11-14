@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.2 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
-import {readFile, realpath, stat, access, mkdir, mkdtemp, writeFile, rm, rename, open} from 'node:fs/promises';
+// ForgeShare 0.1.3 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+import {readFile, realpath, stat, lstat, opendir, access, mkdir, mkdtemp, writeFile, rm, rename, open} from 'node:fs/promises';
 import {randomUUID} from 'node:crypto';
 import {constants} from 'node:fs';
 import path from 'node:path';
@@ -444,6 +444,88 @@ export async function addLibraryEntry({root=appFolder(),location,name,kind,descr
     data.entries.push(entry);validateLibrary(data);return entry;
   });
 }
+export function defaultDiscoveryRoots(home=os.homedir()) {
+  return ['Wikis','Documents','Desktop','Downloads'].map(name=>path.join(home,name));
+}
+// Read-only, bounded folder discovery. Never follows directory symlinks or executes wiki code.
+export async function discoverWikiFolders({roots=defaultDiscoveryRoots(),known=[],maxDepth=5,maxDirectories=1500,maxEntries=20000,maxResults=100,timeoutMs=5000}={}) {
+  const skip=new Set(['node_modules','vendor','Library','AppData','$RECYCLE.BIN','System Volume Information','tiddlers','plugins','themes','editions']);
+  const queue=roots.map(location=>({location:path.resolve(location),depth:0})),seen=new Set(),found=[];
+  const deadline=Date.now()+timeoutMs;let visited=0,examined=0,limited=false,unreadable=0;
+  const excluded=new Set(known.map(wikiKey));
+  while(queue.length) {
+    if(Date.now()>=deadline || visited>=maxDirectories || examined>=maxEntries || found.length>=maxResults){limited=true;break;}
+    const {location,depth}=queue.shift();
+    try {
+      const info=await lstat(location);if(!info.isDirectory() || info.isSymbolicLink())continue;
+      const canonical=await realpath(location),key=wikiKey(canonical);if(seen.has(key))continue;seen.add(key);visited++;
+      let isWiki=false;
+      try {
+        const marker=path.join(canonical,'tiddlywiki.info'),meta=await lstat(marker);
+        if(meta.isFile() && !meta.isSymbolicLink() && meta.size<=65536)isWiki=object(JSON.parse(await readFile(marker,'utf8')));
+      } catch(error) {if(!['ENOENT','ENOTDIR'].includes(error.code) && !(error instanceof SyntaxError))unreadable++;}
+      if(isWiki) {
+        if(!excluded.has(key))found.push({kind:'folder',location:canonical,name:path.basename(canonical)});
+        continue; // Do not search a wiki's contents/backups/plugins for nested candidates.
+      }
+      if(depth>=maxDepth){limited=true;continue;}
+      const directory=await opendir(canonical);
+      for await(const entry of directory) {
+        examined++;
+        if(examined>=maxEntries || Date.now()>=deadline){limited=true;break;}
+        if(entry.isDirectory() && !entry.isSymbolicLink() && !entry.name.startsWith('.') && !skip.has(entry.name) && !/\.(app|bundle|framework|photoslibrary)$/i.test(entry.name))
+          queue.push({location:path.join(canonical,entry.name),depth:depth+1});
+      }
+    }catch(error){if(error.code!=='ENOENT')unreadable++;}
+  }
+  found.sort((a,b)=>a.name.localeCompare(b.name)||a.location.localeCompare(b.location));
+  return {entries:found,limited,unreadable,visited};
+}
+function availableLibraryName(name,entries) {
+  const base=String(name).replace(/[\x00-\x1f\x7f]/g,' ').trim().slice(0,65)||'Wiki';
+  let candidate=base,index=2;
+  while(entries.some(e=>profileKey(e.name)===profileKey(candidate)))candidate=base+' ('+(index++)+')';
+  return candidate;
+}
+export async function addDiscoveredFolders(candidates,root=appFolder()) {
+  return libraryTransaction(root,async data=>{
+    const added=[];
+    for(const candidate of candidates) {
+      const location=await realpath(candidate.location);
+      if(data.entries.some(e=>wikiKey(e.location)===wikiKey(location)))continue;
+      // Revalidate at acceptance time: search results are suggestions, not authority.
+      const marker=path.join(location,'tiddlywiki.info'),info=await lstat(marker);
+      if(!info.isFile() || info.isSymbolicLink() || info.size>65536 || !object(JSON.parse(await readFile(marker,'utf8'))))
+        fail('The wiki folder has changed. Search again.', 'Wikimappen er ændret. Søg igen.');
+      const entry={id:randomUUID(),name:availableLibraryName(candidate.name,data.entries),kind:'folder',location,description:''};
+      data.entries.push(entry);added.push(entry);
+    }
+    return added;
+  });
+}
+async function discoverLibrary(ask,root,deps) {
+  let roots=deps.discoveryRoots;
+  for(;;) {
+    const library=await listLibrary(root);
+    const result=await (deps.discover || discoverWikiFolders)({roots,known:library.entries.map(e=>e.location)});
+    if(!result.entries.length) {
+      await ask('choice','No new wiki folders found here. Try another folder?\nIngen nye wikimapper fundet her. Prøv en anden mappe?',['Search another folder / Søg i en anden mappe']);
+      roots=[await ask('folder','Choose where to look / Vælg, hvor der skal søges')];continue;
+    }
+    const planned=[...library.entries];
+    const choices=result.entries.map((entry,index)=>{
+      const name=availableLibraryName(entry.name,planned);planned.push({name});
+      const relative=path.relative(deps.home||os.homedir(),entry.location);
+      const hint=relative.startsWith('..')?entry.location:relative;
+      return {...entry,name,label:(index+1)+'. '+name+' — '+hint.replace(/[\r\n\t]/g,' ')};
+    });
+    const note=(result.limited || result.unreadable)?'\nSome folders were skipped or the search limit was reached. / Nogle mapper blev sprunget over, eller søgegrænsen blev nået.':'';
+    const selected=(await ask('choices','Found wiki folders — select those to add. Nothing will be started or shared.\nFundne wikimapper — vælg dem, der skal tilføjes. Intet bliver startet eller delt.'+note,choices.map(e=>e.label))).split(/\r?\n/);
+    const chosen=choices.filter(e=>selected.includes(e.label));
+    if(!chosen.length)throw Object.assign(Error('Cancelled'),{cancelled:true});
+    await addDiscoveredFolders(chosen,root);return;
+  }
+}
 export async function editLibraryEntry(id,{name,description},root=appFolder()) {
   return libraryTransaction(root,async data=>{
     const entry=data.entries.find(e=>e.id===id);if(!entry)fail('Wiki not found.', 'Wikien blev ikke fundet.');
@@ -487,7 +569,11 @@ export async function libraryMain(action,encoded='',deps={}) {
     if(action==='list'){report(await listLibrary(root));return;}
     const input=encoded?JSON.parse(Buffer.from(encoded,'base64').toString('utf8')):{};
     if(action==='add') {
-      const choice=await ask('choice','Add a wiki / Tilføj en wiki',['HTML file / HTML-fil','Wiki folder / Wikimappe']);
+      const choice=await ask('choice','Add a wiki / Tilføj en wiki',['Find wiki folders / Find wikimapper','HTML file / HTML-fil','Choose a wiki folder / Vælg en wikimappe','Search another folder / Søg i en anden mappe']);
+      if(choice.startsWith('Find') || choice.startsWith('Search')) {
+        if(choice.startsWith('Search'))deps={...deps,discoveryRoots:[await ask('folder','Choose where to look / Vælg, hvor der skal søges')]};
+        await discoverLibrary(ask,root,deps);report({ok:true});return;
+      }
       const kind=choice.startsWith('HTML')?'html':'folder';
       const location=await ask(kind==='html'?'file':'folder','Choose your wiki / Vælg din wiki');
       const name=await ask('text','Wiki name / Wikinavn',path.basename(location).replace(/\.html?$/i,''));
@@ -621,6 +707,7 @@ if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === imp
 export function dialogCommand(platform, kind, message, initial = '') {
   if (platform === 'darwin') {
     const actions = {
+      choices: 'set picked to choose from list (items 2 thru -1 of argv) with prompt (item 1 of argv) with title "ForgeShare" with multiple selections allowed\nif picked is false then error number -128\nset AppleScript\'s text item delimiters to linefeed\nreturn picked as text',
       save: 'return POSIX path of (choose file name with prompt (item 1 of argv) default name (item 2 of argv))',
       optional: 'return text returned of (display dialog (item 1 of argv) default answer (item 2 of argv) with title "ForgeShare")',
       folder: 'return POSIX path of (choose folder with prompt (item 1 of argv))',
@@ -631,15 +718,16 @@ export function dialogCommand(platform, kind, message, initial = '') {
       info: 'display dialog (item 1 of argv) buttons {"OK"} default button 1 with title "ForgeShare"',
       choice: 'set picked to choose from list (items 2 thru -1 of argv) with prompt (item 1 of argv) with title "ForgeShare"\nif picked is false then error number -128\nreturn item 1 of picked'
     };
-    return ['/usr/bin/osascript', ['-e', `on run argv\n${actions[kind]}\nend run`, '--', message, ...(kind === 'choice' ? initial : [initial])]];
+    return ['/usr/bin/osascript', ['-e', `on run argv\n${actions[kind]}\nend run`, '--', message, ...(['choice','choices'].includes(kind) ? initial : [initial])]];
   }
   if (platform === 'win32') {
-    // Base64 JSON carries arbitrary paths/text without PowerShell quoting/injection.
+    // Data travels on stdin, keeping paths/text out of code and avoiding Windows' command-line size limit.
     const data = Buffer.from(JSON.stringify({kind, message, initial})).toString('base64');
     const script = `$env:PSModulePath=$PSHOME+'\\Modules'; $ErrorActionPreference='Stop'; Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName Microsoft.VisualBasic
-$d = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String('${data}')) | ConvertFrom-Json
+$d = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String([Console]::In.ReadToEnd())) | ConvertFrom-Json
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 switch ($d.kind) {
+ 'choices' { $f=New-Object Windows.Forms.Form; $f.Text='ForgeShare'; $f.Width=760; $f.Height=470; $f.StartPosition='CenterScreen'; $l=New-Object Windows.Forms.Label; $l.Text=$d.message; $l.SetBounds(15,15,710,100); $list=New-Object Windows.Forms.CheckedListBox; $list.CheckOnClick=$true; $list.HorizontalScrollbar=$true; $list.SetBounds(15,120,710,250); foreach($item in $d.initial){[void]$list.Items.Add([string]$item)}; $b=New-Object Windows.Forms.Button; $b.Text='OK'; $b.SetBounds(620,385,100,30); $b.DialogResult='OK'; $f.Controls.AddRange(@($l,$list,$b)); $f.AcceptButton=$b; if($f.ShowDialog() -ne 'OK' -or $list.CheckedItems.Count -eq 0){exit 2}; foreach($item in $list.CheckedItems){Write-Output $item} }
  'choice' { $f=New-Object Windows.Forms.Form; $f.Text='ForgeShare'; $f.Width=570; $f.Height=400; $f.StartPosition='CenterScreen'; $l=New-Object Windows.Forms.Label; $l.Text=$d.message; $l.SetBounds(15,15,520,60); $list=New-Object Windows.Forms.ListBox; $list.SetBounds(15,80,520,220); foreach ($item in $d.initial) { [void]$list.Items.Add([string]$item) }; $list.SelectedIndex=0; $b=New-Object Windows.Forms.Button; $b.Text='OK'; $b.SetBounds(430,315,100,30); $b.DialogResult='OK'; $f.Controls.AddRange(@($l,$list,$b)); $f.AcceptButton=$b; if ($f.ShowDialog() -ne 'OK' -or $null -eq $list.SelectedItem) { exit 2 }; Write-Output $list.SelectedItem }
  'save' { $p=New-Object Windows.Forms.SaveFileDialog; $p.Title=$d.message; $p.Filter='Wiki overview|*.json'; $p.FileName=$d.initial; $p.DefaultExt='json'; if($p.ShowDialog() -ne 'OK') {exit 2}; Write-Output $p.FileName }
  'optional' { $f=New-Object Windows.Forms.Form; $f.Text='ForgeShare'; $f.Width=540; $f.Height=200; $l=New-Object Windows.Forms.Label; $l.Text=$d.message; $l.SetBounds(15,15,490,40); $t=New-Object Windows.Forms.TextBox; $t.Text=$d.initial; $t.SetBounds(15,60,490,25); $b=New-Object Windows.Forms.Button; $b.Text='OK'; $b.SetBounds(400,100,100,30); $b.DialogResult='OK'; $f.Controls.AddRange(@($l,$t,$b)); $f.AcceptButton=$b; if($f.ShowDialog() -ne 'OK') {exit 2}; Write-Output $t.Text }
@@ -650,7 +738,7 @@ switch ($d.kind) {
  'confirm' { if ([Windows.Forms.MessageBox]::Show($d.message,'ForgeShare','OKCancel') -ne 'OK') { exit 2 } }
  'info' { [void][Windows.Forms.MessageBox]::Show($d.message,'ForgeShare') }
 }`;
-    return ['powershell.exe', ['-NoProfile', '-NonInteractive', '-STA', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')]];
+    return ['powershell.exe', ['-NoProfile', '-NonInteractive', '-STA', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')],data];
   }
   if (platform === 'linux') {
     const common = ['--title=ForgeShare'];
@@ -671,9 +759,13 @@ switch ($d.kind) {
   throw Error('Supported systems: Mac, Windows, Linux / Understøttede systemer: Mac, Windows, Linux.');
 }
 export async function dialog(kind, message, initial = '', signal) {
-  const [command, args] = dialogCommand(process.platform, kind, message, initial);
+  const [command, args, input] = dialogCommand(process.platform, kind, message, initial);
   try {
-    const {stdout} = await execute(command, args, {maxBuffer: 65536, windowsHide: true, signal});
+    const stdout = await new Promise((resolve,reject)=>{
+      const child=execFile(command,args,{maxBuffer:262144,windowsHide:true,signal},(error,stdout,stderr)=>error?reject(Object.assign(error,{stdout,stderr})):resolve(stdout));
+      // Early cancellation can close the pipe before the payload is written; the exit callback reports it.
+      child.stdin.on('error',()=>{});child.stdin.end(input || '');
+    });
     return stdout.trimEnd();
   } catch (error) {
     if (error.code === 'ENOENT') throw Error('Graphical dialogs are unavailable. On Linux, install Zenity using your software manager. / Grafiske dialoger mangler. På Linux installeres Zenity via programbutikken.');

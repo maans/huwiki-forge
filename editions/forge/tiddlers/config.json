@@ -1,0 +1,27 @@
+[
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[HUWiki Forge]]"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  },
+  {
+    "title": "$:/SiteTitle",
+    "text": "HUWiki Forge"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">Skab din egen wiki med TiddlyWiki</$list><$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">Create your own TiddlyWiki</$list>"
+  },
+  {
+    "title": "$:/state/sidebar",
+    "text": "no"
+  },
+  {
+    "title": "$:/huwiki/forge/wide-class",
+    "tags": "$:/tags/ClassFilters/PageTemplate",
+    "text": "[{$:/state/sidebar}match[no]then[forge-wide]]"
+  }
+]

@@ -1,6 +1,6 @@
 # ForgeShare / Tailscale-samarbejde
 
-Optional, standalone TiddlyWiki 5 plugin, `0.1.2`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
+Optional, standalone TiddlyWiki 5 plugin, `0.1.3`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
 
 Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeShare** or the plugin readme. Forge's **Extra plugins** catalog lists it as an optional test package; no Edition includes it automatically. HTML/offline use and native savers remain available.
 
@@ -8,7 +8,7 @@ Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeS
 
 1. Install Node.js for the helper. Tailscale is needed only when sharing. Linux additionally needs Zenity for dialogs.
 2. Download and extract the helper, then open ForgeShare.app (Mac), ForgeShare.exe (Windows) or the Linux launcher.
-3. Add an HTML file or wiki folder to the persistent library. Existing shared profiles appear automatically. Adding starts no server or Tailscale process. Edit changes a name/description without changing assigned ports.
+3. Choose Add → Find wiki folders to search common locations and accept selected suggestions. Alternatively, choose an HTML file or folder yourself. Existing shared profiles appear automatically. Adding starts no server or Tailscale process. Edit changes a name/description without changing assigned ports.
 4. Open an HTML file with the default browser and its existing save method. Open a prepared server folder locally with authenticated loopback access; this does not query or start Tailscale. Share is a separate action. Optional pinned TiddlyWiki installation requires explicit approval. HTML-to-server conversion is not automatic.
 5. Select entries and Export selected. Choose names/descriptions only (default) or include last shared HTTPS addresses. Save a new JSON file and import it normally in a wiki. The localized overview and individual plain-text entry tiddlers use stable IDs for reimport. No paths, ports, credentials, unselected entries or wiki content are exported. Snapshots never claim live status; old imported entries are not automatically deleted.
 6. Active servers have independent Copy address and Stop controls; stopping leaves the library entry intact. Quitting asks before ending active sessions. Linux provides the library actions through dialogs and a separate status dialog per running wiki.
@@ -79,8 +79,12 @@ For later trusted Mac distribution: enroll in the Apple Developer Program, creat
 
 Windows distribution can later use Authenticode signing; even a valid signature does not promise immediate SmartScreen reputation. See [Microsoft’s distribution guidance](https://learn.microsoft.com/windows/apps/package-and-deploy/smartscreen-reputation).
 
-Version 0.1.2 intentionally increments the patch number: TW 5.4.1’s import comparison ignores prerelease suffixes such as `-test.2` and `-test.3`. The actual core comparator is tested so the new package upgrades those earlier test builds.
+Version 0.1.3 intentionally increments the patch number: TW 5.4.1’s import comparison ignores prerelease suffixes such as `-test.2` and `-test.3`. The actual core comparator is tested so the new package upgrades those earlier test builds.
 
 The headless browser check also uses the core import review and Import button, then reimports to verify stable identities and removal of previously included addresses.
 
 Library tests cover persistence, legacy profile migration, renaming without port changes, excluded/private metadata, inert user text rendered by real TW, stable reimport identity, cancellation, non-overwriting export files and an actual authenticated local server that never invokes Tailscale.
+
+Discovery searches Wikis, Documents, Desktop and Downloads, or a folder explicitly chosen by the user. It recognizes a valid tiddlywiki.info, excludes known library entries and skips hidden/dependency/application folders, symlinks and wiki contents. Bounds: depth 5, 1500 directories, 20000 directory entries, 100 results and a 5-second cooperative deadline. Partial results are labelled; inaccessible folders are skipped. Nothing is added or started until suggestions are accepted. Accepted folders are revalidated and added atomically, with unique display names.
+
+The Mac self-test now exercises the actual library row rendering with empty, populated and refreshed lists. This covers the 0.1.2 crash caused by activating a row-to-parent constraint before inserting the row into the view hierarchy. No visible window or real library is used in the test.

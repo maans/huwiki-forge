@@ -1,4 +1,4 @@
-ForgeShare — testudgave / test release 0.1.2
+ForgeShare — testudgave / test release 0.1.3
 
 DANSK
 
@@ -79,3 +79,8 @@ https://support.apple.com/en-us/102445
 https://learn.microsoft.com/windows/apps/package-and-deploy/smartscreen-reputation
 
 Original HUWiki code. Licensing awaits the project's decision.
+
+Find eksisterende wikier / Find existing wikis
+Tilføj → Find wikimapper søger i Wikis, Dokumenter, Skrivebord og Overførsler. Vælg de fundne mapper, du vil have på listen. Søg i en anden mappe er også muligt.
+Add → Find wiki folders searches Wikis, Documents, Desktop and Downloads. Select the suggestions to add. Search another folder is also available.
+Søgningen starter ingen wiki eller deling. / Searching starts no wiki or sharing.

@@ -36,7 +36,7 @@ test('bundle is reproducible, standalone and opt-in in the catalog', async () =>
   assert.deepEqual((await build()).plugin, plugin);
   assert.equal(plugin.title, base);
   // TW 5.4.1 compares only major/minor/patch when deciding whether to import.
-  for (const previous of ['0.1.0-test.1','0.1.0-test.2','0.1.0-test.3','0.1.1'])
+  for (const previous of ['0.1.0-test.1','0.1.0-test.2','0.1.0-test.3','0.1.1','0.1.2'])
     assert.ok(tw.utils.compareVersions(plugin.version,previous)>0,'The actual TW importer must accept this upgrade');
   assert.equal(plugin.dependents, undefined);
   assert.ok(Object.keys(shadows).every(title => title.startsWith(base + '/')));
@@ -220,10 +220,11 @@ test('dialog commands treat user-facing text as data on all platforms', () => {
   const unsafe = 'A "quote"; $(not-code) & <text>\nline';
   const [mac, args] = dialogCommand('darwin', 'text', unsafe);
   assert.equal(mac, '/usr/bin/osascript'); assert.equal(args[args.length - 2], unsafe); assert.ok(!args[1].includes(unsafe));
-  const [win, windows] = dialogCommand('win32', 'text', unsafe);
+  const [win, windows, payload] = dialogCommand('win32', 'text', unsafe);
   assert.equal(win, 'powershell.exe');
   const source = Buffer.from(windows.at(-1), 'base64').toString('utf16le');
-  assert.ok(!source.includes(unsafe)); assert.ok(source.includes(Buffer.from(JSON.stringify({kind: 'text', message: unsafe, initial: ''})).toString('base64')));
+  assert.ok(!source.includes(unsafe)); assert.match(source,/In.ReadToEnd/);
+  assert.deepEqual(JSON.parse(Buffer.from(payload,'base64').toString()),{kind:'text',message:unsafe,initial:''});
   assert.deepEqual(dialogCommand('linux', 'text', unsafe)[1].find(x => x.startsWith('--text=')), '--text=' + unsafe);
 });
 class Child extends EventEmitter {

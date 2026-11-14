@@ -24,9 +24,9 @@ test("HUPedia Edition retains canonical articles and has working bilingual plugi
   const {manifest,tiddlers}=await loadEdition(
     "https://forge.example/huwiki-forge/editions/hupedia/manifest.json",localFetch);
   assert.equal(manifest.id,"hupedia");
-  assert.equal(tiddlers.length,17); // 14 original components + 3 shared library links
+  assert.equal(tiddlers.length,18); // 14 original components + 4 shared Forge links
   const byTitle=new Map(tiddlers.map(item=>[item.title,item]));
-  for(const title of ["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community"])assert.ok(byTitle.has(title),title+" missing from Edition");
+  for(const title of ["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community","$:/huwiki/forge/page-control"])assert.ok(byTitle.has(title),title+" missing from Edition");
   for(const title of [
     "HUPedia · Start","Carl Nielsen","Symfoni","Romantikken","Søren Kierkegaard",
     "$:/plugins/huwiki/hupedia","$:/themes/huwiki/hupedia",

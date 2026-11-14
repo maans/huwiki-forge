@@ -9,7 +9,7 @@
         "name": "ForgeShare",
         "description": "Tailscale collaboration / Tailscale-samarbejde",
         "author": "HUWiki",
-        "version": "0.1.2",
+        "version": "0.1.3",
         "plugin-type": "plugin",
         "core-version": ">=5.4.1"
       },
@@ -122,6 +122,20 @@
         "core-version": ">=5.4.1"
       },
       "path": "../../plugins/abc/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/cutout",
+        "type": "application/json",
+        "name": "HUWiki CutOut",
+        "description": "Offline animation workshop · Dukker, animationer og lokal ZIP · Test",
+        "author": "HUWiki",
+        "version": "0.6.2-test.1",
+        "plugin-type": "plugin",
+        "stability": "experimental",
+        "core-version": ">=5.3.0"
+      },
+      "path": "../../plugins/cutout/dist/plugin.json"
     },
     {
       "fields": {

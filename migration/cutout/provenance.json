@@ -1,0 +1,12 @@
+{
+  "archive": "HUWiki-OAuthLab-backup.zip",
+  "archiveSha256": "4551b10224fdca355f3eb198eca2571b602bca1002c6039f13ceca45e08ad54f",
+  "sourceFile": "CutOutAsset01_000.js",
+  "sourceFileSha256": "707f04b671cd1acf6589bf96ccb77003b1bfe6cbac140b75e9478c7c4b5adefe",
+  "asset": "HU_CUTOUT_ASSET_01_000_",
+  "originalTitle": "$:/plugins/huwiki/cutout",
+  "originalVersion": "0.6.2",
+  "author": "HUWiki",
+  "license": "No top-level license declared in original bundle. Preserve original authorship; JSZip license is separate.",
+  "scope": "Standalone CutOut engine. Original optional Excalidraw 0.3.4 bridge, PasteUp/Slideshow and online hosting are not included."
+}

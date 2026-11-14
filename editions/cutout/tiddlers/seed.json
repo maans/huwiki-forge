@@ -1,0 +1,7 @@
+[
+  {
+    "title": "CutOut – Start",
+    "type": "text/vnd.tiddlywiki",
+    "text": "<$transclude $tiddler=\"$:/plugins/huwiki/cutout/README\" $mode=\"block\"/>\n\n<$cutout tiddler=\"Demo – Tændstikmand\"/>"
+  }
+]

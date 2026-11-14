@@ -1,0 +1,18 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "HUWiki CutOut"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "Animation · HUWiki Forge"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[CutOut – Start]]"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  }
+]

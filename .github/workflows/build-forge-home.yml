@@ -1,0 +1,29 @@
+name: Verify public Forge landing TiddlyWiki
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check reproducible homepage
+        run: node scripts/build-forge-home.mjs --check
+      - name: Install browser controller
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Test languages, native save and offline reopen
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/forge-home-browser-smoke.mjs
+      - name: Test custom combinations, dependencies and offline downloads
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/composer-browser-smoke.mjs

@@ -22,7 +22,7 @@ På Linux: følg vejledningen til din distribution. Dialogboksene kræver også 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Saml dine wikier</h2><p>Pak ZIP-filen ud, og åbn ForgeShare. Tryk <strong>Tilføj</strong> for at gemme en HTML-fil eller wikimappe på listen. Markér en wiki, og tryk <strong>Åbn</strong>.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Saml dine wikier</h2><p>Pak ZIP-filen ud, og åbn ForgeShare. Vælg <strong>Tilføj → Find wikimapper</strong>, og vælg blandt forslagene. Du kan også vælge en HTML-fil eller mappe selv. Markér en wiki, og tryk <strong>Åbn</strong>.</p>
 <details class="hu-share-detail">
 <summary>Jeg har kun en HTML-fil</summary>
 <div class="hu-share-detail-body">

@@ -9,7 +9,10 @@
       "category": "HUPedia",
       "label_da": "HUPedia · eksempelartikler",
       "label_en": "HUPedia · sample articles",
-      "source": "../editions/hupedia/tiddlers/seed.json"
+      "source": "../editions/hupedia/tiddlers/seed.json",
+      "requires": [
+        "$:/plugins/huwiki/hupedia"
+      ]
     },
     {
       "id": "lessons-basic",
@@ -143,7 +146,7 @@
       "label_da": "Udgiv som HTML-site",
       "label_en": "HTML SitePublisher",
       "source": "../plugins/site-publisher/dist/plugin.json",
-      "version": "0.1.12-test.1"
+      "version": "0.1.15-test.1"
     },
     {
       "id": "pdf-publisher",
@@ -181,6 +184,17 @@
       "source": "../editions/hupin/tiddlers/seed.json",
       "requires": [
         "$:/plugins/huwiki/hupin"
+      ]
+    },
+    {
+      "id": "tegne-examples",
+      "kind": "tiddler-collection",
+      "category": "Design",
+      "label_da": "Tegne · redigerbare eksempler",
+      "label_en": "Drawing · editable examples",
+      "source": "../editions/tegne/tiddlers/seed.json",
+      "requires": [
+        "$:/plugins/huwiki/tegne"
       ]
     }
   ]

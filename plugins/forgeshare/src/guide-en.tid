@@ -22,7 +22,7 @@ On Linux, follow the instructions for your distribution. The dialogs also need Z
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Collect your wikis</h2><p>Extract the ZIP and open ForgeShare. Select <strong>Add</strong> to keep an HTML file or wiki folder in the list. Select a wiki and choose <strong>Open</strong>.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Collect your wikis</h2><p>Extract the ZIP and open ForgeShare. Choose <strong>Add → Find wiki folders</strong> and select from the suggestions. You can also choose an HTML file or folder yourself. Select a wiki and choose <strong>Open</strong>.</p>
 <details class="hu-share-detail">
 <summary>I only have an HTML file</summary>
 <div class="hu-share-detail-body">

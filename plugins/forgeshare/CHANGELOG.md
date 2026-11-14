@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.1.3 — Find existing wiki folders
+
+- Add → Find wiki folders proposes existing wikis from common folders; users choose what to add. Search another folder remains available without typing paths.
+- Read-only bounded discovery skips hidden/dependency folders and links; selected suggestions are revalidated before an atomic library update. No server or sharing starts.
+- Fix the Mac crash when rendering a populated library: activate row constraints only after insertion. Exercise production rendering in the native self-test.
+- Windows dialog payloads use stdin to support long result lists without command-line limits.
+
 ## 0.1.2 (test release)
 
 - Add a persistent wiki library for local HTML files and wiki folders. Adding a wiki starts no sharing. Existing server profiles appear automatically; names and descriptions can be edited.

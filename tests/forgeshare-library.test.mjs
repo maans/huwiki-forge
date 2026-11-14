@@ -1,14 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,writeFile,readFile,mkdir,rm} from 'node:fs/promises';
+import {mkdtemp,writeFile,readFile,mkdir,rm,symlink,realpath} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import net from 'node:net';
 import {createRequire} from 'node:module';
-import {addLibraryEntry,listLibrary,editLibraryEntry,libraryExport,writeLibraryExport,registerWiki,readRegistry,startSession,libraryMain} from '../plugins/forgeshare/helper/ForgeShare.mjs';
+import {spawnSync} from 'node:child_process';
+import {addLibraryEntry,listLibrary,editLibraryEntry,libraryExport,writeLibraryExport,registerWiki,readRegistry,startSession,libraryMain,discoverWikiFolders,defaultDiscoveryRoots,addDiscoveredFolders,dialogCommand} from '../plugins/forgeshare/helper/ForgeShare.mjs';
 const require=createRequire(import.meta.url),{TiddlyWiki}=require('tiddlywiki/boot/boot.js');
 let temp;
-test.before(async()=>{temp=await mkdtemp(path.join(os.tmpdir(),'forgeshare-library-'));});
+test.before(async()=>{temp=await realpath(await mkdtemp(path.join(os.tmpdir(),'forgeshare-library-')));});
 test.after(async()=>{await rm(temp,{recursive:true,force:true});});
 async function fixture(name) {
  const dir=path.join(temp,name);await mkdir(dir);
@@ -74,4 +75,82 @@ test('local-only real server requires login and never invokes Tailscale',async()
   assert.equal(session.url,'http://127.0.0.1:'+port);assert.equal((await fetch(session.url+'/status')).status,401);
   assert.equal((await fetch(session.url+'/status',{headers:{Authorization:'Basic '+Buffer.from('alice:a-long-test-password').toString('base64')}})).status,200);
  }finally{await session.stop();await session.finished;}
+});
+
+test('discovery finds wiki folders without following links, scanning contents or adding anything',async()=>{
+ const {root,folder}=await fixture('discovery');const base=path.dirname(folder);
+ const wiki=async location=>{await mkdir(location,{recursive:true});await writeFile(path.join(location,'tiddlywiki.info'),'{}');return location;};
+ const second=await wiki(path.join(base,'Documents','Notes'));
+ await wiki(path.join(folder,'backup'));
+ await wiki(path.join(base,'.hidden','Hidden wiki'));
+ await wiki(path.join(base,'node_modules','Dependency'));
+ await wiki(path.join(base,'Some.app','Contents','Packaged wiki'));
+ const invalid=await wiki(path.join(base,'Invalid'));await writeFile(path.join(invalid,'tiddlywiki.info'),'not json');
+ const outside=await wiki(path.join(temp,'outside search'));
+ await symlink(outside,path.join(base,'Shortcut'),process.platform==='win32'?'junction':'dir');
+ const result=await discoverWikiFolders({roots:[base,base,path.join(base,'missing')],timeoutMs:60000});
+ assert.deepEqual(new Set(result.entries.map(e=>e.location)),new Set([folder,second]));
+ assert.deepEqual(await readRegistry(root),{version:1,wikis:[]});
+ await assert.rejects(readFile(path.join(root,'library.json')),{code:'ENOENT'});
+ assert.deepEqual((await discoverWikiFolders({roots:[base],known:[folder,second],timeoutMs:60000})).entries,[]);
+ assert.deepEqual(defaultDiscoveryRoots(base),['Wikis','Documents','Desktop','Downloads'].map(name=>path.join(base,name)));
+});
+test('discovery respects depth, directory, entry, result and time limits',async()=>{
+ const {folder}=await fixture('search limits'),base=path.dirname(folder);
+ for(const options of [{maxDepth:0},{maxDirectories:1},{maxEntries:1},{maxResults:0},{timeoutMs:0}]) {
+  const result=await discoverWikiFolders({roots:[base],...options});assert.equal(result.limited,true);assert.deepEqual(result.entries,[]);
+ }
+ const result=await discoverWikiFolders({roots:[folder],maxResults:1});assert.equal(result.entries.length,1);
+});
+test('suggestions add only accepted folders, disambiguate names and revalidate atomically',async()=>{
+ const {root,folder}=await fixture('accept suggestions');
+ const other=path.join(path.dirname(folder),'other','Wiki folder');await mkdir(other,{recursive:true});await writeFile(path.join(other,'tiddlywiki.info'),'{}');
+ const found=await discoverWikiFolders({roots:[path.dirname(folder)]});
+ assert.equal(found.entries.length,2);
+ const added=await addDiscoveredFolders(found.entries,root);
+ assert.deepEqual(added.map(e=>e.name).sort(),['Wiki folder','Wiki folder (2)']);
+ assert.deepEqual(await addDiscoveredFolders(found.entries,root),[]);
+ assert.deepEqual(await readRegistry(root),{version:1,wikis:[]});
+ const freshRoot=path.join(path.dirname(root),'other settings');await rm(path.join(other,'tiddlywiki.info'));
+ await assert.rejects(addDiscoveredFolders([{name:'First',location:folder},{name:'Gone',location:other}],freshRoot));
+ assert.equal((await listLibrary(freshRoot)).entries.length,0,'A changed candidate must not leave a partially imported selection');
+});
+test('Add offers discovery and only saves the chosen suggestion; cancel leaves the library unchanged',async()=>{
+ const {root,folder}=await fixture('discovery dialog');const reports=[];
+ const second=path.join(path.dirname(folder),'Second');await mkdir(second);await writeFile(path.join(second,'tiddlywiki.info'),'{}');
+ const third=path.join(path.dirname(folder),'Leave alone');await mkdir(third);await writeFile(path.join(third,'tiddlywiki.info'),'{}');
+ const result={entries:[{name:'My wiki',location:folder},{name:'Other wiki',location:second},{name:'Unselected',location:third}],limited:false,unreadable:0};
+ await libraryMain('add','',{root,discover:async()=>result,report:r=>reports.push(r),dialog:async(kind,message,choices)=>{
+  if(kind==='choice'){assert.match(choices[0],/^Find/);return choices[0];}
+  assert.equal(kind,'choices');assert.match(message,/Intet bliver startet eller delt/);return choices.slice(0,2).join('\r\n');
+ }});
+ assert.equal((await listLibrary(root)).entries.length,2);assert.deepEqual(reports,[{ok:true}]);
+ const before=await readFile(path.join(root,'library.json'),'utf8');
+ await libraryMain('add','',{root,discover:async()=>result,report:()=>{},dialog:async(kind,message,choices)=>{
+  if(kind==='choice')return choices[0];throw Object.assign(Error('cancel'),{cancelled:true});
+ }});
+ assert.equal(await readFile(path.join(root,'library.json'),'utf8'),before);
+});
+test('multi-selection dialogs carry untrusted long labels as data on all platforms',()=>{
+ const labels=['Wiki " & $(example) æ','Second wiki'];
+ const mac=dialogCommand('darwin','choices','Choose',labels);
+ assert.match(mac[1][1],/multiple selections allowed/);assert.deepEqual(mac[1].slice(-2),labels);
+ const linux=dialogCommand('linux','choices','Choose',labels);assert.ok(linux[1].includes('--checklist'));
+ const many=Array.from({length:100},(_,i)=>i+' — '+labels[0].repeat(10));
+ const win=dialogCommand('win32','choices','Choose',many);
+ assert.ok(win[1].join(' ').length<30000,'Large result lists must not overflow the Windows command line');
+ assert.deepEqual(JSON.parse(Buffer.from(win[2],'base64').toString()).initial,many);
+ const source=Buffer.from(win[1].at(-1),'base64').toString('utf16le');assert.ok(!source.includes(labels[0]));assert.match(source,/CheckedListBox/);
+});
+test('native discovery dialog scripts compile without opening UI',()=>{
+ if(process.platform==='darwin') {
+  const script=dialogCommand('darwin','choices','Choose',['One','Two'])[1][1];
+  const result=spawnSync('/usr/bin/osacompile',['-o',path.join(temp,'choices.scpt'),'-e',script],{encoding:'utf8',timeout:10000});
+  assert.equal(result.status,0,result.stderr);
+ }else if(process.platform==='win32') {
+  const script=Buffer.from(dialogCommand('win32','choices','Choose',['One','Two'])[1].at(-1),'base64').toString('utf16le');
+  const parser='$tokens=$null;$errors=$null;[void][System.Management.Automation.Language.Parser]::ParseInput([Console]::In.ReadToEnd(),[ref]$tokens,[ref]$errors);if($errors.Count){Write-Output $errors;exit 1}';
+  const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(parser,'utf16le').toString('base64')],{input:script,encoding:'utf8',windowsHide:true,timeout:15000});
+  assert.equal(result.status,0,result.stdout+result.stderr);
+ }
 });

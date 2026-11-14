@@ -1,0 +1,457 @@
+{
+  "archive": "HUWiki-OAuthLab-backup.zip",
+  "sha256": "4551b10224fdca355f3eb198eca2571b602bca1002c6039f13ceca45e08ad54f",
+  "groups": {
+    "cutout": [
+      {
+        "file": "CutOutAsset00_000.js",
+        "bytes": 145054,
+        "sha256": "b830336f1b7854dc67cb25da2d147fd6996e5c974e7a4f3f7cabb0017d606255",
+        "decodedPayloads": 1,
+        "decodedBytes": 1601557,
+        "serviceReferences": {}
+      },
+      {
+        "file": "CutOutAsset01_000.js",
+        "bytes": 186486,
+        "sha256": "707f04b671cd1acf6589bf96ccb77003b1bfe6cbac140b75e9478c7c4b5adefe",
+        "decodedPayloads": 1,
+        "decodedBytes": 561247,
+        "serviceReferences": {
+          "google.script.run": 2
+        }
+      },
+      {
+        "file": "CutOutAsset02_000.js",
+        "bytes": 48264,
+        "sha256": "d16ace1b65b46ddfc9e81b6c3f2cff9a12db8144c232cac569ad993f86b9846e",
+        "decodedPayloads": 1,
+        "decodedBytes": 136701,
+        "serviceReferences": {}
+      },
+      {
+        "file": "CutOutAsset03_000.js",
+        "bytes": 105604,
+        "sha256": "a79cedb5eb9911d69eef16cb1759bc43eecb398e59711c95bfe30a53f6ad6366",
+        "decodedPayloads": 1,
+        "decodedBytes": 481306,
+        "serviceReferences": {
+          "google.script.run": 6
+        }
+      },
+      {
+        "file": "CutOutAsset04_000.js",
+        "bytes": 8294,
+        "sha256": "25d8ac14bb8de37a2f209f193b60ec2c1ed19bc3c33a9060f543df1800c7163a",
+        "decodedPayloads": 1,
+        "decodedBytes": 18134,
+        "serviceReferences": {}
+      },
+      {
+        "file": "CutOutAsset05_000.js",
+        "bytes": 1424,
+        "sha256": "f00e0249f3011f810d1503a4806af9448ddeeb682f73e54b7ed39b6eddae4438",
+        "decodedPayloads": 1,
+        "decodedBytes": 2089,
+        "serviceReferences": {}
+      },
+      {
+        "file": "CutOutEdition.js",
+        "bytes": 9749,
+        "sha256": "c85e39dec87e5544afdeabd38b6fd9c9b46a494ecadde0f6babd2710a334b113",
+        "decodedPayloads": 1,
+        "decodedBytes": 21085,
+        "serviceReferences": {}
+      },
+      {
+        "file": "CutOutSiteRuntime.js",
+        "bytes": 12023,
+        "sha256": "77d7b005308fb6a42395135cd27fc2cc4b2f0ffaa67123be109379dc50597998",
+        "decodedPayloads": 1,
+        "decodedBytes": 23952,
+        "serviceReferences": {}
+      }
+    ],
+    "studio": [
+      {
+        "file": "Studio.js",
+        "bytes": 83274,
+        "sha256": "21eee9c4f81f3c506b15447b539b99cd7e7e34519ef1991a70daaf6fcd0e4638",
+        "decodedPayloads": 1,
+        "decodedBytes": 10410,
+        "serviceReferences": {
+          "google.script.run": 12
+        }
+      },
+      {
+        "file": "StudioEdition.js",
+        "bytes": 26628,
+        "sha256": "879fe0858c3d9d322dd636863e55e17b142ac2816ea6e9c13d6e8f8aa507b855",
+        "decodedPayloads": 7,
+        "decodedBytes": 59811,
+        "serviceReferences": {}
+      },
+      {
+        "file": "StudioPublish.js",
+        "bytes": 15042,
+        "sha256": "1274ac3017f9df8a5674e66dc53302a5c777bb8e5460ec19bc6157bbd6df938f",
+        "decodedPayloads": 1,
+        "decodedBytes": 2314,
+        "serviceReferences": {
+          "google.script.run": 4
+        }
+      }
+    ],
+    "ai": [
+      {
+        "file": "AIEdition.js",
+        "bytes": 133258,
+        "sha256": "c8f04f9cafb021aa4faeb6916fb464dfa5b55fb39629f868b655bc9faa158907",
+        "decodedPayloads": 1,
+        "decodedBytes": 414134,
+        "serviceReferences": {
+          "google.script.run": 11
+        }
+      },
+      {
+        "file": "PrivateVault.js",
+        "bytes": 28135,
+        "sha256": "b54ed411f145c8365cd4247a15cef2939dd290d3cab3aa15c6b08c9507c4f5c8",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      }
+    ],
+    "shop": [
+      {
+        "file": "ShopEdition.js",
+        "bytes": 46762,
+        "sha256": "118b9b0c0cc5c66180fc8a195043e3c44d1da74b6023fa265b18ace72d1767da",
+        "decodedPayloads": 2,
+        "decodedBytes": 51181,
+        "serviceReferences": {
+          "google.script.run": 1,
+          "HUDriveApp": 4,
+          "DriveApp": 4,
+          "HUFormConnector": 3,
+          "SpreadsheetApp": 5
+        }
+      }
+    ],
+    "survey": [
+      {
+        "file": "SurveyEdition.js",
+        "bytes": 99613,
+        "sha256": "df46949a1e45d5e2e962cc83364102c30d5aab842c187c8df2f49752d86a4097",
+        "decodedPayloads": 3,
+        "decodedBytes": 148007,
+        "serviceReferences": {
+          "google.script.run": 12,
+          "HUDriveApp": 11,
+          "DriveApp": 11,
+          "HUFormConnector": 10,
+          "SpreadsheetApp": 1
+        }
+      },
+      {
+        "file": "SurveyLive.js",
+        "bytes": 8317,
+        "sha256": "491b6cdffe0a0440a6845efac5badb2720fa0b195e375fa4fe48739eb6e4482e",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {
+          "HUFormConnector": 1
+        }
+      }
+    ],
+    "slideshow": [
+      {
+        "file": "SlideshowEdition.js",
+        "bytes": 76700,
+        "sha256": "e67487b0b30c2c830edce01969506fea5c9aa3e7cd30cf554a9ff3eda916a1ea",
+        "decodedPayloads": 3,
+        "decodedBytes": 360911,
+        "serviceReferences": {
+          "google.script.run": 2
+        }
+      },
+      {
+        "file": "SlideshowPublishing.js",
+        "bytes": 2157,
+        "sha256": "807b9d3d6962289be057a83a68412f01964fd08a627592f7f2afdfd6d6ca349d",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {
+          "HUDriveApp": 1,
+          "DriveApp": 1
+        }
+      },
+      {
+        "file": "SlideshowVendorAsset.js",
+        "bytes": 495999,
+        "sha256": "1f4f76acddf69ec84b139f048d6be977c0343092f330a307e23866afd06ff673",
+        "decodedPayloads": 1,
+        "decodedBytes": 1188961,
+        "serviceReferences": {}
+      }
+    ],
+    "av": [
+      {
+        "file": "AVEdition.js",
+        "bytes": 10315,
+        "sha256": "df3af634e9a61767cd82d4747dd2dd8bf528b6360604b6fcb288e3db1ce0f7df",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {
+          "HUDriveApp": 5,
+          "DriveApp": 5
+        }
+      },
+      {
+        "file": "AVWorkshopAsset.js",
+        "bytes": 655103,
+        "sha256": "7d572332f549ad5c4416eb9f53735aa8102393002d3d59d532d909a48807a885",
+        "decodedPayloads": 1,
+        "decodedBytes": 902672,
+        "serviceReferences": {
+          "google.script.run": 1
+        }
+      }
+    ],
+    "drawing_dependencies": [
+      {
+        "file": "TegneAsset00_000.js",
+        "bytes": 149367,
+        "sha256": "f16d117182d93d47298e9bfadf1abbce74ad53fde121dc9a04655fb808137dd5",
+        "decodedPayloads": 1,
+        "decodedBytes": 558805,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_000.js",
+        "bytes": 200043,
+        "sha256": "8aa5b4f09bd796855309b8eb65759fc5cf325cd0ee1fe8da2f1ecad3b1569dd7",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_001.js",
+        "bytes": 200043,
+        "sha256": "5c31d76f27f6754892384380f92801ec53de00df8baa82eba9fc1f7fdea5a643",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_002.js",
+        "bytes": 200043,
+        "sha256": "3f91610e5c9839c655d46b01b842a25fe682b5029665a3ecfd5282e22e7ce164",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_003.js",
+        "bytes": 200043,
+        "sha256": "5ef6b808df6fc4e86c2a75fb292212f3d14b5244010256429c4cb3d0aceea084",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_004.js",
+        "bytes": 200043,
+        "sha256": "e3f24fc76d5eec66fb5ee0024e2c004079987e0883e718287d9450aa142d8cbe",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_005.js",
+        "bytes": 200043,
+        "sha256": "5f46db01fe3d447338496977a04a272f37d685355c9534de8aecfe19986b7f7a",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_006.js",
+        "bytes": 200043,
+        "sha256": "d0147c1f6beef980811546efa78b1db55d3cdd191c4b331d8c9399b4ca1961f5",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_007.js",
+        "bytes": 200043,
+        "sha256": "2ad4cbe5184109f26a56942aacde6918eb20a1c442f4eda77a4535474486af0b",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_008.js",
+        "bytes": 200043,
+        "sha256": "a45f164e643f22ad01f56a6f1358b0a4077b5187ecc03bf833c7b64b4a47520b",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_009.js",
+        "bytes": 200043,
+        "sha256": "fb9aad00200605bf6a7abf93d8818cf0f752dd35061552c5387e2ff6743da63f",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_010.js",
+        "bytes": 200044,
+        "sha256": "6e88912c734e0d8f400354036e97f56bc8fa53b852ac2383edbd7b838db817fb",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_011.js",
+        "bytes": 200044,
+        "sha256": "5eccbb8a20e679d8733d498c697cfd3b55ce674e1e313a23b796b01cf1bd5733",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_012.js",
+        "bytes": 200044,
+        "sha256": "aada3f79ef44809244a4fff83334a1ca6270a6e348797bc94110217da22656c0",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_013.js",
+        "bytes": 200044,
+        "sha256": "143764e30b7ba5c394f99528ac8241a7dd66cd0af355400a94205d595b413f22",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_014.js",
+        "bytes": 200044,
+        "sha256": "22062d91f047134ce84742a8a9a091a6752e064d560a949c9ad1f1b2a7504ce4",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_015.js",
+        "bytes": 200044,
+        "sha256": "a14de90ed3f7c8a1b9f58e3832e14be42f5f2b3a9c7950953d432e05c8ec24ed",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_016.js",
+        "bytes": 200044,
+        "sha256": "0370e92eb6eb2a6d8017214e4b33fa1a4cc6437c001924f91cbb6abcfacde9a5",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_017.js",
+        "bytes": 200044,
+        "sha256": "c0d4308ea799771842f832fdcfbc4d251bc64e14203c2a69aa8ad5955629afd6",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_018.js",
+        "bytes": 200044,
+        "sha256": "5f66d4c1516d6574de854345b027cfca1b2e747365794738b10e33c61cb38a4e",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_019.js",
+        "bytes": 98516,
+        "sha256": "d07c7b847663cb4b51c5107a648f2ed6e86417271fc38f8645670567b554d5dc",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset01_020.js",
+        "bytes": 44,
+        "sha256": "7b410a3b1133cae72e3093a6c27457590650574d4fb2c8d62e1d4725f99a5f73",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset02_000.js",
+        "bytes": 100587,
+        "sha256": "a46a8df8843938bc681e0da6d2e44823d159497b6a4acdb41b84f388636b11c6",
+        "decodedPayloads": 1,
+        "decodedBytes": 304288,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneAsset03_000.js",
+        "bytes": 16051,
+        "sha256": "a22a6fcc388ff7185f531c06bbee153560dd8ef4056b9732caa8b31b8b587a3a",
+        "decodedPayloads": 1,
+        "decodedBytes": 41864,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegneEdition.js",
+        "bytes": 9403,
+        "sha256": "73088e395f6c4104093f02959fd279912d66aa8f10c523eaa32a0a481871ecba",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegnePackage0.js",
+        "bytes": 72,
+        "sha256": "03e2abae51014ea8af1ad6f010dba3abe8815335d3a78e61de9638e2e35f3a7d",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegnePackage1.js",
+        "bytes": 523,
+        "sha256": "49786951dd65dce0ebca4fcf23da7914cc6e1ad1dbd939fc051fed1a4463b419",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegnePackage2.js",
+        "bytes": 72,
+        "sha256": "fbc645c8ecc5f137d5ed4e8480abd3348ff29ab541beb2dec35bb042a96860a9",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      },
+      {
+        "file": "TegnePackage3.js",
+        "bytes": 72,
+        "sha256": "22461cd3d028ec0aca12c5fa375227cf5523f4e9bf2e8686cfaecd4e0d8a991d",
+        "decodedPayloads": 0,
+        "decodedBytes": 0,
+        "serviceReferences": {}
+      }
+    ]
+  },
+  "archiveEntries": 132
+}

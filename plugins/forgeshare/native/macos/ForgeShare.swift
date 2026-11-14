@@ -139,20 +139,26 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let selected=Set(selectedEntries().compactMap{$0["id"] as? String})
         libraryCommand("list") { result in
             guard let entries=result?["entries"] as? [[String:Any]] else {self.showError(tr("Wikibiblioteket kunne ikke læses. Ingen filer er ændret.","The wiki library could not be read. No files were changed."));return}
-            self.libraryView.arrangedSubviews.forEach {self.libraryView.removeArrangedSubview($0);$0.removeFromSuperview()};self.libraryChecks=[]
-            if entries.isEmpty {self.libraryView.addArrangedSubview(NSTextField(labelWithString:tr("Tilføj din første wiki. Det starter ingen deling.","Add your first wiki. This does not start sharing.")))}
+            self.renderLibrary(entries,selected:selected)
+        }
+    }
+    func renderLibrary(_ entries:[[String:Any]],selected:Set<String>=[]) {
+            libraryView.arrangedSubviews.forEach {libraryView.removeArrangedSubview($0);$0.removeFromSuperview()};libraryChecks=[]
+            if entries.isEmpty {libraryView.addArrangedSubview(NSTextField(labelWithString:tr("Tryk Tilføj for at finde dine wikier.","Choose Add to find your wikis.")))}
             for entry in entries {
                 let name=entry["name"] as? String ?? "",kind=entry["kind"] as? String ?? ""
                 let missing=entry["available"] as? Bool == false
                 let label=name+"  ·  "+(missing ? tr("Filen mangler","File missing") : kind=="html" ? tr("Lokal HTML-fil","Local HTML file") : tr("Wikimappe","Wiki folder"))
                 let box=NSButton(checkboxWithTitle:label,target:nil,action:nil);box.state=selected.contains(entry["id"] as? String ?? "") ? .on : .off
-                box.widthAnchor.constraint(equalTo:self.libraryView.widthAnchor,constant:-8).isActive=true;box.cell?.lineBreakMode = .byTruncatingMiddle
+                box.cell?.lineBreakMode = .byTruncatingMiddle
                 box.setContentCompressionResistancePriority(.defaultLow,for:.horizontal)
-                self.libraryView.addArrangedSubview(box);self.libraryChecks.append((entry,box))
-                if let description=entry["description"] as? String,!description.isEmpty {let text=NSTextField(wrappingLabelWithString:description);text.textColor = .secondaryLabelColor;text.font = .systemFont(ofSize:12);self.libraryView.addArrangedSubview(text);text.widthAnchor.constraint(equalTo:self.libraryView.widthAnchor,constant:-8).isActive=true}
+                libraryView.addArrangedSubview(box);libraryChecks.append((entry,box))
+                // The row must join the hierarchy BEFORE activating a constraint to its parent.
+                box.widthAnchor.constraint(equalTo:libraryView.widthAnchor,constant:-8).isActive=true
+                if let description=entry["description"] as? String,!description.isEmpty {let text=NSTextField(wrappingLabelWithString:description);text.textColor = .secondaryLabelColor;text.font = .systemFont(ofSize:12);libraryView.addArrangedSubview(text);text.widthAnchor.constraint(equalTo:libraryView.widthAnchor,constant:-8).isActive=true}
             }
-        }
     }
+
     @objc func addToLibrary() {libraryCommand("add"){_ in self.reloadLibrary()}}
     @objc func editSelected() {guard let e=oneEntry() else{return};libraryCommand("edit",["id":e["id"]!]){_ in self.reloadLibrary()}}
     @objc func exportSelected() {let ids=selectedEntries().compactMap{$0["id"] as? String};if ids.isEmpty {showError(tr("Markér de wikier, der skal med i oversigten.","Select the wikis to include in the overview."));return};libraryCommand("export",["ids":ids]){_ in}}
@@ -182,7 +188,22 @@ if CommandLine.arguments.contains("--self-test") {
     guard let url=Bundle.main.url(forResource:"ForgeShare",withExtension:"mjs"), FileManager.default.fileExists(atPath:url.path) else { exit(1) }
     guard let node=nodeExecutable() else { exit(2) }
     let p=Process(); p.executableURL=URL(fileURLWithPath:node); p.arguments=["--check",url.path]
-    try p.run(); p.waitUntilExit(); exit(p.terminationStatus)
+    try p.run(); p.waitUntilExit(); if p.terminationStatus != 0 {exit(p.terminationStatus)}
+    // Exercise the production row-rendering code without windows, dialogs, or user data.
+    let application=NSApplication.shared;application.setActivationPolicy(.prohibited)
+    let testApp=App();testApp.libraryView=LibraryStack();testApp.libraryView.orientation = .vertical
+    let fixture:[[String:Any]]=[
+        ["id":"first","name":"Projektwiki","description":"En beskrivelse","kind":"folder","available":true],
+        ["id":"second","name":"Notes","description":"","kind":"html","available":false]]
+    testApp.renderLibrary([],selected:[])
+    testApp.renderLibrary(fixture,selected:["first"])
+    testApp.libraryView.layoutSubtreeIfNeeded()
+    precondition(testApp.libraryChecks.count==2 && testApp.selectedEntries().count==1)
+    precondition(testApp.libraryChecks.allSatisfy{$0.1.superview != nil})
+    testApp.renderLibrary(fixture,selected:["second"])
+    precondition(testApp.libraryChecks.count==2 && testApp.selectedEntries().first?["id"] as? String == "second")
+    testApp.renderLibrary([],selected:[]);precondition(testApp.libraryChecks.isEmpty)
+    exit(0)
 }
 let app = NSApplication.shared
 let delegate = App(); app.delegate=delegate; app.setActivationPolicy(.regular); app.run()
