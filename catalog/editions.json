@@ -80,17 +80,17 @@
     {
       "id": "musical",
       "name": "Musical Edition (test)",
-      "version": "0.3.0-test.1",
+      "version": "0.4.0-test.1",
       "status": "test",
       "manifest": "../editions/musical/manifest.json",
-      "description": "Musical Studio: multiple complete ABC songs, score cursor, CutOut animation, stage lighting and dual cameras",
+      "description": "Musical Studio: independent whole-song ABC tracks, crossfades, two live scores, CutOut animations and cameras",
       "home": {
         "headingDa": "Lav din egen musikvideo",
         "headingEn": "Create your own music video",
-        "descriptionDa": "Lav en musikvideo med flere hele musiknumre, levende noder, animationer og kameraer.",
-        "descriptionEn": "Create a music video with complete songs, live notation, animation and multiple cameras.",
-        "noteDa": "Testudgave: Numre spiller i rækkefølge uden overlap. Lyd og Safari/iPad skal prøves manuelt.",
-        "noteEn": "Test release: Songs are sequential, not overlapping. Audio and Safari/iPad need manual tests.",
+        "descriptionDa": "Hvert helt musiknummer har sit eget spor med start, overlap, crossfade og levende nodeark.",
+        "descriptionEn": "Each complete tune has its own track, with independent start, overlaps, crossfades and live notation.",
+        "noteDa": "Testudgave med ægte ABC-lydspor og fades. Skal afprøves med lyd på Mac og iPad.",
+        "noteEn": "Test release with independent ABC soundtracks and fades. Requires actual listening tests on Mac and iPad.",
         "order": "02.5"
       }
     },
