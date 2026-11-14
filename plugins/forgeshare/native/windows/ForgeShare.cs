@@ -10,15 +10,15 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Security.Cryptography;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.8.0")]
+[assembly: AssemblyVersion("0.1.9.0")]
 
 class Session {
     public Process Process; public string Name, Url = "", OwnerUrl = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady;
     public FlowLayoutPanel Row; public Label Label; public Button Copy, Stop, Invite;
 }
 class LibraryEntry {
-    public string id,name,kind,location,description,shareUrl;public bool available;
-    public override string ToString() {bool da=CultureInfo.CurrentUICulture.TwoLetterISOLanguageName=="da";return name+"  ·  "+(!available?(da?"Filen mangler":"File missing"):kind=="site"?"Site":kind=="html"?(da?"Lokal HTML-fil":"Local HTML file"):(da?"Wikimappe":"Wiki folder"))+(String.IsNullOrEmpty(description)?"":" — "+description);}
+    public string id,name,kind,location,description,shareUrl;public bool available;public SharingData sharing;
+    public override string ToString() {bool da=CultureInfo.CurrentUICulture.TwoLetterISOLanguageName=="da";return name+"  ·  "+(sharing==null?(da?"Vælg deling ved første start":"Choose sharing on first start"):sharing.mode=="lan"?(da?"Hjemmenetværk":"Home network"):sharing.mode=="funnel"?"Funnel":"Tailscale")+" · "+(!available?(da?"Filen mangler":"File missing"):kind=="site"?"Site":kind=="html"?(da?"Lokal HTML-fil":"Local HTML file"):(da?"Wikimappe":"Wiki folder"))+(String.IsNullOrEmpty(description)?"":" — "+description);}
 }
 class StartupChoice {public string wikiId,mode;public bool allowAnonymous;}
 class StartupData {public StartupChoice startup;}
@@ -205,7 +205,7 @@ class ForgeShare : Form {
         LibraryCommand(action,new {},text=>{
             try {
                 if(text==null)throw new Exception();var data=new JavaScriptSerializer().Deserialize<LibraryData>(text);
-                if(data.sharing!=null)sharingLabel.Text=T("Deling: ","Sharing: ")+(data.sharing.mode=="lan"?T("Hjemmenetværk","Home network"):data.sharing.mode=="funnel"?"Funnel":"Tailscale")+" · "+(data.sharing.mode=="funnel"?T("læser- og redaktørkode","reader and editor codes"):data.sharing.allowAnonymous?T("uden wiki-login","no wiki login"):T("med wiki-login","with wiki login"));
+                sharingLabel.Text=T("Delingsvalg huskes for hver wiki og hvert site.","Sharing choices are remembered for each wiki and site.");
                 library.Items.Clear();foreach(var e in data.entries)library.Items.Add(e,selected.Contains(e.id));
                 if(checkStartup){checkStartup=false;LibraryCommand("startup-status",new {},value=>{
                     if(value==null)return;var setting=new JavaScriptSerializer().Deserialize<StartupData>(value).startup;
