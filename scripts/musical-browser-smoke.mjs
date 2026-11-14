@@ -57,14 +57,37 @@ try{
  throw e;
 }
  await player.locator(".huw-musical-paper svg").first().waitFor();
- assert.equal(await player.locator(".huw-musical-shot").count(),15);
+ assert.equal(await player.locator(".huw-musical-shot").count(),0,"No giant camera button strip");
+ assert.equal(await player.locator(".huw-musical-appbar").count(),1);
+ assert.equal(await player.locator(".huw-musical-workbench").count(),1);
+ assert.equal(await player.locator(".huw-musical-timeline-ruler").count(),1);
+ await page.setViewportSize({width:1120,height:860});
+ const fit=await page.evaluate(()=>{
+  var app=document.querySelector(".huw-musical"),preview=app.querySelector(".huw-musical-layout"),
+   controls=app.querySelector(".huw-musical-transport"),timeline=app.querySelector(".huw-musical-tracks"),
+   rect=el=>el.getBoundingClientRect();
+  return {player:rect(app).toJSON(),stage:rect(preview).toJSON(),
+   controls:rect(controls).toJSON(),timeline:rect(timeline).toJSON()};
+ });
+ assert.ok(fit.stage.height>=150 && fit.timeline.height>=160,"Stage and timeline are simultaneously usable");
+ assert.ok(fit.timeline.top>=fit.stage.bottom,"No oversized controls between preview and timeline");
+ assert.ok(fit.timeline.bottom<=fit.player.bottom+2,"Timeline remains inside the studio viewport");
+
  assert.equal(await player.locator(".huw-musical-play").count(),1);
  assert.equal(await player.locator(".huw-cutout-player").count(),0,"No second CutOut transport");
  const stage=player.locator(".huw-musical-canvas > svg");
  const wide=await stage.getAttribute("viewBox");
  const dancer=player.locator('[data-cutout-id="drummer-root"]').first();
  const startingPose=await dancer.getAttribute("transform");
- await player.getByRole("button",{name:"Trommesolo"}).click();
+ // The t=2 camera shot is edited on its own track, not via a button
+ // in the middle of the workspace.
+ await player.locator('.huw-musical-track[data-track-id="camera-A"] .huw-musical-key').nth(1).click();
+ assert.equal(await player.locator(".huw-musical--inspector-open").count(),0);
+ assert.ok(await player.evaluate(el=>el.classList.contains("huw-musical--inspector-open")),
+  "Selecting a camera keyframe opens the contextual property inspector");
+ assert.equal(await player.locator(".huw-musical-inspector-drawer").count(),1);
+ await player.locator(".huw-musical-inspector-close").click();
+
  const close=await stage.getAttribute("viewBox");
  assert.notEqual(close,wide,"Camera should cut to the drummer");
  assert.ok(/^\d/.test(await player.getAttribute("data-camera-time")));
@@ -72,6 +95,21 @@ try{
  await slider.fill("11");await slider.dispatchEvent("input");
  assert.notEqual(await dancer.getAttribute("transform"),startingPose,"The figures should dance when scrubbing");
  assert.notEqual(await stage.getAttribute("viewBox"),close,"Camera should follow the film timeline");
+ // Choosing a CutOut character on the actual stage selects its
+ // animated element and brings its properties into the inspector.
+ await player.locator('.huw-musical-canvas [data-cutout-id="drummer-root"]').first().evaluate(el=>{
+  el.dispatchEvent(new PointerEvent("pointerdown",{bubbles:true,pointerId:1,button:0,clientX:160,clientY:240}));
+  el.dispatchEvent(new PointerEvent("pointerup",{bubbles:true,pointerId:1,button:0,clientX:160,clientY:240}));
+ });
+ assert.ok(await player.evaluate(el=>el.classList.contains("huw-musical--inspector-open")),
+  "Clicking a musician selects a real CutOut element");
+ assert.ok(await player.locator('.huw-musical-track.is-selected[data-group="animation"]').count()>=1);
+ await player.locator(".huw-musical-inspector-close").click();
+ // Focus mode gives the editor the full browser viewport.
+ await player.locator(".huw-musical-focus-button").click();
+ assert.ok(await player.evaluate(el=>el.classList.contains("huw-musical--focus")));
+ await player.locator(".huw-musical-focus-button").click();
+ assert.ok(!(await player.evaluate(el=>el.classList.contains("huw-musical--focus"))));
  const tracks=player.locator(".huw-musical-track");
  assert.ok(await tracks.count()>=15,"Each complete ABC tune needs its own track");
  assert.equal(await player.locator(".huw-musical-song-clip").count(),2,"Two complete ABC tracks are visible");
@@ -153,5 +191,5 @@ try{
  assert.ok(concurrent.events.includes("play:0")&&concurrent.events.includes("play:1"));
  assert.equal(await page.locator(".tc-error-form").count(),0);
  assert.deepEqual(errors,[]);
- console.log("PASS Musical: two independently placed ABC tracks, equal-power crossfade, dual notation, mixer gain updates, CutOut camera and one transport");
+ console.log("PASS Musical: compact viewport-fit scene + timeline, CutOut element inspector, keyframe camera cuts, independent ABC crossfades, one transport");
 }finally{await browser.close();}
