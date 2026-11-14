@@ -24,4 +24,4 @@ jobs:
         with:
           node-version: 22
       - run: npm ci --ignore-scripts
-      - run: node --test tests/forgeshare.test.mjs tests/forgeshare-library.test.mjs tests/forgeshare-network.test.mjs tests/forgeshare-funnel.test.mjs tests/forgeshare-gateway.test.mjs tests/forgeshare-conversion.test.mjs tests/forgeshare-vault.test.mjs tests/forgeshare-sharing.test.mjs
+      - run: node --test tests/forgeshare.test.mjs tests/forgeshare-library.test.mjs tests/forgeshare-network.test.mjs tests/forgeshare-funnel.test.mjs tests/forgeshare-gateway.test.mjs tests/forgeshare-conversion.test.mjs tests/forgeshare-vault.test.mjs tests/forgeshare-sharing.test.mjs tests/forgeshare-port-recovery.test.mjs tests/forgeshare-process.test.mjs
