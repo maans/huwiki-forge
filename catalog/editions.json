@@ -80,17 +80,17 @@
     {
       "id": "musical",
       "name": "Musical Edition (test)",
-      "version": "0.1.0-test.1",
+      "version": "0.2.0-test.1",
       "status": "test",
       "manifest": "../editions/musical/manifest.json",
-      "description": "CutOut stick-figure orchestra, ABC music, synchronized camera and a single playback transport",
+      "description": "Musical Studio: live ABC notation, CutOut keyframe tracks, lighting and dual-camera editing",
       "home": {
         "headingDa": "Lav din egen musikvideo",
         "headingEn": "Create your own music video",
-        "descriptionDa": "Lad tændstikmusikere spille og danse, mens kameraet klipper i takt med ABC-musikken.",
-        "descriptionEn": "Animate stick-figure performers while a virtual camera follows the ABC soundtrack.",
-        "noteDa": "Prototype. Fælles lyd/billede, kamera og iPad mangler browsertest.",
-        "noteEn": "Prototype. Sound/image timing, camera and iPad still need browser testing.",
+        "descriptionDa": "Lav en musikvideo med levende nodeark, musikeranimationer, belysning og to virtuelle kameraer.",
+        "descriptionEn": "Create a music video with a live score, animated performers, lighting and two virtual cameras.",
+        "noteDa": "Musical Studio test. Safari/iPad og synkron lyd skal stadig prøves manuelt.",
+        "noteEn": "Musical Studio test. Audio synchronisation and Safari/iPad need manual checks.",
         "order": "02.5"
       }
     },
