@@ -6,7 +6,7 @@ const root=new URL('../',import.meta.url);
 const fetcher=async url=>{try{const data=await readFile(new URL('.'+new URL(url).pathname,root),'utf8');return {ok:true,json:async()=>JSON.parse(data)};}catch{return {ok:false,status:404};}};
 const choices=await loadChoices('https://forge.example/assembler/',fetcher);
 const title=id=>'$:/plugins/huwiki/'+id;
-test('Composer includes dependency closure, native language, F and both libraries in a blank wiki',async()=>{
+test('Composer includes dependency closure, native language, F and the native plugin library in a blank wiki',async()=>{
  const {tiddlers,added}=await composeWiki({choices,packageTitles:[title('music'),title('lessons-jazz')],language:'da-DK',name:'Mit værksted'},fetcher);
  assert.ok(added.find(p=>p.title===title('abc')));
  assert.equal(tiddlers.find(t=>t.title==='$:/SiteTitle').text,'Mit værksted');

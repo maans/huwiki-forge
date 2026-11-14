@@ -60,7 +60,19 @@ async function main(){
    official:!!$tw.wiki.getTiddler("$:/config/OfficialPluginLibrary")
   }));
   if(!config.plugin||!config.community||!config.official)throw Error("Missing Forge or native TiddlyWiki library configuration");
-  console.log("Shared library links and TiddlyWiki official library are present");
+  if(config.community.url!=="https://tiddlywiki.com/#Community")throw Error("Wrong community destination");
+  if(await page.locator('[data-tab-title="HUWiki Community"]').count())throw Error("Community sidebar tab must not be shipped");
+  console.log("Native libraries retained; Community points to TiddlyWiki without a sidebar tab");
+
+  // Editions without Forge's own reading startup can still use HUWiki's existing mode.
+  const tools=page.locator('.tc-sidebar-header [data-tab-title="$:/core/ui/SideBar/Tools"]');
+  await tools.click();
+  await page.evaluate(()=>$tw.wiki.addTiddler({title:"$:/temp/HUWiki/AuthorReadingMode",text:"reading"}));
+  await tools.waitFor({state:"hidden"});
+  await page.locator('[data-tab-title="$:/core/ui/SideBar/Open"][aria-selected="true"]').waitFor();
+  await page.evaluate(()=>$tw.wiki.addTiddler({title:"$:/temp/HUWiki/AuthorReadingMode",text:"editing"}));
+  await tools.waitFor({state:"visible"});
+  console.log("Tools follows reading mode even without the Forge landing startup module");
 
   await page.evaluate(url=>$tw.rootWidget.dispatchEvent({type:"tm-load-plugin-library",paramObject:{url}}),lib);
   const pluginTitle="$:/plugins/huwiki/trim";
@@ -75,13 +87,10 @@ async function main(){
   if(installed.version!=="0.1.5"||installed["plugin-type"]!=="plugin")throw Error("Unexpected imported plugin identity");
   console.log("Native TiddlyWiki installed an original Forge plugin package on demand");
 
+  await page.route("https://tiddlywiki.com/**",route=>route.fulfill({contentType:"text/html",body:"<title>Community redirect target</title>"}));
   await page.goto(base+"/community/",{waitUntil:"load",timeout:30000});
-  await page.waitForFunction(()=>document.querySelectorAll("#editions .card").length>=5,null,{timeout:30000});
-  const labels=await page.locator("#editions h3").allTextContents();
-  if(!labels.some(t=>t.includes("Tegne"))||!labels.some(t=>t.includes("HUPedia")))throw Error("Community Editions not listed");
-  const href=await page.locator('#editions a[href*="edition=tegne"]').first().getAttribute("href");
-  if(!href||!href.includes("edition=tegne"))throw Error("Community Edition links are broken");
-  console.log("Static Community lists the Forge Editions without an upload server");
+  await page.waitForURL("https://tiddlywiki.com/#Community");
+  console.log("Old Community address redirects to TiddlyWiki's community");
   if(errors.some(x=>/TypeError|ReferenceError|SyntaxError/.test(x)))throw Error("Browser JavaScript errors: "+errors.slice(0,5).join(" | "));
  }finally{await browser.close();await new Promise(resolve=>server.close(resolve));}
 }

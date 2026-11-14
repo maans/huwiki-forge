@@ -4,7 +4,7 @@ Forsiden er en statisk, selvstændig TiddlyWiki 5.4.1. GitHub Pages leverer den 
 
 ## Indhold og design
 
-Edition-kort og status stammer fra `catalog/editions.json`. De danske/engelske præsentationstekster ligger i hvert elements `home`-felt. Bygget afleder `editions/forge/tiddlers/edition-index.json` fra dette katalog; det er ikke et nyt katalog. Lokale kopier beholder deres snapshot og har links til det aktuelle HUWiki Community og Plugin Library.
+Edition-kort og status stammer fra `catalog/editions.json`. De danske/engelske præsentationstekster ligger i hvert elements `home`-felt. Bygget afleder `editions/forge/tiddlers/edition-index.json` fra dette katalog; det er ikke et nyt katalog. Lokale kopier beholder deres snapshot og har links til TiddlyWikis eget fællesskab og HUWiki Plugin Library.
 
 `seed.json` indeholder redigerbare danske/engelske forsider og kortskabeloner. `design.json` er forsidens stylesheet. Dansk er den uændrede officielle TiddlyWiki 5.4.1-pakke med BSD-licens. Valget følger kun `$:/language` i TiddlyWikis kontrolpanel.
 
