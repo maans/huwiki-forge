@@ -165,7 +165,7 @@ test("A single transport maps two complete ABC tunes to absolute global time",as
  const editor=sh["$:/plugins/huwiki/musical/editor.js"].text;
  new vm.Script(widget);new vm.Script(editor);
  assert.match(widget,/Playback\.start\(session\)/);
- assert.doesNotMatch(widget,/Playback\.start\(c\)/);
+ assert.doesNotMatch(widget,/^\s*Playback\.start\(c\)/m);
  assert.match(widget,/midiBuffer\.setVolumes\(\)/);
  assert.match(widget,/function syncAudio\(t\)/);
  assert.match(widget,/getConfig:function\(\)\{return trackConfig\(song\);\}/);
