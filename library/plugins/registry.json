@@ -142,7 +142,7 @@
         "name": "ForgeShare",
         "description": "Tailscale collaboration / Tailscale-samarbejde",
         "author": "HUWiki",
-        "version": "0.1.9",
+        "version": "0.1.10",
         "plugin-type": "plugin",
         "core-version": ">=5.4.1"
       },

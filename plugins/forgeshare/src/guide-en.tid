@@ -35,7 +35,7 @@ Press Share. The helper prepares the HTML wiki automatically and keeps the same 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select your wikis and press <strong>Share</strong>. Choose sharing for each wiki on its first start. Each wiki remembers its own choice. Change it under <strong>Settings → Sharing settings</strong>. Use <strong>Copy address</strong> to get the link for others.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Share when you choose</h2><p>Select a wiki or site and press <strong>Share</strong>. Choose sharing for each wiki on its first start. Each wiki remembers its own choice. Change it under <strong>Settings → Sharing settings</strong>. Use <strong>Copy address</strong> to get the link for others. The status light shows what is running. Stop it with the button on its row.</p>
 <p class="hu-share-access">A Tailscale invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
 <summary>On your home network — without Tailscale</summary>
 <div class="hu-share-detail-body">
@@ -74,8 +74,8 @@ Funnel needs HTTPS and Funnel permission in Tailscale. It supports only 443, 844
 <summary>Bring the library into a wiki</summary>
 <div class="hu-share-detail-body">
 
-# Check the wikis you want to include in the helper’s list.
-# Choose ''Export selected''. Names and descriptions are the default; shared addresses are optional. File paths and passwords are never included.
+# Open the helper’s export window.
+# Choose ''Export'', select the items to include, and use ''Select all / Select none'' if needed. Names and descriptions are the default; shared addresses are optional. File paths and passwords are never included.
 # Save a new JSON file. Drag it into your chosen wiki, review the import and select ''Import''.
 # Open ''Mine wikier / My wikis'' from the import list. The overview follows the wiki’s Danish/English setting.
 
@@ -103,7 +103,7 @@ The Mac and Windows apps do not open a terminal. Do not disable your computer’
 <summary>Several wikis — no port numbers</summary>
 <div class="hu-share-detail-body">
 
-Select another wiki folder and choose ''Open'' or ''Share''. Stopped wikis stay in the list. Each wiki has its own address and optional login. Copy its address or stop it from its row in the app. On Linux, open the helper again; each wiki has its own status window.
+Select another wiki folder and choose ''Open'' or ''Share''. Stopped wikis stay in the list. Each wiki has its own address and optional login. Stop a running wiki using the button on its library row: ''Stop''. Its status light shows whether it is running. On Linux, open the helper again; each wiki has its own status window.
 
 The helper remembers names, folders and addresses on this computer, not passwords. It finds unused connections and preserves other services. If a saved address is occupied, it explains the conflict instead of silently moving the wiki.
 

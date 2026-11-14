@@ -1,11 +1,11 @@
-ForgeShare 0.1.8 — testudgave / test release
+ForgeShare 0.1.10 — testudgave / test release
 
 DANSK
 Pak hele ZIP-filen ud. Åbn ForgeShare.app (Mac), ForgeShare.exe (Windows)
 eller Start-ForgeShare.sh (Linux). Behold pakkens filer samlet.
 
-Bibliotek: vælg dine wikier eller tilføj et HTML-site. Tryk Del.
-Delinger: kopiér linket, invitér med en mailkladde, eller stop en deling.
+Bibliotek: vælg en wiki eller et site, og tryk Del. Stop står på den kørende række.
+Delinger: kopiér linket, eller invitér med en mailkladde.
 Forbindelser: gem AI-forbindelser i nøgleboksen og godkend andre enheder.
 Indstillinger: vælg deling, start ved login, Tailscale eller Hjælp.
 
@@ -18,8 +18,8 @@ ENGLISH
 Extract the whole ZIP. Open ForgeShare.app (Mac), ForgeShare.exe (Windows)
 or Start-ForgeShare.sh (Linux). Keep all package files together.
 
-Library: select wikis or add an HTML site, then Share.
-Sharing: copy the link, prepare an email invitation, or stop sharing.
+Library: select a wiki or site, then Share. Each running row has a Stop button.
+Sharing: copy the link or prepare an email invitation.
 Connections: save AI connections in the vault and approve other devices.
 Settings: sharing preferences, login startup, Tailscale and Help.
 

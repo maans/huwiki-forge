@@ -35,7 +35,7 @@ Tryk Del. Hjælperen klargør HTML-wikien automatisk og beholder den samme post 
 </div>
 </details>
 </div></section>
-<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Vælg dine wikier og tryk <strong>Del</strong>. Første gang vælger du delingsform for hver wiki. Valget huskes kun for den wiki. Du kan ændre det under <strong>Indstillinger → Delingsindstillinger</strong>. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre.</p>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Del, når du vil</h2><p>Vælg en wiki eller et site og tryk <strong>Del</strong>. Første gang vælger du delingsform for hver wiki. Valget huskes kun for den wiki. Du kan ændre det under <strong>Indstillinger → Delingsindstillinger</strong>. Tryk <strong>Kopiér adresse</strong> for at hente linket til de andre. Statuslyset viser, hvad der kører. Stop med knappen på den kørende række.</p>
 <p class="hu-share-access">Ved Tailscale-deling gælder invitationen computeren. Begræns gæsternes adgang til wikien, før du inviterer.</p><details class="hu-share-detail">
 <summary>På hjemmenetværket — uden Tailscale</summary>
 <div class="hu-share-detail-body">
@@ -74,8 +74,8 @@ Funnel kræver HTTPS og tilladelse til Funnel i Tailscale. Den kan kun bruge 443
 <summary>Få wikibiblioteket ind i en wiki</summary>
 <div class="hu-share-detail-body">
 
-# Markér de wikier, du vil have med i hjælperens liste.
-# Vælg ''Eksportér valgte''. Navne og beskrivelser er standard; delingsadresser kan tilvælges. Filstier og adgangskoder kommer aldrig med.
+# Vælg ''Eksportér'' i hjælperen, og markér de wikier og sites, der skal med. Brug ''Vælg alle / Vælg ingen'' til hele udvalget.
+# Vælg ''Eksportér''. Navne og beskrivelser er standard; delingsadresser kan tilvælges. Filstier og adgangskoder kommer aldrig med.
 # Gem en ny JSON-fil. Træk den ind i den ønskede wiki, gennemse importen, og tryk ''Importér''.
 # Åbn ''Mine wikier / My wikis'' fra importlisten. Oversigten følger wikiens dansk/engelsk-valg.
 
@@ -103,7 +103,7 @@ Mac- og Windows-apps åbner ikke Terminal. Slå ikke computerens generelle besky
 <summary>Flere wikier — uden portnumre</summary>
 <div class="hu-share-detail-body">
 
-Markér en anden wikimappe, og vælg ''Åbn'' eller ''Del''. Stoppede wikier bliver på listen. Hver wiki får sin egen adresse og sit eget login. Kopiér adressen eller stop wikien på dens række i appen. På Linux åbner du hjælperen igen; hver wiki har sit eget statusvindue.
+Markér en anden wikimappe, og vælg ''Åbn'' eller ''Del''. Stoppede wikier bliver på listen. Hver wiki får sin egen adresse og sit eget login. Stop en kørende wiki med knappen på dens række i biblioteket: ''Stop''. Statuslyset viser, om den kører. På Linux åbner du hjælperen igen; hver wiki har sit eget statusvindue.
 
 Hjælperen husker navne, mapper og adresser på denne computer, men ikke adgangskoder. Den bruger ledige forbindelser og bevarer andre tjenester. Hvis en gemt adresse er optaget, forklarer den konflikten. Den flytter ikke wikien i stilhed.
 
