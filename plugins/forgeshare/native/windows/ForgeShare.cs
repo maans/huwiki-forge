@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Security.Cryptography;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.9.0")]
+[assembly: AssemblyVersion("0.1.10.0")]
 
 class Session {
     public Process Process; public string Name, Url = "", OwnerUrl = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady;
@@ -18,7 +18,7 @@ class Session {
 }
 class LibraryEntry {
     public string id,name,kind,location,description,shareUrl;public bool available;public SharingData sharing;
-    public override string ToString() {bool da=CultureInfo.CurrentUICulture.TwoLetterISOLanguageName=="da";return name+"  ·  "+(sharing==null?(da?"Vælg deling ved første start":"Choose sharing on first start"):sharing.mode=="lan"?(da?"Hjemmenetværk":"Home network"):sharing.mode=="funnel"?"Funnel":"Tailscale")+" · "+(!available?(da?"Filen mangler":"File missing"):kind=="site"?"Site":kind=="html"?(da?"Lokal HTML-fil":"Local HTML file"):(da?"Wikimappe":"Wiki folder"))+(String.IsNullOrEmpty(description)?"":" — "+description);}
+    public override string ToString() {return name+"  ·  "+(kind=="site"?"Site":"Wiki");}
 }
 class StartupChoice {public string wikiId,mode;public bool allowAnonymous;}
 class StartupData {public StartupChoice startup;}
@@ -49,7 +49,7 @@ class ForgeShare : Form {
     readonly Button start = new Button();
     readonly Label empty = new Label(),sharingLabel=new Label {AutoSize=true};
     bool quitting = false,libraryBusy=false,nextLocal=false,nextStartup=false,checkStartup=true,checkDiscovery=true;string nextID="";
-    readonly CheckedListBox library=new CheckedListBox();readonly List<Button> libraryButtons=new List<Button>();
+    readonly ListBox library=new ListBox();readonly List<Button> libraryButtons=new List<Button>();
     static string Helper { get { return Path.Combine(AppDomain.CurrentDomain.BaseDirectory,"ForgeShare.mjs"); } }
     static string Node() {
         var candidates = new List<string>();
@@ -84,7 +84,11 @@ class ForgeShare : Form {
             var data=new JavaScriptSerializer().Deserialize<LibraryData>("{\"entries\":[{\"id\":\"test\",\"name\":\"Notes\",\"kind\":\"html\",\"available\":true}]}");
             if(data.entries.Length!=1 || data.entries[0].name!="Notes")return 3;
             Application.EnableVisualStyles();
-            using(var form=new ForgeShare()) {form.CreateControl();form.PerformLayout();form.Controls[0].PerformLayout();if(form.libraryButtons.Count!=5 || form.libraryButtons[4].Right>740)return 4;}
+            using(var form=new ForgeShare()) {form.CreateControl();form.PerformLayout();form.Controls[0].PerformLayout();if(form.libraryButtons.Count!=6 || form.libraryButtons[5].Right>740)return 4;
+                form.library.Items.Add(data.entries[0]);form.library.SelectedIndex=0;form.RefreshLibraryState();if(form.library.SelectionMode!=SelectionMode.One||!form.start.Enabled)return 7;
+                var session=new Session {Id="test"};form.sessions.Add(session);form.RefreshLibraryState();if(form.start.Enabled||form.LibraryStatus("test")!=T("Starter…","Starting…"))return 8;
+                session.Url="http://127.0.0.1:20000";session.Local=true;form.RefreshLibraryState();if(!form.libraryButtons[4].Enabled||form.LibraryStatus("test")!=T("Kører lokalt","Running locally"))return 9;
+                session.Stopping=true;form.RefreshLibraryState();if(form.libraryButtons[4].Enabled)return 10;form.sessions.Clear();form.RefreshLibraryState();if(!form.start.Enabled)return 11;}
             foreach(var value in new[]{"http://127.0.0.1:20000","http://192.168.1.8:20000","http://10.0.0.8:20000","https://example.ts.net:21000"})if(!PermittedAddress(new Uri(value)))return 5;
             foreach(var value in new[]{"http://0.0.0.0:20000","http://8.8.8.8:20000","http://100.64.0.1:20000","file:///C:/wiki"})if(PermittedAddress(new Uri(value)))return 6;
             return 0;
@@ -107,10 +111,11 @@ class ForgeShare : Form {
         };
         var libraryPage=makePage(T("Dit bibliotek","Your library"),T("Wikier og sites, samlet ét sted.","Wikis and sites, together in one place."));
         var toolbar=new FlowLayoutPanel {Location=new Point(0,110),Width=740,Height=45,WrapContents=false};
-        string[] labels={T("Tilføj…","Add…"),T("Åbn","Open"),T("Del…","Share…"),T("Redigér…","Edit…"),T("Eksportér…","Export…")};
-        Action[] actions={AddToLibrary,()=>LaunchSelected(true),ShareSelected,EditSelected,ExportSelected};
-        for(int i=0;i<labels.Length;i++){var a=actions[i];var button=i==2?start:new Button();button.Text=labels[i];button.AutoSize=true;button.Click+=(sender,args)=>a();toolbar.Controls.Add(button);libraryButtons.Add(button);}
-        libraryPage.Controls.Add(toolbar);library.CheckOnClick=true;library.HorizontalScrollbar=true;library.SetBounds(0,165,740,330);library.Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;libraryPage.Controls.Add(library);
+        string[] labels={T("Tilføj…","Add…"),T("Åbn","Open"),T("Del…","Share…"),T("Redigér…","Edit…"),T("Stop","Stop"),T("Eksportér…","Export…")};
+        Action[] actions={AddToLibrary,()=>LaunchSelected(true),ShareSelected,EditSelected,StopSelected,ExportSelected};
+        for(int i=0;i<labels.Length;i++){var a=actions[i];var button=i==2?start:new Button();button.Text=new[]{"＋ ","↗ ","⇧ ","✎ ","■ ","⇩ "}[i]+labels[i];button.AutoSize=true;button.Click+=(sender,args)=>a();toolbar.Controls.Add(button);libraryButtons.Add(button);}
+        libraryPage.Controls.Add(toolbar);library.SelectionMode=SelectionMode.One;library.SelectedIndexChanged+=(s,e)=>RefreshLibraryState();library.DrawMode=DrawMode.OwnerDrawFixed;library.ItemHeight=58;library.DrawItem+=DrawLibraryRow;
+        libraryPage.Controls.Add(new Label {Text=T("Vælg en wiki. Knapperne gælder den markerede række.","Choose a wiki. The buttons act on the selected row."),AutoSize=true,Location=new Point(0,155),ForeColor=SystemColors.GrayText});library.HorizontalScrollbar=true;library.SetBounds(0,185,740,310);library.Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right;libraryPage.Controls.Add(library);
         sharingLabel.Text=T("Finder dine wikier…","Finding your wikis…");sharingLabel.SetBounds(0,510,740,30);sharingLabel.Anchor=AnchorStyles.Bottom|AnchorStyles.Left;libraryPage.Controls.Add(sharingLabel);
         var sharePage=makePage(T("Aktive delinger","Active sharing"),T("Kopiér adressen, eller send en invitation. Stop afslutter kun den valgte deling.","Copy an address or send an invitation. Stop ends only the selected item."));
         empty.Text=T("Ingen delinger kører endnu.","Nothing is shared yet.");empty.AutoSize=true;empty.Location=new Point(0,120);sharePage.Controls.Add(empty);
@@ -168,13 +173,13 @@ class ForgeShare : Form {
         };
         // Drain stderr without exposing subprocess output or passwords in the UI.
         session.Process.ErrorDataReceived+=(s,e)=>{};
-        session.Process.Exited+=(s,e)=>UI(()=> { if(sharingID==session.Id){sharingID=null;shareQueue.Clear();} rows.Controls.Remove(session.Row); sessions.Remove(session); session.Row.Dispose(); session.Process.Dispose(); empty.Visible=sessions.Count==0; if(!quitting)ReloadLibrary(); if(quitting && sessions.Count==0) Close(); });
+        session.Process.Exited+=(s,e)=>UI(()=> { if(sharingID==session.Id){sharingID=null;shareQueue.Clear();} rows.Controls.Remove(session.Row); sessions.Remove(session); RefreshLibraryState(); session.Row.Dispose(); session.Process.Dispose(); empty.Visible=sessions.Count==0; if(!quitting)ReloadLibrary(); if(quitting && sessions.Count==0) Close(); });
         try { sessions.Add(session); rows.Controls.Add(session.Row); empty.Visible=false; Update(session);
             session.Process.Start(); session.Process.BeginOutputReadLine(); session.Process.BeginErrorReadLine();
         } catch { sharingID=null;shareQueue.Clear();sessions.Remove(session); rows.Controls.Remove(session.Row); session.Row.Dispose(); session.Process.Dispose(); empty.Visible=sessions.Count==0;
             MessageBox.Show(T("Wikien kunne ikke startes. Kontroller Node.js-installationen.","The wiki could not start. Check your Node.js installation."),"ForgeShare"); }
     }
-    List<LibraryEntry> SelectedEntries() {var list=new List<LibraryEntry>();foreach(var item in library.CheckedItems)list.Add((LibraryEntry)item);return list;}
+    List<LibraryEntry> SelectedEntries() {var list=new List<LibraryEntry>();if(library.SelectedItem!=null)list.Add((LibraryEntry)library.SelectedItem);return list;}
     LibraryEntry OneEntry() {var items=SelectedEntries();if(items.Count!=1){MessageBox.Show(T("Markér én wiki på listen.","Select one wiki in the list."),"ForgeShare");return null;}return items[0];}
     string RequireNode() {
         var node=Node();if(node!=null)return node;
@@ -196,7 +201,7 @@ class ForgeShare : Form {
             try {using(var p=new Process {StartInfo=Command(node,Quote(Helper)+" --gui --library "+action+" "+data)}) {
                 p.ErrorDataReceived+=(s,e)=>{};p.Start();p.BeginErrorReadLine();var text=p.StandardOutput.ReadToEnd();p.WaitForExit();if(p.ExitCode==0)output=text;
             }}catch{}
-            UI(()=>{libraryBusy=false;foreach(var b in libraryButtons)b.Enabled=true;done(output);});
+            UI(()=>{libraryBusy=false;RefreshLibraryState();done(output);});
         });
     }
     void ReloadLibrary() {
@@ -206,7 +211,7 @@ class ForgeShare : Form {
             try {
                 if(text==null)throw new Exception();var data=new JavaScriptSerializer().Deserialize<LibraryData>(text);
                 sharingLabel.Text=T("Delingsvalg huskes for hver wiki og hvert site.","Sharing choices are remembered for each wiki and site.");
-                library.Items.Clear();foreach(var e in data.entries)library.Items.Add(e,selected.Contains(e.id));
+                library.Items.Clear();foreach(var e in data.entries){int index=library.Items.Add(e);if(selected.Contains(e.id))library.SelectedIndex=index;}RefreshLibraryState();
                 if(checkStartup){checkStartup=false;LibraryCommand("startup-status",new {},value=>{
                     if(value==null)return;var setting=new JavaScriptSerializer().Deserialize<StartupData>(value).startup;
                     if(setting!=null){nextID=setting.wikiId;nextLocal=setting.mode=="local";nextStartup=true;StartWiki();}
@@ -222,9 +227,48 @@ class ForgeShare : Form {
     void AddToLibrary() {LibraryCommand("add",new {},text=>ReloadLibrary());}
     void EditSelected() {var e=OneEntry();if(e!=null)LibraryCommand("edit",new {id=e.id},text=>ReloadLibrary());}
     void ExportSelected() {
-        var ids=new List<string>();foreach(var e in SelectedEntries())ids.Add(e.id);
-        if(ids.Count==0){MessageBox.Show(T("Markér de wikier, der skal med i oversigten.","Select the wikis to include in the overview."),"ForgeShare");return;}
-        LibraryCommand("export",new {ids=ids},text=>{});
+        using(var form=new Form {Text=T("Eksportér wikioversigt","Export wiki overview"),Size=new Size(530,480),StartPosition=FormStartPosition.CenterParent,Font=Font}) {
+            var list=new CheckedListBox {CheckOnClick=true,Location=new Point(20,70),Size=new Size(470,300),Anchor=AnchorStyles.Top|AnchorStyles.Bottom|AnchorStyles.Left|AnchorStyles.Right};
+            foreach(LibraryEntry e in library.Items)list.Items.Add(e.name,e==library.SelectedItem);
+            var toggle=new Button {AutoSize=true,Location=new Point(20,20)};
+            var export=new Button {Text=T("Eksportér…","Export…"),AutoSize=true,Location=new Point(270,390),DialogResult=DialogResult.OK};
+            var cancel=new Button {Text=T("Annuller","Cancel"),AutoSize=true,Location=new Point(390,390),DialogResult=DialogResult.Cancel};
+            Action changed=()=>{toggle.Text=list.CheckedItems.Count==list.Items.Count?T("Vælg ingen","Select none"):T("Vælg alle","Select all");export.Enabled=list.CheckedItems.Count>0;};
+            toggle.Click+=(a,b)=>{bool all=list.CheckedItems.Count==list.Items.Count;for(int i=0;i<list.Items.Count;i++)list.SetItemChecked(i,!all);changed();};
+            list.ItemCheck+=(a,b)=>form.BeginInvoke(changed);form.Controls.AddRange(new Control[]{list,toggle,export,cancel});form.AcceptButton=export;form.CancelButton=cancel;changed();
+            if(form.ShowDialog(this)!=DialogResult.OK)return;
+            var ids=new List<string>();foreach(int i in list.CheckedIndices)ids.Add(((LibraryEntry)library.Items[i]).id);
+            if(ids.Count>0)LibraryCommand("export",new {ids=ids},text=>{});
+        }
+    }
+    void StopSelected(){var entry=library.SelectedItem as LibraryEntry;if(entry!=null){var session=sessions.Find(s=>s.Id==entry.id);if(session!=null)Stop(session);}}
+    string LibraryStatus(string id) {
+        var s=sessions.Find(x=>x.Id==id);if(s==null)return T("Stoppet","Stopped");
+        if(s.Stopping)return T("Stopper…","Stopping…");if(s.Url.Length==0)return T("Starter…","Starting…");
+        if(s.Local)return T("Kører lokalt","Running locally");return T("Delt via ","Shared via ")+(s.Mode=="lan"?T("hjemmenetværk","home network"):s.Mode=="funnel"?"Funnel":"Tailscale");
+    }
+    void DrawLibraryRow(object sender,DrawItemEventArgs e) {
+        if(e.Index<0)return;e.DrawBackground();var entry=(LibraryEntry)library.Items[e.Index];var session=sessions.Find(x=>x.Id==entry.id);
+        var color=session==null?Color.Gray:session.Stopping||session.Url.Length==0?Color.DarkOrange:Color.ForestGreen;
+        using(var brush=new SolidBrush(color))e.Graphics.FillEllipse(brush,e.Bounds.Left+10,e.Bounds.Top+23,10,10);
+        var foreground=(e.State&DrawItemState.Selected)!=0?SystemColors.HighlightText:SystemColors.WindowText;
+        using(var pen=new Pen(foreground,1.3f)) {
+            int x=e.Bounds.Left+31,y=e.Bounds.Top+9;
+            if(entry.kind=="site") {e.Graphics.DrawEllipse(pen,x,y,15,15);e.Graphics.DrawEllipse(pen,x+4,y,7,15);e.Graphics.DrawLine(pen,x,y+7,x+15,y+7);}
+            else {e.Graphics.DrawRectangle(pen,x+2,y,11,15);e.Graphics.DrawLine(pen,x+5,y+5,x+11,y+5);e.Graphics.DrawLine(pen,x+5,y+9,x+11,y+9);}
+        }
+        using(var font=new Font(Font,FontStyle.Bold))TextRenderer.DrawText(e.Graphics,entry.ToString(),font,new Rectangle(e.Bounds.Left+53,e.Bounds.Top+6,e.Bounds.Width-63,22),foreground,TextFormatFlags.EndEllipsis);
+        TextRenderer.DrawText(e.Graphics,LibraryStatus(entry.id)+(entry.available?"":T(" · Filen mangler"," · File missing")),Font,new Rectangle(e.Bounds.Left+30,e.Bounds.Top+30,e.Bounds.Width-40,22),foreground,TextFormatFlags.EndEllipsis);e.DrawFocusRectangle();
+    }
+    void RefreshLibraryState() {
+        library.Invalidate();if(libraryButtons.Count!=6)return;
+        var entry=library.SelectedItem as LibraryEntry;var session=entry==null?null:sessions.Find(s=>s.Id==entry.id);
+        libraryButtons[0].Enabled=!libraryBusy;
+        libraryButtons[1].Enabled=!libraryBusy&&entry!=null&&entry.available&&(session==null||(!session.Stopping&&session.Url.Length>0));
+        libraryButtons[2].Enabled=!libraryBusy&&sharingID==null&&entry!=null&&entry.available&&session==null;
+        libraryButtons[3].Enabled=!libraryBusy&&entry!=null;
+        libraryButtons[4].Enabled=!libraryBusy&&session!=null&&!session.Stopping;
+        libraryButtons[5].Enabled=!libraryBusy&&library.Items.Count>0;
     }
     void ShareSelected() {
         if(sharingID!=null || libraryBusy)return;
@@ -260,6 +304,7 @@ class ForgeShare : Form {
     void Update(Session s) {
         var network=s.Local?T("kun lokalt","local only"):s.Mode=="lan"?T("hjemmenetværk","home network"):s.Mode=="funnel"?"Funnel":"Tailscale";
         var login=s.Mode=="funnel"?T("læser- og redaktørkode","reader and editor codes"):s.Access=="open"?T("uden login","no login"):T("med login","with login");
+        RefreshLibraryState();
         s.Label.Text=s.Name+(s.Stopping?T(" — stopper…"," — stopping…"):s.Url.Length==0?"":" — "+network+" · "+login)+(s.Url.Length==0?"":"\n"+s.Url);
     }
     void Stop(Session s) { if(s.Stopping) return; s.Stopping=true; s.Stop.Enabled=false; Update(s);
