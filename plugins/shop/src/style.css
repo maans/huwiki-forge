@@ -16,3 +16,4 @@
 .forge-shop .shop-progress {font-size:.9em}
 .forge-shop details {margin:1rem 0}
 .forge-shop summary {cursor:pointer;font-weight:600}
+.forge-shop .shop-example img {display:block;max-width:100%;height:auto;border:1px solid #bbb}
