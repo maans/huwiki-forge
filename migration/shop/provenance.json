@@ -1,0 +1,10 @@
+{
+  "archive": "HUWiki-OAuthLab-backup.zip",
+  "path": "HUWiki-OAuthLab-backup/ShopEdition.js",
+  "sha256": "118b9b0c0cc5c66180fc8a195043e3c44d1da74b6023fa265b18ace72d1767da",
+  "originalTitle": "$:/plugins/huwiki/shop",
+  "originalVersion": "0.1.2",
+  "author": "HUWiki",
+  "license": "No license field declared by wikiShopPlugin_; no replacement license inferred.",
+  "adaptation": "Original nine templates, layouts, colours and catalog model. Google server automation replaced by manual setup guide. Private orders remain in the owner’s chosen service."
+}

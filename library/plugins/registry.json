@@ -259,6 +259,18 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/shop",
+        "type": "application/json",
+        "name": "Shop",
+        "description": "Shop Site · guided Forms/Sheets setup, Google Sites and Funnel · Dansk / English · Test",
+        "author": "HUWiki",
+        "version": "0.2.0-test.1",
+        "plugin-type": "plugin"
+      },
+      "path": "../../plugins/shop/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/site-publisher",
         "type": "application/json",
         "name": "SitePublisher",
