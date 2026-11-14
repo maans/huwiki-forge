@@ -190,7 +190,7 @@ class ForgeShare : Form {
         });
     }
     void AdvanceShareQueue(string completed) {
-        if(sharingID!=completed)return;sharingID=null;
+        if(quitting || sharingID!=completed)return;sharingID=null;
         if(shareQueue.Count==0)return;
         sharingID=shareQueue.Dequeue();nextID=sharingID;nextLocal=false;StartWiki();
     }
