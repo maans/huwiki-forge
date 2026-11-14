@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "id": "ai",
+  "name": "AI Edition",
+  "version": "0.1.0-test.1",
+  "coreVersion": "5.4.1",
+  "tiddlers": [
+    "tiddlers/config.json",
+    "tiddlers/seed.json",
+    "../shared/libraries.json"
+  ],
+  "plugins": [
+    "../../themes/modern/dist/theme.json",
+    "../../languages/da-DK/plugin.json",
+    "../../plugins/ai/dist/plugin.json",
+    "../../plugins/forgeshare/dist/plugin.json"
+  ]
+}

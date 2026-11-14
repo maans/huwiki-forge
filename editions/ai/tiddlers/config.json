@@ -1,0 +1,22 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "type": "text/plain",
+    "text": "AI Edition · TiddlyWiki Forge"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "type": "text/vnd.tiddlywiki",
+    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"aiLocale\">\nSamtaler, viden og AI-værksted i din egen wiki\n</$list>\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"aiLocale\">\nConversations, knowledge and AI workbench in your own wiki\n</$list>"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "type": "text/plain",
+    "text": "[[AI Edition]]"
+  },
+  {
+    "title": "$:/theme",
+    "type": "text/plain",
+    "text": "$:/themes/huwiki/modern"
+  }
+]

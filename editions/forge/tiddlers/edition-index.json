@@ -169,5 +169,24 @@
     "description-en": "Create a Shop Site and follow the form, order sheet and publishing setup. Includes nine templates.",
     "note-da": "Testudgave. Google Sites, prøveordre til privat Sheets-ark og offentlig Funnel afprøvet på computer. Fysisk mobiltest udestår.",
     "note-en": "Test edition. Google Sites, a test order into a private Sheet and public Funnel verified on desktop. Physical mobile testing remains pending."
+  },
+  {
+    "title": "$:/huwiki/forge/edition/ai",
+    "tags": "$:/huwiki/forge/edition",
+    "text": "",
+    "edition-id": "ai",
+    "name": "AI Edition (test)",
+    "status": "test",
+    "version": "0.1.0-test.1",
+    "order": "10",
+    "build-url": "https://forge.måns.dk/assembler/?edition=ai",
+    "build-url-da": "https://forge.måns.dk/assembler/?edition=ai&lang=da",
+    "build-url-en": "https://forge.måns.dk/assembler/?edition=ai&lang=en",
+    "heading-da": "Samtaler og AI-værksted",
+    "heading-en": "Conversations and AI workbench",
+    "description-da": "Arbejd med AI i din egen TiddlyWiki: chat, opgaveskabeloner og forslag til dine tiddlere.",
+    "description-en": "Use AI in your own TiddlyWiki: conversations, task templates and suggestions for your tiddlers.",
+    "note-da": "Testudgave. AI-svar kræver en godkendt forbindelse via ForgeShare; nøgleboks og fysisk test udestår.",
+    "note-en": "Test release. AI replies require an approved ForgeShare connection; OS vault and physical testing remain pending."
   }
 ]
