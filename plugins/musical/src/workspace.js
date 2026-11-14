@@ -58,7 +58,12 @@ function mount(o){
  // Keep existing native CutOut/ABC links available without giving them an
  // entire row between the viewer and editing timeline.
  var links=host.querySelector(".huw-musical-links");
- if(links){actions.appendChild(links);}
+ if(links){
+  actions.appendChild(links);
+  var shortcuts=links.querySelectorAll("a");
+  if(shortcuts[0]){shortcuts[0].title=shortcuts[0].textContent;shortcuts[0].textContent="CutOut";}
+  if(shortcuts[1]){shortcuts[1].title=shortcuts[1].textContent;shortcuts[1].textContent="ABC";}
+ }
  // Remove the old full-size camera-shot toolbar entirely. Each shot is now
  // edited as a keyframe on Camera A/B and Cuts tracks.
  var shots=host.querySelector(".huw-musical-shots");if(shots)shots.remove();
