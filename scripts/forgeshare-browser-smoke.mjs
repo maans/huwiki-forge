@@ -73,7 +73,25 @@ try {
  await page.evaluate(title=>window.$tw.wiki.setText('$:/StoryList','list',undefined,[title]),exported[0].title);
  await page.waitForFunction(()=>document.body.textContent.includes('Opdateret beskrivelse'));
  assert.equal(await overview.getByRole('link',{name:'Open shared address'}).count(),0,'A fresh private export clears a previously imported address');
- assert.equal(await page.evaluate(()=>window.$tw.wiki.filterTiddlers('[prefix[ForgeShare/Wiki/]]').length),1,'Reimport updates the existing entry');
+ assert.equal(await page.evaluate(()=>window.$tw.wiki.filterTiddlers('[has[forgeshare-id]]').length),1,'Reimport updates the existing entry');
+ // Each exported information page has content and a readable title/date.
+ await page.evaluate(title=>window.$tw.wiki.setText('$:/StoryList','list',undefined,[title]),exported[1].title);
+ await page.waitForFunction(()=>document.body.textContent.includes('The wiki’s contents have not been copied here.'));
+ const details=page.locator('.tc-tiddler-frame').filter({has:page.locator('h2',{hasText:'Projektwiki'})});
+ assert.ok(!(await details.innerText()).includes('22222222-2222'));
+ assert.match(await details.innerText(),/Snapshot saved:.*\d{4}-\d{2}-\d{2}/s);
+ if(process.env.FORGESHARE_PREVIEW_DIR)await details.screenshot({path:path.join(process.env.FORGESHARE_PREVIEW_DIR,'ForgeShare-wiki-details.png')});
+ for(const language of ['da','en']) {
+  await page.goto(pathToFileURL(path.join(root,'plugins/forgeshare/helper/help-'+language+'.html')).href);
+  assert.equal(await page.locator('html').getAttribute('lang'),language);
+  assert.equal(await page.locator('details').count(),10);
+  await page.locator('summary').nth(5).focus();await page.keyboard.press('Enter');
+  assert.ok(await page.locator('details').nth(5).getAttribute('open')!==null);
+  assert.ok((await page.locator('details').nth(5).innerText()).includes('shell:startup'));
+  await page.setViewportSize({width:390,height:844});
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth));
+  if(process.env.FORGESHARE_PREVIEW_DIR)await page.screenshot({path:path.join(process.env.FORGESHARE_PREVIEW_DIR,'ForgeShare-help-'+language+'.png'),fullPage:false});
+ }
  assert.deepEqual(errors,[]);
  console.log('Headless guide and library: language refresh, downloads, mobile layout, selected import and stable reimport passed');
 } finally {await browser.close();}

@@ -47,14 +47,14 @@ test('selected export is portable and inert, omits private paths and addresses b
  const now=new Date('2026-11-14T12:00:00Z'),out=libraryExport(library,[a.id],{now});
  assert.equal(out.length,2);const text=JSON.stringify(out);
  for(const value of [html,folder,'Unselected private project','https://computer.example.ts.net','password','credentials'])assert.ok(!text.includes(value),value);
- assert.equal(out[1].type,'text/plain');assert.equal(out[1]['forgeshare-snapshot'],now.toISOString());
+ assert.equal(out[1].type,'text/vnd.tiddlywiki');assert.equal(out[1]['forgeshare-snapshot'],now.toISOString());
  assert.equal(libraryExport(library,[a.id],{includeAddresses:true})[1]['forgeshare-address'],library.entries[0].shareUrl);
  library.entries[0].shareUrl='file:///private/secret';assert.equal(libraryExport(library,[a.id],{includeAddresses:true})[1]['forgeshare-address'],'');
  assert.throws(()=>libraryExport(library,[]));assert.throws(()=>libraryExport(library,['unknown']));
  const tw=TiddlyWiki();tw.boot.argv=[path.join(temp,'render')];await new Promise(resolve=>tw.boot.boot(resolve));
  for(const t of out)tw.wiki.addTiddler(t);
  for(const [lang,expected] of [['$:/languages/huwiki-da-DK','Mine wikier'],['$:/languages/en-GB','My wikis']]) {
-  tw.wiki.addTiddler({title:'$:/language',text:lang});const rendered=tw.wiki.renderText('text/html','text/vnd.tiddlywiki','<$transclude $tiddler="'+out[0].title+'" $mode="block"/>');
+  tw.wiki.addTiddler({title:'$:/language',text:lang});const rendered=tw.wiki.renderText('text/html','text/vnd.tiddlywiki','<$tiddler tiddler="'+out[0].title+'"><$transclude $mode="block"/></$tiddler>');
   assert.match(rendered,new RegExp(expected));assert.ok(rendered.includes('&lt;script&gt;'),rendered);assert.ok(!rendered.includes('<script>'));assert.ok(rendered.includes('Secret'));assert.ok(!rendered.includes('Filter error'));
  }
  const filename=path.join(temp,'selected overview æ.json');await writeLibraryExport(filename,library,[a.id]);const before=await readFile(filename,'utf8');
@@ -122,7 +122,7 @@ test('Add offers discovery and only saves the chosen suggestion; cancel leaves t
  const result={entries:[{name:'My wiki',location:folder},{name:'Other wiki',location:second},{name:'Unselected',location:third}],limited:false,unreadable:0};
  await libraryMain('add','',{root,discover:async()=>result,report:r=>reports.push(r),dialog:async(kind,message,choices)=>{
   if(kind==='choice'){assert.match(choices[0],/^Find/);return choices[0];}
-  assert.equal(kind,'choices');assert.match(message,/Intet bliver startet eller delt/);return choices.slice(0,2).join('\r\n');
+  assert.equal(kind,'choices');assert.match(message,/Nothing will be started or shared/);return choices.slice(0,2).join('\r\n');
  }});
  assert.equal((await listLibrary(root)).entries.length,2);assert.deepEqual(reports,[{ok:true}]);
  const before=await readFile(path.join(root,'library.json'),'utf8');
@@ -153,4 +153,58 @@ test('native discovery dialog scripts compile without opening UI',()=>{
   const result=spawnSync('powershell.exe',['-NoProfile','-NonInteractive','-EncodedCommand',Buffer.from(parser,'utf16le').toString('base64')],{input:script,encoding:'utf8',windowsHide:true,timeout:15000});
   assert.equal(result.status,0,result.stdout+result.stderr);
  }
+});
+
+test('system language uses UI preference on Mac/Windows and locale on Linux, with English fallback',async()=>{
+ const {detectLanguage}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');
+ assert.equal(await detectLanguage({platform:'darwin',env:{},run:async()=>({stdout:'(\n "da-DK",\n "en-GB"\n)'})}),'da');
+ assert.equal(await detectLanguage({platform:'win32',env:{},run:async()=>({stdout:'da-DK\r\n'})}),'da');
+ for(const locale of ['da_DK.UTF-8','da:en','da'])assert.equal(await detectLanguage({platform:'linux',env:{LANGUAGE:locale}}),'da');
+ assert.equal(await detectLanguage({platform:'linux',env:{LANG:'de_DE.UTF-8'}}),'en');
+ assert.equal(await detectLanguage({platform:'darwin',env:{FORGESHARE_LANGUAGE:'en'},run:async()=>assert.fail('Native language takes priority')}),'en');
+ assert.equal(await detectLanguage({platform:'darwin',env:{},run:async()=>{throw Error('Unavailable')}}),'en');
+});
+test('small decisions have actual buttons, while Linux choices have radio markers; labels remain data',()=>{
+ const labels=['Names and descriptions','Also addresses " & $(not code)'];
+ const mac=dialogCommand('darwin','choice','Export',labels);
+ assert.match(mac[1][3],/addButtonWithTitle/);assert.ok(!mac[1][3].includes(labels[1]));assert.deepEqual(mac[1].slice(-2),labels);
+ if(process.platform==='darwin') {
+  const result=spawnSync('/usr/bin/osacompile',['-l','JavaScript','-o',path.join(temp,'buttons.scpt'),'-e',mac[1][3]],{encoding:'utf8',timeout:10000});
+  assert.equal(result.status,0,result.stderr);
+  const inspect=mac[1][3].replace('app.activateIgnoringOtherApps(true);', 'var titles=[];for(var j=0;j<Number(alert.buttons.count);j++)titles.push(ObjC.unwrap(alert.buttons.objectAtIndex(j).title));return JSON.stringify(titles);');
+  const inspected=spawnSync('/usr/bin/osascript',['-l','JavaScript','-e',inspect,'--','Export','Cancel',...labels],{encoding:'utf8',timeout:10000});
+  assert.equal(inspected.status,0,inspected.stderr);assert.deepEqual(JSON.parse(inspected.stdout),[...labels,'Cancel']);
+ }
+ const win=dialogCommand('win32','choice','Export',labels),code=Buffer.from(win[1].at(-1),'base64').toString('utf16le');
+ assert.match(code,/FlowLayoutPanel/);assert.match(code,/Add_Click/);assert.ok(!code.includes(labels[1]));
+ assert.ok(dialogCommand('linux','choice','Export',labels)[1].includes('--radiolist'));
+});
+test('Danish buttons take the correct library action and never translate user-entered names',async()=>{
+ const previous=process.env.FORGESHARE_LANGUAGE;process.env.FORGESHARE_LANGUAGE='da';
+ const da=await import('../plugins/forgeshare/helper/ForgeShare.mjs?ui-test-da');
+ if(previous===undefined)delete process.env.FORGESHARE_LANGUAGE;else process.env.FORGESHARE_LANGUAGE=previous;
+ const {root,html}=await fixture('Danish choices');
+ const entry=await da.addLibraryEntry({root,location:html,name:'Names and descriptions / Min egen titel',kind:'html'});
+ const out=path.join(temp,'Danish overview.json'),messages=[];
+ await da.libraryMain('export',Buffer.from(JSON.stringify({ids:[entry.id]})).toString('base64'),{root,report:()=>{},dialog:async(kind,message,initial)=>{
+  messages.push(message);
+  if(kind==='choice'){assert.deepEqual(initial,['Navne og beskrivelser','Også seneste delingsadresser']);return initial[0];}
+  if(kind==='save')return out;
+  if(kind==='text')return initial;
+  return '';
+ }});
+ assert.ok(messages.every(m=>!m.includes('What should')&&!m.includes('Export these')&&!m.includes('Name this')));
+ const exported=JSON.parse(await readFile(out,'utf8'));assert.equal(exported[0].title,'Mine wikier — ForgeShare');
+ assert.equal(exported[1]['forgeshare-name'],'Names and descriptions / Min egen titel');
+});
+test('readable export titles persist through renames and repeated exports, with UUIDs only in fields',async()=>{
+ const {nameLibraryExport}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');
+ const {root,folder}=await fixture('export titles');const e=await addLibraryEntry({root,location:folder,name:'Garden',kind:'folder'});
+ let lib=await nameLibraryExport(root,'My wikis');let first=libraryExport(lib,[e.id]);
+ assert.deepEqual(first.map(t=>t.title),['My wikis','My wikis / Garden']);
+ assert.ok(first[1].text.includes('The wiki’s contents have not been copied here.'));assert.equal(first[1]['forgeshare-id'],e.id);
+ await editLibraryEntry(e.id,{name:'Garden project',description:''},root);
+ lib=await nameLibraryExport(root,'My wikis');const again=libraryExport(lib,[e.id]);
+ assert.equal(again[1].title,first[1].title);assert.equal(again[1]['forgeshare-name'],'Garden project');
+ assert.equal(again[0]['forgeshare-library-id'],lib.id);
 });

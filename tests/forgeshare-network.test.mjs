@@ -61,7 +61,7 @@ test('graphical LAN sharing skips Tailscale and login prompts, confirms the sele
  const input=new PassThrough(),reports=[];let finish,started=false,confirmed=false;const finished=new Promise(resolve=>{finish=resolve;});
  await guiMain({root,libraryId:entry.id,appMode:true,input,networkInterfaces:()=>interfaces,checkAddressPort:async()=>{},readJSON:async()=>assert.fail('No Tailscale configuration'),findTailscale:async()=>assert.fail('No Tailscale installation needed'),findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
   dialog:async(kind,message,choices)=>{
-   if(kind==='confirm'){if(message.startsWith('Start')){assert.match(message,/Hjemmenetværk/);assert.match(message,/Uden wiki-login/);confirmed=true;}return '';}
+   if(kind==='confirm'){if(message.startsWith('Start')){assert.match(message,/Home network/);assert.match(message,/No wiki login/);confirmed=true;}return '';}
    if(kind==='choice')return choices.find(value=>value.startsWith(message.startsWith('Where')?'Home network':'Without'));
    assert.fail('Unexpected login/install dialog: '+kind+' '+message);
   },
@@ -80,4 +80,35 @@ test('a short chosen password works in the helper and its temporary file is remo
   startSession:async options=>{credentials=options.credentials;assert.equal(await readFile(credentials,'utf8'),'username,password\nwiki,pw\n');return {url:'http://127.0.0.1:'+options.port,finished:new Promise(()=>{}),stop:async()=>{}};}
  });
  await assert.rejects(readFile(credentials),{code:'ENOENT'});
+});
+
+test('startup is off by default, accepts only a known server wiki and never stores credentials',async()=>{
+ const {saveStartup,readStartup}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');
+ const folder=await wiki('Startup choices'),root=path.join(temp,'Startup settings');
+ const e=await addLibraryEntry({root,location:folder,name:'Startup wiki',kind:'folder'});
+ assert.equal(await readStartup(root),null);
+ const setting={wikiId:e.id,mode:'local',allowAnonymous:true};await saveStartup(root,setting);assert.deepEqual(await readStartup(root),setting);
+ for(const invalid of [{...setting,password:'secret'},{...setting,mode:'public'},{...setting,wikiId:'unknown'},{...setting,allowAnonymous:'true'}])await assert.rejects(saveStartup(root,invalid));
+ assert.deepEqual(await readStartup(root),setting);await saveStartup(root,null);assert.equal(await readStartup(root),null);
+});
+test('approved local startup starts just the selected wiki, skips dialogs and Tailscale, and obeys STOP',async()=>{
+ const {saveStartup,readStartup}=await import('../plugins/forgeshare/helper/ForgeShare.mjs');
+ const folder=await wiki('Automatic local'),root=path.join(temp,'Automatic local settings');
+ const e=await addLibraryEntry({root,location:folder,name:'Auto',kind:'folder'});
+ await saveStartup(root,{wikiId:e.id,mode:'local',allowAnonymous:true});
+ const input=new PassThrough();let finish,started=false;const finished=new Promise(r=>finish=r);
+ await guiMain({root,startup:await readStartup(root),appMode:true,input,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
+  dialog:async(kind,message)=>assert.fail('No dialog expected: '+message),findTailscale:async()=>assert.fail('No Tailscale'),
+  startSession:async options=>{started=true;assert.equal(options.localOnly,true);assert.equal(options.allowAnonymous,true);assert.equal(options.credentials,undefined);return {url:'http://127.0.0.1:'+options.port,finished,stop:async()=>finish()};},
+  report:event=>{if(event.event==='ready')input.end();}
+ });assert.ok(started);
+});
+test('startup with login asks for credentials and never silently downgrades to anonymous access',async()=>{
+ const folder=await wiki('Automatic authenticated'),root=path.join(temp,'Automatic auth settings');
+ const e=await addLibraryEntry({root,location:folder,name:'Protected',kind:'folder'});
+ let credentials,passwords=0,started=false;
+ await guiMain({root,startup:{wikiId:e.id,mode:'local',allowAnonymous:false},appMode:false,checkAddressPort:async()=>{},findTiddlyWiki:async()=>path.dirname(require.resolve('tiddlywiki/package.json')),
+  dialog:async(kind,message,initial)=>{if(kind==='password'){passwords++;return 'pw';}if(kind==='text')return initial.startsWith('http:')?'':'owner';assert.fail(message);},
+  startSession:async options=>{started=true;assert.equal(options.allowAnonymous,false);credentials=options.credentials;assert.match(await readFile(credentials,'utf8'),/owner,pw/);return {url:'http://127.0.0.1:'+options.port,finished:new Promise(()=>{}),stop:async()=>{}};}
+ });assert.ok(started);assert.equal(passwords,2);await assert.rejects(readFile(credentials),{code:'ENOENT'});
 });

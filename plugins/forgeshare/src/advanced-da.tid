@@ -79,7 +79,7 @@ Brug TiddlyWikis indbyggede ''Download save''/HTML-eksport til en selvstændig o
 
 !! Kilder og version
 
-ForgeShare 0.1.4. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
+ForgeShare 0.1.5. Original HUWiki-kode; licensvalg afventer projektets beslutning. Ingen obligatoriske HUWiki-plugins. Afprøvet mod TiddlyWiki 5.4.1. Installer via Forge-katalogets ''Ekstra plugins'' eller importer `plugin.json`, gem og reload. Afinstaller via TiddlyWikis pluginadministration; en manuelt valgt pollingværdi bevares. Stop hjælperen separat.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
@@ -95,3 +95,7 @@ Tailscales tilladelser lægges sammen. En snæver regel for én wikis HTTPS-port
 
 * [[Tailscale: del en computer og styr adgang|https://tailscale.com/docs/features/sharing]]
 * [[Tailscale grants|https://tailscale.com/docs/reference/syntax/grants]]
+
+!! Hjælp og opstart
+
+Hjælperens ''Hjælp'' åbner en vejledning, der følger med appen og virker offline. Under ''Opstart'' kan du vælge én wiki og netværk, som startes, når ForgeShare åbner. Vælger du login, skal adgangskoden indtastes hver gang; den gemmes ikke. Vælg ''Åbn kun biblioteket'' for at slå automatisk wikistart fra. Hjælpen viser også, hvordan appen tilføjes eller fjernes fra styresystemets start ved login. Intet aktiveres automatisk ved pluginimport.

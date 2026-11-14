@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.4 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.5 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {readFile, realpath, stat, lstat, opendir, access, mkdir, mkdtemp, writeFile, rm, rename, open} from 'node:fs/promises';
 import {randomUUID} from 'node:crypto';
 import {constants} from 'node:fs';
@@ -17,7 +17,19 @@ const self = fileURLToPath(import.meta.url);
 const quiet = process.argv.includes('--gui');
 export const serveArgs = ['serve', '--https=10000', 'http://127.0.0.1:8080'];
 export const makeServeArgs = (port, httpsPort) => ['serve', `--https=${httpsPort}`, `http://127.0.0.1:${port}`];
-const fail = (en, da) => { throw Error(`${en}\n${da}`); };
+let uiLanguage = process.env.FORGESHARE_LANGUAGE === 'da' ? 'da' : 'en';
+export const ui = (en, da) => uiLanguage === 'da' ? da : en;
+export async function detectLanguage({platform=process.platform,env=process.env,run=execute}={}) {
+  if (['da','en'].includes(env.FORGESHARE_LANGUAGE)) return env.FORGESHARE_LANGUAGE;
+  let language='';
+  try {
+    if(platform==='darwin')language=(await run('/usr/bin/defaults',['read','-g','AppleLanguages'])).stdout.replace(/[()"\s]/g,'').split(',')[0];
+    else if(platform==='win32')language=(await run('powershell.exe',['-NoProfile','-NonInteractive','-Command','[Globalization.CultureInfo]::CurrentUICulture.Name'],{windowsHide:true})).stdout.trim();
+    else language=(env.LANGUAGE || env.LC_ALL || env.LC_MESSAGES || env.LANG || '').split(':')[0];
+  } catch {}
+  return /^da(?:[-_]|$)/i.test(language)?'da':'en';
+}
+const fail = (en, da) => { throw Error(ui(en,da)); };
 const object = value => !!value && typeof value === 'object' && !Array.isArray(value);
 const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
@@ -115,7 +127,7 @@ export async function validateWikiFolder(wikiInput) {
 export function checkPort(port = 8080, host = '127.0.0.1') {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
-    server.once('error', error => reject(Object.assign(Error(`Port ${port} is in use or unavailable / er optaget eller utilgængelig. No existing process was stopped / Ingen eksisterende proces blev stoppet.`), {code: error.code})));
+    server.once('error', error => reject(Object.assign(Error(ui(`Address ${port} is in use or unavailable. No existing process was stopped.`,`Adressen ${port} er optaget eller utilgængelig. Ingen eksisterende proces blev stoppet.`)), {code: error.code})));
     server.listen({host, port, exclusive: true}, () => server.close(resolve));
   });
 }
@@ -148,7 +160,7 @@ export async function checkAddressPort(port) {
     const server = net.createServer();
     server.once('error', error => {
       if (['EAFNOSUPPORT', 'EADDRNOTAVAIL'].includes(error.code)) resolve();
-      else reject(Error(`An existing service uses address ${port}. / En eksisterende tjeneste bruger adressen ${port}.`));
+      else reject(Error(ui(`An existing service uses address ${port}.`,`En eksisterende tjeneste bruger adressen ${port}.`)));
     });
     server.listen({host: '::', port, ipv6Only: true, exclusive: true}, () => server.close(resolve));
   });
@@ -160,7 +172,7 @@ export function usedServePorts(config) {
     for (const kind of ['TCP', 'Web', 'AllowFunnel']) {
       for (const key of Object.keys(item[kind] || {})) {
         const value = Number(key.split(':').at(-1));
-        if (!Number.isInteger(value) || value < 1 || value > 65535) throw Error('Unknown Serve port / Ukendt Serve-port.');
+        if (!Number.isInteger(value) || value < 1 || value > 65535) throw Error(ui('Unknown Serve port', 'Ukendt Serve-port.'));
         used.add(value);
       }
     }
@@ -172,7 +184,7 @@ export function usedServePorts(config) {
 const profileKey = value => value.normalize('NFC').toLocaleLowerCase('en-US');
 const wikiKey = value => process.platform === 'win32' ? value.toLowerCase() : value;
 export function validateRegistry(data) {
-  if (!object(data) || data.version !== 1 || !Array.isArray(data.wikis)) throw Error('Unknown wiki list format / Ukendt format i wikilisten.');
+  if (!object(data) || data.version !== 1 || !Array.isArray(data.wikis)) throw Error(ui('Unknown wiki list format', 'Ukendt format i wikilisten.'));
   const ids = new Set(), names = new Set(), folders = new Set(), ports = new Set();
   for (const entry of data.wikis) {
     if (!object(entry) || Object.keys(entry).some(key => !['id', 'name', 'wiki', 'port', 'httpsPort'].includes(key)) ||
@@ -182,7 +194,7 @@ export function validateRegistry(data) {
         !Number.isInteger(entry.port) || entry.port < localRange[0] || entry.port > localRange[1] ||
         !Number.isInteger(entry.httpsPort) || entry.httpsPort < shareRange[0] || entry.httpsPort > shareRange[1] ||
         ids.has(entry.id) || names.has(profileKey(entry.name)) || folders.has(wikiKey(entry.wiki)) || ports.has(entry.port) || ports.has(entry.httpsPort))
-      throw Error('Invalid or duplicate wiki entry. Wiki list was not changed. / Ugyldig eller gentaget wiki. Wikilisten blev ikke ændret.');
+      throw Error(ui('Invalid or duplicate wiki entry. Wiki list was not changed.', 'Ugyldig eller gentaget wiki. Wikilisten blev ikke ændret.'));
     ids.add(entry.id); names.add(profileKey(entry.name)); folders.add(wikiKey(entry.wiki)); ports.add(entry.port); ports.add(entry.httpsPort);
   }
   return data;
@@ -225,7 +237,7 @@ export async function acquireLock(root, key, attempts = 80) {
     finally { if (recovering) await rm(recovery, {recursive: true, force: true}); }
     if (attempt + 1 < attempts) await sleep(100);
   }
-  throw Error('This wiki is already running, or another helper is setting up. Use its status window, or try again shortly. / Wikien kører allerede, eller en anden hjælper er ved at starte. Brug dens statusvindue, eller prøv igen om lidt.');
+  throw Error(ui('This wiki is already running, or another helper is setting up. Use its status window, or try again shortly.', 'Wikien kører allerede, eller en anden hjælper er ved at starte. Brug dens statusvindue, eller prøv igen om lidt.'));
 }
 export async function registerWiki({root = appFolder(), wiki: input, name, tailscale, localOnly=false}, deps = {}) {
   const wiki = await realpath(input);
@@ -235,11 +247,11 @@ export async function registerWiki({root = appFolder(), wiki: input, name, tails
     const existing = registry.wikis.find(entry => wikiKey(entry.wiki) === wikiKey(wiki));
     if (existing) return existing;
     const info = JSON.parse(await readFile(path.join(wiki, 'tiddlywiki.info'), 'utf8'));
-    for (const plugin of ['tiddlywiki/tiddlyweb', 'tiddlywiki/filesystem']) if (!info.plugins?.includes(plugin)) throw Error('Prepare this server wiki first / Forbered først denne serverwiki.');
+    for (const plugin of ['tiddlywiki/tiddlyweb', 'tiddlywiki/filesystem']) if (!info.plugins?.includes(plugin)) throw Error(ui('Prepare this server wiki first', 'Forbered først denne serverwiki.'));
     const entry = {id: randomUUID(), name: name.trim().normalize('NFC'), wiki, port: localRange[0], httpsPort: shareRange[0]};
     // Validate the name before probing/allocating; real allocations follow below.
     validateRegistry({version: 1, wikis: [entry]});
-    if (registry.wikis.some(item => profileKey(item.name) === profileKey(entry.name))) throw Error('Choose a different wiki name / Vælg et andet wikinavn.');
+    if (registry.wikis.some(item => profileKey(item.name) === profileKey(entry.name))) throw Error(ui('Choose a different wiki name', 'Vælg et andet wikinavn.'));
     const config = localOnly ? {} : await (deps.readJSON || jsonCommand)(tailscale, ['serve', 'status', '--json']);
     const used = usedServePorts(config);
     for (const item of registry.wikis) { used.add(item.port); used.add(item.httpsPort); }
@@ -249,7 +261,7 @@ export async function registerWiki({root = appFolder(), wiki: input, name, tails
         if (used.has(candidate)) continue;
         try { await check(candidate); used.add(candidate); return candidate; } catch {}
       }
-      throw Error('No free address was found. No services changed. / Ingen ledig adresse fundet. Ingen tjenester ændret.');
+      throw Error(ui('No free address was found. No services changed.', 'Ingen ledig adresse fundet. Ingen tjenester ændret.'));
     }
     entry.port = await choose(localRange); entry.httpsPort = await choose(shareRange);
     registry.wikis.push(entry); await writeRegistry(root, registry);
@@ -264,7 +276,7 @@ export async function startNamedSession(profile, options, deps = {}) {
     releaseCatalog = await acquireLock(root, 'catalog');
     const saved = (await readRegistry(root)).wikis.find(entry => entry.id === profile.id);
     if (!saved || JSON.stringify(saved) !== JSON.stringify(profile) || wikiKey(await realpath(profile.wiki)) !== wikiKey(profile.wiki))
-      throw Error('Wiki selection changed. Choose it again. / Wikivalget er ændret. Vælg igen.');
+      throw Error(ui('Wiki selection changed. Choose it again.', 'Wikivalget er ændret. Vælg igen.'));
     const session = await (deps.startSession || startSession)({...options, ...profile}, deps);
     const finished = session.finished.finally(releaseWiki);
     return {...session, finished, stop: async () => { await session.stop(); await releaseWiki(); }};
@@ -302,11 +314,11 @@ export async function validateRuntime(folder) {
 export function startWiki({boot, wiki, credentials, port = 8080,allowAnonymous=false,lanHost}) {
   const child = fork(self, ['--worker', boot, ...serverArgs(wiki, credentials, port,{allowAnonymous,lanHost})], {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit', 'ipc']});
   const ready = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => done(Error('Server start timed out / Serverstart tog for lang tid.')), 30000);
+    const timer = setTimeout(() => done(Error(ui('Server start timed out','Serverstart tog for lang tid.'))), 30000);
     const done = (error, address) => { clearTimeout(timer); child.off('message', message); child.off('error', errorEvent); child.off('exit', exitEvent); error ? reject(error) : resolve(address); };
     const message = data => { if (data?.type === 'listening') done(null, data.address); };
     const errorEvent = error => done(error);
-    const exitEvent = () => done(Error('Wiki stopped before listening / Wikien stoppede før opstart.'));
+    const exitEvent = () => done(Error(ui('Wiki stopped before listening', 'Wikien stoppede før opstart.')));
     child.on('message', message); child.once('error', errorEvent); child.once('exit', exitEvent);
   });
   return {child, ready};
@@ -329,10 +341,10 @@ export async function startLocalSession(options,deps={}) {
   let stopping;const stop=()=>stopping ||= stopChild(child);
   try {
     const address=await started.ready;
-    if(address.address!==host || address.port!==port)throw Error('Unexpected local address / Uventet lokal adresse.');
+    if(address.address!==host || address.port!==port)throw Error(ui('Unexpected local address', 'Uventet lokal adresse.'));
     const status=await (deps.probe||(()=>fetch(`http://${host}:${port}/status`,{signal:AbortSignal.timeout(5000)}).then(r=>r.status)))();
     if(status!==(options.allowAnonymous===true?200:401))fail('The wiki does not match the selected login setting.', 'Wikien følger ikke det valgte loginvalg.');
-    if(child.exitCode!==null || child.signalCode!==null)throw Error('Wiki stopped / Wikien stoppede.');
+    if(child.exitCode!==null || child.signalCode!==null)throw Error(ui('Wiki stopped', 'Wikien stoppede.'));
     const finished=new Promise(resolve=>child.once('exit',resolve));
     return {url:`http://${host}:${port}`,stop,finished};
   }catch(error){await stop();throw error;}
@@ -366,11 +378,11 @@ export async function startSession(options, deps = {}) {
   try {
     const started = startServer(options); server = started.child;
     const address = await started.ready;
-    if (closed || address.address !== '127.0.0.1' || address.port !== port) throw Error('Unexpected server address / Uventet serveradresse.');
+    if (closed || address.address !== '127.0.0.1' || address.port !== port) throw Error(ui('Unexpected server address', 'Uventet serveradresse.'));
     if (await probe() !== (options.allowAnonymous===true?200:401)) fail('The wiki does not match the selected login setting. Sharing refused.', 'Wikien følger ikke det valgte loginvalg. Deling afvist.');
     // Recheck immediately before Serve. No --yes: concurrent changes cannot be silently approved.
     const current = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), true, httpsPort);
-    if (JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(current, httpsPort))) throw Error('Serve changed during startup / Serve blev ændret under start.');
+    if (JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(current, httpsPort))) throw Error(ui('Serve changed during startup', 'Serve blev ændret under start.'));
     serve = startServe(options.tailscale, makeServeArgs(port, httpsPort), {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit'], windowsHide: true});
     let serveError;
     serve.once('error', error => { serveError = error; });
@@ -404,16 +416,32 @@ function cleanLabel(value, maximum = 80, optional = false) {
 function validShareURL(value) {
   try { const u=new URL(value);return ((u.protocol==='https:' && /^[a-z0-9.-]+\.ts\.net$/i.test(u.hostname)) || (u.protocol==='http:' && isPrivateIPv4(u.hostname))) && !u.username && !u.password && !u.search && !u.hash && (u.pathname==='/' || !u.pathname); } catch {return false;}
 }
+export function validateStartup(value,library) {
+  if(!object(value) || Object.keys(value).sort().join(',')!=='allowAnonymous,mode,wikiId' ||
+     !['local','lan','tailscale'].includes(value.mode) || typeof value.allowAnonymous!=='boolean' ||
+     !library.entries.some(e=>e.id===value.wikiId && e.kind==='folder'))
+    fail('The startup choice is invalid. Choose it again in Startup.', 'Opstartsvalget er ugyldigt. Vælg det igen under Opstart.');
+  return value;
+}
+export async function saveStartup(root,choice) {
+  return libraryTransaction(root,data=>{data.startup=choice===null?null:validateStartup(choice,data);return data.startup;});
+}
+export async function readStartup(root=appFolder()) {
+  return (await loadLibrary(root)).startup || null;
+}
 export function validateLibrary(data) {
   if(!object(data) || data.version!==1 || !uuidPattern.test(data.id) || !Array.isArray(data.entries) || data.entries.length>500)
     fail('Unknown wiki library format. Nothing changed.', 'Ukendt format i wikibiblioteket. Intet ændret.');
+  if(data.startup!==undefined && data.startup!==null)validateStartup(data.startup,data);
+  if(data.exportTitle!==undefined)cleanLabel(data.exportTitle,100);
   const ids=new Set(),locations=new Set(),names=new Set();
   for(const e of data.entries) {
-    if(!object(e) || Object.keys(e).some(k=>!['id','name','kind','location','description','shareUrl'].includes(k)) ||
+    if(!object(e) || Object.keys(e).some(k=>!['id','name','kind','location','description','shareUrl','exportTitle'].includes(k)) ||
        !uuidPattern.test(e.id) || !['html','folder'].includes(e.kind) || typeof e.location!=='string' || !path.isAbsolute(e.location) ||
        ids.has(e.id) || locations.has(wikiKey(e.location)) || names.has(profileKey(e.name || '')) ||
        (e.shareUrl && !validShareURL(e.shareUrl)))fail('Invalid wiki library entry. Nothing changed.', 'Ugyldig post i wikibiblioteket. Intet ændret.');
     cleanLabel(e.name);cleanLabel(e.description,500,true);
+    if(e.exportTitle!==undefined)cleanLabel(e.exportTitle,240);
     ids.add(e.id);locations.add(wikiKey(e.location));names.add(profileKey(e.name));
   }
   return data;
@@ -532,8 +560,8 @@ async function discoverLibrary(ask,root,deps) {
     const library=await listLibrary(root);
     const result=await (deps.discover || discoverWikiFolders)({roots,known:library.entries.map(e=>e.location)});
     if(!result.entries.length) {
-      await ask('choice','No new wiki folders found here. Try another folder?\nIngen nye wikimapper fundet her. Prøv en anden mappe?',['Search another folder / Søg i en anden mappe']);
-      roots=[await ask('folder','Choose where to look / Vælg, hvor der skal søges')];continue;
+      await ask('choice',ui('No new wiki folders found here. Try another folder?', 'Ingen nye wikimapper fundet her. Prøv en anden mappe?'),[ui('Search another folder', 'Søg i en anden mappe')]);
+      roots=[await ask('folder',ui('Choose where to look', 'Vælg, hvor der skal søges'))];continue;
     }
     const planned=[...library.entries];
     const choices=result.entries.map((entry,index)=>{
@@ -542,8 +570,8 @@ async function discoverLibrary(ask,root,deps) {
       const hint=relative.startsWith('..')?entry.location:relative;
       return {...entry,name,label:(index+1)+'. '+name+' — '+hint.replace(/[\r\n\t]/g,' ')};
     });
-    const note=(result.limited || result.unreadable)?'\nSome folders were skipped or the search limit was reached. / Nogle mapper blev sprunget over, eller søgegrænsen blev nået.':'';
-    const selected=(await ask('choices','Found wiki folders — select those to add. Nothing will be started or shared.\nFundne wikimapper — vælg dem, der skal tilføjes. Intet bliver startet eller delt.'+note,choices.map(e=>e.label))).split(/\r?\n/);
+    const note=(result.limited || result.unreadable)?ui('\nSome folders were skipped or the search limit was reached.', '\nNogle mapper blev sprunget over, eller søgegrænsen blev nået.'):'';
+    const selected=(await ask('choices',ui('Found wiki folders — select those to add. Nothing will be started or shared.', 'Fundne wikimapper — vælg dem, der skal tilføjes. Intet bliver startet eller delt.')+note,choices.map(e=>e.label))).split(/\r?\n/);
     const chosen=choices.filter(e=>selected.includes(e.label));
     if(!chosen.length)throw Object.assign(Error('Cancelled'),{cancelled:true});
     await addDiscoveredFolders(chosen,root);return;
@@ -562,21 +590,62 @@ async function rememberSharedAddress(location,url,root) {
   if(!validShareURL(url))return;
   await libraryTransaction(root,data=>{const entry=data.entries.find(e=>wikiKey(e.location)===wikiKey(location));if(entry)entry.shareUrl=url;});
 }
+// Human-readable titles are retained on subsequent exports, including after a rename.
+// Stable UUIDs remain metadata rather than headings. Import still uses TW's review screen.
+export async function nameLibraryExport(root,title) {
+  return libraryTransaction(root,data=>{
+    const name=cleanLabel(title,100);
+    if(data.exportTitle!==name) {data.exportTitle=name;for(const entry of data.entries)delete entry.exportTitle;}
+    const used=new Set(data.entries.map(e=>e.exportTitle).filter(Boolean));
+    for(const entry of data.entries)if(!entry.exportTitle) {
+      const base=name+' / '+entry.name;let candidate=base,n=2;
+      while(used.has(candidate))candidate=base+' ('+(n++)+')';
+      entry.exportTitle=candidate;used.add(candidate);
+    }
+    return data;
+  });
+}
 export function libraryExport(library,selected,{includeAddresses=false,now=new Date()}={}) {
   if(!Array.isArray(selected) || !selected.length || new Set(selected).size!==selected.length || selected.some(id=>!library.entries.some(e=>e.id===id)))
     fail('Select at least one wiki from the list.', 'Vælg mindst én wiki fra listen.');
-  const snapshot=now.toISOString(),modified=snapshot.replace(/[-:TZ.]/g,''), prefix='ForgeShare/Wiki/';
+  const snapshot=now.toISOString(),modified=snapshot.replace(/[-:TZ.]/g,'');
+  const indexTitle=library.exportTitle || ui('My wikis — ForgeShare','Mine wikier — ForgeShare');
   const entries=selected.map(id=>library.entries.find(e=>e.id===id));
-  const tiddlers=entries.map(e=>({title:prefix+e.id,caption:e.name,type:'text/plain',text:e.description,
-    tags:'[[ForgeShare wikibibliotek]]',modified,'forgeshare-name':e.name,'forgeshare-description':e.description,
-    'forgeshare-kind':e.kind,'forgeshare-snapshot':snapshot,
-    'forgeshare-address':includeAddresses && validShareURL(e.shareUrl)?e.shareUrl:''}));
-  // All user text remains in inert fields, never interpolated as wikitext/code.
   const da='[{$:/language}get[name]lowercase[]regexp[^da(-|$)]] [{$:/language}match[$:/languages/huwiki-da-DK]] [{$:/language}removeprefix[$:/languages/]lowercase[]regexp[^da(-|$)]] [{$:/language}match[da]] +[limit[1]count[]]';
   const label=(d,e)=>`<$text text={{{ [<danish>match[1]then[${d}]else[${e}]] }}}/>`;
-  tiddlers.unshift({title:'ForgeShare/Library/'+library.id,caption:'Mine wikier / My wikis',type:'text/vnd.tiddlywiki',modified,
-    list:entries.map(e=>'[['+prefix+e.id+']]').join(' '),'forgeshare-snapshot':snapshot,
-    text:`<$let danish={{{ ${da} }}} exportIndex="ForgeShare/Library/${library.id}">\n\n<h2>${label('Mine wikier','My wikis')}</h2>\n<p>${label('Eksporteret','Exported')}: <$text text={{{ [<exportIndex>get[forgeshare-snapshot]] }}}/></p>\n<p>${label('Dette er en valgt oversigt. Adresser er sidst kendte adresser; driftsstatus opdateres ikke automatisk.','This is a selected snapshot. Addresses are last known addresses; running status is not updated automatically.')}</p>\n\n<$list filter="[list<exportIndex>]">\n\n<div style="border-top:1px solid #ccc;padding:1em 0">\n<strong><$link><$text text={{!!forgeshare-name}}/></$link></strong>\n<p><$text text={{!!forgeshare-description}}/></p>\n<$list filter="[<currentTiddler>has[forgeshare-address]]" variable="entry"><a href={{!!forgeshare-address}} target="_blank" rel="noopener noreferrer">${label('Åbn delingsadresse','Open shared address')}</a></$list>\n</div>\n</$list>\n\n</$let>`});
+  const date=`<$list filter="[<danish>match[1]]" variable="language"><$view field="modified" format="date" template="DD.0MM.YYYY kl. 0hh:0mm"/></$list><$list filter="[<danish>match[0]]" variable="language"><$view field="modified" format="date" template="YYYY-0MM-DD 0hh:0mm"/></$list>`;
+  const address=`<$list filter="[<currentTiddler>has[forgeshare-address]]" variable="entry"><p><a href={{!!forgeshare-address}} target="_blank" rel="noopener noreferrer">${label('Åbn wikien','Open the wiki')}</a></p><p>${label('Adressen virker, når værtscomputeren er tændt og deler wikien. Du skal have adgang til det samme hjemmenetværk eller være inviteret via Tailscale.','The address works while the host computer is on and sharing. You need access to the same home network or an invitation through Tailscale.')}</p></$list>`;
+  // No user text is interpolated into wikitext: names, titles, descriptions and links are fields.
+  const tiddlers=entries.map(e=>({title:e.exportTitle || indexTitle+' / '+e.name,caption:e.name,type:'text/vnd.tiddlywiki',
+    text:`<$let danish={{{ ${da} }}}>
+<h2><$text text={{!!forgeshare-name}}/></h2>
+<p><$text text={{!!forgeshare-description}}/></p>
+<p>${label('Dette er oplysninger om en wiki i dit bibliotek. Selve wikiens indhold er ikke kopieret hertil.','This describes a wiki in your library. The wiki’s contents have not been copied here.')}</p>
+${address}
+<$list filter="[<currentTiddler>!has[forgeshare-address]]" variable="entry"><p>${label('Ingen delingsadresse er med i denne oversigt. Åbn wikien fra ForgeShare på den computer, hvor den ligger.','No shared address is included. Open the wiki in ForgeShare on the computer where it is stored.')}</p></$list>
+<p>${label('Oversigt gemt','Snapshot saved')}: ${date}</p>
+</$let>`,
+    tags:'[[ForgeShare wikibibliotek]]',modified,'forgeshare-id':e.id,'forgeshare-library-id':library.id,'forgeshare-name':e.name,'forgeshare-description':e.description,
+    'forgeshare-kind':e.kind,'forgeshare-snapshot':snapshot,
+    'forgeshare-address':includeAddresses && validShareURL(e.shareUrl)?e.shareUrl:''}));
+  const list=tiddlers.map(t=>t.title);
+  tiddlers.unshift({title:indexTitle,caption:indexTitle,type:'text/vnd.tiddlywiki',modified,list,
+    'forgeshare-library-id':library.id,'forgeshare-snapshot':snapshot,
+    text:`<$let danish={{{ ${da} }}} exportIndex=<<currentTiddler>>>
+
+<h2>${label('Mine wikier','My wikis')}</h2>
+<p>${label('Oversigt gemt','Snapshot saved')}: ${date}</p>
+<p>${label('Her er de wikier, du valgte i ForgeShare. Åbn en wikis oplysninger nedenfor. Oversigten opdateres, når du eksporterer og importerer igen.','These are the wikis you selected in ForgeShare. Open a wiki’s details below. Export and import again to update this overview.')}</p>
+
+<$list filter="[list<exportIndex>]">
+<div style="border-top:1px solid #ccc;padding:1em 0">
+<strong><$link><$text text={{!!forgeshare-name}}/></$link></strong>
+<p><$text text={{!!forgeshare-description}}/></p>
+<$list filter="[<currentTiddler>has[forgeshare-address]]" variable="entry"><a href={{!!forgeshare-address}} target="_blank" rel="noopener noreferrer">${label('Åbn delingsadresse','Open shared address')}</a></$list>
+</div>
+</$list>
+
+</$let>`});
   return tiddlers;
 }
 export async function writeLibraryExport(filename,library,ids,options={}) {
@@ -585,51 +654,78 @@ export async function writeLibraryExport(filename,library,ids,options={}) {
   // Exclusive creation avoids overwriting an existing wiki/export by surprise.
   await writeFile(filename,content,{flag:'wx',mode:0o600});
 }
+async function launchLibrary(action,encoded) {
+  if(action==='menu') {const startup=await readStartup();if(startup)await guiMain({startup});}
+  return libraryMain(action,encoded);
+}
 export async function libraryMain(action,encoded='',deps={}) {
   const root=deps.root||appFolder(),ask=deps.dialog||dialog;
   const report=deps.report||(value=>process.stdout.write(JSON.stringify(value)+'\n'));
   try {
     if(action==='list'){report(await listLibrary(root));return;}
+    if(action==='startup-status'){report({startup:await readStartup(root)});return;}
     const input=encoded?JSON.parse(Buffer.from(encoded,'base64').toString('utf8')):{};
-    if(action==='add') {
-      const choice=await ask('choice','Add a wiki / Tilføj en wiki',['Find wiki folders / Find wikimapper','HTML file / HTML-fil','Choose a wiki folder / Vælg en wikimappe','Search another folder / Søg i en anden mappe']);
-      if(choice.startsWith('Find') || choice.startsWith('Search')) {
-        if(choice.startsWith('Search'))deps={...deps,discoveryRoots:[await ask('folder','Choose where to look / Vælg, hvor der skal søges')]};
+    if(action==='help') {
+      const file=path.join(path.dirname(self),'help-'+uiLanguage+'.html');
+      await (deps.openHelp || (file=>execute(process.platform==='darwin'?'/usr/bin/open':process.platform==='win32'?'explorer.exe':'xdg-open',[file])))(file);
+    } else if(action==='startup') {
+      const library=await listLibrary(root),folders=library.entries.filter(e=>e.kind==='folder' && e.available);
+      const off=ui('Only open the library','Åbn kun biblioteket');
+      const picked=await ask('choice',ui('When ForgeShare opens','Når ForgeShare åbner'),[off,...folders.map(e=>e.name)]);
+      if(picked===off){await saveStartup(root,null);report({ok:true});return;}
+      const entry=folders.find(e=>e.name===picked);if(!entry)throw Object.assign(Error('Cancelled'),{cancelled:true});
+      const modes=[ui('Only this computer','Kun denne computer'),'Tailscale',ui('Home network','Hjemmenetværk')];
+      const modeIndex=modes.indexOf(await ask('choice',ui('Where should this wiki be available at startup?','Hvor skal wikien være tilgængelig ved opstart?'),modes));
+      if(modeIndex<0)throw Object.assign(Error('Cancelled'),{cancelled:true});
+      const logins=[ui('Ask for wiki login at startup','Bed om wiki-login ved opstart'),ui('Without wiki login','Uden wiki-login')];
+      const loginIndex=logins.indexOf(await ask('choice',ui('Passwords are not saved. Without login, people with network access can read and edit.','Adgangskoder gemmes ikke. Uden login kan personer med netværksadgang læse og redigere.'),logins));
+      if(loginIndex<0)throw Object.assign(Error('Cancelled'),{cancelled:true});
+      await ask('confirm',ui('Start this wiki each time ForgeShare opens?','Start denne wiki, hver gang ForgeShare åbner?')+'\n\n'+entry.name+'\n'+modes[modeIndex]+'\n'+logins[loginIndex]+'\n\n'+ui('To undo, choose Startup → Only open the library. Set up login startup in your system settings; see Help.','Fortryd under Opstart → Åbn kun biblioteket. Start ved login vælges i styresystemet; se Hjælp.'));
+      await saveStartup(root,{wikiId:entry.id,mode:['local','tailscale','lan'][modeIndex],allowAnonymous:loginIndex===1});
+    } else if(action==='add') {
+      const choice=await ask('choice',ui('Add a wiki', 'Tilføj en wiki'),[ui('Find wiki folders', 'Find wikimapper'),ui('HTML file','HTML-fil'),ui('Choose a wiki folder', 'Vælg en wikimappe'),ui('Search another folder', 'Søg i en anden mappe')]);
+      if(choice===ui('Find wiki folders','Find wikimapper') || choice===ui('Search another folder','Søg i en anden mappe')) {
+        if(choice===ui('Search another folder','Søg i en anden mappe'))deps={...deps,discoveryRoots:[await ask('folder',ui('Choose where to look', 'Vælg, hvor der skal søges'))]};
         await discoverLibrary(ask,root,deps);report({ok:true});return;
       }
       const kind=choice.startsWith('HTML')?'html':'folder';
-      const location=await ask(kind==='html'?'file':'folder','Choose your wiki / Vælg din wiki');
-      const name=await ask('text','Wiki name / Wikinavn',path.basename(location).replace(/\.html?$/i,''));
+      const location=await ask(kind==='html'?'file':'folder',ui('Choose your wiki', 'Vælg din wiki'));
+      const name=await ask('text',ui('Wiki name', 'Wikinavn'),path.basename(location).replace(/\.html?$/i,''));
       await addLibraryEntry({root,location,name,kind});
     } else if(action==='edit') {
       const entry=(await listLibrary(root)).entries.find(e=>e.id===input.id);if(!entry)fail('Wiki not found.', 'Wikien blev ikke fundet.');
-      const name=await ask('text','Wiki name / Wikinavn',entry.name);
-      const description=await ask('optional','Short description (optional) / Kort beskrivelse (valgfri)',entry.description);
+      const name=await ask('text',ui('Wiki name', 'Wikinavn'),entry.name);
+      const description=await ask('optional',ui('Short description (optional)', 'Kort beskrivelse (valgfri)'),entry.description);
       await editLibraryEntry(entry.id,{name,description},root);
     } else if(action==='export') {
-      const library=await listLibrary(root);libraryExport(library,input.ids);
-      const choice=await ask('choice','What should the overview include? No file paths or passwords are exported.\nHvad skal oversigten indeholde? Filstier og adgangskoder kommer aldrig med.',['Names and descriptions / Navne og beskrivelser','Also last shared addresses / Også seneste delingsadresser']);
-      const includeAddresses=choice.startsWith('Also');
-      await ask('confirm','Export only these wikis / Eksportér kun disse wikier:\n\n'+input.ids.map(id=>library.entries.find(e=>e.id===id).name).join('\n'));
-      const destination=await ask('save','Save a NEW overview file / Gem en NY oversigtsfil','ForgeShare-wikier.json');
+      let library=await listLibrary(root);libraryExport(library,input.ids);
+      const choice=await ask('choice',ui('What should the overview include? File paths and passwords stay on this computer.','Hvad skal oversigten indeholde? Filstier og adgangskoder bliver på computeren.'),[ui('Names and descriptions', 'Navne og beskrivelser'),ui('Also last shared addresses', 'Også seneste delingsadresser')]);
+      const includeAddresses=choice===ui('Also last shared addresses','Også seneste delingsadresser');
+      await ask('confirm',ui('Export these wikis:\n\n','Eksportér disse wikier:\n\n')+input.ids.map(id=>library.entries.find(e=>e.id===id).name).join('\n'));
+      const destination=await ask('save',ui('Save a NEW overview file', 'Gem en NY oversigtsfil'),'ForgeShare-wikier.json');
+      const title=await ask('text',ui('Name this overview in your wiki. Use a different name for a separate library.','Navngiv oversigten i wikien. Brug et andet navn til et andet bibliotek.'),library.exportTitle || ui('My wikis — ForgeShare','Mine wikier — ForgeShare'));
+      library=await nameLibraryExport(root,title);
       await writeLibraryExport(destination,library,input.ids,{includeAddresses});
-      await ask('info','Overview saved. Drag the JSON file into your wiki, review the import and choose Import. Open “Mine wikier / My wikis”.\n\nOversigten er gemt. Træk JSON-filen ind i din wiki, gennemse importen, og vælg Importér. Åbn “Mine wikier / My wikis”.');
+      await ask('info',ui('Overview saved. Drag the file into your wiki and choose Import. Open the overview using the name you chose.','Oversigten er gemt. Træk filen ind i din wiki, og vælg Importér. Åbn oversigten under det navn, du valgte.'));
     } else if(action==='menu') {
-      const library=await listLibrary(root),add='＋ Add a wiki / Tilføj en wiki',exp='Export selected overview / Eksportér valgt oversigt';
-      const picked=await ask('choice','Wiki library / Wikibibliotek',[add,exp,...library.entries.map(e=>'Wiki: '+e.name)]);
+      const library=await listLibrary(root),add=ui('＋ Add a wiki', 'Tilføj en wiki'),exp=ui('Export selected overview','Eksportér valgt oversigt');
+      const help=ui('Help','Hjælp'),startup=ui('Startup','Opstart');
+      const picked=await ask('choice',ui('Wiki library','Wikibibliotek'),[add,exp,help,startup,...library.entries.map(e=>'Wiki: '+e.name)]);
+      if(picked===help)return libraryMain('help','',deps);
+      if(picked===startup)return libraryMain('startup','',deps);
       if(picked===add)return libraryMain('add','',deps);
-      if(picked===exp){const names=(await ask('choices','Select wikis to export / Vælg wikier til eksport',library.entries.map(e=>e.name))).split('\n');const ids=library.entries.filter(e=>names.includes(e.name)).map(e=>e.id);return libraryMain('export',Buffer.from(JSON.stringify({ids})).toString('base64'),deps);}
+      if(picked===exp){const names=(await ask('choices',ui('Select wikis to export', 'Vælg wikier til eksport'),library.entries.map(e=>e.name))).split('\n');const ids=library.entries.filter(e=>names.includes(e.name)).map(e=>e.id);return libraryMain('export',Buffer.from(JSON.stringify({ids})).toString('base64'),deps);}
       const entry=library.entries.find(e=>'Wiki: '+e.name===picked);if(!entry)return;
-      const op=await ask('choice',entry.name,['Open / Åbn','Edit name/description / Redigér navn/beskrivelse',...(entry.kind==='folder'?['Share / Del']:[])]);
-      if(op.startsWith('Edit'))return libraryMain('edit',Buffer.from(JSON.stringify({id:entry.id})).toString('base64'),deps);
+      const op=await ask('choice',entry.name,[ui('Open', 'Åbn'),ui('Edit name/description','Redigér navn/beskrivelse'),...(entry.kind==='folder'?[ui('Share', 'Del')]:[])]);
+      if(op===ui('Edit name/description','Redigér navn/beskrivelse'))return libraryMain('edit',Buffer.from(JSON.stringify({id:entry.id})).toString('base64'),deps);
       if(entry.kind==='html'){await (deps.openFile || (file=>execute('xdg-open',[file])))(entry.location);return;}
-      return guiMain({...deps,libraryId:entry.id,localOnly:op.startsWith('Open')});
+      return guiMain({...deps,libraryId:entry.id,localOnly:op===ui('Open','Åbn')});
     } else fail('Unknown library action.', 'Ukendt biblioteksfunktion.');
     report({ok:true});
   } catch(error) {
     if(error.cancelled){report({cancelled:true});return;}
     if(action==='list')throw error;
-    await ask('info',error.code==='EEXIST'?'Choose a new file name. The existing file was not replaced.\nVælg et nyt filnavn. Den eksisterende fil blev ikke overskrevet.':error.message);
+    await ask('info',error.code==='EEXIST'?ui('Choose a new file name. The existing file was not replaced.', 'Vælg et nyt filnavn. Den eksisterende fil blev ikke overskrevet.'):error.message);
     report({error:true});
   }
 }
@@ -722,13 +818,29 @@ function worker() {
 }
 if (process.argv[1] && pathToFileURL(path.resolve(process.argv[1])).href === import.meta.url) {
   if (process.argv[2] === '--worker') worker();
-  else (process.argv.includes('--library') ? libraryMain(process.argv[process.argv.indexOf('--library')+1],process.argv[process.argv.indexOf('--library')+2]) : quiet ? guiMain() : main()).catch(error => { console.error('\nForgeShare stopped / stoppet:\n' + error.message); process.exitCode = 1; });
+  else { uiLanguage = await detectLanguage(); (process.argv.includes('--library') ? launchLibrary(process.argv[process.argv.indexOf('--library')+1],process.argv[process.argv.indexOf('--library')+2]) : quiet ? guiMain() : main()).catch(error => { console.error('\nForgeShare stopped / stoppet:\n' + error.message); process.exitCode = 1; }); }
 }
 
 // Native dialogs keep the ordinary flow out of the terminal. Arguments are data,
 // never interpolated into shell commands. No browser or website is opened.
 export function dialogCommand(platform, kind, message, initial = '') {
   if (platform === 'darwin') {
+    if(kind==='choice' && initial.length<=6) {
+      // AppKit's NSAlert buttons are visible before focus, support keyboard activation,
+      // and return an index. All labels travel as argv data, never executable source.
+      const script=`ObjC.import('AppKit');
+function run(argv) {
+  var app=$.NSApplication.sharedApplication; app.setActivationPolicy(1);
+  var alert=$.NSAlert.alloc.init; alert.messageText='ForgeShare'; alert.informativeText=argv[0];
+  for(var i=2;i<argv.length;i++)alert.addButtonWithTitle(argv[i]);
+  var cancel=alert.addButtonWithTitle(argv[1]); cancel.keyEquivalent='\\u001b';
+  app.activateIgnoringOtherApps(true);
+  var selected=Number(alert.runModal)-1000;
+  if(selected<0 || selected>=argv.length-2)throw new Error('Cancelled (-128)');
+  return argv[selected+2];
+}`;
+      return ['/usr/bin/osascript',['-l','JavaScript','-e',script,'--',message,ui('Cancel','Annuller'),...initial]];
+    }
     const actions = {
       choices: 'set picked to choose from list (items 2 thru -1 of argv) with prompt (item 1 of argv) with title "ForgeShare" with multiple selections allowed\nif picked is false then error number -128\nset AppleScript\'s text item delimiters to linefeed\nreturn picked as text',
       save: 'return POSIX path of (choose file name with prompt (item 1 of argv) default name (item 2 of argv))',
@@ -737,21 +849,21 @@ export function dialogCommand(platform, kind, message, initial = '') {
       file: 'return POSIX path of (choose file with prompt (item 1 of argv) of type {"html"})',
       text: 'return text returned of (display dialog (item 1 of argv) default answer (item 2 of argv) with title "ForgeShare")',
       password: 'return text returned of (display dialog (item 1 of argv) default answer "" with hidden answer with title "ForgeShare")',
-      confirm: 'display dialog (item 1 of argv) buttons {"Cancel / Annuller", "Continue / Fortsæt"} default button 2 cancel button 1 with title "ForgeShare"',
+      confirm: 'display dialog (item 1 of argv) buttons {"CANCEL_LABEL", "CONTINUE_LABEL"} default button 2 cancel button 1 with title "ForgeShare"',
       info: 'display dialog (item 1 of argv) buttons {"OK"} default button 1 with title "ForgeShare"',
       choice: 'set picked to choose from list (items 2 thru -1 of argv) with prompt (item 1 of argv) with title "ForgeShare"\nif picked is false then error number -128\nreturn item 1 of picked'
     };
-    return ['/usr/bin/osascript', ['-e', `on run argv\n${actions[kind]}\nend run`, '--', message, ...(['choice','choices'].includes(kind) ? initial : [initial])]];
+    return ['/usr/bin/osascript', ['-e', `on run argv\n${actions[kind].replace('CANCEL_LABEL',ui('Cancel','Annuller')).replace('CONTINUE_LABEL',ui('Continue','Fortsæt'))}\nend run`, '--', message, ...(['choice','choices'].includes(kind) ? initial : [initial])]];
   }
   if (platform === 'win32') {
     // Data travels on stdin, keeping paths/text out of code and avoiding Windows' command-line size limit.
-    const data = Buffer.from(JSON.stringify({kind, message, initial})).toString('base64');
+    const data = Buffer.from(JSON.stringify({kind, message, initial,cancel:ui('Cancel','Annuller')})).toString('base64');
     const script = `$env:PSModulePath=$PSHOME+'\\Modules'; $ErrorActionPreference='Stop'; Add-Type -AssemblyName System.Windows.Forms; Add-Type -AssemblyName Microsoft.VisualBasic
 $d = [Text.Encoding]::UTF8.GetString([Convert]::FromBase64String([Console]::In.ReadToEnd())) | ConvertFrom-Json
 [Console]::OutputEncoding = [Text.Encoding]::UTF8
 switch ($d.kind) {
  'choices' { $f=New-Object Windows.Forms.Form; $f.Text='ForgeShare'; $f.Width=760; $f.Height=470; $f.StartPosition='CenterScreen'; $l=New-Object Windows.Forms.Label; $l.Text=$d.message; $l.SetBounds(15,15,710,100); $list=New-Object Windows.Forms.CheckedListBox; $list.CheckOnClick=$true; $list.HorizontalScrollbar=$true; $list.SetBounds(15,120,710,250); foreach($item in $d.initial){[void]$list.Items.Add([string]$item)}; $b=New-Object Windows.Forms.Button; $b.Text='OK'; $b.SetBounds(620,385,100,30); $b.DialogResult='OK'; $f.Controls.AddRange(@($l,$list,$b)); $f.AcceptButton=$b; if($f.ShowDialog() -ne 'OK' -or $list.CheckedItems.Count -eq 0){exit 2}; foreach($item in $list.CheckedItems){Write-Output $item} }
- 'choice' { $f=New-Object Windows.Forms.Form; $f.Text='ForgeShare'; $f.Width=570; $f.Height=400; $f.StartPosition='CenterScreen'; $l=New-Object Windows.Forms.Label; $l.Text=$d.message; $l.SetBounds(15,15,520,60); $list=New-Object Windows.Forms.ListBox; $list.SetBounds(15,80,520,220); foreach ($item in $d.initial) { [void]$list.Items.Add([string]$item) }; $list.SelectedIndex=0; $b=New-Object Windows.Forms.Button; $b.Text='OK'; $b.SetBounds(430,315,100,30); $b.DialogResult='OK'; $f.Controls.AddRange(@($l,$list,$b)); $f.AcceptButton=$b; if ($f.ShowDialog() -ne 'OK' -or $null -eq $list.SelectedItem) { exit 2 }; Write-Output $list.SelectedItem }
+ 'choice' { $f=New-Object Windows.Forms.Form; $f.Text='ForgeShare'; $f.ClientSize=New-Object Drawing.Size(560,420); $f.StartPosition='CenterScreen'; $f.Font=New-Object Drawing.Font('Segoe UI',10); $l=New-Object Windows.Forms.Label; $l.Text=$d.message; $l.SetBounds(20,15,520,75); $panel=New-Object Windows.Forms.FlowLayoutPanel; $panel.SetBounds(20,95,520,265); $panel.FlowDirection='TopDown'; $panel.WrapContents=$false; $panel.AutoScroll=$true; foreach($item in $d.initial){$b=New-Object Windows.Forms.Button; $b.Text=[string]$item; $b.Tag=[string]$item; $b.Size=New-Object Drawing.Size(490,48); $b.Margin=New-Object Windows.Forms.Padding(0,0,0,10); $b.Add_Click({param($sender,$event) $f.Tag=$sender.Tag; $f.DialogResult='OK'; $f.Close()}); $panel.Controls.Add($b)}; $cancel=New-Object Windows.Forms.Button; $cancel.Text=$d.cancel; $cancel.SetBounds(425,375,115,30); $cancel.DialogResult='Cancel'; $f.CancelButton=$cancel; $f.Controls.AddRange(@($l,$panel,$cancel)); if($f.ShowDialog() -ne 'OK'){exit 2}; Write-Output $f.Tag }
  'save' { $p=New-Object Windows.Forms.SaveFileDialog; $p.Title=$d.message; $p.Filter='Wiki overview|*.json'; $p.FileName=$d.initial; $p.DefaultExt='json'; if($p.ShowDialog() -ne 'OK') {exit 2}; Write-Output $p.FileName }
  'optional' { $f=New-Object Windows.Forms.Form; $f.Text='ForgeShare'; $f.Width=540; $f.Height=200; $l=New-Object Windows.Forms.Label; $l.Text=$d.message; $l.SetBounds(15,15,490,40); $t=New-Object Windows.Forms.TextBox; $t.Text=$d.initial; $t.SetBounds(15,60,490,25); $b=New-Object Windows.Forms.Button; $b.Text='OK'; $b.SetBounds(400,100,100,30); $b.DialogResult='OK'; $f.Controls.AddRange(@($l,$t,$b)); $f.AcceptButton=$b; if($f.ShowDialog() -ne 'OK') {exit 2}; Write-Output $t.Text }
  'folder' { $p = New-Object Windows.Forms.FolderBrowserDialog; $p.Description = $d.message; if ($p.ShowDialog() -ne 'OK') { exit 2 }; Write-Output $p.SelectedPath }
@@ -767,19 +879,19 @@ switch ($d.kind) {
     const common = ['--title=ForgeShare'];
     const flags = {
       choices: ['--list','--checklist','--separator=\n','--text='+message,'--column=','--column=Wiki','--height=400',...(Array.isArray(initial)?initial:[]).flatMap(name=>['FALSE',name])],
-      choice: ['--list', '--text=' + message, '--column=Wiki', '--height=400', ...(Array.isArray(initial) ? initial : [])],
+      choice: ['--list','--radiolist','--text='+message,'--column=','--column='+ui('Choose','Vælg'),'--height=400',...(Array.isArray(initial)?initial:[]).flatMap((name,index)=>[index===0?'TRUE':'FALSE',name])],
       save: ['--file-selection','--save','--filename='+initial,'--title='+message],
       optional: ['--entry','--text='+message,'--entry-text='+initial],
       folder: ['--file-selection', '--directory', '--title=' + message],
       file: ['--file-selection', '--file-filter=Wiki | *.html *.htm', '--title=' + message],
       text: ['--entry', '--text=' + message, '--entry-text=' + initial],
       password: ['--entry', '--hide-text', '--text=' + message],
-      confirm: ['--question', '--text=' + message, '--ok-label=Continue / Fortsæt', '--cancel-label=Cancel / Annuller'],
+      confirm: ['--question', '--text=' + message, '--ok-label='+ui('Continue','Fortsæt'), '--cancel-label='+ui('Cancel','Annuller')],
       info: ['--info', '--text=' + message]
     };
     return ['zenity', [...common, ...flags[kind]]];
   }
-  throw Error('Supported systems: Mac, Windows, Linux / Understøttede systemer: Mac, Windows, Linux.');
+  throw Error(ui('Supported systems: Mac, Windows, Linux','Understøttede systemer: Mac, Windows, Linux.'));
 }
 export async function dialog(kind, message, initial = '', signal) {
   const [command, args, input] = dialogCommand(process.platform, kind, message, initial);
@@ -791,13 +903,13 @@ export async function dialog(kind, message, initial = '', signal) {
     });
     return stdout.trimEnd();
   } catch (error) {
-    if (error.code === 'ENOENT') throw Error('Graphical dialogs are unavailable. On Linux, install Zenity using your software manager. / Grafiske dialoger mangler. På Linux installeres Zenity via programbutikken.');
+    if (error.code === 'ENOENT') throw Error(ui('Graphical dialogs are unavailable. On Linux, install Zenity using your software manager.', 'Grafiske dialoger mangler. På Linux installeres Zenity via programbutikken.'));
     const cancelled = error.name === 'AbortError' ||
       (process.platform === 'win32' && error.code === 2) ||
       (process.platform === 'darwin' && String(error.stderr).includes('(-128)')) ||
       (process.platform === 'linux' && error.code === 1);
-    if (cancelled) throw Object.assign(Error('Cancelled / Annulleret'), {cancelled: true});
-    throw new Error('Could not display the dialog. / Kunne ikke vise dialogboksen.', {cause: error});
+    if (cancelled) throw Object.assign(Error(ui('Cancelled', 'Annulleret')), {cancelled: true});
+    throw new Error(ui('Could not display the dialog.', 'Kunne ikke vise dialogboksen.'), {cause: error});
   }
 }
 function appFolder() {
@@ -808,7 +920,7 @@ function appFolder() {
 export async function installRuntime(ask = dialog) {
   const destination = path.join(appFolder(), 'tiddlywiki-5.4.1');
   try { return await validateRuntime(path.join(destination, 'node_modules/tiddlywiki')); } catch {}
-  await ask('confirm', 'TiddlyWiki is needed to run your wiki. Download and install tested version 5.4.1 here?\n\nTiddlyWiki skal bruges til at køre din wiki. Hent og installer den testede version 5.4.1 her?\n\n' + destination + '\n\nRequires internet. No global installation; no install scripts. / Kræver internet. Ingen global installation eller installationsscripts.');
+  await ask('confirm', ui('TiddlyWiki is needed to run your wiki. Download and install tested version 5.4.1 here?', 'TiddlyWiki skal bruges til at køre din wiki. Hent og installer den testede version 5.4.1 her?') + '\n\n' + destination + ui('\n\nRequires internet. No global installation; no install scripts.', '\nKræver internet. Ingen global installation eller installationsscripts.'));
   const candidates = [path.resolve(path.dirname(process.execPath), '../lib/node_modules/npm/bin/npm-cli.js'),
     path.join(path.dirname(process.execPath), 'node_modules/npm/bin/npm-cli.js')];
   let npm;
@@ -831,7 +943,7 @@ export async function privateSessionDirectory() {
       await execute('powershell.exe', ['-NoProfile', '-NonInteractive', '-EncodedCommand', Buffer.from(protect, 'utf16le').toString('base64')], {windowsHide: true});
     } catch (cause) {
       await rm(directory, {recursive: true, force: true});
-      throw new Error('Could not protect your login file. Nothing shared.\nKunne ikke beskytte din loginfil. Intet delt.', {cause});
+      throw new Error(ui('Could not protect your login file. Nothing shared.', 'Kunne ikke beskytte din loginfil. Intet delt.'), {cause});
     }
   }
   return directory;
@@ -840,8 +952,8 @@ export async function guiMain(deps = {}) {
   const shutdown = new AbortController();
   const ask = (kind, message, initial = '', signal = shutdown.signal) => (deps.dialog || dialog)(kind, message, initial, signal);
   const root = deps.root || appFolder();
-  const localOnly=deps.localOnly ?? process.argv.includes('--local');
-  const libraryId=deps.libraryId || (process.argv.includes('--profile')?process.argv[process.argv.indexOf('--profile')+1]:null);
+  let localOnly=deps.localOnly ?? process.argv.includes('--local');
+  let libraryId=deps.libraryId || (process.argv.includes('--profile')?process.argv[process.argv.indexOf('--profile')+1]:null);
   let session, privateDir;
   const children = new Set();
   let interrupted = false;
@@ -854,12 +966,14 @@ export async function guiMain(deps = {}) {
   if (appMode) { inputStream.on('data', inputData); inputStream.once('end', interrupt); }
   for (const signal of ['SIGINT', 'SIGTERM', 'SIGHUP']) process.on(signal, interrupt);
   try {
-    await ask('confirm', localOnly ? 'Open this wiki only on your computer. You choose whether to use wiki login.\nÅbn kun wikien på denne computer. Du vælger selv, om der skal være wiki-login.' : 'Share a wiki. Choose the network and whether to use wiki login. Nothing starts before the final confirmation.\nDel en wiki. Vælg netværk og eventuelt wiki-login. Intet starter før den sidste bekræftelse.');
+    const startup=deps.startup || (process.argv.includes('--startup')?await readStartup(root):null);
+    if(startup){validateStartup(startup,await loadLibrary(root));libraryId=startup.wikiId;localOnly=startup.mode==='local';}
+    if(!startup)await ask('confirm', localOnly ? ui('Open this wiki only on your computer. You choose whether to use wiki login.', 'Åbn kun wikien på denne computer. Du vælger selv, om der skal være wiki-login.') : ui('Share a wiki. Choose the network and whether to use wiki login. Nothing starts before the final confirmation.', 'Del en wiki. Vælg netværk og eventuelt wiki-login. Intet starter før den sidste bekræftelse.'));
     if (Number(process.versions.node.split('.')[0]) < 20) fail('Install Node.js 20 or later.', 'Installer Node.js 20 eller nyere.');
-    let mode='local',lanHost;
-    if(!localOnly) {
-      const methods=['Tailscale — invited people / inviterede personer','Home network — same Wi-Fi or network / Hjemmenetværk — samme Wi-Fi eller netværk'];
-      const method=await ask('choice','Where should the wiki be shared? / Hvor skal wikien deles?',methods);
+    let mode=startup?.mode || 'local',lanHost;
+    if(!localOnly && !startup) {
+      const methods=[ui('Tailscale — invited people', 'Tailscale — inviterede personer'),ui('Home network — same Wi-Fi or network', 'Hjemmenetværk — samme Wi-Fi eller netværk')];
+      const method=await ask('choice',ui('Where should the wiki be shared?','Hvor skal wikien deles?'),methods);
       if(!methods.includes(method))throw Object.assign(Error('Cancelled'),{cancelled:true});
       mode=method===methods[0]?'tailscale':'lan';
     }
@@ -869,40 +983,41 @@ export async function guiMain(deps = {}) {
       if(addresses.length===1)lanHost=addresses[0].address;
       else {
         const choices=addresses.map(e=>e.name+' — '+e.address);
-        const picked=await ask('choice','Choose the network your guests use / Vælg det netværk, gæsterne bruger',choices);
+        const picked=await ask('choice',ui('Choose the network your guests use', 'Vælg det netværk, gæsterne bruger'),choices);
         lanHost=addresses[choices.indexOf(picked)]?.address;
         if(!lanHost)throw Object.assign(Error('Cancelled'),{cancelled:true});
       }
     }
     const tailscale = mode==='tailscale' ? await (deps.findTailscale || findTailscale)() : undefined;
     const installed = await (deps.findTiddlyWiki || findTiddlyWiki)();
+    if(startup && !installed)fail('Set up TiddlyWiki using Open or Share first. Automatic startup did not install anything.','Klargør først TiddlyWiki med Åbn eller Del. Automatisk opstart har ikke installeret noget.');
     const runtime = installed ? await validateRuntime(installed) : await (deps.installRuntime || installRuntime)(ask);
     const libraryEntry=libraryId?(await listLibrary(root)).entries.find(e=>e.id===libraryId):null;
     if(libraryId && (!libraryEntry || libraryEntry.kind!=='folder'))fail('Choose a server wiki folder.', 'Vælg en serverwikimappe.');
     const choices = (await readRegistry(root)).wikis;
-    const add = '＋ Add another wiki / Tilføj en wiki';
-    const picked = libraryEntry ? '' : choices.length ? await ask('choice', 'Choose your wiki / Vælg din wiki', [...choices.map(item => 'Wiki: ' + item.name), add]) : add;
+    const add = ui('＋ Add another wiki', 'Tilføj en wiki');
+    const picked = libraryEntry ? '' : choices.length ? await ask('choice', ui('Choose your wiki', 'Vælg din wiki'), [...choices.map(item => 'Wiki: ' + item.name), add]) : add;
     let profile = libraryEntry ? await registerWiki({root,wiki:libraryEntry.location,name:libraryEntry.name,tailscale,localOnly:mode!=='tailscale'},deps) : choices.find(item => 'Wiki: ' + item.name === picked);
-    if (!profile && picked !== add) throw Error('Unknown wiki selection / Ukendt wikivalg.');
+    if (!profile && picked !== add) throw Error(ui('Unknown wiki selection', 'Ukendt wikivalg.'));
     if (!profile) {
-      const wiki = await realpath(await ask('folder', 'Choose the prepared wiki folder / Vælg den forberedte wikimappe'));
+      const wiki = await realpath(await ask('folder', ui('Choose the prepared wiki folder', 'Vælg den forberedte wikimappe')));
       try { await access(path.join(wiki, 'tiddlywiki.info')); }
       catch { fail('This is not a prepared wiki folder. Follow “First setup” in ForgeShare; an HTML file must first be copied into a server wiki.', 'Dette er ikke en forberedt wikimappe. Følg “Første opsætning” i ForgeShare; en HTML-fil skal først kopieres til en serverwiki.'); }
-      const name = await ask('text', 'Give this wiki a name, for example Family or Garden.\nGiv wikien et navn, for eksempel Familie eller Have.', path.basename(wiki));
+      const name = await ask('text', ui('Give this wiki a name, for example Family or Garden.', 'Giv wikien et navn, for eksempel Familie eller Have.'), path.basename(wiki));
       profile = await registerWiki({root, wiki, name, tailscale, localOnly:mode!=='tailscale'}, deps);
     }
     const displayName=libraryEntry?.name||profile.name;
     report({event:'selected',name:displayName,...(libraryId?{id:libraryId}:{})});
-    const withLogin='With wiki login / Med wiki-login',withoutLogin='Without wiki login / Uden wiki-login';
-    const login=await ask('choice','Wiki login? Without it, everyone with network access can read and edit.\nWiki-login? Uden login kan alle med netværksadgang læse og redigere.',mode==='tailscale'?[withLogin,withoutLogin]:[withoutLogin,withLogin]);
+    const withLogin=ui('With wiki login', 'Med wiki-login'),withoutLogin=ui('Without wiki login', 'Uden wiki-login');
+    const login=startup ? (startup.allowAnonymous?withoutLogin:withLogin) : await ask('choice',ui('Wiki login? Without it, everyone with network access can read and edit.', 'Wiki-login? Uden login kan alle med netværksadgang læse og redigere.'),mode==='tailscale'?[withLogin,withoutLogin]:[withoutLogin,withLogin]);
     if(![withLogin,withoutLogin].includes(login))throw Object.assign(Error('Cancelled'),{cancelled:true});
     const allowAnonymous=login===withoutLogin;
     let files;
     if(allowAnonymous)files=await validateWikiFolder(profile.wiki);
     else {
-      const username=await ask('text','Choose a wiki username / Vælg wikiens brugernavn','wiki');
-      const password=await ask('password','Choose a password. You decide its length. / Vælg en adgangskode. Du bestemmer længden.');
-      const confirm=await ask('password','Repeat the password / Gentag adgangskoden');
+      const username=await ask('text',ui('Choose a wiki username', 'Vælg wikiens brugernavn'),'wiki');
+      const password=await ask('password',ui('Choose a password. You decide its length.', 'Vælg en adgangskode. Du bestemmer længden.'));
+      const confirm=await ask('password',ui('Repeat the password', 'Gentag adgangskoden'));
       if(password!==confirm)fail('Passwords did not match. Please start again.', 'Adgangskoderne var forskellige. Start igen.');
       validateCredentials(`username,password\n${username},${password}\n`);
       privateDir=await privateSessionDirectory();
@@ -910,10 +1025,10 @@ export async function guiMain(deps = {}) {
       await writeFile(credentials,`username,password\n${username},${password}\n`,{mode:0o600,flag:'wx'});
       files=await validateFiles(profile.wiki,credentials);
     }
-    const network=mode==='local'?'Only this computer / Kun denne computer':mode==='lan'?'Home network / Hjemmenetværk':'Tailscale';
-    const accessText=allowAnonymous?'No wiki login — anyone with network access can read and edit.\nUden wiki-login — alle med netværksadgang kan læse og redigere.':'Wiki login is required. / Wiki-login er påkrævet.';
-    const note=mode==='lan'?'\n\nFor your trusted home network. This connection uses HTTP, without encryption.\nTil dit eget betroede hjemmenetværk. Forbindelsen bruger HTTP uden kryptering.':mode==='tailscale'?`\n\nAccess is controlled in Tailscale. Limit guests to this wiki (TCP ${profile.httpsPort}).\nAdgangen styres i Tailscale. Begræns gæster til denne wiki (TCP ${profile.httpsPort}).`:'';
-    await ask('confirm',`Start “${displayName}”?\n${network}\n\n${accessText}${note}`);
+    const network=mode==='local'?ui('Only this computer', 'Kun denne computer'):mode==='lan'?ui('Home network', 'Hjemmenetværk'):'Tailscale';
+    const accessText=allowAnonymous?ui('No wiki login — anyone with network access can read and edit.', 'Uden wiki-login — alle med netværksadgang kan læse og redigere.'):ui('Wiki login is required.', 'Wiki-login er påkrævet.');
+    const note=mode==='lan'?'\n\n'+ui('For your trusted home network. This connection uses HTTP, without encryption.', 'Til dit eget betroede hjemmenetværk. Forbindelsen bruger HTTP uden kryptering.'):mode==='tailscale'?ui(`\n\nAccess is controlled in Tailscale. Limit guests to this wiki (TCP ${profile.httpsPort}).`,`\n\nAdgangen styres i Tailscale. Begræns gæster til denne wiki (TCP ${profile.httpsPort}).`):'';
+    if(!startup)await ask('confirm',`Start “${displayName}”?\n${network}\n\n${accessText}${note}`);
     if (interrupted) return;
     session = await startNamedSession(profile, {...files, boot: runtime.boot, tailscale, root, localOnly,lanHost,allowAnonymous}, {
       ...deps,
@@ -926,12 +1041,12 @@ export async function guiMain(deps = {}) {
     if (appMode) { await session.finished; return; }
     const statusDialog = new AbortController();
     session.finished.then(() => statusDialog.abort());
-    await ask('text',`“${displayName}” — ${network}\n${accessText}\n\nCopy the address. Keep this window open; OK/Cancel stops this wiki.\nKopiér adressen. Lad vinduet stå åbent; OK/Annuller stopper denne wiki.`,session.url,statusDialog.signal);
+    await ask('text',`“${displayName}” — ${network}\n${accessText}\n\n${ui('Copy the address. Keep this window open; OK/Cancel stops this wiki.','Kopiér adressen. Lad vinduet stå åbent; OK/Annuller stopper denne wiki.')}`,session.url,statusDialog.signal);
   } catch (error) {
     if (session) await session.stop();
     if (!error.cancelled && !interrupted) {
       // Avoid displaying subprocess output that might contain sensitive content.
-      await ask('info', 'ForgeShare stopped. Nothing new is being shared.\nForgeShare stoppede. Ingen ny deling er aktiv.\n\n' + (error.cmd ? 'A required program failed. Check installation and Tailscale HTTPS setup. / Et nødvendigt program fejlede. Kontroller installation og Tailscale HTTPS.' : error.message));
+      await ask('info', ui('ForgeShare stopped. Nothing new is being shared.', 'ForgeShare stoppede. Ingen ny deling er aktiv.') + '\n\n' + (error.cmd ? ui('A required program failed. Check installation and Tailscale HTTPS setup.', 'Et nødvendigt program fejlede. Kontroller installation og Tailscale HTTPS.') : error.message));
     }
   } finally {
     if (session) await session.stop();

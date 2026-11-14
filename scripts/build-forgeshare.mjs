@@ -88,6 +88,8 @@ export async function build() {
     ]
   };
   for (const [platform, files] of Object.entries(packages)) {
+    const helpPrefix=platform==='mac'?app+'Resources/':'';
+    for(const lang of ['da','en'])files.push({name:helpPrefix+'help-'+lang+'.html',text:await read('helper/help-'+lang+'.html')});
     downloads[platform] = zip([...files,{name:'README.txt',text:instructions}]);
     const title = base + '/download/' + platform;
     tiddlers[title] = {title, type: 'text/plain', text: 'data:application/zip;base64,' + downloads[platform].toString('base64')};
@@ -95,7 +97,7 @@ export async function build() {
   const title = base + '/download/script';
   tiddlers[title] = {title, type: 'text/plain', text: 'data:application/octet-stream;base64,' + Buffer.from(script).toString('base64')};
   return {plugin: {title: base, name: 'ForgeShare', description: 'Tailscale collaboration / Tailscale-samarbejde',
-    author: 'HUWiki', version: '0.1.4', list: 'readme', 'plugin-type': 'plugin', type: 'application/json',
+    author: 'HUWiki', version: '0.1.5', list: 'readme', 'plugin-type': 'plugin', type: 'application/json',
     'core-version': '>=5.4.1', 'studio-category': 'Collaboration', 'studio-tags': 'Tailscale Node.js offline',
     'studio-source-titles': Object.keys(tiddlers).map(x => '[[' + x + ']]').join(' '),
     text: JSON.stringify({tiddlers})}, downloads};

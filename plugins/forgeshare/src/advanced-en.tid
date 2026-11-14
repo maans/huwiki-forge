@@ -79,7 +79,7 @@ Use TiddlyWiki's built-in ''Download save''/HTML export to keep a standalone off
 
 !! Sources and version
 
-ForgeShare 0.1.4. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
+ForgeShare 0.1.5. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
@@ -95,3 +95,7 @@ Tailscale permissions are additive. A narrow rule for one wiki’s HTTPS port do
 
 * [[Tailscale: sharing a machine and controlling access|https://tailscale.com/docs/features/sharing]]
 * [[Tailscale grants|https://tailscale.com/docs/reference/syntax/grants]]
+
+!! Help and startup
+
+The helper's ''Help'' opens an included offline guide. Under ''Startup'', choose one wiki and network to start when ForgeShare opens. With wiki login enabled, enter the password each time; it is not saved. Choose ''Only open the library'' to disable automatic wiki startup. Help also explains how to add or remove the app from OS login startup. Importing the plugin enables none of this automatically.

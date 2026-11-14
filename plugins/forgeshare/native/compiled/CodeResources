@@ -6,11 +6,19 @@
 	<dict>
 		<key>Resources/ForgeShare.icns</key>
 		<data>
-		tB9m/b8ZPz+IfL77Wsmo6J1X9Yk=
+		OEf3unNeHXo0HumypDG57Mfo0a8=
 		</data>
 		<key>Resources/ForgeShare.mjs</key>
 		<data>
-		rRwfXiK0fi8Yh+ju85wo6yXUCbk=
+		Wiae2FG06No2ZigC0hy3/U7kfqU=
+		</data>
+		<key>Resources/help-da.html</key>
+		<data>
+		xcgtojb8drJ/Fo9qIgz3e2GuijA=
+		</data>
+		<key>Resources/help-en.html</key>
+		<data>
+		QAZM/HTpL78Wi1AU4lMGAg1Kg04=
 		</data>
 	</dict>
 	<key>files2</key>
@@ -19,14 +27,28 @@
 		<dict>
 			<key>hash2</key>
 			<data>
-			SIctJa/x0ywMDr/n7ghj7xAu4wUMe9b8Kvrv1ryX91w=
+			8MLGhUJnuwr26kN3MF/dXDEN4AW/kGEYqm9qpo6VjLI=
 			</data>
 		</dict>
 		<key>Resources/ForgeShare.mjs</key>
 		<dict>
 			<key>hash2</key>
 			<data>
-			i0jWCIe48RGWVJX87ziMK7c5Z1IYpSV/Ol8+5ePdrsA=
+			5EGBEIjJm+RM1BWc+SSGvumLLHlQ5Y8V5pV6m1u71uc=
+			</data>
+		</dict>
+		<key>Resources/help-da.html</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			OFHfkar8yZcGlXcQ/GnvDRUBP/COGOGOckGTfuMAXK4=
+			</data>
+		</dict>
+		<key>Resources/help-en.html</key>
+		<dict>
+			<key>hash2</key>
+			<data>
+			7oP5knQj0zNUBKE03pQzMJxDOxxCmnDELUJqCRYU7Gg=
 			</data>
 		</dict>
 	</dict>

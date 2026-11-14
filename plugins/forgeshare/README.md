@@ -1,6 +1,6 @@
 # ForgeShare / Tailscale-samarbejde
 
-Optional, standalone TiddlyWiki 5 plugin, `0.1.4`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
+Optional, standalone TiddlyWiki 5 plugin, `0.1.5`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
 
 Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeShare** or the plugin readme. Forge's **Extra plugins** catalog lists it as an optional test package; no Edition includes it automatically. HTML/offline use and native savers remain available.
 
@@ -79,7 +79,7 @@ For later trusted Mac distribution: enroll in the Apple Developer Program, creat
 
 Windows distribution can later use Authenticode signing; even a valid signature does not promise immediate SmartScreen reputation. See [Microsoft’s distribution guidance](https://learn.microsoft.com/windows/apps/package-and-deploy/smartscreen-reputation).
 
-Version 0.1.4 intentionally increments the patch number: TW 5.4.1’s import comparison ignores prerelease suffixes such as `-test.2` and `-test.3`. The actual core comparator is tested so the new package upgrades those earlier test builds.
+Version 0.1.5 intentionally increments the patch number: TW 5.4.1’s import comparison ignores prerelease suffixes such as `-test.2` and `-test.3`. The actual core comparator is tested so the new package upgrades those earlier test builds.
 
 The headless browser check also uses the core import review and Import button, then reimports to verify stable identities and removal of previously included addresses.
 
@@ -90,3 +90,11 @@ Discovery searches Wikis, Documents, Desktop and Downloads, or a folder explicit
 The Mac self-test now exercises the actual library row rendering with empty, populated and refreshed lists. This covers the 0.1.2 crash caused by activating a row-to-parent constraint before inserting the row into the view hierarchy. No visible window or real library is used in the test.
 
 Home-network sharing uses HTTP, not TLS, and is intended for a trusted network. The helper excludes known VPN/virtual adapters and public, wildcard, loopback, IPv6 and Tailscale CGNAT addresses from LAN choices; if multiple eligible interfaces exist the user chooses one. It verifies the selected interface remains present before startup. It does not promise discovery across every VPN/platform adapter naming scheme. No firewall, router, port-forwarding or UPnP changes are made. Other devices need a browser on a network that can reach that interface; guest-network isolation or a firewall can prevent access. LAN addresses can change with DHCP. Actual cross-device LAN/firewall acceptance remains manual; automated integration uses isolated loopback servers.
+
+### Helper language, help and startup (0.1.5)
+
+The helper follows OS UI language (Danish, English fallback); the plugin and exported page bodies follow TiddlyWiki `$:/language`. Help is bundled as offline HTML and opens only when chosen. Startup is off by default. It stores only a library entry ID, network mode and login choice in the private library metadata; no passwords. The native app checks this once per launch. Wiki login requires entering credentials at launch; anonymous startup requires explicit opt-in. The normal listener, port ownership and Tailscale checks remain mandatory. This does not register a service or change OS startup settings: Help explains how users add/remove the app at login. Linux performs the same saved startup before its library menu.
+
+Export asks for a readable overview name. Use distinct names for separate libraries. Names are retained for future exports even after wiki renames; IDs remain inert metadata. Reimport uses TiddlyWiki's usual review; no existing wiki is modified directly. Legacy UUID-titled exports are not deleted automatically.
+
+Official startup references: [Apple](https://support.apple.com/guide/mac-help/mh15189/mac), [Microsoft](https://support.microsoft.com/en-us/windows/experience/startup-boot/configure-startup-applications-in-windows), [Ubuntu](https://help.ubuntu.com/stable/ubuntu-help/startup-applications.html.en).

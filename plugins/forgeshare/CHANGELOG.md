@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.1.5 — Clear choices, readable exports and optional startup
+
+- Helper dialogs follow the OS language (Danish or English); small decisions use actual Mac/Windows buttons and Linux radio choices.
+- Compact Mac status panel, Help and Startup controls on both desktop apps, bundled offline help covering sharing, export, backup, sync and OS login startup.
+- Opt-in startup of one selected wiki, local/Tailscale/LAN. Disabled by default, reversible; passwords are requested per launch, never stored. Existing address, binding and Serve checks still apply.
+- Export titles use a chosen overview name and wiki names; UUIDs stay in metadata. Entry pages explain their purpose and show readable dates. Persisted titles survive wiki renames. Existing legacy UUID-titled exports are left alone; import the new overview and remove old copies manually if desired.
+- Standalone plugin remains in Forge's catalog/library. Collaboration Edition integration is deferred until that edition is ready.
+
 ## 0.1.4 — Home network and optional wiki login
 
 - Share via Tailscale or the home network. LAN sharing binds one selected private IPv4 interface and does not inspect or start Tailscale, change firewall/router rules, or bind all interfaces.

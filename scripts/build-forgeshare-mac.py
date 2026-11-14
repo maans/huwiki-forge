@@ -20,6 +20,8 @@ with tempfile.TemporaryDirectory(prefix='forgeshare-build-') as tmp:
     shutil.copy2(out/'ForgeShare.icns',contents/'Resources/ForgeShare.icns')
     shutil.copy2(native/'macos/Info.plist',contents/'Info.plist')
     shutil.copy2(native.parent/'helper/ForgeShare.mjs',contents/'Resources/ForgeShare.mjs')
+    for language in ('da','en'):
+        shutil.copy2(native.parent/('helper/help-'+language+'.html'),contents/('Resources/help-'+language+'.html'))
     subprocess.run(['codesign','--force','--sign','-',str(app)],check=True)
     subprocess.run(['codesign','--verify','--strict',str(app)],check=True)
     subprocess.run([str(contents/'MacOS/ForgeShare'),'--self-test'],check=True)

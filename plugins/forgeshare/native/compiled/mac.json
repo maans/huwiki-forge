@@ -1,14 +1,16 @@
 {
   "platform": "mac",
   "sources": {
-    "macos/ForgeShare.swift": "44e12d2382e321cded80a5ea170f632cfa3d45f672b6a092c97425bed838e7a5",
+    "macos/ForgeShare.swift": "edc753f0a14cd9b7e6efe1afc90b5a9dcc179cd9017b5607f7190515f9962da6",
     "macos/Icon.swift": "e7a372a3807a9d5cf7c79b9225752f309282bb8c71b3982964635a5025ab192c",
-    "macos/Info.plist": "52d5fdcea8e71f0b139e178090f1c1059d5d0520d3dd3a8a6dfd88f394053abc",
-    "../helper/ForgeShare.mjs": "8b48d60887b8f111965495fcef388c2bb739675218a5257f3a5f3ee5e3ddaec0"
+    "macos/Info.plist": "660818681565303ab2012355aa03f02d3f4c2abf66623bdaf1f2587367fbfd03",
+    "../helper/ForgeShare.mjs": "e441811088c99be44cd4159cf92486bee98b2c7950e58f15e6957a9b5bbbd6e7",
+    "../helper/help-da.html": "3851df91aafcc99706957710fc69ef0d15013ff08e18e18e7241937ee3005cae",
+    "../helper/help-en.html": "ee83f9927423d3335404a134de9433309c433b1c429a70c42d426a091614ec68"
   },
   "artifacts": {
-    "ForgeShare": "477ceee742d8c08e6eb238a37b1594ac9db64ca2f886d9e9d1f598e83f90391f",
-    "ForgeShare.icns": "48872d25aff1d32c0c0ebfe7ee0863ef102ee3050c7bd6fc2afaefd6bc97f75c",
-    "CodeResources": "869205cdac6409d39c1265f72f1fe365cf7f5f51cba8bb480ba1cf5949a810c2"
+    "ForgeShare": "abaef7908537336508ffda4fc73e06bb607cb2abaeea2504ea0fc67776172dd2",
+    "ForgeShare.icns": "f0c2c6854267bb0af6ea4377305fdd5c310de005bf906118aa6f6aa68e958cb2",
+    "CodeResources": "bcf003eaf6feb55cc63118a97eb4fe7e770f726eaae6503dfca1b0b491bcef30"
   }
 }

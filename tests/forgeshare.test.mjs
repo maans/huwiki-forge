@@ -150,7 +150,7 @@ test('all downloadable ZIP files embed the exact standalone reviewed script', as
   for (const platform of ['mac', 'windows', 'linux']) {
     const bytes = Buffer.from(shadows[base + '/download/' + platform].text.split(',')[1], 'base64');
     assert.equal(bytes.readUInt32LE(), 0x04034b50);
-    const count = bytes.readUInt16LE(bytes.length - 22 + 10); assert.equal(count, platform==='mac'?6:3);
+    const count = bytes.readUInt16LE(bytes.length - 22 + 10); assert.equal(count, platform==='mac'?8:5);
     let offset = 0; const files = {};
     while (bytes.readUInt32LE(offset) === 0x04034b50) {
       const size = bytes.readUInt32LE(offset + 18), length = bytes.readUInt16LE(offset + 26);
@@ -224,7 +224,7 @@ test('dialog commands treat user-facing text as data on all platforms', () => {
   assert.equal(win, 'powershell.exe');
   const source = Buffer.from(windows.at(-1), 'base64').toString('utf16le');
   assert.ok(!source.includes(unsafe)); assert.match(source,/In.ReadToEnd/);
-  assert.deepEqual(JSON.parse(Buffer.from(payload,'base64').toString()),{kind:'text',message:unsafe,initial:''});
+  assert.deepEqual(JSON.parse(Buffer.from(payload,'base64').toString()),{kind:'text',message:unsafe,initial:'',cancel:'Cancel'});
   assert.deepEqual(dialogCommand('linux', 'text', unsafe)[1].find(x => x.startsWith('--text=')), '--text=' + unsafe);
 });
 class Child extends EventEmitter {
@@ -566,7 +566,7 @@ test('returning GUI users choose the saved name without choosing a folder or por
   assert.ok(started);
   const choices = ['Wiki: Familie & børn', '＋ Add another wiki / Tilføj en wiki'];
   assert.deepEqual(dialogCommand('darwin', 'choice', 'Choose', choices)[1].slice(-2), choices);
-  assert.deepEqual(dialogCommand('linux', 'choice', 'Choose', choices)[1].slice(-2), choices);
+  assert.deepEqual(dialogCommand('linux', 'choice', 'Choose', choices)[1].slice(-4), ['TRUE',choices[0],'FALSE',choices[1]]);
   const source = Buffer.from(dialogCommand('win32', 'choice', 'Choose', choices)[1].at(-1), 'base64').toString('utf16le');
-  assert.ok(source.includes('Windows.Forms.ListBox')); assert.ok(!source.includes('Familie & børn'));
+  assert.ok(source.includes('Windows.Forms.FlowLayoutPanel')); assert.ok(!source.includes('Familie & børn'));
 });
