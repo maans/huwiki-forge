@@ -1,6 +1,6 @@
 {
   "title": "$:/plugins/huwiki/forge-demo",
-  "name": "HUWiki Forge Demo",
+  "name": "TiddlyWiki Forge Demo",
   "description": "Startup-plugin der kontrollerer før-boot indlæsning.",
   "version": "0.0.1",
   "plugin-type": "plugin",

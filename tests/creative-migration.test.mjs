@@ -1,4 +1,5 @@
 import test from 'node:test';
+import {renameTiddler} from '../scripts/public-names.mjs';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 import {gunzipSync} from 'node:zlib';
@@ -20,7 +21,7 @@ test('Original Slideshow vendors and all seven example data sets remain unchange
  assert.ok(vendors>=5);assert.ok(examples>=7);
 });
 test('CutOut examples retain every original resource except the obsolete setting and duplicate Studio wrapper',async()=>{
- const before=await original('cutout-pages'),after=rows(await plugin('cutout-examples'));for(const[title,t]of Object.entries(before))if(!['$:/config/itw/tw-excalidraw/Language','HUWiki CutOut – Studio'].includes(title))assert.deepEqual(after[title],t,title);
+ const before=await original('cutout-pages'),after=rows(await plugin('cutout-examples'));for(const[title,t]of Object.entries(before))if(!['$:/config/itw/tw-excalidraw/Language','HUWiki CutOut – Studio'].includes(title))assert.deepEqual(after[title],renameTiddler(structuredClone(t)),title);
  assert.ok(Object.keys(after).length>350);
 });
 test('Original licenses/authors remain intact; absent top-level licenses are not invented',async()=>{

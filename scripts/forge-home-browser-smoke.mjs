@@ -19,8 +19,8 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base=process.env.FORGE_HOME_URL||`http://127.0.0.1:${server.address().port}/`;
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',headless:true});
 try {
- for(const [locale,expected]of [['da-DK','da-DK'],['da','da-DK'],['en-US','en-GB'],['de-DE','en-GB']]){const languageContext=await browser.newContext({locale});const probe=await languageContext.newPage();await probe.goto(base);await probe.locator('.forge-home').waitFor();assert.equal(await probe.evaluate(()=>$tw.wiki.getTiddlerText('$:/language')),'$:/languages/'+expected);await languageContext.close();}
- console.log('PASS browser-language startup via native TiddlyWiki actions, Danish variants and English fallback');
+ for(const [locale,expected]of [['da-DK','da-DK'],['da','da-DK'],['en-US','en-GB'],['de-DE','en-GB']]){const languageContext=await browser.newContext({locale});const probe=await languageContext.newPage();await probe.goto(base);await probe.locator('.forge-home').waitFor();assert.equal(await probe.evaluate(()=>$tw.wiki.getTiddlerText('$:/language')),'$:/languages/'+expected);assert.equal(await probe.evaluate(()=>$tw.wiki.getTiddlerText('$:/language/SideBar/Open/Caption')),expected==='da-DK'?'Åbne':'Open');assert.equal(await probe.evaluate(()=>$tw.wiki.getTiddlerText('$:/language/Buttons/ControlPanel/Caption')),expected==='da-DK'?'Kontrolpanel':'control panel');await languageContext.close();}
+ console.log('PASS browser-language startup before the native language switcher starts, Danish variants and English fallback');
  const context=await browser.newContext({locale:'en-US',acceptDownloads:true,viewport:{width:1440,height:1000}});
  const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const response=await page.goto(base);assert.equal(response.status(),200);

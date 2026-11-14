@@ -2,7 +2,7 @@
   "title": "$:/plugins/huwiki/hupedia",
   "type": "application/json",
   "plugin-type": "plugin",
-  "name": "HUWiki HUPedia — article tools / artikelværktøjer",
+  "name": "HUPedia — article tools / artikelværktøjer",
   "description": "Article types, forms and editable infoboxes / Artikeltyper, formularer og faktabokse",
   "author": "HUWiki",
   "version": "0.2.4-test.1",

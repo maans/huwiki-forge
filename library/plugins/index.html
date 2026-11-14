@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>HUWiki Plugin Library · Forge</title>
+<title>Plugin Library · Forge</title>
 <style>
 body{font:1rem/1.6 system-ui,sans-serif;max-width:52rem;margin:3rem auto;padding:0 1.25rem;color:#203b33}
 a{color:#146c53}.note{border-left:3px solid #146c53;background:#f0f8f4;padding:12px 16px}
@@ -79,8 +79,8 @@ window.addEventListener("message",async function(event){
      throw Error("Unexpected plugin identity");
    respond(event,request,200,JSON.stringify(json));
  }catch(error){
-   console.error("HUWiki Plugin Library:",error);
-   respond(event,request,503,"HUWiki Forge library unavailable: "+String(error&&error.message||error),"text/plain");
+   console.error("Plugin Library:",error);
+   respond(event,request,503,"TiddlyWiki Forge library unavailable: "+String(error&&error.message||error),"text/plain");
  }
 },false);
 registryPromise.catch(error=>{
@@ -92,10 +92,10 @@ registryPromise.catch(error=>{
 </script>
 </head>
 <body>
-<h1>HUWiki Plugin Library</h1>
-<p class="note">This is a read-only plugin library hosted on GitHub Pages. In TiddlyWiki, open <strong>Control Panel → Plugins → Get More Plugins → HUWiki Plugin Library</strong> to browse and install plugins.</p>
+<h1>Plugin Library</h1>
+<p class="note">This is a read-only plugin library hosted on GitHub Pages. In TiddlyWiki, open <strong>Control Panel → Plugins → Get More Plugins → Plugin Library</strong> to browse and install plugins.</p>
 <p id="count">Loading the Forge plugin registry …</p>
-<p>Source: <a href="https://github.com/maans/huwiki-forge/tree/main/plugins">Forge plugins on GitHub</a>. You can also explore the <a href="../../community/">HUWiki Community Editions</a>.</p>
+<p>Source: <a href="https://github.com/maans/huwiki-forge/tree/main/plugins">Forge plugins on GitHub</a>. You can also explore the <a href="../../community/">TiddlyWiki Community</a>.</p>
 <p>Libraries are public and require no account. Saving plugins into your own wiki uses TiddlyWiki's existing Save mechanism.</p>
 </body>
 </html>

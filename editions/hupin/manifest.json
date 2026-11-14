@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "id": "hupin",
-  "name": "HUWiki HUPin Edition",
+  "name": "HUPin Edition",
   "version": "0.1.0-test.1",
   "coreVersion": "5.4.1",
   "tiddlers": [
