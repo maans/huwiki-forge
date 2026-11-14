@@ -20,7 +20,7 @@ final class LibraryStack: NSStackView { override var isFlipped:Bool {true} }
 final class Session {
     let process = Process(), input = Pipe(), output = Pipe()
     var id="", local=false, openWhenReady=false, mode="", access=""
-    var name = tr("Vælger wiki…", "Choosing a wiki…"), url = "", pending = Data(), stopping = false
+    var name = tr("Vælger wiki…", "Choosing a wiki…"), url = "", ownerUrl = "", pending = Data(), stopping = false
     let row = NSStackView(), label = NSTextField(labelWithString: "")
     let copy = NSButton(title: tr("Kopiér adresse", "Copy address"), target: nil, action: nil)
     let stop = NSButton(title: tr("Stop", "Stop"), target: nil, action: nil)
@@ -127,7 +127,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
                     let line=s.pending.prefix(upTo:end); s.pending.removeSubrange(...end)
                     if let data=try? JSONSerialization.jsonObject(with:line) as? [String:String] {
                         if let name=data["name"] { s.name=name }
-                        if data["event"] == "ready", let address=data["url"], let url=URL(string:address), permittedAddress(url) { s.mode=data["mode"] ?? "";s.access=data["access"] ?? "login";s.url=address; s.copy.isEnabled=true; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(url)};self.reloadLibrary();self.advanceShareQueue(s.id) }
+                        if data["event"] == "ready", let address=data["url"], let url=URL(string:address), permittedAddress(url) { s.mode=data["mode"] ?? "";s.access=data["access"] ?? "login";s.url=address; if let own=data["ownerUrl"],let u=URL(string:own),u.scheme=="http",u.host=="127.0.0.1" {s.ownerUrl=own}; s.copy.isEnabled=true; if s.openWhenReady {s.openWhenReady=false;NSWorkspace.shared.open(URL(string:s.ownerUrl.isEmpty ? s.url:s.ownerUrl)!)};self.reloadLibrary();self.advanceShareQueue(s.id) }
                         self.update(s)
                     }
                 }
@@ -170,7 +170,7 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
         libraryCommand(action) { result in
             guard let entries=result?["entries"] as? [[String:Any]] else {self.showError(tr("Wikibiblioteket kunne ikke læses. Ingen filer er ændret.","The wiki library could not be read. No files were changed."));return}
             self.renderLibrary(entries,selected:selected)
-            if let sharing=result?["sharing"] as? [String:Any] {self.sharingLabel.stringValue=tr("Deling: ","Sharing: ")+(sharing["mode"] as? String == "lan" ? tr("Hjemmenetværk","Home network") : "Tailscale")+" · "+(sharing["allowAnonymous"] as? Bool == true ? tr("uden wiki-login","no wiki login") : tr("med wiki-login","with wiki login"))}
+            if let sharing=result?["sharing"] as? [String:Any] {self.sharingLabel.stringValue=tr("Deling: ","Sharing: ")+(sharing["mode"] as? String == "lan" ? tr("Hjemmenetværk","Home network") : sharing["mode"] as? String == "funnel" ? "Funnel" : "Tailscale")+" · "+(sharing["mode"] as? String == "funnel" ? tr("læser- og redaktørkode","reader and editor codes") : sharing["allowAnonymous"] as? Bool == true ? tr("uden wiki-login","no wiki login") : tr("med wiki-login","with wiki login"))}
             if self.checkStartup {
                 self.checkStartup=false
                 self.libraryCommand("startup-status") { result in
@@ -232,14 +232,14 @@ final class App: NSObject, NSApplicationDelegate, NSWindowDelegate {
             else {showError(tr("En HTML-fil skal først kopieres til en serverwiki. Se hjælpen i ForgeShare. Originalen kan fortsat bruges lokalt.","An HTML file first needs copying into a server wiki. See ForgeShare help. The original can still be used locally."))};return
         }
         if let existing=sessions.first(where:{$0.id==id}) {
-            if local && !existing.url.isEmpty {NSWorkspace.shared.open(URL(string:existing.url)!)}
+            if local && !existing.url.isEmpty {NSWorkspace.shared.open(URL(string:existing.ownerUrl.isEmpty ? existing.url:existing.ownerUrl)!)}
             else {showError(tr("Denne wiki kører allerede. Stop den først, hvis du vil ændre delingen.","This wiki is already running. Stop it first to change sharing."))};return
         }
         nextID=id;nextLocal=local;startWiki()
     }
     func update(_ s: Session) {
-        let network=s.local ? tr("kun lokalt","local only") : s.mode=="lan" ? tr("hjemmenetværk","home network") : "Tailscale"
-        let login=s.access=="open" ? tr("uden login","no login") : tr("med login","with login")
+        let network=s.local ? tr("kun lokalt","local only") : s.mode=="lan" ? tr("hjemmenetværk","home network") : s.mode=="funnel" ? "Funnel" : "Tailscale"
+        let login=s.mode=="funnel" ? tr("læser- og redaktørkode","reader and editor codes") : s.access=="open" ? tr("uden login","no login") : tr("med login","with login")
         s.label.stringValue=s.name+(s.stopping ? tr(" — stopper…"," — stopping…") : s.url.isEmpty ? "" : " — "+network+" · "+login)
         s.label.stringValue += s.url.isEmpty ? "" : "\n"+s.url;s.label.toolTip=s.label.stringValue
     }

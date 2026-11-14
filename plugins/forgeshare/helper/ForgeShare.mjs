@@ -1,7 +1,8 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.6 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.7 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {readFile, realpath, stat, lstat, opendir, access, mkdir, mkdtemp, writeFile, rm, rename, open} from 'node:fs/promises';
-import {randomUUID} from 'node:crypto';
+import {randomUUID,randomBytes,createHash,timingSafeEqual} from 'node:crypto';
+import {createServer,request as httpRequest} from 'node:http';
 import {constants} from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
@@ -71,6 +72,105 @@ export function hasWikiRoute(config, hostname, port = 8080, httpsPort = 10000) {
     item.TCP?.[httpsPort]?.HTTPS === true &&
     item.Web?.[hostname + ':' + httpsPort]?.Handlers?.['/']?.Proxy === 'http://127.0.0.1:' + port);
 }
+// The public listener never proxies unauthenticated requests. The wiki itself
+// independently enforces reader/editor permissions using ephemeral credentials.
+export async function startCodeGateway({port,origin,readerCode,editorCode,readerSecret,editorSecret,language='en',now=Date.now}) {
+  if(typeof readerCode!=='string'||typeof editorCode!=='string'||!readerCode.trim()||!editorCode.trim()||readerCode===editorCode||Math.max(readerCode.length,editorCode.length)>256)throw Error(ui('Choose two different, nonempty codes (up to 256 characters).','Vælg to forskellige koder, som ikke er tomme (højst 256 tegn).'));
+  const publicOrigin=new URL(origin).origin;
+  if(!/^https:\/\/[a-z0-9.-]+\.ts\.net(?::(?:443|8443|10000))?$/.test(publicOrigin))throw Error('Invalid public origin');
+  const digest=value=>createHash('sha256').update(value).digest();
+  const readerHash=digest(readerCode),editorHash=digest(editorCode);
+  const sessions=new Map(),ownerToken=randomBytes(32).toString('hex');
+  let attempts=[],ownerOrigin;
+  const text=(en,da)=>language==='da'?da:en;
+  const cookieName=owner=>(owner?'ForgeShareOwner-':'__Host-ForgeShare-')+port;
+  const cookie=(owner,value,age=28800)=>`${cookieName(owner)}=${value}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${age}${owner?'':'; Secure'}`;
+  const page=(error='')=>`<!doctype html><html lang="${language==='da'?'da':'en'}"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>ForgeShare</title><style>body{margin:0;background:#f2f5f7;color:#183545;font:18px system-ui;display:grid;min-height:100vh;place-items:center}main{box-sizing:border-box;width:min(92vw,420px);padding:36px;background:white;border-radius:24px;box-shadow:0 12px 48px #18354518}h1{font-size:28px}input,button{box-sizing:border-box;width:100%;padding:14px;font:inherit;border-radius:10px;margin-top:12px}input{border:1px solid #8a9ea9}button{border:0;background:#146bc4;color:white;cursor:pointer}p{line-height:1.5}.error{color:#a32424}</style><main><h1>${text('Open the wiki','Åbn wikien')}</h1><p>${text('Enter the code you received.','Indtast den kode, du har fået.')}</p>${error?'<p class="error">'+error+'</p>':''}<form method="post" action="/_forgeshare/login"><label for="code">${text('Access code','Adgangskode')}</label><input id="code" name="code" type="password" autocomplete="current-password" maxlength="256" required autofocus><button>${text('Open wiki','Åbn wiki')}</button></form></main></html>`;
+  const handler=owner=>async(req,res)=>{
+    const expected=owner?ownerOrigin:publicOrigin;
+    const send=(status,body='',headers={})=>{res.writeHead(status,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store','X-Content-Type-Options':'nosniff','Referrer-Policy':owner?'no-referrer':'same-origin','Content-Security-Policy':"default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; frame-ancestors 'none'",...headers});res.end(body);};
+    try {
+      if(req.headers.host!==new URL(expected).host)return send(421);
+      if(!req.url.startsWith('/')||req.url.startsWith('//'))return send(400);
+      const url=new URL(req.url,expected),unsafe=!['GET','HEAD'].includes(req.method);
+      if(unsafe && req.headers.origin!==expected)return send(403);
+      if(req.headers['sec-fetch-site']==='cross-site' && (unsafe || owner))return send(403);
+      for(const [key,value] of sessions)if(value.expires<=now())sessions.delete(key);
+      const token=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith(cookieName(owner)+'='))?.slice(cookieName(owner).length+1);
+      const session=sessions.get(token);
+      let role=session?.owner===owner?session.role:null;
+      const issue=role=>{if(sessions.size>=1024)sessions.delete(sessions.keys().next().value);const token=randomBytes(32).toString('hex');sessions.set(token,{role,owner,expires:now()+28800000});send(303,'',{'Location':'/','Set-Cookie':cookie(owner,token)});};
+      if(owner && url.pathname==='/_forgeshare/owner' && req.method==='GET') {
+        if(url.searchParams.get('token')!==ownerToken)return send(403);
+        issue('editor');return;
+      }
+      if(url.pathname==='/_forgeshare/logout' && req.method==='POST') {sessions.delete(token);return send(303,'',{'Location':'/','Set-Cookie':cookie(owner,'',0)});}
+      if(!owner && url.pathname==='/_forgeshare/login' && req.method==='POST') {
+        // One global budget cannot be bypassed with forged forwarded-IP headers.
+        attempts=attempts.filter(t=>t>now()-60000);
+        if(attempts.length>=20)return send(429,page(text('Too many attempts. Wait a minute.','For mange forsøg. Vent et minut.')),{'Retry-After':'60'});
+        attempts.push(now());
+        if(!/^application\/x-www-form-urlencoded(?:;|$)/i.test(req.headers['content-type']||''))return send(415);
+        let body='';for await(const chunk of req){body+=chunk;if(Buffer.byteLength(body)>2048){send(413);req.destroy();return;}}
+        const code=new URLSearchParams(body).get('code')||'';
+        const hash=digest(code),reader=timingSafeEqual(hash,readerHash),editor=timingSafeEqual(hash,editorHash);
+        if(!reader&&!editor)return send(401,page(text('The code did not match. Try again.','Koden passer ikke. Prøv igen.')));
+        issue(editor?'editor':'reader');return;
+      }
+      if(!owner && url.pathname==='/_forgeshare/login' && req.method==='GET')return send(200,page());
+      if(!role)return send(401,owner?text('Open this wiki from ForgeShare.','Åbn denne wiki fra ForgeShare.'):page());
+      if(role==='reader' && unsafe)return send(403);
+      // Expose the core wiki API only, never custom server/admin/plugin routes.
+      if(!['/','/status','/favicon.ico','/recipes/default/tiddlers.json'].includes(url.pathname) && !/^\/(?:recipes|bags)\/default\/tiddlers\/[^/]+$/.test(url.pathname))return send(404);
+      if(!['GET','HEAD','PUT','DELETE'].includes(req.method))return send(405);
+      const headers={authorization:'Basic '+Buffer.from((role==='editor'?'editor:':'reader:')+(role==='editor'?editorSecret:readerSecret)).toString('base64')};
+      for(const key of ['content-type','content-length','if-match','if-none-match','x-requested-with','accept'])if(req.headers[key])headers[key]=req.headers[key];
+      const upstream=httpRequest({host:'127.0.0.1',port,path:req.url,method:req.method,headers},response=>{
+        const output={...response.headers,'cache-control':'no-store','referrer-policy':'no-referrer','x-content-type-options':'nosniff','content-security-policy':"frame-ancestors 'none'"};
+        for(const key of ['set-cookie','www-authenticate','access-control-allow-origin','access-control-allow-credentials','connection','transfer-encoding'])delete output[key];
+        res.writeHead(response.statusCode,output);response.pipe(res);
+      });
+      upstream.on('error',()=>{if(!res.headersSent)send(502);else res.destroy();});
+      upstream.setTimeout(30000,()=>upstream.destroy());req.on('aborted',()=>upstream.destroy());res.on('close',()=>upstream.destroy());req.pipe(upstream);
+    } catch {if(!res.headersSent)send(400);else res.destroy();}
+  };
+  const publicServer=createServer(handler(false)),ownerServer=createServer(handler(true));
+  for(const server of [publicServer,ownerServer]){server.requestTimeout=15000;server.headersTimeout=10000;server.maxConnections=200;server.maxRequestsPerSocket=1000;}
+  const listen=server=>new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',()=>{server.off('error',reject);resolve(server.address().port);});});
+  const close=server=>new Promise(resolve=>{server.close(resolve);server.closeAllConnections();});
+  const stop=async()=>{sessions.clear();await Promise.all([close(publicServer),close(ownerServer)]);};
+  try {
+    const publicPort=await listen(publicServer),ownerPort=await listen(ownerServer);ownerOrigin='http://127.0.0.1:'+ownerPort;
+    return {port:publicPort,ownerUrl:ownerOrigin+'/_forgeshare/owner?token='+ownerToken,stop};
+  }catch(error){await stop();throw error;}
+}
+
+export const funnelPorts=Object.freeze([10000,8443,443]);
+export async function planFunnel(config,localPort,checkAddress) {
+  if(!Number.isInteger(localPort)||localPort<1||localPort>65535)throw Error('Invalid local port');
+  const used=usedServePorts(config);
+  for(const port of funnelPorts) {
+    if(used.has(port))continue;
+    try {await checkAddress(port);}catch{continue;}
+    return {port,args:['funnel',`--https=${port}`,`http://127.0.0.1:${localPort}`]};
+  }
+  throw Error(ui('Funnel needs a free address on 443, 8443 or 10000. Existing services were not changed.','Funnel kræver en ledig adresse på 443, 8443 eller 10000. Eksisterende tjenester er ikke ændret.'));
+}
+export function verifyFunnelRoute(before,after,hostname,localPort,port) {
+  if(!funnelPorts.includes(port))throw Error('Invalid Funnel port');
+  validateServe(before,true,port);validateServe(after,false,-1);
+  if(JSON.stringify(protectedConfig(before,port))!==JSON.stringify(protectedConfig(after,port)))throw Error('Unrelated Tailscale configuration changed');
+  const hostPort=hostname+':'+port;
+  // The public permission must belong to the same foreground configuration as
+  // our sole root proxy. A background/public route is not owned by this process.
+  const owners=Object.values(after.Foreground||{}).filter(c=>c.TCP?.[port]||Object.keys(c.Web||{}).some(k=>k.endsWith(':'+port)));
+  if(owners.length!==1 || after.TCP?.[port] || Object.keys(after.Web||{}).some(k=>k.endsWith(':'+port)) || Object.values(after.Services||{}).some(c=>usedServePorts(c).has(port)))return false;
+  return owners.some(config=>
+    config.AllowFunnel?.[hostPort]===true && config.TCP?.[port]?.HTTPS===true &&
+    Object.keys(config.Web?.[hostPort]?.Handlers||{}).length===1 &&
+    config.Web[hostPort].Handlers['/']?.Proxy==='http://127.0.0.1:'+localPort);
+}
+
 export function isPrivateIPv4(address) {
   if(net.isIP(address)!==4)return false;
   const [a,b]=address.split('.').map(Number);
@@ -86,12 +186,12 @@ export function homeNetworkAddresses(interfaces=os.networkInterfaces()) {
   }
   return result;
 }
-export function serverArgs(wiki, credentials, port = 8080, {allowAnonymous=false,lanHost}={}) {
+export function serverArgs(wiki, credentials, port = 8080, {allowAnonymous=false,lanHost,codeRoles=false}={}) {
   if(lanHost && !isPrivateIPv4(lanHost))fail('Choose a private home-network address.', 'Vælg en privat hjemmenetværksadresse.');
   if(allowAnonymous!==true && !credentials)fail('Choose wiki login or explicitly choose no login.', 'Vælg wiki-login, eller vælg udtrykkeligt uden login.');
   return [wiki, '--listen', `host=${lanHost||'127.0.0.1'}`, `port=${port}`,
     ...(allowAnonymous===true?['readers=(anon)']:[`credentials=${credentials}`,'readers=(authenticated)']),
-    `writers=${allowAnonymous===true?'(anon)':'(authenticated)'}`, 'csrf-disable=no'];
+    `writers=${codeRoles?'editor':allowAnonymous===true?'(anon)':'(authenticated)'}`, 'csrf-disable=no'];
 }
 export function validateCredentials(text) {
   const lines = text.replace(/^\uFEFF/, '').trimEnd().split(/\r?\n/);
@@ -277,7 +377,9 @@ export async function startNamedSession(profile, options, deps = {}) {
     const saved = (await readRegistry(root)).wikis.find(entry => entry.id === profile.id);
     if (!saved || JSON.stringify(saved) !== JSON.stringify(profile) || wikiKey(await realpath(profile.wiki)) !== wikiKey(profile.wiki))
       throw Error(ui('Wiki selection changed. Choose it again.', 'Wikivalget er ændret. Vælg igen.'));
-    const session = await (deps.startSession || startSession)({...options, ...profile}, deps);
+    const selected={...options,...profile};
+    if(options.funnel)selected.httpsPort=(await planFunnel(await (deps.readJSON||jsonCommand)(options.tailscale,['serve','status','--json']),profile.port,deps.checkAddressPort||checkAddressPort)).port;
+    const session = await (deps.startSession || startSession)(selected, deps);
     const finished = session.finished.finally(releaseWiki);
     return {...session, finished, stop: async () => { await session.stop(); await releaseWiki(); }};
   } catch (error) { await releaseWiki(); throw error; }
@@ -311,8 +413,8 @@ export async function validateRuntime(folder) {
   await access(path.join(root, 'boot/boot.js'));
   return {boot: path.join(root, 'boot/boot.js'), version: pkg.version};
 }
-export function startWiki({boot, wiki, credentials, port = 8080,allowAnonymous=false,lanHost}) {
-  const child = fork(self, ['--worker', boot, ...serverArgs(wiki, credentials, port,{allowAnonymous,lanHost})], {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit', 'ipc']});
+export function startWiki({boot, wiki, credentials, port = 8080,allowAnonymous=false,lanHost,codeRoles=false}) {
+  const child = fork(self, ['--worker', boot, ...serverArgs(wiki, credentials, port,{allowAnonymous,lanHost,codeRoles})], {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit', 'ipc']});
   const ready = new Promise((resolve, reject) => {
     const timer = setTimeout(() => done(Error(ui('Server start timed out','Serverstart tog for lang tid.'))), 30000);
     const done = (error, address) => { clearTimeout(timer); child.off('message', message); child.off('error', errorEvent); child.off('exit', exitEvent); error ? reject(error) : resolve(address); };
@@ -364,41 +466,45 @@ export async function startSession(options, deps = {}) {
     fail('Sign in to Tailscale and configure MagicDNS/HTTPS first.', 'Log ind i Tailscale og konfigurer MagicDNS/HTTPS først.');
   await portCheck(port);
   await (deps.checkAddressPort || checkAddressPort)(httpsPort);
-  let server, serve, closed = false, stopping;
+  let server, serve, gateway, closed = false, stopping;
   const stop = () => {
     if (stopping) return stopping;
     closed = true;
     stopping = (async () => {
     // End foreground Serve first so nothing can be exposed after stopping our wiki.
     await stopChild(serve);
+    if(gateway)await gateway.stop();
     await stopChild(server);
     })();
     return stopping;
   };
   try {
+    if(options.funnel && (!options.codeRoles || options.allowAnonymous || !options.credentials || !funnelPorts.includes(httpsPort)))throw Error('Funnel requires protected code access');
     const started = startServer(options); server = started.child;
     const address = await started.ready;
     if (closed || address.address !== '127.0.0.1' || address.port !== port) throw Error(ui('Unexpected server address', 'Uventet serveradresse.'));
     if (await probe() !== (options.allowAnonymous===true?200:401)) fail('The wiki does not match the selected login setting. Sharing refused.', 'Wikien følger ikke det valgte loginvalg. Deling afvist.');
+    if(options.funnel)gateway=await startCodeGateway({port,origin:`https://${hostname}:${httpsPort}`,...options.codeAccess,language:uiLanguage});
+    const targetPort=gateway?.port||port;
     // Recheck immediately before Serve. No --yes: concurrent changes cannot be silently approved.
     const current = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), true, httpsPort);
     if (JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(current, httpsPort))) throw Error(ui('Serve changed during startup', 'Serve blev ændret under start.'));
-    serve = startServe(options.tailscale, makeServeArgs(port, httpsPort), {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit'], windowsHide: true});
+    serve = startServe(options.tailscale, (options.funnel?['funnel',`--https=${httpsPort}`,`http://127.0.0.1:${targetPort}`]:makeServeArgs(port, httpsPort)), {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit'], windowsHide: true});
     let serveError;
     serve.once('error', error => { serveError = error; });
     for (let attempt = 0; attempt < 40; attempt++) {
       if (serveError) throw serveError;
       if (serve.exitCode !== null || serve.signalCode !== null || server.exitCode !== null || server.signalCode !== null)
         fail('A process stopped. Check prerequisites and HTTPS setup.', 'En proces stoppede. Kontroller programmer og HTTPS-opsætning.');
-      const after = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), false, httpsPort);
+      const after = validateServe(await readJSON(options.tailscale, ['serve', 'status', '--json']), false, options.funnel?-1:httpsPort);
       if (JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(after, httpsPort)))
         fail('Unrelated Serve settings changed; stopping our processes without restoring someone else’s settings.', 'Andre Serve-indstillinger blev ændret; stopper egne processer uden at overskrive andres opsætning.');
-      if (hasWikiRoute(after, hostname, port, httpsPort)) {
+      if (options.funnel?verifyFunnelRoute(before,after,hostname,targetPort,httpsPort):hasWikiRoute(after, hostname, port, httpsPort)) {
         const finished = new Promise(resolve => {
           const exit = () => { stop().then(resolve); };
           server.once('exit', exit); serve.once('exit', exit);
         });
-        return {url: `https://${hostname}:${httpsPort}`, stop, finished};
+        return {url: `https://${hostname}:${httpsPort}`, ...(gateway?{ownerUrl:gateway.ownerUrl}:{}), stop, finished};
       }
       await sleep(250);
     }
@@ -641,8 +747,8 @@ export async function discoverLibraryAutomatically(root=appFolder(),roots) {
   return listLibrary(root);
 }
 export function validateSharing(value) {
-  if(!object(value) || !['tailscale','lan'].includes(value.mode) || typeof value.allowAnonymous!=='boolean')throw Error('Invalid sharing settings');
-  return {mode:value.mode,allowAnonymous:value.allowAnonymous};
+  if(!object(value) || !['tailscale','lan','funnel'].includes(value.mode) || typeof value.allowAnonymous!=='boolean')throw Error('Invalid sharing settings');
+  return {mode:value.mode,allowAnonymous:value.mode==='funnel'?false:value.allowAnonymous};
 }
 export async function readSharing(root=appFolder()) {return validateSharing((await loadLibrary(root)).sharing || {mode:'tailscale',allowAnonymous:true});}
 export async function saveSharing(root,value) {return libraryTransaction(root,data=>{data.sharing=validateSharing(value);return data.sharing;});}
@@ -706,7 +812,7 @@ export function libraryExport(library,selected,{includeAddresses=false,now=new D
   const da='[{$:/language}get[name]lowercase[]regexp[^da(-|$)]] [{$:/language}match[$:/languages/huwiki-da-DK]] [{$:/language}removeprefix[$:/languages/]lowercase[]regexp[^da(-|$)]] [{$:/language}match[da]] +[limit[1]count[]]';
   const label=(d,e)=>`<$text text={{{ [<danish>match[1]then[${d}]else[${e}]] }}}/>`;
   const date=`<$list filter="[<danish>match[1]]" variable="language"><$view field="modified" format="date" template="DD.0MM.YYYY kl. 0hh:0mm"/></$list><$list filter="[<danish>match[0]]" variable="language"><$view field="modified" format="date" template="YYYY-0MM-DD 0hh:0mm"/></$list>`;
-  const address=`<$list filter="[<currentTiddler>has[forgeshare-address]]" variable="entry"><p><a href={{!!forgeshare-address}} target="_blank" rel="noopener noreferrer">${label('Åbn wikien','Open the wiki')}</a></p><p>${label('Adressen virker, når værtscomputeren er tændt og deler wikien. Du skal have adgang til det samme hjemmenetværk eller være inviteret via Tailscale.','The address works while the host computer is on and sharing. You need access to the same home network or an invitation through Tailscale.')}</p></$list>`;
+  const address=`<$list filter="[<currentTiddler>has[forgeshare-address]]" variable="entry"><p><a href={{!!forgeshare-address}} target="_blank" rel="noopener noreferrer">${label('Åbn wikien','Open the wiki')}</a></p><p>${label('Adressen virker, når værtscomputeren er tændt og deler wikien. Brug den valgte adgang: samme hjemmenetværk, Tailscale-invitation eller en kode til Funnel.','The address works while the host computer is on and sharing. Use the selected access: the same home network, a Tailscale invitation, or a Funnel code.')}</p></$list>`;
   // No user text is interpolated into wikitext: names, titles, descriptions and links are fields.
   const tiddlers=entries.map(e=>({title:e.exportTitle || indexTitle+' / '+e.name,caption:e.name,type:'text/vnd.tiddlywiki',
     text:`<$let danish={{{ ${da} }}}>
@@ -763,9 +869,10 @@ export async function libraryMain(action,encoded='',deps={}) {
       const file=path.join(path.dirname(self),'help-'+uiLanguage+'.html');
       await (deps.openHelp || (file=>execute(process.platform==='darwin'?'/usr/bin/open':process.platform==='win32'?'explorer.exe':'xdg-open',[file])))(file);
     } else if(action==='sharing') {
-      const modes=[ui('Tailscale — private connection','Tailscale — privat forbindelse'),ui('Home network — without Tailscale','Hjemmenetværk — uden Tailscale')];
+      const modes=[ui('Tailscale — private connection','Tailscale — privat forbindelse'),ui('Home network — without Tailscale','Hjemmenetværk — uden Tailscale'),ui('Funnel — internet link with access codes','Funnel — internetlink med adgangskoder')];
       const selected=modes.indexOf(await ask('choice',ui('Sharing settings — used when you press Share','Delingsindstillinger — bruges, når du trykker Del'),modes));
       if(selected<0)throw Object.assign(Error('Cancelled'),{cancelled:true});
+      if(selected===2){await saveSharing(root,{mode:'funnel',allowAnonymous:false});report({ok:true});return;}
       const logins=[ui('Network access is enough','Netværksadgang er nok'),ui('Also require wiki login','Kræv også wiki-login')];
       const login=logins.indexOf(await ask('choice',ui('People with access can read and edit. Wiki passwords are requested when starting, never stored.','Personer med adgang kan læse og redigere. Wiki-adgangskoder spørges ved start og gemmes ikke.'),logins));
       if(login<0)throw Object.assign(Error('Cancelled'),{cancelled:true});
@@ -1097,10 +1204,10 @@ export async function guiMain(deps = {}) {
     if (Number(process.versions.node.split('.')[0]) < 20) fail('Install Node.js 20 or later.', 'Installer Node.js 20 eller nyere.');
     let mode=startup?.mode || (quick && !localOnly?sharing.mode:'local'),lanHost;
     if(!localOnly && !startup && !quick) {
-      const methods=[ui('Tailscale — invited people', 'Tailscale — inviterede personer'),ui('Home network — same Wi-Fi or network', 'Hjemmenetværk — samme Wi-Fi eller netværk')];
+      const methods=[ui('Tailscale — invited people', 'Tailscale — inviterede personer'),ui('Home network — same Wi-Fi or network', 'Hjemmenetværk — samme Wi-Fi eller netværk'),ui('Funnel — internet link with access codes','Funnel — internetlink med adgangskoder')];
       const method=await ask('choice',ui('Where should the wiki be shared?','Hvor skal wikien deles?'),methods);
       if(!methods.includes(method))throw Object.assign(Error('Cancelled'),{cancelled:true});
-      mode=method===methods[0]?'tailscale':'lan';
+      mode=['tailscale','lan','funnel'][methods.indexOf(method)];
     }
     if(mode==='lan') {
       const addresses=homeNetworkAddresses((deps.networkInterfaces||os.networkInterfaces)());
@@ -1113,7 +1220,7 @@ export async function guiMain(deps = {}) {
         if(!lanHost)throw Object.assign(Error('Cancelled'),{cancelled:true});
       }
     }
-    const tailscale = mode==='tailscale' ? await (deps.findTailscale || findTailscale)() : undefined;
+    const tailscale = ['tailscale','funnel'].includes(mode) ? await (deps.findTailscale || findTailscale)() : undefined;
     const installed = await (deps.findTiddlyWiki || findTiddlyWiki)();
     if(startup && !installed)fail('Set up TiddlyWiki using Open or Share first. Automatic startup did not install anything.','Klargør først TiddlyWiki med Åbn eller Del. Automatisk opstart har ikke installeret noget.');
     const runtime = installed ? await validateRuntime(installed) : await (deps.installRuntime || installRuntime)(ask);
@@ -1122,23 +1229,32 @@ export async function guiMain(deps = {}) {
     const choices = (await readRegistry(root)).wikis;
     const add = ui('＋ Add another wiki', 'Tilføj en wiki');
     const picked = libraryEntry ? '' : choices.length ? await ask('choice', ui('Choose your wiki', 'Vælg din wiki'), [...choices.map(item => 'Wiki: ' + item.name), add]) : add;
-    let profile = libraryEntry ? await registerWiki({root,wiki:libraryEntry.location,name:libraryEntry.name,tailscale,localOnly:mode!=='tailscale'},deps) : choices.find(item => 'Wiki: ' + item.name === picked);
+    let profile = libraryEntry ? await registerWiki({root,wiki:libraryEntry.location,name:libraryEntry.name,tailscale,localOnly:!['tailscale','funnel'].includes(mode)},deps) : choices.find(item => 'Wiki: ' + item.name === picked);
     if (!profile && picked !== add) throw Error(ui('Unknown wiki selection', 'Ukendt wikivalg.'));
     if (!profile) {
       const wiki = await realpath(await ask('folder', ui('Choose the prepared wiki folder', 'Vælg den forberedte wikimappe')));
       try { await access(path.join(wiki, 'tiddlywiki.info')); }
       catch { fail('This is not a prepared wiki folder. Follow “First setup” in ForgeShare; an HTML file must first be copied into a server wiki.', 'Dette er ikke en forberedt wikimappe. Følg “Første opsætning” i ForgeShare; en HTML-fil skal først kopieres til en serverwiki.'); }
       const name = await ask('text', ui('Give this wiki a name, for example Family or Garden.', 'Giv wikien et navn, for eksempel Familie eller Have.'), path.basename(wiki));
-      profile = await registerWiki({root, wiki, name, tailscale, localOnly:mode!=='tailscale'}, deps);
+      profile = await registerWiki({root, wiki, name, tailscale, localOnly:!['tailscale','funnel'].includes(mode)}, deps);
     }
     const displayName=libraryEntry?.name||profile.name;
     report({event:'selected',name:displayName,...(libraryId?{id:libraryId}:{})});
     const withLogin=ui('With wiki login', 'Med wiki-login'),withoutLogin=ui('Without wiki login', 'Uden wiki-login');
-    const login=startup ? (startup.allowAnonymous?withoutLogin:withLogin) : quick ? (sharing.allowAnonymous?withoutLogin:withLogin) : await ask('choice',ui('Wiki login? Without it, everyone with network access can read and edit.', 'Wiki-login? Uden login kan alle med netværksadgang læse og redigere.'),mode==='tailscale'?[withLogin,withoutLogin]:[withoutLogin,withLogin]);
+    const login=mode==='funnel'?withLogin:startup ? (startup.allowAnonymous?withoutLogin:withLogin) : quick ? (sharing.allowAnonymous?withoutLogin:withLogin) : await ask('choice',ui('Wiki login? Without it, everyone with network access can read and edit.', 'Wiki-login? Uden login kan alle med netværksadgang læse og redigere.'),mode==='tailscale'?[withLogin,withoutLogin]:[withoutLogin,withLogin]);
     if(![withLogin,withoutLogin].includes(login))throw Object.assign(Error('Cancelled'),{cancelled:true});
     const allowAnonymous=login===withoutLogin;
-    let files;
+    let files,codeAccess;
     if(allowAnonymous)files=await validateWikiFolder(profile.wiki);
+    else if(mode==='funnel') {
+      const readerCode=await ask('password',ui('Code for readers — they can read the wiki','Kode til læsere — de kan læse wikien'));
+      const editorCode=await ask('password',ui('Code for editors — they can change the wiki. Use a different code.','Kode til redaktører — de kan ændre wikien. Brug en anden kode.'));
+      if(!readerCode.trim()||!editorCode.trim()||readerCode===editorCode||Math.max(readerCode.length,editorCode.length)>256)fail('Choose two different, nonempty codes.','Vælg to forskellige koder, som ikke er tomme.');
+      codeAccess={readerCode,editorCode,readerSecret:randomBytes(32).toString('hex'),editorSecret:randomBytes(32).toString('hex')};
+      privateDir=await privateSessionDirectory();const credentials=path.join(privateDir,'login.csv');
+      await writeFile(credentials,`username,password\nreader,${codeAccess.readerSecret}\neditor,${codeAccess.editorSecret}\n`,{mode:0o600,flag:'wx'});
+      files=await validateFiles(profile.wiki,credentials);
+    }
     else {
       const username=await ask('text',ui('Choose a wiki username', 'Vælg wikiens brugernavn'),'wiki');
       const password=await ask('password',ui('Choose a password. You decide its length.', 'Vælg en adgangskode. Du bestemmer længden.'));
@@ -1150,19 +1266,19 @@ export async function guiMain(deps = {}) {
       await writeFile(credentials,`username,password\n${username},${password}\n`,{mode:0o600,flag:'wx'});
       files=await validateFiles(profile.wiki,credentials);
     }
-    const network=mode==='local'?ui('Only this computer', 'Kun denne computer'):mode==='lan'?ui('Home network', 'Hjemmenetværk'):'Tailscale';
-    const accessText=allowAnonymous?ui('No wiki login — anyone with network access can read and edit.', 'Uden wiki-login — alle med netværksadgang kan læse og redigere.'):ui('Wiki login is required.', 'Wiki-login er påkrævet.');
+    const network=mode==='local'?ui('Only this computer', 'Kun denne computer'):mode==='lan'?ui('Home network', 'Hjemmenetværk'):mode==='funnel'?'Funnel':'Tailscale';
+    const accessText=mode==='funnel'?ui('Reader and editor codes. Open in ForgeShare gives you editing access.','Læser- og redaktørkode. Åbn i ForgeShare giver dig redigeringsadgang.'):allowAnonymous?ui('No wiki login — anyone with network access can read and edit.', 'Uden wiki-login — alle med netværksadgang kan læse og redigere.'):ui('Wiki login is required.', 'Wiki-login er påkrævet.');
     const note=mode==='lan'?'\n\n'+ui('For your trusted home network. This connection uses HTTP, without encryption.', 'Til dit eget betroede hjemmenetværk. Forbindelsen bruger HTTP uden kryptering.'):mode==='tailscale'?ui(`\n\nAccess is controlled in Tailscale. Limit guests to this wiki (TCP ${profile.httpsPort}).`,`\n\nAdgangen styres i Tailscale. Begræns gæster til denne wiki (TCP ${profile.httpsPort}).`):'';
     if(!startup && !quick)await ask('confirm',`Start “${displayName}”?\n${network}\n\n${accessText}${note}`);
     if (interrupted) return;
-    session = await startNamedSession(profile, {...files, boot: runtime.boot, tailscale, root, localOnly,lanHost,allowAnonymous}, {
+    session = await startNamedSession(profile, {...files, boot: runtime.boot, tailscale, root, localOnly,lanHost,allowAnonymous,funnel:mode==='funnel',codeRoles:mode==='funnel',codeAccess}, {
       ...deps,
       startWiki: options => { const value = startWiki(options); children.add(value.child); if (interrupted) void stopChild(value.child); return value; },
       spawn: (...args) => { const child = spawn(...args); children.add(child); if (interrupted) void stopChild(child); return child; }
     });
     if (interrupted) return;
     if(!localOnly)await rememberSharedAddress(profile.wiki,session.url,root);
-    report({event:'ready',name:displayName,url:session.url,mode,access:allowAnonymous?'open':'login',...(libraryId?{id:libraryId}:{})});
+    report({event:'ready',name:displayName,url:session.url,...(session.ownerUrl?{ownerUrl:session.ownerUrl}:{}),mode,access:allowAnonymous?'open':'login',...(libraryId?{id:libraryId}:{})});
     if (appMode) { await session.finished; return; }
     const statusDialog = new AbortController();
     session.finished.then(() => statusDialog.abort());

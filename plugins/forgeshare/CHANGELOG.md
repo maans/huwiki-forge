@@ -1,3 +1,9 @@
+# 0.1.7
+
+- Optional public Tailscale Funnel with a code-only login page, reader/editor roles and separate local owner editing access.
+- Restrict public ports to unoccupied 10000/8443/443; preserve existing Serve, Funnel and AI services. Stop only owned foreground processes.
+- Ephemeral credentials and sessions, CSRF/origin checks, bounded login attempts, and independent server-side role enforcement. No anonymous public mode or automatic Funnel startup.
+
 # 0.1.6
 
 - Automatically discover HTML and folder wikis on app startup.

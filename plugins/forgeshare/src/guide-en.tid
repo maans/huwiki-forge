@@ -56,7 +56,11 @@ Use this on your trusted network: the connection uses HTTP without encryption. A
 
 Wiki login is optional. With login you share one username and a password you choose. Without login everyone with Tailscale access to the wiki can read and edit. The app does not remember passwords between starts.
 
-The Tailscale option requires Tailscale on participants' devices. Tailscale Funnel can provide public internet access, but ForgeShare does not activate it.
+Funnel — share over the internet
+
+Choose <b>Sharing → Funnel</b>, then <b>Share</b> for your wiki. Choose one reader code and a different editor code. Guests open the link from <b>Copy address</b> and enter only their code; they do not need Tailscale. <b>Open</b> in the helper gives you editing access. Codes apply to the whole wiki. Give editor access only to people you trust. Codes are requested at each start and never saved. Login lasts up to eight hours and ends when sharing stops. Open <code>/_forgeshare/login</code> at the wiki address to use another code.
+
+Funnel needs HTTPS and Funnel permission in Tailscale. It supports only 443, 8443 or 10000. ForgeShare selects a free port and never replaces existing services. If all three are occupied, Funnel cannot start on this computer until one is freed. Tailscale sharing is private; a Funnel address is public and protected by the codes. Repeated login attempts are limited. Choose codes that are not easy to guess. Automatic Funnel startup is not included in this version.
 
 </div>
 </details>

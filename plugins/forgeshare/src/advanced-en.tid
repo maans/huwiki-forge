@@ -43,9 +43,9 @@ Serve is always started with explicit ports in the foreground. For example, ''on
 tailscale serve --https=21000 http://127.0.0.1:20000
 ```
 
-The helper never uses `serve reset`, Funnel, `--bg`, an implicit 443 command, or global rollback. It compares unrelated Serve configuration before and after startup. A concurrent external change makes it stop its own new processes; retry after the other change is finished. Closing a wiki's status window stops only its owned Serve/server processes and drains pending saves.
+The helper never uses `serve reset`, `--bg`, an implicit 443 command, or global rollback. It compares unrelated Serve configuration before and after startup. A concurrent external change makes it stop its own new processes; retry after the other change is finished. Closing a wiki's status window stops only its owned Serve/server processes and drains pending saves.
 
-Tailscale needs HTTPS/MagicDNS configured. Open the complete address shown by the helper yourself on both devices. Use the selected HTTPS port in access rules; the local port is not the sharing port. Share the address only with intended users and send credentials separately. An address alone does not grant Tailscale access. Serve is private; Funnel would expose a service to the internet and is not used here.
+Tailscale needs HTTPS/MagicDNS configured. Open the complete address shown by the helper yourself on both devices. Use the selected HTTPS port in access rules; the local port is not the sharing port. Share the address only with intended users and send credentials separately. An address alone does not grant Tailscale access. Serve is private. Funnel is a separate option: internet access with reader and editor codes.
 
 !! 4. Sync speed
 
@@ -81,7 +81,7 @@ Use TiddlyWiki's built-in ''Download save''/HTML export to keep a standalone off
 
 !! Sources and version
 
-ForgeShare 0.1.6. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
+ForgeShare 0.1.7. Original HUWiki code; licensing awaits the project's decision. No required HUWiki plugins. Tested against TiddlyWiki 5.4.1. Select it under Forge's ''Extra plugins'' or import `plugin.json`, save and reload. Uninstall through TiddlyWiki's plugin manager; any manually selected polling value remains. Stop the helper separately.
 
 * [[TiddlyWiki CLI — listen|https://tiddlywiki.com/static/ListenCommand.html]]
 * [[TiddlyWiki WebServer|https://tiddlywiki.com/static/WebServer.html]]
@@ -101,3 +101,8 @@ Tailscale permissions are additive. A narrow rule for one wiki’s HTTPS port do
 !! Help and startup
 
 The helper's ''Help'' opens an included offline guide. Under ''Startup'', choose one wiki and network to start when ForgeShare opens. With wiki login enabled, enter the password each time; it is not saved. Choose ''Only open the library'' to disable automatic wiki startup. Help also explains how to add or remove the app from OS login startup. Importing the plugin enables none of this automatically.
+
+
+Funnel — share over the internet
+
+Funnel needs HTTPS and Funnel permission in Tailscale. It supports only 443, 8443 or 10000. ForgeShare selects a free port and never replaces existing services. If all three are occupied, Funnel cannot start on this computer until one is freed. Tailscale sharing is private; a Funnel address is public and protected by the codes. Repeated login attempts are limited. Choose codes that are not easy to guess. Automatic Funnel startup is not included in this version.

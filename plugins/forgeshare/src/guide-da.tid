@@ -56,7 +56,11 @@ Brug dette på dit eget betroede netværk: forbindelsen bruger HTTP uden krypter
 
 Wiki-login er valgfrit. Med login bruger I ét fælles brugernavn og en adgangskode, som du vælger. Uden login kan alle med Tailscale-adgang til wikien læse og redigere. Appen husker ikke adgangskoden mellem starter.
 
-Tailscale-valget kræver Tailscale hos deltagerne. Tailscale Funnel kan give offentlig internetadgang, men aktiveres ikke af ForgeShare.
+Funnel — del via internettet
+
+Vælg <b>Deling → Funnel</b>, og tryk <b>Del</b> ved wikien. Vælg én kode til læsere og en anden til redaktører. Gæster åbner linket fra <b>Kopiér adresse</b> og indtaster kun deres kode; de behøver ikke Tailscale. <b>Åbn</b> i hjælperen giver dig selv redigeringsadgang. Koderne gælder hele wikien. Giv kun redaktørkoden til personer, du stoler på. Koder spørges ved hver start og gemmes ikke. Login varer højst otte timer og ophører, når du stopper delingen. Åbn <code>/_forgeshare/login</code> på wikiens adresse for at bruge en anden kode.
+
+Funnel kræver HTTPS og tilladelse til Funnel i Tailscale. Den kan kun bruge 443, 8443 eller 10000. ForgeShare vælger en ledig port og overtager aldrig eksisterende tjenester. Hvis alle tre er optaget, kan Funnel ikke starte på denne computer, før en af adresserne er frigivet. Tailscale-deling er privat; Funnel-adressen er offentlig og beskyttes af koderne. Gentagne loginforsøg begrænses. Vælg koder, der ikke er lette at gætte. Automatisk opstart af Funnel er ikke med i denne udgave.
 
 </div>
 </details>
