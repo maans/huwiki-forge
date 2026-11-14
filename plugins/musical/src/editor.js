@@ -27,6 +27,7 @@ function attach(o){
  var doc=o.doc,film=o.film,m=ensureMusical(film),inner=o.view.clips&&o.view.clips[0]&&o.view.clips[0].view,source=inner&&inner.scene;
  var L=translations[/\/en(?:-|$)/i.test(o.wiki.getTiddlerText("$:/language",""))?"en":"da"];
  L.addSong=L===translations.da?"Tilføj musiknummer":"Add complete song";
+ L.replaceSong=L===translations.da?"Skift nodeark":"Replace ABC score";
  L.removeSong=L===translations.da?"Fjern nummer":"Remove song";
  L.moveEarlier=L===translations.da?"Flyt tidligere":"Move earlier";
  L.moveLater=L===translations.da?"Flyt senere":"Move later";
@@ -119,6 +120,9 @@ function attach(o){
    m.songs.splice(choice.key+1,0,{id:id,score:select.value,duration:16,kind:"complete-abc"});
    persistSongs();
   };
+  var replace=el(doc,"button","huw-musical-replace-song",L.replaceSong,row);replace.type="button";
+  replace.disabled=!available.length;
+  replace.onclick=function(){var current=m.songs[choice.key];if(!current)return;current.score=select.value;current.duration=16;persistSongs();};
   var remove=el(doc,"button","huw-musical-remove-song",L.removeSong,row);remove.type="button";
   remove.disabled=m.songs.length<=1;remove.onclick=function(){m.songs.splice(choice.key,1);persistSongs();};
   var earlier=el(doc,"button","huw-musical-move-song-earlier",L.moveEarlier,row);earlier.type="button";
