@@ -9,7 +9,7 @@ using System.Web.Script.Serialization;
 using System.Windows.Forms;
 using System.Reflection;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.2.0")]
+[assembly: AssemblyVersion("0.1.3.0")]
 
 class Session {
     public Process Process; public string Name, Url = "", Id=""; public bool Stopping, Local, OpenWhenReady;
@@ -64,7 +64,7 @@ class ForgeShare : Form {
         var content=new TableLayoutPanel { Dock=DockStyle.Fill, Padding=new Padding(24), ColumnCount=1, RowCount=8 };
         foreach(var height in new [] {50,35,48,0,35,35,0,55})content.RowStyles.Add(new RowStyle(height==0?SizeType.Percent:SizeType.Absolute,height==0?50:height));
         content.Controls.Add(new Label { Text=T("Mine wikier","My wikis"),Font=new Font("Segoe UI",25,FontStyle.Bold),AutoSize=true },0,0);
-        content.Controls.Add(new Label { Text=T("Lokale og delte wikier, samlet ét sted.","Local and shared wikis, together in one place."),AutoSize=true },0,1);
+        content.Controls.Add(new Label { Text=T("Find og saml dine lokale og delte wikier.","Find and collect your local and shared wikis."),AutoSize=true },0,1);
         var toolbar=new FlowLayoutPanel {Dock=DockStyle.Fill,WrapContents=false};
         string[] labels={T("Tilføj…","Add…"),T("Åbn","Open"),T("Del…","Share…"),T("Redigér…","Edit…"),T("Eksportér valgte…","Export selected…")};
         Action[] actions={AddToLibrary,()=>LaunchSelected(true),()=>LaunchSelected(false),EditSelected,ExportSelected};
