@@ -96,6 +96,7 @@ class ForgeShare : Form {
     }
     void UI(Action action) { if (!IsDisposed && IsHandleCreated) BeginInvoke(action); }
     void StartWiki() {
+        bool startupLaunch=nextStartup;nextStartup=false;
         var node=Node();
         if(node==null) {
             if(MessageBox.Show(T("Node.js skal installeres først. Vil du åbne den officielle downloadside?","Install Node.js first. Open its official download page?"),"ForgeShare",MessageBoxButtons.YesNo)==DialogResult.Yes)
@@ -103,15 +104,14 @@ class ForgeShare : Form {
             return;
         }
         if(!File.Exists(Helper)) { MessageBox.Show(T("Pak hele ZIP-filen ud. ForgeShare.mjs skal ligge ved siden af programmet.","Extract the whole ZIP. ForgeShare.mjs must stay beside the application."),"ForgeShare"); return; }
-        var session=new Session { Id=nextID,Local=nextLocal,OpenWhenReady=nextLocal && !nextStartup,Name=T("Vælger wiki…","Choosing a wiki…"), Row=new FlowLayoutPanel { AutoSize=true,WrapContents=false } };
+        var session=new Session { Id=nextID,Local=nextLocal,OpenWhenReady=nextLocal && !startupLaunch,Name=T("Vælger wiki…","Choosing a wiki…"), Row=new FlowLayoutPanel { AutoSize=true,WrapContents=false } };
         nextID="";nextLocal=false;
         session.Label=new Label { Width=300,Height=56,AutoEllipsis=true,TextAlign=ContentAlignment.MiddleLeft };
         session.Copy=new Button { Text=T("Kopiér adresse","Copy address"),AutoSize=true,Enabled=false };
         session.Stop=new Button { Text="Stop",AutoSize=true };
         session.Copy.Click+=(s,e)=>Clipboard.SetText(session.Url); session.Stop.Click+=(s,e)=>Stop(session);
         session.Row.Controls.AddRange(new Control[] { session.Label,session.Copy,session.Stop });
-        session.Process=new Process { StartInfo=Command(node,Quote(Helper)+" --gui --app"+(session.Id.Length==0?"":" --profile "+session.Id)+(session.Local?" --local":"")+(nextStartup?" --startup":"")),EnableRaisingEvents=true };
-        nextStartup=false;
+        session.Process=new Process { StartInfo=Command(node,Quote(Helper)+" --gui --app"+(session.Id.Length==0?"":" --profile "+session.Id)+(session.Local?" --local":"")+(startupLaunch?" --startup":"")),EnableRaisingEvents=true };
         session.Process.OutputDataReceived+=(s,e)=> {
             if(e.Data==null || e.Data.Length>65536) return;
             try { var data=new JavaScriptSerializer().Deserialize<Dictionary<string,string>>(e.Data);
