@@ -27,17 +27,17 @@ jobs:
         run: node scripts/musical-browser-smoke.mjs
       - name: Build standalone Musical Edition HTML
         run: node scripts/build-musical-demo.mjs
-      - name: Package Musical Playlist 0.3 test wiki
+      - name: Package Musical Crossfade 0.4 test wiki
         run: |
-          cp dist-musical/Musical-Edition-Prototyp.html dist-musical/Musical-Edition-Playlist-Test.html
+          cp dist-musical/Musical-Edition-Prototyp.html dist-musical/Musical-Edition-Crossfade-Test.html
           cd dist-musical
-          zip -q -9 Musical-Edition-Playlist-Test.zip Musical-Edition-Playlist-Test.html
+          zip -q -9 Musical-Edition-Crossfade-Test.zip Musical-Edition-Crossfade-Test.html
       - name: Publish HTML and ZIP for Mac and iPad testing
         uses: actions/upload-artifact@v4
         with:
-          name: Musical-Edition-Playlist-0.3
+          name: Musical-Edition-Crossfade-0.4
           path: |
-            dist-musical/Musical-Edition-Playlist-Test.html
-            dist-musical/Musical-Edition-Playlist-Test.zip
+            dist-musical/Musical-Edition-Crossfade-Test.html
+            dist-musical/Musical-Edition-Crossfade-Test.zip
           if-no-files-found: error
           retention-days: 14
