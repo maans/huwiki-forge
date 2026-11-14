@@ -12,7 +12,7 @@ For tjenester der kræver en server (fx modtagelse af offentlige formularbesvare
 
 ## Forge-forside og fælles navigation, 14. november 2026
 
-Forge er nu en selvstændig TiddlyWiki bygget fra `editions/forge/`. Fælles F-link til `https://forge.måns.dk/` i alle Editions; eksisterende HUWiki Plugin Library og HUWiki Community bevares. Forsiden viser Edition-kort afledt af det samme katalog, med teststatus og konkrete begrænsninger. Ingen build ved hvert besøg.
+Forge er nu en selvstændig TiddlyWiki bygget fra `editions/forge/`. Fælles F-link til `https://forge.måns.dk/` i alle Editions; HUWiki Plugin Library bevares. Community henviser til TiddlyWikis eget fællesskab uden en sidebar-fane. Forsiden viser Edition-kort afledt af det samme katalog, med teststatus og konkrete begrænsninger. Ingen build ved hvert besøg.
 
 **Lokalt verificeret:** 79 automatiske tests; rigtig Chromium-browser: hængelås i Mere-menuen, dansk/engelsk via TiddlyWikis kontrolpanel, native Gem, offline genåbning, redigering, endnu en Gem/genåbning og layout ved 1440/768/390 px. Eksisterende browserkontrol af pluginbiblioteket består også. CI og Pages kontrolleres særskilt ved udgivelsen. Se [forside, licenser og ejerens lokale redigeringsflow](forge-home.md).
 
