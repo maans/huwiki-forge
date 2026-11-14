@@ -82,17 +82,17 @@
     "edition-id": "musical",
     "name": "Musical Edition (test)",
     "status": "test",
-    "version": "0.1.0-test.1",
+    "version": "0.2.0-test.1",
     "order": "02.5",
     "build-url": "https://forge.måns.dk/assembler/?edition=musical",
     "build-url-da": "https://forge.måns.dk/assembler/?edition=musical&lang=da",
     "build-url-en": "https://forge.måns.dk/assembler/?edition=musical&lang=en",
     "heading-da": "Lav din egen musikvideo",
     "heading-en": "Create your own music video",
-    "description-da": "Lad tændstikmusikere spille og danse, mens kameraet klipper i takt med ABC-musikken.",
-    "description-en": "Animate stick-figure performers while a virtual camera follows the ABC soundtrack.",
-    "note-da": "Prototype. Fælles lyd/billede, kamera og iPad mangler browsertest.",
-    "note-en": "Prototype. Sound/image timing, camera and iPad still need browser testing."
+    "description-da": "Lav en musikvideo med levende nodeark, musikeranimationer, belysning og to virtuelle kameraer.",
+    "description-en": "Create a music video with live notation, performer animation, lighting and two virtual cameras.",
+    "note-da": "Musical Studio test. Lydsynkronisering og Safari/iPad kræver manuel afprøvning.",
+    "note-en": "Musical Studio test. Audio sync and Safari/iPad require manual testing."
   },
   {
     "title": "$:/huwiki/forge/edition/hupin",
