@@ -121,7 +121,7 @@ test("Community only lists published Forge Editions and opt-in public wiki links
  assert.equal(community.schemaVersion,1);
  assert.deepEqual(community.publicWikis,[],"No public user wikis may be invented without owner consent");
  assert.ok(editions.editions.length>=6);
- const assembler=await read("assembler/index.html");
+ const assembler=await read("assembler/ui.mjs");
  assert.ok(assembler.includes('new URL(location.href).searchParams.get("edition")'),"Community deep links should preselect the Edition");
  assert.ok(assembler.includes("editions.some(item=>item.id===requested)"),"Unknown Edition IDs must be ignored");
  assert.doesNotMatch(html,/google\.script\.run|DriveApp|\/api\/community\/upload/i,"Community is static, not a hidden upload service");

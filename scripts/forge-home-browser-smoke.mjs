@@ -25,7 +25,10 @@ try {
  await page.waitForSelector('.forge-card');
  const catalog=JSON.parse(await readFile(path.join(root,'catalog/editions.json'),'utf8'));
  assert.equal(await page.locator('.forge-card').count(),catalog.editions.length);
- assert.equal(await page.locator('.huw-forge-home').getAttribute('href'),'https://forge.måns.dk/');
+ assert.equal(await page.getByRole('button',{name:'show sidebar',exact:true}).isVisible(),true);
+ const columns=await page.locator('.forge-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
+ assert.equal(columns,3,'Three Edition cards across at 1440px');
+ assert.equal(await page.locator('.forge-custom a').getAttribute('href'),'https://forge.måns.dk/assembler/?lang=en');
  assert.equal(await page.locator('.forge-grid > p .forge-card').count(),catalog.editions.length);
  assert.equal(await page.getByRole('button',{name:'Edit this tiddler',exact:true}).isVisible(),false,'HTTP guest view hides edit');
  const homeFrame=page.locator('[data-tiddler-title="HUWiki Forge"]');
@@ -36,9 +39,11 @@ try {
  await homeFrame.getByRole('button',{name:'Reading / Editing',exact:true}).click();
  await homeFrame.getByRole('button',{name:'Edit this tiddler',exact:true}).waitFor({state:'hidden'});
  console.log('PASS original padlock in native More menu reversibly restores editing');
- for(const edition of catalog.editions)assert.equal(await page.locator(`[data-edition="${edition.id}"] .forge-card-action`).getAttribute('href'),'https://forge.måns.dk/assembler/?edition='+edition.id);
+ for(const edition of catalog.editions)assert.equal(await page.locator(`[data-edition="${edition.id}"] .forge-card-action`).getAttribute('href'),'https://forge.måns.dk/assembler/?edition='+edition.id+'&lang=en');
  assert.ok((await page.locator('.forge-home').innerText()).includes('does not change the public website'));
  if(process.env.FORGE_SCREENSHOTS){await mkdir(process.env.FORGE_SCREENSHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.FORGE_SCREENSHOTS,'forge-home-en.png'),fullPage:true});}
+ if(await page.getByRole('button',{name:'show sidebar',exact:true}).isVisible())await page.getByRole('button',{name:'show sidebar',exact:true}).click();
+ assert.equal(await page.locator('.huw-forge-home').getAttribute('href'),'https://forge.måns.dk/');
  await page.getByRole('button',{name:'control panel',exact:true}).click();
  const languages=page.locator('select').filter({has:page.locator('option[value="$:/languages/da-DK"]')});
  await languages.selectOption('$:/languages/da-DK');

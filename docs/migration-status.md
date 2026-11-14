@@ -14,7 +14,9 @@ For tjenester der kræver en server (fx modtagelse af offentlige formularbesvare
 
 Forge er nu en selvstændig TiddlyWiki bygget fra `editions/forge/`. Fælles F-link til `https://forge.måns.dk/` i alle Editions; eksisterende HUWiki Plugin Library og HUWiki Community bevares. Forsiden viser Edition-kort afledt af det samme katalog, med teststatus og konkrete begrænsninger. Ingen build ved hvert besøg.
 
-**Lokalt verificeret:** 71 automatiske tests; rigtig Chromium-browser: hængelås i Mere-menuen, dansk/engelsk via TiddlyWikis kontrolpanel, native Gem, offline genåbning, redigering, endnu en Gem/genåbning og layout ved 1440/768/390 px. Eksisterende browserkontrol af pluginbiblioteket består også. CI og Pages kontrolleres særskilt ved udgivelsen. Se [forside, licenser og ejerens lokale redigeringsflow](forge-home.md).
+**Lokalt verificeret:** 76 automatiske tests; rigtig Chromium-browser: hængelås i Mere-menuen, dansk/engelsk via TiddlyWikis kontrolpanel, native Gem, offline genåbning, redigering, endnu en Gem/genåbning og layout ved 1440/768/390 px. Eksisterende browserkontrol af pluginbiblioteket består også. CI og Pages kontrolleres særskilt ved udgivelsen. Se [forside, licenser og ejerens lokale redigeringsflow](forge-home.md).
+
+Forsiden har desuden tre kort på brede skærme og skjult, genåbneligt sidepanel. Assembleren tilbyder egne kombinationer fra de eksisterende kataloger med automatisk afhængighedskontrol. Browserprøver af to kombinationer og native lokal gemning består; alle kombinationer er ikke afprøvet.
 
 Denne forsidekontrol ændrer ikke acceptstatus for de øvrige Editions nedenfor. ForgeShare holdes adskilt.
 

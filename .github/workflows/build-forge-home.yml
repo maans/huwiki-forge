@@ -23,3 +23,7 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/forge-home-browser-smoke.mjs
+      - name: Test custom combinations, dependencies and offline downloads
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/composer-browser-smoke.mjs

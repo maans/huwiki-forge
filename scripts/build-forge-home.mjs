@@ -17,6 +17,8 @@ export async function editionIndex(){
   title:"$:/huwiki/forge/edition/"+e.id,tags:"$:/huwiki/forge/edition",text:"",
   "edition-id":e.id,name:e.name,status:e.status,version:e.version||"",order:e.home?.order||e.id,
   "build-url":"https://forge.måns.dk/assembler/?edition="+encodeURIComponent(e.id),
+  "build-url-da":"https://forge.måns.dk/assembler/?edition="+encodeURIComponent(e.id)+"&lang=da",
+  "build-url-en":"https://forge.måns.dk/assembler/?edition="+encodeURIComponent(e.id)+"&lang=en",
   "heading-da":e.home?.headingDa||e.name,"heading-en":e.home?.headingEn||e.name,
   "description-da":e.home?.descriptionDa||e.description,"description-en":e.home?.descriptionEn||e.description,
   "note-da":e.home?.noteDa||"Testudgave; browseraccept udestår.","note-en":e.home?.noteEn||"Test release; browser acceptance pending."
