@@ -10,7 +10,7 @@ using System.Windows.Forms;
 using System.Reflection;
 using System.Security.Cryptography;
 [assembly: AssemblyTitle("ForgeShare")]
-[assembly: AssemblyVersion("0.1.10.0")]
+[assembly: AssemblyVersion("0.1.11.0")]
 
 class Session {
     public Process Process; public string Name, Url = "", OwnerUrl = "", Id="", Mode="", Access=""; public bool Stopping, Local, OpenWhenReady;
@@ -313,10 +313,6 @@ class ForgeShare : Form {
     void LaunchSelected(bool local) {
         var e=OneEntry();if(e==null)return;
         if(!e.available){MessageBox.Show(T("Filen findes ikke længere på den gemte placering.","The file is no longer at its saved location."),"ForgeShare");return;}
-        if(e.kind=="html") {
-            if(local){try{Process.Start(new ProcessStartInfo(e.location){UseShellExecute=true});}catch{MessageBox.Show(T("Filen kunne ikke åbnes.","The file could not be opened."),"ForgeShare");}}
-            else MessageBox.Show(T("En HTML-fil skal først kopieres til en serverwiki. Se hjælpen i ForgeShare. Originalen kan fortsat bruges lokalt.","An HTML file first needs copying into a server wiki. See ForgeShare help. The original can still be used locally."),"ForgeShare");return;
-        }
         var existing=sessions.Find(s=>s.Id==e.id);
         if(existing!=null) {
             if(local && existing.Url.Length>0)Process.Start(new ProcessStartInfo(existing.OwnerUrl.Length>0?existing.OwnerUrl:existing.Url){UseShellExecute=true});
