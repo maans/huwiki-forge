@@ -31,7 +31,7 @@ Shop.prototype.upload=function(parent,label,object,key){var wrap=this.el('label'
 Shop.prototype.draw=function(){
  this.root.textContent='';var d=this.data.draft,step=guide.steps[this.data.step],lang=this.en?1:0;
  this.el('h2',this.t('Fra idé til din egen Shop','From idea to your own Shop'));
- this.el('p',this.t('En guide til et Shop Site, du kan dele med kunder. Testudgave: Google Sites og offentlig Funnel skal stadig prøves med din egen konto.','A guide to a Shop Site you can share with customers. Test edition: Google Sites and public Funnel still need testing with your own account.'));
+ this.el('p',this.t('En guide til et Shop Site, du kan dele med kunder. Testudgave: Google Sites-forløbet er afprøvet i Chrome. Afprøv også din egen butik; offentlig Funnel og fysiske mobilenheder afventer test.','A guide to a Shop Site you can share with customers. Test edition: the Google Sites workflow has been tested in Chrome. Test your own shop too; public Funnel and physical mobile devices still await testing.'));
  this.progressNode=this.el('p');this.progressNode.className='shop-progress';this.progress();
  var nav=this.el('nav');nav.setAttribute('aria-label',this.t('Opsætningstrin','Setup steps'));
  guide.steps.forEach((s,i)=>{var b=this.button(s.title[lang],()=>{this.data.step=i;this.save();this.draw();},nav);if(i===this.data.step)b.setAttribute('aria-current','step');});
@@ -54,6 +54,7 @@ Shop.prototype.draw=function(){
  if(this.data.step===4)this.exporter();
  if(this.data.step===5){this.select(this.root,this.t('Udgivelsesvej','Publishing route'),this.data,'route',[['sites','Google Sites'],['funnel','Tailscale Funnel']],()=>{this.save();this.draw();});this.checks(guide.routes[this.data.route]);if(this.data.route==='funnel'){this.link(this.t('Installér Tailscale ↗','Install Tailscale ↗'),'https://tailscale.com/download');this.el('pre','node shop-server.cjs\n\n# '+this.t('I et nyt terminalvindue:','In a new terminal window:')+'\ntailscale funnel 8787');this.button(this.t('Hent shop-server.cjs','Download shop-server.cjs'),()=>this.download('shop-server.cjs',this.wiki.getTiddlerText('$:/plugins/huwiki/shop/shop-server.cjs'),'text/javascript'));this.link(this.t('Prøv den lokale butik ↗','Try the local shop ↗'),'http://127.0.0.1:8787');}}
  if(this.data.step===6){var details=this.el('details');this.el('summary',this.t('Hvis noget driller','Troubleshooting'),details);guide.troubleshooting.forEach(t=>{this.el('h4',t[this.en?1:0],details);this.el('p',t[this.en?3:2],details);});this.link(this.t('Tailscale på Mac ↗','Tailscale on Mac ↗'),'https://tailscale.com/docs/install/mac');}
+ this.examples();
  var actions=this.el('div');actions.className='shop-actions';
  if(this.data.step>0)this.button(this.t('← Tilbage','← Back'),()=>{this.data.step--;this.save();this.draw();},actions);
  if(this.data.step<6)this.button(this.t('Næste →','Next →'),()=>{this.data.step++;this.save();this.draw();},actions);
@@ -85,3 +86,11 @@ Shop.prototype.exporter=function(){
 };
 Shop.prototype.refresh=function(changed){if(changed['$:/language']){this.refreshSelf();return true;}return false;};
 exports['forge-shop']=Shop;
+
+Shop.prototype.examples=function(){
+ var example=this.data.step===2&&this.data.draft.mode==='google'?['order-received.jpg','Et modtaget prøvesvar i det private ordreark. Kun opdigtede oplysninger er brugt.','A received test response in the private order sheet. Only fictional details were used.']:this.data.step===5&&this.data.route==='sites'?['google-sites-shop.jpg','Shop-eksporten indlejret og offentliggjort i Google Sites. Rammen er udvidet til hele kataloget.','The Shop export embedded and published in Google Sites. The frame has been expanded to fit the whole catalog.']:null;
+ if(!example)return;
+ var details=this.el('details');details.className='shop-example';this.el('summary',this.t('Se et afprøvet eksempel','See a tested example'),details);
+ this.el('p',this.t('Skærmbilledet er fra en dansk testkonto, 14. november 2026. Knapnavne kan variere.','Screenshot from a Danish test account, 14 November 2026. Button labels may vary.'),details);
+ var image=this.el('img',null,details);image.alt=example[this.en?2:1];image.src='data:image/jpeg;base64,'+this.wiki.getTiddlerText('$:/plugins/huwiki/shop/examples/'+example[0],'');this.el('p',image.alt,details);
+};

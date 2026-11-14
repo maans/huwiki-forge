@@ -26,6 +26,8 @@ try{
   await ui.getByRole('checkbox').first().check();
   await ui.getByRole('button',{name:t('3. Dit private ordreark','3. Your private order sheet'),exact:true}).click();
   await ui.getByLabel(t('Privat adresse til ordrearket','Private order sheet address'),{exact:true}).fill('https://docs.google.com/spreadsheets/d/PRIVATE-SHEET/edit');
+  await ui.getByText(t('Se et afprøvet eksempel','See a tested example'),{exact:true}).click();
+  await ui.locator('.shop-example img').evaluate(img=>img.decode());assert.ok(await ui.locator('.shop-example img').evaluate(img=>img.naturalWidth>0),'offline screenshot must decode');
   await ui.getByRole('button',{name:t('4. Prøv som kunde','4. Try it as a customer'),exact:true}).click();await ui.getByRole('checkbox').first().check();
   // Changing a product must invalidate previous order checks.
   await ui.getByRole('button',{name:t('1. Din butik','1. Your shop'),exact:true}).click();await ui.getByLabel(t('Pris (DKK)','Price (DKK)'),{exact:true}).first().fill('55');
@@ -43,7 +45,7 @@ try{
   const reopened=await context.newPage();await reopened.goto(pathToFileURL(savedFile).href);await reopened.locator('.forge-shop').waitFor();assert.equal(await reopened.evaluate(()=>$tw.wiki.getTiddlerData('$:/plugins/huwiki/shop/data').draft.items[0].price),'55');assert.equal(await reopened.evaluate(()=>$tw.wiki.getTiddlerData('$:/plugins/huwiki/shop/data').checks['preview-checked']),true);
   // Native language switching changes the guide, without translating the owner's catalog data.
   await reopened.evaluate(lang=>$tw.wiki.addTiddler({title:'$:/language',text:'$:/languages/'+lang}),da?'en-GB':'da-DK');await reopened.getByRole('heading',{name:da?'From idea to your own Shop':'Fra idé til din egen Shop',exact:true}).waitFor();
-  await ui.getByRole('button',{name:t('6. Del med kunder','6. Share with customers'),exact:true}).click();await ui.getByLabel(t('Udgivelsesvej','Publishing route'),{exact:true}).selectOption('funnel');
+  await ui.getByRole('button',{name:t('6. Del med kunder','6. Share with customers'),exact:true}).click();await ui.getByText(t('Se et afprøvet eksempel','See a tested example'),{exact:true}).click();await ui.locator('.shop-example img').evaluate(img=>img.decode());assert.ok(await ui.locator('.shop-example img').evaluate(img=>img.naturalWidth>0));await ui.getByLabel(t('Udgivelsesvej','Publishing route'),{exact:true}).selectOption('funnel');
   const [helper]=await Promise.all([page.waitForEvent('download'),ui.getByRole('button',{name:t('Hent shop-server.cjs','Download shop-server.cjs'),exact:true}).click()]);const helperFile=path.join(dir,'shop-server-'+language+'.cjs');await helper.saveAs(helperFile);assert.equal(await readFile(helperFile,'utf8'),await readFile('plugins/shop/src/shop-server.cjs','utf8'));
   for(const width of [1440,390]){await page.setViewportSize({width,height:1000});assert.ok(await ui.evaluate(el=>el.scrollWidth<=el.clientWidth+2),'wizard overflow at '+width);await customerPage.setViewportSize({width,height:1000});assert.ok(await customerPage.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+2),'customer page overflow at '+width);}
   if(process.env.SHOP_SCREENSHOT&&da){await page.setViewportSize({width:1440,height:1000});await ui.getByRole('button',{name:'2. Bestillingsformular',exact:true}).click();await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:process.env.SHOP_SCREENSHOT,fullPage:true});}

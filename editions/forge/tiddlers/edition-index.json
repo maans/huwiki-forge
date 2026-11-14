@@ -158,7 +158,7 @@
     "edition-id": "shop",
     "name": "Shop Edition (test)",
     "status": "test",
-    "version": "0.2.0-test.1",
+    "version": "0.2.0-test.2",
     "order": "09",
     "build-url": "https://forge.måns.dk/assembler/?edition=shop",
     "build-url-da": "https://forge.måns.dk/assembler/?edition=shop&lang=da",
@@ -167,7 +167,7 @@
     "heading-en": "Your own shop, step by step",
     "description-da": "Lav et Shop Site og følg opsætningen af formular, ordreark og udgivelse. Ni skabeloner følger med.",
     "description-en": "Create a Shop Site and follow the form, order sheet and publishing setup. Includes nine templates.",
-    "note-da": "Testudgave. Lokal eksport afprøvet i Chrome; Google Sites og offentlig Funnel kræver stadig accept med ejerens konto.",
-    "note-en": "Test edition. Local export tested in Chrome; Google Sites and public Funnel still need acceptance with the owner’s account."
+    "note-da": "Testudgave. Google Sites og prøveordre til privat Sheets-ark afprøvet i Chrome. Offentlig Funnel og fysisk mobiltest udestår.",
+    "note-en": "Test edition. Google Sites and a test order into a private Sheet verified in Chrome. Public Funnel and physical mobile testing remain pending."
   }
 ]
