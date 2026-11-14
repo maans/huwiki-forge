@@ -7,9 +7,13 @@
   "tiddlers": [
     "tiddlers/config.json",
     "tiddlers/seed.json",
-    "../shared/libraries.json"
+    "../shared/libraries.json",
+    "tiddlers/edition-index.json",
+    "tiddlers/design.json",
+    "tiddlers/reader.json"
   ],
   "plugins": [
-    "../../themes/modern/dist/theme.json"
+    "../../themes/modern/dist/theme.json",
+    "../../languages/da-DK/plugin.json"
   ]
 }

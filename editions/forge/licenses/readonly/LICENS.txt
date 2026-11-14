@@ -1,0 +1,64 @@
+LICENS OG OPHAV — HUWiki ReadOnly
+Kontrolleret 20. oktober 2026 i originalkilden.
+
+Original komponent: TiddlyTools/Stylesheet/ReadOnly
+Ophavsmand: Eric L. Shulman.
+Original modified-felt: 20241016132212697.
+Original created-felt: 20150321230215146.
+Kilde: https://tiddlytools.com/#TiddlyTools%2FStylesheet%2FReadOnly
+Juridisk meddelelse: https://tiddlytools.com/#TiddlyTools%2FLegal
+Legal-tiddlerens modified-felt: 20250606105531901.
+
+TiddlyTools/Legal angiver Creative Commons Attribution-NonCommercial-
+ShareAlike 4.0 International (CC BY-NC-SA 4.0) for bl.a. stylesheets.
+Copyrightlinjen er i kilden dynamisk: © 2005-<<now YYYY>> Eric L Shulman,
+All Rights Reserved; ved kontrollen er året 2026.
+
+Licens: https://creativecommons.org/licenses/by-nc-sa/4.0/
+Præcis licenstekst: https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode.en
+Tilpasning og deling er tilladt til ikke-kommercielle formål under
+licensvilkårene. Attribution, licenshenvisning og ændringsangivelse skal
+bevares; den tilpassede komponent deles under samme licens. Kommerciel
+brug er ikke omfattet af denne tilladelse.
+
+Originalkildens supplerende instruktioner kræver bevaret dokumentation,
+credits, licens og kilde-URL. Ændrede komponenter skal omdøbes og have
+inline-kommentarer samt revisionshistorik. Hele TiddlyTools-webstedet og
+dets samlede design må ikke genudgives. Denne pakke indeholder derfor kun
+den relevante originale komponent og den juridiske meddelelse, ikke hele
+webstedet. Intet samarbejde med eller godkendelse fra Eric L. Shulman antydes.
+
+Modificeret navn:
+HUWiki ReadOnly (based on Eric Shulman's TiddlyTools ReadOnly)
+
+Ændringer, 20. oktober 2026:
+- HUWiki-navn, attribution, kilde og licensfelter tilføjet.
+- CSS-listen over redigerings-/gemmeknapper udvides på serveren.
+- Protokolbaseret opstart og brugerens oplåsningsknap fjernet.
+- Stylesheet indlæses kun i den servergodkendte læsevisning.
+- Visuel læserstatus tilføjet; original dokumentation bevares i
+  $:/HUWiki/ReaderLicense samt i denne pakkes licenses-mappe.
+- Den ændrede stylesheet-komponent udgives under CC BY-NC-SA 4.0.
+
+Serverens rettighedskontrol er HUWiki-kode og en separat mekanisme.
+Stylesheetet kan ikke i sig selv beskytte data. Andre medfølgende
+HUWiki-/tredjepartskomponenter beholder deres eksisterende licensvilkår.
+
+Original komponent og Legal-tiddler findes som komplette, uændrede
+JSON-udtræk i denne mappe. Filhashene nedenfor refererer til disse udtræk.
+
+SHA-256 ReadOnly-original.json: 2f01a9fe78037efeaf8322ac1ae634904d50bd5ab701f58e7cb1347ce2e76fad
+SHA-256 TiddlyTools-Legal-original.json: 1df7cba3a6172b99bf4b9e7feb9fe896fbf4a6c546803e9251bfaeeb17d47e92
+
+RC5 revision 2026-10-20: HUWiki author reading mode reuses the modified
+ReadOnly CSS locally with a reversible author-only toggle. Original credits,
+source, documentation and CC BY-NC-SA 4.0 remain unchanged.
+
+RC6 revision 2026-10-20: author toggle uses native toolbar tags and a
+shadow visibility default of hide, placing it in the core More menu.
+No changes to original license, credits or source references.
+
+RC7 revision 2026-10-20: HUWiki reading UI additionally hides export controls
+and author sidebar tabs. Reversible for authors; original license unchanged.
+
+Personal 0.4.20-readers-rc1, 2026-10-21: Den eksisterende HUWiki-variant integreres i servergodkendt Personal-læseadgang. Original attribution, dokumentation, kilde og licens bevares.

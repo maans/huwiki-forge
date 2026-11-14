@@ -11,6 +11,17 @@ import {pathToFileURL} from "node:url";
 import {assembleHtml,loadEdition} from "../assembler/assemble.mjs";
 
 const root=path.resolve(import.meta.dirname,"..");
+export async function editionIndex(){
+ const catalog=JSON.parse(await readFile(path.join(root,"catalog/editions.json"),"utf8"));
+ return catalog.editions.map(e=>({
+  title:"$:/huwiki/forge/edition/"+e.id,tags:"$:/huwiki/forge/edition",text:"",
+  "edition-id":e.id,name:e.name,status:e.status,version:e.version||"",order:e.home?.order||e.id,
+  "build-url":"https://forge.måns.dk/assembler/?edition="+encodeURIComponent(e.id),
+  "heading-da":e.home?.headingDa||e.name,"heading-en":e.home?.headingEn||e.name,
+  "description-da":e.home?.descriptionDa||e.description,"description-en":e.home?.descriptionEn||e.description,
+  "note-da":e.home?.noteDa||"Testudgave; browseraccept udestår.","note-en":e.home?.noteEn||"Test release; browser acceptance pending."
+ }));
+}
 async function localFetch(url){
  const parsed=new URL(url);
  const expectedOrigin="https://forge.example";
@@ -18,6 +29,7 @@ async function localFetch(url){
  if(parsed.origin!==expectedOrigin||!parsed.pathname.startsWith(prefix))
   return {ok:false,status:403};
  try {
+  if(parsed.pathname===prefix+"editions/forge/tiddlers/edition-index.json")return {ok:true,status:200,json:editionIndex};
   const data=await readFile(path.join(root,parsed.pathname.slice(prefix.length)),"utf8");
   return {ok:true,status:200,json:async()=>JSON.parse(data)};
  }catch(error){
@@ -34,6 +46,15 @@ export async function buildForgeHome(){
 }
 async function main(){
  const html=await buildForgeHome();
+ const index=JSON.stringify(await editionIndex(),null,2)+"\n";
+ const indexPath=path.join(root,"editions/forge/tiddlers/edition-index.json");
+ if(process.argv.includes("--check")){
+  if(await readFile(path.join(root,"index.html"),"utf8")!==html)throw Error("Stale index.html: run node scripts/build-forge-home.mjs");
+  if(await readFile(indexPath,"utf8")!==index)throw Error("Stale Edition cards: run node scripts/build-forge-home.mjs");
+  console.log("Public Forge wiki matches its sources");
+  return;
+ }
+ await writeFile(indexPath,index);
  await writeFile(path.join(root,"index.html"),html);
  console.log("Built public Forge TiddlyWiki:",Buffer.byteLength(html),"bytes");
 }

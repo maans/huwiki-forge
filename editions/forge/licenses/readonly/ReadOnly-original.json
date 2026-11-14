@@ -1,0 +1,10 @@
+{
+  "text": "\\define readonly()\t$:/config/TiddlyTools/ReadOnly\n\\define dragndrop()\t$:/config/DragAndDrop/Enable\n\\define buttons()\tnew-tiddler new-journal new-image new-here new-journal-here clone edit delete timestamp encryption import control-panel manager tag-manager save-wiki\n\n\\define styles()\n<$list filter=\"[<readonly>text[yes]]\">\n\t.authortools { display:none   !important; }\n\t.readertools { display:inline !important; }\n\t*[class=\"tc-btn-TiddlyTools%2FSaveChanges\"] { display:none !important; }\n\t<$list filter=\"[enlist<buttons>addprefix[tc-btn-$:/core/ui/Buttons/]encodeuricomponent[]]\">\n\t*[class~=\"<<currentTiddler>>\"] { display:none !important; }\n\t</$list>\n</$list>\n<$list filter=\"[<readonly>!text[yes]]\">\n\t.authortools { display:inline !important; }\n\t.readertools { display:none;  !important; }\n</$list>\n\\end\n\n\\define startup()\n<$action-setfield $tiddler=<<readonly>>  text={{{ [{$:/info/url/protocol}match[file:]then[no]else[yes]] }}}/>\n<$action-setfield $tiddler=<<dragndrop>> text={{{ [{$:/info/url/protocol}match[file:]then[yes]else[no]] }}}/>\n\\end\n\n\\define toggle(tid) <$action-setfield $tiddler=<<$tid$>> text={{{ [<readonly>!text[yes]then[yes]else[no]] }}}/>\n\n\\whitespace trim\n@@display:none;<<styles>><<startup>>@@\n<$button class=tc-btn-invisible tooltip={{{ [<readonly>text[yes]then[un]] [[lock this document]] +[join[]] }}}>\n\t<$transclude tiddler={{{ [[$:/core/images/]] [<readonly>!text[yes]then[un]] [[locked-padlock]] +[join[]] }}}/>\n\t<<toggle readonly>><<toggle dragndrop>>\n</$button>",
+  "created": "20150321230215146",
+  "title": "TiddlyTools/Stylesheet/ReadOnly",
+  "modified": "20241016132212697",
+  "tags": "$:/tags/TopRightBar $:/tags/Stylesheet $:/tags/ViewToolbar $:/tags/StartupAction/Browser",
+  "caption": "{{$:/core/images/locked-padlock}} toggle read-only",
+  "description": "Lock/unlock this document (show/hide editing and saving functions)",
+  "view-template-body": ""
+}

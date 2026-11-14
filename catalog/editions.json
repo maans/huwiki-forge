@@ -7,7 +7,16 @@
       "description": "Editable bilingual Forge homepage, shared Plugin Library and Community, and a local-copy-friendly TiddlyWiki",
       "status": "test",
       "manifest": "../editions/forge/manifest.json",
-      "version": "0.1.0-test.1"
+      "version": "0.1.0-test.1",
+      "home": {
+        "headingDa": "Tag denne forside med dig",
+        "headingEn": "Keep your own copy of this page",
+        "descriptionDa": "Tag denne indgang til Editions og biblioteker med dig som en lokal wiki.",
+        "descriptionEn": "Keep this gateway to Editions and libraries as your own local wiki.",
+        "noteDa": "Biblioteker og nye downloads kræver internet.",
+        "noteEn": "Libraries and new downloads require internet access.",
+        "order": "06"
+      }
     },
     {
       "id": "hupedia",
@@ -15,7 +24,16 @@
       "description": "HUPedia: readable editable WikiText, Danish/English infoboxes and article translations using TiddlyWiki's language",
       "status": "test",
       "manifest": "../editions/hupedia/manifest.json",
-      "version": "0.2.4-test.1"
+      "version": "0.2.4-test.1",
+      "home": {
+        "headingDa": "Artikler, kilder og overblik",
+        "headingEn": "Articles, sources and knowledge",
+        "descriptionDa": "Saml artikler, faktabokse og kilder i dit eget opslagsværk.",
+        "descriptionEn": "Build your own reference library of articles, fact boxes and sources.",
+        "noteDa": "Artikelvisning og sprog er stadig under afprøvning.",
+        "noteEn": "Article display and language support are still being tested.",
+        "order": "01"
+      }
     },
     {
       "id": "tegne",
@@ -26,7 +44,16 @@
       "manifest": "../editions/tegne/manifest.json",
       "bundledPlugins": [
         "site-publisher"
-      ]
+      ],
+      "home": {
+        "headingDa": "Tegninger og skitser",
+        "headingEn": "Drawings and sketches",
+        "descriptionDa": "Tegn med Excalidraw, gem redigerbare scener og udgiv som HTML.",
+        "descriptionEn": "Draw with Excalidraw, keep editable scenes and publish to HTML.",
+        "noteDa": "Stor HTML-fil. Mac- og iPad-accept udestår.",
+        "noteEn": "Large HTML file. Mac and iPad acceptance is pending.",
+        "order": "03"
+      }
     },
     {
       "id": "music",
@@ -39,7 +66,16 @@
         "site-publisher",
         "pdf-publisher",
         "musescore-import"
-      ]
+      ],
+      "home": {
+        "headingDa": "Noder, afspilning og undervisning",
+        "headingEn": "Notation, playback and teaching",
+        "descriptionDa": "Skriv noder med ABC, importer fra MuseScore og udforsk seks undervisningspakker.",
+        "descriptionEn": "Write ABC notation, import from MuseScore and explore six teaching collections.",
+        "noteDa": "Afspilning, MIDI og iPad kræver fortsat afprøvning.",
+        "noteEn": "Playback, MIDI and iPad support still need testing.",
+        "order": "02"
+      }
     },
     {
       "id": "hupin",
@@ -50,14 +86,32 @@
       "version": "0.1.0-test.1",
       "bundledPlugins": [
         "hupin"
-      ]
+      ],
+      "home": {
+        "headingDa": "Klikbare billeder og kort",
+        "headingEn": "Clickable images and maps",
+        "descriptionDa": "Sæt klikbare punkter på billeder og SVG og forbind dem med dine tekster.",
+        "descriptionEn": "Add clickable hotspots to images and SVG and connect them to your notes.",
+        "noteDa": "Engelsk brugerflade er endnu ikke færdig.",
+        "noteEn": "The English interface is not yet complete.",
+        "order": "04"
+      }
     },
     {
       "id": "demo",
       "name": "Demo Edition",
       "description": "Minimal test af TiddlyWiki-plugin og før-boot-indlæsning.",
       "status": "test",
-      "manifest": "../editions/demo/manifest.json"
+      "manifest": "../editions/demo/manifest.json",
+      "home": {
+        "headingDa": "Prøv en enkel wiki",
+        "headingEn": "Try a simple wiki",
+        "descriptionDa": "En lille wiki til at prøve Forge, redigering og lokal gemning.",
+        "descriptionEn": "A small wiki for trying Forge, editing and local saving.",
+        "noteDa": "Minimal testudgave.",
+        "noteEn": "Minimal test edition.",
+        "order": "05"
+      }
     }
   ],
   "plugins": [
