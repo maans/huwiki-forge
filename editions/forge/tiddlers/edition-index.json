@@ -150,5 +150,24 @@
     "description-en": "Give your tiddlers a stage. Start with PasteUp, seven stories or a locally imported document.",
     "note-da": "Visuel Office-import kræver valgfri lokal LibreOffice-hjælper eller en PDF. Mobil/touch udestår.",
     "note-en": "Visual Office import uses an optional local LibreOffice helper or a PDF. Mobile/touch testing is pending."
+  },
+  {
+    "title": "$:/huwiki/forge/edition/shop",
+    "tags": "$:/huwiki/forge/edition",
+    "text": "",
+    "edition-id": "shop",
+    "name": "Shop Edition (test)",
+    "status": "test",
+    "version": "0.2.0-test.1",
+    "order": "09",
+    "build-url": "https://forge.måns.dk/assembler/?edition=shop",
+    "build-url-da": "https://forge.måns.dk/assembler/?edition=shop&lang=da",
+    "build-url-en": "https://forge.måns.dk/assembler/?edition=shop&lang=en",
+    "heading-da": "Din egen butik, trin for trin",
+    "heading-en": "Your own shop, step by step",
+    "description-da": "Lav et Shop Site og følg opsætningen af formular, ordreark og udgivelse. Ni skabeloner følger med.",
+    "description-en": "Create a Shop Site and follow the form, order sheet and publishing setup. Includes nine templates.",
+    "note-da": "Testudgave. Lokal eksport afprøvet i Chrome; Google Sites og offentlig Funnel kræver stadig accept med ejerens konto.",
+    "note-en": "Test edition. Local export tested in Chrome; Google Sites and public Funnel still need acceptance with the owner’s account."
   }
 ]

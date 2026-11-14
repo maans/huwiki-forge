@@ -1,0 +1,25 @@
+name: Shop guided setup and customer export
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify original source and reproducible Shop package
+        run: node scripts/build-shop.mjs --check
+      - name: Install browser controller
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Test native languages, saved checklist, customer HTML and Google Sites code
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/shop-browser-smoke.mjs

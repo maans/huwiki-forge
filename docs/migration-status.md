@@ -45,7 +45,7 @@ Den gamle HUPedia-kilde er bevaret i komprimeret form i `migration/hupedia-sourc
 | CutOut | `CutOutEdition.js`, `CutOutAsset01_000.js` | **Kreativ testudgave 0.6.2-test.2:** oprindelig samling, tegnebro, Slideshow, scener og kameraforestilling. Lokal eksport og native sprogvalg; mobil/touch udestår. [Kilde, licens og browseraccept](cutout-migration.md). |
 | Samarbejde | `PersonalAsset07.js`, `PersonalLocalization.js` | Original `$:/plugins/huwiki/collaboration` 0.1.0 med beskeder, svartråde, emner og fælles noter, BSD-3-Clause. Skal migreres som Samarbejds Edition **med ForgeShare indbygget**, native dansk/engelsk og uden Google-tvang. Endnu ikke udgivet på Forge. |
 | Studio | `StudioEdition.js`, `Studio.js`, `StudioPublish.js` | Bevar lokalt design- og pluginværksted; publicering som enkelte GitHub-filer bliver en særskilt, frivillig Publisher |
-| Shop | `ShopEdition.js` | Erstat eksisterende server/ordreflow med lokale skabeloner og en valgfri selvhostet modtagertjeneste til offentlige ordrer |
+| Shop | `ShopEdition.js` | **Testudgave 0.2.0-test.1:** ni originale skabeloner, lokal kundeside og guidet manuel Forms/Sheets-opsætning. Google Sites og Funnel har hver sin guide; offentlig kontoaccept udestår. [Shop-migration](shop-migration.md). |
 | Spørgeskema | `SurveyEdition.js`, `SurveyLive.js` | Erstat Forms/Sheets med lokal spørgeskemaredigering, delbare formularer og en valgfri selvhostet modtager |
 | Slideshow | `SlideshowEdition.js`, `SlideshowPublishing.js` | **Testudgave 0.8.39-test.1:** syv originale fortællinger, PasteUp, lokal import/eksport, PDF og native gem/genåbn. [Accept og grænser](creative-editions.md). |
 | AV | `AVEdition.js`, `AVWorkshopAsset.js` | Lokal afspilning/redigering først; Drive-søgning/upload skal være valgfrit eller erstattes |
@@ -96,3 +96,7 @@ CutOut og Slideshow er udvidet som beskrevet i [den samlede acceptoversigt](crea
 **ForgeShare på forsiden:** Forge har et selvstændigt plugin-kort på lige fod med Editions. Det beskriver deling på lokalt netværk og via Tailscale. Kortet viser “På vej”, indtil den faktiske pluginpakke findes i det eksisterende biblioteksregister; ved genbygning bruges pakkens verificerede downloadsti og version. Efter tilføjelse af ForgeShare køres de eksisterende registry- og forsidebyggere.
 
 **Forge-startsprog:** Forsiden bruger TiddlyWikis native opstartshandling og `$:/info/browser/language` til at vælge en medfølgende sprogpakke, når `$:/language` endnu kun er kernens standard. Dansk og engelsk er indlejret; andre browsersprog falder tilbage til engelsk. Et eksplicit valgt/gemt `$:/language` bevares. Der bygges ikke på ny ved hvert besøg, og ingen sprogpakker hentes i baggrunden. Se [TiddlyWikis StartupActions](https://tiddlywiki.com/static/StartupActions.html).
+
+## Shop: manuel opsætning og kundeside
+
+Efter brugerens præcisering er Shop nu en testudgave med valgfri Google Forms/Sheets-opsætning, hvor ejeren selv logger ind og udfører handlingerne. Lokal katalogredigering og eksport kræver ikke Google. Den nye [Shop-acceptoversigt](shop-migration.md) erstatter de ældre Shop-afgrænsninger ovenfor. Offentlig Google Sites-/Funnel-accept er fortsat udestående; guiden og katalogkortet siger dette tydeligt.
