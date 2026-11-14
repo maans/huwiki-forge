@@ -1284,7 +1284,7 @@ export function dialogCommand(platform, kind, message, initial = '', env = proce
   // paths and passwords travel only over inherited stdin/stdout pipes.
   // The PowerShell fallback remains for users launching the bare .mjs helper.
   if(platform === 'win32' && env.FORGESHARE_NATIVE &&
-      path.basename(env.FORGESHARE_NATIVE).toLowerCase() === 'forgeshare.exe') {
+      path.win32.basename(env.FORGESHARE_NATIVE).toLowerCase() === 'forgeshare.exe') {
     return [env.FORGESHARE_NATIVE, ['--dialog'],
       JSON.stringify({kind,message,initial,cancel:ui('Cancel','Annuller')})];
   }
