@@ -1,7 +1,62 @@
 {
   "schemaVersion": 1,
-  "source": "HUWiki Forge on GitHub",
+  "source": "TiddlyWiki Forge on GitHub",
   "items": [
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/abc",
+        "type": "application/json",
+        "name": "ABC Musik",
+        "description": "ABC Musik: eksisterende site-, nodepult- og Publisher-funktioner samt præcis bjælkesætning og linjebrud for enkeltstående 2/4-overgangstakter i 4/4.",
+        "author": "HUWiki",
+        "version": "0.3.31-test.8",
+        "plugin-type": "plugin",
+        "stability": "experimental",
+        "license": "MIT",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/abc/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/lessons-balkan",
+        "type": "application/json",
+        "name": "Balkan / Balkan",
+        "description": "DA/EN teaching module; requires ABC 0.3.14. Stable IDs and unmodified ABC data.",
+        "author": "HUWiki",
+        "version": "0.3.14",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/abc"
+      },
+      "path": "../../plugins/lessons-balkan/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/lessons-basic",
+        "type": "application/json",
+        "name": "Basic exercises / Grundøvelser",
+        "description": "DA/EN teaching module; requires ABC 0.3.14. Stable IDs and unmodified ABC data.",
+        "author": "HUWiki",
+        "version": "0.3.14",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/abc"
+      },
+      "path": "../../plugins/lessons-basic/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/cutout",
+        "type": "application/json",
+        "name": "CutOut",
+        "description": "Offline animation workshop · Dukker, animationer og lokal ZIP · Test",
+        "author": "HUWiki",
+        "version": "0.6.2-test.2",
+        "plugin-type": "plugin",
+        "stability": "experimental",
+        "core-version": ">=5.3.0"
+      },
+      "path": "../../plugins/cutout/dist/plugin.json"
+    },
     {
       "fields": {
         "title": "$:/plugins/huwiki/cutout-examples",
@@ -30,6 +85,46 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/tegne-da",
+        "type": "application/json",
+        "name": "Dansk",
+        "description": "Danske tegnetekster / Danish drawing strings · native $:/language",
+        "author": "HUWiki",
+        "version": "1.0.1-test.1",
+        "plugin-type": "plugin"
+      },
+      "path": "../../plugins/tegne-da/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/itw/tw-excalidraw",
+        "type": "application/json",
+        "name": "Excalidraw Forge",
+        "description": "Excalidraw Forge · native Dansk / English · original 0.3.4 drawing and library APIs",
+        "author": "ItsTheWhale",
+        "version": "0.3.4",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/linonetwo/tw-react $:/plugins/huwiki/tegne-da",
+        "stability": "STABILITY_1_EXPERIMENTAL",
+        "core-version": ">=5.3.2"
+      },
+      "path": "../../plugins/tegne-excalidraw/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/lessons-folk",
+        "type": "application/json",
+        "name": "Folk music / Folkemusik",
+        "description": "Nordic polka article, playable excerpt and bilingual folk index · 0.3.32",
+        "author": "HUWiki",
+        "version": "0.3.34-test.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/abc"
+      },
+      "path": "../../plugins/lessons-folk/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/forgeshare",
         "type": "application/json",
         "name": "ForgeShare",
@@ -43,49 +138,34 @@
     },
     {
       "fields": {
-        "title": "$:/plugins/huwiki/lessons-balkan",
+        "title": "$:/plugins/huwiki/hupedia",
         "type": "application/json",
-        "name": "HUWiki · Balkan / Balkan",
-        "description": "DA/EN teaching module; requires HUWiki ABC 0.3.14. Stable IDs and unmodified ABC data.",
+        "name": "HUPedia — article tools / artikelværktøjer",
+        "description": "Article types, forms and editable infoboxes / Artikeltyper, formularer og faktabokse",
         "author": "HUWiki",
-        "version": "0.3.14",
-        "plugin-type": "plugin",
-        "dependents": "$:/plugins/huwiki/abc"
+        "version": "0.2.4-test.1",
+        "plugin-type": "plugin"
       },
-      "path": "../../plugins/lessons-balkan/dist/plugin.json"
+      "path": "../../plugins/hupedia/dist/plugin.json"
     },
     {
       "fields": {
-        "title": "$:/plugins/huwiki/lessons-basic",
+        "title": "$:/plugins/huwiki/hupin",
         "type": "application/json",
-        "name": "HUWiki · Basic exercises / Grundøvelser",
-        "description": "DA/EN teaching module; requires HUWiki ABC 0.3.14. Stable IDs and unmodified ABC data.",
+        "name": "HUPin",
+        "description": "Præcise pins og klikområder på billeder, SVG, PasteUp og geografiske kort. Kompatibel med ældre BilledLink-projekter.",
         "author": "HUWiki",
-        "version": "0.3.14",
-        "plugin-type": "plugin",
-        "dependents": "$:/plugins/huwiki/abc"
+        "version": "0.3.3",
+        "plugin-type": "plugin"
       },
-      "path": "../../plugins/lessons-basic/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/lessons-folk",
-        "type": "application/json",
-        "name": "HUWiki · Folk music / Folkemusik",
-        "description": "Nordic polka article, playable excerpt and bilingual folk index · 0.3.32",
-        "author": "HUWiki",
-        "version": "0.3.34-test.1",
-        "plugin-type": "plugin",
-        "dependents": "$:/plugins/huwiki/abc"
-      },
-      "path": "../../plugins/lessons-folk/dist/plugin.json"
+      "path": "../../plugins/hupin/dist/plugin.json"
     },
     {
       "fields": {
         "title": "$:/plugins/huwiki/lessons-india",
         "type": "application/json",
-        "name": "HUWiki · India / Indien",
-        "description": "DA/EN teaching module; requires HUWiki ABC 0.3.14. Stable IDs and unmodified ABC data.",
+        "name": "India / Indien",
+        "description": "DA/EN teaching module; requires ABC 0.3.14. Stable IDs and unmodified ABC data.",
         "author": "HUWiki",
         "version": "0.3.14",
         "plugin-type": "plugin",
@@ -97,7 +177,7 @@
       "fields": {
         "title": "$:/plugins/huwiki/lessons-jazz",
         "type": "application/json",
-        "name": "HUWiki · Jazz / Jazz",
+        "name": "Jazz / Jazz",
         "description": "Jazz two-feel/walking bilingual interactive article · 0.3.32",
         "author": "HUWiki",
         "version": "0.3.34-test.1",
@@ -110,7 +190,7 @@
       "fields": {
         "title": "$:/plugins/huwiki/musescore-import",
         "type": "application/json",
-        "name": "HUWiki · MuseScore → ABC Importer",
+        "name": "MuseScore → ABC Importer",
         "description": "DA: MuseScore/MusicXML til ABC med node-preview og korte instrumentnavne. EN: MuseScore/MusicXML to ABC with preview and short, clean staff labels.",
         "author": "HUWiki contributors (AI-assisted development)",
         "version": "0.1.4-beta.1",
@@ -123,98 +203,9 @@
     },
     {
       "fields": {
-        "title": "$:/plugins/huwiki/lessons-rhythm",
-        "type": "application/json",
-        "name": "HUWiki · Rhythm / Rytmik",
-        "description": "DA/EN teaching module; requires HUWiki ABC 0.3.14 or newer. Stable IDs; complete two-bar bossa example in 4/4.",
-        "author": "HUWiki",
-        "version": "0.3.16-test.2",
-        "plugin-type": "plugin",
-        "dependents": "$:/plugins/huwiki/abc"
-      },
-      "path": "../../plugins/lessons-rhythm/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/abc",
-        "type": "application/json",
-        "name": "HUWiki ABC Musik",
-        "description": "ABC Musik: eksisterende site-, nodepult- og Publisher-funktioner samt præcis bjælkesætning og linjebrud for enkeltstående 2/4-overgangstakter i 4/4.",
-        "author": "HUWiki",
-        "version": "0.3.31-test.8",
-        "plugin-type": "plugin",
-        "stability": "experimental",
-        "license": "MIT",
-        "core-version": ">=5.4.1"
-      },
-      "path": "../../plugins/abc/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/cutout",
-        "type": "application/json",
-        "name": "HUWiki CutOut",
-        "description": "Offline animation workshop · Dukker, animationer og lokal ZIP · Test",
-        "author": "HUWiki",
-        "version": "0.6.2-test.2",
-        "plugin-type": "plugin",
-        "stability": "experimental",
-        "core-version": ">=5.3.0"
-      },
-      "path": "../../plugins/cutout/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/tegne-da",
-        "type": "application/json",
-        "name": "HUWiki Dansk",
-        "description": "Danske tegnetekster / Danish drawing strings · native $:/language",
-        "author": "HUWiki",
-        "version": "1.0.1-test.1",
-        "plugin-type": "plugin"
-      },
-      "path": "../../plugins/tegne-da/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/forge-demo",
-        "type": "application/json",
-        "name": "HUWiki Forge Demo",
-        "description": "Startup-plugin der kontrollerer før-boot indlæsning.",
-        "version": "0.0.1",
-        "plugin-type": "plugin"
-      },
-      "path": "../../plugins/forge-demo/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/hupedia",
-        "type": "application/json",
-        "name": "HUWiki HUPedia — article tools / artikelværktøjer",
-        "description": "Article types, forms and editable infoboxes / Artikeltyper, formularer og faktabokse",
-        "author": "HUWiki",
-        "version": "0.2.4-test.1",
-        "plugin-type": "plugin"
-      },
-      "path": "../../plugins/hupedia/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/hupin",
-        "type": "application/json",
-        "name": "HUWiki HUPin",
-        "description": "Præcise pins og klikområder på billeder, SVG, PasteUp og geografiske kort. Kompatibel med ældre BilledLink-projekter.",
-        "author": "HUWiki",
-        "version": "0.3.3",
-        "plugin-type": "plugin"
-      },
-      "path": "../../plugins/hupin/dist/plugin.json"
-    },
-    {
-      "fields": {
         "title": "$:/plugins/huwiki/music",
         "type": "application/json",
-        "name": "HUWiki Musik",
+        "name": "Musik",
         "description": "Music library, bilingual article index and discovery panel · 0.3.17",
         "author": "HUWiki",
         "version": "0.3.17-test.1",
@@ -228,7 +219,7 @@
       "fields": {
         "title": "$:/plugins/huwiki/pasteup",
         "type": "application/json",
-        "name": "HUWiki PasteUp",
+        "name": "PasteUp Forge",
         "description": "Plakater og interaktive plader / Posters and interactive boards · native Dansk / English",
         "author": "Eric L. Shulman; dansk tilpasning: HUWiki",
         "version": "0.1.8-test.1",
@@ -242,7 +233,7 @@
       "fields": {
         "title": "$:/plugins/huwiki/print-article",
         "type": "application/json",
-        "name": "HUWiki Publisher",
+        "name": "Publisher",
         "description": "Publish tiddlers and collections to PDF / Udgiv tiddlere og samlinger som PDF",
         "author": "HUWiki",
         "version": "0.2.8-test.1",
@@ -251,76 +242,6 @@
         "core-version": ">=5.2.0"
       },
       "path": "../../plugins/print-article/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/site-publisher",
-        "type": "application/json",
-        "name": "HUWiki SitePublisher",
-        "description": "Offline HTML publishing: CutOut, Excalidraw SVG, embedded media and HUPedia / HTML-site med SVG-tegninger og CutOut",
-        "author": "HUWiki",
-        "version": "0.1.15-test.1",
-        "plugin-type": "plugin",
-        "license": "MIT",
-        "core-version": ">=5.2.0"
-      },
-      "path": "../../plugins/site-publisher/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/slideshow",
-        "type": "application/json",
-        "name": "HUWiki Slideshow",
-        "description": "Slideshow, PasteUp, local documents, PDF and editable ZIP · Dansk / English",
-        "author": "HUWiki",
-        "version": "0.8.39-test.1",
-        "plugin-type": "plugin",
-        "dependents": "$:/plugins/huwiki/pasteup"
-      },
-      "path": "../../plugins/slideshow/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/theatre",
-        "type": "application/json",
-        "name": "HUWiki Teater / Theatre",
-        "description": "Forestillinger med PasteUp og CutOut / Performances with PasteUp and CutOut",
-        "author": "HUWiki",
-        "version": "0.6.1-test.1",
-        "plugin-type": "plugin",
-        "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/pasteup",
-        "core-version": ">=5.3.0"
-      },
-      "path": "../../plugins/theatre/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/tegne",
-        "type": "application/json",
-        "name": "HUWiki Tegne",
-        "description": "Standalone Excalidraw studio, Danish/English, local saves / Selvstændigt tegneatelier",
-        "author": "HUWiki",
-        "version": "1.1.2-test.1",
-        "plugin-type": "plugin",
-        "dependents": "$:/plugins/itw/tw-excalidraw $:/plugins/linonetwo/tw-react",
-        "requires-reload": "yes",
-        "license": "MIT",
-        "core-version": ">=5.4.1"
-      },
-      "path": "../../plugins/tegne/dist/plugin.json"
-    },
-    {
-      "fields": {
-        "title": "$:/plugins/huwiki/trim",
-        "type": "application/json",
-        "name": "HUWiki Trim",
-        "description": "Designværktøj med selvstændigt stilark, der bevares efter afinstallation.",
-        "author": "HUWiki contributors",
-        "version": "0.1.5",
-        "plugin-type": "plugin",
-        "license": "MIT"
-      },
-      "path": "../../plugins/trim/dist/plugin.json"
     },
     {
       "fields": {
@@ -338,24 +259,115 @@
     },
     {
       "fields": {
-        "title": "$:/plugins/itw/tw-excalidraw",
+        "title": "$:/plugins/huwiki/lessons-rhythm",
         "type": "application/json",
-        "description": "HUWiki Excalidraw · native Dansk / English · original 0.3.4 drawing and library APIs",
-        "author": "ItsTheWhale",
-        "version": "0.3.4",
+        "name": "Rhythm / Rytmik",
+        "description": "DA/EN teaching module; requires ABC 0.3.14 or newer. Stable IDs; complete two-bar bossa example in 4/4.",
+        "author": "HUWiki",
+        "version": "0.3.16-test.2",
         "plugin-type": "plugin",
-        "dependents": "$:/plugins/linonetwo/tw-react $:/plugins/huwiki/tegne-da",
-        "stability": "STABILITY_1_EXPERIMENTAL",
-        "core-version": ">=5.3.2",
-        "name": "tw-excalidraw"
+        "dependents": "$:/plugins/huwiki/abc"
       },
-      "path": "../../plugins/tegne-excalidraw/dist/plugin.json"
+      "path": "../../plugins/lessons-rhythm/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/shop",
+        "type": "application/json",
+        "name": "Shop",
+        "description": "Shop Site · guided Forms/Sheets setup, Google Sites and Funnel · Dansk / English · Test",
+        "author": "HUWiki",
+        "version": "0.2.0-test.1",
+        "plugin-type": "plugin"
+      },
+      "path": "../../plugins/shop/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/site-publisher",
+        "type": "application/json",
+        "name": "SitePublisher",
+        "description": "Offline HTML publishing: CutOut, Excalidraw SVG, embedded media and HUPedia / HTML-site med SVG-tegninger og CutOut",
+        "author": "HUWiki",
+        "version": "0.1.15-test.1",
+        "plugin-type": "plugin",
+        "license": "MIT",
+        "core-version": ">=5.2.0"
+      },
+      "path": "../../plugins/site-publisher/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/slideshow",
+        "type": "application/json",
+        "name": "Slideshow",
+        "description": "Slideshow, PasteUp, local documents, PDF and editable ZIP · Dansk / English",
+        "author": "HUWiki",
+        "version": "0.8.39-test.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/pasteup"
+      },
+      "path": "../../plugins/slideshow/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/theatre",
+        "type": "application/json",
+        "name": "Teater / Theatre",
+        "description": "Forestillinger med PasteUp og CutOut / Performances with PasteUp and CutOut",
+        "author": "HUWiki",
+        "version": "0.6.1-test.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/pasteup",
+        "core-version": ">=5.3.0"
+      },
+      "path": "../../plugins/theatre/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/tegne",
+        "type": "application/json",
+        "name": "Tegne",
+        "description": "Standalone Excalidraw studio, Danish/English, local saves / Selvstændigt tegneatelier",
+        "author": "HUWiki",
+        "version": "1.1.2-test.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/itw/tw-excalidraw $:/plugins/linonetwo/tw-react",
+        "requires-reload": "yes",
+        "license": "MIT",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/tegne/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/forge-demo",
+        "type": "application/json",
+        "name": "TiddlyWiki Forge Demo",
+        "description": "Startup-plugin der kontrollerer før-boot indlæsning.",
+        "version": "0.0.1",
+        "plugin-type": "plugin"
+      },
+      "path": "../../plugins/forge-demo/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/trim",
+        "type": "application/json",
+        "name": "Trim",
+        "description": "Designværktøj med selvstændigt stilark, der bevares efter afinstallation.",
+        "author": "HUWiki contributors",
+        "version": "0.1.5",
+        "plugin-type": "plugin",
+        "license": "MIT"
+      },
+      "path": "../../plugins/trim/dist/plugin.json"
     },
     {
       "fields": {
         "title": "$:/themes/huwiki/hupedia",
         "type": "application/json",
-        "name": "HUWiki HUPedia – tema",
+        "name": "HUPedia – tema",
         "description": "Leksikonlayout, navigation og typografi. Artikelværktøjer installeres særskilt.",
         "author": "HUWiki",
         "version": "0.2.4-test.1",
@@ -368,7 +380,7 @@
       "fields": {
         "title": "$:/themes/huwiki/modern",
         "type": "application/json",
-        "name": "HUWiki Modern",
+        "name": "Modern",
         "description": "Moderne, paletbaseret og responsivt HUWiki-tema",
         "author": "HUWiki",
         "version": "0.1.2",
@@ -382,8 +394,8 @@
       "fields": {
         "title": "$:/themes/huwiki/retro",
         "type": "application/json",
-        "name": "HUWiki Retro",
-        "description": "Farverigt, læsevenligt og responsivt retrotema inspireret af HUWiki PasteUp.",
+        "name": "Retro",
+        "description": "Farverigt, læsevenligt og responsivt retrotema inspireret af PasteUp.",
         "author": "HUWiki",
         "version": "0.1.3",
         "plugin-type": "theme",

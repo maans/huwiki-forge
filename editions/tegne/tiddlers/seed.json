@@ -26,7 +26,7 @@
     "title": "En tegning i en artikel",
     "type": "text/vnd.tiddlywiki",
     "tags": "HUWiki/Artikel",
-    "text": "! Tegning i en artikel\n\nDette er en almindelig artikel skrevet i WikiText, med luft mellem afsnittene.\n\nHer indsættes en redigerbar tegning som TiddlyWiki-transklusion:\n\n{{Farvefigurer}}\n\nDu kan ændre originaltegningen fra HUWiki Tegne. Ved HTML-publicering skal figuren blive til et skalerbart SVG-billede.",
+    "text": "! Tegning i en artikel\n\nDette er en almindelig artikel skrevet i WikiText, med luft mellem afsnittene.\n\nHer indsættes en redigerbar tegning som TiddlyWiki-transklusion:\n\n{{Farvefigurer}}\n\nDu kan ændre originaltegningen fra Tegne. Ved HTML-publicering skal figuren blive til et skalerbart SVG-billede.",
     "text-en": "! Drawing in an article\n\nThis is an ordinary, human-editable WikiText article.\n\nThe Excalidraw drawing is transcluded below:\n\n{{Farvefigurer}}\n\nEdit the source in HUWiki Draw. SitePublisher should embed the drawing as a standalone scalable SVG image."
   }
 ]

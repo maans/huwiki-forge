@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "title": "HUWiki Forge · Delt · offentlige materialer",
+  "title": "TiddlyWiki Forge · Delt · offentlige materialer",
   "description": "Small public index; resources are fetched on demand, and TiddlyWiki performs import.",
   "items": [
     {
@@ -161,8 +161,8 @@
       "id": "trim",
       "kind": "plugin",
       "category": "Design",
-      "label_da": "HUWiki Trim",
-      "label_en": "HUWiki Trim",
+      "label_da": "Trim",
+      "label_en": "Trim",
       "source": "../plugins/trim/dist/plugin.json",
       "version": "0.1.5"
     },

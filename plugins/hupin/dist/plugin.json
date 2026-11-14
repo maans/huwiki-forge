@@ -2,7 +2,7 @@
   "title": "$:/plugins/huwiki/hupin",
   "type": "application/json",
   "plugin-type": "plugin",
-  "name": "HUWiki HUPin",
+  "name": "HUPin",
   "description": "Præcise pins og klikområder på billeder, SVG, PasteUp og geografiske kort. Kompatibel med ældre BilledLink-projekter.",
   "author": "HUWiki",
   "version": "0.3.3",

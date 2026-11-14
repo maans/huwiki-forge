@@ -2,10 +2,10 @@
   {
     "title": "$:/config/HUWikiPluginLibrary",
     "tags": "$:/tags/PluginLibrary",
-    "caption": "HUWiki Plugin Library",
+    "caption": "Plugin Library",
     "type": "text/vnd.tiddlywiki",
     "url": "https://forge.måns.dk/library/plugins/index.html",
-    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">\nDette bibliotek henter installerbare plugins og temaer direkte fra HUWiki Forge på GitHub Pages.\n\n- Åbn biblioteket med TiddlyWikis eksisterende //Get More Plugins//-funktion.\n- Pakker installeres i din egen wiki og gemmes med TiddlyWikis normale Gem-funktion.\n- Der er ingen upload, konto eller Google-tjeneste bag biblioteket.\n\n[[Se kildekoden på GitHub|https://github.com/maans/huwiki-forge/tree/main/plugins]]\n</$list>\n\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">\nBrowse installable plugins and themes from HUWiki Forge on GitHub Pages.\n\n- Use TiddlyWiki's existing //Get More Plugins// control.\n- Packages are installed into your own wiki and saved with TiddlyWiki's native Save action.\n- No upload server, account or Google service is required.\n\n[[Browse the GitHub source|https://github.com/maans/huwiki-forge/tree/main/plugins]]\n</$list>"
+    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">\nDette bibliotek henter installerbare plugins og temaer direkte fra TiddlyWiki Forge på GitHub Pages.\n\n- Åbn biblioteket med TiddlyWikis eksisterende //Get More Plugins//-funktion.\n- Pakker installeres i din egen wiki og gemmes med TiddlyWikis normale Gem-funktion.\n- Der er ingen upload, konto eller Google-tjeneste bag biblioteket.\n\n[[Se kildekoden på GitHub|https://github.com/maans/huwiki-forge/tree/main/plugins]]\n</$list>\n\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">\nBrowse installable plugins and themes from TiddlyWiki Forge on GitHub Pages.\n\n- Use TiddlyWiki's existing //Get More Plugins// control.\n- Packages are installed into your own wiki and saved with TiddlyWiki's native Save action.\n- No upload server, account or Google service is required.\n\n[[Browse the GitHub source|https://github.com/maans/huwiki-forge/tree/main/plugins]]\n</$list>"
   },
   {
     "title": "$:/config/HUWikiCommunity",
@@ -20,15 +20,16 @@
     "caption": "TiddlyWiki Community",
     "tags": "",
     "type": "text/vnd.tiddlywiki",
-    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n[[Besøg TiddlyWikis fællesskab|https://tiddlywiki.com/#Community]]\n</$list>\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n[[Visit the TiddlyWiki community|https://tiddlywiki.com/#Community]]\n</$list>"
+    "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n[[Besøg TiddlyWikis fællesskab|https://tiddlywiki.com/#Community]]\n</$list>\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">\n[[Visit the TiddlyWiki community|https://tiddlywiki.com/#Community]]\n</$list>",
+    "forge-display-name": "TiddlyWiki Community"
   },
   {
     "title": "$:/huwiki/forge/page-control",
     "tags": "$:/tags/PageControls",
     "type": "text/vnd.tiddlywiki",
-    "caption": "F · HUWiki Forge",
-    "description": "Åbn HUWiki Forge / Open HUWiki Forge",
-    "text": "\\whitespace trim\n<a href=\"https://forge.måns.dk/\" class=\"tc-btn-invisible huw-forge-home\" title=\"HUWiki Forge\" aria-label=\"HUWiki Forge\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15em;line-height:1.4;padding:2px 5px;text-decoration:none\">F</a>"
+    "caption": "F · TiddlyWiki Forge",
+    "description": "Åbn TiddlyWiki Forge / Open TiddlyWiki Forge",
+    "text": "\\whitespace trim\n<a href=\"https://forge.måns.dk/\" class=\"tc-btn-invisible huw-forge-home\" title=\"TiddlyWiki Forge\" aria-label=\"TiddlyWiki Forge\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15em;line-height:1.4;padding:2px 5px;text-decoration:none\">F</a>"
   },
   {
     "title": "$:/huwiki/forge/reader-sidebar-style",
@@ -41,5 +42,29 @@
     "type": "application/javascript",
     "module-type": "startup",
     "text": "/* Keep a hidden Tools tab from leaving its author controls selected. */\nexports.name=\"forge-reader-sidebar\";\nexports.platforms=[\"browser\"];\nexports.after=[\"startup\"];\nexports.synchronous=true;\nexports.startup=function(){\n var mode=\"$:/temp/HUWiki/AuthorReadingMode\", tab=\"$:/state/tab/sidebar--595412856\";\n function update(){\n  if($tw.wiki.getTiddlerText(mode)===\"reading\" &&\n    $tw.wiki.getTiddlerText(tab,$tw.wiki.getTiddlerText(\"$:/config/DefaultSidebarTab\"))===\"$:/core/ui/SideBar/Tools\"){\n   $tw.wiki.addTiddler({title:tab,text:\"$:/core/ui/SideBar/Open\"});\n  }\n }\n update();\n $tw.wiki.addEventListener(\"change\",function(changes){if(changes[mode]||changes[tab])update();});\n};\n"
+  },
+  {
+    "title": "$:/huwiki/forge/display-name",
+    "type": "text/vnd.tiddlywiki",
+    "text": "<$let displayField={{{ [{$:/language}prefix[$:/languages/da]then[huwiki-title-da]else[huwiki-title-en]] }}}><$view field=<<displayField>> format=\"text\"><$view field=\"forge-display-name\" format=\"text\"><$view field=\"title\" format=\"text\"/></$view></$view></$let>"
+  },
+  {
+    "title": "$:/huwiki/forge/display-title",
+    "type": "text/vnd.tiddlywiki",
+    "text": "<h2 class=\"tc-title\"><$transclude $tiddler=\"$:/huwiki/forge/display-name\"/></h2>"
+  },
+  {
+    "title": "$:/huwiki/forge/display-title-filter",
+    "tags": "$:/tags/ViewTemplateTitleFilter",
+    "list-before": "$:/config/ViewTemplateTitleFilters/default",
+    "text": "[<currentTiddler>has[forge-display-name]then[$:/huwiki/forge/display-title]]",
+    "type": "text/vnd.tiddlywiki"
+  },
+  {
+    "title": "$:/core/ui/SideBar/Open",
+    "tags": "$:/tags/SideBar",
+    "caption": "{{$:/language/SideBar/Open/Caption}}",
+    "text": "\\whitespace trim\n\\define lingo-base() $:/language/CloseAll/\n\n\\define drop-actions()\n<$action-listops $tiddler=<<tv-story-list>> $subfilter=\"+[insertbefore<actionTiddler>,<currentTiddler>]\"/>\n\\end\n\n\\define placeholder()\n<div class=\"tc-droppable-placeholder\"/>\n\\end\n\n\\define droppable-item(button)\n\\whitespace trim\n<$droppable actions=<<drop-actions>> enable=<<tv-enable-drag-and-drop>> tag=\"div\">\n<<placeholder>>\n<div>\n$button$\n</div>\n</$droppable>\n\\end\n\n<div class=\"tc-sidebar-tab-open\">\n<$list filter=\"[list<tv-story-list>]\" history=<<tv-history-list>> storyview=\"pop\">\n<div class=\"tc-sidebar-tab-open-item\">\n<$macrocall $name=\"droppable-item\" button=\"<$button message='tm-close-tiddler' tooltip={{$:/language/Buttons/Close/Hint}} aria-label={{$:/language/Buttons/Close/Caption}} class='tc-btn-invisible tc-btn-mini tc-small-gap-right'>{{$:/core/images/close-button}}</$button><$link><$transclude $tiddler='$:/huwiki/forge/display-name'/></$link>\"/>\n</div>\n</$list>\n<$tiddler tiddler=\"\">\n<div>\n<$macrocall $name=\"droppable-item\" button=\"<$button message='tm-close-all-tiddlers' class='tc-btn-invisible tc-btn-mini'><<lingo Button>></$button>\"/>\n</div>\n</$tiddler>\n</div>\n",
+    "type": "text/vnd.tiddlywiki"
   }
 ]

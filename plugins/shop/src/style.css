@@ -1,0 +1,18 @@
+.forge-shop {max-width:65rem;line-height:1.6}
+.forge-shop nav,.forge-shop .shop-actions {display:flex;flex-wrap:wrap;gap:.5rem;margin:1rem 0}
+.forge-shop button {padding:.5rem .75rem;cursor:pointer}
+.forge-shop [aria-current="step"] {font-weight:bold;border:2px solid currentColor}
+.forge-shop .shop-field {display:block;margin:.8rem 0}
+.forge-shop .shop-field span {display:block;font-weight:600}
+.forge-shop input[type="text"],.forge-shop textarea,.forge-shop select {box-sizing:border-box;width:100%;max-width:100%;padding:.5rem;font:inherit}
+.forge-shop fieldset {margin:1rem 0;padding:1rem;min-width:0}
+.forge-shop .shop-check {padding:.8rem 0;border-bottom:1px solid #ccc}
+.forge-shop .shop-check label {display:flex;align-items:flex-start;gap:.65rem;cursor:pointer}
+.forge-shop input[type="checkbox"] {flex-shrink:0;margin-top:.4rem;width:1.2rem;height:1.2rem}
+.forge-shop .shop-check a {display:inline-block;margin-left:1.9rem}
+.forge-shop iframe {display:block;width:100%;height:38rem;border:1px solid #aaa;margin:1rem 0;background:white}
+.forge-shop pre {white-space:pre-wrap;overflow-wrap:anywhere;padding:1rem}
+.forge-shop .shop-notice {font-weight:600}
+.forge-shop .shop-progress {font-size:.9em}
+.forge-shop details {margin:1rem 0}
+.forge-shop summary {cursor:pointer;font-weight:600}

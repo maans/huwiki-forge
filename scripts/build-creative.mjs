@@ -1,11 +1,12 @@
 /** Rebuild preserved CutOut companions and shared drawing engine from OAuthLab. */
+import {renamePackage} from './public-names.mjs';
 import {readFile,writeFile,mkdir} from 'node:fs/promises';
 import {gunzipSync} from 'node:zlib';
 import {translateSource,nativeVariants} from './creative-language.mjs';
 import {createHash} from 'node:crypto';
 const provenance=JSON.parse(await readFile('migration/creative/provenance.json','utf8'));
 async function original(name){const raw=gunzipSync(Buffer.from((await readFile(`migration/creative/${name}.b64`,'utf8')).trim(),'base64'));if(createHash('sha256').update(raw).digest('hex')!==provenance.bundles[name].sha256)throw Error('Original source hash changed: '+name);const data=JSON.parse(raw);return Array.isArray(data)?data[0]:data;}
-async function emit(file,data){const text=typeof data==='string'?data:JSON.stringify(data,null,2)+'\n';if(process.argv.includes('--check')){if(await readFile(file,'utf8')!==text)throw Error('Stale '+file);}else{await mkdir(file.slice(0,file.lastIndexOf('/')),{recursive:true});await writeFile(file,text);}}
+async function emit(file,data){if(data?.['plugin-type'])renamePackage(data);const text=typeof data==='string'?data:JSON.stringify(data,null,2)+'\n';if(process.argv.includes('--check')){if(await readFile(file,'utf8')!==text)throw Error('Stale '+file);}else{await mkdir(file.slice(0,file.lastIndexOf('/')),{recursive:true});await writeFile(file,text);}}
 const engine=await original('excalidraw'),locale=await original('tegne-da');
 const ed=JSON.parse(engine.text).tiddlers,ld=JSON.parse(locale.text).tiddlers;
 // Preserve the exact HUWiki 0.3.4 ABI required by the CutOut bridge.

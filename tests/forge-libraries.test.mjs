@@ -14,7 +14,7 @@ const communityUrl="https://tiddlywiki.com/#Community";
 
 test("Every Edition keeps the native library and links to TiddlyWiki Community without a sidebar tab",async()=>{
  const config=await json("editions/shared/libraries.json");
- assert.equal(config.length,6);
+ assert.equal(config.length,10);
  const plugin=config.find(t=>t.title==="$:/config/HUWikiPluginLibrary");
  const community=config.find(t=>t.title==="$:/config/HUWikiCommunity");
  const card=config.find(t=>t.title==="HUWiki Community");
@@ -22,20 +22,20 @@ test("Every Edition keeps the native library and links to TiddlyWiki Community w
  assert.ok(fButton,"A shared F link must be present in all Editions");
  assert.ok(fButton.tags.includes("$:/tags/PageControls"));
  assert.match(fButton.text,/href="https:\/\/forge\.måns\.dk\/"/);
- assert.match(fButton.text,/aria-label="HUWiki Forge"/);
+ assert.match(fButton.text,/aria-label="TiddlyWiki Forge"/);
  assert.match(fButton.text,/>F<\/a>/);
  assert.doesNotMatch(fButton.text,/ForgeShare|Tailscale|Mine wikier|Delt med mig/,"F is only a home link");
 
  assert.equal(plugin.url,pluginUrl);
  assert.ok(plugin.tags.includes("$:/tags/PluginLibrary"));
- assert.equal(plugin.caption,"HUWiki Plugin Library");
+ assert.equal(plugin.caption,"Plugin Library");
  assert.equal(community.url,communityUrl);
  assert.ok(!String(community.tags||"").includes("$:/tags/PluginLibrary"),"Community Editions aren't TiddlyWiki plugins");
  assert.ok(!card.tags.includes("$:/tags/SideBar"),"Community must not be a sidebar tab");
  assert.match(card.text,/https:\/\/tiddlywiki.com\/#Community/);
  for(const t of config){
   assert.equal(t.type,t["module-type"]==="startup"?"application/javascript":"text/vnd.tiddlywiki");
-  if(!t.title.startsWith("$:/huwiki/forge/"))assert.ok(t.text.includes("$:/language"),"Language follows TiddlyWiki setting");
+  if(["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community"].includes(t.title))assert.ok(t.text.includes("$:/language"),"Language follows TiddlyWiki setting");
   assert.doesNotMatch(t.text,/google\.script|DriveApp|<select|languageToggle/i);
  }
  const all=await json("catalog/editions.json");

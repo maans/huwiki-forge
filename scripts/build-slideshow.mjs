@@ -1,3 +1,4 @@
+import {renamePackage} from './public-names.mjs';
 import {readFile,writeFile,readdir,mkdir} from 'node:fs/promises';
 import {gunzipSync} from 'node:zlib';
 import {translateSource,nativeVariants} from './creative-language.mjs';
@@ -16,6 +17,7 @@ p.list='readme';
 const dictionary=JSON.parse(await readFile('plugins/slideshow/src/strings.json','utf8'));
 for(const title of Object.keys(rows))if((['HUWiki Slideshow – Start','Slideshow – Bibliotek','Slideshow – Del'].includes(title)||title.startsWith(base)&&!title.includes('/vendor/')&&!title.startsWith(base+'Guide/')&&title!==base+'readme')&&(!rows[title].type||rows[title].type==='text/vnd.tiddlywiki')&&rows[title].text)nativeVariants(rows,title,translateSource(rows[title].text,dictionary,Object.keys(rows)),base+'Native');
 p.text=JSON.stringify({tiddlers:rows});p.version='0.8.39-test.1';p.description='Slideshow, PasteUp, local documents, PDF and editable ZIP · Dansk / English';
+renamePackage(p);
 const text=JSON.stringify(p,null,2)+'\n';
 if(process.argv.includes('--check')){if(await readFile('plugins/slideshow/dist/plugin.json','utf8')!==text)throw Error('Stale slideshow bundle');}else{await mkdir('plugins/slideshow/dist',{recursive:true});await writeFile('plugins/slideshow/dist/plugin.json',text);}
 console.log('Slideshow',Buffer.byteLength(text),'bytes');

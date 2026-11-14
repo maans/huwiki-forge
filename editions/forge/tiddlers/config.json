@@ -26,8 +26,8 @@
   },
   {
     "title": "$:/huwiki/forge/browser-language",
-    "tags": "$:/tags/StartupAction/Browser",
-    "type": "text/vnd.tiddlywiki",
-    "text": "\\define browserPrefix() [{$:/info/browser/language}lowercase[]split[-]first[]!match[]else[en]]\n<$list filter=\"[[$:/language]!is[tiddler]]\" variable=\"unsetLanguage\">\n<$let browserPrefix={{{ [subfilter<browserPrefix>] }}}>\n<$action-setfield $tiddler=\"$:/language\" text={{{ [plugin-type[language]prefix[$:/languages/]sort[title]removeprefix[$:/languages/]prefix<browserPrefix>addprefix[$:/languages/]first[]] ~[[$:/languages/en-GB]] }}}/>\n</$let>\n</$list>"
+    "type": "application/javascript",
+    "module-type": "startup",
+    "text": "/* Choose a first-visit language before the native PluginSwitcher starts.\nA saved/manual $:/language is authoritative. No extra language control. */\nexports.name=\"forge-browser-language\";\nexports.platforms=[\"browser\"];\nexports.after=[\"load-modules\"];\nexports.before=[\"startup\"];\nexports.synchronous=true;\nexports.startup=function(){\n if($tw.wiki.tiddlerExists(\"$:/language\"))return;\n var language=/^da(?:-|$)/i.test(navigator.language||\"\")?\"da-DK\":\"en-GB\";\n $tw.wiki.addTiddler({title:\"$:/language\",text:\"$:/languages/\"+language});\n};\n"
   }
 ]

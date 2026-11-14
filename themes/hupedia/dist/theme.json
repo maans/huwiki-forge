@@ -2,7 +2,7 @@
   "title": "$:/themes/huwiki/hupedia",
   "type": "application/json",
   "plugin-type": "theme",
-  "name": "HUWiki HUPedia – tema",
+  "name": "HUPedia – tema",
   "description": "Leksikonlayout, navigation og typografi. Artikelværktøjer installeres særskilt.",
   "author": "HUWiki",
   "version": "0.2.4-test.1",
