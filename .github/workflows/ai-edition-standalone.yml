@@ -1,0 +1,31 @@
+name: AI Edition standalone validation
+
+on:
+  pull_request:
+    paths:
+      - 'editions/ai/**'
+      - 'tests/ai-edition.test.mjs'
+      - 'catalog/editions.json'
+      - 'editions/forge/tiddlers/edition-index.json'
+      - 'index.html'
+  push:
+    branches:
+      - 'feat/ai-edition-forge-20261114'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  edition:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Test standalone AI Edition and plugin-library integration
+        run: node --test tests/ai-edition.test.mjs
+      - name: Verify generated public Forge card
+        run: node scripts/build-forge-home.mjs --check

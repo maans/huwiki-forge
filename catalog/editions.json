@@ -163,6 +163,27 @@
         "noteEn": "Test edition. Google Sites, a test order into a private Sheet and public Funnel verified on desktop. Physical mobile testing remains pending.",
         "order": "09"
       }
+    },
+    {
+      "id": "ai",
+      "name": "AI Edition (test)",
+      "version": "0.1.0-test.1",
+      "description": "Bilingual AI workbench, chat and task templates; approved text-model connections via optional ForgeShare helper",
+      "status": "test",
+      "manifest": "../editions/ai/manifest.json",
+      "bundledPlugins": [
+        "ai",
+        "forgeshare"
+      ],
+      "home": {
+        "headingDa": "Samtaler og AI-værksted",
+        "headingEn": "Conversations and AI workbench",
+        "descriptionDa": "Arbejd med AI i din egen TiddlyWiki: chat, opgaveskabeloner og forslag til dine tiddlere.",
+        "descriptionEn": "Use AI in your own TiddlyWiki: conversations, task templates and suggestions for your tiddlers.",
+        "noteDa": "Testudgave. AI-svar kræver en godkendt forbindelse via ForgeShare; nøgleboks og fysisk test udestår.",
+        "noteEn": "Test release. AI replies require an approved ForgeShare connection; OS vault and physical testing remain pending.",
+        "order": "10"
+      }
     }
   ],
   "plugins": [
