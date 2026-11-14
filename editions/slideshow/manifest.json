@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "id": "slideshow",
+  "name": "HUWiki Slideshow Edition",
+  "version": "0.8.39-test.1",
+  "coreVersion": "5.4.1",
+  "tiddlers": [
+    "tiddlers/config.json",
+    "tiddlers/seed.json",
+    "../shared/libraries.json"
+  ],
+  "plugins": [
+    "../../themes/modern/dist/theme.json",
+    "../../languages/da-DK/plugin.json",
+    "../../plugins/cutout/dist/plugin.json",
+    "../../plugins/pasteup/dist/plugin.json",
+    "../../plugins/slideshow/dist/plugin.json",
+    "../../plugins/theatre/dist/plugin.json"
+  ]
+}

@@ -1,0 +1,28 @@
+name: Slideshow and creative source acceptance
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify preserved sources and reproducible creative packages
+        run: |
+          node scripts/build-creative.mjs --check
+          node scripts/build-slideshow.mjs --check
+          node scripts/build-cutout.mjs --check
+      - name: Install browser controller
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Test original examples, local import, native languages and actual exported files
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/slideshow-browser-smoke.mjs

@@ -23,5 +23,11 @@
     "title": "$:/huwiki/forge/wide-class",
     "tags": "$:/tags/ClassFilters/PageTemplate",
     "text": "[{$:/state/sidebar}match[no]then[forge-wide]]"
+  },
+  {
+    "title": "$:/huwiki/forge/browser-language",
+    "tags": "$:/tags/StartupAction/Browser",
+    "type": "text/vnd.tiddlywiki",
+    "text": "\\define browserPrefix() [{$:/info/browser/language}lowercase[]split[-]first[]!match[]else[en]]\n<$list filter=\"[[$:/language]!is[tiddler]]\" variable=\"unsetLanguage\">\n<$let browserPrefix={{{ [subfilter<browserPrefix>] }}}>\n<$action-setfield $tiddler=\"$:/language\" text={{{ [plugin-type[language]prefix[$:/languages/]sort[title]removeprefix[$:/languages/]prefix<browserPrefix>addprefix[$:/languages/]first[]] ~[[$:/languages/en-GB]] }}}/>\n</$let>\n</$list>"
   }
 ]

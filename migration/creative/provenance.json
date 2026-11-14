@@ -1,0 +1,55 @@
+{
+  "archive": "HUWiki-OAuthLab-backup.zip",
+  "archiveSha256": "4551b10224fdca355f3eb198eca2571b602bca1002c6039f13ceca45e08ad54f",
+  "slideshowAssemblySources": [
+    "SlideshowEdition.js",
+    "SlideshowExports.js",
+    "SlideshowImport.js",
+    "SlideshowLayouts.js",
+    "SlideshowPackage.js",
+    "SlideshowVendorAsset.js"
+  ],
+  "notes": "Slideshow 0.8.39 assembled using original pure package functions and embedded vendors. CutOut companions from exact asset constants. Excalidraw and React from concatenated TegneAsset chunks. No top-level license invented where absent.",
+  "bundles": {
+    "slideshow": {
+      "sha256": "b473dbb3728815138282bebcda9f9ac25e6e28bc14772b6403941dd5d769f127",
+      "bytes": 2980869,
+      "source": "slideshow-original.json"
+    },
+    "pasteup": {
+      "sha256": "40f20f7b8e7fadcb761d264c2c7f56f911871bececbd7e07eef1aa10d8485659",
+      "bytes": 136701,
+      "source": "HU_CUTOUT_ASSET_02_000_.json"
+    },
+    "theatre": {
+      "sha256": "4723dbfe93e79f96bafec5b763ea6930333dd3259a9ee7180aeda9448f516d91",
+      "bytes": 18134,
+      "source": "HU_CUTOUT_ASSET_04_000_.json"
+    },
+    "cutout-excalidraw": {
+      "sha256": "93739564b116adfd9ed3f013ad68559018d07dbf1747906ec90fa91c0aace435",
+      "bytes": 2089,
+      "source": "HU_CUTOUT_ASSET_05_000_.json"
+    },
+    "cutout-pages": {
+      "sha256": "a4f940cdd85ed541096f0879806c04bffd7778625f1a9512bec817675317893b",
+      "bytes": 1601557,
+      "source": "HU_CUTOUT_ASSET_00_000_.json"
+    },
+    "excalidraw": {
+      "sha256": "92c4769a9463b3b4682d1c8f33b76eb3cbe0abed23785732826bf93bfceb2279",
+      "bytes": 9957926,
+      "source": "tegne-1.json"
+    },
+    "react": {
+      "sha256": "314e4c17b0849063f2c7b1430aac85ab1a5dfd752630e8796af9512e67f6d58a",
+      "bytes": 304288,
+      "source": "tegne-2.json"
+    },
+    "tegne-da": {
+      "sha256": "a72dcc48582e12e4f48d2751fb06b49a6a23bfd89803639a89d1b5360fcaee06",
+      "bytes": 41864,
+      "source": "tegne-3.json"
+    }
+  }
+}

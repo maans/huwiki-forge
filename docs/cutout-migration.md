@@ -1,21 +1,7 @@
-# CutOut: afgrænset offlineudgave
+# CutOut: fuld kreativ testudgave
 
-Kilden er `$:/plugins/huwiki/cutout` 0.6.2 fra `HU_CUTOUT_ASSET_01_000_` i den indsendte OAuthLab-backup. Den oprindelige README beskriver udtrykkeligt CutOut som selvstændigt: PasteUp, Slideshow, Theatre og Excalidraw er valgfrie. Forge-testudgaven 0.6.2-test.1 bruger dette selvstændige animationsværksted; den er ikke en påstand om at hele OAuthLab Editionen er migreret.
+Forge 0.6.2-test.2 udvider den tidligere afgrænsede offlineudgave med original eksempelsamling, Excalidraw 0.3.4-bro, PasteUp, Theatre og Slideshow. Motor, projektmodel, ur, oprindelig eksportmotor og bibliotekslicenser er bevaret. Det eneste ekstra sprogvalg er fjernet; TiddlyWikis eget `$:/language` styrer dansk/engelsk.
 
-## Bevarede dele
+Google-adapteren er erstattet med lokal ZIP og samme valgfrie udgivelsesmappe som Slideshow. Alle oprindelige lokale eksportformer er tilgængelige. Den redigerbare tegnekilde og dens SVG bevares, når en del sendes fra Excalidraw tilbage til CutOut.
 
-Motor, projektmodel, ur, afspiller, eksportmotor, tændstikmandsdukke/-animation og JSZip er bevaret. De fire arbejdsrum er dukke, animation, scene og teater. Den oprindelige sprogordbog følger `$:/language`; den ekstra CutOut-sprogvælger er fjernet. Der følger officielt dansk sprogplugin, fælles F-link og begge eksisterende biblioteksindgange med.
-
-Google-serveradapteren er erstattet med faktisk lokal ZIP-eksport. Online-publiceringsknappen er fjernet, og Slideshow tilbydes ikke i denne udgaves eksportvalg. Tegneknapper vises kun, hvis den særskilte CutOut-Excalidraw-bro faktisk findes. Motoren kan stadig importere billeddele uden tegnebroen. Ingen tomme erstatningsknapper eller obligatorisk Google-login.
-
-## Kilde og licenser
-
-Det originale komprimerede bundle ligger i `migration/cutout/original-plugin.b64`. `provenance.json` indeholder originalfilens og hele zip-arkivets SHA-256. `scripts/build-cutout.mjs` genskaber den tilpassede pakke og kan kontrollere den med `--check`.
-
-Originalt ophav er HUWiki. Originalpakken angiver ingen samlet licens; Forge tildeler den ikke stiltiende MIT. Denne mangel er dokumenteret i pakkens NOTICE og Provenance-tiddler. Den indlejrede JSZip-licens er uændret og findes både i pluginet og `plugins/cutout/licenses/JSZip.txt`.
-
-## Afprøvning og afgrænsning
-
-Den automatiserede browserprøve starter en lokal wiki med alle netkald blokeret, åbner dukke-/animationsværkstedet, afspiller, ændrer et nøglebillede, gemmer projektet, skifter dansk/engelsk via kontrolpanelet, eksporterer ZIP, åbner den eksporterede visnings-HTML og gemmer/genåbner den redigerbare wiki med den native saver. Unit-tests sammenligner de bevarede originaldele og undersøger, at den kørbare kode ikke har Google-kald.
-
-Den fulde eksempelsamling, oprindelig Excalidraw 0.3.4-bro, PasteUp/Slideshow-integration, alle scene-/teaterforløb og mobil/touch er endnu ikke accepteret. De er ikke med som lovede funktioner i Forge-kortet. Den simple afspiller og animationsredigering er det konkret afprøvede grundlag.
+Se [samlet omfang, kilder, licenser, browseraccept og begrænsninger](creative-editions.md). Mobil/touch er endnu ikke accepteret. Original CutOut-kilde og kontrolsummer findes fortsat i `migration/cutout/`; ledsagepakkerne ligger i `migration/creative/`.

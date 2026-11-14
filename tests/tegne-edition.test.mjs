@@ -45,7 +45,7 @@ test("Vendor Excalidraw and React remain real self-contained plugins with their 
  const editor=names.get("$:/plugins/itw/tw-excalidraw"),react=names.get("$:/plugins/linonetwo/tw-react");
  assert.equal(editor.author,"ItsTheWhale");
  assert.equal(react.author,"LinOnetwo");
- assert.equal(editor.version,"0.3.0");
+ assert.equal(editor.version,"0.3.4");
  assert.equal(react.version,"1.0.0");
  assert.ok(editor.text.length>8_000_000,"Real Excalidraw engine, not a placeholder");
  assert.ok(react.text.length>200_000,"Real React widget, not an external CDN reference");

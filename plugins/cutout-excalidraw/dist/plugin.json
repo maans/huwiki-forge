@@ -1,0 +1,12 @@
+{
+  "title": "$:/plugins/huwiki/cutout-excalidraw",
+  "type": "application/json",
+  "plugin-type": "plugin",
+  "name": "CutOut ↔ Excalidraw",
+  "author": "HUWiki",
+  "description": "Redigerbare tegninger til CutOut / Editable drawings for CutOut",
+  "list": "readme",
+  "version": "0.1.0-test.1",
+  "text": "{\"tiddlers\":{\"$:/plugins/huwiki/cutout-excalidraw/adapter.js\":{\"title\":\"$:/plugins/huwiki/cutout-excalidraw/adapter.js\",\"type\":\"application/javascript\",\"module-type\":\"library\",\"text\":\"/*\\\\\\ntitle: $:/plugins/huwiki/cutout-excalidraw/adapter.js\\ntype: application/javascript\\nmodule-type: library\\n\\\\*/\\n(function(){'use strict';\\n// Adapter ABI 1, exclusively for the supplied Danish 0.3.4 / Excalidraw 0.18.1.\\n// The installed engine and its standard widget are never changed. The isolated\\n// export closure is compiled lazily from that exact engine, with a private API.\\nvar api;\\nexports.exportSvg=async function(wiki,scene,include){var engine=wiki.getTiddler('$:/plugins/itw/tw-excalidraw');if(!engine||engine.fields.version!=='0.3.4')throw Error('Tegnemotor 0.3.4 kræves til denne adapter.');if(!api){var source=wiki.getTiddlerText('$:/plugins/itw/tw-excalidraw/widget.js','');if(source.indexOf('r9=async({elements:e,appState:A=mt()')<0||source.indexOf('exports.excalidraw=ExcalidrawWidget;')<0)throw Error('Tegnemotorens adapter passer ikke til denne udgave.');api={};new Function('require','exports','module',source+'\\\\nexports.huSvg=r9;exports.huDefaults=mt;')(function(name){return $tw.modules.execute(name);},api,{exports:api});}\\n var elements=scene.elements.filter(function(e){return !e.isDeleted&&(!include||include.indexOf(e.id)>=0);});if(!elements.length)throw Error('Tegn eller vælg mindst én figur.');var state=Object.assign(api.huDefaults(),scene.appState||{},{exportBackground:false,exportWithDarkMode:false,exportEmbedScene:false});var svg=await api.huSvg({elements:elements,appState:state,files:scene.files||{},exportPadding:4,skipInliningFonts:false});return svg.outerHTML;};\\n})();\\n\"}}}",
+  "dependents": "$:/plugins/huwiki/cutout $:/plugins/itw/tw-excalidraw $:/plugins/linonetwo/tw-react"
+}

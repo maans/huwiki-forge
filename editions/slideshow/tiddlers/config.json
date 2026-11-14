@@ -1,0 +1,18 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "HUWiki Slideshow"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "Slides · PasteUp · HUWiki Forge"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[HUWiki Slideshow – Start]]"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  }
+]

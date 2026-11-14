@@ -46,6 +46,33 @@ try{
  await languages.selectOption('$:/languages/en-GB');
  await studio.getByRole('button',{name:'Save project',exact:true}).waitFor();
  console.log('PASS offline puppet/animation workshop, actual playback, keyframe editing, project save, native da/en and preserved data');
+ // Original drawing bridge: create a real shape and keep editable source plus SVG asset.
+ await studio.getByRole('button',{name:'Puppet workshop',exact:true}).click();
+ await page.getByLabel('Project library',{exact:true}).selectOption('Demo – Tændstikmand (dukke)');
+ await studio.getByRole('button',{name:'Draw part / variant in Excalidraw',exact:true}).click();
+ await page.locator('.excalidraw label[title="Rectangle — R or 2"]').click();
+ const canvas=await page.locator('.excalidraw canvas.interactive').boundingBox();
+ await page.mouse.move(canvas.x+canvas.width*.4,canvas.y+canvas.height*.35);await page.mouse.down();await page.mouse.move(canvas.x+canvas.width*.55,canvas.y+canvas.height*.5,{steps:12});await page.mouse.up();
+ await page.getByRole('button',{name:'Use as a transparent image part',exact:true}).click();
+ await studio.getByRole('button',{name:'Save project',exact:true}).click();
+ const drawing=await page.evaluate(()=>{const part=JSON.parse($tw.wiki.getTiddlerText('Demo – Tændstikmand (dukke)')).parts[0];return{asset:part.asset,source:part.variants[0].source,svg:$tw.wiki.getTiddlerText(part.asset),scene:$tw.wiki.getTiddlerText(part.variants[0].source)};});
+ assert.match(decodeURIComponent(drawing.svg),/<svg/);assert.ok(JSON.parse(drawing.scene).elements.some(e=>e.type==='rectangle'));
+ await studio.getByRole('button',{name:'Scene studio',exact:true}).click();await page.getByLabel('Project library',{exact:true}).selectOption({label:'Morning in the scenery town'});
+ await studio.getByRole('button',{name:'▶ Play',exact:true}).click();await page.waitForFunction(()=>Number(document.querySelector('.co-timeline input[type=range]').value)>0.1);await studio.getByRole('button',{name:'Back to start',exact:true}).click();
+ await studio.getByRole('button',{name:'Theatre studio',exact:true}).click();await page.getByLabel('Project library',{exact:true}).selectOption({label:'Milo’s little theatre · camera tour'});
+ assert.ok(await studio.getByText('View through camera',{exact:true}).count());
+ const frame=await studio.locator('.co-stage').innerHTML();await studio.locator('.co-timeline input[type=range]').fill('10');await studio.locator('.co-timeline input[type=range]').dispatchEvent('input');assert.notEqual(await studio.locator('.co-stage').innerHTML(),frame);assert.match(await studio.innerText(),/Scene 2\/2/);
+ await studio.getByRole('button',{name:'Animation studio',exact:true}).click();await page.getByLabel('Project library',{exact:true}).selectOption('Demo – Tændstikmand');
+ console.log('PASS original Excalidraw drawing/source/SVG round-trip, nested scene playback and camera-tour scene transition');
+ // Restore the original Slideshow publication mode and open its actual exported file.
+ await page.getByRole('link',{name:'Export a viewing copy',exact:true}).click();
+ await page.locator('button').filter({hasText:/^Add$/}).first().click();
+ await page.getByLabel('Publication name',{exact:true}).fill('QA CutOut slideshow');
+ await page.getByLabel('Publication format',{exact:true}).selectOption('slideshow');
+ const [showDownload]=await Promise.all([page.waitForEvent('download'),page.getByRole('button',{name:'Download site as ZIP',exact:true}).click()]);
+ const showZip=path.join(dir,'show.zip');await showDownload.saveAs(showZip);const showHtml=execFileSync('unzip',['-p',showZip,'index.html'],{maxBuffer:30e6});const showFile=path.join(dir,'show.html');await writeFile(showFile,showHtml);
+ const showPage=await context.newPage();showPage.on('pageerror',e=>errors.push(e.message));await showPage.goto(pathToFileURL(showFile).href);await showPage.locator('#huws-stage svg').first().waitFor();await showPage.waitForFunction(()=>Number(document.querySelector('#huws-stage input[type=range]').value)>0.1);assert.equal(await showPage.locator('.tc-error-form').count(),0);await showPage.close();
+ console.log('PASS CutOut Slideshow ZIP export and actual offline animation playback');
  // Export from the original workshop, unzip and open the actual generated viewing HTML.
  await studio.getByText('Project and file',{exact:true}).click();
  const [download]=await Promise.all([page.waitForEvent('download'),studio.getByRole('button',{name:'Export project',exact:true}).click()]);
@@ -63,6 +90,7 @@ try{
  await page.getByRole('link',{name:'Open workshop',exact:true}).click();
  await page.locator('.co-studio').waitFor();
  assert.equal(await page.evaluate(()=>$tw.wiki.getTiddlerText('Demo – Tændstikmand')),edited);
+ assert.equal(await page.evaluate(title=>$tw.wiki.getTiddlerText(title),drawing.asset),drawing.svg);
  assert.equal(await page.evaluate(()=>$tw.wiki.getTiddlerText('$:/language')),'$:/languages/en-GB');
  assert.equal(await page.locator('.huw-forge-home').getAttribute('href'),'https://forge.måns.dk/');
  await page.getByLabel('Project library',{exact:true}).selectOption('Demo – Tændstikmand (dukke)');

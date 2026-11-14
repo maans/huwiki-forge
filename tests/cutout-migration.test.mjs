@@ -13,13 +13,14 @@ test('CutOut preserves original engine, project model, samples and vendor licens
  assert.equal(plugin.author,original.author);assert.equal(plugin.license,original.license,'Do not invent a license absent from the original');
  assert.equal(await read('plugins/cutout/licenses/JSZip.txt'),before[prefix+'vendor/jszip-license'].text);
 });
-test('CutOut has no executable Google bridge, server publication button or extra language selector',()=>{
+test('CutOut has no executable Google bridge or extra language selector; publication uses the local folder adapter',()=>{
  for(const row of Object.values(after)){if(row.type==='application/javascript'){
   assert.doesNotMatch(row.text,/google\.script|DriveApp|HUDriveApp/);
   new vm.Script(row.text,{filename:row.title});
  }}
  assert.doesNotMatch(after[prefix+'i18n.js'].text,/CutOut language \/ CutOut-sprog|s\.onchange/);
- assert.doesNotMatch(after[prefix+'widgets/publisher.js'].text,/H\.siteDialog\(/);
+ assert.match(after[prefix+'hosting.js'].text,/HUWikiSlideshowSite\.publishHtml/);
+ assert.match(after[prefix+'widgets/publisher.js'].text,/id:'slideshow'/);
  assert.match(after[prefix+'hosting.js'].text,/P\.downloadBlob\(P\.archiveHtml/);
 });
 test('Native language translates CutOut without changing user project data',()=>{

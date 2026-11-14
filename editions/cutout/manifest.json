@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "cutout",
   "name": "HUWiki CutOut Edition",
-  "version": "0.6.2-test.1",
+  "version": "0.6.2-test.2",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",
@@ -12,6 +12,14 @@
   "plugins": [
     "../../themes/modern/dist/theme.json",
     "../../languages/da-DK/plugin.json",
-    "../../plugins/cutout/dist/plugin.json"
+    "../../plugins/cutout/dist/plugin.json",
+    "../../plugins/pasteup/dist/plugin.json",
+    "../../plugins/slideshow/dist/plugin.json",
+    "../../plugins/theatre/dist/plugin.json",
+    "../../plugins/cutout-excalidraw/dist/plugin.json",
+    "../../plugins/tegne-excalidraw/dist/plugin.json",
+    "../../plugins/tegne-react/dist/plugin.json",
+    "../../plugins/tegne-da/dist/plugin.json",
+    "../../plugins/cutout-examples/dist/plugin.json"
   ]
 }
