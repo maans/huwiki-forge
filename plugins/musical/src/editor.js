@@ -5,7 +5,7 @@ module-type: library
 \*/
 (function(){
 "use strict";
-var Engine=require("$:/plugins/huwiki/cutout/engine.js"),NS="http://www.w3.org/2000/svg";
+var Playlist=require("$:/plugins/huwiki/musical/playlist.js"),Engine=require("$:/plugins/huwiki/cutout/engine.js"),NS="http://www.w3.org/2000/svg";
 function el(doc,tag,cls,txt,parent){var e=doc.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;if(parent)parent.appendChild(e);return e;}
 function num(x,f){x=Number(x);return Number.isFinite(x)?x:f;}
 function lim(x,a,b){return Math.min(b,Math.max(a,num(x,0)));}
@@ -26,11 +26,18 @@ var translations={da:{title:"Musical Studio · tidslinje",help:"Vælg et spor, i
 function attach(o){
  var doc=o.doc,film=o.film,m=ensureMusical(film),inner=o.view.clips&&o.view.clips[0]&&o.view.clips[0].view,source=inner&&inner.scene;
  var L=translations[/\/en(?:-|$)/i.test(o.wiki.getTiddlerText("$:/language",""))?"en":"da"];
+ L.addSong=L===translations.da?"Tilføj musiknummer":"Add complete song";
+ L.removeSong=L===translations.da?"Fjern nummer":"Remove song";
+ L.moveEarlier=L===translations.da?"Flyt tidligere":"Move earlier";
+ L.moveLater=L===translations.da?"Flyt senere":"Move later";
+ L.chooseSong=L===translations.da?"Vælg ABC-nodeark":"Choose ABC score";
+ L.songInfo=L===translations.da?"Hele nummeret afspilles som ét spor. Instrumentstemmerne ligger inde i ABC-nodearket.":"Each full song is one clip; its instrument voices are inside the ABC score.";
+ if(!Array.isArray(m.songs)||!m.songs.length)m.songs=[{id:"song-1",score:o.scoreTitle,start:0,duration:film.duration,kind:"complete-abc"}];
  var root=el(doc,"section","huw-musical-editor",undefined,o.host),head=el(doc,"div","huw-musical-editor-header",undefined,root);
  el(doc,"h3","",L.title,head);el(doc,"p","",L.help,root);
  var cameraLabel=el(doc,"span","huw-musical-active-camera","",head);
  var rows=el(doc,"div","huw-musical-tracks",undefined,root),inspector=el(doc,"div","huw-musical-inspector",undefined,root),status=el(doc,"output","huw-musical-edited-status","",root);
- var playhead=0,choice={id:"camera-A",key:0},playheads=[];
+ var playhead=0,choice={id:"song",key:0},playheads=[];
  var tracks=[{id:"song",kind:"song",name:L.song},{id:"backdrop",kind:"part",part:"stage-back",name:L.backdrop},{id:"stage",kind:"part",part:"stage-floor",name:L.stage},{id:"foreground",kind:"part",part:"foreground-flags",name:L.foreground},{id:"lights",kind:"light",name:L.light}];
  if(source)source.parts.filter(function(p){return /-root$/.test(p.id)&&p.keys&&p.keys.length>1;}).forEach(function(p){tracks.push({id:p.id,kind:"part",part:p.id,name:p.name||p.id});});
  tracks.push({id:"camera-A",kind:"camera",name:L.cameraA},{id:"camera-B",kind:"camera",name:L.cameraB},{id:"cuts",kind:"cut",name:L.cuts});
@@ -56,7 +63,7 @@ function attach(o){
   var json=JSON.stringify(value);o.markOwnWrite(name,json);o.wiki.addTiddler(new $tw.Tiddler(old,{title:name,text:json}));status.textContent=L.saved;
  }
  function choose(id,key){choice={id:id,key:key};draw();}
- function selected(){return keys(track())[choice.key];}
+ function selected(){return track().kind==="song"?m.songs[choice.key]:keys(track())[choice.key];}
  function newPoint(t,time){if(t.kind==="song")return;var at=round(fromFilm(time,t)),list=keys(t),known=list.findIndex(function(k){return Math.abs(k.t-at)<.02;});if(known>=0){choose(t.id,known);return;}
   var k={t:at};if(t.kind==="part"){
    var state=Engine.state(part(t),at);["x","y","r","sx","sy","opacity"].forEach(function(field){k[field]=round(num(state[field],1));});
@@ -77,8 +84,54 @@ function attach(o){
   var select=el(doc,"select","",undefined,p);options.forEach(function(option){var x=el(doc,"option","",option[1],select);x.value=option[0];});
   select.value=k[field]||options[0][0];select.onchange=function(){k[field]=select.value;save(track());draw();o.repaint();};
  }
+ function songChoices(){var choices=[];
+  o.wiki.each(function(t,title){if(t.fields&&typeof t.fields["abc-source"]==="string"&&/^\s*X:\s*\d+/m.test(t.fields["abc-source"]))choices.push(title);});
+  return choices.sort();
+ }
+ function fitStage(){
+  if(!Array.isArray(film.scenes)||!film.scenes.length)return;
+  var length=film.scenes.reduce(function(n,s){return n+Math.max(.125,num(s.duration,16));},0);
+  var total=Playlist.total(m.songs),base=film.scenes[0],n=0;
+  while(length+.1<total&&n++<20){
+   var d=Math.min(Math.max(.125,num(base.duration,16)),total-length);
+   film.scenes.push(Object.assign({},base,{id:"musical-repeat-"+film.scenes.length+"-"+n,start:0,offset:0,duration:round(d)}));
+   length+=d;
+  }
+  film.duration=length;
+ }
+ function persistSongs(){
+  var actual=typeof o.clips==="function"?o.clips():[];
+  m.songs.forEach(function(s){var a=actual.find(function(x){return x.id===s.id;});if(a)s.duration=a.duration;});
+  m.songs=Playlist.reflow(m.songs,o.scoreTitle);fitStage();
+  save({kind:"song"});if(o.reload)o.reload();
+ }
+ function drawSongForm(){
+  var clips=typeof o.clips==="function"?o.clips():m.songs;
+  var k=m.songs[choice.key]||m.songs[0],row=el(doc,"div","huw-musical-key-actions huw-musical-song-actions",undefined,inspector);
+  var available=songChoices(),select=el(doc,"select","huw-musical-song-select",undefined,row);
+  select.setAttribute("aria-label",L.chooseSong);
+  available.forEach(function(title){var opt=el(doc,"option","",title,select);opt.value=title;});
+  if(k&&available.indexOf(k.score)>=0)select.value=k.score;
+  var add=el(doc,"button","huw-musical-add-song",L.addSong,row);add.type="button";
+  add.disabled=!available.length;
+  add.onclick=function(){
+   var id="song-"+(m.songs.length+1);while(m.songs.some(function(s){return s.id===id;}))id+="-x";
+   m.songs.splice(choice.key+1,0,{id:id,score:select.value,duration:16,kind:"complete-abc"});
+   persistSongs();
+  };
+  var remove=el(doc,"button","huw-musical-remove-song",L.removeSong,row);remove.type="button";
+  remove.disabled=m.songs.length<=1;remove.onclick=function(){m.songs.splice(choice.key,1);persistSongs();};
+  var earlier=el(doc,"button","huw-musical-move-song-earlier",L.moveEarlier,row);earlier.type="button";
+  earlier.disabled=choice.key<=0;
+  earlier.onclick=function(){var k=m.songs.splice(choice.key,1)[0];m.songs.splice(choice.key-1,0,k);persistSongs();};
+  var later=el(doc,"button","huw-musical-move-song-later",L.moveLater,row);later.type="button";
+  later.disabled=choice.key>=m.songs.length-1;
+  later.onclick=function(){var k=m.songs.splice(choice.key,1)[0];m.songs.splice(choice.key+1,0,k);persistSongs();};
+  var idx=choice.key,clip=clips[idx]||k;
+  el(doc,"p","huw-musical-song-info",L.songInfo+" "+(k?k.score:"")+" · "+L.time+": "+round(clip.start||0)+" · "+round(clip.duration||0)+"s",inspector);
+ }
  function drawForm(){inspector.textContent="";var t=track(),k=selected();el(doc,"strong","",t.name,inspector);
-  if(t.kind==="song"){el(doc,"p","",L.readonly,inspector);return;}
+  if(t.kind==="song"){drawSongForm();return;}
   var actions=el(doc,"div","huw-musical-key-actions",undefined,inspector),add=el(doc,"button","",L.add,actions),del=el(doc,"button","",L.remove,actions);
   add.type=del.type="button";add.onclick=function(){newPoint(t,playhead);};del.disabled=!k;del.onclick=function(){removePoint(t);};
   if(!k){el(doc,"p","",L.empty,inspector);return;}
@@ -101,8 +154,18 @@ function attach(o){
     var rect=lane.getBoundingClientRect(),u=lim((ev.clientX-rect.left)/Math.max(1,rect.width),0,1);
     o.seek(toAudio(u*film.duration));if(choice.id!==t.id)choose(t.id,0);
    };
-   if(t.kind==="song"||t.id==="stage"){
-    var block=el(doc,"div","huw-musical-block",t.kind==="song"?o.scoreTitle:"",lane);block.title=t.name;
+   if(t.kind==="song"){
+    var clips=typeof o.clips==="function"?o.clips():Playlist.reflow(m.songs,o.scoreTitle);
+    var total=Math.max(.125,o.duration());
+    clips.forEach(function(c,index){
+     var block=el(doc,"button","huw-musical-song-clip",String(index+1)+". "+c.score,lane);
+     block.type="button";block.title=c.score;
+     block.style.left=(100*c.start/total)+"%";block.style.width=(100*c.duration/total)+"%";
+     if(t.id===choice.id&&index===choice.key)block.classList.add("is-selected");
+     block.onclick=function(ev){ev.stopPropagation();choose(t.id,index);o.seek(c.start);};
+    });
+   }else if(t.id==="stage"){
+    var block=el(doc,"div","huw-musical-block","",lane);block.title=t.name;
    }
    keys(t).forEach(function(k,index){var point=el(doc,"button","huw-musical-key",undefined,lane);point.type="button";
     point.style.left=(100*toFilm(k.t,t)/film.duration)+"%";
