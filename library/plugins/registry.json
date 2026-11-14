@@ -162,6 +162,18 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/instantwiki",
+        "type": "application/json",
+        "name": "InstantWiki",
+        "description": "Documents into editable wikis · Dansk / English · Test",
+        "author": "HUWiki",
+        "version": "0.1.0-test.1",
+        "plugin-type": "plugin"
+      },
+      "path": "../../plugins/instantwiki/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/lessons-jazz",
         "type": "application/json",
         "name": "Jazz / Jazz",
