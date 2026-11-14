@@ -42,6 +42,12 @@ try{
 }
  try{await player.locator(".huw-musical-canvas svg").first().waitFor();}catch(e){
  console.log("DEBUG Musical stage:",(await player.innerText()).slice(0,3500));
+ console.log("DEBUG HTML:",(await player.innerHTML()).slice(0,5500));
+ console.log("DEBUG element counts:",await page.evaluate(()=>{
+ const p=document.querySelector(".huw-musical");
+ const svg=p?.querySelector(".huw-musical-canvas svg"),stage=p?.querySelector(".huw-musical-stage");
+ return {stage:!!stage,svgs:p?.querySelectorAll("svg").length,canvas:p?.querySelectorAll(".huw-musical-canvas").length,svgRect:svg?.getBoundingClientRect().toJSON(),stageRect:stage?.getBoundingClientRect().toJSON(),css:svg?getComputedStyle(svg).cssText:"",children:p?.children.length};
+ }));
  console.log("DEBUG startup errors:",errors);
  console.log("DEBUG source fields:",await page.evaluate(()=>{
   const score=$tw.wiki.getTiddler("Musical – Tændstikorkestret (ABC)"),
