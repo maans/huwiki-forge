@@ -81,7 +81,7 @@ try{
  assert.equal(await player.locator('.huw-musical-score-page[data-song-index="0"]').isVisible(),false);
  assert.ok(Number(await slider.inputValue())>=15,"Scrubbing uses global song time");
  await player.locator(".huw-musical-song-clip").first().click();
- assert.match(await player.getAttribute("data-active-song"),/\\(ABC\\)/);
+ assert.ok((await player.getAttribute("data-active-song")).endsWith("(ABC)"));
  const play=player.locator(".huw-musical-play");
  await play.waitFor({state:"visible"});
  await page.waitForFunction(()=>!document.querySelector(".huw-musical-play").disabled,{timeout:25000});
