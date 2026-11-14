@@ -10,7 +10,7 @@ import net from 'node:net';
 import {execFileSync} from 'node:child_process';
 import {build, base} from '../scripts/build-forgeshare.mjs';
 import {assembleHtml} from '../assembler/assemble.mjs';
-import {validateServe, protectedConfig, validateCredentials, validateFiles, serverArgs, startWiki, stopChild, startSession, dialogCommand, checkPort, serveArgs, guiMain, privateSessionDirectory, readRegistry, registerWiki, startNamedSession, acquireLock, usedServePorts, validateRegistry, checkAddressPort} from '../plugins/forgeshare/helper/ForgeShare.mjs';
+import {validateServe, protectedConfig, validateCredentials, validateFiles, serverArgs, startWiki, stopChild, startSession, jsonCommand, tailscaleCLIOptions, dialogCommand, checkPort, serveArgs, guiMain, privateSessionDirectory, readRegistry, registerWiki, startNamedSession, acquireLock, usedServePorts, validateRegistry, checkAddressPort} from '../plugins/forgeshare/helper/ForgeShare.mjs';
 const require = createRequire(import.meta.url);
 const {TiddlyWiki} = require('tiddlywiki/boot/boot.js');
 const boot = require.resolve('tiddlywiki/boot/boot.js');
@@ -239,9 +239,22 @@ function mockSession({configs = [ai, ai, withWiki()], probe = 401, earlyExit = f
     readJSON: async (exe, args) => { calls.push(args); return args[0] === 'status' ? {BackendState: 'Running', Self: {DNSName: 'host.example.ts.net.'}} : structuredClone(configs[Math.min(index++, configs.length - 1)]); },
     checkPort: async () => {}, checkAddressPort: async () => {}, probe: async () => probe,
     startWiki: () => ({child: server, ready: Promise.resolve({address: '127.0.0.1', port: 8080})}),
-    spawn: (exe, args) => { calls.push(args); return serve; }
+    spawn: (exe, args, options) => { assert.equal(options.env.TAILSCALE_BE_CLI, '1'); calls.push(args); return serve; }
   }};
 }
+test('Mac Tailscale app commands force CLI mode even when launched without a shell', async () => {
+  const options = tailscaleCLIOptions({timeout: 10000}, {PATH: '/usr/bin', TAILSCALE_BE_CLI: '0'});
+  assert.equal(options.timeout, 10000);
+  assert.deepEqual(options.env, {PATH: '/usr/bin', TAILSCALE_BE_CLI: '1'});
+  const result = await jsonCommand('/Applications/Tailscale.app/Contents/MacOS/Tailscale', ['status', '--json'],
+    async (executable, args, opts) => {
+      assert.equal(executable, '/Applications/Tailscale.app/Contents/MacOS/Tailscale');
+      assert.deepEqual(args, ['status', '--json']);
+      assert.equal(opts.env.TAILSCALE_BE_CLI, '1');
+      return {stdout: JSON.stringify({BackendState: 'Running'})};
+    });
+  assert.equal(result.BackendState, 'Running');
+});
 test('safe session adds only foreground 10000, preserves AI and stops only owned processes', async () => {
   const mock = mockSession();
   const session = await startSession({tailscale: '/test/tailscale'}, mock.deps);

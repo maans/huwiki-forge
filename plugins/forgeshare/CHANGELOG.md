@@ -1,3 +1,9 @@
+# 0.1.14 — macOS Tailscale CLI launch fix
+
+- Force Tailscale command-line mode for both status checks and foreground Serve/Funnel when ForgeShare launches from Finder. Tailscale's macOS app otherwise sometimes opens its GUI instead of returning status.
+- Preserve all existing Tailscale routes and automatic free-address selection. Add regression checks for status and Serve subprocess environments.
+- Rebuild ad-hoc-signed Mac and native Windows test packages; the pull request remains a draft.
+
 # 0.1.7
 
 - Optional public Tailscale Funnel with a code-only login page, reader/editor roles and separate local owner editing access.

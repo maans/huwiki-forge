@@ -11,6 +11,7 @@ permissions:
   contents: read
 jobs:
   mac:
+    needs: windows
     runs-on: macos-latest
     timeout-minutes: 10
     steps:
@@ -18,6 +19,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: ForgeShare-Windows-native
+          path: plugins/forgeshare/native/compiled
       - run: python3 scripts/build-forgeshare-mac.py
       - run: node scripts/build-forgeshare.mjs
       - run: |
@@ -25,6 +30,18 @@ jobs:
           ditto -x -k plugins/forgeshare/dist/ForgeShare-mac.zip "$RUNNER_TEMP/ForgeShare-native"
           codesign --verify --strict "$RUNNER_TEMP/ForgeShare-native/ForgeShare.app"
           "$RUNNER_TEMP/ForgeShare-native/ForgeShare.app/Contents/MacOS/ForgeShare" --self-test
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ForgeShare-0.1.14-test-builds
+          retention-days: 14
+          path: |
+            plugins/forgeshare/dist/
+            plugins/forgeshare/native/compiled/ForgeShare
+            plugins/forgeshare/native/compiled/ForgeShare.icns
+            plugins/forgeshare/native/compiled/CodeResources
+            plugins/forgeshare/native/compiled/mac.json
+            plugins/forgeshare/native/compiled/ForgeShare.exe
+            plugins/forgeshare/native/compiled/windows.json
   guide:
     runs-on: ubuntu-latest
     timeout-minutes: 10

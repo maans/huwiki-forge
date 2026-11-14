@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.13 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.14 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {validateSite,siteWorker} from './Site.mjs';
 import {configureLogin} from './Startup.mjs';
 import {Vault,vaultDialog,invitation,privateCommand} from './Vault.mjs';
@@ -18,6 +18,11 @@ import {fileURLToPath, pathToFileURL} from 'node:url';
 import {createInterface} from 'node:readline/promises';
 const require = createRequire(import.meta.url);
 const execute = promisify(execFile);
+// The macOS Tailscale app uses terminal environment variables to choose CLI
+// mode. Finder-launched apps must force it for status AND foreground Serve.
+export const tailscaleCLIOptions = (options = {}, env = process.env) => ({
+  ...options, env: {...env, TAILSCALE_BE_CLI: '1'}
+});
 const self = fileURLToPath(import.meta.url);
 const quiet = process.argv.includes('--gui');
 export const serveArgs = ['serve', '--https=10000', 'http://127.0.0.1:8080'];
@@ -241,7 +246,7 @@ export function checkPort(port = 8080, host = '127.0.0.1') {
 }
 export async function jsonCommand(executable, args, run=execute) {
   try {
-    const {stdout} = await run(executable, args, {timeout: 10000, maxBuffer: 1024 * 1024, windowsHide: true});
+    const {stdout} = await run(executable, args, tailscaleCLIOptions({timeout: 10000, maxBuffer: 1024 * 1024, windowsHide: true}));
     const value=JSON.parse(stdout);
     if(!object(value))throw Error('Invalid status');
     return value;
@@ -617,7 +622,7 @@ export async function startSession(options, deps = {}) {
     if (serveTargetPorts(current).has(port) || JSON.stringify(protectedConfig(before, httpsPort)) !== JSON.stringify(protectedConfig(current, httpsPort))) throw Error(ui('Serve changed during startup', 'Serve blev ændret under start.'));
     // Isolate only our foreground Serve process tree. A PATH entry can be a
     // shell wrapper; stopping its parent alone would leave the sharing alive.
-    serve = startServe(options.tailscale, (options.funnel?['funnel',`--https=${httpsPort}`,`http://127.0.0.1:${targetPort}`]:makeServeArgs(port, httpsPort)), {stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit'], windowsHide: true, detached:process.platform!=='win32'});
+    serve = startServe(options.tailscale, (options.funnel?['funnel',`--https=${httpsPort}`,`http://127.0.0.1:${targetPort}`]:makeServeArgs(port, httpsPort)), tailscaleCLIOptions({stdio: ['ignore', quiet ? 'ignore' : 'inherit', quiet ? 'ignore' : 'inherit'], windowsHide: true, detached:process.platform!=='win32'}));
     if(process.platform!=='win32' && serve.pid)ownedServeGroups.add(serve);
     let serveError;
     serve.once('error', error => { serveError = error; });
