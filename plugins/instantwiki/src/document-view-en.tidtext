@@ -1,0 +1,90 @@
+\whitespace trim
+\define instant-start-edit-actions()
+<$action-setfield $tiddler="$:/temp/instant-wiki/document/edittext" text={{!!text}} $timestamp="no"/>
+<$action-setfield $tiddler="$:/temp/instant-wiki/document/edit" text=<<partTitle>> $timestamp="no"/>
+\end
+
+\define instant-save-edit-actions()
+<$action-setfield $tiddler=<<partTitle>> $field="text" $value={{$:/temp/instant-wiki/document/edittext}}/>
+<$action-setfield $tiddler="$:/temp/instant-wiki/document/edit" text="" $timestamp="no"/>
+<$action-setfield $tiddler="$:/temp/instant-wiki/document/edittext" text="" $timestamp="no"/>
+\end
+
+\define instant-cancel-edit-actions()
+<$action-setfield $tiddler="$:/temp/instant-wiki/document/edit" text="" $timestamp="no"/>
+<$action-setfield $tiddler="$:/temp/instant-wiki/document/edittext" text="" $timestamp="no"/>
+\end
+
+\define instant-heading-edit-button()
+<$button class="tc-btn-invisible instant-doc-heading-hit" tooltip="Click the heading to edit this document part" aria-label="Edit this document part">
+<<instant-start-edit-actions>>
+<span class="instant-doc-edit-hint">✎ Edit</span>
+</$button>
+\end
+
+\define instant-render-heading()
+<$list filter="[all[current]field:instant-level[1]]"><div class="instant-doc-heading-wrap"><h1 class="instant-doc-heading"><$view field="title"/></h1><<instant-heading-edit-button>></div></$list>
+<$list filter="[all[current]field:instant-level[2]]"><div class="instant-doc-heading-wrap"><h2 class="instant-doc-heading"><$view field="title"/></h2><<instant-heading-edit-button>></div></$list>
+<$list filter="[all[current]field:instant-level[3]]"><div class="instant-doc-heading-wrap"><h3 class="instant-doc-heading"><$view field="title"/></h3><<instant-heading-edit-button>></div></$list>
+<$list filter="[all[current]field:instant-level[4]]"><div class="instant-doc-heading-wrap"><h4 class="instant-doc-heading"><$view field="title"/></h4><<instant-heading-edit-button>></div></$list>
+<$list filter="[all[current]field:instant-level[5]]"><div class="instant-doc-heading-wrap"><h5 class="instant-doc-heading"><$view field="title"/></h5><<instant-heading-edit-button>></div></$list>
+<$list filter="[all[current]field:instant-level[6]]"><div class="instant-doc-heading-wrap"><h6 class="instant-doc-heading"><$view field="title"/></h6><<instant-heading-edit-button>></div></$list>
+<div class="instant-doc-body"><$transclude/></div>
+\end
+
+\define instant-render-part()
+<$let partTitle=<<currentTiddler>>>
+<div class="instant-doc-part">
+<$reveal state="$:/temp/instant-wiki/document/edit" type="nomatch" text=<<partTitle>>>
+<$button class="tc-btn-invisible instant-doc-edge instant-doc-edge-left" tooltip="Edit this document part" aria-label="Edit this document part from the left edge">
+<<instant-start-edit-actions>><span>✎</span>
+</$button>
+<$button class="tc-btn-invisible instant-doc-edge instant-doc-edge-right" tooltip="Edit this document part" aria-label="Edit this document part from the right edge">
+<<instant-start-edit-actions>><span>✎</span>
+</$button>
+<$list filter="[all[current]field:toc-type[heading]]" emptyMessage=""><<instant-render-heading>></$list>
+<$list filter="[all[current]!field:toc-type[heading]]" emptyMessage=""><div class="instant-doc-body"><$transclude/></div></$list>
+</$reveal>
+<$reveal state="$:/temp/instant-wiki/document/edit" type="match" text=<<partTitle>>>
+<div class="instant-doc-edit-panel">
+<$keyboard key="ctrl+enter meta+enter" actions=<<instant-save-edit-actions>> tag="div">
+<$keyboard key="escape" actions=<<instant-cancel-edit-actions>> tag="div">
+<$edit-text tiddler="$:/temp/instant-wiki/document/edittext" field="text" tag="textarea" class="instant-doc-editor"/>
+</$keyboard>
+</$keyboard>
+<div class="instant-doc-edit-actions">
+<span class="instant-doc-shortcuts">⌘/Ctrl+Enter save · Esc cancel</span>
+<$button class="instant-doc-action instant-doc-save"><<instant-save-edit-actions>>✓ Save</$button>
+<$button class="instant-doc-action"><<instant-cancel-edit-actions>>Cancel</$button>
+</div>
+</div>
+</$reveal>
+<$list filter="[list<currentTiddler>]" variable="childTitle">
+<$tiddler tiddler=<<childTitle>>><<instant-render-part>></$tiddler>
+</$list>
+</div>
+</$let>
+\end
+
+<$let documentRoot=<<currentTiddler>>>
+<div class="instant-doc-shell">
+<$list filter="[<documentRoot>match[Dokument]]">
+<h1 class="instant-doc-title"><$transclude tiddler=<<documentRoot>> field="instant-document-title"/></h1>
+</$list>
+<div class="instant-doc-topbar">
+<$button class="instant-doc-open-parts" tooltip="Open all document parts as ordinary tiddlers in their original order">
+<$action-setfield $tiddler="$:/StoryList" $field="list" $value={{{ [<documentRoot>get[instant-flat-list]] }}} $timestamp="no"/>
+☷ Open as tiddlers
+</$button>
+<$list filter="[<documentRoot>has[instant-source-url]]">
+<a class="instant-doc-source-link" href={{{ [<documentRoot>get[instant-source-url]] }}} target="_blank" rel="noopener noreferrer">Open source document ↗</a>
+</$list>
+</div>
+<p class="instant-doc-intro"><strong>Continuous document.</strong> The parts below are individual tiddlers. Click a section heading or either edge to edit it directly. Save with ⌘/Ctrl+Enter or cancel with Esc. You can also open all parts in the Story River using the button above.</p>
+<div class="instant-doc">
+<$list filter="[<documentRoot>get[list]enlist-input[]]" variable="partTitle">
+<$tiddler tiddler=<<partTitle>>><<instant-render-part>></$tiddler>
+</$list>
+</div>
+</div>
+</$let>

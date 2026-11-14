@@ -1,0 +1,12 @@
+.forge-instantwiki {max-width:60rem;line-height:1.6}
+.forge-instantwiki fieldset {border:1px solid #aaa;border-radius:.5rem;padding:1.1rem;margin:1.5rem 0}
+.forge-instantwiki legend {font-weight:bold;padding:0 .5rem}
+.forge-instantwiki label {display:block;margin:.7rem 0}
+.forge-instantwiki input:not([type=checkbox]),.forge-instantwiki select {display:block;max-width:100%;width:100%;padding:.45rem}
+.forge-instantwiki button {padding:.55rem .8rem;margin:.3rem .5rem .3rem 0;white-space:normal}
+.forge-instantwiki .iw-check {display:flex;gap:.7rem;align-items:center}
+.forge-instantwiki .iw-preview {max-height:35rem;overflow:auto;padding:0 1rem 0 2rem}
+.forge-instantwiki .iw-preview li {border-bottom:1px solid #bbb;padding:.5rem 0 1rem}
+.forge-instantwiki pre {white-space:pre-wrap;overflow-wrap:anywhere;max-height:18rem;overflow:auto}
+.forge-instantwiki .iw-note {font-size:.9em}
+.forge-instantwiki [role=alert] {border-left:4px solid #b33;padding:.7rem}

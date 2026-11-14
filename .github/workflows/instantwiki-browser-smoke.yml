@@ -1,0 +1,22 @@
+name: InstantWiki document conversion
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/build-instantwiki.mjs --check
+      - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - run: node scripts/instantwiki-browser-smoke.mjs
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
