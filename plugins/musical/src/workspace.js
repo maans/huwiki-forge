@@ -80,8 +80,15 @@ function mount(o){
  });
  filterButtons.all.classList.add("is-active");
  var controls=el(doc,"div","huw-musical-edit-controls",undefined,toolbar);
- button(controls,"huw-musical-add-key","＋ "+L.addKey,function(){editor.addKeyframe();setInspector(true);});
- button(controls,"huw-musical-delete-key","⌫ "+L.delKey,function(){editor.removeKeyframe();});
+ var addKeyButton=button(controls,"huw-musical-add-key","＋ "+L.addKey,function(){editor.addKeyframe();setInspector(true);});
+ var deleteKeyButton=button(controls,"huw-musical-delete-key","⌫ "+L.delKey,function(){editor.removeKeyframe();});
+ function updateEditButtons(){
+  var selected=editor.getSelection(),editable=selected&&selected.kind!=="song";
+  addKeyButton.disabled=deleteKeyButton.disabled=!editable;
+  addKeyButton.title=editable?L.addKey:L.sceneHint;
+  deleteKeyButton.title=editable?L.delKey:L.sceneHint;
+ }
+ updateEditButtons();
  var zoomOut=button(controls,"huw-musical-zoom-out","−",function(){editor.setZoom(editor.getZoom()/1.35);});
  zoomOut.setAttribute("aria-label",L.zoomOut);zoomOut.title=L.zoomOut;
  var zoomIn=button(controls,"huw-musical-zoom-in","＋",function(){editor.setZoom(editor.getZoom()*1.35);});
@@ -104,7 +111,7 @@ function mount(o){
   inspectorButton.setAttribute("aria-pressed",String(inspectorOpen));
  }
  function selection(){
-  setInspector(true);
+  updateEditButtons();setInspector(true);
  }
  // Adjustable divider keeps the preview and timeline visible together.
  var grip=el(doc,"div","huw-musical-layout-resize");
