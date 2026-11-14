@@ -121,6 +121,9 @@ test("Musical Studio supports live notes, whole songs, lighting and editable cam
  const rows=await json("editions/musical/tiddlers/seed.json");
  const movie=JSON.parse(rows.find(t=>t.title==="Musical – Tændstikorkestret (film)").text);
  assert.equal(movie.musical.songs.length,1);
+ assert.equal(movie.musical.songs[0].score,"Musical – Tændstikorkestret (ABC)");
+ assert.match(editor.text,/markOwnWrite/);
+ assert.match(widget,/this\._ownWritten/);
  assert.equal(movie.musical.songs[0].kind,"complete-abc");
  assert.ok(movie.musical.cameraB.keys.length>=3);
  assert.ok(movie.musical.cuts.some(k=>k.camera==="A"));
