@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Importer en ChatGPT-fortælling",
+  "caption": "Importer en ChatGPT-fortælling",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Samtaler og vidensbank",
+  "description": "Redigér importerede tråde til et sammenhængende forløb",
+  "ai-prompt": "Jeg har importeret en ChatGPT-samtale som tiddlere. Lav en oversigt over hovedpunkter, ubesvarede spørgsmål og de besluttede ændringer. Skel mellem mine egne idéer og modellens forslag.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"449\"/></h2><p><$huwiki-ai-label key=\"450\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Import a ChatGPT narrative",
+  "ai-ui-description-en": "Edit imported threads into a connected story",
+  "ai-ui-category-en": "Conversations and knowledge"
+}

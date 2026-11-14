@@ -1,0 +1,7 @@
+{
+  "source": "HUWiki AI 0.3.6 from the existing AI Edition project",
+  "originalPackageSha256": "8fbb4564e4298537d727d8abf0e29e36fb943c08c9a71e7e9cae5f8073bb380b",
+  "originalTitle": "$:/plugins/huwiki/ai",
+  "originalVersion": "0.3.6",
+  "changes": "ForgeShare connection bridge and consent; editable source tiddlers; text-only vault integration"
+}

@@ -1,0 +1,5 @@
+{
+  "title": "HUWiki AI · Om projektet",
+  "tags": "[[HUWiki AI · Navigation]]",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"399\"/></h2><p><$huwiki-ai-label key=\"400\"/></p></div><p><$huwiki-ai-label key=\"401\"/></p><h3><$huwiki-ai-label key=\"402\"/></h3><ul><li><$huwiki-ai-label key=\"403\"/> <a href=\"https://github.com/TiddlyWiki/TiddlyWiki5/pull/8365\" target=\"_blank\" rel=\"noopener noreferrer\"><$huwiki-ai-label key=\"404\"/></a><$huwiki-ai-label key=\"542\"/></li><li><$huwiki-ai-label key=\"403\"/> <a href=\"https://github.com/Jermolene/twillm\" target=\"_blank\" rel=\"noopener noreferrer\"><$huwiki-ai-label key=\"405\"/></a><$huwiki-ai-label key=\"543\"/></li><li><a href=\"https://github.com/rryan/tiddly-mcp\" target=\"_blank\" rel=\"noopener noreferrer\"><$huwiki-ai-label key=\"406\"/></a> <$huwiki-ai-label key=\"407\"/></li></ul><h3><$huwiki-ai-label key=\"408\"/></h3><p><$huwiki-ai-label key=\"409\"/></p><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Forside\"><$huwiki-ai-label key=\"410\"/></$link></div>\n"
+}

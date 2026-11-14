@@ -1,0 +1,158 @@
+title: $:/plugins/huwiki/forgeshare/guide-en
+type: text/vnd.tiddlywiki
+
+<div class="hu-share-hero"><div class="hu-share-eyebrow">ForgeShare · Tailscale collaboration · Wikis and sites<span class="hu-share-badge">Test release</span></div><h1>Your content. Your connections.</h1><p>Open on your computer. Share with others when you choose.</p></div>
+<div class="hu-share-types">
+<section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">▤</span><div><h2>Wiki</h2><p>Edit together using the wiki’s own TiddlyWiki server.</p></div></section>
+<section class="hu-share-type"><span class="hu-share-type-icon" aria-hidden="true">◈</span><div><h2>Site</h2><p>Serve static HTML pages through ForgeShare’s own server.</p></div></section>
+</div>
+<p><$link to="$:/plugins/huwiki/forgeshare/library">Open your wiki library</$link></p>
+<div class="hu-share-steps">
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">1</span><div class="hu-share-step-body"><h2>Get the helper</h2><p>Choose the computer that will host your wiki.</p>
+<div class="hu-share-downloads">
+<a href={{$:/plugins/huwiki/forgeshare/download/mac}} download="ForgeShare-mac.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Mac</span></a>
+<a href={{$:/plugins/huwiki/forgeshare/download/windows}} download="ForgeShare-windows.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Windows</span></a>
+<a href={{$:/plugins/huwiki/forgeshare/download/linux}} download="ForgeShare-linux.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Linux</span></a>
+</div>
+<details class="hu-share-detail">
+<summary>First time? Install these first</summary>
+<div class="hu-share-detail-body">
+
+Install Node.js for the helper. Tailscale is needed only when you choose sharing through Tailscale. Home network needs no Tailscale. Use the official installers. The helper can offer to install TiddlyWiki when you open a server wiki.
+
+<div class="hu-share-install-links"><a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">Get Node.js ↗</a> <a href="https://tailscale.com/download" target="_blank" rel="noopener noreferrer">Get Tailscale ↗</a></div>
+
+On Linux, follow the instructions for your distribution. The dialogs also need Zenity.
+
+</div>
+</details>
+</div></section>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">2</span><div class="hu-share-step-body"><h2>Collect your wikis</h2><p>Open ForgeShare. Your wikis are found automatically and shown in the list. Use <strong>Add</strong> if one is missing.</p>
+<details class="hu-share-detail">
+<summary>I only have an HTML file</summary>
+<div class="hu-share-detail-body">
+
+Press Open or Share. The helper prepares the HTML wiki automatically and keeps the same library entry. Save and close the HTML wiki first. After verification, the original moves to Trash. You can still export HTML for offline use.
+
+</div>
+</details>
+</div></section>
+<section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">3</span><div class="hu-share-step-body"><h2>Open or share</h2><p><strong>Open</strong> prepares and opens the item only on your computer. Select a wiki or site and press <strong>Share</strong>. Choose sharing for each wiki or site the first time. On the next <strong>Share</strong>, reuse that connection or choose another. You can also change it under <strong>Settings → Sharing settings</strong>. To switch an active share, first use its row’s <strong>Stop</strong> button. Use <strong>Copy address</strong> to get the link for others. A green light shows what is running. Shared items show Tailscale, Home network or Funnel on the same line. Stop with the button beside the name. Sharing lists only items shared with others; copy their link or choose Invite there.</p>
+<p class="hu-share-access">A Tailscale invitation shares access to the computer. Restrict guest access to the wiki before inviting.</p><details class="hu-share-detail">
+<summary>On your home network — without Tailscale</summary>
+<div class="hu-share-detail-body">
+
+Choose ''Share → Home network''. Others open the link in a browser on the same network. Choose whether the wiki needs login. Everyone with access can read and edit. You choose the password length.
+
+Use this on your trusted network: the connection uses HTTP without encryption. A guest network or the computer firewall may block access. The app changes no firewall or router settings.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Invite through Tailscale</summary>
+<div class="hu-share-detail-body">
+
+# Participants install Tailscale and sign in to their own accounts. They need only Tailscale and a browser.
+# Open Tailscale administration, select the host computer and use ''Share''. Personal invitations and reusable invitation links can invite several people.
+# Check access rules: guests should reach this wiki while other private services remain inaccessible. See ''Verify wiki-only access'' under Advanced help; get assistance if needed. ForgeShare does not edit these rules.
+# Once the invitation is accepted, send the wiki address and optional login in separate private messages. Try one participant first.
+
+Wiki login is optional. With login you share one username and a password you choose. Without login everyone with Tailscale access to the wiki can read and edit. The app does not remember passwords between starts.
+
+Funnel — share over the internet
+
+Press <b>Share</b> and choose <b>Funnel</b>. Choose one reader code and a different editor code. Guests open the link from <b>Copy address</b> and enter only their code; they do not need Tailscale. <b>Open</b> in the helper gives you editing access. A site needs only one visitor code and cannot be edited through sharing. Codes apply to the whole wiki or site. Give editor access only to people you trust. You can choose to remember sharing codes in the vault. Login lasts up to eight hours and ends when sharing stops. Open <code>/_forgeshare/login</code> at the wiki address to use another code.
+
+Funnel needs HTTPS and Funnel permission in Tailscale. The only supported public HTTPS ports are <strong>443, 8443 and 10000</strong>. If existing Tailscale routes or local services occupy them, ForgeShare shows the reason for each port. It never changes existing sharing automatically. Press <b>Share</b> again to reuse or choose a different method. Funnel needs a free port or a separate Tailscale device. <b>Open</b> still works on your own computer. Tailscale sharing is private; a Funnel address is public and protected by the codes. Repeated login attempts are limited. Choose codes that are not easy to guess. Automatic Funnel startup is not included in this version.
+
+</div>
+</details>
+</div></section>
+</div>
+<p class="hu-share-footer">Keep the host computer on while collaborating. Stop in the app ends only the selected wiki.</p>
+<h2 class="hu-share-help-heading">Help when you need it</h2>
+<div class="hu-share-help">
+<details class="hu-share-detail">
+<summary>Bring the library into a wiki</summary>
+<div class="hu-share-detail-body">
+
+# Open the helper’s export window.
+# Choose ''Export'', select the items to include, and use ''Select all / Select none'' if needed. Names and descriptions are the default; shared addresses are optional. File paths and passwords are never included.
+# Save a new JSON file. Drag it into your chosen wiki, review the import and select ''Import''.
+# Open ''Mine wikier / My wikis'' from the import list. The overview follows the wiki’s Danish/English setting.
+
+This is a snapshot from the export time. Addresses are last known sharing addresses, not a sign that a wiki is currently running. There is no automatic update. Reimporting updates the same entries but does not delete previously imported entries.
+
+Use ''Edit'' in the helper for names and descriptions. Changes in an imported overview are not sent back to the helper.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>If your computer blocks the app</summary>
+<div class="hu-share-detail-body">
+
+The test app has no publisher certificate.
+
+* ''Mac:'' open `ForgeShare.app`. If macOS blocks it as unidentified, you can — if you trust this download — approve this particular app under System Settings → Privacy & Security → Open Anyway. See [[Apple’s instructions|https://support.apple.com/en-us/102445]].
+* ''Windows:'' open `ForgeShare.exe`. Keep `ForgeShare.mjs` in the same folder. If SmartScreen warns about an unrecognized app, choose More info → Run anyway if offered and you trust the file. Smart App Control or computer policy may block it entirely. See [[Microsoft’s explanation|https://learn.microsoft.com/windows/apps/package-and-deploy/smartscreen-reputation]].
+* ''Linux:'' open `Start-ForgeShare.sh`; if necessary, allow it to run in the file’s properties. A terminal window may be visible on Linux.
+
+The Mac and Windows apps do not open a terminal. Do not disable your computer’s general protections. If the app stays blocked, stop and get help.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Several wikis and sites</summary>
+<div class="hu-share-detail-body">
+
+Select another wiki or site and choose ''Open'' or ''Share''. Stopped wikis and sites stay in the list. Each has its own address and optional login. Use ''Stop'' on its running library row. The status light shows whether it is running. On Linux, each running wiki or site has its own status window.
+
+The helper remembers names, folders and addresses. For private Tailscale sharing, it finds an available address even if an old route holds the previous one. Other services remain untouched. Use ''Copy address'' for the current link.
+
+Several devices can open the same wiki. Only one server is needed for that wiki. Do not run its folder in another server at the same time. Changes to the host’s Tailscale name or domain can change its address.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Updates take a while to appear</summary>
+<div class="hu-share-detail-body">
+
+Every browser checks for changes, including the browser on the host computer. You can choose a 3-second interval under ''Sync speed'' in Advanced help. Save first, then reload the wiki on every device.
+
+Checking more often can make updates appear sooner but cannot guarantee a particular speed. Keep the tab active when testing.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Collaboration, backups and offline copies</summary>
+<div class="hu-share-detail-body">
+
+Agree who edits each article. TiddlyWiki does not automatically merge simultaneous changes to the same tiddler.
+
+The optional ''Meddelelser'' (Messages) plugin is described as storing each message in a separate tiddler. This can keep discussion separate from the article’s text but does not lock it. The integration has not been tested here.
+
+Regularly copy the wiki folder with the server stopped. Sync is not backup: deletions are shared too. HTML/offline copies remain possible; their edits are not automatically sent back.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>An image seems to be missing</summary>
+<div class="hu-share-detail-body">
+
+A new image does not open itself for other people. Image tiddlers without a modified date may also be absent from ''Recent''. Find the image below; choose Edit and Save to give it a modified date.
+
+<$list filter="[is[image]!is[system]sort[title]]" emptyMessage="No images found in this browser."><div><$link/></div></$list>
+
+Still missing? Check that the server received it and the devices use the same wiki. ''Get latest from server'' does not open every new tiddler.
+
+</div>
+</details>
+<details class="hu-share-detail">
+<summary>Advanced help</summary>
+<div class="hu-share-detail-body">
+
+<$transclude $tiddler="$:/plugins/huwiki/forgeshare/advanced-en" $mode="block"/>
+
+</div>
+</details>
+</div>

@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Byg et TiddlyWiki-filter",
+  "caption": "Byg et TiddlyWiki-filter",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "TiddlyWiki og automatisering",
+  "description": "Beskriv et behov, få et filter",
+  "ai-prompt": "Jeg vil have en levende oversigt over alle tiddlere med tagget Projekt, grupperet efter status og sorteret alfabetisk. Foreslå det korteste gyldige TiddlyWiki-filter og giv et eksempel på, hvordan det indsættes i en tiddler.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"455\"/></h2><p><$huwiki-ai-label key=\"456\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Build a TiddlyWiki filter",
+  "ai-ui-description-en": "Describe a need and get a filter",
+  "ai-ui-category-en": "TiddlyWiki and automation"
+}

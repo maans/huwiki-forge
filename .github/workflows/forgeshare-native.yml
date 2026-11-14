@@ -1,0 +1,125 @@
+name: ForgeShare native apps
+on:
+  pull_request:
+    paths:
+      - plugins/forgeshare/**
+      - plugins/ai/**
+      - scripts/*forgeshare*
+      - scripts/native-manifest.mjs
+      - .github/workflows/forgeshare-native.yml
+permissions:
+  contents: read
+jobs:
+  mac:
+    needs: windows
+    runs-on: macos-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: ForgeShare-Windows-native
+          path: plugins/forgeshare/native/compiled
+      # Reuse the native 0.1.13 executable that opened successfully on the user's Mac.
+      - run: python3 scripts/build-forgeshare-mac.py --reuse-tested-launcher
+      - run: node scripts/build-forgeshare.mjs
+      - run: npm ci --ignore-scripts
+      - run: node --test tests/forgeshare*.test.mjs
+      - run: |
+          mkdir -p "$RUNNER_TEMP/ForgeShare-native"
+          ditto -x -k plugins/forgeshare/dist/ForgeShare-mac.zip "$RUNNER_TEMP/ForgeShare-native"
+          codesign --verify --strict "$RUNNER_TEMP/ForgeShare-native/ForgeShare.app"
+          "$RUNNER_TEMP/ForgeShare-native/ForgeShare.app/Contents/MacOS/ForgeShare" --self-test
+      # Test the *real* app lifecycle, not only the UI-free --self-test.
+      - name: Launch main window in macOS session
+        run: |
+          APP="$RUNNER_TEMP/ForgeShare-native/ForgeShare.app"
+          open "$APP"
+          sleep 3
+          PID=$(pgrep -f "$APP/Contents/MacOS/ForgeShare" | head -1)
+          if [ -z "$PID" ]; then echo "ForgeShare did not remain running"; exit 1; fi
+          swift scripts/forgeshare-mac-window-smoke.swift "$PID"
+          kill "$PID" || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: ForgeShare-0.1.18-test-builds
+          retention-days: 14
+          path: |
+            plugins/forgeshare/dist/
+            plugins/forgeshare/native/compiled/ForgeShare
+            plugins/forgeshare/native/compiled/ForgeShare.icns
+            plugins/forgeshare/native/compiled/CodeResources
+            plugins/forgeshare/native/compiled/mac.json
+            plugins/forgeshare/native/compiled/ForgeShare.exe
+            plugins/forgeshare/native/compiled/windows.json
+  guide:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - run: node scripts/forgeshare-browser-smoke.mjs
+      - run: npm install --no-save --no-package-lock --ignore-scripts tiddlywiki@5.4.1 playwright-core@1.56.1
+      - run: node scripts/forgeshare-funnel-browser-smoke.mjs
+      - run: node scripts/forgeshare-vault-browser-smoke.mjs
+  windows:
+    runs-on: windows-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - shell: pwsh
+        run: |
+          & ./plugins/forgeshare/native/windows/build.ps1
+          Copy-Item plugins/forgeshare/helper/ForgeShare.mjs plugins/forgeshare/native/compiled/
+          $p=Start-Process plugins/forgeshare/native/compiled/ForgeShare.exe -ArgumentList '--self-test' -Wait -PassThru
+          if($p.ExitCode -ne 0) { throw 'Native self-test failed' }
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ForgeShare-Windows-native
+          path: |
+            plugins/forgeshare/native/compiled/ForgeShare.exe
+            plugins/forgeshare/native/compiled/windows.json
+
+  sync-artifacts:
+    # Commit only validated test bundles to the same draft feature branch.
+    # Never commit from forks, merge the PR, or publish the public site.
+    if: ${{ github.event.pull_request.head.repo.full_name == github.repository && github.event.pull_request.head.ref == 'feat/forgeshare-tailscale' }}
+    needs: mac
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: ForgeShare-0.1.18-test-builds
+          path: .forgeshare-tested
+      - name: Verify and commit tested bundles to draft branch
+        run: |
+          set -euo pipefail
+          cp -R .forgeshare-tested/dist/. plugins/forgeshare/dist/
+          cp -R .forgeshare-tested/native/compiled/. plugins/forgeshare/native/compiled/
+          node scripts/build-forgeshare.mjs --check
+          # Keep the draft feature branch's generated home cards in sync with
+          # its plugin registry; this does NOT deploy the public homepage.
+          node scripts/build-forge-home.mjs
+          node scripts/build-forge-home.mjs --check
+          git add plugins/forgeshare/dist plugins/forgeshare/native/compiled index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
+          if git diff --cached --quiet; then exit 0; fi
+          git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Sync validated ForgeShare test bundles'
+          git push origin HEAD:feat/forgeshare-tailscale

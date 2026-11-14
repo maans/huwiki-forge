@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Undervisningsforløb i dansk",
+  "caption": "Undervisningsforløb i dansk",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Undervisning og formidling",
+  "description": "Planlæg et forløb med aktiviteter og refleksion",
+  "ai-prompt": "Lav et danskforløb om argumentation til 9.-10. klasse. Foreslå tiddlere til læringsmål, teksteksempler, øvelser, evaluering og lærerens noter. Hold forløbet praktisk og varieret.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"463\"/></h2><p><$huwiki-ai-label key=\"464\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "A Danish language teaching unit",
+  "ai-ui-description-en": "Plan a unit with activities and reflection",
+  "ai-ui-category-en": "Teaching and communication"
+}

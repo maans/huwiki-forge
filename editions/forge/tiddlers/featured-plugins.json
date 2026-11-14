@@ -2,9 +2,9 @@
   {
     "title": "$:/huwiki/forge/forgeshare",
     "text": "",
-    "available": "no",
-    "version": "",
-    "plugin-title": "",
-    "download-url": ""
+    "available": "yes",
+    "version": "0.1.18",
+    "plugin-title": "$:/plugins/huwiki/forgeshare",
+    "download-url": "https://forge.xn--mns-ula.dk/plugins/forgeshare/dist/plugin.json"
   }
 ]

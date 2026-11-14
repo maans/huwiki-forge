@@ -1,0 +1,27 @@
+name: ForgeShare helpers
+on:
+  pull_request:
+    paths:
+      - plugins/forgeshare/**
+      - scripts/build-forgeshare.mjs
+      - tests/forgeshare*.test.mjs
+      - package.json
+      - package-lock.json
+      - .github/workflows/forgeshare-test.yml
+permissions:
+  contents: read
+jobs:
+  helpers:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - run: node --test tests/forgeshare.test.mjs tests/forgeshare-library.test.mjs tests/forgeshare-network.test.mjs tests/forgeshare-funnel.test.mjs tests/forgeshare-gateway.test.mjs tests/forgeshare-conversion.test.mjs tests/forgeshare-vault.test.mjs tests/forgeshare-sharing.test.mjs tests/forgeshare-port-recovery.test.mjs tests/forgeshare-process.test.mjs
