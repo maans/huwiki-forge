@@ -1,0 +1,18 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "Musical"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "CutOut · ABC Music · Virtual Camera"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[Musical – Start]]"
+  }
+]
