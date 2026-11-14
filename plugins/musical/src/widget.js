@@ -59,6 +59,7 @@ Musical.prototype.render=function(parent,next){
   return {clip:c,title:c.score,source:source,fields:fields,events:[],tune:null,controller:null,page:null};
  });
  this._playlistTitles=songs.map(function(s){return s.title;});
+ this._songStates=songs;
  if(!songs.length||songs.some(function(s){return !s.source.trim();})){
   node(doc,"p","huw-musical-error","En scene eller et nodeark mangler. / Missing scene or score.",host);return;
  }
