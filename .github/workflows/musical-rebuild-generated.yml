@@ -1,0 +1,39 @@
+name: Rebuild Musical Edition generated assets
+on:
+  push:
+    branches:
+      - feature/musical-edition-orchestra
+    paths:
+      - .github/workflows/musical-rebuild-generated.yml
+      - plugins/musical/dist/plugin.json
+      - catalog/editions.json
+      - editions/musical/**
+      - editions/forge/tiddlers/edition-index.json
+      - library/plugins/registry.json
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  regenerate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/musical-edition-orchestra
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Rebuild native plugin library and Forge homepage
+        run: |
+          node scripts/build-forge-plugin-library.mjs
+          node scripts/build-forge-home.mjs
+      - name: Commit regenerated files to the Musical feature branch only
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html library/plugins/registry.json editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
+          if ! git diff --cached --quiet; then
+            git commit -m "Build Musical Edition 0.2 generated catalog and homepage"
+            git push origin HEAD:feature/musical-edition-orchestra
+          fi
