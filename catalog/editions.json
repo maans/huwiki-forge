@@ -80,17 +80,17 @@
     {
       "id": "musical",
       "name": "Musical Edition (test)",
-      "version": "0.4.0-test.1",
+      "version": "0.5.0-test.1",
       "status": "test",
       "manifest": "../editions/musical/manifest.json",
-      "description": "Musical Studio: independent whole-song ABC tracks, crossfades, two live scores, CutOut animations and cameras",
+      "description": "LumaFusion-inspired musical editor with stage and live ABC score directly above the timeline, contextual CutOut tools, camera keyframes and overlapping tunes",
       "home": {
-        "headingDa": "Lav din egen musikvideo",
-        "headingEn": "Create your own music video",
-        "descriptionDa": "Hvert helt musiknummer har sit eget spor med start, overlap, crossfade og levende nodeark.",
-        "descriptionEn": "Each complete tune has its own track, with independent start, overlaps, crossfades and live notation.",
-        "noteDa": "Testudgave med ægte ABC-lydspor og fades. Skal afprøves med lyd på Mac og iPad.",
-        "noteEn": "Test release with independent ABC soundtracks and fades. Requires actual listening tests on Mac and iPad.",
+        "headingDa": "Musical Studio – musikvideo",
+        "headingEn": "Musical Studio – Music Video",
+        "descriptionDa": "Scene og levende nodeark over tidslinjen. Redigér musikspor, crossfades, musikere, lys og kamera.",
+        "descriptionEn": "Stage and live score above the timeline. Edit song tracks, crossfades, performers, lighting and cameras.",
+        "noteDa": "Ny arbejdsflade under test. Crossfade med rigtig lyd og Safari/iPad skal afprøves.",
+        "noteEn": "New workspace under test. Audible crossfade and Safari/iPad still need acceptance tests.",
         "order": "02.5"
       }
     },
