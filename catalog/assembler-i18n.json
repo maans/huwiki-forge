@@ -1,0 +1,408 @@
+{
+  "schemaVersion": 1,
+  "description": "Assembler presentation text only. Keep plugin package metadata and technical IDs unchanged.",
+  "editions": {
+    "forge": {
+      "da": {
+        "name": "TiddlyWiki Forge (forside)"
+      },
+      "en": {
+        "name": "TiddlyWiki Forge (homepage)"
+      }
+    },
+    "hupedia": {
+      "da": {
+        "name": "HUPedia Edition"
+      },
+      "en": {
+        "name": "HUPedia Edition"
+      }
+    },
+    "tegne": {
+      "da": {
+        "name": "Tegne Edition (test)"
+      },
+      "en": {
+        "name": "Drawing Edition (test)"
+      }
+    },
+    "music": {
+      "da": {
+        "name": "Musik Edition (test)"
+      },
+      "en": {
+        "name": "Music Edition (test)"
+      }
+    },
+    "ai": {
+      "da": {
+        "name": "AI Edition (test)"
+      },
+      "en": {
+        "name": "AI Edition (test)"
+      }
+    },
+    "hupin": {
+      "da": {
+        "name": "HUPin Edition (test)"
+      },
+      "en": {
+        "name": "HUPin Edition (test)"
+      }
+    },
+    "demo": {
+      "da": {
+        "name": "Demo Edition"
+      },
+      "en": {
+        "name": "Demo Edition"
+      }
+    },
+    "cutout": {
+      "da": {
+        "name": "CutOut Edition (test)"
+      },
+      "en": {
+        "name": "CutOut Edition (test)"
+      }
+    },
+    "slideshow": {
+      "da": {
+        "name": "Slideshow Edition (test)"
+      },
+      "en": {
+        "name": "Slideshow Edition (test)"
+      }
+    },
+    "shop": {
+      "da": {
+        "name": "Shop Edition (test)"
+      },
+      "en": {
+        "name": "Shop Edition (test)"
+      }
+    }
+  },
+  "packages": {
+    "$:/plugins/huwiki/abc": {
+      "da": {
+        "name": "ABC Musik",
+        "description": "Skriv ABC-noder, afspil musik og følg noderne under afspilning. Indeholder jazz og swing samt mikser til flere stemmer."
+      },
+      "en": {
+        "name": "ABC Music",
+        "description": "Create and play ABC notation with a follow-along score, jazz and swing settings, and a multi-voice mixer."
+      }
+    },
+    "$:/plugins/huwiki/ai": {
+      "da": {
+        "name": "AI Forge",
+        "description": "Tekstsamtaler med AI via lokale modeller eller godkendte ForgeShare-forbindelser."
+      },
+      "en": {
+        "name": "AI Forge",
+        "description": "AI text conversations using local models or approved ForgeShare connections."
+      }
+    },
+    "$:/plugins/huwiki/lessons-balkan": {
+      "da": {
+        "name": "Balkan",
+        "description": "Musikundervisning med ABC-eksempler fra Balkan."
+      },
+      "en": {
+        "name": "Balkan",
+        "description": "Balkan music teaching material with ABC notation examples."
+      }
+    },
+    "$:/plugins/huwiki/lessons-basic": {
+      "da": {
+        "name": "Grundøvelser",
+        "description": "Grundlæggende musikøvelser med ABC-noder."
+      },
+      "en": {
+        "name": "Basic exercises",
+        "description": "Introductory music exercises using ABC notation."
+      }
+    },
+    "$:/plugins/huwiki/cutout": {
+      "da": {
+        "name": "CutOut",
+        "description": "Lav dukker og animationer i et lokalt værksted."
+      },
+      "en": {
+        "name": "CutOut",
+        "description": "Create puppets and animations in a local workshop."
+      }
+    },
+    "$:/plugins/huwiki/cutout-examples": {
+      "da": {
+        "name": "CutOut · eksempler",
+        "description": "Eksempelprojekter og øvelser til CutOut."
+      },
+      "en": {
+        "name": "CutOut · examples",
+        "description": "Example projects and exercises for CutOut."
+      }
+    },
+    "$:/plugins/huwiki/cutout-excalidraw": {
+      "da": {
+        "name": "CutOut ↔ Excalidraw",
+        "description": "Brug redigerbare Excalidraw-tegninger i CutOut."
+      },
+      "en": {
+        "name": "CutOut ↔ Excalidraw",
+        "description": "Use editable Excalidraw drawings in CutOut."
+      }
+    },
+    "$:/plugins/huwiki/tegne-da": {
+      "da": {
+        "name": "Danske tegnetekster",
+        "description": "Danske tekster til Tegne-værkstedet, styret af TiddlyWikis sprogvalg."
+      },
+      "en": {
+        "name": "Danish drawing language pack",
+        "description": "Danish interface strings for the drawing studio, following TiddlyWiki's language setting."
+      }
+    },
+    "$:/plugins/itw/tw-excalidraw": {
+      "da": {
+        "name": "Excalidraw Forge",
+        "description": "Tegning med Excalidraw og integration med TiddlyWikis bibliotek."
+      },
+      "en": {
+        "name": "Excalidraw Forge",
+        "description": "Excalidraw drawing tools integrated with TiddlyWiki's library."
+      }
+    },
+    "$:/plugins/huwiki/lessons-folk": {
+      "da": {
+        "name": "Folkemusik",
+        "description": "Nordisk folkemusik med ABC-eksempler og et artikelindeks."
+      },
+      "en": {
+        "name": "Folk music",
+        "description": "Nordic folk music with ABC examples and an article index."
+      }
+    },
+    "$:/plugins/huwiki/forgeshare": {
+      "da": {
+        "name": "ForgeShare · Mac-test",
+        "description": "Valgfri TiddlyWiki-vejledning til Mac-hjælpeprogrammet, lokal server og privat Tailscale-deling. Ikke selve programmet."
+      },
+      "en": {
+        "name": "ForgeShare · Mac test",
+        "description": "Optional TiddlyWiki guide for the separate Mac helper app, local server and private Tailscale sharing. Not the app itself."
+      }
+    },
+    "$:/plugins/huwiki/hupedia": {
+      "da": {
+        "name": "HUPedia · artikelværktøjer",
+        "description": "Artikler, formularer og redigerbare faktabokse."
+      },
+      "en": {
+        "name": "HUPedia · article tools",
+        "description": "Articles, forms and editable infoboxes."
+      }
+    },
+    "$:/plugins/huwiki/hupin": {
+      "da": {
+        "name": "HUPin",
+        "description": "Lav klikbare punkter på billeder, SVG og kort."
+      },
+      "en": {
+        "name": "HUPin",
+        "description": "Add interactive hotspots to images, SVG drawings and maps."
+      }
+    },
+    "$:/plugins/huwiki/lessons-india": {
+      "da": {
+        "name": "Indien",
+        "description": "Musikundervisning med indiske eksempler i ABC-notation."
+      },
+      "en": {
+        "name": "India",
+        "description": "Indian music teaching material with ABC notation examples."
+      }
+    },
+    "$:/plugins/huwiki/instantwiki": {
+      "da": {
+        "name": "InstantWiki",
+        "description": "Lav dokumenter om til redigerbare wikier."
+      },
+      "en": {
+        "name": "InstantWiki",
+        "description": "Turn documents into editable wikis."
+      }
+    },
+    "$:/plugins/huwiki/lessons-jazz": {
+      "da": {
+        "name": "Jazz",
+        "description": "Interaktive jazzøvelser med two-feel og walking bass."
+      },
+      "en": {
+        "name": "Jazz",
+        "description": "Interactive jazz exercises with two-feel and walking bass."
+      }
+    },
+    "$:/plugins/huwiki/musescore-import": {
+      "da": {
+        "name": "MuseScore → ABC-import",
+        "description": "Importér MuseScore/MusicXML til ABC med nodevisning, gentagelser, bindebuer og oktavbas."
+      },
+      "en": {
+        "name": "MuseScore → ABC Importer",
+        "description": "Import MuseScore/MusicXML as ABC with score preview, repeats, ties and octave bass."
+      }
+    },
+    "$:/plugins/huwiki/music": {
+      "da": {
+        "name": "Musik",
+        "description": "Musikbibliotek, tosproget artikelindeks og søgepanel."
+      },
+      "en": {
+        "name": "Music",
+        "description": "Music library, bilingual article index and discovery panel."
+      }
+    },
+    "$:/plugins/huwiki/pasteup": {
+      "da": {
+        "name": "PasteUp Forge",
+        "description": "Lav plakater og interaktive plader."
+      },
+      "en": {
+        "name": "PasteUp Forge",
+        "description": "Create posters and interactive boards."
+      }
+    },
+    "$:/plugins/huwiki/print-article": {
+      "da": {
+        "name": "PDF-udgiver",
+        "description": "Udgiv tiddlere og samlinger som PDF."
+      },
+      "en": {
+        "name": "PDF Publisher",
+        "description": "Publish tiddlers and collections as PDF files."
+      }
+    },
+    "$:/plugins/linonetwo/tw-react": {
+      "da": {
+        "name": "ReactJS",
+        "description": "Understøttelse af React-komponenter i TiddlyWiki."
+      },
+      "en": {
+        "name": "ReactJS",
+        "description": "React component support in TiddlyWiki."
+      }
+    },
+    "$:/plugins/huwiki/lessons-rhythm": {
+      "da": {
+        "name": "Rytmik",
+        "description": "Rytmeøvelser med ABC, herunder bossa nova i 4/4."
+      },
+      "en": {
+        "name": "Rhythm",
+        "description": "Rhythm exercises using ABC notation, including bossa nova in 4/4."
+      }
+    },
+    "$:/plugins/huwiki/shop": {
+      "da": {
+        "name": "Shop",
+        "description": "Opret Shop Sites med vejledning til formularer, ordreark, Google Sites og Funnel."
+      },
+      "en": {
+        "name": "Shop",
+        "description": "Create Shop Sites with setup guidance for forms, order sheets, Google Sites and Funnel."
+      }
+    },
+    "$:/plugins/huwiki/site-publisher": {
+      "da": {
+        "name": "SitePublisher",
+        "description": "Udgiv HTML-sider med CutOut, Excalidraw, billeder og indlejret medieindhold."
+      },
+      "en": {
+        "name": "SitePublisher",
+        "description": "Publish HTML sites with CutOut, Excalidraw, images and embedded media."
+      }
+    },
+    "$:/plugins/huwiki/slideshow": {
+      "da": {
+        "name": "Slideshow",
+        "description": "Lav præsentationer med PasteUp, lokale dokumenter, PDF og redigerbare ZIP-kopier."
+      },
+      "en": {
+        "name": "Slideshow",
+        "description": "Create presentations with PasteUp, local documents, PDF and editable ZIP exports."
+      }
+    },
+    "$:/plugins/huwiki/theatre": {
+      "da": {
+        "name": "Teater",
+        "description": "Lav forestillinger med PasteUp og CutOut."
+      },
+      "en": {
+        "name": "Theatre",
+        "description": "Create performances with PasteUp and CutOut."
+      }
+    },
+    "$:/plugins/huwiki/tegne": {
+      "da": {
+        "name": "Tegne",
+        "description": "Tegneværksted med Excalidraw og lokal gemning."
+      },
+      "en": {
+        "name": "Drawing studio",
+        "description": "Excalidraw drawing studio with local saving."
+      }
+    },
+    "$:/plugins/huwiki/forge-demo": {
+      "da": {
+        "name": "TiddlyWiki Forge Demo",
+        "description": "Demonstrationsplugin, der kontrollerer TiddlyWikis opstart."
+      },
+      "en": {
+        "name": "TiddlyWiki Forge Demo",
+        "description": "Demo plugin that checks TiddlyWiki startup."
+      }
+    },
+    "$:/plugins/huwiki/trim": {
+      "da": {
+        "name": "Trim",
+        "description": "Selvstændigt designværktøj med et stilark, der bevares efter afinstallation."
+      },
+      "en": {
+        "name": "Trim",
+        "description": "Standalone design tool with a stylesheet retained after uninstalling."
+      }
+    },
+    "$:/themes/huwiki/hupedia": {
+      "da": {
+        "name": "HUPedia-tema",
+        "description": "Tema til opslagsværker med navigation og læsbar typografi. Artikelværktøjer installeres særskilt."
+      },
+      "en": {
+        "name": "HUPedia theme",
+        "description": "Reference-style theme with navigation and readable typography. Article tools are installed separately."
+      }
+    },
+    "$:/themes/huwiki/modern": {
+      "da": {
+        "name": "Modern",
+        "description": "Moderne, responsivt tema med farvepaletter."
+      },
+      "en": {
+        "name": "Modern",
+        "description": "Modern responsive theme with colour palettes."
+      }
+    },
+    "$:/themes/huwiki/retro": {
+      "da": {
+        "name": "Retro",
+        "description": "Farverigt og læsevenligt retrotema inspireret af PasteUp."
+      },
+      "en": {
+        "name": "Retro",
+        "description": "Colourful, readable retro theme inspired by PasteUp."
+      }
+    }
+  }
+}
