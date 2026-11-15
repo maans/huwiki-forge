@@ -90,7 +90,7 @@
     "edition-id": "ai",
     "name": "AI Edition (test)",
     "status": "test",
-    "version": "0.4.0-test.1",
+    "version": "0.4.1-test.1",
     "order": "02.5",
     "build-url": "https://forge.måns.dk/assembler/?edition=ai",
     "build-url-da": "https://forge.måns.dk/assembler/?edition=ai&lang=da",
@@ -99,10 +99,10 @@
     "demo-url-en": "https://forge.måns.dk/demo/?edition=ai&lang=en",
     "heading-da": "Samtaler, AI-opgaver og dine egne modeller",
     "heading-en": "AI conversations, tasks and your models",
-    "description-da": "Brug AI Forge til tekstsamtaler og opgaver i din egen wiki. Vælg lokal AI eller godkendte forbindelser via ForgeShare på Mac.",
-    "description-en": "Use AI Forge for text chats and tasks in your own wiki. Connect to local AI or approved connections through ForgeShare on Mac.",
-    "note-da": "Testudgave. ForgeShare er valgfri lokalt; AI-forbindelser via hjælpeappen kræver Mac, opsætning og godkendelse. Billedfunktioner udestår.",
-    "note-en": "Test release. ForgeShare is optional for local mode; helper connections need Mac setup and approval. Image operations are pending."
+    "description-da": "Brug OpenAI, Claude, Gemini eller en lokal AI-model via LM Studio/Ollama. ForgeShare er valgfri.",
+    "description-en": "Use OpenAI, Claude, Gemini or local models via LM Studio/Ollama. ForgeShare is optional.",
+    "note-da": "Testudgave: Direkte cloud-kald kan blokeres af CORS. Nøgler gemmes ikke i wikien.",
+    "note-en": "Test release: Direct cloud requests may be blocked by CORS. Keys are not saved in the wiki."
   },
   {
     "title": "$:/huwiki/forge/edition/hupin",
