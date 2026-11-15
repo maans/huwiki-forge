@@ -48,8 +48,14 @@ function attach(o){
  el(doc,"h3","",L.title,head);el(doc,"p","",L.help,root);
  var cameraLabel=el(doc,"span","huw-musical-active-camera","",head);
  L.name=L===translations.da?"Navn":"Name";L.color=L===translations.da?"Farve":"Color";L.text=L===translations.da?"Tekst":"Text";
+ var clipBar=el(doc,"div","huw-musical-clip-editor-bar",undefined,root);
+ clipBar.hidden=true;
+ var clipBack=el(doc,"button","huw-musical-clip-back",L===translations.da?"← Tilbage til forestillingen":"← Back to performance",clipBar);clipBack.type="button";
+ var clipHeading=el(doc,"div","huw-musical-clip-editor-heading",undefined,clipBar);
+ var clipTitle=el(doc,"strong","huw-musical-clip-editor-title","",clipHeading);
+ var clipMeta=el(doc,"span","huw-musical-clip-editor-meta","",clipHeading);
  var rows=el(doc,"div","huw-musical-tracks",undefined,root),inspector=el(doc,"div","huw-musical-inspector",undefined,root),status=el(doc,"output","huw-musical-edited-status","",root);
- var playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1,expandedClipId="";
+ var playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1,expandedClipId="",detailClipId="",detailReturn=null,lastClipTap=null,isolation="";
  var tracks=[{id:"song",kind:"song",name:L.song},{id:"backdrop",kind:"part",part:"stage-back",name:L.backdrop},{id:"stage",kind:"part",part:"stage-floor",name:L.stage},{id:"foreground",kind:"part",part:"foreground-flags",name:L.foreground},{id:"lights",kind:"light",name:L.light}];
  if(Array.isArray(m.animationClips)&&m.animationClips.length){
   m.animationClips.forEach(function(c){tracks.push({id:"animation:"+c.id,kind:"animation",clipId:c.id,name:c.name||c.id});});
@@ -63,6 +69,33 @@ function attach(o){
  function axisDuration(){return Math.max(1,o.duration(),film.duration,Playlist.total(m.songs));}
  function part(t){return source&&source.parts.find(function(p){return p.id===t.part;});}
  function animation(t){return m.animationClips.find(function(c){return c.id===t.clipId;});}
+ function activeDetail(){return m.animationClips.find(function(c){return c.id===detailClipId;});}
+ function detailTrack(clip,partId){
+  var p=source&&source.parts.find(function(k){return k.id===partId;});
+  var id="motion:"+clip.id+":"+partId;
+  return map[id]||(map[id]={id:id,kind:"motion",clipId:clip.id,part:partId,name:p&&p.name||partId});
+ }
+ function openAnimation(clipId){
+  var clip=m.animationClips.find(function(c){return c.id===clipId;});if(!clip)return false;
+  if(!detailClipId)detailReturn={id:choice.id,key:choice.key,filter:filter};
+  detailClipId=clip.id;choice={id:"animation:"+clip.id,key:0};
+  expandedClipId="animation:"+clip.id;
+  o.host.classList.add("huw-musical--clip-detail");
+  clipBar.hidden=false;draw();
+  if(playhead<clip.start||playhead>clip.start+clip.duration)o.seek(clip.start);
+  o.repaint();if(o.onSelect)o.onSelect(track());
+  if(root.scrollIntoView)root.scrollIntoView({block:"nearest"});
+  return true;
+ }
+ function closeAnimation(){
+  if(!detailClipId)return false;
+  detailClipId="";o.host.classList.remove("huw-musical--clip-detail");
+  clipBar.hidden=true;
+  if(detailReturn){choice={id:detailReturn.id,key:detailReturn.key};filter=detailReturn.filter;}
+  detailReturn=null;lastClipTap=null;draw();o.repaint();
+  return true;
+ }
+ clipBack.onclick=closeAnimation;
  function animationTime(c,beat){
   var clock=o.beatClock&&o.beatClock();if(!clock)return c.start+beat*.5;
   var start=lim(c.start,0,axisDuration()),lo=start,hi=axisDuration(),goal=clock.at(start)+beat;
@@ -89,8 +122,28 @@ function attach(o){
  function paint(time){var c=cameraState(time),w=film.width/c.zoom,h=film.height/c.zoom,box={x:c.x-w/2,y:c.y-h/2,width:w,height:h};
   o.view.svg.setAttribute("viewBox",[box.x,box.y,box.width,box.height].join(" "));
   Object.keys(box).forEach(function(k){overlay.setAttribute(k,box[k]);});overlay.setAttribute("fill","#040716");overlay.setAttribute("opacity",round((1-illumination(time))*.78));
-  cameraLabel.textContent=L.camera+" "+activeCam(time);playhead=time;
-  playheads.forEach(function(e){e.style.left=(100*time/axisDuration())+"%";});
+  // This is a preview-only camera and solo mode. The actual film camera and
+  // all other animation clips remain unchanged in the saved TiddlyWiki.
+  var detail=activeDetail();
+  if(detail){
+   var person=source&&source.parts.find(function(p){return p.id===detail.target;});
+   if(person){var pose=Engine.state(person,time);o.view.svg.setAttribute("viewBox",[round(pose.x-200),round(pose.y-165),400,225].join(" "));}
+  }
+  if(isolation!==detailClipId){
+   (o.view.clips||[]).forEach(function(filmClip){var nested=filmClip.view;if(!nested)return;
+    m.animationClips.forEach(function(c){var node=nested.nodes&&nested.nodes[c.target];
+     if(node&&node.el)node.el.style.display=detailClipId&&c.id!==detailClipId?"none":"";
+    });
+   });isolation=detailClipId;
+  }
+  cameraLabel.textContent=detail?(L===translations.da?"Animation: ":"Animation: ")+detail.name:L.camera+" "+activeCam(time);playhead=time;
+  playheads.forEach(function(e){
+   if(e.dataset.cursorMode==="beat"){
+    var phase=detail&&Motion.phase(detail,time,o.beatClock&&o.beatClock());
+    e.style.display=phase===null?"none":"";
+    e.style.left=phase===null?"0%":(100*phase/Math.max(.125,num(detail.beatsPerLoop,8)))+"%";
+   }else e.style.left=(100*time/axisDuration())+"%";
+  });
  }
  function save(t){var isPart=t.kind==="part",name=isPart?o.stageTitle:o.sceneTitle,value=isPart?source:film,old=o.wiki.getTiddler(name);if(!old||!value)return;
   var json=JSON.stringify(value);o.markOwnWrite(name,json);o.wiki.addTiddler(new $tw.Tiddler(old,{title:name,text:json}));status.textContent=L.saved;
@@ -283,7 +336,80 @@ function attach(o){
   }else if(t.kind==="light")formNumber(k,L.intensity,"intensity",.05,0,1);
   else if(t.kind==="cut")formSelect(k,L.camera,"camera",[["A",L.cameraA],["B",L.cameraB]]);
  }
+ function drawDetail(){
+  var clip=activeDetail();if(!clip)return;
+  clipTitle.textContent=clip.name||clip.id;
+  clipMeta.textContent=(L===translations.da?"Bevægelsesløkke · ":"Motion loop · ")+round(num(clip.beatsPerLoop,8))+
+   (L===translations.da?" slag · følger ABC-tempoet":" beats · follows ABC tempo");
+  var span=Math.max(.125,num(clip.beatsPerLoop,8));
+  var rule=el(doc,"div","huw-musical-timeline-ruler huw-musical-detail-ruler",undefined,rows);
+  el(doc,"span","huw-musical-ruler-label",L===translations.da?"Slag i løkken":"Beats in loop",rule);
+  var ruleLane=el(doc,"div","huw-musical-ruler-lane",undefined,rule);
+  for(var i=0;i<=span;i++){
+   var tick=el(doc,"span","huw-musical-ruler-tick",i===span?"↻":String(i+1),ruleLane);
+   tick.style.left=(100*i/span)+"%";
+  }
+  ruleLane.onclick=function(ev){var box=ruleLane.getBoundingClientRect();
+   var fraction=lim((ev.clientX-box.left)/Math.max(1,box.width),0,1);
+   o.seek(animationTime(clip,round(fraction*span)));
+  };
+  Object.keys(clip.motion||{}).forEach(function(partId){
+   var t=detailTrack(clip,partId),row=el(doc,"div","huw-musical-track huw-musical-detail-track",undefined,rows);
+   row.dataset.trackId=t.id;row.dataset.group="animation";
+   if(choice.id===t.id)row.classList.add("is-selected");
+   var caption=el(doc,"div","huw-musical-lane-title",t.name,row);
+   caption.onclick=function(){choose(t.id,0);};
+   var lane=el(doc,"div","huw-musical-lane huw-musical-beat-lane",undefined,row);
+   lane.onclick=function(ev){if(ev.target.closest&&ev.target.closest(".huw-musical-key"))return;
+    var box=lane.getBoundingClientRect(),beat=lim((ev.clientX-box.left)/Math.max(1,box.width),0,1)*span;
+    o.seek(animationTime(clip,beat));
+    var list=keys(t),index=0,best=Infinity;
+    list.forEach(function(k,j){var d=Math.abs(num(k.t,0)-beat);if(d<best){best=d;index=j;}});
+    choose(t.id,index);
+   };
+   (clip.motion[partId]||[]).forEach(function(k,index){
+    var dot=el(doc,"button","huw-musical-key huw-musical-motion-key",undefined,lane);
+    dot.type="button";dot.style.left=(100*num(k.t,0)/span)+"%";
+    dot.setAttribute("aria-label",t.name+" · "+round(k.t)+" "+(L===translations.da?"slag":"beats"));
+    dot.title=dot.getAttribute("aria-label");
+    if(choice.id===t.id&&choice.key===index)dot.classList.add("is-selected");
+    dot.onclick=function(ev){ev.preventDefault();ev.stopPropagation();choose(t.id,index);o.seek(animationTime(clip,num(k.t,0)));};
+   });
+   var cursor=el(doc,"div","huw-musical-lane-cursor",undefined,lane);
+   cursor.dataset.cursorMode="beat";playheads.push(cursor);
+  });
+  // Solo accents belong to this animation, but use absolute seconds because
+  // they are story events (unlike the beat-based repeating motion pattern).
+  var soloRule=el(doc,"div","huw-musical-timeline-ruler huw-musical-detail-solo-ruler",undefined,rows);
+  el(doc,"span","huw-musical-ruler-label",L===translations.da?"Solo · sekunder":"Solo · seconds",soloRule);
+  var soloRuleLane=el(doc,"div","huw-musical-ruler-lane",undefined,soloRule);
+  var duration=axisDuration(),step=duration>60?10:5;
+  for(var second=0;second<=duration;second+=step){
+   var tick=el(doc,"span","huw-musical-ruler-tick",second+"s",soloRuleLane);
+   tick.style.left=(100*second/duration)+"%";
+  }
+  soloRuleLane.onclick=function(ev){var box=soloRuleLane.getBoundingClientRect();
+   o.seek((ev.clientX-box.left)/Math.max(1,box.width)*duration);
+  };
+  var accent=map["accent:"+clip.id],soloRow=el(doc,"div","huw-musical-track huw-musical-detail-track",undefined,rows);
+  soloRow.dataset.group="animation";soloRow.dataset.trackId=accent.id;
+  if(choice.id===accent.id)soloRow.classList.add("is-selected");
+  var soloTitle=el(doc,"div","huw-musical-lane-title",L===translations.da?"Solobevægelser":"Solo accents",soloRow);
+  soloTitle.onclick=function(){choose(accent.id,0);};
+  var soloLane=el(doc,"div","huw-musical-lane",undefined,soloRow);
+  (clip.accents||[]).forEach(function(k,index){
+   var dot=el(doc,"button","huw-musical-key huw-musical-accent-key",undefined,soloLane);
+   dot.type="button";dot.style.left=(100*num(k.t,0)/duration)+"%";
+   dot.title=round(k.t)+"s";dot.setAttribute("aria-label",dot.title);
+   if(choice.id===accent.id&&choice.key===index)dot.classList.add("is-selected");
+   dot.onclick=function(ev){ev.preventDefault();ev.stopPropagation();choose(accent.id,index);o.seek(num(k.t,0));};
+  });
+  var cursor=el(doc,"div","huw-musical-lane-cursor",undefined,soloLane);
+  cursor.dataset.cursorMode="seconds";playheads.push(cursor);
+  drawForm();
+ }
  function draw(){rows.textContent="";playheads=[];
+  if(detailClipId){drawDetail();return;}
   var axis=axisDuration();
   var ruler=el(doc,"div","huw-musical-timeline-ruler",undefined,rows);
   el(doc,"span","huw-musical-ruler-label",L.time,ruler);
@@ -317,10 +443,26 @@ function attach(o){
     block.setAttribute("role","button");block.tabIndex=0;
     block.style.left=(100*span.start/axis)+"%";
     block.style.width=(100*Math.max(.1,span.end-span.start)/axis)+"%";
-    block.title=(motionClip.name||t.name)+" · "+round(span.start)+"–"+round(span.end)+"s · "+round(motionClip.beatsPerLoop)+" beats / loop";
+    block.title=(motionClip.name||t.name)+" · "+round(span.start)+"–"+round(span.end)+"s · "+round(motionClip.beatsPerLoop)+" beats / loop · "+(L===translations.da?"Dobbeltklik for at redigere":"Double-click to edit");
+    block.setAttribute("aria-label",block.title);
     if(t.id===choice.id||expandedClipId===t.id)block.classList.add("is-selected");
-    block.onclick=function(ev){ev.stopPropagation();choose(t.id,0);};
-    block.onkeydown=function(ev){if(ev.key==="Enter"||ev.key===" "){ev.preventDefault();choose(t.id,0);}};
+    block.onclick=function(ev){ev.stopPropagation();if(detailClipId)return;
+     if(ev.detail>=2){openAnimation(t.clipId);return;}
+     choose(t.id,0);
+    };
+    // Safari/iPad may not generate dblclick after a re-render on the first tap.
+    // Detect the second release on the clip, not the same DOM node.
+    block.addEventListener("pointerup",function(ev){
+     if(ev.button!==undefined&&ev.button!==0)return;
+     var now=Date.now(),last=lastClipTap;
+     if(last&&last.id===t.clipId&&now-last.time<480&&
+       Math.abs(ev.clientX-last.x)<30&&Math.abs(ev.clientY-last.y)<30){
+      lastClipTap=null;ev.preventDefault();ev.stopPropagation();openAnimation(t.clipId);
+     }else lastClipTap={id:t.clipId,time:now,x:ev.clientX,y:ev.clientY};
+    });
+    block.addEventListener("dblclick",function(ev){ev.preventDefault();ev.stopPropagation();openAnimation(t.clipId);});
+    block.onkeydown=function(ev){if(ev.key==="Enter"){ev.preventDefault();openAnimation(t.clipId);}
+      else if(ev.key===" "){ev.preventDefault();choose(t.id,0);}};
     (motionClip.accents||[]).forEach(function(k,index){
      var accent=el(doc,"button","huw-musical-key huw-musical-accent-key",undefined,lane);
      accent.type="button";accent.style.left=(100*num(k.t,0)/axis)+"%";
@@ -442,6 +584,13 @@ function attach(o){
   drawForm();
  }
  function selectPart(id){
+  if(detailClipId){
+   var own=activeDetail();if(!own||!own.motion||!own.motion[id])return false;
+   var mt=detailTrack(own,id),index=0,minimum=Infinity;
+   var phase=Motion.phase(own,playhead,o.beatClock&&o.beatClock())||0;
+   keys(mt).forEach(function(k,i){var d=Math.abs(num(k.t,0)-phase);if(d<minimum){minimum=d;index=i;}});
+   choose(mt.id,index);return true;
+  }
   var motionClip=m.animationClips.find(function(c){return c.target===id||(c.motion&&c.motion[id]);});
   if(motionClip){choose("animation:"+motionClip.id,0);return true;}
   if(!source||!source.parts)return false;
@@ -454,6 +603,17 @@ function attach(o){
   choose(t.id,index);return true;
  }
  function beginPartMove(id,globalTime){
+  if(detailClipId){
+   var c=activeDetail();if(!c||!c.motion||!c.motion[id])return null;
+   var t=detailTrack(c,id),beat=round(Motion.phase(c,globalTime,o.beatClock&&o.beatClock())||0);
+   var list=keys(t),index=list.findIndex(function(k){return Math.abs(num(k.t,0)-beat)<.05;});
+   var inserted=index<0,k=inserted?Object.assign({t:beat},Motion.sample(list,beat)||{x:0,y:0,r:0,sx:1,sy:1,opacity:1}):list[index];
+   if(inserted)list.push(k);
+   var oldX=num(k.x,0),oldY=num(k.y,0);
+   return {update:function(dx,dy){k.x=round(oldX+dx);k.y=round(oldY+dy);o.repaint();},
+    commit:function(){list.sort(function(a,b){return a.t-b.t;});choice={id:t.id,key:list.indexOf(k)};save(t);draw();o.repaint();},
+    cancel:function(){if(inserted)list.splice(list.indexOf(k),1);else{k.x=oldX;k.y=oldY;}draw();o.repaint();}};
+  }
   var t=tracks.find(function(t){return t.kind==="part"&&t.part===id;});
   if(!t&&source&&source.parts){var candidate=source.parts.find(function(p){return p.id===id;});
    if(candidate){t={id:"part:"+id,kind:"part",part:id,name:candidate.name||id};tracks.splice(tracks.length-3,0,t);map[t.id]=t;}}
@@ -474,6 +634,7 @@ function attach(o){
  function addKeyframe(){var t=track();if(t&&t.kind!=="song")newPoint(t,playhead);}
  function removeKeyframe(){var t=track();if(t&&t.kind!=="song")removePoint(t);}
  draw();return {paint:paint,redraw:draw,selectPart:selectPart,beginPartMove:beginPartMove,
+  openAnimation:openAnimation,closeAnimation:closeAnimation,inClipDetail:function(){return !!detailClipId;},getDetailClip:activeDetail,
   addKeyframe:addKeyframe,removeKeyframe:removeKeyframe,setFilter:setFilter,setZoom:setZoom,
   getZoom:function(){return zoom;},getSelection:track,
   dispose:function(){if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};
