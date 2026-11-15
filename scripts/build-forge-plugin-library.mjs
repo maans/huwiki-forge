@@ -46,7 +46,7 @@ async function main(){
  const target=path.join(root,"library/plugins/registry.json");
  await mkdir(path.dirname(target),{recursive:true});
  await writeFile(target,JSON.stringify(registry,null,2)+"\n");
- console.log("HUWiki Plugin Library:",registry.items.length,"plugins/themes indexed");
+ console.log("Forge Plugin Library:",registry.items.length,"plugins/themes indexed");
  for(const row of registry.items)console.log(row.fields.title,row.fields.version,row.path);
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(path.resolve(process.argv[1])).href)
