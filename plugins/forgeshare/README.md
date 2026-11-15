@@ -184,3 +184,10 @@ A real GUI launch check on a macOS CI runner verifies a visible ForgeShare libra
 **Important:** The Mac ZIP is ad-hoc signed only, not Apple Developer ID-signed or notarized. A downloaded copy can trigger the standard Gatekeeper warning; the warning is not by itself a malware finding. Do not disable system-wide security to run it. A frictionless public Mac distribution requires Developer ID signing and Apple notarization. More details: https://support.apple.com/da-dk/102445.
 
 **Release gate:** The draft must not be merged or deployed until the freshly downloaded, quarantined app starts from Finder on the target Mac and both private Tailscale and an optional external Funnel route are manually verified without disturbing existing Tailscale services.
+
+
+## Google Gemini via ForgeShare Vault (udviklingsgren – endnu ikke Mac-download)
+
+Gemini kan nu vælges som AI-udbyder i ForgeShares nøgleboks med en særskilt API-nøgle fra [Google AI Studio](https://aistudio.google.com/apikey). **Der kræves ingen HUWiki/Google Workspace OAuth**. API-nøglen opbevares i styresystemets nøgleboks, ikke i wikien. Geminiforbindelsen skal godkendes særskilt for hver enhed/wiki i ForgeShare; eksisterende 30-dages godkendelser udvides ikke automatisk. Assistentens tekst- og modellistekald videresendes gennem hjælperen til den faste Google Gemini API-vært (ingen browser-CORS).
+
+Dette er en kildekodeændring på udviklingsgrenen, ikke en opdatering af den eksisterende offentlige 0.1.18 Mac-ZIP. En ny Mac-build og fysisk test er nødvendig før udgivelse.
