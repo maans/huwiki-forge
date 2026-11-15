@@ -23,7 +23,10 @@ test("Every Edition keeps the native library and links to TiddlyWiki Community w
  assert.ok(fButton.tags.includes("$:/tags/PageControls"));
  assert.match(fButton.text,/href="https:\/\/forge\.måns\.dk\/"/);
  assert.match(fButton.text,/aria-label="TiddlyWiki Forge"/);
- assert.match(fButton.text,/>F<\/a>/);
+ assert.match(fButton.text,/tc-image-tiddlyforge tc-image-button/,"F uses a native toolbar SVG icon");
+ assert.match(fButton.text,/width="22pt" height="22pt"/,"Use the same icon size as TiddlyWiki page controls");
+ assert.doesNotMatch(fButton.text,/font-weight|font-size|fill=|color:/i,"Let native toolbar styles set icon appearance");
+ assert.match(fButton.text,/aria-label="TiddlyWiki Forge"/);
  assert.doesNotMatch(fButton.text,/ForgeShare|Tailscale|Mine wikier|Delt med mig/,"F is only a home link");
 
  assert.equal(plugin.url,pluginUrl);
