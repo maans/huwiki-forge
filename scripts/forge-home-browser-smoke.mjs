@@ -86,7 +86,7 @@ try {
  const languages=page.locator('select').filter({has:page.locator('option[value="$:/languages/da-DK"]')});
  await languages.selectOption('$:/languages/da-DK');
  await page.getByRole('heading',{name:'Form din næste wiki.',exact:true}).waitFor();
- assert.equal((await page.locator('.forge-card-action').first().innerText()).replace(/\s+/g,' '),'Vælg Edition ↗');
+ assert.equal((await page.locator('.forge-card-action').first().innerText()).replace(/\s+/g,' '),'Tilpas og hent ↗');
  assert.ok((await page.locator('.tc-site-subtitle').innerText()).includes('Skab din egen'));
  assert.equal(await toolsTab.isVisible(),false,'Danish Tools hidden in reading mode');
  await languages.selectOption('$:/languages/en-GB');
