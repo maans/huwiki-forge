@@ -62,6 +62,17 @@ test("The plugin registry contains every actual Forge plugin and theme without s
  assert.ok(!published.items.some(x=>x.fields["plugin-type"]==="language"),"Only plugins and themes belong in this library");
 });
 
+test("Publishing a plugin update also regenerates the InstantWiki service",async()=>{
+ const workflow=await read(".github/workflows/publish-forge-home.yml");
+ assert.match(workflow,/node scripts\/build-instantwiki\.mjs/,"publisher must rebuild InstantWiki service");
+ assert.match(workflow,/git add --[^\n]*instantwiki\/index\.html/,"publisher must deploy the generated InstantWiki HTML");
+ assert.match(workflow,/plugins\/\*\*\/dist\/plugin\.json/,"publisher must watch all plugin releases");
+ assert.match(workflow,/editions\/shared\/libraries\.json/,"publisher must watch shared library updates");
+ const smoke=await read(".github/workflows/instantwiki-browser-smoke.yml");
+ assert.match(smoke,/node scripts\/build-instantwiki\.mjs\n/,"PR smoke must rebuild from sources");
+ assert.match(smoke,/git diff --exit-code -- plugins\/instantwiki\/dist\/plugin\.json/,"PR smoke must prevent unpublished source changes");
+});
+
 test("Native TiddlyWiki GET/GET-RESPONSE plugin library protocol works without any backend",async()=>{
  const html=await read("library/plugins/index.html"),reg=await json("library/plugins/registry.json");
  const snippet=html.match(/<script>([\s\S]*?)<\/script>/);
