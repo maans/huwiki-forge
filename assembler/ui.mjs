@@ -69,7 +69,8 @@ function summary(){
  try{
   const added=resolvePackages(selection(),choices.packages,included);
   const manual=new Set([...checked('.optional-plugin'),...checked('.content-plugin'),$('theme').value].filter(id=>!autoSelected.has(id)));
-  const removed=included.filter(title=>choices.packages.some(p=>p.title===title&&p['plugin-type']==='plugin')&&!manual.has(title));
+  const active=new Set([...checked('.optional-plugin'),...checked('.content-plugin')]);
+  const removed=included.filter(title=>choices.packages.some(p=>p.title===title&&p['plugin-type']==='plugin')&&!active.has(title));
   const lines=added.map(p=>(manual.has(p.title)?'':'↳ '+words.auto+': ')+localName(p));
   lines.push(...checked('.material').map(id=>{const c=choices.content.find(c=>c.id===id);return da?c.label_da:c.label_en;}));
   if(removed.length)lines.push(words.removed+': '+removed.map(id=>localName(choices.packages.find(p=>p.title===id))).join(', '));
