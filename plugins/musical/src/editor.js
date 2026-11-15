@@ -5,7 +5,7 @@ module-type: library
 \*/
 (function(){
 "use strict";
-var Playlist=require("$:/plugins/huwiki/musical/playlist.js"),Engine=require("$:/plugins/huwiki/cutout/engine.js"),NS="http://www.w3.org/2000/svg";
+var Playlist=require("$:/plugins/huwiki/musical/playlist.js"),Engine=require("$:/plugins/huwiki/cutout/engine.js"),Motion=require("$:/plugins/huwiki/musical/motion.js"),NS="http://www.w3.org/2000/svg";
 function el(doc,tag,cls,txt,parent){var e=doc.createElement(tag);if(cls)e.className=cls;if(txt!==undefined)e.textContent=txt;if(parent)parent.appendChild(e);return e;}
 function num(x,f){x=Number(x);return Number.isFinite(x)?x:f;}
 function lim(x,a,b){return Math.min(b,Math.max(a,num(x,0)));}
@@ -21,6 +21,7 @@ function ensureMusical(film){var m=film.musical||(film.musical={version:1});
  if(!m.cameraB)m.cameraB={easing:"smooth",keys:[{t:0,x:400,y:225,zoom:1},{t:6,x:248,y:260,zoom:2.3},{t:10,x:675,y:270,zoom:2.3},{t:14,x:400,y:225,zoom:1}]};
  if(!Array.isArray(m.cuts))m.cuts=[{t:0,camera:"A"},{t:6,camera:"B"},{t:8,camera:"A"},{t:10,camera:"B"},{t:12,camera:"A"}];
  if(!m.lighting)m.lighting={keys:[{t:0,intensity:1},{t:4,intensity:.78},{t:8,intensity:1},{t:12,intensity:.85},{t:15.5,intensity:1}]};
+ if(!Array.isArray(m.animationClips))m.animationClips=[];
  return m;}
 var translations={da:{title:"Musical Studio · tidslinje",help:"Vælg et spor, indsæt kontrolpunkter ved afspilningspositionen, eller træk dem vandret. Klik på et punkt for at redigere det.",song:"Musiknummer (komplet ABC)",backdrop:"Baggrund",stage:"Scene",foreground:"Forgrund",light:"Belysning",cameraA:"Kamera A",cameraB:"Kamera B",cuts:"Kameraklip",add:"+ Kontrolpunkt",remove:"Slet punkt",time:"Tid (sek.)",x:"X",y:"Y",r:"Rotation (°)",opacity:"Synlighed",zoom:"Zoom",intensity:"Lysstyrke",camera:"Aktivt kamera",easing:"Overgang",smooth:"Blød",step:"Klip",linear:"Lineær",readonly:"Hele musiknummeret afspilles som ét samlet ABC-spor. Redigér noderne i ABC-editoren.",empty:"Vælg et kontrolpunkt eller indsæt et nyt.",saved:"Gemt i wikien"},en:{title:"Musical Studio · timeline",help:"Select a track, add keyframes at the playhead, or drag them horizontally. Click a keyframe to edit it.",song:"Song (complete ABC)",backdrop:"Background",stage:"Stage",foreground:"Foreground",light:"Lighting",cameraA:"Camera A",cameraB:"Camera B",cuts:"Camera cuts",add:"+ Keyframe",remove:"Delete keyframe",time:"Time (sec)",x:"X",y:"Y",r:"Rotation (°)",opacity:"Opacity",zoom:"Zoom",intensity:"Light intensity",camera:"Active camera",easing:"Transition",smooth:"Smooth",step:"Cut",linear:"Linear",readonly:"The whole song plays on one ABC track. Edit notation in the ABC editor.",empty:"Select a control point or insert a new one.",saved:"Saved to wiki"}};
 function attach(o){
@@ -48,18 +49,36 @@ function attach(o){
  var cameraLabel=el(doc,"span","huw-musical-active-camera","",head);
  L.name=L===translations.da?"Navn":"Name";L.color=L===translations.da?"Farve":"Color";L.text=L===translations.da?"Tekst":"Text";
  var rows=el(doc,"div","huw-musical-tracks",undefined,root),inspector=el(doc,"div","huw-musical-inspector",undefined,root),status=el(doc,"output","huw-musical-edited-status","",root);
- var playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1;
+ var playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1,expandedClipId="";
  var tracks=[{id:"song",kind:"song",name:L.song},{id:"backdrop",kind:"part",part:"stage-back",name:L.backdrop},{id:"stage",kind:"part",part:"stage-floor",name:L.stage},{id:"foreground",kind:"part",part:"foreground-flags",name:L.foreground},{id:"lights",kind:"light",name:L.light}];
- if(source)source.parts.filter(function(p){return /-root$/.test(p.id)&&p.keys&&p.keys.length>1;}).forEach(function(p){tracks.push({id:p.id,kind:"part",part:p.id,name:p.name||p.id});});
+ if(Array.isArray(m.animationClips)&&m.animationClips.length){
+  m.animationClips.forEach(function(c){tracks.push({id:"animation:"+c.id,kind:"animation",clipId:c.id,name:c.name||c.id});});
+ }else if(source)source.parts.filter(function(p){return /-root$/.test(p.id)&&p.keys&&p.keys.length>1;}).forEach(function(p){tracks.push({id:p.id,kind:"part",part:p.id,name:p.name||p.id});});
  tracks.push({id:"camera-A",kind:"camera",name:L.cameraA},{id:"camera-B",kind:"camera",name:L.cameraB},{id:"cuts",kind:"cut",name:L.cuts});
  var map={};tracks.forEach(function(t){map[t.id]=t;});
+ m.animationClips.forEach(function(c){map["accent:"+c.id]={id:"accent:"+c.id,kind:"accent",clipId:c.id,name:(c.name||c.id)+" · solo"};});
  function songTracks(){return m.songs.map(function(s,i){return {id:"song:"+s.id,kind:"song",index:i,name:"♫ "+(i+1)+". "+s.score};});}
  function group(t){return t.kind==="song"?"music":(t.kind==="camera"||t.kind==="cut")?"camera":(t.id==="lights"||["backdrop","stage","foreground"].indexOf(t.id)>=0)?"scene":"animation";}
  function track(){return songTracks().find(function(s){return s.id===choice.id;})||map[choice.id]||songTracks()[0]||tracks[0];}
  function axisDuration(){return Math.max(1,o.duration(),film.duration,Playlist.total(m.songs));}
  function part(t){return source&&source.parts.find(function(p){return p.id===t.part;});}
- function target(t){if(t.kind==="part")return part(t);if(t.id==="camera-A")return film.camera;if(t.id==="camera-B")return m.cameraB;if(t.kind==="light")return m.lighting;if(t.kind==="cut")return m;return null;}
- function keys(t){var v=target(t);return v?(t.kind==="cut"?v.cuts:(v.keys||(v.keys=[]))):[];}
+ function animation(t){return m.animationClips.find(function(c){return c.id===t.clipId;});}
+ function animationTime(c,beat){
+  var clock=o.beatClock&&o.beatClock();if(!clock)return c.start+beat*.5;
+  var start=lim(c.start,0,axisDuration()),lo=start,hi=axisDuration(),goal=clock.at(start)+beat;
+  for(var i=0;i<24;i++){var mid=(lo+hi)/2;if(clock.at(mid)<goal)lo=mid;else hi=mid;}
+  return hi;
+ }
+ function clipRange(c){return {start:lim(c.start,0,axisDuration()),end:lim(num(c.start,0)+num(c.duration,0),0,axisDuration())};}
+ function target(t){if(t.kind==="part")return part(t);if(t.kind==="animation")return animation(t);
+  if(t.kind==="motion"||t.kind==="accent")return animation(t);
+  if(t.id==="camera-A")return film.camera;if(t.id==="camera-B")return m.cameraB;
+  if(t.kind==="light")return m.lighting;if(t.kind==="cut")return m;return null;}
+ function keys(t){var v=target(t);if(!v)return [];
+  if(t.kind==="motion")return (v.motion||{})[t.part]||[];
+  if(t.kind==="accent")return v.accents||(v.accents=[]);
+  if(t.kind==="animation")return [];
+  return t.kind==="cut"?v.cuts:(v.keys||(v.keys=[]));}
  function toFilm(time,t){if(t.kind!=="part")return lim(time,0,film.duration);var c=film.scenes&&film.scenes[0]||{};return lim((time-num(c.offset,0))/Math.max(.01,num(c.speed,1))+num(c.start,0),0,film.duration);}
  function fromFilm(time,t){if(t.kind!=="part")return time;var c=film.scenes&&film.scenes[0]||{};return Engine.localTime(time,source?source.duration:film.duration,c);}
  function toAudio(time){return lim(time,0,o.duration());}
@@ -76,22 +95,41 @@ function attach(o){
  function save(t){var isPart=t.kind==="part",name=isPart?o.stageTitle:o.sceneTitle,value=isPart?source:film,old=o.wiki.getTiddler(name);if(!old||!value)return;
   var json=JSON.stringify(value);o.markOwnWrite(name,json);o.wiki.addTiddler(new $tw.Tiddler(old,{title:name,text:json}));status.textContent=L.saved;
  }
- function choose(id,key){choice={id:id,key:key};draw();if(o.onSelect)o.onSelect(track());}
- function selected(){return track().kind==="song"?m.songs[track().index]:keys(track())[choice.key];}
- function newPoint(t,time){if(t.kind==="song")return;var at=round(fromFilm(time,t)),list=keys(t),known=list.findIndex(function(k){return Math.abs(k.t-at)<.02;});if(known>=0){choose(t.id,known);return;}
-  var k={t:at};if(t.kind==="part"){
+ function choose(id,key){choice={id:id,key:key};var t=track();
+  if(t.kind==="animation")expandedClipId=t.id;
+  if(t.kind==="motion"||t.kind==="accent")expandedClipId="animation:"+t.clipId;
+  draw();if(o.onSelect)o.onSelect(track());}
+ function selected(){return track().kind==="song"?m.songs[track().index]:track().kind==="animation"?animation(track()):keys(track())[choice.key];}
+ function newPoint(t,time){if(t.kind==="song")return;
+  if(t.kind==="animation"){
+   var c=animation(t);if(!c)return;
+   var accents=c.accents||(c.accents=[]),key={t:round(time),x:0,y:0,r:0};
+   accents.push(key);accents.sort(function(a,b){return a.t-b.t;});
+   choose("accent:"+c.id,accents.indexOf(key));save({kind:"animation"});return;
+  }
+  var at=round(t.kind==="motion"?(Motion.phase(animation(t),time,o.beatClock())||0):t.kind==="accent"?time:fromFilm(time,t));
+  var list=keys(t),known=list.findIndex(function(k){return Math.abs(k.t-at)<.02;});if(known>=0){choose(t.id,known);return;}
+  var k={t:at};if(t.kind==="motion")Object.assign(k,Motion.sample(list,at)||{x:0,y:0,r:0,sx:1,sy:1,opacity:1});
+  else if(t.kind==="accent")Object.assign(k,{x:0,y:0,r:0});
+  else if(t.kind==="part"){
    var state=Engine.state(part(t),at);["x","y","r","sx","sy","opacity"].forEach(function(field){k[field]=round(num(state[field],1));});
   }else if(t.kind==="camera"){
    var cam=Engine.cameraState({width:film.width,height:film.height,camera:target(t)},at);k.x=round(cam.x);k.y=round(cam.y);k.zoom=round(cam.zoom);k.easing="smooth";
   }else if(t.kind==="light")k.intensity=round(illumination(at));else if(t.kind==="cut")k.camera=activeCam(at);
   list.push(k);list.sort(function(a,b){return a.t-b.t;});choice={id:t.id,key:list.indexOf(k)};save(t);draw();o.repaint();
  }
- function removePoint(t){var list=keys(t);if(!list[choice.key])return;list.splice(choice.key,1);choice.key=Math.max(0,Math.min(choice.key,list.length-1));save(t);draw();o.repaint();}
+ function removePoint(t){var list=keys(t);if(!list[choice.key])return;
+  if(t.kind==="motion"&&(choice.key===0||choice.key===list.length-1))return;list.splice(choice.key,1);choice.key=Math.max(0,Math.min(choice.key,list.length-1));save(t);draw();o.repaint();}
  function formNumber(k,label,field,step,min,max){var p=el(doc,"label","huw-musical-property",undefined,inspector);el(doc,"span","",label,p);
   var input=el(doc,"input","",undefined,p);input.type="number";input.step=step;if(min!==undefined)input.min=min;if(max!==undefined)input.max=max;
   input.value=round(num(k[field],0));input.onchange=function(){var value=Number(input.value);if(!Number.isFinite(value))return;
    if(min!==undefined)value=Math.max(min,value);if(max!==undefined)value=Math.min(max,value);k[field]=field==="t"?round(value):value;
    var t=track();if(field==="t"){var list=keys(t);list.sort(function(a,b){return a.t-b.t;});choice.key=list.indexOf(k);}
+   if(t.kind==="motion"&&field!=="t"){
+    var motionKeys=keys(t),first=motionKeys[0],last=motionKeys[motionKeys.length-1];
+    if(k===first&&last&&last!==first&&Math.abs(num(last.t,0)-num(animation(t).beatsPerLoop,8))<.01)last[field]=k[field];
+    if(k===last&&first&&last!==first&&Math.abs(num(first.t,0))<.01)first[field]=k[field];
+   }
    save(t);draw();o.repaint();};
  }
  function formText(target,label,field,apply){
@@ -337,6 +375,8 @@ function attach(o){
   drawForm();
  }
  function selectPart(id){
+  var motionClip=m.animationClips.find(function(c){return c.target===id||(c.motion&&c.motion[id]);});
+  if(motionClip){choose("animation:"+motionClip.id,0);return true;}
   if(!source||!source.parts)return false;
   var p=source.parts.find(function(item){return item.id===id;});if(!p)return false;
   var t=tracks.find(function(t){return t.kind==="part"&&t.part===id;});
