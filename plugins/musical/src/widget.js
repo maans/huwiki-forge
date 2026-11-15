@@ -327,7 +327,8 @@ Musical.prototype.render=function(parent,next){
  });
  this._editor=editor;
  workspace=Workspace.mount({
-  doc:doc,host:host,wiki:this.wiki,project:scene.name||"Musical",
+  doc:doc,host:host,wiki:this.wiki,project:scene.name||"Musical",film:scene,sceneTitle:this.sceneTitle,stageTitle:this._stageTitle,
+  markOwnWrite:function(title,body){self._ownWritten[title]=body;},repaint:function(){paint(timeline.value());},
   layout:layout,transport:transport,play:play,view:view,editor:editor,
   seek:seek,position:function(){return timeline.value();},
   pause:function(){if(timeline.running)pauseAll();}
