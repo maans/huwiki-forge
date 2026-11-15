@@ -71,7 +71,8 @@ test("Forge Plugin Library has its own visible name and publishing observes chan
    assert.ok(workflow.includes("- "+path),"Release workflow must watch "+path);
  }
 });
-\ntest("Native TiddlyWiki GET/GET-RESPONSE plugin library protocol works without any backend",async()=>{
+
+test("Native TiddlyWiki GET/GET-RESPONSE plugin library protocol works without any backend",async()=>{
  const html=await read("library/plugins/index.html"),reg=await json("library/plugins/registry.json");
  const snippet=html.match(/<script>([\s\S]*?)<\/script>/);
  assert.ok(snippet,"Native plugin library must install an iframe message listener");
