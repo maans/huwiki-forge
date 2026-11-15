@@ -1,5 +1,14 @@
 name: Musical Edition browser smoke
 on:
+  push:
+    branches:
+      - feature/musical-edition-orchestra
+    paths:
+      - 'editions/musical/**'
+      - 'plugins/musical/**'
+      - 'scripts/musical-browser-smoke.mjs'
+      - 'scripts/build-musical-demo.mjs'
+      - '.github/workflows/musical-browser-smoke.yml'
   pull_request:
     paths:
       - 'editions/musical/**'
