@@ -70,6 +70,8 @@ test("Forge Plugin Library has its own visible name and publishing observes chan
  for(const path of ["editions/shared/libraries.json","plugins/*/dist/plugin.json","themes/*/dist/theme.json","library/plugins/registry.json","library/plugins/index.html"]){
    assert.ok(workflow.includes("- "+path),"Release workflow must watch "+path);
  }
+ assert.match(workflow,/node scripts\/build-instantwiki\.mjs/,"InstantWiki service must rebuild from shared library changes");
+ assert.match(workflow,/git add --[^\n]*instantwiki\/index\.html/,"InstantWiki output must be deployed alongside the Forge homepage");
 });
 
 test("Native TiddlyWiki GET/GET-RESPONSE plugin library protocol works without any backend",async()=>{
