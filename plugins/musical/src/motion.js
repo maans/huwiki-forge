@@ -83,8 +83,10 @@ function syncLoopSeam(keys,span,edited){
  PROPERTIES.forEach(function(p){other[p]=finite(edited[p],(p==="sx"||p==="sy"||p==="opacity")?1:0);});
  other.easing=edited.easing||"smooth";
 }
-function animatedState(part,base,keys,beat){
- var pose=sample(keys,beat),first=sample(keys,0);
+function animatedState(part,base,keys,beat,reference){
+ // Reference is captured before editing. Re-reading the first live key would
+ // make a dragged keyframe at beat 0 appear frozen at its old position.
+ var pose=sample(keys,beat),first=reference||sample(keys,0);
  if(!pose||!first)return base;
  var out={};PROPERTIES.forEach(function(k){
   if(k==="sx"||k==="sy"||k==="opacity")out[k]=base[k]*pose[k]/(Math.abs(first[k])>.00001?first[k]:1);
@@ -105,7 +107,7 @@ function paint(view,film,time,clock){
    var motions=clip.motion||{};
    Object.keys(motions).forEach(function(id){
     var node=nested.nodes[id],part=node&&node.part;if(!node||!part)return;
-    var base=Engine.state(part,local),pose=animatedState(part,base,motions[id],beat);
+    var base=Engine.state(part,local),pose=animatedState(part,base,motions[id],beat,clip.motionReference&&clip.motionReference[id]);
     if(id===clip.target&&Array.isArray(clip.accents)&&clip.accents.length){
      var accent=sample(clip.accents,time);if(accent){pose.x+=accent.x;pose.y+=accent.y;pose.r+=accent.r;}
     }
