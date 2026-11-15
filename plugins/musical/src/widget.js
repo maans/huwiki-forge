@@ -13,7 +13,7 @@ var Playback=require("$:/plugins/huwiki/abc/playback.js");
 var Accompaniment=require("$:/plugins/huwiki/abc/accompaniment.js");
 var StartPosition=require("$:/plugins/huwiki/abc/start-position.js");
 var Timeline=require("$:/plugins/huwiki/musical/sync.js").Timeline;
-var Editor=require("$:/plugins/huwiki/musical/editor.js");
+var Editor=require("$:/plugins/huwiki/musical/editor.js"),Motion=require("$:/plugins/huwiki/musical/motion.js");
 var Workspace=require("$:/plugins/huwiki/musical/workspace.js");
 var Playlist=require("$:/plugins/huwiki/musical/playlist.js");
 function Musical(tree,options){this.initialise(tree,options);}
@@ -54,6 +54,7 @@ Musical.prototype.render=function(parent,next){
  var scene=Engine.readScene(this.wiki,this.sceneTitle);
  if(!scene){node(doc,"p","huw-musical-error",L.missing,host);return;}
  var clips=Playlist.reflow(scene.musical&&scene.musical.songs,this.scoreTitle);
+ var beatClock=Motion.beatClock(clips,function(title){var tid=self.wiki.getTiddler(title);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
  var songs=clips.map(function(c){
   var item=self.wiki.getTiddler(c.score),fields=item?item.fields:{};
   var source=fields["abc-source"]||fields.text||"";
@@ -186,6 +187,7 @@ Musical.prototype.render=function(parent,next){
  function paint(t){
   var visualTime=Math.max(0,Math.min(scene.duration,t));
   Engine.paint(view,visualTime);
+  Motion.paint(view,scene,t,beatClock);
   if(editor)editor.paint(t);
   showSong(t);applyGains(t,false);
   if(timeline&&timeline.running)syncAudio(t);
@@ -309,9 +311,10 @@ Musical.prototype.render=function(parent,next){
  };
  editor=Editor.attach({doc:doc,host:host,wiki:this.wiki,film:scene,view:view,
   sceneTitle:this.sceneTitle,stageTitle:this._stageTitle,scoreTitle:this.scoreTitle,
-  duration:function(){return duration;},clips:function(){return clips;},
+  duration:function(){return duration;},clips:function(){return clips;},beatClock:function(){return beatClock;},
   updateClips:function(updated){
    clips=Playlist.reflow(updated,self.scoreTitle);
+   beatClock=Motion.beatClock(clips,function(title){var tid=self.wiki.getTiddler(title);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
    songs.forEach(function(song,i){if(clips[i]&&clips[i].id===song.clip.id)song.clip=clips[i];
     else{var match=clips.find(function(c){return c.id===song.clip.id;});if(match)song.clip=match;}});
    duration=Math.max(.1,Playlist.total(clips),scene.duration);
@@ -356,6 +359,7 @@ Musical.prototype.render=function(parent,next){
    song.page.insertBefore(heading,song.page.firstChild);
   });
   clips=Playlist.reflow(songs.map(function(song){return song.clip;}),self.scoreTitle);
+  beatClock=Motion.beatClock(clips,function(title){var tid=self.wiki.getTiddler(title);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
   songs.forEach(function(song,i){song.clip=clips[i];});
   duration=Math.max(.1,Playlist.total(clips),scene.duration);timeline.duration=duration;
   time.max=String(duration);showSong(0);paint(0);
