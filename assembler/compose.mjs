@@ -33,6 +33,53 @@ export async function loadChoices(base,fetcher=fetch){
  const content=materials.items.filter(m=>m.kind==='tiddler-collection').map(m=>({...m,url:sameOriginUrl(m.source,materialsUrl,[path('editions/')])}));
  return {root:root.href,editions,packages,content};
 }
+/**
+ * Keep the selection dependency-safe in the direction of the dependency.
+ * Removing a dependent never removes its requirements: removing MuseScore
+ * importer must not remove ABC. Removing a requirement removes only selected
+ * packages/content that depend on it (directly or transitively).
+ * Enabling a dependent selects its known requirements.
+ */
+export function reconcilePackageSelection(current,changed,enabled,packages,materials=[]){
+ const registry=new Map(packages.map(p=>[p.title,p]));
+ const content=new Map(materials.map(p=>[p.id,p]));
+ const known=new Set([...registry.keys(),...content.keys()]);
+ if(!known.has(changed))throw Error('Unknown selection: '+changed);
+ const selected=new Set([...current].filter(id=>known.has(id)));
+ const before=new Set(selected);
+ const requirements=id=>{
+  const item=registry.get(id)||content.get(id);
+  return item?(registry.has(id)?listTitles(item.dependents):item.requires||[]):[];
+ };
+ if(enabled){
+  const visiting=new Set(),done=new Set();
+  const visit=id=>{
+   if(done.has(id))return;
+   if(visiting.has(id))throw Error('Circular dependency: '+id);
+   visiting.add(id);
+   for(const dep of requirements(id)){
+    if(!registry.has(dep)&&!['$:/themes/tiddlywiki/vanilla','$:/themes/tiddlywiki/snowwhite'].includes(dep))
+     throw Error('Missing dependency: '+dep);
+    if(registry.has(dep))visit(dep);
+   }
+   visiting.delete(id);done.add(id);selected.add(id);
+  };
+  visit(changed);
+ }else{
+  selected.delete(changed);
+  // Iteratively remove only dependents of missing requirements.
+  let changedAgain=true;
+  while(changedAgain){
+   changedAgain=false;
+   for(const id of [...selected]){
+    if(requirements(id).some(dep=>registry.has(dep)&&!selected.has(dep))){
+     selected.delete(id);changedAgain=true;
+    }
+   }
+  }
+ }
+ return {selected,added:[...selected].filter(id=>!before.has(id)),removed:[...before].filter(id=>!selected.has(id))};
+}
 export function resolvePackages(selected,packages,present=[]){
  const registry=new Map(packages.map(p=>[p.title,p]));const done=new Set(present),visiting=new Set(),ordered=[];
  const core=new Set(['$:/themes/tiddlywiki/vanilla','$:/themes/tiddlywiki/snowwhite']);
@@ -91,7 +138,7 @@ Use the plus button to add a tiddler. Use TiddlyWiki’s Save button to save you
 !! Your tools
 Find plugins and their guides in the [[Control Panel|$:/ControlPanel]]. F takes you back to Forge. Plugin Library is available in the Control Panel.
 </$list>`};
-export async function composeWiki({choices,editionId='',packageTitles=[],contentIds=[],theme='',name='',language='en-GB'},fetcher=fetch){
+export async function composeWiki({choices,editionId='',packageTitles=[],excludedPackageTitles=[],contentIds=[],theme='',name='',language='en-GB'},fetcher=fetch){
  if(!['en-GB','da-DK'].includes(language))throw Error('Unsupported language');
  const chosenContent=contentIds.map(id=>{const c=choices.content.find(m=>m.id===id);if(!c)throw Error('Unknown material: '+id);return c;});
  let manifest={id:'custom',plugins:[]},tiddlers=[];
@@ -101,6 +148,18 @@ export async function composeWiki({choices,editionId='',packageTitles=[],content
   if(manifest.id!==e.id||manifest.coreVersion!=='5.4.1')throw Error('Edition identity/core mismatch');
  }
  const registry=new Map(choices.packages.map(p=>[p.title,p]));
+ const originalBundled=new Set(tiddlers.filter(t=>t['plugin-type']).map(t=>t.title));
+ const excluded=new Set(excludedPackageTitles);
+ for(const title of excluded){
+  const entry=registry.get(title);
+  // Only optional, visibly listed plugin packages can be removed; language,
+  // theme and infrastructure tiddlers are managed by the Edition itself.
+  if(!originalBundled.has(title)||entry?.['plugin-type']!=='plugin')
+   throw Error('Cannot remove non-optional Edition package: '+title);
+  if(packageTitles.includes(title))
+   throw Error('Package both selected and excluded: '+title);
+ }
+ if(excluded.size)tiddlers=tiddlers.filter(t=>!excluded.has(t.title));
  for(const bundled of tiddlers.filter(p=>p['plugin-type'])){
   const entry=registry.get(bundled.title);
   if(entry && bundled.version!==entry.version)throw Error('Bundled/registry version mismatch: '+bundled.title);
@@ -109,6 +168,10 @@ export async function composeWiki({choices,editionId='',packageTitles=[],content
  // Dependencies of bundled packages must also be satisfied.
  const required=[...selected,...tiddlers.filter(p=>p['plugin-type']).flatMap(p=>listTitles(p.dependents))];
  const added=resolvePackages(required,choices.packages,tiddlers.filter(t=>t['plugin-type']).map(t=>t.title));
+ // Never silently reintroduce a package the user unchecked. An unchecked
+ // required dependency is an invalid selection, not an implicit re-install.
+ const conflicting=added.find(entry=>excluded.has(entry.title));
+ if(conflicting)throw Error('Cannot remove required Edition package: '+conflicting.title);
  for(const entry of added){
   const p=await readJson(entry.url,fetcher);
   if(p.title!==entry.title||p.version!==entry.version||p['plugin-type']!==entry['plugin-type']||p.dependents!==entry.dependents && (p.dependents||entry.dependents))throw Error('Registry/package mismatch: '+entry.title);
