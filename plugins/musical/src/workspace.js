@@ -150,6 +150,7 @@ function mount(o){
  function keyboard(e){
   if(e.altKey||e.ctrlKey||e.metaKey||editingField(e.target))return;
   if(e.key==="Escape"){
+   if(editor.inClipDetail&&editor.inClipDetail()){e.preventDefault();editor.closeAnimation();return;}
    if(focus){e.preventDefault();toggleFocus();}
    else if(inspectorOpen){e.preventDefault();setInspector(false);}
   }else if(e.code==="Space"&&e.target.tagName!=="BUTTON"){
