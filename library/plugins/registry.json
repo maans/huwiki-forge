@@ -7,7 +7,7 @@
         "title": "$:/plugins/huwiki/abc",
         "type": "application/json",
         "name": "ABC Musik",
-        "description": "ABC Musik: følger melodinoder under fuld flerstemmig afspilning, swing i mixeren, jazzfont, becifringer og dokumenteret abc-player-makro.",
+        "description": "ABC Musik with a synchronized melody-follow player, chord views, jazz typography and per-tiddler swing playback.",
         "author": "HUWiki",
         "version": "0.3.32-test.1",
         "plugin-type": "plugin",
