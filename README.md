@@ -6,7 +6,7 @@ TiddlyWiki Forge skal oprette en ny, selvstændig TiddlyWiki fra en **frisk, tes
 
 ## Prøv Forge Assembler
 
-Åbn **[Edition Assembler](https://forge.måns.dk/assembler/)** og vælg en Edition fra kataloget:
+Åbn **[Edition Assembler](https://forge.xn--mns-ula.dk/assembler/)** og vælg en Edition fra kataloget:
 
 - **HUPedia Edition (test):** Tosproget leksikon med artikelredigering, faktabokse og otte eksempelartikler. Brug sammen med SitePublisher og PDF Publisher efter behov.
 - **Musik Edition (test):** ABC-plugin med følgeafspiller og swing, TiddlyWiki Jingle som redigerbart nodeeksempel, Musik-plugin, seks undervisningspakker, Modern-temaet, **MuseScore → ABC Importer 0.1.5-beta.1** samt SitePublisher og PDF Publisher. Kontroller noder og lyd i browseren, inden Editionen anvendes til produktion.
@@ -35,7 +35,11 @@ AI Edition kan bruge ForgeShare til godkendte AI-forbindelser; lokal AI kan ogs�
 
 ## Plugin Library og TiddlyWiki Community
 
-**[HUWiki Plugin Library](https://forge.måns.dk/library/plugins/index.html)** integrerer med TiddlyWikis egen *Get More Plugins*-dialog. Den tilbyder alle de installerbare Forge-plugins og temaer, som ligger under `plugins/` og `themes/` i dette GitHub-repository. Pakkerne hentes ved installation, ikke alle på én gang.
+**[TiddlyForge – til eksisterende TiddlyWikier](plugins/tiddlyforge/dist/plugin.json)** er et lille, selvstændigt plugin, som tilføjer Forge Plugin Library til den normale *Get More Plugins*-dialog og en diskret **F**-genvej blandt TiddlyWikis eksisterende sideværktøjer. Det officielle bibliotek bevares. Importér pluginfilen i din wiki og gem. Ingen særskilt browser, ekstra installationsdialog eller automatisk installering af andre plugins.
+
+
+
+**[HUWiki Plugin Library](https://forge.xn--mns-ula.dk/library/plugins/index.html)** integrerer med TiddlyWikis egen *Get More Plugins*-dialog. Den tilbyder alle de installerbare Forge-plugins og temaer, som ligger under `plugins/` og `themes/` i dette GitHub-repository. Pakkerne hentes ved installation, ikke alle på én gang.
 
 **[TiddlyWiki Community](https://tiddlywiki.com/#Community)** er indgangen til TiddlyWikis eget fællesskab. Den tidligere `/community/`-side viderestiller dertil. Der tilføjes ingen Community-fane i sidepanelet.
 

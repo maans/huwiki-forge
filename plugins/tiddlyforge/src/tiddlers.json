@@ -1,0 +1,20 @@
+{
+  "tiddlers": {
+    "$:/config/HUWikiPluginLibrary": {
+      "title": "$:/config/HUWikiPluginLibrary",
+      "tags": "$:/tags/PluginLibrary",
+      "caption": "Forge Plugin Library",
+      "type": "text/vnd.tiddlywiki",
+      "url": "https://forge.xn--mns-ula.dk/library/plugins/index.html",
+      "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"forgeLocale\">\nDette bibliotek henter installerbare plugins og temaer direkte fra TiddlyWiki Forge på GitHub Pages.\n\n- Åbn biblioteket med TiddlyWikis eksisterende //Get More Plugins//-funktion.\n- Pakker installeres i din egen wiki og gemmes med TiddlyWikis normale Gem-funktion.\n- Der er ingen upload, konto eller Google-tjeneste bag biblioteket.\n\n[[Se kildekoden på GitHub|https://github.com/maans/huwiki-forge/tree/main/plugins]]\n</$list>\n\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"forgeLocale\">\nBrowse installable plugins and themes from TiddlyWiki Forge on GitHub Pages.\n\n- Use TiddlyWiki's existing //Get More Plugins// control.\n- Packages are installed into your own wiki and saved with TiddlyWiki's native Save action.\n- No upload server, account or Google service is required.\n\n[[Browse the GitHub source|https://github.com/maans/huwiki-forge/tree/main/plugins]]\n</$list>"
+    },
+    "$:/huwiki/forge/page-control": {
+      "title": "$:/huwiki/forge/page-control",
+      "tags": "$:/tags/PageControls",
+      "type": "text/vnd.tiddlywiki",
+      "caption": "F · TiddlyWiki Forge",
+      "description": "Åbn TiddlyWiki Forge / Open TiddlyWiki Forge",
+      "text": "\\whitespace trim\n<a href=\"https://forge.xn--mns-ula.dk/\" class=\"tc-btn-invisible\" title=\"TiddlyWiki Forge\" aria-label=\"TiddlyWiki Forge\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:inline-flex;align-items:center;justify-content:center;vertical-align:middle\">\n<svg class=\"tc-image-tiddlyforge tc-image-button\" width=\"22pt\" height=\"22pt\" viewBox=\"0 0 22 22\" aria-hidden=\"true\" focusable=\"false\">\n<path d=\"M5.8 4.5c0-.5.4-.9.9-.9h10.5c.5 0 .9.4.9.9v1.1c0 .5-.4.9-.9.9H9v3.8h6.6c.5 0 .9.4.9.9v1.1c0 .5-.4.9-.9.9H9v4.2c0 .5-.4.9-.9.9H6.7c-.5 0-.9-.4-.9-.9z\"/>\n</svg>\n</a>"
+    }
+  }
+}

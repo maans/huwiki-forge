@@ -366,6 +366,19 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/tiddlyforge",
+        "type": "application/json",
+        "name": "TiddlyForge",
+        "description": "Add Forge Plugin Library to TiddlyWiki's native Get More Plugins dialog and an F link in page controls / Tilføj Forge-bibliotek og F-genvej.",
+        "author": "HUWiki",
+        "version": "0.1.0",
+        "plugin-type": "plugin",
+        "core-version": ">=5.2.0"
+      },
+      "path": "../../plugins/tiddlyforge/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/forge-demo",
         "type": "application/json",
         "name": "TiddlyWiki Forge Demo",

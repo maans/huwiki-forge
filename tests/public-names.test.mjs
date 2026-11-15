@@ -15,5 +15,5 @@ test('Every published package and Edition uses public names without the HUWiki p
  for(const base of ['plugins','themes'])for(const dir of await readdir(new URL(base+'/',root))){let p;try{p=await read(`${base}/${dir}/dist/${base==='themes'?'theme':'plugin'}.json`);}catch(e){if(['ENOENT','ENOTDIR'].includes(e.code))continue;throw e;}assert.doesNotMatch(p.name||'',/^HUWiki\b/i,p.title);}
  const pasteup=await read('plugins/pasteup/dist/plugin.json');assert.equal(pasteup.name,'PasteUp Forge');assert.equal(pasteup.author,'Eric L. Shulman; dansk tilpasning: HUWiki');assert.equal(pasteup.license,'CC-BY-NC-SA-4.0');
  const catalog=await read('catalog/editions.json');for(const e of catalog.editions)assert.doesNotMatch(e.name,/^HUWiki\b/i,e.id);
- const shared=await read('editions/shared/libraries.json');assert.equal(shared.find(t=>t.title==='$:/config/HUWikiPluginLibrary').caption,'Plugin Library');assert.match(shared.find(t=>t.title==='$:/huwiki/forge/page-control').text,/aria-label="TiddlyWiki Forge"/);
+ const shared=await read('editions/shared/libraries.json');assert.equal(shared.find(t=>t.title==='$:/config/HUWikiPluginLibrary').caption,'Forge Plugin Library');assert.match(shared.find(t=>t.title==='$:/huwiki/forge/page-control').text,/aria-label="TiddlyWiki Forge"/);
 });
