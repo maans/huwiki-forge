@@ -1,3 +1,11 @@
+# Under udvikling — Google Gemini (ingen ny Mac-release endnu)
+
+- Gemini er tilgængelig som ekstra AI-udbyder i ForgeShare-nøgleboksen med Google AI Studio API-nøgle og uden Google OAuth.
+- Nøgleboksen henter Gemini-modeller og gennemfører tekstsamtaler med native `generateContent`; API-nøglen sendes kun i `x-goog-api-key`-headeren til en fast Google-vært, aldrig til wikien eller URL'en.
+- Modellisten kan være pagineret, og fejl 401/403/404/429 vises uden rå HTTP-svar og uden hemmeligheder.
+- Nye rettigheder skal godkendes for den gemte Gemini-forbindelse, også ved 30-dages godkendelser.
+- Eksisterende Mac/Windows-binærfiler og den offentlige 0.1.18-testpakke er uændrede.
+
 # 0.1.18 — Windows Share/Add dialog reliability
 
 - Windows Share, Add, file/folder selection, code entry and error dialogs are displayed by the already-open ForgeShare app as owned, modal windows. No additional hidden PowerShell or GUI helper is needed for normal Windows app operation.
