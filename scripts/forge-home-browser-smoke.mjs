@@ -72,7 +72,12 @@ try {
  await page.getByRole('button',{name:'show sidebar',exact:true}).waitFor({state:'visible'});
  console.log('PASS Tools returns in editing; reading hides Tools and switches an active Tools tab to Open');
  console.log('PASS original padlock in native More menu reversibly restores editing');
- for(const edition of catalog.editions)assert.equal(await page.locator(`[data-edition="${edition.id}"] .forge-card-action`).getAttribute('href'),'https://forge.måns.dk/assembler/?edition='+edition.id+'&lang=en');
+ for(const edition of catalog.editions){
+  const card=page.locator(`[data-edition="${edition.id}"]`);
+  assert.equal(await card.locator('.forge-card-action').getAttribute('href'),'https://forge.måns.dk/assembler/?edition='+edition.id+'&lang=en');
+  assert.equal(await card.locator('.forge-card-demo').getAttribute('href'),'https://forge.måns.dk/demo/?edition='+edition.id+'&lang=en');
+  assert.equal(await card.locator('.forge-card-demo').innerText(),'Open demo ↗');
+ }
  assert.ok((await page.locator('.forge-home').innerText()).includes('does not change the public website'));
  if(process.env.FORGE_SCREENSHOTS){await mkdir(process.env.FORGE_SCREENSHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.FORGE_SCREENSHOTS,'forge-home-en.png'),fullPage:true});}
  if(await page.getByRole('button',{name:'show sidebar',exact:true}).isVisible())await page.getByRole('button',{name:'show sidebar',exact:true}).click();
