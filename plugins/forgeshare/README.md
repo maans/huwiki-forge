@@ -1,5 +1,7 @@
 # ForgeShare – offentlig Mac-test (0.1.18)
 
+**[Download, installationsvejledning og test-/versionsstatus](../../downloads/forgeshare/README.md)** er den fælles offentlige reference. Plugin-JSON er en valgfri TiddlyWiki-vejledning, ikke Mac-applikationen.
+
 Dette er den **afgrænsede Mac-testudgave** af ForgeShare. Den er tilgængelig fra Forge-forsiden som et selvstændigt TiddlyWiki-plugin med en dansk/engelsk vejledning og en særskilt Mac-hjælpeapp. Pluginet er dokumentation og downloadindgang; serverfunktionerne ligger i Mac-programmet.
 
 - Mac ZIP: `/downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip`. Pak hele ZIP-filen ud. Mac-programmet er **ikke Apple Developer ID-signeret eller notariseret** og kan kræve manuel godkendelse. Brug på eget ansvar; tag backup af wikier.

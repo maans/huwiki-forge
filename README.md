@@ -27,7 +27,7 @@ Se [migrationsstatus](docs/migration-status.md), [overførselsinventar fra OAuth
 
 ## ForgeShare · offentlig Mac-test
 
-[ForgeShare til Mac, 0.1.18-test (ZIP)](downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip) er et særskilt hjælpeprogram; [ForgeShare-pluginvejledningen](plugins/forgeshare/dist/plugin.json) kan installeres i en TiddlyWiki via Plugin Library. **Åbn** starter en lokal TiddlyWiki Node.js-server uden Tailscale. Privat Tailscale-deling er afprøvet på Mac/iPad, men offentlig **Funnel er ikke verificeret**.
+[ForgeShare til Mac, 0.1.18-test (ZIP)](downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip) er et særskilt hjælpeprogram; [installationsvejledningen og den løbende versionsstatus](downloads/forgeshare/README.md) forklarer Mac-appens brug og begrænsninger. Den valgfrie [ForgeShare-pluginvejledning (JSON)](plugins/forgeshare/dist/plugin.json) kan installeres i en TiddlyWiki via Plugin Library. **Åbn** starter en lokal TiddlyWiki Node.js-server uden Tailscale. Privat Tailscale-deling er afprøvet på Mac/iPad, men offentlig **Funnel er ikke verificeret**.
 
 Mac-appen er **ikke Apple Developer ID-signeret eller notariseret** og kan kræve manuel macOS-godkendelse. Det er testsoftware på eget ansvar; tag backup før brug. **Windows-download er ikke tilgængelig:** en tidligere Windows-testudgave blev blokeret af Microsoft Defender, og detektionen er endnu ikke afklaret. Det anbefales ikke at omgå antivirus.
 
