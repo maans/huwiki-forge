@@ -29,13 +29,13 @@
     "type": "text/vnd.tiddlywiki",
     "caption": "F · TiddlyWiki Forge",
     "description": "Åbn TiddlyWiki Forge / Open TiddlyWiki Forge",
-    "text": "\\whitespace trim\n<a href=\"https://forge.måns.dk/\" class=\"tc-btn-invisible huw-forge-home\" title=\"TiddlyWiki Forge\" aria-label=\"TiddlyWiki Forge\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15em;line-height:1.4;padding:2px 5px;text-decoration:none\">F</a>"
+    "text": "\\whitespace trim\n<a href=\"https://forge.måns.dk/\" class=\"tc-btn-invisible huw-forge-home\" title=\"TiddlyWiki Forge\" aria-label=\"TiddlyWiki Forge\" target=\"_blank\" rel=\"noopener noreferrer\">\n<svg class=\"tc-image-button\" width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" aria-hidden=\"true\" focusable=\"false\">\n<path d=\"M7 20V4h11M7 12h8\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2.3\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/>\n</svg>\n</a>"
   },
   {
     "title": "$:/huwiki/forge/reader-sidebar-style",
     "tags": "$:/tags/Stylesheet",
     "type": "text/vnd.tiddlywiki",
-    "text": "\\rules only html\n<$list filter=\"[{$:/temp/HUWiki/AuthorReadingMode}match[reading]]\" variable=\"readingMode\">\n.tc-sidebar-header [data-tab-title=\"$:/core/ui/SideBar/Tools\"] {display:none!important;}\n</$list>"
+    "text": "\\rules only html\n/* Match native PageControls: unobtrusive at rest, full contrast on hover/focus. */\na.huw-forge-home { display:inline-flex; align-items:center; justify-content:center; vertical-align:middle; width:24px; height:24px; padding:0; line-height:1; text-decoration:none; color:inherit; }\na.huw-forge-home .tc-image-button { display:block; opacity:0.46; transition:opacity 120ms ease; }\na.huw-forge-home:hover .tc-image-button,\na.huw-forge-home:focus-visible .tc-image-button { opacity:1; }\n<$list filter=\"[{$:/temp/HUWiki/AuthorReadingMode}match[reading]]\" variable=\"readingMode\">\n.tc-sidebar-header [data-tab-title=\"$:/core/ui/SideBar/Tools\"] {display:none!important;}\n</$list>"
   },
   {
     "title": "$:/huwiki/forge/reader-sidebar-startup",
