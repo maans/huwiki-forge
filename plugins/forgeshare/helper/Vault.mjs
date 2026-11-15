@@ -22,10 +22,11 @@ export function systemStore({platform=process.platform,native=process.env.FORGES
 }
 export function publicConnection(c) {return {id:c.id,name:c.name,provider:c.provider,serverUrl:c.serverUrl,model:c.model,hasKey:!!c.secret};}
 export function validateConnection(input) {
-  if(!limited(input.name)||!input.name.trim()||!['lmstudio','ollama','openai','compatible'].includes(input.provider)||!limited(input.model,200))throw Error('Invalid connection');
-  let url=new URL(input.provider==='openai'?'https://api.openai.com':input.serverUrl);
+  if(!limited(input.name)||!input.name.trim()||!['lmstudio','ollama','openai','gemini','compatible'].includes(input.provider)||!limited(input.model,200))throw Error('Invalid connection');
+  let url=new URL(input.provider==='openai'?'https://api.openai.com':input.provider==='gemini'?'https://generativelanguage.googleapis.com':input.serverUrl);
   if(!['http:','https:'].includes(url.protocol)||url.username||url.password||url.search||url.hash||url.pathname!=='/')throw Error('Use a server address without an API path. / Brug serveradressen uden en API-sti.');
   if(typeof input.secret!=='string'||input.secret.length>8192||/[\r\n]/.test(input.secret))throw Error('Invalid credential');
+  if(input.provider==='gemini'&&!input.secret.trim())throw Error('Gemini needs an API key from Google AI Studio / Gemini kræver en API-nøgle fra Google AI Studio.');
   return {id:input.id||randomUUID(),name:input.name.trim(),provider:input.provider,serverUrl:url.origin,model:input.model,secret:input.secret};
 }
 export class Vault {
@@ -75,36 +76,85 @@ export class Vault {
     try{return await this.request(c,operation,input);}finally{this.inFlight.delete(g.id);}
   }
   async request(c,operation,input){
-    const ollama=c.provider==='ollama';let body;
+    const ollama=c.provider==='ollama',gemini=c.provider==='gemini';let body,modelId='';
     if(operation==='generate'){
       if(input.consent!==true||!Array.isArray(input.messages)||input.messages.length>100||!input.messages.length)throw Error('Confirm before sending / Bekræft før afsendelse');
       const messages=input.messages.map(m=>{if(!['user','assistant','system'].includes(m.role)||typeof m.content!=='string'||m.content.length>100000)throw Error('Invalid message');return {role:m.role,content:m.content};});
-      if(!limited(input.model||c.model,200)||!(input.model||c.model))throw Error('Choose a model / Vælg en model');
-      body={model:input.model||c.model,messages,stream:false,...(!ollama?{...(c.provider==='openai'?{max_completion_tokens:2048}:{max_tokens:2048})}:{options:{num_predict:2048}})};
+      const model=input.model||c.model;
+      if(!limited(model,200)||!model)throw Error('Choose a model / Vælg en model');
+      if(gemini){
+        modelId=String(model).replace(/^models\//,'');
+        if(!/^[A-Za-z0-9._-]+$/.test(modelId))throw Error('Invalid Gemini model / Ugyldigt Gemini-modelnavn');
+        const system=messages.filter(m=>m.role==='system').map(m=>m.content).join('\n\n');
+        const contents=messages.filter(m=>m.role!=='system').map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
+        if(!contents.length)throw Error('No user or assistant messages / Ingen beskeder at sende');
+        body={contents,generationConfig:{maxOutputTokens:2048}};
+        if(system)body.systemInstruction={parts:[{text:system}]};
+      }else{
+        body={model,messages,stream:false,...(!ollama?{...(c.provider==='openai'?{max_completion_tokens:2048}:{max_tokens:2048})}:{options:{num_predict:2048}})};
+      }
     }
-    const endpoint=operation==='models'?(ollama?'/api/tags':'/v1/models'):(ollama?'/api/chat':'/v1/chat/completions');
-    const headers={'Content-Type':'application/json'};if(c.secret)headers.Authorization='Bearer '+c.secret;
-    try {
-      const response=await this.fetcher(c.serverUrl+endpoint,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined,redirect:'error',signal:AbortSignal.timeout(120000)});
-      if(!response.ok)throw Error('upstream');
-      let chunks=[],size=0;for await(const chunk of response.body){chunks.push(Buffer.from(chunk));size+=chunk.length;if(size>2097152)throw Error('large response');}let raw=Buffer.concat(chunks).toString('utf8');
+    // The Gemini destination is fixed even if a stored connection is damaged.
+    const server=gemini?'https://generativelanguage.googleapis.com':c.serverUrl;
+    const headers={'Content-Type':'application/json'};
+    if(gemini)headers['x-goog-api-key']=c.secret;
+    else if(c.secret)headers.Authorization='Bearer '+c.secret;
+    const fetchJson=async(endpoint,payload)=>{
+      const response=await this.fetcher(server+endpoint,{method:payload?'POST':'GET',headers,body:payload?JSON.stringify(payload):undefined,redirect:'error',signal:AbortSignal.timeout(120000)});
+      if(!response.ok)throw Error('upstream:'+response.status);
+      let chunks=[],size=0;
+      for await(const chunk of response.body){chunks.push(Buffer.from(chunk));size+=chunk.length;if(size>2097152)throw Error('large response');}
+      let raw=Buffer.concat(chunks).toString('utf8');
       // Upstream errors/echoes cannot leak credentials into a wiki.
-      if(c.secret)raw=raw.split(c.secret).join('[private]');const data=JSON.parse(raw);
+      if(c.secret)raw=raw.split(c.secret).join('[private]');
+      return JSON.parse(raw);
+    };
+    try{
+      if(gemini&&operation==='models'){
+        const models=[],seen=new Set();let nextPage='';
+        // Gemini may paginate its catalog. Bound the number of pages and results.
+        for(let page=0;page<5;page++){
+          const endpoint='/v1beta/models?pageSize=100'+(nextPage?'&pageToken='+encodeURIComponent(nextPage):'');
+          const data=await fetchJson(endpoint);
+          if(!Array.isArray(data.models))throw Error('invalid model response');
+          for(const item of data.models){
+            if(item.supportedGenerationMethods&&(!Array.isArray(item.supportedGenerationMethods)||!item.supportedGenerationMethods.includes('generateContent')))continue;
+            const name=String(item.name||'').replace(/^models\//,'');
+            if(!/^[A-Za-z0-9._-]+$/.test(name)||seen.has(name))continue;
+            seen.add(name);models.push(name);
+            if(models.length>=500)break;
+          }
+          if(models.length>=500)break;
+          nextPage=typeof data.nextPageToken==='string'&&data.nextPageToken.length<=2048?data.nextPageToken:'';
+          if(!nextPage)break;
+        }
+        return {ok:true,models};
+      }
+      const endpoint=gemini?'/v1beta/models/'+encodeURIComponent(modelId)+':generateContent':
+        operation==='models'?(ollama?'/api/tags':'/v1/models'):(ollama?'/api/chat':'/v1/chat/completions');
+      const data=await fetchJson(endpoint,body);
       if(operation==='models')return {ok:true,models:(ollama?data.models:data.data||[]).map(m=>String(ollama?m.name:m.id).split(c.secret||'\u0000').join('[private]')).slice(0,500)};
-      const content=ollama?data.message?.content:data.choices?.[0]?.message?.content;
-      if(typeof content!=='string')throw Error('missing content');return {ok:true,content:c.secret?content.split(c.secret).join('[private]'):content};
-    }catch {throw Error('The AI connection did not answer. Check it in ForgeShare. / AI-forbindelsen svarede ikke. Kontrollér den i ForgeShare.');}
+      const content=gemini?(data.candidates?.[0]?.content?.parts||[]).filter(p=>typeof p.text==='string').map(p=>p.text).join('\n'):
+        ollama?data.message?.content:data.choices?.[0]?.message?.content;
+      if(typeof content!=='string'||!content.trim())throw Error('missing content');
+      return {ok:true,content:c.secret?content.split(c.secret).join('[private]'):content};
+    }catch(error){
+      if(gemini&&/^upstream:(401|403)$/.test(error.message||''))throw Error('Gemini rejected the API key or access (HTTP '+error.message.split(':')[1]+') / Gemini afviste API-nøgle eller adgang.');
+      if(gemini&&error.message==='upstream:429')throw Error('Gemini quota or rate limit (HTTP 429) / Grænse for Gemini-kald eller kvote.');
+      if(gemini&&error.message==='upstream:404')throw Error('Gemini model not found (HTTP 404) / Gemini-modellen findes ikke.');
+      throw Error('The AI connection did not answer. Check it in ForgeShare. / AI-forbindelsen svarede ikke. Kontrollér den i ForgeShare.');
+    }
   }
 }
 export async function vaultDialog(vault,ask,t){
   const add=t('Add AI connection','Tilføj AI-forbindelse'),password=t('Save another password','Gem en anden adgangskode'),approve=t('Approve a device','Godkend en enhed'),manage=t('Manage access and connections','Administrér adgang og forbindelser');
   const action=await ask('choice',t('Vault — secrets stay on this computer','Nøgleboks — hemmeligheder bliver på denne computer'),[add,approve,manage,password]);
   if(action===add){
-    const providers=['LM Studio','Ollama','OpenAI',t('Other compatible AI server','Anden kompatibel AI-server')];
+    const providers=['LM Studio','Ollama','OpenAI','Google Gemini',t('Other compatible AI server','Anden kompatibel AI-server')];
     const picked=await ask('choice',t('AI connection','AI-forbindelse'),providers),index=providers.indexOf(picked);if(index<0)return;
-    const name=await ask('text',t('Connection name','Forbindelsens navn'),picked),provider=['lmstudio','ollama','openai','compatible'][index];
-    const serverUrl=index===2?'https://api.openai.com':await ask('text',t('Server address','Serveradresse'),index===0?'http://127.0.0.1:1234':index===1?'http://127.0.0.1:11434':'https://');
-    let secret='';if(index===2 || await ask('choice',t('Does this connection need a key?','Kræver forbindelsen en nøgle?'),[t('No','Nej'),t('Yes','Ja')])===t('Yes','Ja')){
+    const name=await ask('text',t('Connection name','Forbindelsens navn'),picked),provider=['lmstudio','ollama','openai','gemini','compatible'][index];
+    const serverUrl=provider==='openai'?'https://api.openai.com':provider==='gemini'?'https://generativelanguage.googleapis.com':await ask('text',t('Server address','Serveradresse'),index===0?'http://127.0.0.1:1234':index===1?'http://127.0.0.1:11434':'https://');
+    let secret='';if(provider==='openai'||provider==='gemini'||await ask('choice',t('Does this connection need a key?','Kræver forbindelsen en nøgle?'),[t('No','Nej'),t('Yes','Ja')])===t('Yes','Ja')){
       const saved=(await vault.read()).passwords,newKey=t('Enter a new key','Indtast en ny nøgle'),labels=saved.map(p=>p.name+' · '+p.id.slice(0,8));
       const choice=saved.length?await ask('choice',t('Credential for this AI connection','Adgangsoplysning til denne AI-forbindelse'),[newKey,...labels]):newKey;
       if(choice===newKey)secret=await ask('password',t('API key — stored in the system vault','API-nøgle — gemmes i styresystemets nøgleboks'));
