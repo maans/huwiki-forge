@@ -7,7 +7,7 @@
       "description": "Bilingual Forge homepage with editable ABC Jingle follow-score card, plugin library and standalone wiki download",
       "status": "test",
       "manifest": "../editions/forge/manifest.json",
-      "version": "0.1.1-test.2",
+      "version": "0.1.1-test.3",
       "home": {
         "headingDa": "Tag denne forside med dig",
         "headingEn": "Keep your own copy of this page",
@@ -61,7 +61,7 @@
       "description": "ABC notation, editable TiddlyWiki Jingle with jazz follow player, full score, six teaching packs, MuseScore import and site publishing",
       "status": "test",
       "manifest": "../editions/music/manifest.json",
-      "version": "0.1.1-test.2",
+      "version": "0.1.1-test.3",
       "bundledPlugins": [
         "site-publisher",
         "pdf-publisher",
