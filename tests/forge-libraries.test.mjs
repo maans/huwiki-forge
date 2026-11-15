@@ -9,7 +9,7 @@ const root=new URL("../",import.meta.url);
 const read=async p=>readFile(new URL(p,root),"utf8");
 const json=async p=>JSON.parse(await read(p));
 const ids=(await json("catalog/editions.json")).editions.map(e=>e.id);
-const pluginUrl="https://forge.måns.dk/library/plugins/index.html";
+const pluginUrl="https://forge.xn--mns-ula.dk/library/plugins/index.html";
 const communityUrl="https://tiddlywiki.com/#Community";
 
 test("Every Edition keeps the native library and links to TiddlyWiki Community without a sidebar tab",async()=>{
@@ -21,7 +21,7 @@ test("Every Edition keeps the native library and links to TiddlyWiki Community w
  const fButton=config.find(t=>t.title==="$:/huwiki/forge/page-control");
  assert.ok(fButton,"A shared F link must be present in all Editions");
  assert.ok(fButton.tags.includes("$:/tags/PageControls"));
- assert.match(fButton.text,/href="https:\/\/forge\.måns\.dk\/"/);
+ assert.match(fButton.text,/href="https:\/\/forge\.xn--mns-ula\.dk\/"/);
  assert.match(fButton.text,/aria-label="TiddlyWiki Forge"/);
  assert.match(fButton.text,/tc-image-tiddlyforge tc-image-button/,"F uses a native toolbar SVG icon");
  assert.match(fButton.text,/width="22pt" height="22pt"/,"Use the same icon size as TiddlyWiki page controls");
