@@ -7,3 +7,32 @@ Open the wiki through ForgeShare 0.1.8. Add an AI connection in the helper's vau
 Supported vault operations: text chat and model lists for LM Studio, Ollama, OpenAI and compatible chat-completions servers. Image generation and image analysis through the vault are explicitly rejected in this test version; direct local AI mode is retained. Keys cannot be entered into or exported from a wiki. Wiki readers with a separate approved AI grant can use the owner's accounts; saving chat tiddlers still requires wiki editing rights.
 
 `forgeshare-vault-browser-smoke.mjs` exercises the real plugin modules in a running TiddlyWiki using an isolated in-memory vault and simulated AI. It performs no external AI request or billing. See the ForgeShare README for trust boundaries and remaining physical-device/OS-vault acceptance.
+
+
+## Experimental manual AI connections (0.4.1-test.1)
+
+The workbench and chat library now offer a **manual** connection beside ForgeShare,
+with OpenAI, Anthropic Claude, Google Gemini, LM Studio and Ollama.
+Enter the provider API key into a password field (LM Studio key optional),
+choose or discover a model, and optionally enter the local server URL.
+Chrome/password managers may offer to fill the key, but the wiki cannot retrieve
+stored passwords itself; autofill depends on the browser's behavior.
+
+The key lives **only in in-memory JavaScript** in the running browser tab.
+It is never written to TiddlyWiki tiddlers, the saved HTML, localStorage,
+sessionStorage, request URLs or GitHub. A **Forget key** button clears it.
+Reloading the page loses the key. Model names, provider choice and local
+server URLs can remain in browser settings as non-secret preferences.
+
+**Security:** Direct browser requests are experimental and not equivalent to
+ForgeShare. Any other JavaScript or browser extension with page access may
+read a manually entered key. Cloud browser requests may fail due to CORS.
+Cloud API endpoints are fixed to their official HTTPS hosts; the Gemini API
+uses an x-goog-api-key header, Claude uses x-api-key plus the Anthropic
+direct-browser opt-in header, and OpenAI uses Authorization Bearer.
+ForgeShare remains the recommended alternative when a key should stay out
+of the wiki/browser page entirely. Image generation still requires ForgeShare.
+No real cloud-provider account/API billing test was performed in this change.
+
+The plugin bundle in dist and the Forge Plugin Library registry have the same
+version. No changes are made to ForgeShare itself.

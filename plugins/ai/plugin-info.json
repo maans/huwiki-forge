@@ -3,7 +3,7 @@
   "type": "application/json",
   "plugin-type": "plugin",
   "name": "AI Forge",
-  "description": "AI text conversations through approved ForgeShare connections",
-  "version": "0.4.0",
+  "description": "AI Forge: ForgeShare vault or manual session-only OpenAI, Claude, Gemini, LM Studio and Ollama connections (experimental browser direct mode)",
+  "version": "0.4.1-test.1",
   "author": "HUWiki"
 }
