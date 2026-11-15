@@ -10,6 +10,7 @@ TiddlyWiki Forge skal oprette en ny, selvstændig TiddlyWiki fra en **frisk, tes
 
 - **HUPedia Edition (test):** Tosproget leksikon med artikelredigering, faktabokse og otte eksempelartikler. Brug sammen med SitePublisher og PDF Publisher efter behov.
 - **Musik Edition (test):** ABC-plugin med følgeafspiller og swing, TiddlyWiki Jingle som redigerbart nodeeksempel, Musik-plugin, seks undervisningspakker, Modern-temaet, **MuseScore → ABC Importer 0.1.5-beta.1** samt SitePublisher og PDF Publisher. Kontroller noder og lyd i browseren, inden Editionen anvendes til produktion.
+- **AI Edition (test):** AI Forge 0.4.0 med tekstsamtaler, opgaveeksempler og valg af lokal AI eller godkendte ForgeShare-forbindelser. AI-forbindelsesbroen kræver det særskilte Mac-hjælpeprogram og adgangsgodkendelse; billedfunktioner er ikke godkendt via broen.
 - **Demo Edition:** Den tidligere gennemprøvede opstartstest af TiddlyWiki og et startup-plugin.
 
 Tryk **Byg Edition**. Forge henter automatisk den **fastlåste** TiddlyWiki-kerne og leverer én selvstændig HTML-fil. Du skal **ikke** selv hente `empty.html`. Åbn filen og brug TiddlyWikis indbyggede redigering og Gem-funktion.
@@ -23,6 +24,14 @@ Kør `npm test` (Node.js 20+) for de automatiske tests. De kontrollerer nu også
 Se [migrationsstatus](docs/migration-status.md), [overførselsinventar fra OAuthLab](docs/oauthlab-transfer-inventory.md), [det lette materialekatalog](catalog/materials.json), [AI Editionens forbindelsesdesign](docs/ai-connections.md) og [HUWiki-kildeanalysen](docs/huwiki-source-analysis.md).
 
 **TiddlyWiki Jingle:** Forge-forsiden har en kompakt nodefølger med melodi og becifringer. Alle stemmer og akkompagnement spilles. Det tosprogede link **Åbn / Open** åbner kompositionens fulde, redigerbare tiddler. Makroen `<<abc-player ...>>` og dens parametre forklares i ABC-pluginets hjælp.
+
+## ForgeShare · offentlig Mac-test
+
+[ForgeShare til Mac, 0.1.18-test (ZIP)](downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip) er et særskilt hjælpeprogram; [ForgeShare-pluginvejledningen](plugins/forgeshare/dist/plugin.json) kan installeres i en TiddlyWiki via Plugin Library. **Åbn** starter en lokal TiddlyWiki Node.js-server uden Tailscale. Privat Tailscale-deling er afprøvet på Mac/iPad, men offentlig **Funnel er ikke verificeret**.
+
+Mac-appen er **ikke Apple Developer ID-signeret eller notariseret** og kan kræve manuel macOS-godkendelse. Det er testsoftware på eget ansvar; tag backup før brug. **Windows-download er ikke tilgængelig:** en tidligere Windows-testudgave blev blokeret af Microsoft Defender, og detektionen er endnu ikke afklaret. Det anbefales ikke at omgå antivirus.
+
+AI Edition kan bruge ForgeShare til godkendte AI-forbindelser; lokal AI kan også bruges separat. ForgeShare-udviklingen og den blokerede Windows-test forbliver i [draft-PR #8](https://github.com/maans/huwiki-forge/pull/8), uden at den fulde PR flettes ind i main.
 
 ## Plugin Library og TiddlyWiki Community
 
