@@ -35,4 +35,11 @@ of the wiki/browser page entirely. Image generation still requires ForgeShare.
 No real cloud-provider account/API billing test was performed in this change.
 
 The plugin bundle in dist and the Forge Plugin Library registry have the same
-version. No changes are made to ForgeShare itself.
+version. Gemini via the ForgeShare vault requires an updated ForgeShare helper build (the currently published Mac 0.1.18 ZIP does not yet contain that helper support). The manual Gemini connector remains available as an experimental, session-only alternative.
+
+
+## Gemini restoration: OAuth-independent AI Forge / AI Edition (0.4.1-test.3)
+
+AI Forge and the AI Edition now explicitly present Google Gemini as a **ForgeShare Vault** provider in addition to the existing manual browser connection. Users create a separate **Gemini API key in Google AI Studio**, not a Google Workspace OAuth client or Gmail/Drive scope grant. The ForgeShare Mac host sends authorized text-generation and model-list requests to the Gemini API; the key never reaches the wiki, its stored HTML, iPad browser or GitHub. Each wiki/device must be explicitly authorized for that new Gemini connection in ForgeShare, even if the device previously had 30-day permission for LM Studio.
+
+**Compatibility:** The updated ForgeShare Vault implementation is on the ForgeShare development branch/PR #8. The public 0.1.18 Mac ZIP predates the update and must not be presented as Gemini-ready. Gemini through the Vault is for text chat and model listing only until separately tested for images. No Google OAuth verification status is changed by this work. A real Google AI Studio key is required for live end-to-end testing. Google now requires an appropriate auth-type API key rather than a legacy unrestricted standard key.
