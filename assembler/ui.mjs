@@ -1,7 +1,12 @@
 import {assembleHtml,loadOfficialCore,loadEdition} from './assemble.mjs';
 import {loadChoices,resolvePackages,composeWiki} from './compose.mjs';
 const query=new URL(location.href).searchParams;
-const da=query.get('lang')==='da'||(!query.has('lang')&&navigator.language.startsWith('da'));
+const requestedLanguage=query.get('lang')?.toLowerCase();
+// A link from the public TiddlyWiki carries its chosen language. Otherwise use
+// the browser's supported language preferences (Danish or English fallback).
+const preferredLanguages=Array.isArray(navigator.languages)&&navigator.languages.length?navigator.languages:[navigator.language];
+const browserChoice=preferredLanguages.find(value=>/^(da|en)(-|$)/i.test(value))||preferredLanguages[0]||'en';
+const da=requestedLanguage==='da'||(requestedLanguage!=='en'&&/^da(-|$)/i.test(browserChoice));
 const words=da?{
  heading:'Form din egen wiki.',intro:'Vælg et udgangspunkt. Tilføj de værktøjer, det indhold og det tema, du vil have med.',
  note:'Du får én redigerbar HTML-fil. Pakkerne hentes fra de eksisterende Forge-biblioteker; nødvendige hjælpepakker følger automatisk med. Ingen konto er nødvendig.',baseHeading:'1. Dit udgangspunkt',base:'Edition',name:'Navn på din wiki (valgfrit)',tools:'2. Værktøjer',toolsHelp:'Vælg på tværs af Editions. Pakker, der allerede følger med dit udgangspunkt, markeres nedenfor.',content:'3. Indhold og eksempler',themeHeading:'4. Udseende',theme:'Tema',review:'Din sammensætning',testNotice:'Testudgaver: nogle pakker har uafsluttet engelsk brugerflade eller funktioner, der endnu ikke er afprøvet på alle enheder. Ikke alle kombinationer er browserafprøvet. Modstridende pakker bliver afvist før download.',download:'Byg og hent din wiki',save:'Åbn HTML-filen, og brug TiddlyWikis Gem-knap.',advanced:'Avanceret: afprøv en lokal kerne',core:'Vælg en officiel empty.html (valgfrit)',libraries:'F-linket og Plugin Library følger med alle sammensætninger. Hver pakke beholder sit ophav og sin licens.',blank:'Begynd med en tom wiki',keep:'Behold Editionens tema / TiddlyWiki-standard',included:'Følger med',test:'Testpakke',helper:'Nødvendig hjælpepakke',auto:'Tilføjes automatisk',build:'Henter og kontrollerer dine pakker…',done:'Din wiki er hentet. Åbn HTML-filen for at begynde.',error:'Kunne ikke bygge wikien: ',none:'Ingen ekstra valg. F-link og Plugin Library følger altid med.'
@@ -11,6 +16,9 @@ const words=da?{
 document.documentElement.lang=da?'da':'en';document.title='TiddlyWiki Forge · '+words.heading;
 for(const el of document.querySelectorAll('[data-i18n]'))el.textContent=words[el.dataset.i18n];
 const $=id=>document.getElementById(id),select=$('edition'),status=$('status'),button=$('assemble');
+const language=da?'da':'en';
+const localName=item=>item.display?.[language]?.name||item.name;
+const localDescription=item=>item.display?.[language]?.description||item.description||'';
 let choices,editions=[],included=[],revision=0,loading=false,building=false;
 const checked=selector=>Array.from(document.querySelectorAll(selector+':checked')).filter(el=>!el.disabled).map(el=>el.value);
 function checkbox(parent,value,label,description,kind){
@@ -27,7 +35,7 @@ function summary(){
  try{
   const added=resolvePackages(selection(),choices.packages,included);
   const manual=new Set([...checked('.optional-plugin'),...checked('.content-plugin'),$('theme').value]);
-  const lines=added.map(p=>(manual.has(p.title)?'':'↳ '+words.auto+': ')+p.name);
+  const lines=added.map(p=>(manual.has(p.title)?'':'↳ '+words.auto+': ')+localName(p));
   lines.push(...checked('.material').map(id=>{const c=choices.content.find(c=>c.id===id);return da?c.label_da:c.label_en;}));
   $('summary').textContent=lines.join('\n')||words.none;button.disabled=loading||building;
  }catch(e){$('summary').textContent=e.message;button.disabled=true;}
@@ -47,14 +55,14 @@ async function updateDescription(){
 }
 async function init(){
  choices=await loadChoices(location.href);editions=choices.editions;
- select.replaceChildren(new Option(words.blank,''));for(const e of editions)select.add(new Option(e.name,e.id));
+ select.replaceChildren(new Option(words.blank,''));for(const e of editions)select.add(new Option(localName(e),e.id));
  const requested=new URL(location.href).searchParams.get("edition");
  if(requested&&editions.some(item=>item.id===requested))select.value=requested;
  $('theme').add(new Option(words.keep,''));
  for(const p of choices.packages){
-  if(p['plugin-type']==='theme'){$('theme').add(new Option(p.name,p.title));continue;}
+  if(p['plugin-type']==='theme'){$('theme').add(new Option(localName(p),p.title));continue;}
   const lessons=p.title.includes('/lessons-');
-  checkbox(lessons?'content-list':'plugin-list',p.title,p.name,p.description,lessons?'content-plugin':'optional-plugin');
+  checkbox(lessons?'content-list':'plugin-list',p.title,localName(p),localDescription(p),lessons?'content-plugin':'optional-plugin');
  }
  for(const c of choices.content)checkbox('content-list',c.id,da?c.label_da:c.label_en,'', 'material');
  select.disabled=false;await updateDescription();
