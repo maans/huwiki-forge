@@ -18,7 +18,7 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  const {manifest,tiddlers}=await loadEdition("https://forge.example/huwiki-forge/editions/music/manifest.json",localFetch);
  assert.equal(manifest.id,"music");
  assert.equal(manifest.coreVersion,"5.4.1");
- assert.equal(manifest.version,"0.1.1-test.1");
+ assert.equal(manifest.version,"0.1.1-test.2");
  assert.equal(tiddlers.length,28); // 16 existing + 10 shared Forge tiddlers + Jingle and its example
  const byTitle=new Map(tiddlers.map(t=>[t.title,t]));
   for(const title of ["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community","$:/huwiki/forge/page-control"])assert.ok(byTitle.has(title),title+" missing from Edition");
@@ -45,18 +45,25 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  for(const t of tiddlers.filter(t=>t.title.startsWith("$:/plugins/huwiki/lessons-"))){
   assert.equal(t.dependents,"$:/plugins/huwiki/abc",t.title);
  }
- assert.equal(byTitle.get("$:/plugins/huwiki/abc").version,"0.3.32-test.1");
+ assert.equal(byTitle.get("$:/plugins/huwiki/abc").version,"0.3.32-test.2");
  const jingle=byTitle.get("TiddlyWiki Jingle");
  assert.ok(jingle,"TiddlyWiki Jingle must be shipped as an editable tiddler");
  assert.equal(jingle["abc-swing"],"66");
  assert.equal(jingle["abc-font"],"petaluma");
  const voices=JSON.parse(jingle["abc-accompaniment"]).voiceSettings;
- assert.equal(voices["0"].instrument,11,"lead should be vibraphone");
- assert.equal(voices["3"].volume,25,"fourth voice piano comp");
- assert.equal(voices["4"].volume,12,"fifth voice piano bass doubling");
+ assert.deepEqual([voices["0"].instrument,voices["0"].volume],[11,80],"vibraphone lead at 80 percent");
+ assert.deepEqual([voices["1"].instrument,voices["1"].volume],[57,65],"second voice trombone");
+ assert.deepEqual([voices["2"].instrument,voices["2"].volume],[57,65],"third voice trombone");
+ assert.deepEqual([voices["3"].instrument,voices["3"].volume],[26,23],"fourth voice jazz guitar");
+ assert.equal(voices["4"].volume,12,"fifth voice soft bass doubling");
+ assert.match(jingle["abc-source"],/^V:5 clef=bass-8$/m,"fifth voice in octave-transposing bass clef");
  assert.match(byTitle.get("TiddlyWiki Jingle – Følgeafspiller").text,/abc-player/);
  const abc=JSON.parse(byTitle.get("$:/plugins/huwiki/abc").text).tiddlers;
  assert.ok(abc["$:/plugins/huwiki/abc/follow-viewport.js"]);
+ assert.match(abc["$:/plugins/huwiki/abc/follow-viewport.js"].text,/querySelectorAll\('\.huwabc-follow-chord-label'\)/);
+ assert.ok(!abc["$:/plugins/huwiki/abc/accompaniment.js"].text.includes("Dronen holder fast Sa/Pa"));
+ assert.match(abc["$:/plugins/huwiki/abc/accompaniment.js"].text,/mixer\.appendChild\(voiceHost\)/,"notated voices must be inside mixer");
+ assert.match(abc["$:/plugins/huwiki/abc/minimal-player.css"].text,/huwabc-follow-backdrop/,"protect score camera background");
  assert.match(abc["$:/plugins/huwiki/abc/ExampleMacros"].text,/\\procedure abc-player/);
  const importer=byTitle.get("$:/plugins/huwiki/musescore-import");
  assert.equal(importer.version,"0.1.5-beta.1");
