@@ -28,7 +28,7 @@ test("Every Edition keeps the native library and links to TiddlyWiki Community w
 
  assert.equal(plugin.url,pluginUrl);
  assert.ok(plugin.tags.includes("$:/tags/PluginLibrary"));
- assert.equal(plugin.caption,"Plugin Library");
+ assert.equal(plugin.caption,"Forge Plugin Library");
  assert.equal(community.url,communityUrl);
  assert.ok(!String(community.tags||"").includes("$:/tags/PluginLibrary"),"Community Editions aren't TiddlyWiki plugins");
  assert.ok(!card.tags.includes("$:/tags/SideBar"),"Community must not be a sidebar tab");
