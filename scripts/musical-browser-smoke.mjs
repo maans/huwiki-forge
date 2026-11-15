@@ -241,7 +241,7 @@ try{
  assert.equal(await onion.getAttribute("aria-pressed"),"true");
  assert.ok(await player.locator(".huw-musical-onion-ghost").count()>=2,
   "Neighbouring poses should appear in the animation editor");
- const beforeOnion=$ => $.wiki.getTiddlerText("Musical – Tændstikorkestret (film)");
+ const beforeOnion=() => $tw.wiki.getTiddlerText("Musical – Tændstikorkestret (film)");
  const preservedFilm=await page.evaluate(beforeOnion);
  await onion.click();
  assert.equal(await onion.getAttribute("aria-pressed"),"false");
