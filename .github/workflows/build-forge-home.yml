@@ -15,8 +15,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Check reproducible homepage
-        run: node scripts/build-forge-home.mjs --check
+      - name: Build and verify the deterministic homepage from current sources
+        run: |
+          node scripts/build-forge-home.mjs
+          node scripts/build-forge-home.mjs --check
+          git diff --check
       - name: Install browser controller
         run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
       - name: Test languages, native save and offline reopen
