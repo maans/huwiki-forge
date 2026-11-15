@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Oversæt med bevarede links",
+  "caption": "Oversæt med bevarede links",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Undervisning og formidling",
+  "description": "Oversæt indhold uden at ødelægge TiddlyWiki-markup",
+  "ai-prompt": "Oversæt den valgte tiddlers almindelige tekst til engelsk, men bevar interne linkmål, tags, feltnavne, makroer og wikitext-struktur. Vis ændringerne side om side før gemning.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"467\"/></h2><p><$huwiki-ai-label key=\"468\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Translate while preserving links",
+  "ai-ui-description-en": "Translate content without breaking TiddlyWiki markup",
+  "ai-ui-category-en": "Teaching and communication"
+}

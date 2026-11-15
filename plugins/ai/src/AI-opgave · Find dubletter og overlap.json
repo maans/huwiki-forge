@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Find dubletter og overlap",
+  "caption": "Find dubletter og overlap",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Organisering og kvalitet",
+  "description": "Saml viden uden at overskrive kilderne",
+  "ai-prompt": "Find mulige dubletter og emner som overlapper. Lav en oversigt med links til begge kilder, forklar forskellene og foreslå mulige sammenlægninger. Foretag ikke ændringer, før jeg har gennemset dem.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"443\"/></h2><p><$huwiki-ai-label key=\"444\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Find duplicates and overlap",
+  "ai-ui-description-en": "Bring knowledge together without overwriting sources",
+  "ai-ui-category-en": "Organisation and quality"
+}

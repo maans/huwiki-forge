@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Lav en projektoversigt",
+  "caption": "Lav en projektoversigt",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Organisering og kvalitet",
+  "description": "Få en dynamisk oversigt i stedet for et statisk dokument",
+  "ai-prompt": "Gennemgå tiddlere med tagget Projekt. Foreslå en overordnet projektside med introduktion, milepæle, beslutninger og en dynamisk TiddlyWiki-liste, der automatisk finder de projekt-tiddlere, som er relevante. Vis forslagene før gemning.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"439\"/></h2><p><$huwiki-ai-label key=\"440\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Create a project overview",
+  "ai-ui-description-en": "Get a dynamic overview instead of a static document",
+  "ai-ui-category-en": "Organisation and quality"
+}

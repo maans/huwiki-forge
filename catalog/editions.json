@@ -78,6 +78,23 @@
       }
     },
     {
+      "id": "ai",
+      "name": "AI Edition (test)",
+      "description": "AI Forge 0.4.0 text conversations and tasks in TiddlyWiki, with local model mode or explicitly approved ForgeShare AI connections. Mac helper offered separately.",
+      "status": "test",
+      "manifest": "../editions/ai/manifest.json",
+      "version": "0.4.0-test.1",
+      "home": {
+        "headingDa": "Samtaler, AI-opgaver og dine egne modeller",
+        "headingEn": "AI conversations, tasks and your models",
+        "descriptionDa": "Brug AI Forge til tekstsamtaler og opgaver i din egen wiki. Vælg lokal AI eller godkendte forbindelser via ForgeShare på Mac.",
+        "descriptionEn": "Use AI Forge for text chats and tasks in your own wiki. Connect to local AI or approved connections through ForgeShare on Mac.",
+        "noteDa": "Testudgave. ForgeShare er valgfri lokalt; AI-forbindelser via hjælpeappen kræver Mac, opsætning og godkendelse. Billedfunktioner udestår.",
+        "noteEn": "Test release. ForgeShare is optional for local mode; helper connections need Mac setup and approval. Image operations are pending.",
+        "order": "02.5"
+      }
+    },
+    {
       "id": "hupin",
       "name": "HUPin Edition (test)",
       "description": "Interactive pins on images and SVG; optional PasteUp and online map integrations. English UI migration pending / Klikbare billeder og SVG",

@@ -1,0 +1,5 @@
+{
+  "title": "HUWiki AI · Import",
+  "tags": "[[HUWiki AI · Navigation]]",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"350\"/></h2><p><$huwiki-ai-label key=\"351\"/></p></div>\n<div class=\"huw-ai-steps\">\n<div class=\"huw-ai-step\"><div><strong><$huwiki-ai-label key=\"352\"/></strong><small><$huwiki-ai-label key=\"353\"/></small><a href=\"https://chatgpt.com/#settings/DataControls\" target=\"_blank\" rel=\"noopener noreferrer\"><$huwiki-ai-label key=\"354\"/></a></div></div>\n<div class=\"huw-ai-step\"><div><strong><$huwiki-ai-label key=\"355\"/></strong><small><$huwiki-ai-label key=\"356\"/> <code>conversations.json</code> <$huwiki-ai-label key=\"541\"/></small></div></div>\n<div class=\"huw-ai-step\"><div><strong><$huwiki-ai-label key=\"357\"/></strong><small><$huwiki-ai-label key=\"358\"/></small></div></div>\n</div>\n<div class=\"huw-ai-note\"><$huwiki-ai-label key=\"359\"/></div>\n<$huwiki-ai-chat-library mode=\"import\"/>\n</div>\n"
+}

@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Lav et dashboard med felter",
+  "caption": "Lav et dashboard med felter",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "TiddlyWiki og automatisering",
+  "description": "Udnyt TiddlyWikis databaseegenskaber",
+  "ai-prompt": "Foreslå et simpelt dashboard med felterne status, ansvarlig og deadline. Brug TiddlyWikis egne filtre og transklusioner. Beskriv hvilke felter der skal tilføjes, og vis en redigerbar prototype.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"457\"/></h2><p><$huwiki-ai-label key=\"458\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Create a dashboard with fields",
+  "ai-ui-description-en": "Use TiddlyWiki’s database features",
+  "ai-ui-category-en": "TiddlyWiki and automation"
+}

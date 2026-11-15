@@ -1,0 +1,12 @@
+{
+  "title": "AI-opgave · Kontrollér WikiText",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "caption": "Kontrollér min WikiText",
+  "ai-category": "TiddlyWiki og automatisering",
+  "description": "Kontroller kompatibilitet, makrokald, widget-parametre, filtre og moderne TiddlyWiki-syntaks før du ændrer kode.",
+  "ai-prompt": "Kontrollér følgende WikiText mod min faktiske TiddlyWiki-version. Undersøg først tiddlywiki.com/ og tiddlywiki.com/dev/ med et browserværktøj, hvis du har et; ellers brug kun verificeret medsendt referenceviden og fortæl tydeligt, hvad du ikke kan slå op. Gennemgå procedure/function/macro-kald, widget-attributter, filteroperatorer, versioner og mulige konflikter. Gæt ikke på parametre. Returnér et korrigeret forslag plus testtrin, uden at ændre nogen tiddler automatisk.",
+  "text": "<$huwiki-ai-label key=\"481\"/>\n\n<$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button>\n",
+  "ai-ui-caption-en": "Check my WikiText",
+  "ai-ui-description-en": "Check compatibility, macro calls, widget parameters, filters and modern TiddlyWiki syntax before changing code.",
+  "ai-ui-category-en": "TiddlyWiki and automation"
+}

@@ -1,0 +1,6 @@
+{
+  "title": "$:/plugins/huwiki/ai/i18n-filter.js",
+  "type": "application/javascript",
+  "module-type": "filteroperator",
+  "text": "var ui=require('$:/plugins/huwiki/ai/i18n.js');exports['huwiki-ai-label']=function(source,operator,options){return [ui.label(operator.operand,options.wiki)];};"
+}

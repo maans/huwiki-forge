@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · TiddlyWiki-plugin med AI-hjælp",
+  "caption": "TiddlyWiki-plugin med AI-hjælp",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "TiddlyWiki og automatisering",
+  "description": "Udform et lille plugin eller en wikitext-komponent",
+  "ai-prompt": "Jeg vil bygge en lille TiddlyWiki-funktion. Begynd med en kort beskrivelse af behovet, foreslå en løsning med standardwidgets og filtre, og brug kun JavaScript hvis wikitext ikke er nok. Vis altid koden til gennemsyn.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"477\"/></h2><p><$huwiki-ai-label key=\"478\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "A TiddlyWiki plugin with AI help",
+  "ai-ui-description-en": "Design a small plugin or WikiText component",
+  "ai-ui-category-en": "TiddlyWiki and automation"
+}

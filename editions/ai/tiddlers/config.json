@@ -1,0 +1,12 @@
+[
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[AI Edition · Start]]"
+  },
+  {
+    "title": "AI Edition · Start",
+    "type": "text/vnd.tiddlywiki",
+    "text": "<$list filter=\"[{$:/language}regexp[da]]\" variable=\"language\"><div class=\"huw-ai-edition-intro\">\n<h1>AI Edition · testudgave</h1>\n<p>Eksperimentér med AI-samtaler og opgaver direkte i din egen TiddlyWiki. Start med AI-forsiden, og vælg en lokal model eller en forbindelse, du selv har godkendt.</p>\n<p><$link to=\"HUWiki AI · Forside\">Åbn AI-forsiden →</$link> · <$link to=\"HUWiki AI · Forbindelser\">Forbindelser</$link> · <$link to=\"$:/plugins/huwiki/forgeshare/readme\">ForgeShare på Mac</$link></p>\n<p>**Vigtigt:** Forbindelser via ForgeShare kræver det særskilte Mac-hjælpeprogram og godkendelse i nøgleboksen. Kun tekstsamtaler og modellister er afprøvet via forbindelsesbroen; billedfunktioner er ikke godkendt. Windows-programmet distribueres ikke, mens en Defender-advarsel undersøges.</p>\n</div></$list>\n<$list filter=\"[{$:/language}!regexp[da]]\" variable=\"language\"><div class=\"huw-ai-edition-intro\">\n<h1>AI Edition · test release</h1>\n<p>Explore AI conversations and tasks inside your own TiddlyWiki. Open the AI home page, then select a local model or a connection you explicitly approve.</p>\n<p><$link to=\"HUWiki AI · Forside\">Open AI home →</$link> · <$link to=\"HUWiki AI · Forbindelser\">Connections</$link> · <$link to=\"$:/plugins/huwiki/forgeshare/readme\">ForgeShare on Mac</$link></p>\n<p>**Important:** Shared AI connections through ForgeShare require the separate Mac helper and vault approval. Only text chat and model lists have been tested through the bridge; image operations are not accepted. The Windows helper is not being distributed while a Defender alert is investigated.</p>\n</div></$list>",
+    "forge-display-name": "AI Edition"
+  }
+]

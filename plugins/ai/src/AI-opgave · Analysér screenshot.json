@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Analysér screenshot",
+  "caption": "Analysér screenshot",
+  "ai-category": "TiddlyWiki og automatisering",
+  "description": "Indsæt et screenshot direkte i chatten for at undersøge en fejl eller en brugerflade.",
+  "ai-prompt": "Undersøg det vedhæftede screenshot. Beskriv hvad der er synligt, peg på mulige fejl i TiddlyWiki-brugerfladen, og forklar hvilke oplysninger eller kode der skal kontrolleres. Skeln mellem det du ser, og det du kun kan antage.",
+  "type": "text/vnd.tiddlywiki",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "text": "<div class=\"huw-ai-cover\">\n<div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"482\"/></h2><p><$huwiki-ai-label key=\"484\"/></p></div>\n<p><$huwiki-ai-label key=\"485\"/> <strong>⌘V</strong> <$huwiki-ai-label key=\"486\"/> <strong><$huwiki-ai-label key=\"487\"/></strong> <$huwiki-ai-label key=\"488\"/></p>\n<$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button>\n<p class=\"huw-ai-note\"><$huwiki-ai-label key=\"489\"/></p>\n</div>\n",
+  "ai-ui-caption-en": "Analyse screenshot",
+  "ai-ui-description-en": "Paste a screenshot directly into chat to investigate an error or an interface.",
+  "ai-ui-category-en": "TiddlyWiki and automation"
+}

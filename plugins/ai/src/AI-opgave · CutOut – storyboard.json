@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · CutOut – storyboard",
+  "caption": "CutOut – storyboard",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Kreative Editions",
+  "description": "Planlæg scener til en animation",
+  "ai-prompt": "Lav et storyboard til en kort teateranimation i HUWiki CutOut. Beskriv scenografiens lag, kameravinkler, rekvisitter, tæppeskift og keyframes. Foreslå én tiddler pr. scene samt en samlet sceneliste.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"475\"/></h2><p><$huwiki-ai-label key=\"476\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "CutOut storyboard",
+  "ai-ui-description-en": "Plan scenes for an animation",
+  "ai-ui-category-en": "Creative Editions"
+}

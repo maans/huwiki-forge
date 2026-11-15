@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Forbedr tags på eksisterende tiddlere",
+  "caption": "Forbedr tags på eksisterende tiddlere",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Organisering og kvalitet",
+  "description": "Ensartede emneord, uden at du mister de eksisterende",
+  "ai-prompt": "Analyser navnene og indholdet af mine tiddlere. Foreslå en konsekvent tagstruktur, genbrug eksisterende tags når muligt, og vis før/efter for hver tiddler. Fjern aldrig tags uden min udtrykkelige godkendelse.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"441\"/></h2><p><$huwiki-ai-label key=\"442\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Improve tags on existing tiddlers",
+  "ai-ui-description-en": "Consistent keywords without losing existing tags",
+  "ai-ui-category-en": "Organisation and quality"
+}

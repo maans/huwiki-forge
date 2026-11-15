@@ -1,0 +1,13 @@
+{
+  "title": "AI-opgave · Find døde links",
+  "caption": "Find døde links",
+  "tags": "[[HUWiki AI · Opgave]]",
+  "ai-category": "Organisering og kvalitet",
+  "description": "Kontrollér interne forbindelser",
+  "ai-prompt": "Undersøg wikien for interne links til titler, der ikke findes. Opdel i stavefejl, sandsynlige omdøbninger og reelt manglende tiddlere. Foreslå rettelser, men ændr ingen links uden godkendelse.",
+  "type": "text/vnd.tiddlywiki",
+  "text": "<div class=\"huw-ai-cover\"><div class=\"huw-ai-header\"><h2><$huwiki-ai-label key=\"447\"/></h2><p><$huwiki-ai-label key=\"448\"/></p></div><p><strong><$huwiki-ai-label key=\"435\"/></strong></p><blockquote><$text text={{!!ai-prompt}}/></blockquote><div class=\"huw-ai-hero-actions\"><$button class=\"huw-ai-btn huw-ai-btn-primary\"><$action-setfield $tiddler=\"$:/temp/huwiki/ai/chat-draft\" text={{!!ai-prompt}}/><$action-navigate $to=\"HUWiki AI · Chatbibliotek\"/><$huwiki-ai-label key=\"436\"/></$button><$link class=\"huw-ai-cardlink\" to=\"HUWiki AI · Opgaver\"><$huwiki-ai-label key=\"437\"/></$link></div><div class=\"huw-ai-note\"><$huwiki-ai-label key=\"438\"/></div></div>\n",
+  "ai-ui-caption-en": "Find broken links",
+  "ai-ui-description-en": "Check internal connections",
+  "ai-ui-category-en": "Organisation and quality"
+}
