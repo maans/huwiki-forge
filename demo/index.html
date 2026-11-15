@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TiddlyWiki Forge · Edition demo</title>
+<style>
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;background:#f3f2ed;color:#163d46;font:14px/1.45 system-ui,sans-serif}
+header{display:flex;align-items:center;flex-wrap:wrap;gap:8px 18px;min-height:64px;padding:10px 18px;border-bottom:1px solid #cfdbd2;background:#fffefa}
+#home{font-weight:700;text-decoration:none;color:#163d46;white-space:nowrap}
+#name{font-weight:650}
+#status{font-size:12px;color:#526765}
+nav{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+nav a{border-radius:7px;background:#163d46;color:white;padding:8px 13px;text-decoration:none;font-size:12px;font-weight:650}
+nav span{font-size:11px;color:#526765;max-width:260px}
+#viewer{flex:1;min-height:300px;position:relative}
+#wiki{display:none;position:absolute;inset:0;width:100%;height:100%;border:0;background:white}
+#error{display:none;max-width:700px;padding:24px;margin:30px auto;color:#8a3434;background:#fffefa;border-radius:10px}
+@media(max-width:680px){header{padding:8px 12px}#home{font-size:12px}#name{font-size:12px}nav{margin-left:0;width:100%;justify-content:space-between}nav span{max-width:65%}}
+</style>
+</head>
+<body>
+<header>
+ <a id="home" href="../">F · TiddlyWiki Forge</a>
+ <strong id="name"></strong>
+ <span id="status" role="status" aria-live="polite">Loading demo…</span>
+ <nav>
+  <span id="note">Try this wiki here. Use TiddlyWiki’s Save button to keep your changes.</span>
+  <a id="customize" href="../assembler/">Customize &amp; download</a>
+ </nav>
+</header>
+<main id="viewer" aria-label="TiddlyWiki Edition demo">
+ <iframe id="wiki" title="TiddlyWiki Edition demo" allow="clipboard-read; clipboard-write"></iframe>
+ <p id="error" role="alert"></p>
+</main>
+<script type="module" src="./demo.mjs"></script>
+</body>
+</html>
