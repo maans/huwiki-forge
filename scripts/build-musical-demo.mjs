@@ -13,9 +13,9 @@ const fetchLocal=async url=>{
   return {ok:true,status:200,json:async()=>JSON.parse(content)};
  }catch(e){return {ok:false,status:e.code==="ENOENT"?404:500};}
 };
-const {tiddlers}=await loadEdition("https://forge.test/editions/musical/manifest.json",fetchLocal);
+const {manifest,tiddlers}=await loadEdition("https://forge.test/editions/musical/manifest.json",fetchLocal);
 const core=await readFile(path.join(root,"core/empty.html"),"utf8");
 const output=path.join(root,"dist-musical");
 await mkdir(output,{recursive:true});
-await writeFile(path.join(output,"Musical-Edition-Prototyp.html"),assembleHtml(core,tiddlers));
+await writeFile(path.join(output,"Forge-Musical-Studio-"+manifest.version+".html"),assembleHtml(core,tiddlers));
 console.log("Musical Edition HTML built with",tiddlers.length,"tiddlers / packages");
