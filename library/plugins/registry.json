@@ -221,7 +221,8 @@
         "plugin-type": "plugin",
         "stability": "STABILITY_1_EXPERIMENTAL",
         "license": "MIT (bundled ABCJS MIT/Petaluma OFL 1.1; JSZip MIT; see license tab)",
-        "core-version": ">=5.4.1"
+        "core-version": ">=5.4.1",
+        "dependents": "$:/plugins/huwiki/abc"
       },
       "path": "../../plugins/musescore-import/dist/plugin.json"
     },
