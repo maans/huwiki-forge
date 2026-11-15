@@ -403,6 +403,16 @@
         "name": "Retro",
         "description": "Colourful, readable retro theme inspired by PasteUp."
       }
+    },
+    "$:/plugins/huwiki/tiddlyforge": {
+      "da": {
+        "name": "TiddlyForge",
+        "description": "Tilføj Forge Plugin Library til TiddlyWikis normale pluginbiblioteker og et lille F-ikon i sideværktøjerne."
+      },
+      "en": {
+        "name": "TiddlyForge",
+        "description": "Add Forge Plugin Library to TiddlyWiki's native plugin libraries and a small F icon to the page controls."
+      }
     }
   }
 }
