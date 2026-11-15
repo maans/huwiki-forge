@@ -18,7 +18,7 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  const {manifest,tiddlers}=await loadEdition("https://forge.example/huwiki-forge/editions/music/manifest.json",localFetch);
  assert.equal(manifest.id,"music");
  assert.equal(manifest.coreVersion,"5.4.1");
- assert.equal(manifest.version,"0.1.1-test.3");
+ assert.equal(manifest.version,"0.1.2-test.1");
  assert.equal(tiddlers.length,28); // 16 existing + 10 shared Forge tiddlers + Jingle and its example
  const byTitle=new Map(tiddlers.map(t=>[t.title,t]));
   for(const title of ["$:/config/HUWikiPluginLibrary","$:/config/HUWikiCommunity","HUWiki Community","$:/huwiki/forge/page-control"])assert.ok(byTitle.has(title),title+" missing from Edition");
@@ -45,7 +45,7 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  for(const t of tiddlers.filter(t=>t.title.startsWith("$:/plugins/huwiki/lessons-"))){
   assert.equal(t.dependents,"$:/plugins/huwiki/abc",t.title);
  }
- assert.equal(byTitle.get("$:/plugins/huwiki/abc").version,"0.3.32-test.3");
+ assert.equal(byTitle.get("$:/plugins/huwiki/abc").version,"0.3.38-test.2");
  const jingle=byTitle.get("TiddlyWiki Jingle");
  assert.ok(jingle,"TiddlyWiki Jingle must be shipped as an editable tiddler");
  assert.equal(jingle["abc-swing"],"66");
@@ -66,7 +66,7 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  assert.ok(mixerSource.includes("mixer.appendChild(voiceHost)"),"written voices must be inside the mixer");
  assert.ok(mixerSource.indexOf("mixer.appendChild(voiceHost)") < mixerSource.indexOf("mixer.appendChild(accompChannels)"),"written voices must be first");
  assert.ok(mixerSource.includes("accompGrid.appendChild(wrap)"),"backing channels must be in their own lower group");
- assert.ok(mixerSource.includes("{inline:true}"),"written parts must not need a second opening");
+ assert.match(mixerSource,/\{\s*inline:\s*true(?:\s*,|\s*\})/,"written parts must not need a second opening");
  assert.ok(abc["$:/plugins/huwiki/abc/voice-controls.js"].text.includes("inline ? 'section' : 'details'"),"inline voices must not be hidden inside a second fold");
  assert.ok(abc["$:/plugins/huwiki/abc/styles.css"].text.includes(".huwabc-score .huwabc-mixer[hidden]"),"hidden mixer should really stay hidden");
  assert.ok(abc["$:/plugins/huwiki/abc/score-widget.js"].text.includes("querySelector('.huwabc-accomp-channels-grid')"),"swing should be in the audio settings, not above the voices");
