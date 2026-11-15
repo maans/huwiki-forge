@@ -20,6 +20,7 @@ const language=da?'da':'en';
 const localName=item=>item.display?.[language]?.name||item.name;
 const localDescription=item=>item.display?.[language]?.description||item.description||'';
 let choices,editions=[],included=[],revision=0,loading=false,building=false;
+const autoSelected=new Set();
 const checked=selector=>Array.from(document.querySelectorAll(selector)).filter(el=>el.checked&&!el.disabled).map(el=>el.value);
 function checkbox(parent,value,label,description,kind){
  const row=document.createElement('label');row.className='choice';
@@ -39,8 +40,16 @@ function onChoiceChange(event){
  if(input.checked)selected.delete(input.value);else selected.add(input.value);
  try{
   const result=reconcilePackageSelection(selected,input.value,input.checked,choices.packages,choices.content);
-  for(const other of document.querySelectorAll('.optional-plugin,.content-plugin,.material'))
+  autoSelected.delete(input.value);
+  if(input.checked)for(const id of result.added)if(id!==input.value)autoSelected.add(id);
+  for(const id of result.removed)autoSelected.delete(id);
+  for(const other of document.querySelectorAll('.optional-plugin,.content-plugin,.material')){
    other.checked=result.selected.has(other.value);
+   const marker=other.parentElement.querySelector('small');
+   marker.textContent=included.includes(other.value)
+    ?(other.checked?words.included:words.removed)
+    :(other.checked&&autoSelected.has(other.value)?words.auto:words.test);
+  }
   const automatic=(input.checked?result.added:result.removed).filter(id=>id!==input.value);
   const label=id=>{
    const pkg=choices.packages.find(p=>p.title===id);
@@ -59,7 +68,7 @@ function summary(){
  if(!choices)return;
  try{
   const added=resolvePackages(selection(),choices.packages,included);
-  const manual=new Set([...checked('.optional-plugin'),...checked('.content-plugin'),$('theme').value]);
+  const manual=new Set([...checked('.optional-plugin'),...checked('.content-plugin'),$('theme').value].filter(id=>!autoSelected.has(id)));
   const removed=included.filter(title=>choices.packages.some(p=>p.title===title&&p['plugin-type']==='plugin')&&!manual.has(title));
   const lines=added.map(p=>(manual.has(p.title)?'':'↳ '+words.auto+': ')+localName(p));
   lines.push(...checked('.material').map(id=>{const c=choices.content.find(c=>c.id===id);return da?c.label_da:c.label_en;}));
@@ -74,6 +83,7 @@ async function updateDescription(){
  const loaded=edition?await loadEdition(edition.manifestUrl):{tiddlers:[]};if(token!==revision)return;
  loading=false;
  included=loaded.tiddlers.filter(t=>t['plugin-type']).map(t=>t.title);
+ autoSelected.clear();
  // Start from the selected Edition's actual bundles. Preinstalled plugins
  // are checked but editable; themes/languages stay Edition infrastructure.
  for(const input of document.querySelectorAll('.optional-plugin,.content-plugin')){
