@@ -183,14 +183,34 @@ function mount(o){
    var point=svg.createSVGPoint();point.x=ev.clientX;point.y=ev.clientY;
    var local=point.matrixTransform(matrix.inverse());return {x:local.x,y:local.y};
   }
-  var start=coords(e),drag=null,finished=false;
+  var start=coords(e),drag=null,finished=false,joint=editor.isJointMove&&editor.isJointMove(id),anchor=null;
+  // In the clip editor a limb turns around its actual CutOut pivot.
+  // Dragging the puppet root still moves the whole figure.
+  if(joint&&partEl.getScreenCTM&&parent&&parent.getScreenCTM){
+   var childMatrix=partEl.getScreenCTM(),parentMatrix=parent.getScreenCTM();
+   if(childMatrix&&parentMatrix){
+    var pivot=editor.getPartPivot(id),point=svg.createSVGPoint();
+    point.x=Number(pivot.x)||0;point.y=Number(pivot.y)||0;
+    var screen=point.matrixTransform(childMatrix);
+    anchor=screen.matrixTransform(parentMatrix.inverse());
+    if(Math.hypot(start.x-anchor.x,start.y-anchor.y)<6)anchor=null;
+   }
+  }
   partEl.classList.add("huw-musical-selected-element");
   if(partEl.setPointerCapture)partEl.setPointerCapture(e.pointerId);
   function move(ev){
    var at=coords(ev),dx=at.x-start.x,dy=at.y-start.y;
    if(!drag&&Math.hypot(dx,dy)<3)return;
-   if(!drag){o.pause();drag=editor.beginPartMove(id,o.position());}
-   if(drag)drag.update(dx,dy);
+   if(!drag){o.pause();lastTap=null;drag=editor.beginPartMove(id,o.position());}
+   if(drag){
+    if(joint&&anchor){
+     var from=Math.atan2(start.y-anchor.y,start.x-anchor.x),
+      to=Math.atan2(at.y-anchor.y,at.x-anchor.x),
+      angle=(to-from)*180/Math.PI;
+     if(angle>180)angle-=360;if(angle< -180)angle+=360;
+     drag.update(0,0,angle);
+    }else drag.update(dx,dy);
+   }
   }
   function finish(commit){
    if(finished)return;finished=true;
