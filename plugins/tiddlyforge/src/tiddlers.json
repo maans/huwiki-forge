@@ -14,7 +14,7 @@
       "type": "text/vnd.tiddlywiki",
       "caption": "F · TiddlyWiki Forge",
       "description": "Åbn TiddlyWiki Forge / Open TiddlyWiki Forge",
-      "text": "\\whitespace trim\n<a href=\"https://forge.måns.dk/\" class=\"tc-btn-invisible huw-forge-home\" title=\"TiddlyWiki Forge\" aria-label=\"TiddlyWiki Forge\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:inline-flex;align-items:center;justify-content:center;font-weight:800;font-size:1.15em;line-height:1.4;padding:2px 5px;text-decoration:none\">F</a>"
+      "text": "\\whitespace trim\n<a href=\"https://forge.måns.dk/\" class=\"tc-btn-invisible\" title=\"TiddlyWiki Forge\" aria-label=\"TiddlyWiki Forge\" target=\"_blank\" rel=\"noopener noreferrer\" style=\"display:inline-flex;align-items:center;justify-content:center;vertical-align:middle\">\n<svg class=\"tc-image-tiddlyforge tc-image-button\" width=\"22pt\" height=\"22pt\" viewBox=\"0 0 22 22\" aria-hidden=\"true\" focusable=\"false\">\n<path d=\"M5.8 4.5c0-.5.4-.9.9-.9h10.5c.5 0 .9.4.9.9v1.1c0 .5-.4.9-.9.9H9v3.8h6.6c.5 0 .9.4.9.9v1.1c0 .5-.4.9-.9.9H9v4.2c0 .5-.4.9-.9.9H6.7c-.5 0-.9-.4-.9-.9z\"/>\n</svg>\n</a>"
     }
   }
 }
