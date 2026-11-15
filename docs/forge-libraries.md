@@ -1,12 +1,12 @@
-# TiddlyWiki Forge: Plugin Library og TiddlyWiki Community
+# TiddlyWiki Forge: Forge Plugin Library og TiddlyWiki Community
 
-Plugin Library leveres direkte fra [Forge på GitHub](https://github.com/maans/huwiki-forge) gennem GitHub Pages. Der kræves **ingen Google Apps Script-server, uploadservice, database, nøgle eller konto** for at browse/hente offentlige pakker.
+Forge Plugin Library leveres direkte fra [Forge på GitHub](https://github.com/maans/huwiki-forge) gennem GitHub Pages. Der kræves **ingen Google Apps Script-server, uploadservice, database, nøgle eller konto** for at browse/hente offentlige pakker.
 
 ## Plugin Library (installerbare pakker)
 
 Adresse: **https://forge.måns.dk/library/plugins/index.html**
 
-- Integrerer med TiddlyWikis **eksisterende** *Kontrolpanel → Plugins → Get More Plugins*. Det officielle TiddlyWiki-pluginbibliotek bevares ved siden af.
+- Integrerer med TiddlyWikis **eksisterende** *Kontrolpanel → Plugins → Get More Plugins* (med navnet **Forge Plugin Library**). Det officielle TiddlyWiki-pluginbibliotek bevares ved siden af.
 - En fælles tiddler \`$:/config/HUWikiPluginLibrary\` med tag \`$:/tags/PluginLibrary\` og ovenstående URL er lagt i \`editions/shared/libraries.json\`. Alle Forge Editions indlæser denne ene fælles kilde gennem deres manifest.
 - Den statiske \`library/plugins/index.html\` implementerer TiddlyWikis officielle \`GET\`/\`GET-RESPONSE\`-iframe-protokol for \`recipes/library/tiddlers.json\` og \`recipes/library/tiddlers/<title>.json\`. Der er **ingen** skriveendepunkter.
 - \`library/plugins/registry.json\` indeholder kun kort metadata og relative stier til de **originale** \`plugins/<id>/dist/plugin.json\` og \`themes/<id>/dist/theme.json\`. Den faktiske pluginpakke hentes først, når brugeren installerer den.
@@ -22,13 +22,13 @@ Adresse: **https://tiddlywiki.com/#Community**
 - Forge henviser til TiddlyWikis eksisterende fællesskab. Det tidligere ekstra Edition-katalog på `/community/` er erstattet med en viderestilling.
 - Community har ingen `$:/tags/SideBar`-markering og vises derfor ikke som en fane i nye Editions.
 - De gamle tiddlertitler `HUWiki Community` og `$:/config/HUWikiCommunity` bevares kun for kompatibilitet med gemte wikier. Deres tekst og adresse peger nu på TiddlyWiki; begge har tomme tags.
-- Teksten følger TiddlyWikis `$:/language`. Plugin Library bevarer sin normale plads i pluginbiblioteket.
+- Teksten følger TiddlyWikis `$:/language`. Forge Plugin Library bevarer sin normale plads i pluginbiblioteket.
 
 ## Læsetilstand og eksisterende kopier
 
 - Den fælles sidebar-tilpasning skjuler Tools via den eksisterende `$:/temp/HUWiki/AuthorReadingMode`-tilstand. Den tilføjer hverken en ny læseknap eller en ny standardtilstand.
 - Hvis Tools var valgt, skifter sidepanelet til Open ved aktivering af læsetilstand. Tools vender tilbage i redigeringstilstand. Kontrolpanelet og Gem bevares.
-- Allerede gemte HTML-wikier opdateres ikke automatisk. Importér den opdaterede fælles konfiguration, gem og genåbn, eller hent en ny Edition. Eksisterende indhold skal ikke overskrives.
+- **Eksisterende wikier:** En gammel wiki kan stadig vise den tidligere caption *Plugin Library*. Den findes i tiddleren `$:/config/HUWikiPluginLibrary` og kan ændres ved at sætte feltet `caption` til `Forge Plugin Library` uden at ændre URL eller pluginindhold. Allerede gemte HTML-wikier opdateres ikke automatisk. Importér den opdaterede fælles konfiguration, gem og genåbn, eller hent en ny Edition. Eksisterende indhold skal ikke overskrives.
 
 ## Tailscale Serve/Funnel
 
@@ -37,5 +37,5 @@ Adresse: **https://tiddlywiki.com/#Community**
 ## Status og manuel afprøvning
 
 - CI validerer sammensætning af de fem Editions, metadata, versionssynkronisering og \`GET\`/\`GET-RESPONSE\`-protokollen.
-- Kontrollér manuelt i den **downloadede** HTML-wiki på Mac/iPad: *Get More Plugins* → Plugin Library → vælg og installer en mindre pluginpakke → Gem/genåbn wiki. Kontrollér at Community-fanen er væk, og at Tools skjules i læsetilstand.
+- Kontrollér manuelt i den **downloadede** HTML-wiki på Mac/iPad: *Get More Plugins* → Forge Plugin Library → vælg og installer en mindre pluginpakke → Gem/genåbn wiki. Kontrollér at Community-fanen er væk, og at Tools skjules i læsetilstand.
 - Gemte wikier fra **før** denne ændring opdateres ikke automatisk; byg en ny Edition eller importér den fælles biblioteks-konfiguration.
