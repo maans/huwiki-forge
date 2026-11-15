@@ -22,6 +22,18 @@ function ensureMusical(film){var m=film.musical||(film.musical={version:1});
  if(!Array.isArray(m.cuts))m.cuts=[{t:0,camera:"A"},{t:6,camera:"B"},{t:8,camera:"A"},{t:10,camera:"B"},{t:12,camera:"A"}];
  if(!m.lighting)m.lighting={keys:[{t:0,intensity:1},{t:4,intensity:.78},{t:8,intensity:1},{t:12,intensity:.85},{t:15.5,intensity:1}]};
  if(!Array.isArray(m.animationClips))m.animationClips=[];
+ // Capture the original rest pose once, independently from editable keys.
+ // This keeps beat-zero edits visible and preserves changes to the puppet rig.
+ m.animationClips.forEach(function(c){
+  c.motionReference=c.motionReference||{};
+  Object.keys(c.motion||{}).forEach(function(id){
+   var first=(c.motion[id]||[])[0];if(!first||c.motionReference[id])return;
+   c.motionReference[id]={};
+   ["x","y","r","sx","sy","opacity"].forEach(function(k){
+    c.motionReference[id][k]=num(first[k],k==="sx"||k==="sy"||k==="opacity"?1:0);
+   });
+  });
+ });
  return m;}
 var translations={da:{title:"Musical Studio · tidslinje",help:"Vælg et spor, indsæt kontrolpunkter ved afspilningspositionen, eller træk dem vandret. Klik på et punkt for at redigere det.",song:"Musiknummer (komplet ABC)",backdrop:"Baggrund",stage:"Scene",foreground:"Forgrund",light:"Belysning",cameraA:"Kamera A",cameraB:"Kamera B",cuts:"Kameraklip",add:"+ Kontrolpunkt",remove:"Slet punkt",time:"Tid (sek.)",x:"X",y:"Y",r:"Rotation (°)",opacity:"Synlighed",zoom:"Zoom",intensity:"Lysstyrke",camera:"Aktivt kamera",easing:"Overgang",smooth:"Blød",step:"Klip",linear:"Lineær",readonly:"Hele musiknummeret afspilles som ét samlet ABC-spor. Redigér noderne i ABC-editoren.",empty:"Vælg et kontrolpunkt eller indsæt et nyt.",saved:"Gemt i wikien"},en:{title:"Musical Studio · timeline",help:"Select a track, add keyframes at the playhead, or drag them horizontally. Click a keyframe to edit it.",song:"Song (complete ABC)",backdrop:"Background",stage:"Stage",foreground:"Foreground",light:"Lighting",cameraA:"Camera A",cameraB:"Camera B",cuts:"Camera cuts",add:"+ Keyframe",remove:"Delete keyframe",time:"Time (sec)",x:"X",y:"Y",r:"Rotation (°)",opacity:"Opacity",zoom:"Zoom",intensity:"Light intensity",camera:"Active camera",easing:"Transition",smooth:"Smooth",step:"Cut",linear:"Linear",readonly:"The whole song plays on one ABC track. Edit notation in the ABC editor.",empty:"Select a control point or insert a new one.",saved:"Saved to wiki"}};
 function attach(o){
@@ -168,7 +180,7 @@ function attach(o){
    item.elements.forEach(function(element){
     var id=element.getAttribute("data-cutout-id"),ref=nested.nodes[id];if(!ref||!ref.part)return;
     var part=ref.part,base=Engine.state(part,local),motion=clip.motion&&clip.motion[id],
-     pose=motion?Motion.animatedState(part,base,motion,ghostBeat):base,pv=part.pivot||{x:0,y:0};
+     pose=motion?Motion.animatedState(part,base,motion,ghostBeat,clip.motionReference&&clip.motionReference[id]):base,pv=part.pivot||{x:0,y:0};
     element.setAttribute("transform","translate("+pose.x+" "+pose.y+") rotate("+pose.r+") scale("+pose.sx+" "+pose.sy+") translate("+(-num(pv.x,0))+" "+(-num(pv.y,0))+")");
     element.setAttribute("opacity",String(pose.opacity));
    });
@@ -664,7 +676,14 @@ function attach(o){
    var c=activeDetail(),p=partById(id);if(!c||!p||!belongsToClip(c,id))return null;
    var t=detailTrack(c,id),span=Math.max(.125,num(c.beatsPerLoop,8)),
     beat=round(Motion.phase(c,globalTime,o.beatClock&&o.beatClock())||0);
-   c.motion=c.motion||{};var created=!c.motion[id];
+   c.motion=c.motion||{};c.motionReference=c.motionReference||{};var created=!c.motion[id];
+   if(!c.motionReference[id]){
+    var reference=created?Engine.state(p,0):(c.motion[id]||[])[0]||Engine.state(p,0);
+    c.motionReference[id]={};
+    ["x","y","r","sx","sy","opacity"].forEach(function(field){
+     c.motionReference[id][field]=num(reference[field],field==="sx"||field==="sy"||field==="opacity"?1:0);
+    });
+   }
    if(created){
     var base=Engine.state(p,0),first=Object.assign({t:0,easing:"smooth"},base);
     c.motion[id]=[first,Object.assign({},first,{t:span})];
