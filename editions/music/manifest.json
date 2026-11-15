@@ -2,10 +2,11 @@
   "schemaVersion": 1,
   "id": "music",
   "name": "Musik Edition",
-  "version": "0.1.0-test.1",
+  "version": "0.1.1-test.1",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",
+    "../shared/jingle.json",
     "../shared/libraries.json"
   ],
   "plugins": [
