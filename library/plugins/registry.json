@@ -7,7 +7,7 @@
         "title": "$:/plugins/huwiki/abc",
         "type": "application/json",
         "name": "ABC Musik",
-        "description": "ABC Musik: melody follow, swing jazz, per-voice controls within the mixer and safe notation highlighting.",
+        "description": "ABC Musik with a synchronized melody-follow player, chord views, jazz typography and per-tiddler swing playback. · Orkestermixer og beskyttet nodefølger",
         "author": "HUWiki",
         "version": "0.3.32-test.2",
         "plugin-type": "plugin",
