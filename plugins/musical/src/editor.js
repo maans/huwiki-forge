@@ -66,7 +66,8 @@ function attach(o){
  var clipHeading=el(doc,"div","huw-musical-clip-editor-heading",undefined,clipBar);
  var clipTitle=el(doc,"strong","huw-musical-clip-editor-title","",clipHeading);
  var clipMeta=el(doc,"span","huw-musical-clip-editor-meta","",clipHeading);
- var onionButton=el(doc,"button","huw-musical-onion-toggle","Onion skin",clipBar);
+ var onionButton=el(doc,"button","huw-musical-onion-toggle","Onion skin");
+ clipBar.insertBefore(onionButton,clipHeading);
  onionButton.type="button";onionButton.title=L===translations.da?"Vis eller skjul forrige og næste stilling":"Show or hide previous and next poses";
  var onionEnabled=true,onionGhosts=[];
  function onionButtonState(){onionButton.setAttribute("aria-pressed",String(onionEnabled));onionButton.classList.toggle("is-active",onionEnabled);}
