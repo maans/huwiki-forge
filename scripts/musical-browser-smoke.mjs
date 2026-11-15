@@ -108,7 +108,7 @@ try{
  await player.locator(".huw-musical-focus-button").click();
  assert.ok(await player.evaluate(el=>el.classList.contains("huw-musical--focus")));
  await mkdir(path.join(root,"dist-musical"),{recursive:true});
- await page.screenshot({path:path.join(root,"dist-musical/Musical-Studio-Layout-0.7.png"),fullPage:false});
+ await page.screenshot({path:path.join(root,"dist-musical/Musical-Studio-Layout-0.9.png"),fullPage:false});
  await player.locator(".huw-musical-focus-button").click();
  assert.ok(!(await player.evaluate(el=>el.classList.contains("huw-musical--focus"))));
  // A scene element can be moved by the contextual CutOut editor and
@@ -228,12 +228,47 @@ try{
  await performer.click();
  assert.equal(await player.locator(".huw-musical-clip-editor-bar:visible").count(),0);
  await player.locator(".huw-musical-motion-clip").first().dblclick();
- assert.equal(await player.locator(".huw-musical--clip-detail").count(),1);
+ assert.equal(await player.evaluate(el=>el.classList.contains("huw-musical--clip-detail")),true);
  assert.ok((await player.locator(".huw-musical-clip-editor-title").innerText()).includes("Trommeslager"));
  assert.equal(await player.locator('.huw-musical-track[data-group="music"]').count(),0,
   "Music and camera should not clutter one animation's editor");
  assert.ok(await player.locator(".huw-musical-detail-track").count()>=5);
  assert.equal(await player.locator(".huw-musical-score").isVisible(),false);
+ // Onion ghosts are transparent previews only, and the user can hide them
+ // without changing the saved film.
+ await slider.fill("1.25");await slider.dispatchEvent("input");
+ const onion=player.locator(".huw-musical-onion-toggle");
+ assert.equal(await onion.getAttribute("aria-pressed"),"true");
+ assert.ok(await player.locator(".huw-musical-onion-ghost").count()>=2,
+  "Neighbouring poses should appear in the animation editor");
+ const beforeOnion=$ => $.wiki.getTiddlerText("Musical – Tændstikorkestret (film)");
+ const preservedFilm=await page.evaluate(beforeOnion);
+ await onion.click();
+ assert.equal(await onion.getAttribute("aria-pressed"),"false");
+ assert.equal(await player.locator(".huw-musical-onion-ghost").count(),0,
+  "Turning onion skin off must actually remove the ghost drawings");
+ await onion.click();
+ assert.ok(await player.locator(".huw-musical-onion-ghost").count()>=2);
+ assert.equal(await page.evaluate(beforeOnion),preservedFilm,
+  "The onion-skin switch must not insert animation data");
+ // A limb drag generates an editable beat keyframe and rotates about its pivot.
+ const posed=await page.evaluate(function(){
+  function locate(w){if(w&&w._editor&&w.host&&w.host.classList.contains("huw-musical"))return w;
+   for(const c of w.children||[]){var found=locate(c);if(found)return found;}return null;}
+  const widget=locate($tw.rootWidget),api=widget&&widget._editor;
+  const title="Musical – Tændstikorkestret (film)",start=JSON.parse($tw.wiki.getTiddlerText(title));
+  const clip=start.musical.animationClips.find(x=>x.target==="drummer-root"),old=clip.motion["drummer-arm-left"].length;
+  if(!api||!api.isJointMove("drummer-arm-left"))throw Error("Puppet limb must be pivot-editable");
+  const move=api.beginPartMove("drummer-arm-left",1.25);
+  if(!move)throw Error("Missing automatic limb keyframe");
+  move.update(0,0,18);move.commit();
+  const result=JSON.parse($tw.wiki.getTiddlerText(title)).musical.animationClips.find(x=>x.target==="drummer-root");
+  const keys=result.motion["drummer-arm-left"];
+  return {old,now:keys.length,hasSmooth:keys.some(k=>k.easing==="smooth"&&k.t>0&&k.t<8),
+   changed:keys.some(k=>k.t>0&&k.t<8&&k.r!==clip.motion["drummer-arm-left"][0].r)};
+ });
+ assert.equal(posed.now,posed.old+1,"Dragging a limb at a new beat creates exactly one keyframe");
+ assert.ok(posed.hasSmooth&&posed.changed,"The new pose is a rotated smooth inbetween");
  assert.equal(await player.locator('.huw-musical-canvas [data-cutout-id="bassist-root"]').first().evaluate(el=>el.style.display),"none",
   "Only the selected performer is visible in the focused stage");
  await player.locator(".huw-musical-detail-track .huw-musical-motion-key").nth(2).click();
@@ -261,8 +296,8 @@ try{
  assert.ok((await player.locator(".huw-musical-clip-editor-title").innerText()).includes("Violin"),
   "Double-tap opens the tapped animation, not the previous one");
  await player.press("Escape");
- assert.equal(await player.locator(".huw-musical--clip-detail").count(),0);
+ assert.equal(await player.evaluate(el=>el.classList.contains("huw-musical--clip-detail")),false);
  assert.equal(await page.locator(".tc-error-form").count(),0);
  assert.deepEqual(errors,[]);
- console.log("PASS Musical: compact viewport-fit scene + timeline, CutOut element inspector, keyframe camera cuts, independent ABC crossfades, one transport");
+ console.log("PASS Musical: Pivot joint editing, onion skin switch, music/camera timeline, ABC crossfades, one transport");
 }finally{await browser.close();}
