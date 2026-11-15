@@ -25,6 +25,9 @@ test("TiddlyForge is a two-tiddler, dependency-free native TiddlyWiki plugin", a
   assert.ok(library.tags.includes("$:/tags/PluginLibrary"), "Use TiddlyWiki's built-in library selector");
   assert.ok(button.tags.includes("$:/tags/PageControls"), "Use existing page tools");
   assert.match(button.text, /href="https:\/\/forge\.måns\.dk\/"/);
+  assert.match(button.text, /tc-image-tiddlyforge tc-image-button/, "Icon must follow native toolbar styles");
+  assert.match(button.text, /width="22pt" height="22pt"/);
+  assert.doesNotMatch(button.text, /font-size|font-weight|fill=|color:/i, "No black or oversized inline glyph");
   assert.match(button.text, /target="_blank"/);
   assert.match(button.text, /rel="noopener noreferrer"/);
   assert.ok(library.text.includes("$:/language"), "Library instructions follow TiddlyWiki language");
