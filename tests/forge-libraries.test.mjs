@@ -23,7 +23,13 @@ test("Every Edition keeps the native library and links to TiddlyWiki Community w
  assert.ok(fButton.tags.includes("$:/tags/PageControls"));
  assert.match(fButton.text,/href="https:\/\/forge\.måns\.dk\/"/);
  assert.match(fButton.text,/aria-label="TiddlyWiki Forge"/);
- assert.match(fButton.text,/>F<\/a>/);
+ assert.match(fButton.text,/<svg[^>]+width="20"[^>]+height="20"/,"F icon should be smaller than the old bold text");
+ assert.match(fButton.text,/stroke="currentColor"/,"F icon should inherit the current theme");
+ assert.doesNotMatch(fButton.text,/font-weight:800|font-size:1\.15em/,"Oversized black F must not return");
+ const fStyle=config.find(t=>t.title==="$:/huwiki/forge/reader-sidebar-style").text;
+ assert.match(fStyle,/huw-forge-home \.tc-image-button \{[^}]*opacity:0\.46/,"F must be muted at rest");
+ assert.match(fStyle,/huw-forge-home:hover \.tc-image-button/,"F must darken on mouse hover");
+ assert.match(fStyle,/huw-forge-home:focus-visible \.tc-image-button/,"F must be visible on keyboard focus");
  assert.doesNotMatch(fButton.text,/ForgeShare|Tailscale|Mine wikier|Delt med mig/,"F is only a home link");
 
  assert.equal(plugin.url,pluginUrl);
