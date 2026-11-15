@@ -23,6 +23,7 @@ function label(wiki){
  };
 }
 function mount(o){
+ var Puppet=require("$:/plugins/huwiki/musical/puppet.js");
  var doc=o.doc,host=o.host,L=label(o.wiki),editor=o.editor,root=host.querySelector(".huw-musical-editor");
  if(!root)return {dispose:function(){}};
  host.classList.add("huw-musical--workspace");
@@ -36,7 +37,7 @@ function mount(o){
  function button(parent,cls,title,action){
   var b=el(doc,"button",cls,title,parent);b.type="button";b.title=title;b.addEventListener("click",action);return b;
  }
- var inspectorOpen=false,mode="split",focus=false;
+ var inspectorOpen=false,mode="split",focus=false,puppet=Puppet.mount(o),lastTap=null;
  function toggleFocus(){
   focus=!focus;host.classList.toggle("huw-musical--focus",focus);
   focusButton.textContent=focus?L.exit:L.focus;focusButton.setAttribute("aria-pressed",String(focus));
@@ -148,6 +149,7 @@ function mount(o){
   return target&&(target.closest&&target.closest("input,select,textarea,[contenteditable=true]"));
  }
  function keyboard(e){
+  if(puppet.isOpen())return;
   if(e.altKey||e.ctrlKey||e.metaKey||editingField(e.target))return;
   if(e.key==="Escape"){
    if(editor.inClipDetail&&editor.inClipDetail()){e.preventDefault();editor.closeAnimation();return;}
@@ -202,10 +204,23 @@ function mount(o){
   partEl.addEventListener("pointerup",up);
   partEl.addEventListener("pointercancel",cancel);
  }
+ function sourceId(e){var node=e.target.closest&&e.target.closest("[data-cutout-id]");return node&&svg.contains(node)?node.getAttribute("data-cutout-id"):"";}
+ function openPuppet(e){var id=sourceId(e);if(!id)return; e.preventDefault();e.stopPropagation();puppet.open(id);}
+ svg.addEventListener("dblclick",openPuppet);
+ // iPad does not reliably generate dblclick after the timeline/inspector re-render.
+ function touchOpen(e){if(e.pointerType!=="touch"&&e.pointerType!=="pen")return;
+  var id=sourceId(e);if(!id)return;
+  var now=Date.now(),tap=lastTap;lastTap={id:id,time:now,x:e.clientX,y:e.clientY};
+  if(tap&&tap.id===id&&now-tap.time<450&&Math.hypot(tap.x-e.clientX,tap.y-e.clientY)<25){
+   lastTap=null;e.preventDefault();e.stopPropagation();puppet.open(id);
+  }
+ }
+ svg.addEventListener("pointerup",touchOpen);
  svg.addEventListener("pointerdown",pointerDown);
  return {showInspector:selection,setInspector:setInspector,dispose:function(){
   host.removeEventListener("keydown",keyboard);
   svg.removeEventListener("pointerdown",pointerDown);
+  svg.removeEventListener("dblclick",openPuppet);svg.removeEventListener("pointerup",touchOpen);puppet.close();
  }};
 }
 exports.mount=mount;
