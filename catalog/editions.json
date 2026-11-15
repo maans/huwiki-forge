@@ -58,10 +58,10 @@
     {
       "id": "music",
       "name": "Musik Edition (test)",
-      "description": "ABC notation, editable TiddlyWiki Jingle with jazz follow player, full score, six teaching packs, MuseScore import and site publishing",
+      "description": "ABC notation with editable score, responsive three-tab mini mixer (Voices, Accompaniment, Chords), live playback controls, TinySynth offline fallback, MuseScore import and teaching collections",
       "status": "test",
       "manifest": "../editions/music/manifest.json",
-      "version": "0.1.1-test.3",
+      "version": "0.1.2-test.1",
       "bundledPlugins": [
         "site-publisher",
         "pdf-publisher",
@@ -70,10 +70,10 @@
       "home": {
         "headingDa": "Noder, afspilning og undervisning",
         "headingEn": "Notation, playback and teaching",
-        "descriptionDa": "Skriv noder med ABC, importer fra MuseScore, afspil TiddlyWiki Jingle med swing, og udforsk seks undervisningspakker.",
-        "descriptionEn": "Write ABC notation, import from MuseScore, play the swinging TiddlyWiki Jingle, and explore six teaching collections.",
-        "noteDa": "Afspilning, MIDI og iPad kræver fortsat afprøvning.",
-        "noteEn": "Playback, MIDI and iPad support still need testing.",
+        "descriptionDa": "Skriv ABC-noder, importer fra MuseScore, og afspil TiddlyWiki Jingle med flytbar mixer og akkorder, der følger musikken.",
+        "descriptionEn": "Write ABC notation, import from MuseScore, and play the TiddlyWiki Jingle with a detachable mixer and follow-along chord chart.",
+        "noteDa": "ABC 0.3.38-test.2 · tre mixerfaner · diskret akkordzoom −/+ · TinySynth offline-reserve.",
+        "noteEn": "ABC 0.3.38-test.2 · three mixer tabs · discreet chord zoom −/+ · offline TinySynth backup.",
         "order": "02"
       }
     },
