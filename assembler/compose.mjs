@@ -138,7 +138,7 @@ Use the plus button to add a tiddler. Use TiddlyWiki’s Save button to save you
 !! Your tools
 Find plugins and their guides in the [[Control Panel|$:/ControlPanel]]. F takes you back to Forge. Plugin Library is available in the Control Panel.
 </$list>`};
-export async function composeWiki({choices,editionId='',packageTitles=[],excludedPackageTitles=[],contentIds=[],theme='',name='',language='en-GB'},fetcher=fetch){
+export async function composeWiki({choices,editionId='',packageTitles=[],excludedPackageTitles=[],contentIds=[],excludedContentIds=[],theme='',name='',language='en-GB'},fetcher=fetch){
  if(!['en-GB','da-DK'].includes(language))throw Error('Unsupported language');
  const chosenContent=contentIds.map(id=>{const c=choices.content.find(m=>m.id===id);if(!c)throw Error('Unknown material: '+id);return c;});
  let manifest={id:'custom',plugins:[]},tiddlers=[];
@@ -160,6 +160,31 @@ export async function composeWiki({choices,editionId='',packageTitles=[],exclude
    throw Error('Package both selected and excluded: '+title);
  }
  if(excluded.size)tiddlers=tiddlers.filter(t=>!excluded.has(t.title));
+ // Edition-owned example collections are optional even when their tiddlers are
+ // in the base manifest. Only explicit titles may be removed: never infer
+ // which configuration tiddlers to remove from a source directory.
+ const excludedTitles=new Set();
+ for(const id of excludedContentIds){
+  const material=choices.content.find(c=>c.id===id);
+  if(!material||!material.defaultEditions?.includes(editionId)||
+     !Array.isArray(material.titles)||!material.titles.length)
+   throw Error('Cannot remove non-optional Edition material: '+id);
+  if(contentIds.includes(id))throw Error('Material both selected and excluded: '+id);
+  for(const title of material.titles){
+   if(!tiddlers.some(t=>t.title===title))throw Error('Edition material missing: '+title);
+   excludedTitles.add(title);
+  }
+ }
+ if(excludedTitles.size){
+  tiddlers=tiddlers.filter(t=>!excludedTitles.has(t.title));
+  const defaultTiddlers=tiddlers.find(t=>t.title==='$:/DefaultTiddlers');
+  if(defaultTiddlers){
+   let updated=defaultTiddlers.text;
+   for(const title of excludedTitles)updated=updated.replaceAll('[['+title+']]','');
+   updated=updated.replace(/\s+/g,' ').trim();
+   tiddlers=tiddlers.map(t=>t.title==='$:/DefaultTiddlers'?{...t,text:updated}:t);
+  }
+ }
  for(const bundled of tiddlers.filter(p=>p['plugin-type'])){
   const entry=registry.get(bundled.title);
   if(entry && bundled.version!==entry.version)throw Error('Bundled/registry version mismatch: '+bundled.title);
