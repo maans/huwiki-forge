@@ -25,9 +25,15 @@ try {
  const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const response=await page.goto(base);assert.equal(response.status(),200);
  await page.waitForSelector('.forge-card');
- await page.locator('[data-plugin="forgeshare"]').getByRole('heading',{name:'Share your wikis'}).waitFor();
+ await page.locator('[data-plugin="forgeshare"]').getByRole('heading',{name:'Share your wiki from Mac'}).waitFor();
  const featured=JSON.parse(await readFile(path.join(root,'editions/forge/tiddlers/featured-plugins.json'),'utf8'))[0];
- assert.equal(await page.locator('[data-plugin="forgeshare"] a').count(),featured.available==='yes'?1:0);
+ const shareCard=page.locator('[data-plugin="forgeshare"]');
+ assert.equal(await shareCard.locator('a').count(),featured.available==='yes'?2:1);
+ assert.equal(await shareCard.locator('.forge-card-action').getAttribute('href'),'https://forge.måns.dk/downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip');
+ if(featured.available==='yes')assert.equal(await shareCard.locator('.forge-card-secondary').getAttribute('href'),featured['download-url']);
+ const warning=await shareCard.locator('.forge-risk').innerText();
+ for(const phrase of ['Defender','notarized','Windows'])assert.ok(warning.includes(phrase));
+ assert.equal(await page.locator('[data-edition="ai"]').getByRole('heading',{name:'AI conversations, tasks and your models'}).count(),1);
  const catalog=JSON.parse(await readFile(path.join(root,'catalog/editions.json'),'utf8'));
  assert.equal(await page.locator('.forge-card[data-edition]').count(),catalog.editions.length);
  assert.equal(await page.getByRole('button',{name:'show sidebar',exact:true}).isVisible(),true);
