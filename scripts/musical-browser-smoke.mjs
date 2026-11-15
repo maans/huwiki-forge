@@ -223,6 +223,45 @@ try{
  assert.deepEqual(concurrent.started,[true,true],"Both whole-song controllers play concurrently at the overlap");
  assert.deepEqual(concurrent.paused,[true,true],"One Pause stops both audio streams together");
  assert.ok(concurrent.events.includes("play:0")&&concurrent.events.includes("play:1"));
+ // A clip opens a *dedicated animation editor* only after double click, not on selection.
+ const performer=player.locator(".huw-musical-motion-clip").first();
+ await performer.click();
+ assert.equal(await player.locator(".huw-musical-clip-editor-bar:visible").count(),0);
+ await player.locator(".huw-musical-motion-clip").first().dblclick();
+ assert.equal(await player.locator(".huw-musical--clip-detail").count(),1);
+ assert.ok((await player.locator(".huw-musical-clip-editor-title").innerText()).includes("Trommeslager"));
+ assert.equal(await player.locator('.huw-musical-track[data-group="music"]').count(),0,
+  "Music and camera should not clutter one animation's editor");
+ assert.ok(await player.locator(".huw-musical-detail-track").count()>=5);
+ assert.equal(await player.locator(".huw-musical-score").isVisible(),false);
+ assert.equal(await player.locator('.huw-musical-canvas [data-cutout-id="bassist-root"]').first().evaluate(el=>el.style.display),"none",
+  "Only the selected performer is visible in the focused stage");
+ await player.locator(".huw-musical-detail-track .huw-musical-motion-key").nth(2).click();
+ const focusedChanged=await page.evaluate(function(){
+  const title="Musical – Tændstikorkestret (film)",before=$tw.wiki.getTiddlerText(title);
+  const input=Array.from(document.querySelectorAll(".huw-musical-inspector .huw-musical-property"))
+   .find(x=>x.textContent.includes("Rotation")).querySelector("input");
+  input.value="14";input.dispatchEvent(new Event("change",{bubbles:true}));
+  const film=JSON.parse($tw.wiki.getTiddlerText(title));
+  return {changed:before!==$tw.wiki.getTiddlerText(title),
+   value:film.musical.animationClips[0].motion["drummer-root"][2].r};
+ });
+ assert.ok(focusedChanged.changed&&focusedChanged.value===14,"Motion-key edits persist in the selected animation");
+ await player.locator(".huw-musical-clip-back").click();
+ assert.equal(await player.locator(".huw-musical-motion-clip").count(),6);
+ assert.equal(await player.locator('.huw-musical-canvas [data-cutout-id="bassist-root"]').first().evaluate(el=>el.style.display),"",
+  "Returning to the show must restore the full orchestra");
+ // Safari may not fire native dblclick when the first tap re-renders the clip.
+ // The pointerup fallback must open the correct *other* performer.
+ await player.locator(".huw-musical-motion-clip").nth(2).evaluate(el=>{
+  const args={pointerType:"touch",pointerId:10,button:0,clientX:320,clientY:600,bubbles:true};
+  el.dispatchEvent(new PointerEvent("pointerup",args));
+  el.dispatchEvent(new PointerEvent("pointerup",args));
+ });
+ assert.ok((await player.locator(".huw-musical-clip-editor-title").innerText()).includes("Violin"),
+  "Double-tap opens the tapped animation, not the previous one");
+ await player.press("Escape");
+ assert.equal(await player.locator(".huw-musical--clip-detail").count(),0);
  assert.equal(await page.locator(".tc-error-form").count(),0);
  assert.deepEqual(errors,[]);
  console.log("PASS Musical: compact viewport-fit scene + timeline, CutOut element inspector, keyframe camera cuts, independent ABC crossfades, one transport");
