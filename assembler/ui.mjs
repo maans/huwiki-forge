@@ -20,7 +20,7 @@ const language=da?'da':'en';
 const localName=item=>item.display?.[language]?.name||item.name;
 const localDescription=item=>item.display?.[language]?.description||item.description||'';
 let choices,editions=[],included=[],revision=0,loading=false,building=false;
-const checked=selector=>Array.from(document.querySelectorAll(selector+':checked')).filter(el=>!el.disabled).map(el=>el.value);
+const checked=selector=>Array.from(document.querySelectorAll(selector)).filter(el=>el.checked&&!el.disabled).map(el=>el.value);
 function checkbox(parent,value,label,description,kind){
  const row=document.createElement('label');row.className='choice';
  const input=document.createElement('input');input.type='checkbox';input.value=value;input.className=kind;
