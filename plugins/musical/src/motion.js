@@ -55,6 +55,34 @@ function phase(clip,time,clock){
  var span=Math.max(.125,finite(clip.beatsPerLoop,8));
  return clip.loop===false?clamp(beats,0,span):((beats%span)+span)%span;
 }
+// Return the actual neighbouring keyframe poses, not guessed time offsets.
+function neighboringPoses(clip,beat){
+ var span=Math.max(.125,finite(clip&&clip.beatsPerLoop,8)),points=[0,span];
+ Object.keys(clip&&clip.motion||{}).forEach(function(id){
+  (clip.motion[id]||[]).forEach(function(key){
+   var t=finite(key.t,-1);if(t>=0&&t<=span)points.push(t);
+  });
+ });
+ points.sort(function(a,b){return a-b;});
+ var distinct=points.filter(function(t,i){return i===0||!near(t,points[i-1]);});
+ var before=null,after=null;
+ distinct.forEach(function(t){
+  if(t<beat-.0001)before=t;
+  if(after===null&&t>beat+.0001)after=t;
+ });
+ if(before===null)before=distinct.length>2?distinct[distinct.length-2]:0;
+ if(after===null)after=distinct.length>2?distinct[1]:span;
+ return {previous:before,next:after};
+}
+// Keep the first and last poses identical when editing a seamless beat loop.
+function syncLoopSeam(keys,span,edited){
+ if(!Array.isArray(keys)||keys.length<2)return;
+ var first=keys[0],last=keys[keys.length-1];
+ if(!near(finite(first.t,-1),0)||!near(finite(last.t,-1),finite(span,8)))return;
+ var other=edited===first?last:edited===last?first:null;if(!other)return;
+ PROPERTIES.forEach(function(p){other[p]=finite(edited[p],(p==="sx"||p==="sy"||p==="opacity")?1:0);});
+ other.easing=edited.easing||"smooth";
+}
 function animatedState(part,base,keys,beat){
  var pose=sample(keys,beat),first=sample(keys,0);
  if(!pose||!first)return base;
@@ -88,5 +116,5 @@ function paint(view,film,time,clock){
   });
  });
 }
-exports.sample=sample;exports.tempoFromAbc=tempoFromAbc;exports.beatClock=beatClock;exports.phase=phase;exports.animatedState=animatedState;exports.paint=paint;
+exports.sample=sample;exports.tempoFromAbc=tempoFromAbc;exports.beatClock=beatClock;exports.phase=phase;exports.neighboringPoses=neighboringPoses;exports.syncLoopSeam=syncLoopSeam;exports.animatedState=animatedState;exports.paint=paint;
 })();
