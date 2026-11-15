@@ -6,6 +6,29 @@ const root=new URL('../',import.meta.url);
 const fetcher=async url=>{try{const data=await readFile(new URL('.'+new URL(url).pathname,root),'utf8');return {ok:true,json:async()=>JSON.parse(data)};}catch{return {ok:false,status:404};}};
 const choices=await loadChoices('https://forge.example/assembler/',fetcher);
 const title=id=>'$:/plugins/huwiki/'+id;
+test('Assembler has complete separate Danish/English labels for all current Editions, plugins and themes',async()=>{
+ const raw=JSON.parse(await readFile(new URL('../catalog/assembler-i18n.json',import.meta.url),'utf8'));
+ assert.equal(raw.schemaVersion,1);
+ assert.deepEqual(new Set(Object.keys(raw.editions)),new Set(choices.editions.map(e=>e.id)));
+ assert.deepEqual(new Set(Object.keys(raw.packages)),new Set(choices.packages.map(p=>p.title)));
+ for(const e of choices.editions){
+  assert.deepEqual(e.display,raw.editions[e.id]);
+  for(const language of ['da','en'])assert.ok(e.display[language].name.trim(),e.id+' '+language);
+ }
+ for(const p of choices.packages){
+  assert.deepEqual(p.display,raw.packages[p.title]);
+  for(const language of ['da','en']){
+   const fields=p.display[language];
+   assert.ok(fields.name.trim(),p.title+' '+language+' name');
+   assert.ok(fields.description.trim(),p.title+' '+language+' description');
+   assert.doesNotMatch(fields.description,/(^|\\s)(?:DA:|EN:)/i,p.title+' '+language);
+  }
+ }
+ const importer=choices.packages.find(p=>p.title===title('musescore-import'));
+ assert.match(importer.display.da.description,/Importér MuseScore/);
+ assert.match(importer.display.en.description,/Import MuseScore/);
+ assert.ok(importer.description.includes('DA:'),'Canonical registry metadata remains unchanged');
+});
 test('Composer includes dependency closure, native language, F and the native plugin library in a blank wiki',async()=>{
  const {tiddlers,added}=await composeWiki({choices,packageTitles:[title('music'),title('lessons-jazz')],language:'da-DK',name:'Mit værksted'},fetcher);
  assert.ok(added.find(p=>p.title===title('abc')));
