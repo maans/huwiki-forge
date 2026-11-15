@@ -56,22 +56,26 @@ test('Removing MuseScore importer leaves ABC; removing ABC removes only its depe
   /Cannot remove required Edition package.*abc/
  );
  const initial=new Set(have);
+ assert.equal(choices.packages.find(p=>p.title===title('musescore-import')).dependents,title('abc'),'Canonical plugin dependency declares ABC');
  const withoutImporter=reconcilePackageSelection(initial,title('musescore-import'),false,choices.packages);
  assert.ok(withoutImporter.selected.has(title('abc')));
  assert.ok(withoutImporter.selected.has(title('music')));
  const withoutAbc=reconcilePackageSelection(initial,title('abc'),false,choices.packages);
  assert.ok(!withoutAbc.selected.has(title('music')));
  assert.ok(!withoutAbc.selected.has(title('lessons-jazz')));
- assert.ok(withoutAbc.selected.has(title('musescore-import')),'Independent importer not silently removed');
+ assert.ok(!withoutAbc.selected.has(title('musescore-import')),'MuseScore importer requires ABC and is removed with it');
  const valid=await composeWiki({
   choices,editionId:'music',excludedPackageTitles:[...have].filter(t=>!withoutAbc.selected.has(t))
  },fetcher);
  assert.ok(!valid.tiddlers.some(t=>t.title===title('abc')));
- assert.ok(valid.tiddlers.some(t=>t.title===title('musescore-import')));
+ assert.ok(!valid.tiddlers.some(t=>t.title===title('musescore-import')),'No importer without ABC');
  const restored=reconcilePackageSelection(withoutAbc.selected,title('music'),true,choices.packages);
  assert.ok(restored.selected.has(title('abc')),'Enabling Music restores required ABC');
  assert.ok(restored.selected.has(title('music')));
  assert.ok(!restored.selected.has(title('lessons-jazz')),'Unrelated dependent remains unselected');
+ const importAgain=reconcilePackageSelection(withoutAbc.selected,title('musescore-import'),true,choices.packages);
+ assert.ok(importAgain.selected.has(title('abc')),'Choosing importer restores ABC');
+ assert.ok(importAgain.selected.has(title('musescore-import')));
 });
 test('Every existing Edition remains buildable through the composer',async()=>{
  for(const e of choices.editions){
