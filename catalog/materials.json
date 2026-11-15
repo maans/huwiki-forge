@@ -196,6 +196,23 @@
       "requires": [
         "$:/plugins/huwiki/tegne"
       ]
+    },
+    {
+      "id": "music-jingle",
+      "kind": "tiddler-collection",
+      "source": "../editions/shared/jingle.json",
+      "requires": [
+        "$:/plugins/huwiki/abc"
+      ],
+      "label_da": "TiddlyWiki Jingle · noder og følgeafspiller",
+      "label_en": "TiddlyWiki Jingle · score and follow player",
+      "defaultEditions": [
+        "music"
+      ],
+      "titles": [
+        "TiddlyWiki Jingle",
+        "TiddlyWiki Jingle – Følgeafspiller"
+      ]
     }
   ]
 }
