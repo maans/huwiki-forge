@@ -9,7 +9,7 @@ TiddlyWiki Forge skal oprette en ny, selvstændig TiddlyWiki fra en **frisk, tes
 Åbn **[Edition Assembler](https://forge.måns.dk/assembler/)** og vælg en Edition fra kataloget:
 
 - **HUPedia Edition (test):** Tosproget leksikon med artikelredigering, faktabokse og otte eksempelartikler. Brug sammen med SitePublisher og PDF Publisher efter behov.
-- **Musik Edition (test):** ABC-plugin, noder/afspilning, Musik-plugin, seks undervisningspakker, Modern-temaet, **MuseScore → ABC Importer 0.1.4-beta.1** samt SitePublisher og PDF Publisher. Kontroller noder og lyd i browseren, inden Editionen anvendes til produktion.
+- **Musik Edition (test):** ABC-plugin med følgeafspiller og swing, TiddlyWiki Jingle som redigerbart nodeeksempel, Musik-plugin, seks undervisningspakker, Modern-temaet, **MuseScore → ABC Importer 0.1.5-beta.1** samt SitePublisher og PDF Publisher. Kontroller noder og lyd i browseren, inden Editionen anvendes til produktion.
 - **Demo Edition:** Den tidligere gennemprøvede opstartstest af TiddlyWiki og et startup-plugin.
 
 Tryk **Byg Edition**. Forge henter automatisk den **fastlåste** TiddlyWiki-kerne og leverer én selvstændig HTML-fil. Du skal **ikke** selv hente `empty.html`. Åbn filen og brug TiddlyWikis indbyggede redigering og Gem-funktion.
@@ -21,6 +21,8 @@ Et valgfrit felt til en lokal `empty.html` er bevaret til versionskontrol. Den o
 Kør `npm test` (Node.js 20+) for de automatiske tests. De kontrollerer nu også HUPedia-komponenter og samling mod den fastlåste kerne. Enhedstests kan ikke erstatte reel browserafprøvning.
 
 Se [migrationsstatus](docs/migration-status.md), [overførselsinventar fra OAuthLab](docs/oauthlab-transfer-inventory.md), [det lette materialekatalog](catalog/materials.json), [AI Editionens forbindelsesdesign](docs/ai-connections.md) og [HUWiki-kildeanalysen](docs/huwiki-source-analysis.md).
+
+**TiddlyWiki Jingle:** Forge-forsiden har en kompakt nodefølger med melodi og becifringer. Alle stemmer og akkompagnement spilles. Det tosprogede link **Åbn / Open** åbner kompositionens fulde, redigerbare tiddler. Makroen `<<abc-player ...>>` og dens parametre forklares i ABC-pluginets hjælp.
 
 ## Plugin Library og TiddlyWiki Community
 
