@@ -39,6 +39,6 @@ jobs:
           path: |
             dist-musical/Musical-Studio-Layout-Test.html
             dist-musical/Musical-Studio-Layout-Test.zip
-            dist-musical/Musical-Studio-Layout-0.5.png
+            dist-musical/Musical-Studio-Layout-0.6.png
           if-no-files-found: error
           retention-days: 14
