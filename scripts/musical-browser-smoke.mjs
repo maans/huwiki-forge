@@ -108,7 +108,7 @@ try{
  await player.locator(".huw-musical-focus-button").click();
  assert.ok(await player.evaluate(el=>el.classList.contains("huw-musical--focus")));
  await mkdir(path.join(root,"dist-musical"),{recursive:true});
- await page.screenshot({path:path.join(root,"dist-musical/Musical-Studio-Layout-0.5.png"),fullPage:false});
+ await page.screenshot({path:path.join(root,"dist-musical/Musical-Studio-Layout-0.6.png"),fullPage:false});
  await player.locator(".huw-musical-focus-button").click();
  assert.ok(!(await player.evaluate(el=>el.classList.contains("huw-musical--focus"))));
  // A scene element can be moved by the contextual CutOut editor and
@@ -133,6 +133,20 @@ try{
  const tracks=player.locator(".huw-musical-track");
  assert.ok(await tracks.count()>=15,"Each complete ABC tune needs its own track");
  assert.equal(await player.locator(".huw-musical-song-clip").count(),2,"Two complete ABC tracks are visible");
+ assert.equal(await player.locator(".huw-musical-motion-clip").count(),6,"Six reusable performer clips replace dense keyframe lanes");
+ const mover=player.locator('.huw-musical-canvas [data-cutout-id="drummer-root"]').nth(1);
+ await slider.fill("18");await slider.dispatchEvent("input");
+ const secondScenePose=await mover.getAttribute("transform");
+ await slider.fill("18.5");await slider.dispatchEvent("input");
+ assert.notEqual(await mover.getAttribute("transform"),secondScenePose,
+  "Orchestra dancers should stay animated in the second half of the 30s show");
+ await player.locator(".huw-musical-motion-clip").first().click();
+ assert.ok(await player.locator(".huw-musical-motion-row").count()>=5,
+  "Opening one motion clip exposes its per-part beat-keyframes without cluttering all tracks");
+ await player.locator(".huw-musical-motion-row .huw-musical-key").nth(2).click();
+ assert.ok(await player.evaluate(el=>el.classList.contains("huw-musical--inspector-open")),
+  "A nested beat-keyframe opens editable properties");
+ await player.locator(".huw-musical-inspector-close").click();
  assert.equal(await player.locator(".huw-musical-track:has(.huw-musical-song-clip)").count(),2);
  assert.equal(await player.locator(".huw-musical-fade-left").count(),2);
  assert.equal(await player.locator(".huw-musical-fade-right").count(),2);
