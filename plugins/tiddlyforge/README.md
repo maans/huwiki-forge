@@ -2,7 +2,7 @@
 
 A minimal bootstrap plugin for an existing TiddlyWiki 5 wiki. It **does not install extra features** or replace the official library.
 
-- Adds an **F** link to the existing TiddlyWiki page controls (opens https://forge.måns.dk/ in a new tab).
+- Adds an **F** link to the existing TiddlyWiki page controls (opens https://forge.xn--mns-ula.dk/ in a new tab).
 - Adds **Forge Plugin Library** to the regular **Control Panel → Plugins → Get More Plugins** library selector, alongside the official TiddlyWiki library.
 - Uses the existing TiddlyWiki language setting for the library instructions (Danish/English).
 
@@ -10,7 +10,7 @@ A minimal bootstrap plugin for an existing TiddlyWiki 5 wiki. It **does not inst
 
 Download or import [plugin.json](dist/plugin.json) into an existing TiddlyWiki. Confirm the standard TiddlyWiki import, save the wiki, and use **Get More Plugins**. Select **Forge Plugin Library** to browse packages in the normal TiddlyWiki interface.
 
-The standalone file is also served at https://forge.måns.dk/plugins/tiddlyforge/dist/plugin.json .
+The standalone file is also served at https://forge.xn--mns-ula.dk/plugins/tiddlyforge/dist/plugin.json .
 
 ## Source
 
