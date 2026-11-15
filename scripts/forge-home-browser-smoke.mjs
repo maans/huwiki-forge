@@ -76,7 +76,7 @@ try {
   const card=page.locator(`[data-edition="${edition.id}"]`);
   assert.equal(await card.locator('.forge-card-action').getAttribute('href'),'https://forge.måns.dk/assembler/?edition='+edition.id+'&lang=en');
   assert.equal(await card.locator('.forge-card-demo').getAttribute('href'),'https://forge.måns.dk/demo/?edition='+edition.id+'&lang=en');
-  assert.equal(await card.locator('.forge-card-demo').innerText(),'Open demo ↗');
+  assert.equal((await card.locator('.forge-card-demo').innerText()).replace(/\\s+/g,' ').trim(),'Open demo ↗');
  }
  assert.ok((await page.locator('.forge-home').innerText()).includes('does not change the public website'));
  if(process.env.FORGE_SCREENSHOTS){await mkdir(process.env.FORGE_SCREENSHOTS,{recursive:true});await page.screenshot({path:path.join(process.env.FORGE_SCREENSHOTS,'forge-home-en.png'),fullPage:true});}
