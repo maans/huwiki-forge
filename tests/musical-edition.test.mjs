@@ -335,6 +335,18 @@ test("Musical 0.9: Pivot posing and onion skin retain the reusable CutOut animat
  assert.match(editor,/function paintOnion\(time\)/);
  assert.match(editor,/isJointMove:isJointMove,getPartPivot:getPartPivot/);
  assert.match(editor,/Motion\.syncLoopSeam\(list,span,k\)/);
+ assert.match(editor,/motionReference/);
+ assert.match(shadows["$:/plugins/huwiki/musical/puppet.js"].text,/savedClip\.motionReference/);
+ const reference={x:0,y:0,r:0,sx:1,sy:1,opacity:1};
+ const movedStart=[{t:0,x:7,y:0,r:28,sx:1,sy:1,opacity:1,easing:"smooth"},
+  {t:8,x:7,y:0,r:28,sx:1,sy:1,opacity:1,easing:"smooth"}];
+ const base={x:0,y:0,r:0,sx:1,sy:1,opacity:1};
+ const posed=M.animatedState(null,base,movedStart,0,reference);
+ assert.equal(posed.x,7,"The edited first keyframe must visibly move the part");
+ assert.equal(posed.r,28,"The edited first keyframe must visibly rotate the part");
+ const adjustedRig=M.animatedState(null,{...base,x:3},movedStart,0,reference);
+ assert.equal(adjustedRig.x,10,"Editing the puppet rig must offset every animation pose");
+
  assert.match(workspace,/getScreenCTM\(\)/);
  assert.match(workspace,/Math\.atan2\(at\.y-anchor\.y,at\.x-anchor\.x\)/);
  assert.match(workspace,/drag\.update\(0,0,angle\)/);
