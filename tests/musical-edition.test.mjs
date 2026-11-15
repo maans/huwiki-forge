@@ -296,3 +296,50 @@ test("Reusable animation loops follow ABC quarter-note tempo and continue into s
  assert.match(editor,/huw-musical-motion-row/);
  assert.match(editor,/huw-musical-accent-key/);
 });
+
+
+test("Musical 0.9: Pivot posing and onion skin retain the reusable CutOut animation model",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json");
+ const shadows=JSON.parse(plugin.text).tiddlers;
+ assert.equal(plugin.version,"0.9.0-test.1");
+ const motion=shadows["$:/plugins/huwiki/musical/motion.js"].text;
+ const editor=shadows["$:/plugins/huwiki/musical/editor.js"].text;
+ const workspace=shadows["$:/plugins/huwiki/musical/workspace.js"].text;
+ const css=shadows["$:/plugins/huwiki/musical/styles.css"].text;
+ for(const name of ["editor.js","motion.js","workspace.js"]){
+  assert.equal(shadows["$:/plugins/huwiki/musical/"+name].text,await read("plugins/musical/src/"+name),
+   "The installed plugin must contain the edited source for "+name);
+ }
+ new vm.Script(motion);new vm.Script(editor);new vm.Script(workspace);
+ const context={exports:{},require:()=>({})};
+ new vm.Script(motion).runInNewContext(context);
+ const M=context.exports;
+ const keys=[
+  {t:0,x:0,y:0,r:0,sx:1,sy:1,opacity:1,easing:"smooth"},
+  {t:2,x:4,y:0,r:90,sx:1,sy:1,opacity:1,easing:"smooth"},
+  {t:6,x:4,y:0,r:0,sx:1,sy:1,opacity:1,easing:"smooth"},
+  {t:8,x:0,y:0,r:0,sx:1,sy:1,opacity:1,easing:"smooth"}
+ ];
+ assert.equal(M.sample(keys,1).r,45,"Default smooth inbetweening should interpolate poses");
+ const clip={beatsPerLoop:8,motion:{arm:keys}};
+ const before=M.neighboringPoses(clip,1);
+ assert.equal(before.previous,0);assert.equal(before.next,2);
+ const atStart=M.neighboringPoses(clip,0);
+ assert.equal(atStart.previous,6);assert.equal(atStart.next,2);
+ keys[0].r=23;M.syncLoopSeam(keys,8,keys[0]);
+ assert.equal(keys[3].r,23,"First and last pose must match in a loop");
+ keys[3].x=17;M.syncLoopSeam(keys,8,keys[3]);
+ assert.equal(keys[0].x,17,"Editing the last pose must update the first");
+ assert.match(editor,/huw-musical-onion-toggle/);
+ assert.match(editor,/onionEnabled=!onionEnabled/);
+ assert.match(editor,/function paintOnion\(time\)/);
+ assert.match(editor,/isJointMove:isJointMove,getPartPivot:getPartPivot/);
+ assert.match(editor,/Motion\.syncLoopSeam\(list,span,k\)/);
+ assert.match(workspace,/getScreenCTM\(\)/);
+ assert.match(workspace,/Math\.atan2\(at\.y-anchor\.y,at\.x-anchor\.x\)/);
+ assert.match(workspace,/drag\.update\(0,0,angle\)/);
+ assert.match(css,/huw-musical-onion-ghost/);
+ assert.match(css,/touch-action:none/);
+ const manifest=await json("editions/musical/manifest.json");
+ assert.equal(manifest.version,plugin.version);
+});
