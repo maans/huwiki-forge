@@ -4,15 +4,15 @@
     {
       "id": "forge",
       "name": "TiddlyWiki Forge (landingswiki)",
-      "description": "Editable bilingual Forge homepage, shared Plugin Library and Community, and a local-copy-friendly TiddlyWiki",
+      "description": "Bilingual Forge homepage with editable ABC Jingle follow-score card, plugin library and standalone wiki download",
       "status": "test",
       "manifest": "../editions/forge/manifest.json",
-      "version": "0.1.0-test.1",
+      "version": "0.1.1-test.1",
       "home": {
         "headingDa": "Tag denne forside med dig",
         "headingEn": "Keep your own copy of this page",
-        "descriptionDa": "Tag denne indgang til Editions og biblioteker med dig som en lokal wiki.",
-        "descriptionEn": "Keep this gateway to Editions and libraries as your own local wiki.",
+        "descriptionDa": "Forge-forsiden med en interaktiv Jingle og redigerbare noder.",
+        "descriptionEn": "Forge landing wiki with an interactive Jingle and editable music notation.",
         "noteDa": "Biblioteker og nye downloads kræver internet.",
         "noteEn": "Libraries and new downloads require internet access.",
         "order": "06"
@@ -58,10 +58,10 @@
     {
       "id": "music",
       "name": "Musik Edition (test)",
-      "description": "ABC notation and playback · six teaching packs · MuseScore/MusicXML batch import · site/PDF publishing",
+      "description": "ABC notation, editable TiddlyWiki Jingle with jazz follow player, full score, six teaching packs, MuseScore import and site publishing",
       "status": "test",
       "manifest": "../editions/music/manifest.json",
-      "version": "0.1.0-test.1",
+      "version": "0.1.1-test.1",
       "bundledPlugins": [
         "site-publisher",
         "pdf-publisher",
@@ -70,8 +70,8 @@
       "home": {
         "headingDa": "Noder, afspilning og undervisning",
         "headingEn": "Notation, playback and teaching",
-        "descriptionDa": "Skriv noder med ABC, importer fra MuseScore og udforsk seks undervisningspakker.",
-        "descriptionEn": "Write ABC notation, import from MuseScore and explore six teaching collections.",
+        "descriptionDa": "Skriv noder med ABC, importer fra MuseScore, afspil TiddlyWiki Jingle med swing, og udforsk seks undervisningspakker.",
+        "descriptionEn": "Write ABC notation, import from MuseScore, play the swinging TiddlyWiki Jingle, and explore six teaching collections.",
         "noteDa": "Afspilning, MIDI og iPad kræver fortsat afprøvning.",
         "noteEn": "Playback, MIDI and iPad support still need testing.",
         "order": "02"
@@ -193,7 +193,7 @@
     {
       "id": "musescore-import",
       "name": "MuseScore → ABC Importer",
-      "version": "0.1.4-beta.1",
+      "version": "0.1.5-beta.1",
       "description": "Independent MusicXML/MuseScore to ABC importer; automatically included in Music Edition; preview and native TiddlyWiki import",
       "file": "../plugins/musescore-import/dist/plugin.json",
       "status": "test"
