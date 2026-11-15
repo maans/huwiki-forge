@@ -40,11 +40,16 @@ jobs:
           node scripts/build-forge-home.mjs
           node scripts/build-forge-home.mjs --check
           git diff --check
+      - name: Rebuild InstantWiki service and verify its reviewed plugin
+        run: |
+          node scripts/build-instantwiki.mjs
+          node scripts/build-instantwiki.mjs --check
+          git diff --exit-code -- plugins/instantwiki/dist/plugin.json
       - name: Commit only generated website outputs
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- index.html library/plugins/registry.json editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
+          git add -- index.html instantwiki/index.html library/plugins/registry.json editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
           if ! git diff --cached --quiet; then
             git commit -m 'build(forge): publish generated landing wiki and plugin registry'
             git push origin HEAD:main

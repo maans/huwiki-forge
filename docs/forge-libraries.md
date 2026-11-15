@@ -39,3 +39,10 @@ Adresse: **https://tiddlywiki.com/#Community**
 - CI validerer sammensætning af de fem Editions, metadata, versionssynkronisering og \`GET\`/\`GET-RESPONSE\`-protokollen.
 - Kontrollér manuelt i den **downloadede** HTML-wiki på Mac/iPad: *Get More Plugins* → Forge Plugin Library → vælg og installer en mindre pluginpakke → Gem/genåbn wiki. Kontrollér at Community-fanen er væk, og at Tools skjules i læsetilstand.
 - Gemte wikier fra **før** denne ændring opdateres ikke automatisk; byg en ny Edition eller importér den fælles biblioteks-konfiguration.
+
+
+## Versioner, geninstallation og kilder
+
+*Geninstaller* er TiddlyWikis normale knap for et plugin, der allerede er installeret. Den betyder ikke i sig selv, at den nyeste udgave er installeret; sammenlign den viste biblioteksversion med versionen i din wiki. Geninstallér, gem og genindlæs wikien for at tage en ny udgivet pakke i brug. Ændringer i åbne udviklingsforslag (PR'er) er **ikke** udgivet i biblioteket, før de er lagt på `main`.
+
+Forge-forsiden og InstantWiki-tjenesten indeholder kopier af den fælles biblioteksopsætning. Publiceringsworkflowet genopbygger begge genererede HTML-wikier, når en ny pluginpakke, et tema eller bibliotekskonfigurationen ændres. CI kontrollerer også, at den importerbare InstantWiki-pluginpakke fortsat svarer til den godkendte kildekode.
