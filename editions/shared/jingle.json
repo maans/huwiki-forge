@@ -1,0 +1,29 @@
+[
+  {
+    "created": "20261114210146060",
+    "text": "TiddlyWiki Jingle · Swing jazz (2015). Redigér melodien, orkesterstemmer, klange og mixer i dette fulde nodeark.\n\nFølgeafspiller og makroparametre: [[HUWiki ABC – Følgeafspiller og makroer]].",
+    "title": "TiddlyWiki Jingle",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Tiddlywiki\nC:Måns Mårtensson -2015\nM:4/4\nL:1/8\nQ:1/4=164\nV:1 name=\"\" clef=treble snm=\"\"\nV:2 name=\"\" clef=treble snm=\"\"\nV:3 name=\"\" clef=bass snm=\"\"\nV:4 name=\"\" clef=treble snm=\"\"\nV:5 clef=treble\nV:6 name=\"\" clef=bass-8 snm=\"\"\nK:C\nV:1\n(3:2:3G/A/G/^F |: GE z2 z4 | z2 (3:2:3G/A/G/^F (3:2:3G/A/G/F (3:2:3G/A/G/F | GF z2 z4 | z4 z2 (3:2:3G/A/G/^F |\nGF z2 z4 | z2 (3:2:3G/A/G/^F (3:2:3G/A/G/F (3:2:3G/A/G/F | GE z2 z4 | z4 z EFG |\n_A2 AA Ac_BA | G G2 G- G3 _A/G/ | ^F2 F2 FA^GF | F6 (3:2:3G/A/G/^F |\nGE z2 D4 | C4 D2 z D | CDEB- BA z E- | E2 z E EDCD- |\nD E3- E3 F- | F4 z2 (3:2:3G/A/G/^F :| Gc _B2 A2 _A2 | GA Bc z2 ^F2 |\nV:2\nz2 |: z E z2 E2 z2 | E2 z2 z G- G2 | z F z2 F2 z2 | F4 F2 z2 |\nz F z2 F2 z2 | F4 z4 | z E z2 E2 z2 | E2 z2 E2 z2 |\nz _A z A z A z G- | GG z G- G2 z2 | _G2 G2 G2 G2 | F2 FF- F2 z2 |\nz E z2 E2 z2 | E2 z2 D4 | E4 z E- E2 | E4 z A- A2 |\nz F z2 A3 B- | BB- B4 z2 :| Gc _B2 A2 _A2 | G_G FE z2 C2 |\nV:3\nz2 |: z4 B,2 z2 | A,2 z2 z4 | z4 B,2 z2 | A,4 B,2 z2 |\nz4 B,2 z2 | A,4 z4 | z4 B,2 z2 | A,2 z2 _B,2 z2 |\nz _E z D z D z D- | DD z ^C- C2 z2 | _D2 D2 C2 C2 | C2 CB,- B,2 z2 |\nz B, z2 _B,2 z2 | A,2 z2 _A,4 | A,4 z B,- B,2 | C4 z D- D2 |\nz C z2 D3 _E- | _EE- E4 z2 :| EC E,2 F,2 ^F,2 | G,A, B,C z2 D2 |\nV:4\nz2 |: z E, z2 [E,B,]2 z2 | [E,A,]2 z2 z G,- G,2 | z F, z2 [F,B,]2 z2 | [F,A,]4 [F,B,]2 z2 |\nz F, z2 [F,B,]2 z2 | [F,A,]4 z F, z2 | z E, z2 [E,B,]2 z2 | [E,A,]2 z2 [E,_B,]2 z2 |\nz [_A,_E] z [A,D] z [A,D] z [G,-D-] | [G,D][G,D] z [G,-^C-] [G,C]2 z2 | [_G,_D]2 [G,D]2 [G,C]2 [G,C]2 | [F,C]2 [F,C][F,-B,-] [F,B,]2 z2 |\nz [E,B,] z2 [E,_B,]2 z2 | [E,A,]2 z2 [D,_A,]4 | [E,A,]4 z [E,-B,-] [E,B,]2 | [E,C]4 z [A,-D-] [A,D]2 |\nz [F,CE] z2 [A,CF]3 [B,-_E-G-] | [B,_EG][B,-E-G-] [B,EG]4 z2 :| C,2 z z z4 | z8 |\nV:5\nx2 |: C,2 E,,2 G,,2 B,,2 | C,2 ^G,,2 A,,2 _E,2 | D,2 _A,,2 G,,2 ^C,2 | D,2 A,,2 G,,2 ^C,2 |\nD,2 _A,,2 G,,2 ^C,2 | D,2 A,,2 G,,2 B,,2 | C,2 E,,2 G,,2 B,,2 | C,2 E,,2 G,,2 _G,,2 |\nF,2 B,,2 _B,,2 F,2 | E,2 _B,,2 A,,2 E,2 | _E,2 A,,2 _A,,2 E,2 | D,2 _A,,2 G,,2 D,_D, |\nC,2 E,,2 G,,2 _G,,2 | F,,2 A,,2 _B,,2 B,,2 | A,,2 A,,2 _A,,2 A,,2 | G,,2 G,,2 _G,,2 G,,2 |\nD,2 E,,2 F,,2 ^F,,2 | G,,2 A,,2 ^A,,2 B,,2 :| x8 | x8 |\nV:6\nz2 |: \"C\"C,2 E,,2\"Cmaj7\" G,,2 B,,2 | \"C6\"C,2 ^G,,2\"A7\" A,,2 _E,2 | \"Dm7\"D,2 _A,,2\"G7\" G,,2 ^C,2 | \"Dm7\"D,2 A,,2\"G7\" G,,2 ^C,2 |\n\"Dm7\"D,2 _A,,2\"G7\" G,,2 ^C,2 | \"Dm7\"D,2 A,,2\"G7\" G,,2 B,,2 | \"C\"C,2 E,,2\"Cmaj7\" G,,2 B,,2 | \"C6\"C,2 E,,2\"C7\" G,,2 _G,,2 |\n\"Fm7\"F,2 B,,2\"Bb7\" _B,,2 F,2 | \"Em7\"E,2 _B,,2\"A7\" A,,2 E,2 | \"Ebm7\"_E,2 A,,2\"Ab7\" _A,,2 E,2 | \"Dm7\"D,2 _A,,2\"G7\" G,,2 D,_D, |\n\"Cmaj7\"C,2 E,,2\"C7\" G,,2 _G,,2 | \"Fmaj7\"F,,2 A,,2\"Bb7\" _B,,2 B,,2 | \"Ami9\"A,,2 A,,2\"E\" _A,,2 A,,2 | \"C\"G,,2 G,,2\"D\" _G,,2 G,,2 |\n\"Dmi9\"D,2 E,,2\"F\" F,,2\"F#o\" ^F,,2 | \"G7#5\"G,,2 A,,2 ^A,,2 B,,2 :| C,2 E,,2 F,,2 ^F,,2 | G,,A,, B,,C, z2 C,,2 |\n",
+    "abc-bars-per-line": "4",
+    "huwiki-import-source": "TWJingle.mscz",
+    "huwiki-import-format": "mscx",
+    "huwiki-import-range": "1-21",
+    "huwiki-import-original-instruments": "Piano / Violins 2 / Trombone / Guitar / Acoustic Bass",
+    "modified": "20261115005000000",
+    "abc-key": "C",
+    "abc-meter": "4/4",
+    "abc-rhythm": "",
+    "abc-view": "full",
+    "abc-accompaniment": "{\"droneEnabled\":false,\"droneVolume\":42,\"droneMode\":\"sa-pa\",\"droneTimbre\":\"shruti\",\"droneSa\":\"auto\",\"enabled\":true,\"metronome\":false,\"metronomeVolume\":60,\"metronomeSound\":\"wood\",\"metronomeAccent\":true,\"style\":\"swing\",\"bass\":\"walking\",\"chords\":\"jazzcomp\",\"drums\":\"swing\",\"melodyInstrument\":\"source\",\"bassInstrument\":32,\"chordInstrument\":0,\"melodyVolume\":100,\"bassVolume\":49,\"chordVolume\":48,\"drumVolume\":48,\"variation\":35,\"seed\":1,\"form\":\"auto\",\"feel\":\"form\",\"bassSource\":\"voice:5\",\"voiceSettings\":{\"0\":{\"instrument\":11,\"volume\":100,\"muted\":false},\"4\":{\"instrument\":\"inherit\",\"volume\":12,\"muted\":false},\"3\":{\"instrument\":\"inherit\",\"volume\":25,\"muted\":false}},\"repeatCounts\":{}}",
+    "tags": "ABC Jingle ForgeDemo",
+    "abc-swing": "66",
+    "abc-font": "petaluma"
+  },
+  {
+    "title": "TiddlyWiki Jingle – Følgeafspiller",
+    "type": "text/vnd.tiddlywiki",
+    "tags": "ABC Jingle Example",
+    "text": "! TiddlyWiki Jingle – følgeafspiller\n\nHer kan du afprøve og ændre parametrene til `abc-player` uden at ændre den oprindelige komposition.\n\n<<abc-player tiddler:\"TiddlyWiki Jingle\" mode:\"follow\" voice:\"1\" measures:\"3\" chords:\"below\" chord-voice:\"6\" audio:\"all\" show-title:\"no\">>\n\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\"><$link to=\"TiddlyWiki Jingle\">Åbn</$link></$list><$list filter=\"[{$:/language}!prefix[$:/languages/da]]\"><$link to=\"TiddlyWiki Jingle\">Open</$link></$list>\n\n!! Kun becifringer\n\n<<abc-player tiddler:\"TiddlyWiki Jingle\" mode:\"chords\" measures:\"3\" chord-voice:\"6\" audio:\"all\" show-title:\"no\">>\n\n!! Tilpas afspilleren\n\nLæs [[HUWiki ABC – Følgeafspiller og makroer]] om `voice`, `measures`, `chords`, `chord-voice`, `audio`, `swing` og udsnit. Hele partituret og alle instrumenterne er stadig til rådighed i [[TiddlyWiki Jingle]].\n"
+  }
+]
