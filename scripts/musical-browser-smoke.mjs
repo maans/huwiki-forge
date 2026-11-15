@@ -108,7 +108,7 @@ try{
  await player.locator(".huw-musical-focus-button").click();
  assert.ok(await player.evaluate(el=>el.classList.contains("huw-musical--focus")));
  await mkdir(path.join(root,"dist-musical"),{recursive:true});
- await page.screenshot({path:path.join(root,"dist-musical/Musical-Studio-Layout-0.6.png"),fullPage:false});
+ await page.screenshot({path:path.join(root,"dist-musical/Musical-Studio-Layout-0.7.png"),fullPage:false});
  await player.locator(".huw-musical-focus-button").click();
  assert.ok(!(await player.evaluate(el=>el.classList.contains("huw-musical--focus"))));
  // A scene element can be moved by the contextual CutOut editor and
