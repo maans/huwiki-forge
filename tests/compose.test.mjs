@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {loadChoices,composeWiki,resolvePackages,mergeTiddlers,sameOriginUrl,checkShadowConflicts} from '../assembler/compose.mjs';
+import {loadChoices,composeWiki,resolvePackages,reconcilePackageSelection,mergeTiddlers,sameOriginUrl,checkShadowConflicts} from '../assembler/compose.mjs';
 const root=new URL('../',import.meta.url);
 const fetcher=async url=>{try{const data=await readFile(new URL('.'+new URL(url).pathname,root),'utf8');return {ok:true,json:async()=>JSON.parse(data)};}catch{return {ok:false,status:404};}};
 const choices=await loadChoices('https://forge.example/assembler/',fetcher);
@@ -42,6 +42,36 @@ test('Drawing material automatically adds Tegne, Excalidraw and React with origi
  for(const id of [title('tegne'),'$:/plugins/itw/tw-excalidraw','$:/plugins/linonetwo/tw-react']){
   const p=tiddlers.find(t=>t.title===id);assert.ok(p,id);assert.ok(p.license||JSON.parse(p.text).tiddlers[id+'/license']?.text,id+' license');
  }
+});
+test('Removing MuseScore importer leaves ABC; removing ABC removes only its dependents',async()=>{
+ const baseline=await composeWiki({choices,editionId:'music',language:'da-DK'},fetcher);
+ const have=new Set(baseline.tiddlers.filter(t=>t['plugin-type']==='plugin').map(t=>t.title));
+ assert.ok(have.has(title('abc'))&&have.has(title('musescore-import')));
+ const one=await composeWiki({choices,editionId:'music',excludedPackageTitles:[title('musescore-import')]},fetcher);
+ assert.ok(one.tiddlers.some(t=>t.title===title('abc')),'ABC remains installed');
+ assert.ok(one.tiddlers.some(t=>t.title===title('music')),'Music remains installed');
+ assert.ok(!one.tiddlers.some(t=>t.title===title('musescore-import')),'Importer is removed');
+ await assert.rejects(
+  composeWiki({choices,editionId:'music',excludedPackageTitles:[title('abc')]},fetcher),
+  /Cannot remove required Edition package.*abc/
+ );
+ const initial=new Set(have);
+ const withoutImporter=reconcilePackageSelection(initial,title('musescore-import'),false,choices.packages);
+ assert.ok(withoutImporter.selected.has(title('abc')));
+ assert.ok(withoutImporter.selected.has(title('music')));
+ const withoutAbc=reconcilePackageSelection(initial,title('abc'),false,choices.packages);
+ assert.ok(!withoutAbc.selected.has(title('music')));
+ assert.ok(!withoutAbc.selected.has(title('lessons-jazz')));
+ assert.ok(withoutAbc.selected.has(title('musescore-import')),'Independent importer not silently removed');
+ const valid=await composeWiki({
+  choices,editionId:'music',excludedPackageTitles:[...have].filter(t=>!withoutAbc.selected.has(t))
+ },fetcher);
+ assert.ok(!valid.tiddlers.some(t=>t.title===title('abc')));
+ assert.ok(valid.tiddlers.some(t=>t.title===title('musescore-import')));
+ const restored=reconcilePackageSelection(withoutAbc.selected,title('music'),true,choices.packages);
+ assert.ok(restored.selected.has(title('abc')),'Enabling Music restores required ABC');
+ assert.ok(restored.selected.has(title('music')));
+ assert.ok(!restored.selected.has(title('lessons-jazz')),'Unrelated dependent remains unselected');
 });
 test('Every existing Edition remains buildable through the composer',async()=>{
  for(const e of choices.editions){
