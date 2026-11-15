@@ -66,7 +66,7 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  assert.ok(mixerSource.includes("mixer.appendChild(voiceHost)"),"written voices must be inside the mixer");
  assert.ok(mixerSource.indexOf("mixer.appendChild(voiceHost)") < mixerSource.indexOf("mixer.appendChild(accompChannels)"),"written voices must be first");
  assert.ok(mixerSource.includes("accompGrid.appendChild(wrap)"),"backing channels must be in their own lower group");
- assert.ok(mixerSource.includes("{inline:true}"),"written parts must not need a second opening");
+ assert.match(mixerSource,/\{\s*inline:\s*true(?:\s*,|\s*\})/,"written parts must not need a second opening");
  assert.ok(abc["$:/plugins/huwiki/abc/voice-controls.js"].text.includes("inline ? 'section' : 'details'"),"inline voices must not be hidden inside a second fold");
  assert.ok(abc["$:/plugins/huwiki/abc/styles.css"].text.includes(".huwabc-score .huwabc-mixer[hidden]"),"hidden mixer should really stay hidden");
  assert.ok(abc["$:/plugins/huwiki/abc/score-widget.js"].text.includes("querySelector('.huwabc-accomp-channels-grid')"),"swing should be in the audio settings, not above the voices");
