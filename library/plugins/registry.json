@@ -205,7 +205,7 @@
         "title": "$:/plugins/huwiki/musical",
         "type": "application/json",
         "name": "Musical · CutOut + ABC",
-        "description": "Musical Studio 0.8: CutOut puppet workshop with hierarchical joints, swappable parts and stage double-click",
+        "description": "Musical Studio 0.8: CutOut-compatible puppet workshop with hierarchical joints, asset replacement and direct stage editing",
         "author": "HUWiki Forge",
         "version": "0.8.0-test.1",
         "plugin-type": "plugin",
