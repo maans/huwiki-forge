@@ -65,3 +65,51 @@ test('sharing an HTML site needs no TiddlyWiki installation and Funnel asks only
   startSession:async options=>{started=true;assert.equal(options.kind,'site');assert.equal(options.codeAccess.readerCode,'visitor');assert.notEqual(options.codeAccess.editorCode,'visitor');return {url:'https://example.test.ts.net:10000',finished:new Promise(()=>{}),stop:async()=>{}};}
  });assert.equal(requested,1);assert.equal(started,true);
 });
+
+
+test('Gemini uses Google AI Studio API key via the native vault, without OAuth or browser secrets',async t=>{
+ const root=await mkdtemp(path.join(os.tmpdir(),'forgeshare-gemini-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ let saved={},calls=[];
+ const response=(data,status=200)=>new Response(JSON.stringify(data),{status});
+ const vault=new Vault({root,lock:async()=>()=>{},store:{read:async()=>structuredClone(saved),write:async x=>{saved=structuredClone(x);}},
+   library:async()=>({entries:[{id:'wiki-one',name:'AI Edition'}]}),
+   fetcher:async(url,options)=>{
+     calls.push({url,options});
+     if(url.includes('/v1beta/models?pageSize=100&pageToken=second'))return response({models:[{name:'models/gemini-3.5-flash',supportedGenerationMethods:['generateContent']}]});
+     if(url.includes('/v1beta/models?pageSize=100'))return response({models:[
+       {name:'models/gemini-2.5-flash',supportedGenerationMethods:['generateContent']},
+       {name:'models/text-embedding',supportedGenerationMethods:['embedContent']}
+     ],nextPageToken:'second'});
+     return response({candidates:[{content:{parts:[{text:'Klar'}]}}]});
+   }});
+ await assert.rejects(vault.saveConnection({name:'Gemini',provider:'gemini',serverUrl:'https://wrong.example',model:'gemini-2.5-flash',secret:''}),/Gemini/);
+ const publicConnection=await vault.saveConnection({name:'Gemini',provider:'gemini',serverUrl:'https://wrong.example',model:'gemini-2.5-flash',secret:'gemini-private-key'});
+ assert.equal(publicConnection.serverUrl,'https://generativelanguage.googleapis.com');
+ assert.equal(publicConnection.provider,'gemini');
+ assert.equal(JSON.stringify(publicConnection).includes('gemini-private-key'),false);
+ const pair=await vault.pair('wiki-one','iPad');
+ await vault.approve((await vault.pending())[0].id,[publicConnection.id],[]);
+ const list=await vault.call('wiki-one',pair.token,'models',{connectionId:publicConnection.id});
+ assert.deepEqual(list.models,['gemini-2.5-flash','gemini-3.5-flash']);
+ assert.equal(calls.length,2);
+ assert.ok(calls.every(x=>x.url.startsWith('https://generativelanguage.googleapis.com/v1beta/models')));
+ assert.ok(calls.every(x=>x.options.headers['x-goog-api-key']==='gemini-private-key'));
+ assert.ok(calls.every(x=>!x.url.includes('gemini-private-key')&&!('Authorization' in x.options.headers)));
+ await assert.rejects(vault.call('wiki-one',pair.token,'generate',{connectionId:publicConnection.id,model:'gemini-2.5-flash',messages:[{role:'user',content:'Hej'}]}),/Bekræft/);
+ const answer=await vault.call('wiki-one',pair.token,'generate',{connectionId:publicConnection.id,model:'gemini-2.5-flash',messages:[{role:'system',content:'Be brief'},{role:'user',content:'Hej'},{role:'assistant',content:'Hej'},{role:'user',content:'Sig klar'}],consent:true});
+ assert.equal(answer.content,'Klar');
+ const call=calls.at(-1);assert.equal(call.url,'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent');
+ const body=JSON.parse(call.options.body);
+ assert.equal(body.systemInstruction.parts[0].text,'Be brief');
+ assert.deepEqual(body.contents.map(c=>c.role),['user','model','user']);
+ assert.equal(JSON.stringify(answer).includes('gemini-private-key'),false);
+ await assert.rejects(vault.call('wiki-one',pair.token,'generate',{connectionId:publicConnection.id,model:'https://evil.example',messages:[{role:'user',content:'x'}],consent:true}),/Gemini-modelnavn/);
+});
+test('Gemini errors do not expose its API key, user data or raw upstream response',async t=>{
+ const root=await mkdtemp(path.join(os.tmpdir(),'forgeshare-gemini-error-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const vault=new Vault({root,lock:async()=>()=>{},store:{read:async()=>structuredClone(vault._db||{}),write:async x=>{vault._db=structuredClone(x);}},
+ library:async()=>({entries:[{id:'wiki-one'}]}),fetcher:async()=>new Response('secret-google-key', {status:403})});
+ const c=await vault.saveConnection({name:'Gemini',provider:'gemini',serverUrl:'https://generativelanguage.googleapis.com',model:'gemini-2.5-flash',secret:'secret-google-key'});
+ const pair=await vault.pair('wiki-one','iPad');await vault.approve((await vault.pending())[0].id,[c.id],[]);
+ await assert.rejects(vault.call('wiki-one',pair.token,'models',{connectionId:c.id}),e=>/403/.test(e.message)&&!e.message.includes('secret-google-key'));
+});
