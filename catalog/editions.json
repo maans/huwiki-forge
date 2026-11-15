@@ -80,17 +80,17 @@
     {
       "id": "ai",
       "name": "AI Edition (test)",
-      "description": "AI Forge 0.4.0 text conversations and tasks in TiddlyWiki, with local model mode or explicitly approved ForgeShare AI connections. Mac helper offered separately.",
+      "description": "AI Forge 0.4.1 with manual OpenAI, Claude, Gemini, LM Studio and Ollama connections, plus optional ForgeShare vault. Browser direct cloud requests are experimental.",
       "status": "test",
       "manifest": "../editions/ai/manifest.json",
-      "version": "0.4.0-test.1",
+      "version": "0.4.1-test.1",
       "home": {
         "headingDa": "Samtaler, AI-opgaver og dine egne modeller",
         "headingEn": "AI conversations, tasks and your models",
-        "descriptionDa": "Brug AI Forge til tekstsamtaler og opgaver i din egen wiki. Vælg lokal AI eller godkendte forbindelser via ForgeShare på Mac.",
-        "descriptionEn": "Use AI Forge for text chats and tasks in your own wiki. Connect to local AI or approved connections through ForgeShare on Mac.",
-        "noteDa": "Testudgave. ForgeShare er valgfri lokalt; AI-forbindelser via hjælpeappen kræver Mac, opsætning og godkendelse. Billedfunktioner udestår.",
-        "noteEn": "Test release. ForgeShare is optional for local mode; helper connections need Mac setup and approval. Image operations are pending.",
+        "descriptionDa": "Brug OpenAI, Claude, Gemini eller en lokal AI-model via LM Studio/Ollama. ForgeShare er valgfri.",
+        "descriptionEn": "Use OpenAI, Claude, Gemini or local models via LM Studio/Ollama. ForgeShare is optional.",
+        "noteDa": "Testudgave: Direkte cloud-kald kan blokeres af CORS. Nøgler gemmes ikke i wikien.",
+        "noteEn": "Test release: Direct cloud requests may be blocked by CORS. Keys are not saved in the wiki.",
         "order": "02.5"
       }
     },
