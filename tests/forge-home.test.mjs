@@ -24,10 +24,17 @@ test('Owner import only copies text of known page/design tiddlers, never plugins
  assert.throws(()=>readSavedTiddlers('<html>not a wiki</html>'),/Not a saved Forge/);
 });
 
-test('ForgeShare has a first-class home card, but no invented download before its actual registry package exists',async()=>{
+test('ForgeShare homepage separates the Mac app ZIP and public guide from its optional wiki plugin',async()=>{
  const featured=await featuredPlugins(),saved=readSavedTiddlers(await read('index.html'));
  assert.equal(featured.length,1);assert.deepEqual(saved.get('$:/huwiki/forge/forgeshare'),featured[0]);
- for(const lang of ['da','en']){const card=saved.get('$:/huwiki/forge/forgeshare-card-'+lang);assert.match(card.text,/data-plugin="forgeshare"/);assert.match(card.text,/available\[yes\]/);assert.match(card.text,/Tailscale/);}
+ for(const lang of ['da','en']){
+  const card=saved.get('$:/huwiki/forge/forgeshare-card-'+lang);
+  assert.match(card.text,/data-plugin="forgeshare"/);
+  assert.match(card.text,/ForgeShare-mac-0\\.1\\.18-test\\.zip/);
+  assert.match(card.text,/https:\\/\\/github\\.com\\/maans\\/huwiki-forge\\/blob\\/main\\/downloads\\/forgeshare\\/README\\.md/);
+  assert.doesNotMatch(card.text,/ForgeShare-plugin-mac-test\\.json/);
+  assert.match(card.text,/Tailscale/);
+ }
  if(featured[0].available==='no')assert.equal(featured[0]['download-url'],'');
- else assert.match(featured[0]['download-url'],/\/plugins\/.+\/dist\/plugin\.json$/);
+ else assert.match(featured[0]['download-url'],/\\/plugins\\/.+\\/dist\\/plugin\\.json$/);
 });
