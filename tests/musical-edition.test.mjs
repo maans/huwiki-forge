@@ -46,7 +46,14 @@ test("Orchestra has animated players, original ABC score, and editable film came
  const score=byTitle.get("Musical – Tændstikorkestret (ABC)");
  const actors=stage.parts.filter(p=>p.id.endsWith("-root"));
  assert.equal(actors.length,6);
- assert.ok(actors.every(p=>p.keys.length>=30));
+ assert.ok(actors.every(p=>p.keys.length===1),"Dense dancer keyframes should be replaced by reusable clips");
+ assert.equal(film.duration,30);
+ assert.equal(film.musical.animationClips.length,6);
+ assert.ok(film.musical.animationClips.every(c=>c.start===0&&c.duration===30&&c.beatsPerLoop===8&&c.loop===true));
+ for(const clip of film.musical.animationClips){
+  assert.ok(clip.motion[clip.target].length>=5,"Performer roots retain their motion templates");
+  for(const keys of Object.values(clip.motion)){assert.equal(keys[0].t,0);assert.equal(keys.at(-1).t,8);}
+ }
  assert.equal(stage.kind,"scene");
  assert.equal(film.kind,"theatre");
  assert.equal(film.scenes.length,2);
@@ -257,4 +264,35 @@ test("Musical Studio 0.5 is a viewport-fit editor, not a scroll-through article 
  const start=rows.find(x=>x.title==="Musical – Start").text;
  assert.match(start,/Fokusvisning/);
  assert.match(start,/Focus view/);
+});
+
+test("Reusable animation loops follow ABC quarter-note tempo and continue into scene two",async()=>{
+ const plugin=await json("plugins/musical/dist/plugin.json"),shadows=JSON.parse(plugin.text).tiddlers;
+ const source=shadows["$:/plugins/huwiki/musical/motion.js"];
+ assert.equal(source["module-type"],"library");
+ new vm.Script(source.text);
+ const context={exports:{},require:()=>({})};
+ new vm.Script(source.text).runInNewContext(context);
+ const Motion=context.exports;
+ assert.equal(Motion.tempoFromAbc("X:1\nQ:1/4=120\nK:C"),120);
+ assert.equal(Motion.tempoFromAbc("X:1\nQ:1/8=120\nK:C"),60);
+ const clock=Motion.beatClock([
+  {score:"first",start:0,duration:16},
+  {score:"second",start:14,fadeIn:2,duration:16}
+ ],title=>title==="first"?"X:1\nQ:120":"X:2\nQ:180");
+ assert.equal(clock.at(10),20);
+ assert.equal(clock.at(15),30);
+ assert.equal(clock.at(17),36);
+ const rows=await json("editions/musical/tiddlers/seed.json");
+ const film=JSON.parse(rows.find(t=>t.title==="Musical – Tændstikorkestret (film)").text);
+ const loop=film.musical.animationClips.find(c=>c.target==="drummer-root");
+ const demoClock=Motion.beatClock(film.musical.songs,()=> "Q:120");
+ const pose18=Motion.sample(loop.motion["drummer-root"],Motion.phase(loop,18,demoClock));
+ const pose185=Motion.sample(loop.motion["drummer-root"],Motion.phase(loop,18.5,demoClock));
+ assert.notEqual(pose18.x,pose185.x,"Motion must still be active after the 16-second scene boundary");
+ assert.equal(Motion.phase(loop,31,demoClock),null,"Clips stop at their intended end");
+ const editor=shadows["$:/plugins/huwiki/musical/editor.js"].text;
+ assert.match(editor,/huw-musical-motion-clip/);
+ assert.match(editor,/huw-musical-motion-row/);
+ assert.match(editor,/huw-musical-accent-key/);
 });
