@@ -7,8 +7,11 @@ on:
       - editions/forge/manifest.json
       - editions/forge/tiddlers/seed.json
       - editions/forge/tiddlers/design.json
-      - plugins/ai/dist/plugin.json
-      - plugins/forgeshare/dist/plugin.json
+      - 'plugins/**/dist/plugin.json'
+      - 'themes/**/dist/theme.json'
+      - editions/shared/libraries.json
+      - library/plugins/index.html
+      - scripts/build-forge-plugin-library.mjs
       - scripts/build-forge-home.mjs
       - scripts/build-forge-plugin-library.mjs
   workflow_dispatch:
