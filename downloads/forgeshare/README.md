@@ -1,43 +1,6 @@
-# ForgeShare – Mac-download, vejledning og versionsstatus
+# ForgeShare — Mac download, setup guide and release status
 
-**Aktuel offentlig testudgave: 0.1.18 til Mac.** Status gennemgået 15. november 2026. ForgeShare er testsoftware, ikke en færdig eller officielt signeret udgivelse.
-
-**[Hent ForgeShare til Mac (.zip)](https://forge.måns.dk/downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip)**
-
-## Dansk
-
-### Hvad henter jeg?
-
-**ZIP-filen** indeholder selve Mac-applikationen, `ForgeShare.app`, med dens hjælpefiler og indbyggede dansk/engelske hjælp. **JSON-filen** i [Forge Plugin Library](https://forge.måns.dk/library/plugins/index.html) er derimod et valgfrit **TiddlyWiki-plugin med vejledning**. Det er ikke et Mac-program. Import af pluginet starter ingen server, og pluginet er ikke nødvendigt for at køre ForgeShare på Mac.
-
-Denne README er den fælles kilde til **installationsvejledning, offentlig teststatus og versioner**. Forsiden linker direkte hertil, så status kan vedligeholdes ét sted.
-
-### Sådan bruges Mac-programmet
-
-1. Sørg for, at [Node.js](https://nodejs.org/en/download) er installeret. Det bruges til TiddlyWikis egen server.
-2. Hent ZIP-filen ovenfor, pak den **helt** ud, og åbn `ForgeShare.app`. Appen er ad hoc-signeret, men **ikke Apple Developer ID-signeret eller notariseret**. macOS kan kræve manuel godkendelse i **Systemindstillinger → Anonymitet og sikkerhed**. Brug kun programmet, hvis du stoler på kilden.
-3. Vælg eller tilføj din lokale wiki (HTML-fil eller wiki-mappe), og tryk **Åbn**. Det starter TiddlyWikis lokale Node.js-server. **Tailscale behøves ikke** til lokal brug.
-4. Vil du dele privat, skal [Tailscale](https://tailscale.com/download) være installeret og konfigureret på de relevante enheder. Vælg **Del** for at bruge dit eget private Tailscale-netværk; del kun med betroede deltagere. Offentlig Funnel-deling er endnu ikke verificeret.
-5. Brug programmets **Stop**-funktion til at afslutte en aktiv server eller deling. Tag backup af wikier før afprøvning.
-
-### Status – 15. november 2026
-
-| Funktion | Status |
-| --- | --- |
-| Lokal TiddlyWiki-server på Mac uden Tailscale | Afprøvet på Mac |
-| Privat deling med Tailscale-VPN | Afprøvet på Mac og iPad |
-| Offentlig Tailscale Funnel | **Ikke verificeret** |
-| Forbindelsesbro til AI Edition | Testfunktion; kræver opsætning og godkendelse. Billedfunktioner er ikke verificeret |
-| Windows | **Ingen offentlig download.** En tidligere Windows 0.1.18-test blev blokeret af Defender som `Trojan:Script/Wacatac.B!ml`. Detektionen er uafklaret. Omgå ikke antivirus |
-| macOS-sikkerhed | Ikke Developer ID-signeret eller notariseret; test på eget ansvar |
-
-### Versioner og videre udvikling
-
-- **0.1.18-test:** Den offentlige Mac-ZIP ovenfor. ZIP'en indeholder `ForgeShare.app` og dens hjælpefiler – ikke Windows-programmet.
-- **0.1.17 og tidligere:** Udviklingsudgaver, dokumenteret i [PR #8](https://github.com/maans/huwiki-forge/pull/8) og [ændringsloggen](https://github.com/maans/huwiki-forge/blob/feat/forgeshare-tailscale/plugins/forgeshare/CHANGELOG.md).
-- **Fremtidige Mac-versioner:** Tilføj en ny versionsmærket ZIP og opdatér denne side, før forsidens download ændres.
-
----
+[English](#english) · [Dansk](#dansk)
 
 ## English
 
@@ -75,3 +38,42 @@ The **ZIP** contains the real `ForgeShare.app`, including its helper modules and
 - **Future versions:** Publish a versioned Mac ZIP and update **this page** before changing the front-page download.
 
 [Forge homepage](https://forge.måns.dk/) · [ForgeShare development PR #8](https://github.com/maans/huwiki-forge/pull/8).
+
+---
+
+## Dansk
+
+**Aktuel offentlig testudgave: 0.1.18 til Mac.** Status gennemgået 15. november 2026. ForgeShare er testsoftware, ikke en færdig eller officielt signeret udgivelse.
+
+**[Hent ForgeShare til Mac (.zip)](https://forge.måns.dk/downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip)**
+
+### Hvad henter jeg?
+
+**ZIP-filen** indeholder selve Mac-applikationen, `ForgeShare.app`, med dens hjælpefiler og indbyggede dansk/engelske hjælp. **JSON-filen** i [Forge Plugin Library](https://forge.måns.dk/library/plugins/index.html) er derimod et valgfrit **TiddlyWiki-plugin med vejledning**. Det er ikke et Mac-program. Import af pluginet starter ingen server, og pluginet er ikke nødvendigt for at køre ForgeShare på Mac.
+
+Denne README er den fælles kilde til **installationsvejledning, offentlig teststatus og versioner**. Forsiden linker direkte hertil, så status kan vedligeholdes ét sted.
+
+### Sådan bruges Mac-programmet
+
+1. Sørg for, at [Node.js](https://nodejs.org/en/download) er installeret. Det bruges til TiddlyWikis egen server.
+2. Hent ZIP-filen ovenfor, pak den **helt** ud, og åbn `ForgeShare.app`. Appen er ad hoc-signeret, men **ikke Apple Developer ID-signeret eller notariseret**. macOS kan kræve manuel godkendelse i **Systemindstillinger → Anonymitet og sikkerhed**. Brug kun programmet, hvis du stoler på kilden.
+3. Vælg eller tilføj din lokale wiki (HTML-fil eller wiki-mappe), og tryk **Åbn**. Det starter TiddlyWikis lokale Node.js-server. **Tailscale behøves ikke** til lokal brug.
+4. Vil du dele privat, skal [Tailscale](https://tailscale.com/download) være installeret og konfigureret på de relevante enheder. Vælg **Del** for at bruge dit eget private Tailscale-netværk; del kun med betroede deltagere. Offentlig Funnel-deling er endnu ikke verificeret.
+5. Brug programmets **Stop**-funktion til at afslutte en aktiv server eller deling. Tag backup af wikier før afprøvning.
+
+### Status – 15. november 2026
+
+| Funktion | Status |
+| --- | --- |
+| Lokal TiddlyWiki-server på Mac uden Tailscale | Afprøvet på Mac |
+| Privat deling med Tailscale-VPN | Afprøvet på Mac og iPad |
+| Offentlig Tailscale Funnel | **Ikke verificeret** |
+| Forbindelsesbro til AI Edition | Testfunktion; kræver opsætning og godkendelse. Billedfunktioner er ikke verificeret |
+| Windows | **Ingen offentlig download.** En tidligere Windows 0.1.18-test blev blokeret af Defender som `Trojan:Script/Wacatac.B!ml`. Detektionen er uafklaret. Omgå ikke antivirus |
+| macOS-sikkerhed | Ikke Developer ID-signeret eller notariseret; test på eget ansvar |
+
+### Versioner og videre udvikling
+
+- **0.1.18-test:** Den offentlige Mac-ZIP ovenfor. ZIP'en indeholder `ForgeShare.app` og dens hjælpefiler – ikke Windows-programmet.
+- **0.1.17 og tidligere:** Udviklingsudgaver, dokumenteret i [PR #8](https://github.com/maans/huwiki-forge/pull/8) og [ændringsloggen](https://github.com/maans/huwiki-forge/blob/feat/forgeshare-tailscale/plugins/forgeshare/CHANGELOG.md).
+- **Fremtidige Mac-versioner:** Tilføj en ny versionsmærket ZIP og opdatér denne side, før forsidens download ændres.
