@@ -11,13 +11,24 @@ export async function readJson(url,fetcher=fetch){const r=await fetcher(url);if(
 export async function loadChoices(base,fetcher=fetch){
  const root=new URL('../',base);const registryUrl=new URL('library/plugins/registry.json',root).href;
  const materialsUrl=new URL('catalog/materials.json',root).href;
- const [catalog,registry,materials]=await Promise.all([
-  readJson(new URL('catalog/editions.json',root),fetcher),readJson(registryUrl,fetcher),readJson(materialsUrl,fetcher)
+ const localeUrl=new URL('catalog/assembler-i18n.json',root).href;
+ const [catalog,registry,materials,locales]=await Promise.all([
+  readJson(new URL('catalog/editions.json',root),fetcher),readJson(registryUrl,fetcher),
+  readJson(materialsUrl,fetcher),readJson(localeUrl,fetcher)
  ]);
- if(catalog.schemaVersion!==1||registry.schemaVersion!==1||materials.schemaVersion!==1)throw Error('Unknown Forge catalog');
+ if(catalog.schemaVersion!==1||registry.schemaVersion!==1||materials.schemaVersion!==1||
+    locales.schemaVersion!==1||!locales.editions||!locales.packages)throw Error('Unknown Forge catalog');
  const path=p=>new URL(p,root).pathname;
- const editions=catalog.editions.map(e=>({...e,manifestUrl:sameOriginUrl(e.manifest,new URL('catalog/editions.json',root),[path('editions/')])}));
- const packages=registry.items.map(e=>({...e.fields,url:sameOriginUrl(e.path,registryUrl,[path('plugins/'),path('themes/')])}));
+ // Localized display strings are separate from canonical package metadata and IDs.
+ // The native TiddlyWiki plugin library still receives the original metadata.
+ const editions=catalog.editions.map(e=>({...e,
+  display:locales.editions[e.id]||null,
+  manifestUrl:sameOriginUrl(e.manifest,new URL('catalog/editions.json',root),[path('editions/')])
+ }));
+ const packages=registry.items.map(e=>({...e.fields,
+  display:locales.packages[e.fields.title]||null,
+  url:sameOriginUrl(e.path,registryUrl,[path('plugins/'),path('themes/')])
+ }));
  const seen=new Set();for(const p of packages){if(seen.has(p.title))throw Error('Duplicate registry title: '+p.title);seen.add(p.title);}
  const content=materials.items.filter(m=>m.kind==='tiddler-collection').map(m=>({...m,url:sameOriginUrl(m.source,materialsUrl,[path('editions/')])}));
  return {root:root.href,editions,packages,content};
