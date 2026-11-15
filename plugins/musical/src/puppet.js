@@ -143,7 +143,16 @@ function mount(o){
   source.parts=combined;
   var changedParts=parts.filter(function(p){return !originalIds[p.id];});
   if(changedParts.length&&clip){var loops=film.musical&&film.musical.animationClips||[];var savedClip=loops.find(function(c){return c.id===clip.id;});
-   if(savedClip){savedClip.motion=savedClip.motion||{};changedParts.forEach(function(p){if(!savedClip.motion[p.id]){var key=Object.assign({},partBase(p)),tail=Object.assign({},key,{t:n(savedClip.beatsPerLoop,8)});savedClip.motion[p.id]=[key,tail];}});}}
+   if(savedClip){savedClip.motion=savedClip.motion||{};savedClip.motionReference=savedClip.motionReference||{};
+    changedParts.forEach(function(p){
+     var key=Object.assign({},partBase(p));
+     if(!savedClip.motionReference[p.id])savedClip.motionReference[p.id]=Object.assign({},key);
+     if(!savedClip.motion[p.id]){
+      var tail=Object.assign({},key,{t:n(savedClip.beatsPerLoop,8)});
+      savedClip.motion[p.id]=[key,tail];
+     }
+    });
+   }}
   var stageTitle=o.stageTitle,prior=o.wiki.getTiddler(stageTitle);if(!prior){msg.textContent="CutOut scene not found";return false;}
   var body=JSON.stringify(source);o.markOwnWrite(stageTitle,body);o.wiki.addTiddler(new $tw.Tiddler(prior,{title:stageTitle,text:body}));
   if(changedParts.length){var filmPrior=o.wiki.getTiddler(o.sceneTitle),filmBody=JSON.stringify(film);if(filmPrior){o.markOwnWrite(o.sceneTitle,filmBody);o.wiki.addTiddler(new $tw.Tiddler(filmPrior,{title:o.sceneTitle,text:filmBody}));}}
