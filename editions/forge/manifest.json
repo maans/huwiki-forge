@@ -2,11 +2,12 @@
   "schemaVersion": 1,
   "id": "forge",
   "name": "TiddlyWiki Forge",
-  "version": "0.1.0-test.1",
+  "version": "0.1.1-test.1",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",
     "tiddlers/seed.json",
+    "../shared/jingle.json",
     "../shared/libraries.json",
     "tiddlers/edition-index.json",
     "tiddlers/design.json",
@@ -15,6 +16,7 @@
   ],
   "plugins": [
     "../../themes/modern/dist/theme.json",
-    "../../languages/da-DK/plugin.json"
+    "../../languages/da-DK/plugin.json",
+    "../../plugins/abc/dist/plugin.json"
   ]
 }
