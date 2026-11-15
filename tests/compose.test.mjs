@@ -77,6 +77,32 @@ test('Removing MuseScore importer leaves ABC; removing ABC removes only its depe
  assert.ok(importAgain.selected.has(title('abc')),'Choosing importer restores ABC');
  assert.ok(importAgain.selected.has(title('musescore-import')));
 });
+test('Music Jingle and every standalone lesson bundle are optional, independent of ABC',async()=>{
+ const jingle=choices.content.find(c=>c.id==='music-jingle');
+ assert.ok(jingle&&jingle.defaultEditions.includes('music'));
+ const full=await composeWiki({choices,editionId:'music',language:'da-DK'},fetcher);
+ assert.ok(full.tiddlers.some(t=>t.title==='TiddlyWiki Jingle'));
+ assert.ok(full.tiddlers.some(t=>t.title==='TiddlyWiki Jingle – Følgeafspiller'));
+ const slim=await composeWiki({choices,editionId:'music',excludedContentIds:['music-jingle'],language:'da-DK'},fetcher);
+ assert.ok(!slim.tiddlers.some(t=>t.title==='TiddlyWiki Jingle'));
+ assert.ok(!slim.tiddlers.some(t=>t.title==='TiddlyWiki Jingle – Følgeafspiller'));
+ assert.ok(!slim.tiddlers.find(t=>t.title==='$:/DefaultTiddlers').text.includes('Jingle'));
+ assert.ok(slim.tiddlers.some(t=>t.title===title('abc')),'ABC remains installed');
+ assert.ok(slim.tiddlers.some(t=>t.title===title('musescore-import')),'MuseScore importer remains installed');
+ const lessonNames=['lessons-basic','lessons-jazz','lessons-rhythm','lessons-balkan','lessons-india','lessons-folk'];
+ const absent=await composeWiki({choices,editionId:'music',excludedPackageTitles:lessonNames.map(title),excludedContentIds:['music-jingle']},fetcher);
+ assert.ok(absent.tiddlers.some(t=>t.title===title('abc')));
+ for(const id of lessonNames)assert.ok(!absent.tiddlers.some(t=>t.title===title(id)),id+' omitted');
+ assert.ok(absent.tiddlers.some(t=>t.title===title('music')),'Core Music plugin remains');
+ const selected=new Set(full.tiddlers.filter(t=>t['plugin-type']==='plugin').map(t=>t.title));
+ selected.add('music-jingle');
+ for(const item of [...lessonNames.map(title),'music-jingle']){
+  const after=reconcilePackageSelection(selected,item,false,choices.packages,choices.content);
+  assert.ok(after.selected.has(title('abc')),item+' removal must not remove ABC');
+  assert.ok(!after.selected.has(item),item+' was not deselected');
+ }
+ await assert.rejects(composeWiki({choices,editionId:'music',excludedContentIds:['hupedia-examples']},fetcher),/non-optional Edition material/);
+});
 test('Every existing Edition remains buildable through the composer',async()=>{
  for(const e of choices.editions){
   const result=await composeWiki({choices,editionId:e.id},fetcher);
