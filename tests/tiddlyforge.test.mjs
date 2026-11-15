@@ -20,11 +20,11 @@ test("TiddlyForge is a two-tiddler, dependency-free native TiddlyWiki plugin", a
   assert.equal(Object.keys(entries).length, 2);
   assert.deepEqual(library, shared.find(x => x.title === library.title), "Reuse same Forge library configuration as Editions");
   assert.deepEqual(button, shared.find(x => x.title === button.title), "Reuse same F control as Editions");
-  assert.equal(library.url, "https://forge.måns.dk/library/plugins/index.html");
+  assert.equal(library.url, "https://forge.xn--mns-ula.dk/library/plugins/index.html");
   assert.equal(library.caption, "Forge Plugin Library");
   assert.ok(library.tags.includes("$:/tags/PluginLibrary"), "Use TiddlyWiki's built-in library selector");
   assert.ok(button.tags.includes("$:/tags/PageControls"), "Use existing page tools");
-  assert.match(button.text, /href="https:\/\/forge\.måns\.dk\/"/);
+  assert.match(button.text, /href="https:\/\/forge\.xn--mns-ula\.dk\/"/);
   assert.match(button.text, /tc-image-tiddlyforge tc-image-button/, "Icon must follow native toolbar styles");
   assert.match(button.text, /width="22pt" height="22pt"/);
   assert.doesNotMatch(button.text, /font-size|font-weight|fill=|color:/i, "No black or oversized inline glyph");
