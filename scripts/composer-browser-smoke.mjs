@@ -21,6 +21,15 @@ try{
  const page=await context.newPage();page.setDefaultTimeout(30000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(new URL('assembler/?lang=da',base).href);
  await page.locator('#assemble:enabled').waitFor();
+ assert.equal(await page.locator('html').getAttribute('lang'),'da');
+ assert.equal(await page.locator('input[value="$:/plugins/huwiki/music"] + strong').innerText(),'Musik');
+ const daImport=page.locator('label.choice').filter({has:page.locator('input[value="$:/plugins/huwiki/musescore-import"]')});
+ assert.equal(await daImport.locator('strong').innerText(),'MuseScore → ABC-import');
+ assert.match(await daImport.locator('p').innerText(),/^Importér MuseScore/);
+ assert.doesNotMatch(await daImport.locator('p').innerText(),/DA:|EN:/);
+ assert.equal(await page.locator('input[value="$:/plugins/huwiki/theatre"] + strong').innerText(),'Teater');
+ assert.equal(await page.locator('input[value="$:/plugins/linonetwo/tw-react"] ~ p').innerText(),'Understøttelse af React-komponenter i TiddlyWiki.');
+ assert.equal(await page.locator('input[value="$:/plugins/huwiki/music"] ~ small').innerText(),'Testpakke');
  await page.locator('#wiki-name').fill('Mit musikværksted');
  await page.locator('input[value="$:/plugins/huwiki/music"]').check();
  await page.locator('input[value="$:/plugins/huwiki/lessons-jazz"]').check();
@@ -48,7 +57,16 @@ try{
  assert.deepEqual(errors,[]);await offline.close();
  // A different starting Edition with a content dependency chain exercises base selection and helpers.
  const drawing=await browser.newPage();await drawing.goto(new URL('assembler/?edition=hupedia&lang=en',base).href);await drawing.locator('#assemble:enabled').waitFor();
+ assert.equal(await drawing.locator('html').getAttribute('lang'),'en');
  assert.equal(await drawing.locator('#edition').inputValue(),'hupedia');
+ assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/music"] + strong').innerText(),'Music');
+ const enImport=drawing.locator('label.choice').filter({has:drawing.locator('input[value="$:/plugins/huwiki/musescore-import"]')});
+ assert.equal(await enImport.locator('strong').innerText(),'MuseScore → ABC Importer');
+ assert.match(await enImport.locator('p').innerText(),/^Import MuseScore/);
+ assert.doesNotMatch(await enImport.locator('p').innerText(),/DA:|EN:/);
+ assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/theatre"] + strong').innerText(),'Theatre');
+ assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/music"] ~ small').innerText(),'Test package');
+ assert.equal(await drawing.locator('#edition option[value="tegne"]').innerText(),'Drawing Edition (test)');
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/hupedia"]').isDisabled(),true);
  await drawing.locator('input[value="tegne-examples"]').check();
  assert.match(await drawing.locator('#summary').innerText(),/React/);
@@ -58,4 +76,13 @@ try{
  assert.ok(await drawing.evaluate(()=>$tw.wiki.getPluginInfo('$:/plugins/itw/tw-excalidraw')));
  assert.equal(await drawing.locator('.tc-error-form').count(),0);
  console.log('PASS existing Edition selection, included markers, drawing content dependencies and combined wiki boot');
+ const detected=await browser.newContext({locale:'da-DK'});
+ const auto=await detected.newPage();
+ await auto.goto(new URL('assembler/?edition=ai',base).href);
+ await auto.locator('#assemble:enabled').waitFor();
+ assert.equal(await auto.locator('html').getAttribute('lang'),'da');
+ assert.equal(await auto.locator('#edition').inputValue(),'ai');
+ assert.equal(await auto.locator('input[value="$:/plugins/huwiki/music"] + strong').innerText(),'Musik');
+ await detected.close();
+ console.log('PASS localized Danish/English package names and descriptions, explicit URL language and browser detection');
 }finally{await browser.close();await new Promise(r=>server.close(r));}
