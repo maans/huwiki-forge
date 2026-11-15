@@ -29,7 +29,7 @@ try{
  assert.doesNotMatch(await daImport.locator('p').innerText(),/DA:|EN:/);
  assert.equal(await page.locator('input[value="$:/plugins/huwiki/theatre"] + strong').innerText(),'Teater');
  assert.equal(await page.locator('input[value="$:/plugins/linonetwo/tw-react"] ~ p').innerText(),'Understøttelse af React-komponenter i TiddlyWiki.');
- assert.equal(await page.locator('input[value="$:/plugins/huwiki/music"] ~ small').innerText(),'Testpakke');
+ assert.equal(await page.locator('input[value="$:/plugins/huwiki/music"] ~ small').innerText(),'Valgfrit · ikke valgt');
  await page.locator('#wiki-name').fill('Mit musikværksted');
  await page.locator('input[value="$:/plugins/huwiki/music"]').check();
  await page.locator('input[value="$:/plugins/huwiki/lessons-jazz"]').check();
@@ -65,7 +65,7 @@ try{
  assert.match(await enImport.locator('p').innerText(),/^Import MuseScore/);
  assert.doesNotMatch(await enImport.locator('p').innerText(),/DA:|EN:/);
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/theatre"] + strong').innerText(),'Theatre');
- assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/music"] ~ small').innerText(),'Test package');
+ assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/music"] ~ small').innerText(),'Optional · not selected');
  assert.equal(await drawing.locator('#edition option[value="tegne"]').innerText(),'Drawing Edition (test)');
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/hupedia"]').isChecked(),true,'Bundled HUPedia starts checked');
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/hupedia"]').isEnabled(),true,'Bundled plugins can be deselected');
@@ -94,6 +94,23 @@ try{
  const importer=music.locator('input[value="$:/plugins/huwiki/musescore-import"]');
  assert.equal(await abc.isChecked(),true);
  assert.equal(await importer.isChecked(),true);
+ assert.equal(await abc.locator('..').locator('small').innerText(),'Med fra start · kan fravælges');
+ const jingle=music.locator('input[value="music-jingle"]');
+ assert.equal(await jingle.isChecked(),true,'Jingle is included in Music Edition by default');
+ assert.equal(await jingle.locator('..').locator('small').innerText(),'Med fra start · kan fravælges');
+ await jingle.uncheck();
+ assert.equal(await abc.isChecked(),true,'Removing Jingle does not remove ABC notation');
+ assert.equal(await importer.isChecked(),true,'Removing Jingle does not remove MuseScore importer');
+ assert.equal(await jingle.locator('..').locator('small').innerText(),'Fravalgt fra Edition');
+ for(const lesson of ['lessons-basic','lessons-jazz','lessons-rhythm','lessons-balkan','lessons-india','lessons-folk']){
+  const example=music.locator('input[value="$:/plugins/huwiki/'+lesson+'"]');
+  assert.equal(await example.isChecked(),true,lesson+' included by default');
+  await example.uncheck();
+  assert.equal(await abc.isChecked(),true,lesson+' is optional, not ABC');
+ }
+ assert.equal(await music.locator('input[value="$:/plugins/huwiki/music"]').isChecked(),true,'Music plugin remains when examples are removed');
+ await jingle.check();
+ assert.equal(await jingle.isChecked(),true);
  assert.equal(await importer.isEnabled(),true);
  await importer.uncheck();
  assert.equal(await abc.isChecked(),true,'Removing MuseScore importer never removes ABC');
