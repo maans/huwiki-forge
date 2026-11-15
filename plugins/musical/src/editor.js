@@ -455,6 +455,8 @@ function attach(o){
  }
  function beginPartMove(id,globalTime){
   var t=tracks.find(function(t){return t.kind==="part"&&t.part===id;});
+  if(!t&&source&&source.parts){var candidate=source.parts.find(function(p){return p.id===id;});
+   if(candidate){t={id:"part:"+id,kind:"part",part:id,name:candidate.name||id};tracks.splice(tracks.length-3,0,t);map[t.id]=t;}}
   if(!t||!part(t))return null;
   var at=round(fromFilm(globalTime,t)),list=keys(t),index=list.findIndex(function(k){return Math.abs(k.t-at)<.025;});
   var inserted=index<0;
