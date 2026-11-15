@@ -67,7 +67,8 @@ try{
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/theatre"] + strong').innerText(),'Theatre');
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/music"] ~ small').innerText(),'Test package');
  assert.equal(await drawing.locator('#edition option[value="tegne"]').innerText(),'Drawing Edition (test)');
- assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/hupedia"]').isDisabled(),true);
+ assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/hupedia"]').isChecked(),true,'Bundled HUPedia starts checked');
+ assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/hupedia"]').isEnabled(),true,'Bundled plugins can be deselected');
  await drawing.locator('input[value="tegne-examples"]').check();
  assert.match(await drawing.locator('#summary').innerText(),/React/);
  const [d]=await Promise.all([drawing.waitForEvent('download'),drawing.locator('#assemble').click()]);
@@ -85,4 +86,51 @@ try{
  assert.equal(await auto.locator('input[value="$:/plugins/huwiki/music"] + strong').innerText(),'Musik');
  await detected.close();
  console.log('PASS localized Danish/English package names and descriptions, explicit URL language and browser detection');
+ // Dependency choices: MuseScore import requires ABC, but not the other way around.
+ const music=await browser.newPage();music.setDefaultTimeout(45000);
+ await music.goto(new URL('assembler/?edition=music&lang=da',base).href);
+ await music.locator('#assemble:enabled').waitFor();
+ const abc=music.locator('input[value="$:/plugins/huwiki/abc"]');
+ const importer=music.locator('input[value="$:/plugins/huwiki/musescore-import"]');
+ assert.equal(await abc.isChecked(),true);
+ assert.equal(await importer.isChecked(),true);
+ assert.equal(await importer.isEnabled(),true);
+ await importer.uncheck();
+ assert.equal(await abc.isChecked(),true,'Removing MuseScore importer never removes ABC');
+ assert.equal(await importer.isChecked(),false);
+ await importer.check();
+ await abc.uncheck();
+ assert.equal(await importer.isChecked(),false,'Removing ABC automatically deselects importer');
+ assert.equal(await music.locator('input[value="$:/plugins/huwiki/music"]').isChecked(),false,'Removing ABC deselects Music');
+ assert.match(await music.locator('#selection-notice').innerText(),/MuseScore/);
+ await importer.check();
+ assert.equal(await abc.isChecked(),true,'Selecting importer restores ABC dependency');
+ assert.equal(await music.locator('input[value="$:/plugins/huwiki/music"]').isChecked(),false,'Unrelated dependents do not automatically return');
+ console.log('PASS default Edition checkboxes and one-way automatic ABC/MuseScore dependency reconciliation');
+
+ // An on-demand demo must boot the same default composition with no extras.
+ const demo=await browser.newPage();demo.setDefaultTimeout(90000);
+ await demo.goto(new URL('demo/?edition=ai&lang=en',base).href);
+ await demo.locator('#wiki').waitFor({state:'visible'});
+ assert.equal(await demo.locator('#customize').getAttribute('href'),'../assembler/?edition=ai&lang=en');
+ const iframe=await demo.locator('#wiki').elementHandle();
+ const built=await iframe.contentFrame();
+ await built.waitForFunction(()=>window.$tw?.wiki&&document.querySelector('.tc-tiddler-frame'));
+ const demoState=await built.evaluate(()=>({
+  language:$tw.wiki.getTiddlerText('$:/language'),
+  ai:!!$tw.wiki.getPluginInfo('$:/plugins/huwiki/ai'),
+  share:!!$tw.wiki.getPluginInfo('$:/plugins/huwiki/forgeshare')
+ }));
+ assert.equal(demoState.language,'$:/languages/en-GB');
+ assert.equal(demoState.ai,true);
+ assert.equal(demoState.share,true);
+ const demoDownload=demo.waitForEvent('download',{timeout:30000});
+ await built.evaluate(()=>{
+  $tw.wiki.addTiddler({title:'Demo saved check',text:'This is my own local copy'});
+  $tw.rootWidget.dispatchEvent({type:'tm-save-wiki'});
+ });
+ const demoSaved=await demoDownload;
+ assert.ok(demoSaved.suggestedFilename().endsWith('.html'));
+ console.log('PASS AI Edition direct demo boots standard plugins in an editable, saveable browser wiki');
+
 }finally{await browser.close();await new Promise(r=>server.close(r));}
