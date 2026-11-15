@@ -35,6 +35,10 @@ AI Edition kan bruge ForgeShare til godkendte AI-forbindelser; lokal AI kan ogs�
 
 ## Plugin Library og TiddlyWiki Community
 
+**[TiddlyForge – til eksisterende TiddlyWikier](plugins/tiddlyforge/dist/plugin.json)** er et lille, selvstændigt plugin, som tilføjer Forge Plugin Library til den normale *Get More Plugins*-dialog og en diskret **F**-genvej blandt TiddlyWikis eksisterende sideværktøjer. Det officielle bibliotek bevares. Importér pluginfilen i din wiki og gem. Ingen særskilt browser, ekstra installationsdialog eller automatisk installering af andre plugins.
+
+
+
 **[HUWiki Plugin Library](https://forge.måns.dk/library/plugins/index.html)** integrerer med TiddlyWikis egen *Get More Plugins*-dialog. Den tilbyder alle de installerbare Forge-plugins og temaer, som ligger under `plugins/` og `themes/` i dette GitHub-repository. Pakkerne hentes ved installation, ikke alle på én gang.
 
 **[TiddlyWiki Community](https://tiddlywiki.com/#Community)** er indgangen til TiddlyWikis eget fællesskab. Den tidligere `/community/`-side viderestiller dertil. Der tilføjes ingen Community-fane i sidepanelet.
