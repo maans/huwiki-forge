@@ -28,7 +28,7 @@ test("Every Edition keeps the native library and links to TiddlyWiki Community w
 
  assert.equal(plugin.url,pluginUrl);
  assert.ok(plugin.tags.includes("$:/tags/PluginLibrary"));
- assert.equal(plugin.caption,"Plugin Library");
+ assert.equal(plugin.caption,"Forge Plugin Library");
  assert.equal(community.url,communityUrl);
  assert.ok(!String(community.tags||"").includes("$:/tags/PluginLibrary"),"Community Editions aren't TiddlyWiki plugins");
  assert.ok(!card.tags.includes("$:/tags/SideBar"),"Community must not be a sidebar tab");
@@ -61,7 +61,17 @@ test("The plugin registry contains every actual Forge plugin and theme without s
  assert.ok(!published.items.some(x=>x.fields["plugin-type"]==="language"),"Only plugins and themes belong in this library");
 });
 
-test("Native TiddlyWiki GET/GET-RESPONSE plugin library protocol works without any backend",async()=>{
+test("Forge Plugin Library has its own visible name and publishing observes changes to all plugins",async()=>{
+ const html=await read("library/plugins/index.html");
+ const seed=await json("editions/forge/tiddlers/seed.json");
+ const workflow=await read(".github/workflows/publish-forge-home.yml");
+ assert.match(html,/<h1>Forge Plugin Library<\/h1>/);
+ assert.ok(seed.filter(t=>/Forge Plugin Library/.test(t.text||"")).length>=2,"Danish and English homepage links should name Forge");
+ for(const path of ["editions/shared/libraries.json","plugins/*/dist/plugin.json","themes/*/dist/theme.json","library/plugins/registry.json","library/plugins/index.html"]){
+   assert.ok(workflow.includes("- "+path),"Release workflow must watch "+path);
+ }
+});
+\ntest("Native TiddlyWiki GET/GET-RESPONSE plugin library protocol works without any backend",async()=>{
  const html=await read("library/plugins/index.html"),reg=await json("library/plugins/registry.json");
  const snippet=html.match(/<script>([\s\S]*?)<\/script>/);
  assert.ok(snippet,"Native plugin library must install an iframe message listener");
