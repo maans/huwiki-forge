@@ -4,6 +4,10 @@ Forge Plugin Library leveres direkte fra [Forge på GitHub](https://github.com/m
 
 ## Forge Plugin Library (installerbare pakker)
 
+**Bemærk om »Geninstaller«:** TiddlyWikis indbyggede pluginvælger skriver også *Geninstaller*, når et plugin allerede findes i wikien — det fortæller ikke, om der ligger en nyere version. Sammenlign versionerne, vælg *Geninstaller* for at hente den nyeste udgivne pakke, og gem/genindlæs wikien. **Udviklingsforslag (PR'er) er ikke automatisk udgivet til biblioteket.**
+
+**Udgivelsesflow:** Pakker fra `plugins/*/dist/plugin.json` og `themes/*/dist/theme.json` valideres mod registret i CI. Ved ændringer på `main` genopbygger publiceringsworkflowet både registret og den redigerbare Forge-forside. Udgaver eller hjælpeprogrammer i særskilte udviklingsgrene bliver først tilgængelige efter separat godkendt publicering.
+
 Adresse: **https://forge.måns.dk/library/plugins/index.html**
 
 - Integrerer med TiddlyWikis **eksisterende** *Kontrolpanel → Plugins → Get More Plugins*. Det officielle TiddlyWiki-pluginbibliotek bevares ved siden af.
