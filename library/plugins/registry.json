@@ -219,10 +219,10 @@
         "author": "HUWiki contributors (AI-assisted development)",
         "version": "0.1.5-beta.1",
         "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/abc",
         "stability": "STABILITY_1_EXPERIMENTAL",
         "license": "MIT (bundled ABCJS MIT/Petaluma OFL 1.1; JSZip MIT; see license tab)",
-        "core-version": ">=5.4.1",
-        "dependents": "$:/plugins/huwiki/abc"
+        "core-version": ">=5.4.1"
       },
       "path": "../../plugins/musescore-import/dist/plugin.json"
     },
