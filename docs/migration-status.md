@@ -1,5 +1,7 @@
 # Overførsel af HUWiki Editions til Forge
 
+> **Løbende teknisk migrationslog, ikke en startvejledning.** Nedenstående afsnit er skrevet på forskellige tidspunkter; tidlige åbne opgaver kan være løst i senere afsnit. Begynd med [den aktuelle Forge-vejledning](../README.md), hvis du vil prøve en Edition.
+
 Status: 14. november 2026. Dette dokument beskriver den konkrete migration af den indsendte `HUWiki-OAuthLab-backup.zip` (132 arkivposter), ikke en påstand om at alle Editions allerede er færdige.
 
 ## Ufravigeligt princip

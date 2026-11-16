@@ -1,5 +1,7 @@
 # HUWiki Tegne Edition – portering til Forge
 
+> **Versionsspecifik teknisk status fra 13. november 2026.** Beskrivelsen af »første testudgave« er historik, ikke en generel garanti for den seneste browser- eller enhedsunderstøttelse. Se [Forge-kataloget](https://forge.måns.dk/) for den aktuelle testadvarsel.
+
 Status: 13. november 2026 · **0.1.2-test.1**. Mac/iPad-browsertest mangler.
 
 ## Første testudgave

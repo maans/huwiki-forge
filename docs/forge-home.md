@@ -1,5 +1,7 @@
 # Forge-landingswikien
 
+> **For udviklere.** Denne side beskriver, hvordan Forge-forsiden bygges og testes. Vil du blot prøve en Edition, så brug [Forge-forsiden](https://forge.måns.dk/) og [startvejledningen](../README.md).
+
 Forsiden er en statisk, selvstændig TiddlyWiki 5.4.1. GitHub Pages leverer den færdige `index.html`; der køres ikke et nyt build ved besøg. `editions/forge/manifest.json` samler også den samme Edition i den eksisterende Assembler.
 
 ## Indhold og design

@@ -1,5 +1,7 @@
 # OAuthLab → HUWiki Forge: Editions, plugins og delte materialer
 
+> **Historisk inventar, 13. november 2026.** Versionerne og listen over næste porteringer er et øjebliksbillede. Brug [Edition-kataloget](../catalog/editions.json) og [de aktuelle vejledninger](README.md) for det, der findes nu.
+
 **Foreløbig teknisk inventarliste, 13. november 2026.** Kildemateriale: brugerens `HUWiki-OAuthLab-backup.zip` (132 ZIP-indgange), nyere `Musik-0.3.54-beaming-alle-fire.html` samt separat `HUWiki-MuseScore-ABC-Importer-v0.1.4-beta.1`. En del navne/versioner i backup er ældre end de seneste lokale forsøg; en portering må ikke overskrive nyere arbejde.
 
 ## Flyttet til GitHub

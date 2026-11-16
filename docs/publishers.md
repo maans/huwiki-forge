@@ -4,12 +4,12 @@ Kilde: `HUWiki-Musik-v0.3.51-test.1-SitePublisher-Fokus-manuel.html` og de selvs
 
 ## Hvorfor fælles plugins?
 
-Udgivelse er en kapacitet, som flere Editions kan få glæde af. Den skal ikke være en uforanderlig del af eksempelvis HUPedia eller Musik. Derfor er plugins **selvstændige pakker i det fælles plugin-katalog**. Brugeren kan vælge dem i Assembler. De er foreløbig **fravalgt som standard**, indtil de er browser- og funktionstestet på tværs af Editions.
+Udgivelse er en kapacitet, som flere Editions kan få glæde af. Den skal ikke være en uforanderlig del af eksempelvis HUPedia eller Musik. Derfor er plugins **selvstændige pakker i det fælles plugin-katalog**. Brugeren kan vælge dem i Assembler. Hvilke udgivelsesplugins der er valgt fra starten, afhænger af den konkrete Editions manifest. **Musik Edition medtager aktuelt begge**; i Assembleren kan brugeren ændre valg og afhængigheder. De er fortsat testplugins, og alle kombinationer er ikke verificeret på alle enheder.
 
 | Plugin | TiddlyWiki-titel | Forge-fil | Version |
 | --- | --- | --- | --- |
-| HUWiki SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.15-test.1 |
-| HUWiki PDF Publisher (internt kaldet HUWiki Publisher/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.7-test.1 |
+| SitePublisher | `$:/plugins/huwiki/site-publisher` | `plugins/site-publisher/dist/plugin.json` | 0.1.15-test.1 |
+| PDF Publisher (teknisk plugin-id er fortsat HUWiki/Print Article) | `$:/plugins/huwiki/print-article` | `plugins/print-article/dist/plugin.json` | 0.2.7-test.1 |
 
 Begge plugins er browserværktøjer, ikke serverside-håndtering af Google Drev eller Apps Script. Den separate `PDF Publisher` laver PDF; `SitePublisher` laver **HTML-sites**. Den almindelige redigerbare single-file wiki gemmes fortsat med TiddlyWikis indbyggede saver.
 
@@ -70,7 +70,7 @@ I **Indstillinger → Sitelayout** kan man vælge følgende, uden at åbne et ny
 - **Vanilla (klassisk):** Enkelt og traditionelt TiddlyWiki-inspireret læselayout.
 - **HUPedia (leksikon):** Leksikonlayout, som kombineres med HUPedias eksisterende faktabokse og artikelkomponenter.
 
-Valg af Sitelayout påvirker **samme HTML**, som anvendes til Sitevisning, Hent HTML og Del HTML. SitePublisher bevarer den eksisterende indholdsudvælgelse, siderækkefølge, oversigt, nodeafspilning og iPad-fokusfunktion; der oprettes ingen ny sprogvælger eller særlig design-editor. Hver designs CSS er en redigerbar systemtiddler i pluginpakken under \`$:/plugins/huwiki/site-publisher/layouts/\`. Alle nødvendige stilarter indlejres i den eksporterede HTML-fil, uden netværksafhængigheder. De fire profiler er **tilpasset den gamle OAuthLab-designretning**, ikke kopier af den gamle multi-page SiteWorkshop UI.
+Valg af Sitelayout påvirker **samme HTML**, som anvendes til Sitevisning, Hent HTML og Del HTML. SitePublisher bevarer den eksisterende indholdsudvælgelse, siderækkefølge, oversigt, nodeafspilning og iPad-fokusfunktion; der oprettes ingen ny sprogvælger eller særlig design-editor. Hver designs CSS er en redigerbar systemtiddler i pluginpakken under `$:/plugins/huwiki/site-publisher/layouts/`. Alle nødvendige stilarter indlejres i den eksporterede HTML-fil, uden netværksafhængigheder. De fire profiler er **tilpasset den gamle OAuthLab-designretning**, ikke kopier af den gamle multi-page SiteWorkshop UI.
 
 Bemærk at valg af HUPedia-layout ikke i sig selv skaber faktabokse på almindelige artikler. Faktaboksens data/skabelon hører til HUPedia-pluginet, og sitelayoutet vælger kun det visuelle udtryk.
 

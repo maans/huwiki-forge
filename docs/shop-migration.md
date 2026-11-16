@@ -1,5 +1,7 @@
 # Shop Edition: Shop Site og guidet opsætning
 
+> **Afgrænsning:** En konkret offentlig Funnel-afprøvning i Shop-forløbet er ikke en generel godkendelse af ForgeShares offentlige Tailscale Funnel. ForgeShares aktuelle status står i [Mac-vejledningen](../downloads/forgeshare/README.md).
+
 Version: 0.2.0-test.3. Kilde: `HUWiki-OAuthLab-backup.zip`, `ShopEdition.js`, oprindelig Shop 0.1.2. Den originale kilde ligger komprimeret i `migration/shop/source.b64`, med SHA-256 og ophav i `provenance.json`. Det tekniske plugin-id er fortsat `$:/plugins/huwiki/shop`, og ophavet HUWiki bevares. Originalen angiver ingen top-level-licens; vi opfinder ikke en.
 
 Brugeren har bedt om at erstatte den automatiske Google-opsætning med en enkel guide, hvor ejeren selv logger ind og opretter formular og regneark. Google er derfor en valgfri, udtrykkelig opsætningsvej for Shop. Katalog, redigering, forhåndsvisning, kundesideeksport og gemning fungerer lokalt. Et katalog uden formular og et link til en anden offentlig formular er også muligt.
