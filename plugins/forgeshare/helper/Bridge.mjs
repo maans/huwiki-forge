@@ -10,8 +10,15 @@ export function installBridge(server,invoke,{origins=()=>[]}={}) {
     const origin=req.headers.origin,cookieName='ForgeShareAccess-'+server.address().port+'=';
     if(req.method!=='POST'||req.headers['x-forgeshare']!=='1'||req.headers['content-type']!=='application/json'||!origins().includes(origin)||req.headers['sec-fetch-site']==='cross-site')return send(403,{error:'Same-origin request required'});
     try {
-      let text='';for await(const chunk of req){text+=chunk;if(Buffer.byteLength(text)>524288)return send(413,{error:'Request too large'});}
-      const operation=req.url.slice(bridgePath.length),input=JSON.parse(text||'{}');
+      const operation=req.url.slice(bridgePath.length);
+      const maxBytes=['generate','media-save'].includes(operation)?6*1024*1024:524288;
+      let length=0;const chunks=[];
+      for await(const chunk of req){
+        length+=chunk.length;
+        if(length>maxBytes)return send(413,{error:'Request too large / Billederne er for store'});
+        chunks.push(chunk);
+      }
+      const input=JSON.parse(Buffer.concat(chunks).toString('utf8')||'{}');
       const token=(req.headers.cookie||'').split(';').map(s=>s.trim()).find(s=>s.startsWith(cookieName))?.slice(cookieName.length);
       if(operation==='pair'){
         const now=Date.now();while(attempts.length&&attempts[0]<now-60000)attempts.shift();if(attempts.length>=10)return send(429,{error:'Please wait'});attempts.push(now);
