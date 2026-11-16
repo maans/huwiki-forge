@@ -6,7 +6,8 @@ param(
 # Windows Node-only fallback: same CurrentUser DPAPI vault as ForgeShare.exe.
 # Never accept a path, command, or encryption key from an untrusted caller.
 $ErrorActionPreference='Stop'
-[Console]::OutputEncoding=New-Object System.Text.UTF8Encoding($false)
+Add-Type -AssemblyName System.Security
+[Console]::OutputEncoding=[System.Text.UTF8Encoding]::new($false)
 $folder=Join-Path ([Environment]::GetFolderPath('LocalApplicationData')) 'ForgeShare'
 $file=Join-Path $folder 'vault.dpapi'
 if($Action -eq 'read'){
