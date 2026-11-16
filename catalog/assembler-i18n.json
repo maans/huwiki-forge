@@ -34,6 +34,14 @@
         "name": "Music Edition (test)"
       }
     },
+    "animus": {
+      "da": {
+        "name": "AniMus Forge I (beta)"
+      },
+      "en": {
+        "name": "AniMus Forge I (beta)"
+      }
+    },
     "ai": {
       "da": {
         "name": "AI Edition (test)"
@@ -402,6 +410,36 @@
       "en": {
         "name": "Retro",
         "description": "Colourful, readable retro theme inspired by PasteUp."
+      }
+    },
+    "$:/plugins/huwiki/musical": {
+      "da": {
+        "name": "AniMus Forge I · Editor",
+        "description": "Fælles animations-, musik- og teaterværksted. Meget tidlig beta; ændringer kan være inkompatible."
+      },
+      "en": {
+        "name": "AniMus Forge I · Editor",
+        "description": "Shared animation, music and theatre editor. Early beta; updates may be incompatible."
+      }
+    },
+    "$:/plugins/huwiki/animus-example-orchestra": {
+      "da": {
+        "name": "AniMus · Tændstikorkestret",
+        "description": "Eksempelforestilling med seks musikere, kamera og to ABC-numre. Kræver AniMus Editor."
+      },
+      "en": {
+        "name": "AniMus · Stick Orchestra",
+        "description": "Example show with six musicians, cameras and two ABC pieces. Requires AniMus Editor."
+      }
+    },
+    "$:/plugins/huwiki/animus-example-fyrtoejet": {
+      "da": {
+        "name": "AniMus · Fyrtøjet",
+        "description": "Eksempelforestilling med tre akter, ni scener og manuskript. Kræver AniMus Editor."
+      },
+      "en": {
+        "name": "AniMus · The Tinderbox",
+        "description": "Example show with three acts, nine scenes and a screenplay. Requires AniMus Editor."
       }
     }
   }
