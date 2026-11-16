@@ -1,0 +1,13 @@
+[
+  {
+    "title": "Musical Studio · Forestillinger",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! AniMus Forge I · Forestillinger\n\nVælg en forestilling. **Fyrtøjet og Tændstikorkestret bruger den samme AniMus-editor** med animation, kamera, ABC-musik, undertekster og Manuskriptværksted.\n\n<div class=\"musical-project-gallery\">\n<div class=\"musical-project-card\">\n<h2>🌲 Fyrtøjet</h2>\n<p>Tre akter · ni scener · musik, rekvisitter og kulisser.</p>\n<p>[[Åbn Fyrtøjet →|Fyrtøjet · Start]]</p>\n</div>\n<div class=\"musical-project-card\">\n<h2>🎺 Tændstikorkestret</h2>\n<p>Seks musikere · animationsløkker · kamera · to musiknumre.</p>\n<p>[[Åbn Tændstikorkestret →|Musical – Start]]</p>\n</div>\n</div>\n\n!! Fælles værksteder\n\n[[Dukke- og SVG-værksted|HUWiki CutOut – Studio]] · [[ABC-nodeværksted|HUWiki ABC – Nodeværksted]]\n\n!! Beta-Ceta · eksperimentel test\n\n**Du tester på eget ansvar.** AniMus er et proof of concept. Opdateringer af motor, dataformat, figurer og eksempler kan ændre eller overskrive dine egne ændringer. Gem en ekstra kopi, hvis du vil beholde noget. iPad-lyd og flere værksteder er endnu ikke færdigtestet.\n\n**Forslag og fejlrapporter er meget velkomne.** Brug de åbne samtaler på [[Talk TiddlyWiki|https://talk.tiddlywiki.org/]] eller [[GitHub Issues|https://github.com/maans/huwiki-forge/issues]].\n"
+  },
+  {
+    "title": "$:/plugins/huwiki/musical/project-gallery.css",
+    "type": "text/css",
+    "tags": "$:/tags/Stylesheet",
+    "text": "/* AniMus shared show gallery */\n.musical-project-gallery{display:grid;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));gap:15px;margin:1em 0}\n.musical-project-card{border:1px solid #b6c6d9;border-radius:12px;padding:18px;background:linear-gradient(140deg,#f3f8fd,#fff);color:#23384c}\n.musical-project-card h2{margin:0 0 .55em;font-size:1.3em}\n.musical-project-card a{display:inline-block;background:#146b81;color:white!important;border-radius:6px;padding:8px 12px;text-decoration:none;font-weight:600}\n@media(max-width:620px){.musical-project-gallery{grid-template-columns:1fr}}\n"
+  }
+]
