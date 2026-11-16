@@ -9,7 +9,7 @@ Start with the instructions for **what you want to do**. Technical implementatio
 | Try an Edition or keep my own wiki / Prøve en Edition | [Forge README](../README.md) and [Assembler guide](../assembler/README.md) |
 | Install a plugin / Installere et plugin | [Plugin guide](../plugins/README.md) |
 | Set up AI / Bruge AI | [AI connections](ai-connections.md) and [AI plugin guide](../plugins/ai/README.md) |
-| Download or use ForgeShare on Mac / Bruge ForgeShare | [Mac installation and version status](../downloads/forgeshare/README.md) |
+| Install ForgeShare on Windows, Mac or Linux / Installere ForgeShare | [Step-by-step HOWTO / installationsvejledning](../downloads/forgeshare/HOWTO.md) and [downloads + current test status](../downloads/forgeshare/README.md) |
 | Understand saving and hosting / Gemme og udgive | [Distribution and self-hosting](distribution.md), [security and data](security.md) |
 | Work on an Edition / Udvikle en Edition | [Edition manifests](../editions/README.md) and [Forge homepage build](forge-home.md) |
 | Maintain Plugin Library / Vedligeholde biblioteker | [Plugin Library architecture](forge-libraries.md) |
