@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "animus",
   "name": "AniMus Forge I",
-  "version": "0.10.0-beta.1",
+  "version": "0.10.0-beta.2",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",
