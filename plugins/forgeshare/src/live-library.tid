@@ -1,0 +1,17 @@
+title: $:/plugins/huwiki/forgeshare/live-library.js
+type: application/javascript
+module-type: widget
+
+var Widget=require('$:/core/modules/widgets/widget.js').widget,bridge=require('$:/plugins/huwiki/forgeshare/bridge.js');
+function Live(node,options){this.initialise(node,options);}Live.prototype=new Widget();
+Live.prototype.render=function(parent,next){
+ this.computeAttributes();var self=this,da=bridge.danish(this.wiki),root=this.document.createElement('section');this.parentDomNode=parent;this.domNodes=[root];parent.insertBefore(root,next);
+ function node(tag,text){var n=self.document.createElement(tag);if(text)n.textContent=text;root.appendChild(n);return n;}
+ node('h2',da?'Dit bibliotek fra ForgeShare':'Your ForgeShare library');
+ node('p',da?'Vis de wikier og sites, ejeren har givet dig adgang til.':'Show the wikis and sites the owner has approved for you.');
+ var pair=node('button',da?'Forbind til ForgeShare':'Connect to ForgeShare');pair.className='fs-action';pair.onclick=function(){bridge.pair().catch(function(e){status.textContent=e.message;});};
+ var refresh=node('button',da?'Opdatér oversigt':'Refresh overview');refresh.className='fs-action';var status=node('p'),list=node('div');
+ function load(){status.textContent=da?'Henter…':'Loading…';bridge.call('library').then(function(data){while(list.firstChild)list.removeChild(list.firstChild);data.entries.forEach(function(e){var card=self.document.createElement('div'),title=self.document.createElement('h3');title.textContent=e.name;card.appendChild(title);var description=self.document.createElement('p');description.textContent=e.description||'';card.appendChild(description);if(e.url && /^https?:\/\//.test(e.url)){var a=self.document.createElement('a');a.textContent=da?'Åbn':'Open';a.href=e.url;a.target='_blank';a.rel='noopener noreferrer';card.appendChild(a);}list.appendChild(card);});status.textContent=da?'Opdateret nu. Adresser er senest kendte delingsadresser.':'Updated now. Addresses are the last known sharing addresses.';}).catch(function(e){status.textContent=e.message;});}
+ refresh.onclick=load;load();
+};
+Live.prototype.refresh=function(changed){if(changed['$:/language']){this.refreshSelf();return true;}return false;};exports['forgeshare-library']=Live;
