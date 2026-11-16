@@ -78,6 +78,23 @@
       }
     },
     {
+      "id": "animus",
+      "name": "AniMus Forge I (beta)",
+      "version": "0.10.0-beta.1",
+      "status": "test",
+      "manifest": "../editions/animus/manifest.json",
+      "description": "Experimental unified animation, music and theatre workshop for TiddlyWiki. The Fyrtøjet and Tændstikorkestret examples share one editor.",
+      "home": {
+        "headingDa": "AniMus Forge I – animation og teater",
+        "headingEn": "AniMus Forge I – Animation & Theatre",
+        "descriptionDa": "Prøv Fyrtøjet og Tændstikorkestret i samme editor med dukker, SVG, musik, kamera, undertekster og manuskript.",
+        "descriptionEn": "Try The Tinderbox and Stick Orchestra in one editor with puppets, SVG, music, cameras, captions and scripts.",
+        "noteDa": "Meget tidlig beta: motor og eksempler kan ændres uden garanti for dine data. iPad-lyd er ikke godkendt. Forslag og fejlmeldinger er velkomne på Talk og GitHub.",
+        "noteEn": "Very early beta: core and examples may change without preserving your edits. iPad audio is unverified. Feedback welcome on Talk and GitHub.",
+        "order": "02.4"
+      }
+    },
+    {
       "id": "ai",
       "name": "AI Edition (test)",
       "description": "AI Forge 0.4.2 with OpenAI, Claude and Google Gemini, local LM Studio/Ollama, approved ForgeShare Vault and screenshot analysis.",
