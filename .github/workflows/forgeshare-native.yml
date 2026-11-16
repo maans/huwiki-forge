@@ -132,11 +132,12 @@ jobs:
           for platform in mac windows windows-node linux; do
             cp "plugins/forgeshare/dist/ForgeShare-${platform}.zip" "downloads/forgeshare/ForgeShare-${platform}-0.1.19-test.zip"
           done
-          # Keep the draft feature branch's generated home cards in sync with
-          # its plugin registry; this does NOT deploy the public homepage.
+          # Rebuild native plugin registry from the actual verified bundles.
+          node scripts/build-forge-plugin-library.mjs
+          # Keep Forge home cards/version metadata matched to the registry.
           node scripts/build-forge-home.mjs
           node scripts/build-forge-home.mjs --check
-          git add plugins/forgeshare/dist plugins/forgeshare/native/compiled downloads/forgeshare index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
+          git add plugins/forgeshare/dist plugins/forgeshare/native/compiled downloads/forgeshare library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
           if git diff --cached --quiet; then exit 0; fi
           git -c user.name='github-actions[bot]' -c user.email='41898282+github-actions[bot]@users.noreply.github.com' commit -m 'Sync validated ForgeShare test bundles'
           git push origin HEAD:feat/ai-gemini-vision-release-20261116
