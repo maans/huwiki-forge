@@ -1,41 +1,69 @@
-# AI Forge — experimental AI connections
+# AI Forge 0.4.2 — Gemini and screenshots (test)
 
-**Current plugin metadata:** 0.4.1-test.3. This is a test integration, not a promise that every provider, browser, model or image function works.
+Source migration of the existing HUWiki AI 0.3.6 package from the AI Edition project, with a ForgeShare same-origin bridge replacing its Apps Script vault calls. Original HUWiki modules/pages/templates are retained as editable tiddler JSON in `src/`. Build with `node scripts/build-forge-ai.mjs`; import `dist/plugin.json`, save and reload. This is an optional test package; no production Edition is changed by this branch.
 
-[Try AI Edition in Forge](https://forge.måns.dk/) · [Connection and privacy details](../../docs/ai-connections.md) · [ForgeShare Mac instructions](../../downloads/forgeshare/README.md)
+Open the wiki through ForgeShare 0.1.19. Add an AI connection in the helper's vault. The AI Connections page can request access; compare the code in the helper and approve the desired connections. Refresh the connections list. The browser receives only connection metadata, model lists and replies; it never receives API keys. The helper owns outgoing AI requests. Each selected browser/wiki requires its own approval, including the owner's browser.
 
-## Choose how to connect
+Supported Vault operations in the new AI Forge 0.4.2 test source: text chat, model lists, screenshot/image analysis for LM Studio, Ollama, OpenAI-compatible servers, OpenAI and Gemini, plus optional local per-wiki image save/load. Image generation through the Vault is still separate and not implemented. Earlier ForgeShare Mac 0.1.18 does not include these operations; update to ForgeShare 0.1.19-test for screenshot analysis. Keys cannot be entered into or exported from a wiki. Wiki readers with a separate approved AI grant can use the owner's accounts; saving chat tiddlers still requires wiki editing rights.
 
-| Connection | What you do | Where the API key stays |
-| --- | --- | --- |
-| **Manual browser connection** | In AI Forge, select OpenAI, Claude, Gemini, LM Studio or Ollama; enter the server address/model and key if required. | In memory in the **current browser tab**. Reloading loses the key. |
-| **ForgeShare Vault** | Open the wiki through the ForgeShare Mac helper, add a connection in its Vault, request access from AI Forge, check the displayed code and approve the wiki/device. | In ForgeShare, **outside the wiki**. The browser receives connection metadata and replies, not the key. |
+`forgeshare-vault-browser-smoke.mjs` exercises the real plugin modules in a running TiddlyWiki using an isolated in-memory vault and simulated AI. It performs no external AI request or billing. See the ForgeShare README for trust boundaries and remaining physical-device/OS-vault acceptance.
 
-### Try a manual connection
 
-1. Open **AI Edition**, then its AI connection controls.
-2. Choose **Manual** and your provider. For a local model, start LM Studio or Ollama first and enter its local API URL. For a cloud model, use a provider API key, not a Google OAuth client ID.
-3. Select or enter a model, then send a short test message.
-4. Use **Forget key** when finished. A page reload also clears the manual key.
+## Experimental manual AI connections (0.4.1-test.1)
 
-Manual requests run from the browser and can fail because of CORS or local-server settings. Browser password managers **may** offer autofill; the wiki cannot read your browser's saved passwords on its own. Do not paste API keys into ordinary wiki tiddlers or chat messages.
+The workbench and chat library now offer a **manual** connection beside ForgeShare,
+with OpenAI, Anthropic Claude, Google Gemini, LM Studio and Ollama.
+Enter the provider API key into a password field (LM Studio key optional),
+choose or discover a model, and optionally enter the local server URL.
+Chrome/password managers may offer to fill the key, but the wiki cannot retrieve
+stored passwords itself; autofill depends on the browser's behavior.
 
-### Try ForgeShare Vault
+The key lives **only in in-memory JavaScript** in the running browser tab.
+It is never written to TiddlyWiki tiddlers, the saved HTML, localStorage,
+sessionStorage, request URLs or GitHub. A **Forget key** button clears it.
+Reloading the page loses the key. Model names, provider choice and local
+server URLs can remain in browser settings as non-secret preferences.
 
-1. Install the separate [Mac app](../../downloads/forgeshare/README.md), including its Node.js prerequisite, and open your wiki through ForgeShare.
-2. Create the desired connection in ForgeShare's Vault.
-3. In the wiki, request access and approve the matching request/code in ForgeShare. Refresh the list of approved connections before testing a chat.
+**Security:** Direct browser requests are experimental and not equivalent to
+ForgeShare. Any other JavaScript or browser extension with page access may
+read a manually entered key. Cloud browser requests may fail due to CORS.
+Cloud API endpoints are fixed to their official HTTPS hosts; the Gemini API
+uses an x-goog-api-key header, Claude uses x-api-key plus the Anthropic
+direct-browser opt-in header, and OpenAI uses Authorization Bearer.
+ForgeShare remains the recommended alternative when a key should stay out
+of the wiki/browser page entirely. Image generation still requires ForgeShare.
+No real cloud-provider account/API billing test was performed in this change.
 
-The public **0.1.18-test Mac ZIP does not yet include the updated Gemini Vault support** described in the ForgeShare development branch [PR #8](https://github.com/maans/huwiki-forge/pull/8). Manual Gemini is a separate experimental option. Vault image generation and image analysis are **not verified** for the public test. Access from another browser or device needs its own approval.
+The plugin bundle in dist and the Forge Plugin Library registry have the same
+version. Gemini via the ForgeShare vault requires an updated ForgeShare helper build (the currently published Mac 0.1.18 ZIP does not yet contain that helper support). The manual Gemini connector remains available as an experimental, session-only alternative.
 
-## What is and is not saved
 
-The manual key is not deliberately written to tiddlers, downloaded HTML, localStorage, sessionStorage, request URLs or GitHub; provider/model and local URL preferences may remain as non-secret browser settings. Because the manual key exists in the browser page's memory, other scripts or extensions with page access may still see it. ForgeShare Vault is preferable when the key must stay outside the page.
+## Gemini restoration: OAuth-independent AI Forge / AI Edition (0.4.1-test.3)
 
-AI chat content that you choose to store in your wiki is different from a connection secret. Do not assume that saving or sharing the HTML file hides the chat.
+AI Forge and the AI Edition now explicitly present Google Gemini as a **ForgeShare Vault** provider in addition to the existing manual browser connection. Users create a separate **Gemini API key in Google AI Studio**, not a Google Workspace OAuth client or Gmail/Drive scope grant. The ForgeShare Mac host sends authorized text-generation and model-list requests to the Gemini API; the key never reaches the wiki, its stored HTML, iPad browser or GitHub. Each wiki/device must be explicitly authorized for that new Gemini connection in ForgeShare, even if the device previously had 30-day permission for LM Studio.
 
-## For developers
+**Compatibility:** The updated ForgeShare Vault implementation is on the ForgeShare development branch/PR #8. ForgeShare 0.1.18 predates Gemini support. Install the rebuilt 0.1.19-test helper for Gemini via the Vault. Gemini through the Vault is for text chat and model listing only until separately tested for images. No Google OAuth verification status is changed by this work. A real Google AI Studio key is required for live end-to-end testing. Google now requires an appropriate auth-type API key rather than a legacy unrestricted standard key.
 
-The migrated HUWiki AI plugin retains editable source tiddlers under `src/`. Build with `node scripts/build-forge-ai.mjs`; the installable bundle is `dist/plugin.json`. Its original Apps Script vault calls were replaced at the connection boundary. The ForgeShare browser smoke test uses an isolated simulated Vault and does **not** verify paid cloud-provider requests. See [AI connections](../../docs/ai-connections.md) for the trust model and known limitations.
 
-**Dansk, kort fortalt:** Du kan indtaste en AI-nøgle manuelt til den aktuelle browserfane eller bruge ForgeShare Vault, hvor nøglen bliver uden for wikien. Manuel adgang kræver ofte korrekte CORS-indstillinger; den offentlige Mac-ZIP har endnu ikke den nye Gemini Vault-understøttelse. Billedfunktionerne via Vault er ikke verificeret.
+## AI Forge vision/local-media development branch — 16 November 2026
+
+**Two dependent test branches:** AI plugin in `fix/ai-forge-vision-av-20261116` (based on `main`) and ForgeShare helper in `feat/forgeshare-vault-vision-media-20261116` (based on PR #8). Neither is deployed in the public Mac ZIP. Plugin version metadata stays at the already published test version until the generated Forge landing page and plugin registry are rebuilt together for release. The source changes are available only on this feature branch. A new, separately tested Mac app build is required before device acceptance and release. Do not present this as a live fix in the user's existing wiki.
+
+- The chat now passes explicitly attached PNG/JPEG/WebP screenshots through the same-origin ForgeShare bridge to the Mac host. The host validates MIME, encoded bytes, user consent and the approved connection before forwarding the image to the selected vision-capable local/cloud model. Provider formats differ: LM Studio/OpenAI-compatible uses `image_url`, Ollama uses `images`, Gemini uses `inline_data`. Existing text-only requests remain unchanged.
+- The old `google.script.run` image-save, playback and AV-sharing calls are **not used** for new images. User and generated images are transient unless the user selects **Gem billedet lokalt / Save image locally**. Approved local save writes a file to the ForgeShare host's `ai-media/<sha256-of-wiki-id>` directory under the app's private data root, and stores only an ID/reference in the TiddlyWiki tiddler. The same approved wiki session can reload it from Mac or iPad via Tailscale.
+- Old `av-file-id`/Drive references are preserved as historical references and can still link to the original Drive file. They are **not** automatically imported or rewritten. Saving a new image requires a current approved ForgeShare session; an HTML wiki export does **not** embed the local images. Back up the ForgeShare `ai-media` directory together with the wiki, and expect the media to be unavailable when the wiki is opened outside its approved host.
+- Only PNG/JPEG/WebP are supported for host-side storage in this first test. SVG can still be handled as text/code. Two attached input images maximum, combined original image data up to 4 MiB, each up to 3 MiB; the bridge limits body size to 6 MiB. Local library quotas are intentionally bounded.
+- Retry after a browser reload restores explicitly saved screenshots through the authorized bridge. If the original screenshot was transient and lost, Retry explains that it must be attached again rather than making a misleading text-only request.
+
+### Testing order
+
+1. Run the automated helper tests on the ForgeShare helper PR and the AI-plugin bundle/tests on the AI Forge PR. No real cloud account is used in these tests.
+2. Build a *new test Mac app* from the reviewed helper branch, leaving the published 0.1.18 ZIP untouched. Pair the local wiki with ForgeShare Vault and LM Studio Gemma 4.
+3. Test text chat, one small screenshot, two screenshots and a 1200 px screenshot from Mac and iPad separately. Inspect model input and ensure no model/approval bypass or secret disclosure.
+4. Save an attached screenshot locally, reload the wiki on both devices, verify that the image renders and that a retry still includes the image. Check revocation and a second wiki cannot retrieve it.
+5. Test legacy Drive references (read-only link), ordinary single-file backups (clear missing-media explanation) and ForgeShare media backup/restore before deciding whether to merge/deploy.
+
+
+## Paired release 0.4.2 / 0.1.19
+
+The plugin library now advertises **AI Forge 0.4.2**. Its standalone AI Edition uses the same plugin, so Google Gemini is available in both. The updated ForgeShare Vault 0.1.19 supports Gemini API keys and screenshot analysis, but requires installation of the separate current helper ZIP on the host computer. Plugin-only updates do not replace the ForgeShare Mac/Windows/Linux program. Windows has both a native-app and Node-only ZIP; download links are kept separate from the plugin JSON. Image generation via Vault remains unsupported.

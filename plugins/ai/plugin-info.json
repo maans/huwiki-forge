@@ -3,7 +3,7 @@
   "type": "application/json",
   "plugin-type": "plugin",
   "name": "AI Forge",
-  "description": "AI Forge: ForgeShare Vault (including Google Gemini API-key connections with updated helper) or manual session-only OpenAI, Claude, Gemini, LM Studio and Ollama",
-  "version": "0.4.1-test.3",
+  "description": "AI Forge 0.4.2: OpenAI, Claude, Google Gemini, LM Studio or Ollama; manual browser connections or approved ForgeShare Vault; screenshot analysis and local media",
+  "version": "0.4.2",
   "author": "HUWiki"
 }

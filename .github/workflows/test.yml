@@ -13,4 +13,20 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm test
+      - run: npm ci --ignore-scripts
+      # On a feature PR native Mac/Windows artifacts are regenerated in the
+      # ForgeShare native workflow; its macOS job runs the complete bundle tests.
+      - name: Source and cross-platform tests (feature PR)
+        if: github.event_name == 'pull_request'
+        shell: bash
+        run: |
+          set -euo pipefail
+          files=(tests/*.test.mjs)
+          selected=()
+          for file in "${files[@]}"; do
+            if [[ "$file" != "tests/forgeshare.test.mjs" ]]; then selected+=("$file"); fi
+          done
+          node --test "${selected[@]}"
+      - name: Complete tested release suite (main)
+        if: github.event_name == 'push'
+        run: npm test

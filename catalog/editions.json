@@ -80,17 +80,17 @@
     {
       "id": "ai",
       "name": "AI Edition (test)",
-      "description": "AI Forge 0.4.1 with manual OpenAI, Claude, Gemini, LM Studio and Ollama connections, plus optional ForgeShare vault. Browser direct cloud requests are experimental.",
+      "description": "AI Forge 0.4.2 with OpenAI, Claude and Google Gemini, local LM Studio/Ollama, approved ForgeShare Vault and screenshot analysis.",
       "status": "test",
       "manifest": "../editions/ai/manifest.json",
-      "version": "0.4.1-test.1",
+      "version": "0.4.2",
       "home": {
         "headingDa": "Samtaler, AI-opgaver og dine egne modeller",
         "headingEn": "AI conversations, tasks and your models",
         "descriptionDa": "Brug OpenAI, Claude, Gemini eller en lokal AI-model via LM Studio/Ollama. ForgeShare er valgfri.",
         "descriptionEn": "Use OpenAI, Claude, Gemini or local models via LM Studio/Ollama. ForgeShare is optional.",
-        "noteDa": "Testudgave: Direkte cloud-kald kan blokeres af CORS. Nøgler gemmes ikke i wikien.",
-        "noteEn": "Test release: Direct cloud requests may be blocked by CORS. Keys are not saved in the wiki.",
+        "noteDa": "Testudgave: Gemini via ForgeShare kræver den nye Mac-hjælper og godkendelse. Direkte cloud-kald kan blokeres af CORS.",
+        "noteEn": "Test release: Gemini through ForgeShare needs the updated Mac helper and approval. Direct browser cloud calls may be blocked by CORS.",
         "order": "02.5"
       }
     },
@@ -277,6 +277,14 @@
       "version": "0.2.0-test.3",
       "description": "Shop Site and setup checklist · native Dansk / English · Google Sites and public Funnel tested on desktop; physical mobile acceptance pending",
       "file": "../plugins/shop/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "forgeshare",
+      "name": "ForgeShare",
+      "version": "0.1.19",
+      "description": "Local wiki/site sharing, approved Gemini/OpenAI/LM Studio/Ollama AI connections, screenshot analysis and per-wiki media",
+      "file": "../plugins/forgeshare/dist/plugin.json",
       "status": "test"
     }
   ]

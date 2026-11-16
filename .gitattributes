@@ -1,0 +1,9 @@
+# ForgeShare bundles are deterministic across macOS, Windows and Linux.
+plugins/forgeshare/** text eol=lf
+plugins/forgeshare/helper/*.cmd text eol=crlf
+plugins/forgeshare/dist/*.zip binary
+scripts/build-forgeshare.mjs text eol=lf
+tests/forgeshare.test.mjs text eol=lf
+plugins/forgeshare/native/compiled/ForgeShare binary
+plugins/forgeshare/native/compiled/*.exe binary
+plugins/forgeshare/native/compiled/*.icns binary

@@ -1,0 +1,53 @@
+name: ForgeShare Windows and Linux packages
+on:
+  pull_request:
+    paths:
+      - plugins/forgeshare/**
+      - scripts/build-forgeshare-portable.mjs
+      - .github/workflows/forgeshare-portable.yml
+permissions:
+  contents: read
+jobs:
+  portable:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/build-forgeshare-portable.mjs
+      - run: |
+          unzip -l downloads/forgeshare/ForgeShare-windows-node-0.1.19-test.zip
+          unzip -l downloads/forgeshare/ForgeShare-linux-0.1.19-test.zip
+          node --check plugins/forgeshare/helper/ForgeShare.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ForgeShare-0.1.19-Windows-Node-and-Linux
+          retention-days: 30
+          path: |
+            downloads/forgeshare/ForgeShare-windows-node-0.1.19-test.zip
+            downloads/forgeshare/ForgeShare-linux-0.1.19-test.zip
+  windows-native:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - shell: pwsh
+        run: '& ./plugins/forgeshare/native/windows/build.ps1'
+      - run: node scripts/build-forgeshare-portable.mjs --windows-native
+      - shell: pwsh
+        run: |
+          $package = 'downloads/forgeshare/ForgeShare-windows-0.1.19-test.zip'
+          Add-Type -AssemblyName System.IO.Compression.FileSystem
+          $z = [IO.Compression.ZipFile]::OpenRead((Resolve-Path $package).Path)
+          try {
+            if(-not ($z.Entries.Name -contains 'ForgeShare.exe')){throw 'Native executable not found'}
+            if(-not ($z.Entries.Name -contains 'VaultWindows.ps1')){throw 'DPAPI fallback missing'}
+          } finally {$z.Dispose()}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ForgeShare-0.1.19-Windows-Native
+          retention-days: 30
+          path: downloads/forgeshare/ForgeShare-windows-0.1.19-test.zip

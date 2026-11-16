@@ -22,9 +22,9 @@
         "title": "$:/plugins/huwiki/ai",
         "type": "application/json",
         "name": "AI Forge",
-        "description": "AI Forge: ForgeShare Vault (including Google Gemini API-key connections with updated helper) or manual session-only OpenAI, Claude, Gemini, LM Studio and Ollama",
+        "description": "AI Forge 0.4.2: OpenAI, Claude, Google Gemini, LM Studio or Ollama; manual browser connections or approved ForgeShare Vault; screenshot analysis and local media",
         "author": "HUWiki",
-        "version": "0.4.1-test.3",
+        "version": "0.4.2",
         "plugin-type": "plugin"
       },
       "path": "../../plugins/ai/dist/plugin.json"
@@ -139,10 +139,10 @@
       "fields": {
         "title": "$:/plugins/huwiki/forgeshare",
         "type": "application/json",
-        "name": "ForgeShare · Mac test",
-        "description": "Mac-only ForgeShare guide and download · local TiddlyWiki Node.js and private Tailscale · unsigned test",
+        "name": "ForgeShare",
+        "description": "Tailscale collaboration / Tailscale-samarbejde",
         "author": "HUWiki",
-        "version": "0.1.18-mac-test.1",
+        "version": "0.1.19",
         "plugin-type": "plugin",
         "core-version": ">=5.4.1"
       },

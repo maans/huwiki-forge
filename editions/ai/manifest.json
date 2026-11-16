@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "ai",
   "name": "AI Edition",
-  "version": "0.4.1-test.3",
+  "version": "0.4.2",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",

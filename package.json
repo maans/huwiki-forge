@@ -4,9 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/*.test.mjs"
+    "test": "node --test tests/*.test.mjs",
+    "build:forgeshare": "node scripts/build-forgeshare.mjs",
+    "check:forgeshare": "node scripts/build-forgeshare.mjs --check"
   },
   "engines": {
     "node": ">=20"
+  },
+  "devDependencies": {
+    "tiddlywiki": "5.4.1"
   }
 }
