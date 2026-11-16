@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// ForgeShare 0.1.18 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
+// ForgeShare 0.1.19 — optional local helper. Explicit local actions; no unsolicited browser launch or shell evaluation.
 import {validateSite,siteWorker} from './Site.mjs';
 import {configureLogin} from './Startup.mjs';
 import {Vault,vaultDialog,invitation,privateCommand} from './Vault.mjs';

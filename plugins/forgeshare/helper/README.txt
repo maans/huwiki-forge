@@ -1,6 +1,7 @@
-ForgeShare 0.1.18 — testudgave / test release
+ForgeShare 0.1.19 — testudgave / test release
 
 DANSK
+Ny Windows Node-udgave: Start-ForgeShare.cmd kræver Node.js 20+ og PowerShell 5.1 med tilladelse til signeret/autoriseret lokal scriptskørsel. Den anvender Windows DPAPI til nøgleboksen og kræver ingen ForgeShare.exe.
 Pak hele ZIP-filen ud. Åbn ForgeShare.app (Mac), ForgeShare.exe (Windows)
 eller Start-ForgeShare.sh (Linux). Behold pakkens filer samlet.
 
@@ -16,6 +17,7 @@ På Linux kræves Zenity til dialoger og secret-tool/Secret Service til
 nøgleboksen. Linux bruger fortsat menu og statusdialog, ikke en bakke-app.
 
 ENGLISH
+New Windows Node edition: Start-ForgeShare.cmd requires Node.js 20+ and PowerShell 5.1 with local script execution permitted by your system policy. It uses Windows DPAPI for the vault and has no ForgeShare.exe.
 Extract the whole ZIP. Open ForgeShare.app (Mac), ForgeShare.exe (Windows)
 or Start-ForgeShare.sh (Linux). Keep all package files together.
 
@@ -34,8 +36,7 @@ Downloads: https://nodejs.org/en/download | https://tailscale.com/download
 
 Unsigned test builds / Usignerede testudgaver
 Mac may require approval under Privacy & Security / Anonymitet & sikkerhed.
-Windows SmartScreen may offer More info / Flere oplysninger, then Run anyway /
-Kør alligevel. Only approve a download you trust. Computer policy can block it.
+Windows Defender previously flagged an unsigned ForgeShare.exe. Do not bypass antivirus; if the new native EXE is blocked, try the Node-only package through ordinary system protection. / Windows Defender advarede tidligere mod ForgeShare.exe. Omgå ikke antivirus; prøv i stedet Node-pakken under normal beskyttelse.
 Do not disable system-wide protection. / Slå ikke generel beskyttelse fra.
 
 Detailed help is bundled and works offline. / Hjælpen følger med og virker offline.
