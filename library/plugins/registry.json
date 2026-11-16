@@ -31,6 +31,54 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/animus-example-fyrtoejet",
+        "type": "application/json",
+        "name": "AniMus · Fyrtøjet",
+        "description": "Complete nine-scene Fyrtøjet theatre demonstration, with ABC, captions and screenplay",
+        "author": "TiddlyWiki Forge",
+        "version": "0.1.0-beta.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/musical",
+        "requires-reload": "yes",
+        "stability": "experimental",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/animus-example-fyrtoejet/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/animus-example-orchestra",
+        "type": "application/json",
+        "name": "AniMus · Tændstikorkestret",
+        "description": "Complete editable original Tændstikorkestret orchestra demonstration",
+        "author": "TiddlyWiki Forge",
+        "version": "0.1.0-beta.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/musical",
+        "requires-reload": "yes",
+        "stability": "experimental",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/animus-example-orchestra/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/musical",
+        "type": "application/json",
+        "name": "AniMus Forge I · Editor (beta)",
+        "description": "One experimental theatre editor for scene, puppets, animation, ABC music, captions and screenplay. Separate shows install as optional example plugins.",
+        "author": "HUWiki Forge",
+        "version": "0.10.0-beta.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/abc",
+        "requires-reload": "yes",
+        "stability": "experimental",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/musical/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/lessons-balkan",
         "type": "application/json",
         "name": "Balkan / Balkan",
