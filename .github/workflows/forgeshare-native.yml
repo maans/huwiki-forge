@@ -119,7 +119,7 @@ jobs:
           node-version: 22
       - uses: actions/download-artifact@v4
         with:
-          name: ForgeShare-0.1.18-test-builds
+          name: ForgeShare-0.1.19-test-builds
           path: .forgeshare-tested
       - name: Verify and commit tested bundles to draft branch
         run: |
