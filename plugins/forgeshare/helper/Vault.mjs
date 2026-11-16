@@ -3,6 +3,7 @@ import {execFile} from 'node:child_process';
 import {randomBytes,randomUUID,createHash} from 'node:crypto';
 import {mkdir,readFile,writeFile,rename,rm,readdir,stat} from 'node:fs/promises';
 import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const empty=()=>({version:1,connections:[],passwords:[],grants:[],wikiLogins:{}});
 const limited=(s,n=120)=>typeof s==='string' && s.length<=n && !/[\x00-\x1f]/.test(s);
@@ -47,6 +48,12 @@ export function privateCommand(command,args,input='',missingOK=false) {
 export function systemStore({platform=process.platform,native=process.env.FORGESHARE_NATIVE,run=privateCommand}={}) {
   const perform=async(action,input)=>{
     if(platform==='linux')return run('secret-tool',action==='read'?['lookup','application','org.huwiki.ForgeShare','account','vault-v1']:['store','--label=ForgeShare','application','org.huwiki.ForgeShare','account','vault-v1'],input,action==='read');
+    if(platform==='win32' && (!native || !path.isAbsolute(native))) {
+      // Node-only Windows package reuses the identical CurrentUser DPAPI file.
+      // PowerShell receives only a fixed script path and read/write operation; secrets use stdin.
+      const script=path.join(path.dirname(fileURLToPath(import.meta.url)),'VaultWindows.ps1');
+      return run('powershell.exe',['-NoProfile','-NonInteractive','-File',script,action],input);
+    }
     if(!native || !path.isAbsolute(native))throw Error('Open the ForgeShare app to use the vault. / Åbn ForgeShare-appen for at bruge nøgleboksen.');
     return run(native,['--vault',action],input);
   };
