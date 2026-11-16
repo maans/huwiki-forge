@@ -23,7 +23,7 @@ All Editions are **test versions**; a working automated test does not mean every
 | **Demo** | A small wiki for trying editing and saving. |
 | **HUPedia** | Editable articles, fact boxes and bilingual article views. |
 | **Music** | ABC notation, playback, a mixer, teaching examples and MuseScore-to-ABC import. |
-| **AI** | Conversations with manually configured AI providers or approved ForgeShare connections. |
+| **AI** | OpenAI, Claude, Gemini and local models; manual sessions or approved ForgeShare Vault, including screenshot analysis. |
 | **CutOut / Drawing / Slideshow** | Scenes, drawings and presentations. Some device and import/export workflows are still being tested. |
 | **Shop** | A local product catalogue and guided, optional order-form setup. |
 | **HUPin** | Clickable points on images and SVGs. |
@@ -57,4 +57,4 @@ The new Forge code does **not** yet have a repository-wide license decision. Ind
 
 Du behøver ingen konto. Forge gemmer eller synkroniserer **ikke** automatisk din wiki på nettet. Alle Editions er testudgaver med forskellige begrænsninger.
 
-Se [dokumentationsoversigten](docs/README.md), [vejledningen til Assembler](assembler/README.md), [AI-forbindelser](docs/ai-connections.md) og [ForgeShare til Mac](downloads/forgeshare/README.md).
+Se [dokumentationsoversigten](docs/README.md), [vejledningen til Assembler](assembler/README.md), [AI-forbindelser](docs/ai-connections.md) og [ForgeShare til Mac, Windows og Linux](downloads/forgeshare/README.md).
