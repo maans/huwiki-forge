@@ -1,6 +1,16 @@
+# ForgeShare 0.1.19 test release
+
+The ForgeShare plugin and helper have the same version **0.1.19**, available in a small TiddlyWiki plugin and four *separate* downloads for Mac, Windows, Windows Node-only and Linux. [Bilingual downloads and installation guide](../../downloads/forgeshare/README.md).
+
+Gemini, OpenAI, LM Studio (including vision models), and Ollama are available through the approved Vault; image input is supported using AI Forge 0.4.2. Image files saved in the helper's local media store do not travel in HTML wiki backups. Gemini needs a Google AI Studio API key and no HUWiki OAuth grant.
+
+The Windows Node-only edition includes a CMD launcher and a PowerShell 5.1 DPAPI vault bridge, but no ForgeShare.exe. It may avoid the specific unsigned app packaging issue; **it is not a security bypass**. Do not disable antivirus or circumvent a block. The native Windows package remains an unsigned test following an unresolved Defender detection. All device acceptance is still pending.
+
+## Earlier development notes (historical)
+
 # ForgeShare / Tailscale-samarbejde
 
-Optional, standalone TiddlyWiki 5 plugin, `0.1.18`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
+Optional, standalone TiddlyWiki 5 plugin, `0.1.19`. Adds a nontechnical Danish/English guide, official prerequisite download links, and locally downloadable helpers. Nothing is installed, shared or started by importing the plugin. It uses native `$:/language` (Danish, English fallback), with no extra language control. It uses the selected language plugin’s `name` metadata, the standard Danish ID and the existing HUWiki Danish ID (`$:/languages/huwiki-da-DK`). Native information tabs include `da-DK/readme`, `en-GB/readme` and the `HUWiki Dansk/readme` alias, plus a standalone fallback. These readmes remain readable directly from plugin JSON without unpacked shadows.
 
 Import `dist/plugin.json`, save and reload, then open **Control Panel → ForgeShare** or the plugin readme. Forge's **Extra plugins** catalog lists it as an optional test package; no Edition includes it automatically. HTML/offline use and native savers remain available.
 

@@ -1,4 +1,12 @@
-# Under udvikling — Google Gemini (ingen ny Mac-release endnu)
+# ForgeShare 0.1.19 — Gemini, screenshot analysis and four platform packages
+
+- Approved Google Gemini API-key connections in Vault (no HUWiki OAuth) and multi-provider image analysis via the helper.
+- Local, per-wiki PNG/JPEG/WebP media library, with deliberate save/load and access checks. No Google Drive/Apps Script AV dependency for new images.
+- Standalone Mac, Windows, Windows Node-only and Linux ZIP files. Node-only Windows version includes DPAPI Vault and needs Node.js 20+.
+- TiddlyWiki ForgeShare plugin uses versioned external download URLs, not an embedded executable or base64 ZIP.
+- Windows Defender's previous heuristic detection remains unverified; do not bypass protection. Live iPad/Tailscale/Gemma acceptance remains to be done.
+
+# Historical: Gemini implementation prior to the 0.1.19 package build
 
 - Gemini er tilgængelig som ekstra AI-udbyder i ForgeShare-nøgleboksen med Google AI Studio API-nøgle og uden Google OAuth.
 - Nøgleboksen henter Gemini-modeller og gennemfører tekstsamtaler med native `generateContent`; API-nøglen sendes kun i `x-goog-api-key`-headeren til en fast Google-vært, aldrig til wikien eller URL'en.

@@ -62,3 +62,8 @@ AI Forge and the AI Edition now explicitly present Google Gemini as a **ForgeSha
 3. Test text chat, one small screenshot, two screenshots and a 1200 px screenshot from Mac and iPad separately. Inspect model input and ensure no model/approval bypass or secret disclosure.
 4. Save an attached screenshot locally, reload the wiki on both devices, verify that the image renders and that a retry still includes the image. Check revocation and a second wiki cannot retrieve it.
 5. Test legacy Drive references (read-only link), ordinary single-file backups (clear missing-media explanation) and ForgeShare media backup/restore before deciding whether to merge/deploy.
+
+
+## Paired release 0.4.2 / 0.1.19
+
+The plugin library now advertises **AI Forge 0.4.2**. Its standalone AI Edition uses the same plugin, so Google Gemini is available in both. The updated ForgeShare Vault 0.1.19 supports Gemini API keys and screenshot analysis, but requires installation of the separate current helper ZIP on the host computer. Plugin-only updates do not replace the ForgeShare Mac/Windows/Linux program. Windows has both a native-app and Node-only ZIP; download links are kept separate from the plugin JSON. Image generation via Vault remains unsupported.
