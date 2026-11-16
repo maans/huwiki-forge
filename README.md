@@ -30,11 +30,14 @@ All Editions are **test versions**; a working automated test does not mean every
 
 See the [live Edition catalogue](https://forge.måns.dk/) for the available choices and their specific limitations. You can also [open the Assembler directly](https://forge.måns.dk/assembler/). Extra plugins and examples can be deselected; if a tool is required by another selection, the Assembler adjusts the dependent selection and explains the change.
 
-## ForgeShare: separate Mac helper
+## ForgeShare 0.1.19 — Windows, Mac and Linux
 
-[ForgeShare 0.1.18-test for Mac — download and instructions](downloads/forgeshare/README.md) can open a local TiddlyWiki server without Tailscale or share privately over your own Tailscale network. It is **not** part of a normal Edition download.
+[Download ForgeShare](downloads/forgeshare/README.md) · [First-run and unsigned-app installation guide (Danish/English)](downloads/forgeshare/HOWTO.md)
 
-The public Mac app is **not Developer ID signed or notarized**. It is test software: back up your wikis and review the installation instructions. There is **no public Windows download** while the earlier Microsoft Defender detection remains unresolved. Public Tailscale Funnel and AI image functions are not generally verified. The public Mac ZIP does **not** yet include the newer Gemini ForgeShare Vault integration.
+**Physically verified on 16 November 2026:** The owner used the normal, native Windows `ForgeShare.exe` with private Tailscale to Chrome on an iPad. Both Windows and iPad could create and save tiddlers in the same server wiki. The app also worked **without Run as administrator**, after its unsigned-app first-run confirmation. This is shared editing on one TiddlyWiki server, not synchronization of separate single-file wikis.
+
+**Beta distribution:** Four separate 0.1.19 ZIP packages are available (Windows native, Windows Node-only, Mac and Linux). Installing or updating the optional ForgeShare TiddlyWiki plugin does **not** install the host program. Mac is ad-hoc signed, not notarized; Windows native EXE is unsigned. A previous Windows package triggered Defender `Trojan:Script/Wacatac.B!ml`; this remains unresolved, so do not bypass a malware detection or disable antivirus. Public Funnel, the Windows Node-only variant and live Gemma 4 image analysis still need physical acceptance.
+
 
 ## Plugins, source and developer notes
 

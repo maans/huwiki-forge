@@ -1,5 +1,8 @@
 # ForgeShare 0.1.19 test release
 
+**Physical acceptance (16 November 2026):** The native Windows EXE was tested with an iPad over private Tailscale; tiddlers created and saved on either device appeared on the other. It also ran as a normal Windows user, after the required approval of the unsigned app. This establishes Windows↔iPad shared-server editing, not independent-wiki synchronization. See the [bilingual first-run HOWTO](../../downloads/forgeshare/HOWTO.md). The previous Defender detection remains unresolved; do not override an antivirus malware block. Public Funnel, Windows Node Edition and live Gemma 4 vision are not yet physically verified.
+
+
 The ForgeShare plugin and helper have the same version **0.1.19**, available in a small TiddlyWiki plugin and four *separate* downloads for Mac, Windows, Windows Node-only and Linux. [Bilingual downloads and installation guide](../../downloads/forgeshare/README.md).
 
 Gemini, OpenAI, LM Studio (including vision models), and Ollama are available through the approved Vault; image input is supported using AI Forge 0.4.2. Image files saved in the helper's local media store do not travel in HTML wiki backups. Gemini needs a Google AI Studio API key and no HUWiki OAuth grant.

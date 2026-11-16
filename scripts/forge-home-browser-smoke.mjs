@@ -25,20 +25,24 @@ try {
  const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const response=await page.goto(base);assert.equal(response.status(),200);
  await page.waitForSelector('.forge-card');
- await page.locator('[data-plugin="forgeshare"]').getByRole('heading',{name:'Share your wiki from Mac'}).waitFor();
+ await page.locator('[data-plugin="forgeshare"]').getByRole('heading',{name:'Share your wiki from Mac and Windows'}).waitFor();
  const shareCard=page.locator('[data-plugin="forgeshare"]');
- assert.equal(await shareCard.locator('a').count(),2,'Mac app download and guide must be separate links');
- assert.equal(await shareCard.locator('.forge-card-action').getAttribute('href'),'https://forge.måns.dk/downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip');
- assert.equal(await shareCard.locator('.forge-card-action').getAttribute('download'),'ForgeShare-mac-0.1.18-test.zip');
- assert.ok((await shareCard.locator('.forge-card-action').innerText()).includes('(.zip)'));
- assert.equal(await shareCard.locator('.forge-card-secondary').getAttribute('href'),'https://github.com/maans/huwiki-forge/blob/main/downloads/forgeshare/README.md');
- assert.equal(await shareCard.locator('.forge-card-secondary').getAttribute('download'),null,'Guide is a web page, not plugin JSON');
- assert.ok((await shareCard.locator('.forge-card-secondary').innerText()).includes('Guide, status and versions'));
- const macZip=await readFile(path.join(root,'downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip'));
- assert.ok(macZip.length>500000&&macZip.subarray(0,4).equals(Buffer.from([80,75,3,4])),'Public Mac download is a ZIP');
- assert.ok(macZip.includes(Buffer.from('ForgeShare.app/Contents/MacOS/ForgeShare')),'ZIP contains the native Mac app');
- const guide=await readFile(path.join(root,'downloads/forgeshare/README.md'),'utf8');
- assert.ok(guide.includes('0.1.18')&&guide.includes('Windows'),'Public documentation covers version and Windows status');
+ assert.equal(await shareCard.locator('a').count(),3,'Windows, Mac and installation guide should be separate links');
+ const windowsURL='https://forge.måns.dk/downloads/forgeshare/ForgeShare-windows-0.1.19-test.zip';
+ const macURL='https://forge.måns.dk/downloads/forgeshare/ForgeShare-mac-0.1.19-test.zip';
+ assert.equal(await shareCard.locator('.forge-card-action').getAttribute('href'),windowsURL);
+ assert.equal(await shareCard.locator('.forge-card-action').getAttribute('download'),'ForgeShare-windows-0.1.19-test.zip');
+ assert.equal(await shareCard.locator('.forge-card-secondary').nth(0).getAttribute('href'),macURL);
+ assert.equal(await shareCard.locator('.forge-card-secondary').nth(0).getAttribute('download'),'ForgeShare-mac-0.1.19-test.zip');
+ assert.equal(await shareCard.locator('.forge-card-secondary').nth(1).getAttribute('href'),'https://github.com/maans/huwiki-forge/blob/main/downloads/forgeshare/HOWTO.md#english');
+ assert.equal(await shareCard.locator('.forge-card-secondary').nth(1).getAttribute('download'),null);
+ for(const [platform,minBytes,signature] of [['mac',500000,'ForgeShare.app/Contents/MacOS/ForgeShare'],['windows',100000,'ForgeShare.exe']]){
+  const bytes=await readFile(path.join(root,'downloads/forgeshare/ForgeShare-'+platform+'-0.1.19-test.zip'));
+  assert.ok(bytes.length>minBytes&&bytes.subarray(0,4).equals(Buffer.from([80,75,3,4])),'Public '+platform+' download must be a ZIP');
+  assert.ok(bytes.includes(Buffer.from(signature)),'Public '+platform+' ZIP must contain the launcher');
+ }
+ const guide=await readFile(path.join(root,'downloads/forgeshare/HOWTO.md'),'utf8');
+ assert.ok(guide.includes('0.1.19')&&guide.includes('Flere oplysninger')&&guide.includes('Open Anyway'),'HOWTO covers the version, Windows and Mac first-run approval');
  const warning=await shareCard.locator('.forge-risk').innerText();
  for(const phrase of ['Defender','notarized','Windows'])assert.ok(warning.includes(phrase));
  assert.equal(await page.locator('[data-edition="ai"]').getByRole('heading',{name:'AI conversations, tasks and your models'}).count(),1);

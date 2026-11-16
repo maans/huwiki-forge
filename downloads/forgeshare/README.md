@@ -4,6 +4,11 @@
 
 ## English
 
+**[Step-by-step setup and unsigned-app approval guide](HOWTO.md#english)** — includes Windows, Mac, first-run warnings and a private Tailscale sharing test.
+
+**Physical acceptance, 16 November 2026:** The regular Windows 0.1.19 EXE was opened by the project owner without administrator elevation (following a first-run unsigned-app confirmation). Chrome on an iPad reached a HUPedia server wiki over private Tailscale, and tiddlers saved from Windows and iPad appeared on the other device. This verifies shared editing of one server wiki, not sync between independent HTML files.
+
+
 **ForgeShare 0.1.19 test packages (16 November 2026).** Choose the archive for your computer; each is a standalone download, not part of the TiddlyWiki plugin JSON.
 
 - [Mac app — ForgeShare 0.1.19](./ForgeShare-mac-0.1.19-test.zip)
@@ -22,6 +27,11 @@ Install a supported Node.js version (20 or later) from [nodejs.org](https://node
 ---
 
 ## Dansk
+
+**[Trinvis installationsvejledning og godkendelse af usigneret app](HOWTO.md#dansk)** — Windows, Mac, første åbning og test af privat Tailscale-deling.
+
+**Praktisk afprøvet 16. november 2026:** Den almindelige Windows 0.1.19-EXE blev startet uden administratorrettigheder efter godkendelse af en usigneret app. Chrome på iPad åbnede HUPedia via privat Tailscale, og tiddlere gemt på både Windows og iPad blev vist på den anden enhed. Det er fælles redigering i én serverwiki, ikke synkronisering af separate HTML-filer.
+
 
 **ForgeShare 0.1.19 – testpakker til Mac, Windows og Linux (16. november 2026).** Hver ZIP-fil hentes for sig og ligger ikke længere som indlejret program i pluginbibliotekets JSON.
 

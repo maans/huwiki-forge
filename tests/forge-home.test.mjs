@@ -24,14 +24,17 @@ test('Owner import only copies text of known page/design tiddlers, never plugins
  assert.throws(()=>readSavedTiddlers('<html>not a wiki</html>'),/Not a saved Forge/);
 });
 
-test('ForgeShare homepage separates its Mac app ZIP and public guide from the optional wiki plugin',async()=>{
+test('ForgeShare homepage shows Windows and Mac 0.1.19, first-run guide and separate plugin',async()=>{
  const featured=await featuredPlugins(),saved=readSavedTiddlers(await read('index.html'));
  assert.equal(featured.length,1);assert.deepEqual(saved.get('$:/huwiki/forge/forgeshare'),featured[0]);
  for(const lang of ['da','en']){
   const card=saved.get('$:/huwiki/forge/forgeshare-card-'+lang);
   assert.ok(card.text.includes('data-plugin="forgeshare"'));
-  assert.ok(card.text.includes('ForgeShare-mac-0.1.18-test.zip'));
-  assert.ok(card.text.includes('https://github.com/maans/huwiki-forge/blob/main/downloads/forgeshare/README.md'));
+  assert.ok(card.text.includes('ForgeShare-mac-0.1.19-test.zip'));
+  assert.ok(card.text.includes('ForgeShare-windows-0.1.19-test.zip'));
+  assert.ok(card.text.includes('downloads/forgeshare/HOWTO.md'));
+  assert.ok(card.text.includes('0.1.19'));
+  assert.ok(card.text.includes('https://github.com/maans/huwiki-forge/blob/main/downloads/forgeshare/HOWTO.md'));
   assert.ok(!card.text.includes('ForgeShare-plugin-mac-test.json'));
   assert.ok(card.text.includes('Tailscale'));
  }
