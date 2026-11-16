@@ -80,7 +80,7 @@
     {
       "id": "animus",
       "name": "AniMus Forge I (beta)",
-      "version": "0.10.0-beta.1",
+      "version": "0.10.0-beta.2",
       "status": "test",
       "manifest": "../editions/animus/manifest.json",
       "description": "Experimental unified animation, music and theatre workshop for TiddlyWiki. The Fyrtøjet and Tændstikorkestret examples share one editor.",
