@@ -278,6 +278,14 @@
       "description": "Shop Site and setup checklist · native Dansk / English · Google Sites and public Funnel tested on desktop; physical mobile acceptance pending",
       "file": "../plugins/shop/dist/plugin.json",
       "status": "test"
+    },
+    {
+      "id": "forgeshare",
+      "name": "ForgeShare",
+      "version": "0.1.19",
+      "description": "Local wiki/site sharing, approved Gemini/OpenAI/LM Studio/Ollama AI connections, screenshot analysis and per-wiki media",
+      "file": "../plugins/forgeshare/dist/plugin.json",
+      "status": "test"
     }
   ]
 }
