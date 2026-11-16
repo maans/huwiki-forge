@@ -45,7 +45,8 @@ test('bundle is reproducible, standalone and opt-in in the catalog', async () =>
   assert.equal(catalog.plugins.find(p => p.id === 'forgeshare').version, plugin.version);
   for (const item of catalog.editions) {
     const manifest = JSON.parse(await read('catalog/' + item.manifest));
-    assert.ok(!manifest.plugins.some(p => p.includes('forgeshare')));
+    if(item.id==='ai') assert.ok(manifest.plugins.some(p => p.includes('forgeshare')));
+    else assert.ok(!manifest.plugins.some(p => p.includes('forgeshare')));
   }
 });
 test('actual TW renderer selects Danish and English, preserves block headings and download links offline', () => {
@@ -60,9 +61,10 @@ test('actual TW renderer selects Danish and English, preserves block headings an
     const html = tw.wiki.renderTiddler('text/html', base + '/home');
     assert.ok(html.includes(expected), language); assert.ok(!html.includes(excluded), language);
     assert.match(html, /<h[12][^>]*>/); assert.doesNotMatch(html, /Filter error|Missing closing/);
-    for (const name of ['mac', 'windows', 'linux']) {
+    for (const name of ['mac', 'windows', 'windows-node', 'linux']) {
       assert.ok(html.includes(`download="ForgeShare-${name}.zip"`));
-      assert.ok(html.includes('data:application/zip;base64,'));
+      assert.ok(html.includes('https://forge.måns.dk/downloads/forgeshare/ForgeShare-'+name+'-0.1.19-test.zip'));
+      assert.ok(!html.includes('data:application/zip;base64,'));
     }
     assert.ok(html.includes('https://nodejs.org/en/download'));
     assert.ok(html.includes('https://tailscale.com/download'));
@@ -147,10 +149,11 @@ test('native 3000 action changes only the requested config; read-only view hides
 });
 test('all downloadable ZIP files embed the reviewed helper and all required modules', async () => {
   const source = await read('plugins/forgeshare/helper/ForgeShare.mjs');
-  for (const platform of ['mac', 'windows', 'linux']) {
-    const bytes = Buffer.from(shadows[base + '/download/' + platform].text.split(',')[1], 'base64');
+  for (const platform of ['mac', 'windows', 'windows-node', 'linux']) {
+    const bytes = await readFile(new URL('../plugins/forgeshare/dist/ForgeShare-' + platform + '.zip', import.meta.url));
+    assert.equal(shadows[base + '/download/' + platform].text,'https://forge.måns.dk/downloads/forgeshare/ForgeShare-'+platform+'-0.1.19-test.zip');
     assert.equal(bytes.readUInt32LE(), 0x04034b50);
-    const count = bytes.readUInt16LE(bytes.length - 22 + 10); assert.equal(count, platform==='mac'?12:9);
+    const count = bytes.readUInt16LE(bytes.length - 22 + 10); assert.equal(count, platform==='mac'?12:platform==='linux'?9:10);
     let offset = 0; const files = {};
     while (bytes.readUInt32LE(offset) === 0x04034b50) {
       const size = bytes.readUInt32LE(offset + 18), length = bytes.readUInt16LE(offset + 26);
@@ -175,11 +178,13 @@ test('all downloadable ZIP files embed the reviewed helper and all required modu
       entry += 46 + length + bytes.readUInt16LE(entry + 30) + bytes.readUInt16LE(entry + 32);
     }
     if(platform==='linux')assert.match(files['Start-ForgeShare.sh'].toString(),/--gui/);
+    else if(platform==='windows-node') {assert.ok(files['Start-ForgeShare.cmd']);assert.ok(!files['ForgeShare.exe']);}
     else assert.ok(!Object.keys(files).some(name=>/\.(cmd|command)$/.test(name)));
     if(platform==='mac') {
       assert.equal(files['ForgeShare.app/Contents/MacOS/ForgeShare'].readUInt32BE(),0xcafebabe,'Universal Mac executable');
       assert.equal(files['ForgeShare.app/Contents/Resources/ForgeShare.icns'].subarray(0,4).toString(),'icns');
     }
+    if(platform==='windows'||platform==='windows-node') assert.ok(files['VaultWindows.ps1']);
     if(platform==='windows') {
       const exe=files['ForgeShare.exe']; assert.equal(exe.subarray(0,2).toString(),'MZ');
       const pe=exe.readUInt32LE(0x3c); assert.equal(exe.readUInt32LE(pe),0x4550);
@@ -188,10 +193,11 @@ test('all downloadable ZIP files embed the reviewed helper and all required modu
   }
   assert.equal(shadows[base + '/download/script'], undefined, 'No broken standalone download without its modules');
 });
-test('plugin assembles into pinned standalone HTML without remote dependency', async () => {
+test('plugin assembles into pinned standalone HTML with external versioned downloads', async () => {
   const html = assembleHtml(await read('core/empty.html'), [plugin]);
   assert.ok(html.includes('"title":"' + base + '"'));
-  assert.ok(html.includes('data:application/zip;base64,'));
+  assert.ok(html.includes('ForgeShare-mac-0.1.19-test.zip'));
+  assert.ok(!html.includes('data:application/zip;base64,'));
   assert.ok(!Object.values(shadows).some(t => t['module-type'] === 'startup'));
 });
 test('Serve guard preserves AI mappings and refuses occupied ports, foreground and public conflicts', () => {
