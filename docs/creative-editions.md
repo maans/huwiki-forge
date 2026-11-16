@@ -1,4 +1,4 @@
-# CutOut og Slideshow: oprindelige værktøjer uden Google-tvang
+# CutOut og Slideshow — funktioner, import, eksport og kendte begrænsninger
 
 ## Omfang
 

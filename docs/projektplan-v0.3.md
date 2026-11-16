@@ -1,7 +1,9 @@
 # HUWiki Forge — projektplan v0.3
 
+> **Historisk plan.** Denne tekst dokumenterer overvejelser og opgaver, som de så ud 13. november 2026. Forge har siden fået en offentlig forside, Assembler og Plugin Library. Brug [den aktuelle vejledning](../README.md) og [dokumentationsoversigten](README.md) for det, der kan prøves nu.
+
 **Dato:** 13. november 2026  
-**Status:** Revideret arkitektur- og arbejdsplan — endnu ikke implementeret  
+**Status:** Historisk arkitekturplan fra 13. november 2026 — ikke en aktuel oversigt over implementerede funktioner  
 **Arbejdsnavn:** HUWiki Forge  
 **Ændring siden v0.2:** TiddlyWikis eksisterende redigerings-, gemme-, import-/eksport- og server-saverfunktioner er standard. IndexedDB, »Mine wikier« og en ny lagringsmotor er **ikke** krav til Forge og er taget ud af den første udviklingsplan.
 

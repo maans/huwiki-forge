@@ -1,5 +1,7 @@
 # SitePublisher – genbrug OAuthLabs funktioner uden den gamle brugerflade
 
+> **Teknisk kildeaudit og udviklingsnoter.** De tidlige »skal«-punkter var en implementeringsplan; senere statusafsnit dokumenterer udvalgte ændringer. For en brugers vej fra wiki til HTML/PDF, se [Forge-vejledningen](../README.md) og [publisher-oversigten](publishers.md).
+
 **Kildegennemgang: 13. november 2026.** Autoritative kilder: den vedhæftede `HUWiki-OAuthLab-backup.zip`, især `SiteWorkshop.js`, `HUPediaPublishing.js`, `HUPediaSiteAssets.js`, `CutOutSiteRuntime.js`, `MusicSite.js` og `MusicSiteTemplate.js`; nyere Musik Edition med `$:/plugins/huwiki/studio/site-builder.js` og `$:/plugins/huwiki/site-publisher`.
 
 ## Beslutning

@@ -1,5 +1,7 @@
 # Overførsel af den eksisterende HUWiki-kode til Forge
 
+> **Historisk kildeanalyse, 13. november 2026.** Afsnittet »Hvad der endnu ikke er gjort« beskriver status ved gennemgangen af kildearkivet, ikke den aktuelle Forge-udgave. Se [brugervejledningen](../README.md) og [migrationsloggen](migration-status.md) for senere arbejde.
+
 **Kilde:** HUWiki-OAuthLab-backup.zip (132 filer). Undersøgt 13. november 2026.
 
 Arkivet bruges som teknisk reference og grundlag for fremtidig komponentmigrering. Apps Script-koden offentliggøres ikke automatisk i Forge-repositoryet.
