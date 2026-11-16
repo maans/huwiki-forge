@@ -101,8 +101,8 @@
     "heading-en": "AI conversations, tasks and your models",
     "description-da": "Brug OpenAI, Claude, Gemini eller en lokal AI-model via LM Studio/Ollama. ForgeShare er valgfri.",
     "description-en": "Use OpenAI, Claude, Gemini or local models via LM Studio/Ollama. ForgeShare is optional.",
-    "note-da": "Testudgave: Gemini via ForgeShare kræver den nye Mac-hjælper og godkendelse. Direkte cloud-kald kan blokeres af CORS.",
-    "note-en": "Test release: Gemini through ForgeShare needs the updated Mac helper and approval. Direct browser cloud calls may be blocked by CORS."
+    "note-da": "Testudgave: Gemini via ForgeShare kræver hjælperen 0.1.19 til Mac, Windows eller Linux og godkendelse. Direkte cloud-kald kan blokeres af CORS.",
+    "note-en": "Test release: Gemini via ForgeShare needs the 0.1.19 helper for Mac, Windows or Linux and approval. Direct browser cloud requests may be blocked by CORS."
   },
   {
     "title": "$:/huwiki/forge/edition/hupin",
