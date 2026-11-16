@@ -1,0 +1,18 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "AniMus Forge I · Beta"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "Fyrtøjet · Tændstikorkestret · Fælles redigering"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[AniMus Forge I · Start]]"
+  }
+]
