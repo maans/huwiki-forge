@@ -173,7 +173,7 @@ test('all downloadable ZIP files embed the reviewed helper and all required modu
       assert.equal(bytes.readUInt32LE(entry), 0x02014b50);
       const length = bytes.readUInt16LE(entry + 28);
       const name = bytes.subarray(entry + 46, entry + 46 + length).toString();
-      if (name.startsWith('Start-') || name.endsWith('/MacOS/ForgeShare'))
+      if ((name.startsWith('Start-') && !name.endsWith('.cmd')) || name.endsWith('/MacOS/ForgeShare'))
         assert.equal((bytes.readUInt32LE(entry + 38) >>> 16) & 0o777, 0o755);
       entry += 46 + length + bytes.readUInt16LE(entry + 30) + bytes.readUInt16LE(entry + 32);
     }
