@@ -25,17 +25,17 @@ try {
  await page.goto(pathToFileURL(file).href);
  const panel=page.locator('.hu-forgeshare'); await panel.waitFor();
  assert.equal(await panel.locator('h1').innerText(),'Dit indhold. Dine forbindelser.');
- assert.equal(await panel.locator('.hu-share-downloads a').count(),3);
+ assert.equal(await panel.locator('.hu-share-downloads a').count(),4);
  assert.equal(await panel.locator('details[open]').count(),0);
  const download=await panel.locator('.hu-share-downloads').boundingBox();
  assert.ok(download.y<700,'Downloads must remain near the top, after the server-type cards and before long help text');
  const capture=async name=>{if(process.env.FORGESHARE_PREVIEW_DIR){await mkdir(process.env.FORGESHARE_PREVIEW_DIR,{recursive:true});await panel.screenshot({path:path.join(process.env.FORGESHARE_PREVIEW_DIR,name+'.png')});}};
  await capture('ForgeShare-dansk');
- // The browser checks actual downloadable bytes for all three platforms.
- for(const platform of ['mac','windows','linux']) {
+ // Browser downloads refer to separate versioned ZIP files, never embedded base64.
+ for(const platform of ['mac','windows','windows-node','linux']) {
   const href=await panel.locator(`[download="ForgeShare-${platform}.zip"]`).getAttribute('href');
-  const bytes=Buffer.from(href.split(',')[1],'base64');
-  assert.ok(bytes.equals(await readFile(path.join(root,`plugins/forgeshare/dist/ForgeShare-${platform}.zip`))));
+  assert.equal(href,`https://forge.måns.dk/downloads/forgeshare/ForgeShare-${platform}-0.1.19-test.zip`);
+  assert.ok((await readFile(path.join(root,`plugins/forgeshare/dist/ForgeShare-${platform}.zip`))).length>100);
  }
  await page.setViewportSize({width:390,height:844});
  const bounds=await panel.boundingBox(); assert.ok(bounds.x+bounds.width<=391,'Panel must fit inside the mobile viewport');
