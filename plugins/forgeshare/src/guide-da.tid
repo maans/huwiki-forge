@@ -11,6 +11,7 @@ type: text/vnd.tiddlywiki
 <section class="hu-share-step"><span class="hu-share-number" aria-hidden="true">1</span><div class="hu-share-step-body"><h2>Hent hjælperen</h2><p>Vælg computeren, hvor wikien skal ligge.</p>
 <div class="hu-share-downloads">
 <a href={{$:/plugins/huwiki/forgeshare/download/mac}} download="ForgeShare-mac.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Mac</span></a>
+<a href={{$:/plugins/huwiki/forgeshare/download/windows-node}} download="ForgeShare-windows-node.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Windows · Node</span></a>
 <a href={{$:/plugins/huwiki/forgeshare/download/windows}} download="ForgeShare-windows.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Windows</span></a>
 <a href={{$:/plugins/huwiki/forgeshare/download/linux}} download="ForgeShare-linux.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 16v5h16v-5"/></svg><span>Linux</span></a>
 </div>
@@ -22,7 +23,7 @@ Installer Node.js til hjælperen. Tailscale behøves kun, når du vælger deling
 
 <div class="hu-share-install-links"><a href="https://nodejs.org/en/download" target="_blank" rel="noopener noreferrer">Hent Node.js ↗</a> <a href="https://tailscale.com/download" target="_blank" rel="noopener noreferrer">Hent Tailscale ↗</a></div>
 
-På Linux: følg vejledningen til din distribution. Dialogboksene kræver også Zenity.
+På Windows anbefales den enklere <strong>Windows · Node</strong>-pakke, hvis sikkerhedsprogrammet blokerer den usignerede EXE. Den kræver Node.js 20+ og PowerShell, og bruger stadig Windows DPAPI til nøgleboksen. Windows Defender fandt tidligere en mulig trussel i en testudgave; omgå ikke antiviruskontrol. På Linux: følg vejledningen til din distribution. Dialogboksene kræver også Zenity.
 
 </div>
 </details>
