@@ -90,7 +90,7 @@
     "edition-id": "ai",
     "name": "AI Edition (test)",
     "status": "test",
-    "version": "0.4.1-test.1",
+    "version": "0.4.2",
     "order": "02.5",
     "build-url": "https://forge.måns.dk/assembler/?edition=ai",
     "build-url-da": "https://forge.måns.dk/assembler/?edition=ai&lang=da",
@@ -101,8 +101,8 @@
     "heading-en": "AI conversations, tasks and your models",
     "description-da": "Brug OpenAI, Claude, Gemini eller en lokal AI-model via LM Studio/Ollama. ForgeShare er valgfri.",
     "description-en": "Use OpenAI, Claude, Gemini or local models via LM Studio/Ollama. ForgeShare is optional.",
-    "note-da": "Testudgave: Direkte cloud-kald kan blokeres af CORS. Nøgler gemmes ikke i wikien.",
-    "note-en": "Test release: Direct cloud requests may be blocked by CORS. Keys are not saved in the wiki."
+    "note-da": "Testudgave: Gemini via ForgeShare kræver den nye Mac-hjælper og godkendelse. Direkte cloud-kald kan blokeres af CORS.",
+    "note-en": "Test release: Gemini through ForgeShare needs the updated Mac helper and approval. Direct browser cloud calls may be blocked by CORS."
   },
   {
     "title": "$:/huwiki/forge/edition/hupin",

@@ -139,10 +139,10 @@
       "fields": {
         "title": "$:/plugins/huwiki/forgeshare",
         "type": "application/json",
-        "name": "ForgeShare · Mac test",
-        "description": "Mac-only ForgeShare guide and download · local TiddlyWiki Node.js and private Tailscale · unsigned test",
+        "name": "ForgeShare",
+        "description": "Tailscale collaboration / Tailscale-samarbejde",
         "author": "HUWiki",
-        "version": "0.1.18-mac-test.1",
+        "version": "0.1.19",
         "plugin-type": "plugin",
         "core-version": ">=5.4.1"
       },
