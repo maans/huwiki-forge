@@ -1,11 +1,43 @@
 // Private helper service. No secret-returning browser operation exists.
 import {execFile} from 'node:child_process';
 import {randomBytes,randomUUID,createHash} from 'node:crypto';
-import {mkdir,readFile,writeFile,rename,rm} from 'node:fs/promises';
+import {mkdir,readFile,writeFile,rename,rm,readdir,stat} from 'node:fs/promises';
 import path from 'node:path';
 const hash=s=>createHash('sha256').update(s).digest('hex');
 const empty=()=>({version:1,connections:[],passwords:[],grants:[],wikiLogins:{}});
 const limited=(s,n=120)=>typeof s==='string' && s.length<=n && !/[\x00-\x1f]/.test(s);
+
+// Image bytes belong to the ForgeShare host, never in the saved wiki or Vault secrets.
+// Accepted formats are intentionally narrow; an extension or claimed MIME is not enough.
+const MAX_IMAGE_BYTES=3*1024*1024;
+const MAX_IMAGE_BATCH_BYTES=4*1024*1024;
+const MAX_IMAGE_REQUESTS=2;
+const imageFormats=new Set(['image/png','image/jpeg','image/webp']);
+export function decodeImageAttachment(image){
+  if(!image || typeof image!=='object' || !imageFormats.has(image.mimeType) ||
+      typeof image.data!=='string' || !image.data.length ||
+      image.data.length>Math.ceil(MAX_IMAGE_BYTES/3)*4+4 ||
+      image.data.length%4!==0 || !/^[A-Za-z0-9+/]+={0,2}$/.test(image.data))
+    throw Error('Invalid PNG, JPEG or WebP image / Ugyldigt PNG-, JPEG- eller WebP-billede');
+  const bytes=Buffer.from(image.data,'base64');
+  if(!bytes.length || bytes.length>MAX_IMAGE_BYTES || bytes.toString('base64')!==image.data)
+    throw Error('Invalid image payload / Ugyldige billeddata');
+  const png=bytes.length>=8 && bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10]));
+  const jpg=bytes.length>=3 && bytes[0]===255 && bytes[1]===216 && bytes[2]===255;
+  const webp=bytes.length>=12 && bytes.toString('ascii',0,4)==='RIFF' && bytes.toString('ascii',8,12)==='WEBP';
+  if(!(image.mimeType==='image/png'&&png || image.mimeType==='image/jpeg'&&jpg || image.mimeType==='image/webp'&&webp))
+    throw Error('Image content does not match format / Billedet passer ikke til filformatet');
+  return {mimeType:image.mimeType,data:image.data,bytes};
+}
+function validatedImages(value){
+  if(value===undefined || value===null)return [];
+  if(!Array.isArray(value) || value.length>MAX_IMAGE_REQUESTS)throw Error('At most two images / Højst to billeder');
+  const result=value.map(decodeImageAttachment);
+  if(result.reduce((total,image)=>total+image.bytes.length,0)>MAX_IMAGE_BATCH_BYTES)
+    throw Error('Images exceed the size limit / Billederne er for store');
+  return result;
+}
+const mediaIdPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 export function privateCommand(command,args,input='',missingOK=false) {
   return new Promise((resolve,reject)=>{
     const child=execFile(command,args,{windowsHide:true,maxBuffer:1048576,timeout:30000},(error,stdout,stderr)=>error && !(missingOK && error.code===1 && !stdout && !stderr)?reject(Error('The system password store is unavailable. / Styresystemets nøgleboks er ikke tilgængelig.')):resolve(stdout));
@@ -59,6 +91,34 @@ export class Vault {
     });
   }
   async revoke(id){await this.change(d=>{d.grants=d.grants.filter(g=>g.id!==id);});}
+
+  imageDirectory(wikiId){return path.join(this.root,'ai-media',hash(String(wikiId)));}
+  async saveMedia(wikiId,input){
+    const image=decodeImageAttachment(input),dir=this.imageDirectory(wikiId);
+    await mkdir(dir,{recursive:true,mode:0o700});
+    // A shared/approved device must not be able to fill the host disk indefinitely.
+    const names=(await readdir(dir)).filter(name=>mediaIdPattern.test(name.replace(/\.bin$/,''))&&name.endsWith('.bin'));
+    if(names.length>=500)throw Error('Local media library is full / Det lokale billedbibliotek er fyldt');
+    let total=0;for(const name of names)total+=(await stat(path.join(dir,name))).size;
+    if(total+image.bytes.length>128*1024*1024)throw Error('Local media quota exceeded / Grænse for lokale billeder nået');
+    const id=randomUUID(),dataPath=path.join(dir,id+'.bin'),metaPath=path.join(dir,id+'.json');
+    const name=limited(input.name,120)?input.name.trim():'';
+    await writeFile(dataPath,image.bytes,{flag:'wx',mode:0o600});
+    try{await writeFile(metaPath,JSON.stringify({id,mimeType:image.mimeType,name,bytes:image.bytes.length}),{flag:'wx',mode:0o600});}
+    catch(e){await rm(dataPath,{force:true});throw e;}
+    return {ok:true,id,mimeType:image.mimeType,name,bytes:image.bytes.length};
+  }
+  async loadMedia(wikiId,input){
+    if(!mediaIdPattern.test(input?.id||''))throw Error('Invalid local image reference / Ugyldig lokal billedreference');
+    const dir=this.imageDirectory(wikiId),id=input.id;
+    const meta=JSON.parse(await readFile(path.join(dir,id+'.json'),'utf8'));
+    if(meta.id!==id || !imageFormats.has(meta.mimeType) || !Number.isSafeInteger(meta.bytes) || meta.bytes>MAX_IMAGE_BYTES)
+      throw Error('Invalid local media metadata / Ugyldige billedoplysninger');
+    const bytes=await readFile(path.join(dir,id+'.bin'));
+    if(bytes.length!==meta.bytes)throw Error('Invalid stored media / Ugyldigt gemt billede');
+    const image=decodeImageAttachment({mimeType:meta.mimeType,data:bytes.toString('base64')});
+    return {ok:true,id,mimeType:meta.mimeType,data:image.data,bytes:bytes.length};
+  }
   async grant(wikiId,token){
     if(!/^[a-f0-9]{64}$/.test(token||''))throw Error('Approval required / Godkendelse kræves');
     const d=await this.read(),g=d.grants.find(g=>g.wikiId===wikiId&&g.hash===hash(token)&&g.expires>this.now());
@@ -68,6 +128,14 @@ export class Vault {
     const {d,g}=await this.grant(wikiId,token);
     if(operation==='connections')return {connections:d.connections.filter(c=>g.connectionIds.includes(c.id)).map(publicConnection)};
     if(operation==='library')return {entries:(await this.library()).entries.filter(e=>g.wikiIds.includes(e.id)).map(e=>({id:e.id,name:e.name,description:e.description,kind:e.kind,url:e.shareUrl||'',addressIsLastKnown:true,hasLogin:!!d.wikiLogins[e.id]}))};
+    if(operation==='media-get')return this.loadMedia(wikiId,input);
+    if(operation==='media-save'){
+      if(!g.connectionIds.length)throw Error('AI access approval required / Godkend AI-adgang først');
+      this.attempts=this.attempts.filter(a=>a.time>this.now()-60000);
+      if(this.attempts.filter(a=>a.id===g.id&&a.media).length>=10)throw Error('Please wait before saving more images / Vent før du gemmer flere billeder');
+      this.attempts.push({id:g.id,time:this.now(),media:true});
+      return this.saveMedia(wikiId,input);
+    }
     if(!['models','generate'].includes(operation))throw Error('Unknown operation');
     const c=d.connections.find(c=>c.id===input.connectionId && g.connectionIds.includes(c.id));if(!c)throw Error('Connection not approved / Forbindelsen er ikke godkendt');
     if(this.inFlight.has(g.id))throw Error('Wait for the previous answer / Vent på det forrige svar');
@@ -80,6 +148,8 @@ export class Vault {
     if(operation==='generate'){
       if(input.consent!==true||!Array.isArray(input.messages)||input.messages.length>100||!input.messages.length)throw Error('Confirm before sending / Bekræft før afsendelse');
       const messages=input.messages.map(m=>{if(!['user','assistant','system'].includes(m.role)||typeof m.content!=='string'||m.content.length>100000)throw Error('Invalid message');return {role:m.role,content:m.content};});
+      const images=validatedImages(input.images);
+      if(images.length && !messages.some(m=>m.role==='user'))throw Error('Image requires a user message / Billedet kræver en brugerbesked');
       const model=input.model||c.model;
       if(!limited(model,200)||!model)throw Error('Choose a model / Vælg en model');
       if(gemini){
@@ -88,10 +158,22 @@ export class Vault {
         const system=messages.filter(m=>m.role==='system').map(m=>m.content).join('\n\n');
         const contents=messages.filter(m=>m.role!=='system').map(m=>({role:m.role==='assistant'?'model':'user',parts:[{text:m.content}]}));
         if(!contents.length)throw Error('No user or assistant messages / Ingen beskeder at sende');
+        if(images.length){
+          const last=contents.findLastIndex(m=>m.role==='user');
+          contents[last].parts.push(...images.map(im=>({inline_data:{mime_type:im.mimeType,data:im.data}})));
+        }
         body={contents,generationConfig:{maxOutputTokens:2048}};
         if(system)body.systemInstruction={parts:[{text:system}]};
       }else{
         body={model,messages,stream:false,...(!ollama?{...(c.provider==='openai'?{max_completion_tokens:2048}:{max_tokens:2048})}:{options:{num_predict:2048}})};
+        if(images.length){
+          const last=body.messages.findLastIndex(m=>m.role==='user');
+          if(ollama)body.messages[last].images=images.map(im=>im.data);
+          else body.messages[last].content=[
+            {type:'text',text:body.messages[last].content},
+            ...images.map(im=>({type:'image_url',image_url:{url:'data:'+im.mimeType+';base64,'+im.data}}))
+          ];
+        }
       }
     }
     // The Gemini destination is fixed even if a stored connection is damaged.
