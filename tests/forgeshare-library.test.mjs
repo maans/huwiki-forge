@@ -93,7 +93,11 @@ test('discovery finds wiki folders without following links, scanning contents or
  assert.deepEqual(await readRegistry(root),{version:1,wikis:[]});
  await assert.rejects(readFile(path.join(root,'library.json')),{code:'ENOENT'});
  assert.deepEqual((await discoverWikiFolders({roots:[base],known:[folder,second],timeoutMs:60000})).entries,[]);
- assert.deepEqual(defaultDiscoveryRoots(base),['Wikis','Documents','Desktop','Downloads'].map(name=>path.join(base,name)));
+ const expected=['Wikis','Documents','Desktop','Downloads'].map(name=>path.join(base,name));
+ const actual=defaultDiscoveryRoots(base);
+ assert.deepEqual(actual.slice(0,4),expected);
+ if(process.platform==='win32')assert.ok(actual.includes(path.join(base,'OneDrive','Wikis')),'Windows discovery should include OneDrive/Wikis');
+ else assert.deepEqual(actual,expected);
 });
 test('Windows discovery includes OneDrive Documents as well as ordinary Documents',async()=>{
  const home=path.join(temp,'Windows home');
