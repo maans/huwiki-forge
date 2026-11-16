@@ -25,17 +25,16 @@ try {
  const page=await context.newPage();page.setDefaultTimeout(15000);const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const response=await page.goto(base);assert.equal(response.status(),200);
  await page.waitForSelector('.forge-card');
- await page.locator('[data-plugin="forgeshare"]').getByRole('heading',{name:'Share your wiki from Mac and Windows'}).waitFor();
+
+ await page.locator('[data-plugin="forgeshare"]').getByRole('heading',{name:'Open and share your wikis'}).waitFor();
  const shareCard=page.locator('[data-plugin="forgeshare"]');
- assert.equal(await shareCard.locator('a').count(),3,'Windows, Mac and installation guide should be separate links');
- const windowsURL='https://forge.måns.dk/downloads/forgeshare/ForgeShare-windows-0.1.19-test.zip';
- const macURL='https://forge.måns.dk/downloads/forgeshare/ForgeShare-mac-0.1.19-test.zip';
- assert.equal(await shareCard.locator('.forge-card-action').getAttribute('href'),windowsURL);
- assert.equal(await shareCard.locator('.forge-card-action').getAttribute('download'),'ForgeShare-windows-0.1.19-test.zip');
- assert.equal(await shareCard.locator('.forge-card-secondary').nth(0).getAttribute('href'),macURL);
- assert.equal(await shareCard.locator('.forge-card-secondary').nth(0).getAttribute('download'),'ForgeShare-mac-0.1.19-test.zip');
- assert.equal(await shareCard.locator('.forge-card-secondary').nth(1).getAttribute('href'),'https://github.com/maans/huwiki-forge/blob/main/downloads/forgeshare/HOWTO.md#english');
- assert.equal(await shareCard.locator('.forge-card-secondary').nth(1).getAttribute('download'),null);
+ assert.equal(await shareCard.locator('a').count(),2,'GitHub downloads and installation/safety guide only');
+ assert.equal(await shareCard.locator('.forge-card-action').getAttribute('href'),'https://github.com/maans/huwiki-forge/tree/main/downloads/forgeshare');
+ assert.equal(await shareCard.locator('.forge-card-action').getAttribute('download'),null,'Download choices belong on GitHub');
+ assert.equal(await shareCard.locator('.forge-card-secondary').getAttribute('href'),'https://github.com/maans/huwiki-forge/blob/main/downloads/forgeshare/HOWTO.md#english');
+ assert.equal(await shareCard.locator('.forge-risk,.forge-note').count(),0,'No release-history or caution box on the landing card');
+ assert.equal(await shareCard.evaluate(el=>getComputedStyle(el).alignSelf),'start','The short card should not stretch to the height of the neighbouring Edition card');
+ assert.doesNotMatch(await page.locator('.forge-footer').innerText(),/Windows 0\.1\.19/,'Internal test history should not appear in the public footer');
  for(const [platform,minBytes,signature] of [['mac',500000,'ForgeShare.app/Contents/MacOS/ForgeShare'],['windows',100000,'ForgeShare.exe']]){
   const bytes=await readFile(path.join(root,'downloads/forgeshare/ForgeShare-'+platform+'-0.1.19-test.zip'));
   assert.ok(bytes.length>minBytes&&bytes.subarray(0,4).equals(Buffer.from([80,75,3,4])),'Public '+platform+' download must be a ZIP');
@@ -43,8 +42,6 @@ try {
  }
  const guide=await readFile(path.join(root,'downloads/forgeshare/HOWTO.md'),'utf8');
  assert.ok(guide.includes('0.1.19')&&guide.includes('Flere oplysninger')&&guide.includes('Open Anyway'),'HOWTO covers the version, Windows and Mac first-run approval');
- const warning=await shareCard.locator('.forge-risk').innerText();
- for(const phrase of ['Defender','notarized','Windows'])assert.ok(warning.includes(phrase));
  assert.equal(await page.locator('[data-edition="ai"]').getByRole('heading',{name:'AI conversations, tasks and your models'}).count(),1);
  const catalog=JSON.parse(await readFile(path.join(root,'catalog/editions.json'),'utf8'));
  assert.equal(await page.locator('.forge-card[data-edition]').count(),catalog.editions.length);
