@@ -3,5 +3,5 @@
   "originalPackageSha256": "8fbb4564e4298537d727d8abf0e29e36fb943c08c9a71e7e9cae5f8073bb380b",
   "originalTitle": "$:/plugins/huwiki/ai",
   "originalVersion": "0.3.6",
-  "changes": "ForgeShare connection bridge and consent; editable source tiddlers; text-only vault integration"
+  "changes": "ForgeShare AI connector with screenshot analysis, local per-wiki image storage, and read-only legacy Google Drive references. Browser-only image attachments are not persisted unless saved explicitly."
 }
