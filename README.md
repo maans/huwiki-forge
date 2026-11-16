@@ -9,7 +9,7 @@
 ## Get started
 
 1. On the [Forge homepage](https://forge.måns.dk/), choose **Open demo** on an Edition card to try it without installing anything.
-2. Choose **Customize and download** to select tools, examples and a theme. In the Assembler, click **Build and download your wiki**.
+2. Choose **Customize & download** to select tools, examples and a theme. In the Assembler, click **Build & download your wiki**.
 3. Open the downloaded HTML file, edit it in TiddlyWiki and use TiddlyWiki's **Save** button to keep your changes.
 
 You do **not** need a GitHub or Google account to try Forge. Forge does **not** automatically store or synchronize your wiki online. Keep backups of your HTML file. Some downloads, AI connections and publishing features need an internet connection or another service.

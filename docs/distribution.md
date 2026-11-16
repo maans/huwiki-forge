@@ -3,8 +3,8 @@
 ## I only want my own wiki
 
 1. Open [Forge](https://forge.måns.dk/) and choose **Open demo** to try an Edition.
-2. Choose **Customize and download**, or go directly to the [Assembler](https://forge.måns.dk/assembler/).
-3. Click **Build and download your wiki**. Open the HTML file, edit it, and use TiddlyWiki's **Save** button.
+2. Choose **Customize & download**, or go directly to the [Assembler](https://forge.måns.dk/assembler/).
+3. Click **Build & download your wiki**. Open the HTML file, edit it, and use TiddlyWiki's **Save** button.
 
 This is a **download of your wiki**, not a copy of the Forge source repository. Forge does not create an online account or synchronize your downloaded copies.
 

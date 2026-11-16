@@ -8,7 +8,7 @@ The Assembler creates **one editable TiddlyWiki HTML file** from an Edition and 
 
 1. Under **1. Your starting point / Dit udgangspunkt**, select an Edition. You can give your wiki a name.
 2. Under **2. Tools / Værktøjer** and **3. Content and examples / Indhold og eksempler**, keep or remove the selected packages. Under **4. Appearance / Udseende**, choose a theme.
-3. Review the summary. Click **Build and download your wiki / Byg og hent din wiki**.
+3. Review the summary. Click **Build & download your wiki / Byg og hent din wiki**.
 4. Open the downloaded HTML file, edit it in TiddlyWiki, and use its **Save / Gem** button. Keep a backup.
 
 The Assembler automatically uses a pinned, tested TiddlyWiki core. You do **not** need to find or upload `empty.html`. The optional **Advanced / Avanceret** file picker is only for testing a different official core.
