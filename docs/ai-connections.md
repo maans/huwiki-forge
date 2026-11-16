@@ -1,39 +1,33 @@
-# AI Edition: private forbindelser uden for TiddlyWiki
+# AI connections — current test behavior
 
-**Designkrav** fra den tidligere HUWiki Private Vault (`PrivateVault.js`) og AI Edition 0.3.6 (`AIEdition.js`).
+AI Edition uses **AI Forge** for text conversations. Connections are **optional**: the wiki can still be opened and edited without an AI provider.
 
-HUWiki havde et brugerafgrænset serverlager (`PropertiesService.getUserProperties()`), som holdt cloud-API-nøgler ude af TiddlyWikien. Forge skal bevare **adskillelsen** uden at kræve Apps Script eller nogen Google-tjeneste.
+**Current plugin metadata:** `plugins/ai/plugin-info.json` identifies version **0.4.1-test.3**. This document describes the available test modes; it is no longer just the pre-implementation design proposal.
 
-## Funktionelle muligheder
+## How to use it
 
-- Brugeren vælger selv leverandør og model: fx OpenAI, Anthropic/Claude eller en anden kompatibel API.
-- Brugeren kan vælge lokal/modelserver ved URL (LM Studio, Ollama eller OpenAI-kompatibel lokal API).
-- Nøgle, serveradresse og model konfigureres separat fra wikiens tiddlere. Wikiens HTML kan kopieres eller deles uden at overføre disse forbindelser.
-- Uden konfigureret forbindelse skal AI Edition stadig være redigerbar; AI-knapperne må forklare, at en forbindelse mangler, og må ikke sende data.
-- Afsendelse af wikiindhold til en valgt cloud-provider kræver synligt brugerinitiativ og fortsat samtykke.
+- **Manual connection, no ForgeShare required:** In the AI Edition connection controls choose OpenAI, Claude, Gemini, LM Studio or Ollama. Enter the model, optional local server URL and required API key. Test with a short chat message. The key lasts only in the open browser tab; reload or **Forget key** clears it.
+- **ForgeShare Vault:** Install the separate [Mac helper](../downloads/forgeshare/README.md), open the wiki through it, configure a provider in the helper's Vault, request access from the wiki and approve the matching code in ForgeShare. The helper sends the requests. Each browser/wiki needs its own approval.
 
-## Oprindelige afhængigheder der skal erstattes
+For more detail, see the [step-by-step AI plugin guide](../plugins/ai/README.md).
 
-Pluginet `$:/plugins/huwiki/ai` i `AIEdition.js` indeholder bl.a. `workbench-widget.js`, `chat-library-widget.js`, `connection-status-widget.js` og `image-replies.js` med kald til den tidligere `google.script.run`-bro og `huPrivateVault...`-funktioner. De skal ændres på API-grænsen før pluginet kan udgives som en fungerende Google-uafhængig Forge Edition.
+## Known limits
 
-## Forslag til browserkontrakt
+| Feature or question | Current position |
+| --- | --- |
+| Can a downloaded wiki run without AI? | **Yes.** Editing does not require a connection. |
+| Are manually entered API keys saved into the HTML wiki? | **No, not by the connection form.** They live in the browser tab's JavaScript memory. Do not put keys in normal tiddlers. |
+| Can the wiki read saved Chrome passwords automatically? | **No.** A password manager may offer autofill, but the wiki cannot access its password store. |
+| Do cloud providers always work from a local HTML file? | **No.** Browser CORS rules and provider policies may prevent requests. |
+| Does ForgeShare put a private key into the wiki? | **No.** The Vault holds the key in the separate helper; the browser gets approved metadata and responses. |
+| Is Gemini available through the public Mac Vault ZIP? | **Not yet.** The updated implementation is in development PR #8; manual Gemini is an experimental separate route. |
+| Are image operations through Vault verified? | **No.** Do not present them as ready. |
+| Is AI connection setup synchronized across devices? | **No automatic cross-device secret synchronization.** Configure or approve each relevant client. |
 
-- `listConnections()` → vis **kun** offentlige metadata: id, navn, provider, model, URL og `hasKey`.
-- `setConnection()` → modtag private indstillinger i en særskilt browser/sessionfunktion; må ikke skrive dem i tiddlere eller HTML.
-- `requestCompletion()`, `listModels()`, `generateImage()` → sender kun til en eksplicit valgt endpoint/provider; ingen indbygget central HUWiki-server.
-- `forgetConnection()` → fjerner forbindelsen fra aktiv session og evt. valgfrit browserlager.
-- Alle API-kald skal formidle HTTP-/CORS-fejl uden at udskrive API-nøgler i debuglog eller statusmeddelelser.
+Manual browser connections use official HTTPS provider hosts for cloud APIs and optional user-supplied local API URLs. Same-page JavaScript and browser extensions may see manually entered keys. If a provider blocks cross-origin requests, Forge does not secretly bypass CORS or forward all users' keys through a shared server.
 
-## Lagring og sikkerhed
+## Implementation notes: what changed from the original plan
 
-Den første implementering bør bruge **sessionshukommelse**. Nøgler bør ikke som standard persisteres. En senere, tydeligt valgfri indstilling kan gemme forbindelsesmetadata lokalt i browseren og efter særskilt vurdering også credentials.
+The original HUWiki AI plugin depended on Apps Script (`google.script.run`) and private user properties. Forge replaced that path with an explicit local-helper Vault route and a separate manual, session-only browser route. The older proposed functions (`listConnections`, `setConnection`, `requestCompletion` and related operations) were **design ideas**, not a public stable JavaScript API. Consult the current plugin source and tests before building against an interface.
 
-`localStorage`, `sessionStorage` og `IndexedDB` er ikke hemmelige for JavaScript med samme origin. En gemt `file://`-wiki har desuden inkonsistent browser-/originadfærd, så en lokal fil kan ikke pålideligt dele et lager med enhver anden lokal fil. En separat, dedikeret connector-origin eller en brugeradministreret localhost-tjeneste kan senere give mere robust lagring og adgangskontrol. Credentials må aldrig transkluderes ind i tiddlere, gemte HTML-filer, Github-commits, backups eller diagnoseudskrifter.
-
-## Ingen stiltiende omgåelse af CORS
-
-GitHub Pages er kun statisk hosting. Browseren kan kalde en privat LLM/server eller cloud-API direkte **hvis** destinationen tillader browserens origin og de nødvendige HTTP-headere. Dette er ikke garanteret for alle AI-providere. For endpoints uden understøttet browser-CORS kan brugeren benytte en lokal eller selvhostet proxy under egen kontrol; Forge stiller ikke automatisk andres API-nøgler til rådighed gennem en fælles server.
-
-## Status
-
-Dette er et specificeret migrationskrav, **ikke** en færdig credential-boks eller et påstået fungerende AI-plugin. Den oprindelige AI-pakke skal bevares og gennemgås modul for modul før publicering.
+The ForgeShare simulated-browser test exercises approval and text-message flows without sending real paid cloud requests. It must not be reported as physical-device or live cloud-provider acceptance. [ForgeShare public status](../downloads/forgeshare/README.md) is maintained separately.

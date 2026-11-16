@@ -1,13 +1,14 @@
-# ForgeShare – offentlig Mac-test (0.1.18)
+# ForgeShare — Mac test and optional TiddlyWiki guide
 
-**[Download, installationsvejledning og test-/versionsstatus](../../downloads/forgeshare/README.md)** er den fælles offentlige reference. Plugin-JSON er en valgfri TiddlyWiki-vejledning, ikke Mac-applikationen.
+**[Download, install and see current test status](../../downloads/forgeshare/README.md)** (English and Danish).
 
-Dette er den **afgrænsede Mac-testudgave** af ForgeShare. Den er tilgængelig fra Forge-forsiden som et selvstændigt TiddlyWiki-plugin med en dansk/engelsk vejledning og en særskilt Mac-hjælpeapp. Pluginet er dokumentation og downloadindgang; serverfunktionerne ligger i Mac-programmet.
+ForgeShare has **two different parts**:
 
-- Mac ZIP: `/downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip`. Pak hele ZIP-filen ud. Mac-programmet er **ikke Apple Developer ID-signeret eller notariseret** og kan kræve manuel godkendelse. Brug på eget ansvar; tag backup af wikier.
-- **Åbn:** lokal TiddlyWiki Node.js-server, uden Tailscale. **Del:** privat Tailscale-VPN med inviterede deltagere, afprøvet på Mac/iPad. Serverdrift kræver Node.js, og privat deling kræver Tailscale.
-- **Funnel:** offentlig deling er stadig under fejlsøgning og må ikke beskrives som verificeret.
-- **Windows:** Ingen Windows-download fra den offentlige forside eller denne pluginpakke. Tidligere Windows-udgave udløste `Trojan:Script/Wacatac.B!ml` i Microsoft Defender; detektionen er uafklaret. Anbefal ikke at omgå antivirus eller installere en ikke-godkendt Windows-build.
-- **AI Edition:** AI Forge 0.4.0 understøtter tekstsamtaler via lokale modeller eller godkendte ForgeShare-forbindelser. Delte AI-forbindelser kræver hjælper og godkendelse i Vault; billedfunktioner er ikke godkendt via broen.
+- The **Mac ZIP** contains the separate `ForgeShare.app`. Install Node.js first, extract the ZIP fully, and open the app. **Open / Åbn** starts a local TiddlyWiki server without Tailscale. **Share / Del** is for private sharing over your own Tailscale network.
+- The **ForgeShare plugin JSON** is an optional guide inside a TiddlyWiki. Installing the JSON does **not** install the Mac application or start a server.
 
-Den fulde udvikling fortsætter i [PR #8](https://github.com/maans/huwiki-forge/pull/8). Den offentlige Mac-test er en særskilt, kurateret pakke uden Windows-binærfiler og uden automatisk installation eller deling. Forbedringerne er endnu ikke en generel Windows-release.
+**Status:** Public Mac 0.1.18-test; not Apple Developer ID signed or notarized. Private Tailscale sharing has been tested on Mac and iPad. Public Funnel is not generally verified. No public Windows download is offered: a previous Windows test triggered an unresolved Microsoft Defender detection. Do not bypass antivirus protection.
+
+AI Forge may use ForgeShare Vault for approved connections. The public Mac ZIP **predates the updated Gemini Vault support** in [development PR #8](https://github.com/maans/huwiki-forge/pull/8); image features through Vault are not verified.
+
+**Dansk:** Hent **Mac-programmet** fra installationssiden ovenfor; pluginets JSON-fil er kun en valgfri vejledning. **Åbn** fungerer lokalt uden Tailscale. **Del** kræver dit eget private Tailscale-net. Tag backup, før du afprøver den usignerede testudgave.

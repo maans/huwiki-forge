@@ -1,45 +1,41 @@
-# HUWiki AI — ForgeShare integration (0.4.0 test)
+# AI Forge — experimental AI connections
 
-Source migration of the existing HUWiki AI 0.3.6 package from the AI Edition project, with a ForgeShare same-origin bridge replacing its Apps Script vault calls. Original HUWiki modules/pages/templates are retained as editable tiddler JSON in `src/`. Build with `node scripts/build-forge-ai.mjs`; import `dist/plugin.json`, save and reload. This is an optional test package; no production Edition is changed by this branch.
+**Current plugin metadata:** 0.4.1-test.3. This is a test integration, not a promise that every provider, browser, model or image function works.
 
-Open the wiki through ForgeShare 0.1.8. Add an AI connection in the helper's vault. The AI Connections page can request access; compare the code in the helper and approve the desired connections. Refresh the connections list. The browser receives only connection metadata, model lists and replies; it never receives API keys. The helper owns outgoing AI requests. Each selected browser/wiki requires its own approval, including the owner's browser.
+[Try AI Edition in Forge](https://forge.måns.dk/) · [Connection and privacy details](../../docs/ai-connections.md) · [ForgeShare Mac instructions](../../downloads/forgeshare/README.md)
 
-Supported vault operations: text chat and model lists for LM Studio, Ollama, OpenAI and compatible chat-completions servers. Image generation and image analysis through the vault are explicitly rejected in this test version; direct local AI mode is retained. Keys cannot be entered into or exported from a wiki. Wiki readers with a separate approved AI grant can use the owner's accounts; saving chat tiddlers still requires wiki editing rights.
+## Choose how to connect
 
-`forgeshare-vault-browser-smoke.mjs` exercises the real plugin modules in a running TiddlyWiki using an isolated in-memory vault and simulated AI. It performs no external AI request or billing. See the ForgeShare README for trust boundaries and remaining physical-device/OS-vault acceptance.
+| Connection | What you do | Where the API key stays |
+| --- | --- | --- |
+| **Manual browser connection** | In AI Forge, select OpenAI, Claude, Gemini, LM Studio or Ollama; enter the server address/model and key if required. | In memory in the **current browser tab**. Reloading loses the key. |
+| **ForgeShare Vault** | Open the wiki through the ForgeShare Mac helper, add a connection in its Vault, request access from AI Forge, check the displayed code and approve the wiki/device. | In ForgeShare, **outside the wiki**. The browser receives connection metadata and replies, not the key. |
 
+### Try a manual connection
 
-## Experimental manual AI connections (0.4.1-test.1)
+1. Open **AI Edition**, then its AI connection controls.
+2. Choose **Manual** and your provider. For a local model, start LM Studio or Ollama first and enter its local API URL. For a cloud model, use a provider API key, not a Google OAuth client ID.
+3. Select or enter a model, then send a short test message.
+4. Use **Forget key** when finished. A page reload also clears the manual key.
 
-The workbench and chat library now offer a **manual** connection beside ForgeShare,
-with OpenAI, Anthropic Claude, Google Gemini, LM Studio and Ollama.
-Enter the provider API key into a password field (LM Studio key optional),
-choose or discover a model, and optionally enter the local server URL.
-Chrome/password managers may offer to fill the key, but the wiki cannot retrieve
-stored passwords itself; autofill depends on the browser's behavior.
+Manual requests run from the browser and can fail because of CORS or local-server settings. Browser password managers **may** offer autofill; the wiki cannot read your browser's saved passwords on its own. Do not paste API keys into ordinary wiki tiddlers or chat messages.
 
-The key lives **only in in-memory JavaScript** in the running browser tab.
-It is never written to TiddlyWiki tiddlers, the saved HTML, localStorage,
-sessionStorage, request URLs or GitHub. A **Forget key** button clears it.
-Reloading the page loses the key. Model names, provider choice and local
-server URLs can remain in browser settings as non-secret preferences.
+### Try ForgeShare Vault
 
-**Security:** Direct browser requests are experimental and not equivalent to
-ForgeShare. Any other JavaScript or browser extension with page access may
-read a manually entered key. Cloud browser requests may fail due to CORS.
-Cloud API endpoints are fixed to their official HTTPS hosts; the Gemini API
-uses an x-goog-api-key header, Claude uses x-api-key plus the Anthropic
-direct-browser opt-in header, and OpenAI uses Authorization Bearer.
-ForgeShare remains the recommended alternative when a key should stay out
-of the wiki/browser page entirely. Image generation still requires ForgeShare.
-No real cloud-provider account/API billing test was performed in this change.
+1. Install the separate [Mac app](../../downloads/forgeshare/README.md), including its Node.js prerequisite, and open your wiki through ForgeShare.
+2. Create the desired connection in ForgeShare's Vault.
+3. In the wiki, request access and approve the matching request/code in ForgeShare. Refresh the list of approved connections before testing a chat.
 
-The plugin bundle in dist and the Forge Plugin Library registry have the same
-version. Gemini via the ForgeShare vault requires an updated ForgeShare helper build (the currently published Mac 0.1.18 ZIP does not yet contain that helper support). The manual Gemini connector remains available as an experimental, session-only alternative.
+The public **0.1.18-test Mac ZIP does not yet include the updated Gemini Vault support** described in the ForgeShare development branch [PR #8](https://github.com/maans/huwiki-forge/pull/8). Manual Gemini is a separate experimental option. Vault image generation and image analysis are **not verified** for the public test. Access from another browser or device needs its own approval.
 
+## What is and is not saved
 
-## Gemini restoration: OAuth-independent AI Forge / AI Edition (0.4.1-test.3)
+The manual key is not deliberately written to tiddlers, downloaded HTML, localStorage, sessionStorage, request URLs or GitHub; provider/model and local URL preferences may remain as non-secret browser settings. Because the manual key exists in the browser page's memory, other scripts or extensions with page access may still see it. ForgeShare Vault is preferable when the key must stay outside the page.
 
-AI Forge and the AI Edition now explicitly present Google Gemini as a **ForgeShare Vault** provider in addition to the existing manual browser connection. Users create a separate **Gemini API key in Google AI Studio**, not a Google Workspace OAuth client or Gmail/Drive scope grant. The ForgeShare Mac host sends authorized text-generation and model-list requests to the Gemini API; the key never reaches the wiki, its stored HTML, iPad browser or GitHub. Each wiki/device must be explicitly authorized for that new Gemini connection in ForgeShare, even if the device previously had 30-day permission for LM Studio.
+AI chat content that you choose to store in your wiki is different from a connection secret. Do not assume that saving or sharing the HTML file hides the chat.
 
-**Compatibility:** The updated ForgeShare Vault implementation is on the ForgeShare development branch/PR #8. The public 0.1.18 Mac ZIP predates the update and must not be presented as Gemini-ready. Gemini through the Vault is for text chat and model listing only until separately tested for images. No Google OAuth verification status is changed by this work. A real Google AI Studio key is required for live end-to-end testing. Google now requires an appropriate auth-type API key rather than a legacy unrestricted standard key.
+## For developers
+
+The migrated HUWiki AI plugin retains editable source tiddlers under `src/`. Build with `node scripts/build-forge-ai.mjs`; the installable bundle is `dist/plugin.json`. Its original Apps Script vault calls were replaced at the connection boundary. The ForgeShare browser smoke test uses an isolated simulated Vault and does **not** verify paid cloud-provider requests. See [AI connections](../../docs/ai-connections.md) for the trust model and known limitations.
+
+**Dansk, kort fortalt:** Du kan indtaste en AI-nøgle manuelt til den aktuelle browserfane eller bruge ForgeShare Vault, hvor nøglen bliver uden for wikien. Manuel adgang kræver ofte korrekte CORS-indstillinger; den offentlige Mac-ZIP har endnu ikke den nye Gemini Vault-understøttelse. Billedfunktionerne via Vault er ikke verificeret.

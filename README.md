@@ -1,64 +1,60 @@
 # TiddlyWiki Forge
 
-**Status: udviklings- og testprojekt.** Forge Assembler kan samle flere selvstændige Editions; enkelte pluginfunktioner kræver stadig browsertest.
+**Public test project — not a finished release.** Forge helps you build your own editable [TiddlyWiki](https://tiddlywiki.com/) from a selected Edition (a starting set of tools and content). The result is an HTML wiki you can keep and edit yourself.
 
-TiddlyWiki Forge skal oprette en ny, selvstændig TiddlyWiki fra en **frisk, testet og kompatibel** `empty.html` og et manifest med Editionens tiddlere og plugins. Brugeren redigerer og gemmer bagefter med TiddlyWikis **egne** funktioner. Forge bygger hverken en ny HTML-saver, backupmotor eller generel serversynkronisering.
+**English** · [Dansk](#dansk)
 
-## Prøv Forge Assembler
+**[Open Forge](https://forge.måns.dk/)** · [Try the simple demo](https://forge.måns.dk/demo/?edition=demo&lang=en) · [Customize a wiki](https://forge.måns.dk/assembler/) · [Plugin Library](https://forge.måns.dk/library/plugins/index.html)
 
-Åbn **[Edition Assembler](https://forge.måns.dk/assembler/)** og vælg en Edition fra kataloget:
+## Get started
 
-- **HUPedia Edition (test):** Tosproget leksikon med artikelredigering, faktabokse og otte eksempelartikler. Brug sammen med SitePublisher og PDF Publisher efter behov.
-- **Musik Edition (test):** ABC Musik **0.3.38-test.2** med redigerbart nodeark, live-mixer, flytbar minimixer med fanerne **Stemmer · Akkompagnement · Akkorder**, diskret akkordzoom (−/+), TinySynth som offline-reserve og TiddlyWiki Jingle som nodeeksempel. Omfatter fortsat Musik-plugin, seks undervisningspakker, Modern-tema, **MuseScore → ABC Importer** samt SitePublisher og PDF Publisher.
-- **AI Edition (test):** AI Forge 0.4.0 med tekstsamtaler, opgaveeksempler og valg af lokal AI eller godkendte ForgeShare-forbindelser. AI-forbindelsesbroen kræver det særskilte Mac-hjælpeprogram og adgangsgodkendelse; billedfunktioner er ikke godkendt via broen.
-- **Demo Edition:** Den tidligere gennemprøvede opstartstest af TiddlyWiki og et startup-plugin.
+1. On the [Forge homepage](https://forge.måns.dk/), choose **Open demo** on an Edition card to try it without installing anything.
+2. Choose **Customize and download** to select tools, examples and a theme. In the Assembler, click **Build and download your wiki**.
+3. Open the downloaded HTML file, edit it in TiddlyWiki and use TiddlyWiki's **Save** button to keep your changes.
 
-Tryk **Byg Edition**. Forge henter automatisk den **fastlåste** TiddlyWiki-kerne og leverer én selvstændig HTML-fil. Du skal **ikke** selv hente `empty.html`. Åbn filen og brug TiddlyWikis indbyggede redigering og Gem-funktion.
+You do **not** need a GitHub or Google account to try Forge. Forge does **not** automatically store or synchronize your wiki online. Keep backups of your HTML file. Some downloads, AI connections and publishing features need an internet connection or another service.
 
-Et valgfrit felt til en lokal `empty.html` er bevaret til versionskontrol. Den officielle upstream-kerne overvåges i GitHub Actions, men nye versioner gemmes som **kandidater** og erstatter ikke automatisk den version, Editions bruger.
+## What can I try?
 
-**Separat plugin:** [ABC Musik 0.3.38-test.2](plugins/abc/dist/plugin.json), [HUWiki Trim 0.1.5](plugins/trim/dist/plugin.json) og [MuseScore → ABC Importer](plugins/musescore-import/dist/plugin.json) kan vælges under **Ekstra plugins**. MuseScore-importeren er allerede med i Musik Edition. Import efter node-preview bruger TiddlyWikis almindelige `$:/Import`.
+All Editions are **test versions**; a working automated test does not mean every feature has been tested on Mac, Windows, iPad and all browsers.
 
-Kør `npm test` (Node.js 20+) for de automatiske tests. De kontrollerer nu også HUPedia-komponenter og samling mod den fastlåste kerne. Enhedstests kan ikke erstatte reel browserafprøvning.
+| Edition | What it is for |
+| --- | --- |
+| **Demo** | A small wiki for trying editing and saving. |
+| **HUPedia** | Editable articles, fact boxes and bilingual article views. |
+| **Music** | ABC notation, playback, a mixer, teaching examples and MuseScore-to-ABC import. |
+| **AI** | Conversations with manually configured AI providers or approved ForgeShare connections. |
+| **CutOut / Drawing / Slideshow** | Scenes, drawings and presentations. Some device and import/export workflows are still being tested. |
+| **Shop** | A local product catalogue and guided, optional order-form setup. |
+| **HUPin** | Clickable points on images and SVGs. |
 
-Se [migrationsstatus](docs/migration-status.md), [overførselsinventar fra OAuthLab](docs/oauthlab-transfer-inventory.md), [det lette materialekatalog](catalog/materials.json), [AI Editionens forbindelsesdesign](docs/ai-connections.md) og [HUWiki-kildeanalysen](docs/huwiki-source-analysis.md).
+See the [live Edition catalogue](https://forge.måns.dk/) for the available choices and their specific limitations. You can also [open the Assembler directly](https://forge.måns.dk/assembler/). Extra plugins and examples can be deselected; if a tool is required by another selection, the Assembler adjusts the dependent selection and explains the change.
 
-**TiddlyWiki Jingle:** Forge-forsiden har en kompakt nodefølger med melodi og becifringer og et diskret valgfrit mixerikon (`mixer:"yes"`). Mixeren har tre faner med akkordskema, aktiv akkordmarkering og −/+ til størrelsen. Alle stemmer og akkompagnement spilles. Det tosprogede link **Åbn / Open** åbner kompositionens fulde, redigerbare tiddler. Makroen `<<abc-player ...>>` og dens parametre forklares i ABC-pluginets hjælp.
+## ForgeShare: separate Mac helper
 
-## ForgeShare · offentlig Mac-test
+[ForgeShare 0.1.18-test for Mac — download and instructions](downloads/forgeshare/README.md) can open a local TiddlyWiki server without Tailscale or share privately over your own Tailscale network. It is **not** part of a normal Edition download.
 
-[ForgeShare til Mac, 0.1.18-test (ZIP)](downloads/forgeshare/ForgeShare-mac-0.1.18-test.zip) er et særskilt hjælpeprogram; [installationsvejledningen og den løbende versionsstatus](downloads/forgeshare/README.md) forklarer Mac-appens brug og begrænsninger. Den valgfrie [ForgeShare-pluginvejledning (JSON)](plugins/forgeshare/dist/plugin.json) kan installeres i en TiddlyWiki via Plugin Library. **Åbn** starter en lokal TiddlyWiki Node.js-server uden Tailscale. Privat Tailscale-deling er afprøvet på Mac/iPad, men offentlig **Funnel er ikke verificeret**.
+The public Mac app is **not Developer ID signed or notarized**. It is test software: back up your wikis and review the installation instructions. There is **no public Windows download** while the earlier Microsoft Defender detection remains unresolved. Public Tailscale Funnel and AI image functions are not generally verified. The public Mac ZIP does **not** yet include the newer Gemini ForgeShare Vault integration.
 
-Mac-appen er **ikke Apple Developer ID-signeret eller notariseret** og kan kræve manuel macOS-godkendelse. Det er testsoftware på eget ansvar; tag backup før brug. **Windows-download er ikke tilgængelig:** en tidligere Windows-testudgave blev blokeret af Microsoft Defender, og detektionen er endnu ikke afklaret. Det anbefales ikke at omgå antivirus.
+## Plugins, source and developer notes
 
-AI Edition kan bruge ForgeShare til godkendte AI-forbindelser; lokal AI kan også bruges separat. ForgeShare-udviklingen og den blokerede Windows-test forbliver i [draft-PR #8](https://github.com/maans/huwiki-forge/pull/8), uden at den fulde PR flettes ind i main.
+- [Install or build plugins](plugins/README.md) and [find Edition manifests](editions/README.md).
+- [Documentation index](docs/README.md) separates current instructions from older plans and migration notes.
+- [AI connection options and limitations](docs/ai-connections.md) and [ForgeShare setup](downloads/forgeshare/README.md).
+- [Assembler implementation](assembler/README.md), [Forge homepage architecture](docs/forge-home.md) and [Plugin Library architecture](docs/forge-libraries.md).
 
-## Plugin Library og TiddlyWiki Community
+Developers: install **Node.js 20 or later** and run `npm test`. Browser/device checks are separate from these automated tests. Changes to the generated homepage or package registry must also follow the build instructions in their respective technical documents.
 
-**[HUWiki Plugin Library](https://forge.måns.dk/library/plugins/index.html)** integrerer med TiddlyWikis egen *Get More Plugins*-dialog. Den tilbyder alle de installerbare Forge-plugins og temaer, som ligger under `plugins/` og `themes/` i dette GitHub-repository. Pakkerne hentes ved installation, ikke alle på én gang.
+The new Forge code does **not** yet have a repository-wide license decision. Individual third-party components retain their own licenses; do not assume the same license covers every file.
 
-**[TiddlyWiki Community](https://tiddlywiki.com/#Community)** er indgangen til TiddlyWikis eget fællesskab. Den tidligere `/community/`-side viderestiller dertil. Der tilføjes ingen Community-fane i sidepanelet.
+## Dansk
 
-Alle Editions bruger de **samme** TiddlyWiki-biblioteksadresser fra `editions/shared/libraries.json`. TiddlyWikis officielle pluginbibliotek bevares. Se [bibliotekernes arkitektur og opdatering](docs/forge-libraries.md).
+**Forge er et offentligt testprojekt.** Her kan du prøve en Edition eller sammensætte din egen TiddlyWiki. En Edition er et udgangspunkt med bestemte værktøjer, eksempler og indstillinger.
 
-## Struktur
+1. Gå til [Forge-forsiden](https://forge.måns.dk/), og vælg **Åbn demo** for at afprøve en Edition.
+2. Vælg **Tilpas og hent**, hvis du vil bestemme, hvilke værktøjer og eksempler der følger med. Klik **Byg og hent din wiki**.
+3. Åbn HTML-filen, redigér i TiddlyWiki, og brug **Gem**. Behold en sikkerhedskopi.
 
-- `assembler/` — før-boot assembler og testside
-- `editions/` — Editions-manifester og tiddlere
-- `plugins/` — plugin-kilder og distributionsbundles
-- `catalog/` — Editions og et let, offentligt materialekatalog til det kommende Delt-panel
-- `core/` — planlagte, testede TiddlyWiki-kerner
-- `docs/` — arkitektur, sikkerhed og [projektplan v0.3](docs/projektplan-v0.3.md)
-- `updates/` — kommende Notice-feed
-- `admin/` — kommende GitHub Publisher
+Du behøver ingen konto. Forge gemmer eller synkroniserer **ikke** automatisk din wiki på nettet. Alle Editions er testudgaver med forskellige begrænsninger.
 
-## Grundprincipper
-
-- Ingen GitHub- eller Google-konto for almindelige brugere.
-- TiddlyWikis eksisterende redigering, HTML-gemning, eksport, import og saver-funktioner genbruges.
-- En Edition er et manifest, ikke en vedligeholdt monolitisk HTML-fil.
-- Fork, GitHub-template og Download ZIP kan distribuere den samlede kildekode.
-- Notice starter med opdateringsbeskeder; Talkback og frivilligt community kommer senere.
-- Tokens og andre hemmeligheder må aldrig indgå i offentlige filer eller eksporter.
-
-**Licens til ny Forge-kode er endnu ikke besluttet.** Tredjepartskomponenters licenser skal respekteres, før projektet frigives til videre distribution.
+Se [dokumentationsoversigten](docs/README.md), [vejledningen til Assembler](assembler/README.md), [AI-forbindelser](docs/ai-connections.md) og [ForgeShare til Mac](downloads/forgeshare/README.md).
