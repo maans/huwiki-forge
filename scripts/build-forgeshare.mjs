@@ -82,6 +82,10 @@ export async function build() {
       {name:'ForgeShare.exe',text:await binary('ForgeShare.exe')},
       {name:'ForgeShare.mjs',text:script}
     ],
+    'windows-node': [
+      {name:'Start-ForgeShare.cmd',text:await read('helper/Start-ForgeShare.cmd')},
+      {name:'ForgeShare.mjs',text:script}
+    ],
     linux: [
       {name:'Start-ForgeShare.sh',text:await read('helper/Start-ForgeShare.sh'),executable:true},
       {name:'ForgeShare.mjs',text:script,executable:true}
@@ -90,13 +94,18 @@ export async function build() {
   for (const [platform, files] of Object.entries(packages)) {
     const helpPrefix=platform==='mac'?app+'Resources/':'';
     for(const module of ['Vault.mjs','Bridge.mjs','Startup.mjs','Site.mjs'])files.push({name:helpPrefix+module,text:await read('helper/'+module)});
+    if(platform==='windows' || platform==='windows-node')
+      files.push({name:'VaultWindows.ps1',text:await read('helper/VaultWindows.ps1')});
     for(const lang of ['da','en'])files.push({name:helpPrefix+'help-'+lang+'.html',text:await read('helper/help-'+lang+'.html')});
     downloads[platform] = zip([...files,{name:'README.txt',text:instructions}]);
     const title = base + '/download/' + platform;
-    tiddlers[title] = {title, type: 'text/plain', text: 'data:application/zip;base64,' + downloads[platform].toString('base64')};
+    // Keep the plugin library as plain JSON/TiddlyWiki content, never an EXE/ZIP
+    // encoded into a plugin. Downloads are separate, versioned artifacts.
+    tiddlers[title] = {title, type: 'text/plain', text:
+      'https://forge.måns.dk/downloads/forgeshare/ForgeShare-' + platform + '-0.1.19-test.zip'};
   }
   return {plugin: {title: base, name: 'ForgeShare', description: 'Tailscale collaboration / Tailscale-samarbejde',
-    author: 'HUWiki', version: '0.1.18', list: 'readme', 'plugin-type': 'plugin', type: 'application/json',
+    author: 'HUWiki', version: '0.1.19', list: 'readme', 'plugin-type': 'plugin', type: 'application/json',
     'core-version': '>=5.4.1', 'studio-category': 'Collaboration', 'studio-tags': 'Tailscale Node.js offline',
     'studio-source-titles': Object.keys(tiddlers).map(x => '[[' + x + ']]').join(' '),
     text: JSON.stringify({tiddlers})}, downloads};
