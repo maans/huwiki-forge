@@ -90,7 +90,7 @@
     "edition-id": "animus",
     "name": "AniMus Forge I (beta)",
     "status": "test",
-    "version": "0.10.0-beta.1",
+    "version": "0.11.0-beta.1",
     "order": "02.4",
     "build-url": "https://forge.måns.dk/assembler/?edition=animus",
     "build-url-da": "https://forge.måns.dk/assembler/?edition=animus&lang=da",

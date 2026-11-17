@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "test": "node --test tests/*.test.mjs",
+    "build:animus": "node scripts/build-animus.mjs",
+    "check:animus": "node scripts/build-animus.mjs --check",
     "build:forgeshare": "node scripts/build-forgeshare.mjs",
     "check:forgeshare": "node scripts/build-forgeshare.mjs --check"
   },
@@ -15,3 +17,4 @@
     "tiddlywiki": "5.4.1"
   }
 }
+

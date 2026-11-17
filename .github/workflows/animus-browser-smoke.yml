@@ -1,0 +1,66 @@
+name: AniMus production browser acceptance
+on:
+  push:
+    branches: [main]
+    paths:
+      - editions/animus/**
+      - plugins/musical/**
+      - plugins/cutout/**
+      - plugins/abc/**
+      - plugins/site-publisher/**
+      - assembler/**
+      - core/**
+      - scripts/build-animus.mjs
+      - scripts/build-site-publisher.mjs
+      - scripts/animus-browser-smoke.mjs
+      - tests/animus-site-view.test.mjs
+      - .github/workflows/animus-browser-smoke.yml
+  pull_request:
+    paths:
+      - editions/animus/**
+      - plugins/musical/**
+      - plugins/cutout/**
+      - plugins/abc/**
+      - plugins/site-publisher/**
+      - assembler/**
+      - core/**
+      - scripts/build-animus.mjs
+      - scripts/build-site-publisher.mjs
+      - scripts/animus-browser-smoke.mjs
+      - tests/animus-site-view.test.mjs
+      - .github/workflows/animus-browser-smoke.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  production:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify reproducible plugin packages
+        run: |
+          node scripts/build-animus.mjs --check
+          node scripts/build-site-publisher.mjs --check
+      - name: Install browser controller
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Test standalone Site playback in Chrome
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+          ANIMUS_BROWSER_TESTS: '1'
+        run: node --test tests/animus-site-view.test.mjs
+      - name: Test the complete AniMus editing and publication workflow
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/animus-browser-smoke.mjs
+      - name: Retain screenshots and trace
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: animus-browser-acceptance
+          path: test-results/animus/
+          if-no-files-found: ignore
+          retention-days: 7

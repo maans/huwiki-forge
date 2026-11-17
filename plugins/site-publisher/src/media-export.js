@@ -177,3 +177,4 @@ function publicationMediaArticle(title){
  if(kind==="image")return '<figure class="husp-site-image"><img alt="'+safe(title)+'" src="'+safe(src)+'"></figure>';
  return '<figure class="husp-site-media"><'+kind+' controls preload="metadata" src="'+safe(src)+'"></'+kind+'><figcaption>'+safe(title)+'</figcaption></figure>';
 }
+

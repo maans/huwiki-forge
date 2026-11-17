@@ -1,0 +1,82 @@
+{
+  "$:/plugins/huwiki/musical/sync.js": {
+    "title": "$:/plugins/huwiki/musical/sync.js",
+    "type": "application/javascript",
+    "module-type": "library",
+    "source": "sync.js"
+  },
+  "$:/plugins/huwiki/musical/widget.js": {
+    "title": "$:/plugins/huwiki/musical/widget.js",
+    "type": "application/javascript",
+    "module-type": "widget",
+    "source": "widget.js"
+  },
+  "$:/plugins/huwiki/musical/styles.css": {
+    "title": "$:/plugins/huwiki/musical/styles.css",
+    "type": "text/css",
+    "tags": "$:/tags/Stylesheet",
+    "source": "styles.css"
+  },
+  "$:/plugins/huwiki/musical/README": {
+    "title": "$:/plugins/huwiki/musical/README",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! AniMus production tools\n\nOpen [[AniMus Forge I · Start]] to create or open a musical. The stage, ABC music, recorded dialogue, captions, camera and lighting share one timeline.\n\n* ''Scenes'' changes scene names, lengths, backgrounds and order.\n* ''Draw SVG'' opens layers and frame animation for the selected part, or creates a drawing on a blank stage.\n* ''Music'' opens the existing ABC editor inside AniMus. Changes stay in a draft until Save.\n* ''Script'' edits captions and scene notes. ''Record line'' opens the audio workshop.\n* ''Audio tracks'' records or imports sound, with trim, timing, level and mute.\n* ''Site view'' prepares a separate audience HTML player using the same music and animation data.\n\nDouble-click a stage figure to edit its parts and pivots. Double-click an animation clip to edit its movement. Save the wiki file to keep your work.\n\n!! Dansk\n\nÅbn [[AniMus Forge I · Start]] for at oprette eller åbne en musical. Brug ''Scener'', ''Tegn SVG'', ''Musik'', ''Manuskript'', ''Lydspor'' og ''Sitevisning'' i værktøjslinjen. Dobbeltklik på figurer for at redigere dele og led, eller på animationsklip for at ændre bevægelser.\n\nSe [[vejledningen|AniMus · Produktionsværksteder]] for arbejdsgangen.\n"
+  },
+  "$:/plugins/huwiki/musical/editor.js": {
+    "title": "$:/plugins/huwiki/musical/editor.js",
+    "type": "application/javascript",
+    "module-type": "library",
+    "source": "editor.js"
+  },
+  "$:/plugins/huwiki/musical/playlist.js": {
+    "title": "$:/plugins/huwiki/musical/playlist.js",
+    "type": "application/javascript",
+    "module-type": "library",
+    "source": "playlist.js"
+  },
+  "$:/plugins/huwiki/musical/workspace.js": {
+    "title": "$:/plugins/huwiki/musical/workspace.js",
+    "type": "application/javascript",
+    "module-type": "library",
+    "source": "workspace.js"
+  },
+  "$:/plugins/huwiki/musical/motion.js": {
+    "title": "$:/plugins/huwiki/musical/motion.js",
+    "type": "application/javascript",
+    "module-type": "library",
+    "source": "motion.js"
+  },
+  "$:/plugins/huwiki/musical/puppet.js": {
+    "title": "$:/plugins/huwiki/musical/puppet.js",
+    "type": "application/javascript",
+    "module-type": "library",
+    "source": "puppet.js"
+  },
+  "$:/plugins/huwiki/musical/sfx.js": {
+    "title": "$:/plugins/huwiki/musical/sfx.js",
+    "type": "application/javascript",
+    "module-type": "library",
+    "source": "sfx.js"
+  },
+  "$:/plugins/huwiki/musical/manuscript.js": {
+    "title": "$:/plugins/huwiki/musical/manuscript.js",
+    "type": "application/javascript",
+    "module-type": "library",
+    "source": "manuscript.js"
+  },
+  "AniMus Forge I · Start": {
+    "title": "AniMus Forge I · Start",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! AniMus Forge I\n\n<$animus-new-project/>\n\n<$list filter=\"[all[shadows+tiddlers]tag[AniMusProjects]sort[title]]\" variable=\"show\">\n* <$link to=<<show>>/>\n</$list>\n\n[[Alle forestillinger|Musical Studio · Forestillinger]] · [[Vejledning|AniMus · Produktionsværksteder]]\n"
+  },
+  "Musical Studio · Manuskriptværksted – vejledning": {
+    "title": "Musical Studio · Manuskriptværksted – vejledning",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! Manuskriptværksted (test)\nÅbn en forestilling i Musical Studio og tryk **Manuskript** i den øverste værktøjslinje.\n\n* Vælg en scene til venstre.\n* Vælg en replik eller sanglinje i midten. Klik flytter forestillingens tidsmarkør til replikken.\n* Redigér repliktekst, start og slut til højre, eller tilføj en ny replik.\n* Skriv scenenoter i det store tekstfelt. De vises ikke som undertekster for publikum.\n* De fælles skydere øverst styrer størrelse og placering af alle forestillingens undertekster.\n* Tryk **Gem og tilbage** for at gemme ændringer i scenetiddlerne og det fælles format i forestillingens film-tiddler. **Annuller** ændrer intet.\n\n! Begrænsninger\nDenne første testudgave omfatter replikker og scenenoter i de eksisterende CutOut-scener. Manuskriptet og regibogen for Fyrtøjet findes fortsat som selvstændige tiddlere og overskrives ikke automatisk. Der oprettes ikke nye animations- eller kamerakeyframes, når der redigeres tekst.\n"
+  },
+  "AniMus · Produktionsværksteder": {
+    "title": "AniMus · Produktionsværksteder",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! AniMus · Produktionsværksteder\n\n* ''Scener'': navn, varighed, baggrund, rækkefølge og nye scener. Vælg, om musik og cues skal følge flytningen.\n* ''Tegn SVG'': tegn på den valgte figur, eller vælg en tom scene for at oprette en ny tegning. Arbejd i lag og med animationsbilleder. Gem, og åbn tegningen igen for at fortsætte.\n* Dobbeltklik på en figur for at redigere dele, led og drejepunkter. Dobbeltklik på et animationsklip for at redigere bevægelsen.\n* ''Musik'': åbn det aktive nodeark i ABC-værkstedet. Redigér noder, akkorder og sangtekst, eller importér en ABC-fil. Gem eller annullér.\n* ''Manuskript'': replikker, undertekster og scenenoter. Vælg ''Indtal replik'' for at optage den valgte tekst.\n* ''Lydspor'': optag med mikrofon eller importér en lydfil. Lyt, trim, placér og justér lydstyrken. Mikrofonadgang bliver først efterspurgt, når du trykker Optag.\n* ''Sitevisning'': klargør en publikumsside med forestillingens afspiller. Visningen har afspilning, pause, søgning og fuld skærm.\n\nGem hele wikien med TiddlyWikis Gem-knap, når du vil beholde arbejdet som fil. Lydoptagelser gemmes i wikien og følger med Site-eksporten.\n\n!! English\n\nCreate a show with ''New show''. Use ''Scenes'' for sequence and duration, ''Draw SVG'' for layers and drawn frames, ''Music'' for the existing ABC notation editor, and ''Audio tracks'' for recording, importing and trimming dialogue. Double-click a stage figure for parts and pivots, or an animation clip for its movement. ''Site view'' creates an audience player with the show's music, animation, captions and voice tracks.\n\nUse TiddlyWiki's Save button to keep the complete wiki as a file. Microphone recording needs permission and a supported browser; importing an audio file is also available.\n"
+  }
+}

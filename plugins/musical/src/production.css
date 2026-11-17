@@ -1,0 +1,18 @@
+/* AniMus production workshops */
+.huw-score-workshop,.huw-scene-workshop{position:fixed;inset:2vh 2vw;z-index:1200;display:flex;flex-direction:column;gap:0;background:#f7fafc;color:#213547;border:1px solid #aabacc;border-radius:12px;box-shadow:0 18px 80px #05142b66;overflow:hidden;font:14px system-ui,sans-serif}
+.huw-score-workshop-header,.huw-scene-workshop-header{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:12px 16px;background:#173747;color:#fff}
+.huw-score-workshop button,.huw-scene-workshop button{cursor:pointer;border:1px solid #9cadba;border-radius:6px;padding:7px 12px;background:#fff;color:#173747;font:inherit}
+.huw-score-workshop button:focus-visible,.huw-scene-workshop button:focus-visible{outline:3px solid #d88722;outline-offset:2px}
+.huw-score-workshop button:disabled,.huw-scene-workshop button:disabled{opacity:.45;cursor:default}
+.huw-score-workshop-title{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.huw-score-workshop-body{overflow:auto;min-height:0;flex:1;padding:16px}
+.huw-score-workshop .huwabc-edit-workshop{margin:0;max-width:none}
+.huw-score-workshop-status{padding:8px 16px;min-height:28px;color:#9b2e19}
+.huw-score-import{font-size:12px;max-width:180px}.huw-score-import input{display:block;width:175px;font-size:11px}
+.huw-score-workshop .huw-score-save,.huw-scene-workshop .huw-scene-save{background:#cbf0df;color:#164332;border-color:#cbf0df}
+.huw-musical-recorded-clip{position:absolute;top:8px;height:29px;min-width:12px;border:1px solid #b56b8b;border-radius:5px;background:#f7ddeb;color:#67314d;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:grab;font:12px system-ui;padding:4px 7px}
+.huw-musical-recorded-clip[aria-pressed=true]{outline:2px solid #a03473}.huw-musical-recorded-clip.is-muted{opacity:.45}
+.huw-scene-workshop-body{display:grid;grid-template-columns:minmax(200px,30%) 1fr;min-height:0;flex:1}.huw-scene-list,.huw-scene-details{padding:16px;overflow:auto}.huw-scene-list{border-right:1px solid #ccdae4;display:flex;flex-direction:column;gap:7px}.huw-scene-list button{text-align:left}.huw-scene-list .is-active{border-color:#177a82;background:#dbf1ee}
+.huw-scene-field{display:flex;align-items:center;gap:12px;margin:12px 0}.huw-scene-field>span{min-width:110px}.huw-scene-field input,.huw-scene-field select{padding:7px;border:1px solid #b3c3cf;border-radius:5px;background:white;color:#213547;max-width:100%}.huw-scene-field input[type=text]{flex:1}.huw-scene-actions{display:flex;gap:7px;flex-wrap:wrap;margin:15px 0}.huw-scene-hint{line-height:1.5;color:#52697c}.huw-scene-footer{padding:10px 16px;border-top:1px solid #ccdae4;display:flex;gap:12px;align-items:center}.huw-scene-footer output{flex:1}
+.huw-animus-new-project{display:flex;gap:9px;flex-wrap:wrap;margin:16px 0}.huw-animus-new-project input{padding:9px;border:1px solid #aac1cc;border-radius:6px;min-width:220px;flex:1}.huw-animus-new-project button{padding:9px 15px;border:0;border-radius:6px;color:white;background:#146b81}
+@media(max-width:700px){.huw-score-workshop,.huw-scene-workshop{inset:0;border-radius:0}.huw-score-workshop-body{padding:8px}.huw-score-workshop-header,.huw-scene-workshop-header{gap:6px;padding:8px}.huw-scene-workshop-body{grid-template-columns:1fr;grid-template-rows:minmax(100px,30%) 1fr}.huw-scene-list{border-right:0;border-bottom:1px solid #ccdae4}.huw-musical-app-actions{flex-wrap:wrap}}

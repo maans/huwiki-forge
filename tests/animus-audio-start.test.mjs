@@ -32,7 +32,7 @@ test('AniMus demo revalidates its current manifest and the sound plugin',async()
  assert.match(demo,/isAbcAudioPlugin/);
  assert.match(demo,/cache:'no-store'/);
  assert.match(html,/allow="autoplay;/);
- assert.match(html,/demo\.mjs\?v=animus-audiofix-20261117b/);
+ assert.match(html,/demo\.mjs\?v=animus-production-20261117/);
 });
 
 test('ABC fallback uses hosted audio resources for public blob HTTPS demos',async()=>{
@@ -73,3 +73,4 @@ test('No forced backing instruments or metronome when AniMus ABC score has accom
   }
  }
 });
+

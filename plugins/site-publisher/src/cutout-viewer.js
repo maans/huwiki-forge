@@ -78,6 +78,13 @@ function timing(t,duration,p){
  p=p||{};var start=finite(p.start,0),v=(Math.max(t,start)-start)*finite(p.speed,1)+finite(p.offset,0);
  return {active:t>=start,time:p.loop&&duration>0?((v%duration)+duration)%duration:clamp(v,0,duration)};
 }
+function clipAt(clips,t){
+ var start=0,index=-1,local=0;
+ (clips||[]).some(function(c,i){var duration=Math.max(.1,finite(c.duration,4));index=i;local=clamp(t-start,0,duration);
+  if(t<start+duration)return true;start+=duration;return false;
+ });
+ return {index:index,time:local,local:local};
+}
 function build(doc,wiki,scene,ancestors){
  ancestors=(ancestors||[]).concat(scene._title||[]);
  var root=svg(doc,"svg"),back=svg(doc,"rect"),parts=scene.parts||[],byId={},children={},nodes={},clips=[];
@@ -154,5 +161,9 @@ function hydrate(root,rows){
   if(host.getAttribute("data-autoplay")==="yes"&&!(window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches))start();
  });
 }
-window.HUWikiCutOutSite={hydrate:hydrate};
+// AniMus uses the same scene, hierarchy, variants and camera renderer. This
+// read-only API deliberately excludes all CutOut editing and storage code.
+window.HUWikiCutOutSite={hydrate:hydrate,readScene:readScene,build:build,paint:paint,state:state,
+ clipAt:clipAt,localTime:function(t,duration,settings){return timing(t,duration,settings).time;}};
 })();
+

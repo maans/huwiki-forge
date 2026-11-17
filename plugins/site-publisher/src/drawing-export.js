@@ -194,3 +194,4 @@ function drawingSiteWiki(ctx){
  };
  return local;
 }
+

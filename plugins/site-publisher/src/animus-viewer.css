@@ -1,0 +1,17 @@
+.huw-site-animus{position:relative;width:100%;overflow:hidden;border:1px solid #d6ddd9;border-radius:12px;background:#10131a;color:#f4f5f7;font:14px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;isolation:isolate}
+.huw-animus-stage{position:relative;width:100%;aspect-ratio:16/9;overflow:hidden;background:#080a10;display:grid;place-items:center}
+.huw-animus-stage>svg{display:block;width:100%;height:100%;max-height:100%;object-fit:contain}
+.huw-animus-captions{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;gap:6px;padding:2%;pointer-events:none;text-align:center;white-space:pre-line;color:#fff7e8;line-height:1.45}
+.huw-animus-line,.huw-animus-cue{padding:.35em .7em;border-radius:6px;text-shadow:0 1px 3px #000}
+.huw-animus-cue{background:#090c12a8}.huw-animus-captions [hidden]{display:none!important}
+.huw-animus-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:10px;background:#f4f7f5;color:#173f32}
+.huw-animus-controls button{font:600 13px/1.3 system-ui;border:1px solid #bbcfc3;border-radius:8px;padding:9px 12px;background:white;color:#1d5542;cursor:pointer;min-height:38px;touch-action:manipulation}
+.huw-animus-controls .huw-animus-play{background:#256d56;border-color:#256d56;color:white}
+.huw-animus-controls button:focus-visible,.huw-animus-range:focus-visible,.huw-site-animus:focus-visible{outline:3px solid #e8ae4c;outline-offset:2px}
+.huw-animus-range{flex:1 1 160px;min-width:100px;accent-color:#256d56}.huw-animus-clock{white-space:nowrap;font:12px ui-monospace,monospace}
+.huw-animus-status{margin:0!important;padding:6px 12px 9px;background:#f4f7f5;color:#4d6659;font-size:12px;min-height:28px}
+.huw-animus-score-source{position:absolute;left:-20000px;top:0;width:800px;visibility:hidden;pointer-events:none;height:1px;overflow:hidden}
+.huw-site-animus.huw-animus-focus,.huw-site-animus:fullscreen{position:fixed;inset:0;width:100vw;height:100dvh;z-index:10000;border:0;border-radius:0;display:flex;flex-direction:column;background:#080a10}
+.huw-animus-focus .huw-animus-stage,.huw-site-animus:fullscreen .huw-animus-stage{flex:1 1 auto;min-height:0;aspect-ratio:auto}
+.huw-animus-focus .huw-animus-controls,.huw-site-animus:fullscreen .huw-animus-controls{flex:none;padding-bottom:max(10px,env(safe-area-inset-bottom))}
+@media(max-width:600px){.huw-animus-controls{gap:5px;padding:7px}.huw-animus-controls button{padding:8px}.huw-animus-range{order:5;flex-basis:100%;width:100%}.huw-animus-fullscreen{margin-left:auto}.huw-animus-status{font-size:11px}.huw-site-animus{border-radius:7px}}

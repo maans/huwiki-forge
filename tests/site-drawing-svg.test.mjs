@@ -68,7 +68,7 @@ test("Drawing SVG adapter is separate readable code bundled in one shared SitePu
  const plugin=JSON.parse(await read("plugins/site-publisher/dist/plugin.json"));
  const items=JSON.parse(plugin.text).tiddlers;
  const js=items[base+"/startup.js"].text;
- assert.equal(plugin.version,"0.1.15-test.1");
+ assert.equal(plugin.version,"0.1.16-test.1");
  assert.ok(js.includes(code.trim()));
  new Script(js);new Script(code);
  assert.equal(items[base+"/drawings/view.css"].type,"text/css");
@@ -200,3 +200,4 @@ test("The exporter refuses invalid image dependencies from saved Excalidraw file
  rows.Media.text=makeScene([image],{"image-file":{mimeType:"image/png",dataURL:"data:text/html,<script>alert(1)</script>"}});
  assert.throws(()=>api.siteDrawingSource("Media"),/embedded image is missing/);
 });
+
