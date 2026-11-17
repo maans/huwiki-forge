@@ -23,7 +23,8 @@ const fetchFreshEditionManifest=(resource,options)=>{
  const url=new URL(resource,location.href);
  const isEditionManifest=/\/editions\/[^/]+\/manifest\.json$/.test(url.pathname);
  const isAniMusAudioPlugin=/\/plugins\/musical\/dist\/plugin\.json$/.test(url.pathname);
- if(url.origin===location.origin&&(isEditionManifest||isAniMusAudioPlugin)){
+ const isAbcAudioPlugin=/\/plugins\/abc\/dist\/plugin\.json$/.test(url.pathname);
+ if(url.origin===location.origin&&(isEditionManifest||isAniMusAudioPlugin||isAbcAudioPlugin)){
   url.searchParams.set('_forge_demo',String(Date.now()));
   return fetch(url.href,{...options,cache:'no-store'});
  }

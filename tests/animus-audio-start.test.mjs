@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
-import {Script} from 'node:vm';
+import {Script,runInNewContext} from 'node:vm';
 
 const root=new URL('../',import.meta.url);
 const read=async path=>readFile(new URL(path,root),'utf8');
@@ -29,7 +29,29 @@ test('AniMus demo revalidates its current manifest and the sound plugin',async()
  const html=await read('demo/index.html');
  assert.match(demo,/isEditionManifest/);
  assert.match(demo,/isAniMusAudioPlugin/);
+ assert.match(demo,/isAbcAudioPlugin/);
  assert.match(demo,/cache:'no-store'/);
  assert.match(html,/allow="autoplay;/);
- assert.match(html,/demo\.mjs\?v=animus-audio-20261117/);
+ assert.match(html,/demo\.mjs\?v=animus-audiofix-20261117b/);
+});
+
+test('ABC fallback uses hosted audio resources for public blob HTTPS demos',async()=>{
+ const abc=JSON.parse(await read('plugins/abc/dist/plugin.json'));
+ const source=JSON.parse(abc.text).tiddlers['$:/plugins/huwiki/abc/reserve-runtime.js'].text;
+ new Script(source,{filename:'abc/reserve-runtime.js'});
+ function sourceFor(page,online=true,config=''){
+  const exports={};
+  runInNewContext(source,{exports,require(){return {};},URL,
+   document:{baseURI:page},navigator:{onLine:online}});
+  return exports.sourceFor(config?{base:config}:{});
+ }
+ const demo=sourceFor('blob:https://forge.måns.dk/07f3-123');
+ assert.equal(demo.mode,'hosted');
+ assert.match(demo.base,/^https:\/\/cdn\.jsdelivr\.net\//);
+ assert.equal(sourceFor('https://forge.måns.dk/demo/').mode,'hosted');
+ assert.equal(sourceFor('blob:http://localhost:8080/123').mode,'local');
+ assert.equal(sourceFor('blob:null/123').mode,'local');
+ assert.equal(sourceFor('file:///Users/example/score.html').mode,'local');
+ assert.equal(sourceFor('blob:https://forge.måns.dk/07f3-123',false).mode,'local');
+ assert.equal(sourceFor('blob:https://forge.måns.dk/07f3-123',true,'https://example.test/av/').mode,'local');
 });

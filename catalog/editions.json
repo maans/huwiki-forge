@@ -72,8 +72,8 @@
         "headingEn": "Notation, playback and teaching",
         "descriptionDa": "Skriv ABC-noder, importer fra MuseScore, og afspil TiddlyWiki Jingle med flytbar mixer og akkorder, der følger musikken.",
         "descriptionEn": "Write ABC notation, import from MuseScore, and play the TiddlyWiki Jingle with a detachable mixer and follow-along chord chart.",
-        "noteDa": "ABC 0.3.38-test.2 · tre mixerfaner · diskret akkordzoom −/+ · TinySynth offline-reserve.",
-        "noteEn": "ABC 0.3.38-test.2 · three mixer tabs · discreet chord zoom −/+ · offline TinySynth backup.",
+        "noteDa": "ABC 0.3.38-test.3 · tre mixerfaner · diskret akkordzoom −/+ · TinySynth offline-reserve.",
+        "noteEn": "ABC 0.3.38-test.3 · three mixer tabs · discreet chord zoom −/+ · offline TinySynth backup.",
         "order": "02"
       }
     },
