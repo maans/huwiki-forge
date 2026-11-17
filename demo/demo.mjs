@@ -22,12 +22,14 @@ $('customize').textContent=da?'Tilpas og hent':'Customize & download';
 const fetchFreshEditionManifest=(resource,options)=>{
  const url=new URL(resource,location.href);
  const isEditionManifest=/\/editions\/[^/]+\/manifest\.json$/.test(url.pathname);
+ const isPluginRegistry=/\/library\/plugins\/registry\.json$/.test(url.pathname);
+ const isEditionCatalog=/\/catalog\/editions\.json$/.test(url.pathname);
  const isAniMusAudioPlugin=/\/plugins\/musical\/dist\/plugin\.json$/.test(url.pathname);
  const isAbcAudioPlugin=/\/plugins\/abc\/dist\/plugin\.json$/.test(url.pathname);
  const isAniMusScriptExample=/\/plugins\/animus-example-fyrtoejet\/dist\/plugin\.json$/.test(url.pathname);
  const isCutoutEditorPlugin=/\/plugins\/cutout\/dist\/plugin\.json$/.test(url.pathname);
  const isSitePublisherPlugin=/\/plugins\/site-publisher\/dist\/plugin\.json$/.test(url.pathname);
- if(url.origin===location.origin&&(isEditionManifest||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin)){
+ if(url.origin===location.origin&&(isEditionManifest||isPluginRegistry||isEditionCatalog||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin)){
   url.searchParams.set('_forge_demo',String(Date.now()));
   return fetch(url.href,{...options,cache:'no-store'});
  }
@@ -39,7 +41,7 @@ async function start(){
  const editionId=params.get('edition')||'';
  // Fetch the same catalog and compose with the same defaults as Assembler:
  // no extra packages, materials, theme override or user-provided title.
- const choices=await loadChoices(new URL('../assembler/',location.href).href);
+ const choices=await loadChoices(new URL('../assembler/',location.href).href,fetchFreshEditionManifest);
  const edition=choices.editions.find(e=>e.id===editionId);
  if(!edition)throw Error(da?'Ukendt Edition. Vælg en Edition på Forge-forsiden.':'Unknown Edition. Choose an Edition on the Forge homepage.');
  $('name').textContent=edition.display?.[lang]?.name||edition.name;
