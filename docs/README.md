@@ -30,5 +30,6 @@ All public Editions are tests. A passing automated test does not prove that the 
 4. **Explain what is saved and where.** A downloaded HTML wiki, a local server, a browser session and a hosted site are different things.
 5. **Check the source of truth before changing versions:** `catalog/editions.json`, the Edition's `manifest.json`, the plugin's `plugin-info.json` and the actual download folder. If these disagree, identify the mismatch rather than choosing a convenient number.
 6. **Prefer short instructions and explicit limitations over promotional language.** Keep detailed development history in the technical documents.
+7. **English first, Danish second.** For bilingual GitHub documentation, lead with the English introduction, links and instructions, then provide the Danish version. Keep both languages and their section anchors. The actual TiddlyWiki UI language remains controlled by its normal localization settings.
 
 **Reviewed:** 16 November 2026. This index organizes documentation; it does not replace release verification.
