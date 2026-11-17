@@ -24,8 +24,9 @@ const fetchFreshEditionManifest=(resource,options)=>{
  const isEditionManifest=/\/editions\/[^/]+\/manifest\.json$/.test(url.pathname);
  const isAniMusAudioPlugin=/\/plugins\/musical\/dist\/plugin\.json$/.test(url.pathname);
  const isAbcAudioPlugin=/\/plugins\/abc\/dist\/plugin\.json$/.test(url.pathname);
+ const isAniMusScriptExample=/\/plugins\/animus-example-fyrtoejet\/dist\/plugin\.json$/.test(url.pathname);
  const isSitePublisherPlugin=/\/plugins\/site-publisher\/dist\/plugin\.json$/.test(url.pathname);
- if(url.origin===location.origin&&(isEditionManifest||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin)){
+ if(url.origin===location.origin&&(isEditionManifest||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample)){
   url.searchParams.set('_forge_demo',String(Date.now()));
   return fetch(url.href,{...options,cache:'no-store'});
  }

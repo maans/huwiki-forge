@@ -5,6 +5,7 @@ module-type: library
 \*/
 (function(){
 "use strict";
+var LipSync=require("$:/plugins/huwiki/musical/lipsync.js");
 /* One shared screenplay workstation. Script cues remain in their original
    CutOut scene tiddlers; scene notes belong to the individual scenes, and
    the common caption style belongs to the Musical film. */
@@ -30,7 +31,7 @@ function retime(part,start,end,duration){start=clamp(start,0,Math.max(0,duration
  if(end<duration)arr.push(key(end,0));else arr.push(key(duration,0));
  part.keys=arr;
 }
-function collect(wiki,film){var result=[],active={};
+function collect(wiki,film,rootTitle){var result=[],active={};
  function walk(data,title,base,duration,depth,path){
   if(depth>12||!data||!data.parts)return;
   var sub=data.scenes||[];
@@ -45,7 +46,7 @@ function collect(wiki,film){var result=[],active={};
    elapsed+=span;
   });
  }
- walk(film,film._title||"",0,num(film.duration,1),0,"");
+ walk(film,rootTitle||film._title||"",0,num(film.duration,1),0,"");
  return result;}
 function notesFromExisting(wiki,scene){var text=wiki.getTiddlerText("Fyrtøjet · Manuskript","");
  if(!text||!scene.name)return "";
@@ -58,6 +59,47 @@ function notesFromExisting(wiki,scene){var text=wiki.getTiddlerText("Fyrtøjet �
   return rows.join("\n\n");
  }
  return "";}
+function speakerChoices(scene){
+ var found=LipSync.actors(scene).slice(),known={},cueIds={};found.forEach(function(actor){known[actor.id]=true;});captions(scene).forEach(function(p){cueIds[p.id]=true;});
+ (scene.parts||[]).forEach(function(part){
+  if(known[part.id]||cueIds[part.id])return;
+  if(part.type==="group"||!part.parent||(scene.parts||[]).some(function(child){return child.parent===part.id;})){
+   found.push({id:part.id,label:part.name||part.id,open:"",closed:""});known[part.id]=true;
+  }
+ });return found;
+}
+function mouthChoices(scene,target){
+ var children={};(scene.parts||[]).forEach(function(p){(children[p.parent]||(children[p.parent]=[])).push(p);});
+ var result=[],seen={},root=(scene.parts||[]).find(function(p){return p.id===target;});
+ // An image with mouth variants can be the whole actor. Grouped characters
+ // instead expose their individual descendant layers as mouth choices.
+ if(root&&root.type!=='group')result.push({id:root.id,label:root.name||root.id});
+ function walk(id){if(seen[id])return;seen[id]=true;(children[id]||[]).forEach(function(p){
+  if(!/^(?:spoken-\d+|song-line-\d+|sing-label)$/.test(p.id))result.push({id:p.id,label:p.name||p.id});walk(p.id);
+ });}walk(target);return result;
+}
+function newLipSync(actor){return {enabled:true,target:actor&&actor.id||"",open:actor&&actor.open||"",closed:actor&&actor.closed||"",timing:"auto",offset:0,strength:1};}
+function ensembleLine(text){var match=/^\s*([^:\n]{1,80}):/.exec(text||'');return !!(match&&/^(?:alle|kor|chorus|all|everyone|ensemble)$/i.test(match[1].replace(/\([^)]*\)|\[[^\]]*\]/g,'').trim()));}
+function assignLipSyncRoles(scene){
+ var assigned=0,unresolved=0,preserved=0;
+ captions(scene).filter(function(p){return /^spoken-\d+$/.test(p.id);}).forEach(function(part){
+  // Keep explicit disablement and manual choices. Assignment runs only when
+  // requested, never while rendering or editing dialogue text.
+  if(Object.prototype.hasOwnProperty.call(part,"lipSync")){preserved++;return;}
+  if(ensembleLine(part.text)){unresolved++;return;}
+  var candidates=LipSync.suggest(scene,part.text||"");
+  if(candidates.length!==1||!candidates[0].open){unresolved++;return;}
+  part.lipSync=newLipSync(candidates[0]);assigned++;
+ });return {assigned:assigned,unresolved:unresolved,preserved:preserved};
+}
+function lipSyncIssues(scene){
+ var parts=scene.parts||[],byId={};parts.forEach(function(p){byId[p.id]=p;});
+ return captions(scene).filter(function(part){var config=part.lipSync;if(!config||config.enabled!==true)return false;
+  if(!byId[config.target]||!byId[config.open]||config.open===config.closed)return true;
+  var mouths=mouthChoices(scene,config.target).map(function(p){return p.id;});
+  return mouths.indexOf(config.open)<0||!!config.closed&&mouths.indexOf(config.closed)<0;
+ });
+}
 function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(wiki.getTiddlerText("$:/language",""));
  var L=en?{
   title:"Script workshop",subtitle:"Dialogue, lyrics, scene notes and shared subtitles",back:"Cancel",save:"Save and return",
@@ -71,7 +113,12 @@ function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(w
   edit:"Valgt replik",text:"Tekst, som publikum ser",go:"Gå til dette tidspunkt",empty:"Ingen replikker i denne scene endnu",types:{spoken:"Replik",song:"Sanglinje",cue:"Sangtitel"},
   style:"Undertekster · fælles udseende",size:"Tekststørrelse",bottom:"Afstand fra bunden",width:"Maksimal bredde",bg:"Baggrund",live:"Eksempel",all:"Alle scener",
   hint:"Scenenoter vises kun i redigeringsværkstedet – aldrig som undertekster for publikum.",warning:"Der er ændringer, som ikke er gemt. Luk uden at gemme?",status:"Ændringerne er gemt i de tilhørende CutOut-scener."};
- var popup=null,items=[],selectedScene=0,selectedId="",drafts={},style={},dirty=false;
+ Object.assign(L,en?{
+  lipTitle:"Lip sync",lipEnable:"Enable for this line",lipActor:"Speaking figure",lipChoose:"Choose a figure",lipOpen:"Open mouth",lipClosed:"Closed mouth (optional)",lipNone:"None",lipChooseMouth:"Choose a mouth part",lipTiming:"Timing",lipAuto:"Linked recording, otherwise script",lipScript:"Script timing only",lipOffset:"Timing offset (s)",lipStrength:"Mouth movement (%)",lipAssign:"Assign speaking roles",lipAssigned:"Lines assigned",lipUnresolved:"Left for manual selection",lipPreserved:"Existing choices kept",lipMissing:"Missing",lipInvalid:"Choose a figure and its open mouth; the closed mouth must be a different part.",lipApprox:"Mouth movement is approximated from the line. A linked recording can supply its timing; the voice itself is not analysed.",lipSavedPreview:"Save and return, then play the line to check the result.",lipOff:"When disabled, the original mouth animation is kept.",lipNoParts:"This figure has no separate mouth parts. Add a mouth as its own SVG layer, or choose another figure.",sceneConflict:"Scenes changed elsewhere"
+ }:{
+  lipTitle:"Læbesynkronisering",lipEnable:"Aktivér for denne replik",lipActor:"Talende figur",lipChoose:"Vælg figur",lipOpen:"Åben mund",lipClosed:"Lukket mund (valgfri)",lipNone:"Ingen",lipChooseMouth:"Vælg munddel",lipTiming:"Timing",lipAuto:"Tilknyttet indtaling, ellers manuskript",lipScript:"Kun manuskriptets tider",lipOffset:"Tidsforskydning (s)",lipStrength:"Mundbevægelse (%)",lipAssign:"Fordel taleroller",lipAssigned:"Replikker fordelt",lipUnresolved:"Afventer manuelt valg",lipPreserved:"Eksisterende valg bevaret",lipMissing:"Mangler",lipInvalid:"Vælg en figur og dens åbne mund. Den lukkede mund skal være en anden del.",lipApprox:"Mundbevægelsen tilnærmes ud fra replikteksten. En tilknyttet indtaling kan styre timingen; selve stemmen analyseres ikke.",lipSavedPreview:"Gem og tilbage, og afspil derefter replikken for at se resultatet.",lipOff:"Når funktionen er slået fra, bevares den oprindelige mundanimation.",lipNoParts:"Figuren har ingen særskilte munddele. Tilføj munden som sit eget SVG-lag, eller vælg en anden figur.",sceneConflict:"Scener ændret andetsteds"
+ });
+ var popup=null,items=[],selectedScene=0,selectedId="",drafts={},originals={},style={},initialStyle={},originalStyle={},dirty=false;
  function isOpen(){return !!popup;}
  function changed(){dirty=true;var s=popup&&popup.querySelector('.huw-script-status');if(s)s.textContent=en?"Unsaved changes":"Ændringer er ikke gemt";}
  function getEntry(index){return items[index]||null;}
@@ -110,6 +157,48 @@ function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(w
    element(doc,'span','',entry.path||entry.name,b);
   });
  }
+ function renderLipSync(parent,entry,part){
+  var scene=data(entry),suggested=LipSync.suggest(scene,part.text||''),candidate=suggested.length===1&&!ensembleLine(part.text)?suggested[0]:null;
+  var stored=part.lipSync&&typeof part.lipSync==='object'?part.lipSync:null;
+  // Suggestions are display defaults. Merely opening a line must never write
+  // or enable lip sync, including a line which the author explicitly disabled.
+  var config=Object.assign(newLipSync(candidate),stored||{},{enabled:!!(stored&&stored.enabled===true)});
+  var group=element(doc,'section','huw-script-lipsync',undefined,parent);
+  element(doc,'h4','',L.lipTitle,group);
+  var toggleLabel=element(doc,'label','huw-script-lipsync-toggle',undefined,group);
+  var enabled=element(doc,'input','huw-script-lipsync-enable',undefined,toggleLabel);enabled.type='checkbox';enabled.checked=config.enabled;
+  labelText(toggleLabel,L.lipEnable);
+  enabled.addEventListener('change',function(){config.enabled=enabled.checked;part.lipSync=copy(config);changed();redraw();});
+  element(doc,'p','huw-script-lipsync-hint',L.lipApprox,group);
+  var controls=element(doc,'div','huw-script-lipsync-controls',undefined,group);
+  function update(key,value){config[key]=value;part.lipSync=copy(config);changed();}
+  function select(label,cls,choices,value,empty,onChange){
+   var wrap=element(doc,'label','huw-script-field',undefined,controls);labelText(wrap,label);
+   var sel=element(doc,'select',cls,undefined,wrap);sel.disabled=!config.enabled;
+   if(empty!==null){var placeholder=element(doc,'option','',empty,sel);placeholder.value='';}
+   choices.forEach(function(choice){var option=element(doc,'option','',choice.label,sel);option.value=choice.id;});
+   if(value&&!choices.some(function(choice){return choice.id===value;})){
+    var missing=element(doc,'option','',L.lipMissing+': '+value,sel);missing.value=value;
+   }
+   sel.value=value||'';sel.addEventListener('change',function(){onChange(sel.value);});return sel;
+  }
+  var actors=speakerChoices(scene);
+  select(L.lipActor,'huw-script-lipsync-actor',actors,config.target,L.lipChoose,function(value){
+   var actor=actors.find(function(a){return a.id===value;});
+   config.target=value;config.open=actor&&actor.open||'';config.closed=actor&&actor.closed||'';
+   part.lipSync=copy(config);changed();redraw();
+  });
+  var mouths=mouthChoices(scene,config.target);
+  select(L.lipOpen,'huw-script-lipsync-open',mouths,config.open,L.lipChooseMouth,function(value){update('open',value);});
+  select(L.lipClosed,'huw-script-lipsync-closed',mouths,config.closed,L.lipNone,function(value){update('closed',value);});
+  select(L.lipTiming,'huw-script-lipsync-timing',[{id:'auto',label:L.lipAuto},{id:'script',label:L.lipScript}],config.timing,null,function(value){update('timing',value);});
+  var offset=field(controls,L.lipOffset,'number',num(config.offset,0),function(value){update('offset',clamp(num(value,0),-3600,3600));});
+  offset.className='huw-script-lipsync-offset';offset.step=.05;offset.min=-3600;offset.max=3600;offset.disabled=!config.enabled;
+  var strength=field(controls,L.lipStrength,'range',Math.round(clamp(num(config.strength,1),0,1)*100),function(value){update('strength',clamp(num(value,100)/100,0,1));});
+  strength.className='huw-script-lipsync-strength';strength.min=0;strength.max=100;strength.step=1;strength.disabled=!config.enabled;
+  if(config.enabled&&config.target&&!mouths.length)element(doc,'p','huw-script-lipsync-warning',L.lipNoParts,group);
+  element(doc,'p','huw-script-lipsync-hint',config.enabled?L.lipSavedPreview:L.lipOff,group);
+ }
  function redraw(){if(!popup)return;var entry=selectedEntry();
   refreshScenes();refreshList();
   var note=popup.querySelector('.huw-script-scene-notes'),right=popup.querySelector('.huw-script-selected');
@@ -129,12 +218,13 @@ function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(w
    var at=timing(part,entry.duration),role=/^([^:\n]{1,40}):/.exec(part.text||'');
    o.openNarration({cueId:part.id,sceneTitle:entry.title,text:part.text||'',role:role?role[1]:'',start:entry.start+at.start,name:part.name||cueName(part)});
   },'huw-script-primary');
+  if(part.id!=='sing-label')renderLipSync(right,entry,part);
   button(right,L.remove,function(){if(!entry)return;var d=data(entry);d.parts=d.parts.filter(function(p){return p!==part;});selectedId='';changed();redraw();},'huw-script-danger');
  }
  function open(){if(popup)return true;
-  items=collect(wiki,o.film);if(!items.length)return false;
-  drafts={};items.forEach(function(item){if(!drafts[item.title])drafts[item.title]=copy(item.scene);});
-  ensureStyle();dirty=false;
+  items=collect(wiki,o.film,o.sceneTitle);if(!items.length)return false;
+  drafts={};originals={};items.forEach(function(item){if(!drafts[item.title]){drafts[item.title]=copy(item.scene);originals[item.title]=copy(item.scene);}});
+  ensureStyle();initialStyle=copy(style);originalStyle=copy(o.film.musical&&o.film.musical.captionStyle||{});dirty=false;
   // Open on the current scene, even in the middle of a multi-act musical.
   var t=o.position();selectedScene=Math.max(0,items.findIndex(function(e){return t>=e.start&&t<e.start+e.duration;}));selectedId='';o.pause();
   popup=element(doc,'section','huw-script-workshop',undefined,host);popup.setAttribute('role','dialog');popup.setAttribute('aria-modal','true');popup.setAttribute('aria-label',L.title);popup.tabIndex=-1;
@@ -163,6 +253,10 @@ function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(w
    var part={id:id,name:en?'Line '+(next+1):'Replik '+(next+1),type:'text',parent:null,geo:{},fill:'#fff7e8',text:en?'NEW LINE: ':'NY REPLIK: ',fontSize:15,align:'middle',keys:[]};
    retime(part,start,Math.min(start+4,entry.duration),entry.duration);d.parts.push(part);selectedId=id;changed();redraw();
   },'huw-script-primary');
+  button(cues,L.lipAssign,function(){var entry=selectedEntry();if(!entry)return;
+   var result=assignLipSyncRoles(data(entry));if(result.assigned)changed();redraw();
+   popup.querySelector('.huw-script-status').textContent=L.lipAssigned+': '+result.assigned+' · '+L.lipUnresolved+': '+result.unresolved+' · '+L.lipPreserved+': '+result.preserved;
+  },'huw-script-secondary huw-script-lipsync-assign');
   element(doc,'div','huw-script-cue-list',undefined,cues);
   var edit=element(doc,'section','huw-script-pane huw-script-edit-pane',undefined,body);
   element(doc,'div','huw-script-selected',undefined,edit);
@@ -179,20 +273,52 @@ function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(w
    sample.style.maxWidth=style.width+'%';sample.style.marginBottom=(style.bottom*.4)+'px';}}
  function close(force){if(!popup)return; if(dirty&&!force&&!(doc.defaultView&&doc.defaultView.confirm&&doc.defaultView.confirm(L.warning)))return;
   popup.remove();popup=null;host.classList.remove('huw-musical--manuscript-open');dirty=false;}
- function save(){if(!popup)return false;var changes=[],errors=[];
-  Object.keys(drafts).forEach(function(title){var tid=wiki.getTiddler(title);if(!tid){errors.push(title);return;}
-   var existing=JSON.parse(tid.fields.text||'{}'),draft=drafts[title];
-   if(JSON.stringify(existing)!==JSON.stringify(draft))changes.push({title:title,tid:tid,text:JSON.stringify(draft)});
-  });
-  if(errors.length){popup.querySelector('.huw-script-status').textContent=en?'Missing scenes: ':'Manglende scener: '+errors.join(', ');return false;}
-  var newStyle=copy(style),musical=o.film.musical||(o.film.musical={});
-  if(JSON.stringify(musical.captionStyle||{})!==JSON.stringify(newStyle)){
-   musical.captionStyle=newStyle;var f=wiki.getTiddler(o.sceneTitle);if(f)changes.push({title:o.sceneTitle,tid:f,text:JSON.stringify(o.film)});
+ function save(){if(!popup)return false;var pending=Object.create(null),errors=[],conflicts=[],invalid=[];
+  function equal(a,b){return JSON.stringify(a)===JSON.stringify(b);}
+  function latest(title){if(pending[title])return pending[title];var tid=wiki.getTiddler(title),value;
+   if(!tid){errors.push(title);return null;}
+   try{value=JSON.parse(tid.fields.text||'{}');if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('Invalid scene');}
+   catch(_){errors.push(title);return null;}
+   return pending[title]={title:title,tid:tid,data:value,changed:false};
   }
-  changes.forEach(function(c){o.markOwnWrite(c.title,c.text);wiki.addTiddler(new $tw.Tiddler(c.tid,{title:c.title,text:c.text}));});
-  dirty=false;close(true);if(changes.length&&o.reload)o.reload();else o.repaint();return true;
+  Object.keys(drafts).forEach(function(title){var draft=drafts[title],original=originals[title];
+   var partsChanged=!equal(draft.parts,original.parts),notesChanged=!equal(draft.sceneNotes,original.sceneNotes);
+   if(!partsChanged&&!notesChanged)return;
+   var current=latest(title);if(!current)return;
+   if(partsChanged){
+    if(!equal(current.data.parts,original.parts)){conflicts.push(title);return;}
+    lipSyncIssues(draft).forEach(function(part){invalid.push(part.name||part.id);});
+    current.data.parts=copy(draft.parts);current.changed=true;
+   }
+   if(notesChanged){
+    if(!equal(current.data.sceneNotes,original.sceneNotes)){conflicts.push(title);return;}
+    current.data.sceneNotes=draft.sceneNotes;current.changed=true;
+   }
+  });
+  if(!equal(style,initialStyle)){
+   var film=latest(o.sceneTitle);
+   if(film){var savedStyle=film.data.musical&&film.data.musical.captionStyle||{};
+    if(!equal(savedStyle,originalStyle)&&!equal(savedStyle,style))conflicts.push(o.sceneTitle);
+    else{film.data.musical=film.data.musical||{};film.data.musical.captionStyle=copy(style);film.changed=true;}
+   }
+  }
+  var status=popup.querySelector('.huw-script-status');
+  if(errors.length){status.textContent=(en?'Missing or unreadable scenes: ':'Manglende eller ulæselige scener: ')+errors.join(', ');return false;}
+  if(conflicts.length){status.textContent=L.sceneConflict+': '+conflicts.join(', ');return false;}
+  if(invalid.length){status.textContent=L.lipInvalid+' ('+invalid.join(', ')+')';return false;}
+  // Merge just manuscript-owned fields into the latest scene. A recording made
+  // while this workshop is open must retain its audio asset and clip metadata.
+  // The root scene and its caption style are committed together in one write.
+  var changes=Object.keys(pending).map(function(title){return pending[title];}).filter(function(c){return c.changed;});
+  changes.forEach(function(c){var text=JSON.stringify(c.data);o.markOwnWrite(c.title,text);wiki.addTiddler(new $tw.Tiddler(c.tid,{title:c.title,text:text}));
+   if(c.title===o.sceneTitle){o.film.parts=copy(c.data.parts||[]);if(c.data.sceneNotes!==undefined)o.film.sceneNotes=c.data.sceneNotes;if(c.data.musical)o.film.musical=copy(c.data.musical);}
+  });
+  dirty=false;close(true);if(changes.length&&o.reload)o.reload();else if(o.repaint)o.repaint();return true;
  }
  return {open:open,close:function(){close(false);},dispose:function(){close(true);},isOpen:isOpen};
 }
 exports.mount=mount;
+exports.assignLipSyncRoles=assignLipSyncRoles;
+exports.mouthChoices=mouthChoices;
+exports.lipSyncIssues=lipSyncIssues;
 })();

@@ -33,6 +33,17 @@ const errors=[],checks=[],sampleRequests=[];
 function passed(name){checks.push(name);console.log('PASS '+name);}
 async function screenshot(name){await page.screenshot({path:fileURLToPath(new URL(name+'.png',out)),fullPage:false});}
 async function savedProduction(){return page.evaluate(name=>{const f=$tw.wiki.getTiddler(name).fields,film=JSON.parse($tw.wiki.getTiddlerText(f['animus-scene']));return {title:name,filmTitle:f['animus-scene'],scoreTitle:f['animus-score'],stageTitle:film.scenes[0].source,film,stage:JSON.parse($tw.wiki.getTiddlerText(film.scenes[0].source)),score:$tw.wiki.getTiddler(f['animus-score']).fields['abc-source']};},'AniMus CI production');}
+function actorFixture(id,name,x){const pose=(opacity=1)=>({t:0,x:0,y:0,r:0,sx:1,sy:1,opacity});return [
+ {id,name,type:'group',parent:null,keys:[{...pose(),x,y:180}]},
+ {id:id+'-head',name:'Head',type:'circle',parent:id,geo:{r:40},fill:'#e4bc8b',keys:[pose()]},
+ {id:id+'-mouth-closed',name:'Mund lukket',type:'path',parent:id,geo:{d:'M -16 12 Q 0 20 16 12'},fill:'none',stroke:'#4c2929',strokeWidth:3,keys:[pose()]},
+ {id:id+'-mouth-open',name:'Mund åben',type:'ellipse',parent:id,geo:{rx:13,ry:10,cy:14},fill:'#4c2929',keys:[pose(0)]}
+];}
+async function assertMouth(scope,talking){
+ const opacity=async id=>Number(await scope.locator(`[data-cutout-id="${id}"]`).getAttribute('opacity'));
+ if(talking)assert.ok(await opacity('ci-alma-mouth-open')>0,'the bound actor opens her mouth during the line');else assert.equal(await opacity('ci-alma-mouth-open'),0,'the bound actor closes her mouth outside the line');
+ assert.equal(await opacity('ci-alma-mouth-closed'),talking?0:1);assert.equal(await opacity('ci-bo-mouth-open'),0,'the other actor stays silent');assert.equal(await opacity('ci-bo-mouth-closed'),1);
+}
 try{
  browser=await playwright.chromium.launch({headless:true,executablePath,args:['--no-sandbox']});
  context=await browser.newContext({viewport:{width:1500,height:1050},acceptDownloads:true});
@@ -73,6 +84,12 @@ try{
  await show.locator(`[data-cutout-id="${rootPart.id}"] image`).last().click();await show.locator('.huw-musical-draw-button').click();drawing=show.locator('.huw-svg-workshop');assert.equal(await drawing.locator('.huw-svg-layer-row').count(),2);assert.equal(await drawing.locator('.huw-svg-frame').count(),2);
  await drawing.getByRole('button',{name:'Annuller',exact:true}).click();await drawing.waitFor({state:'detached'});passed('SVG freehand, layers, animation frames, undo, save and reopen');
 
+ // A named, prepared CutOut cast is test input. All speech bindings below
+ // are created through the manuscript UI and rendered by the real runtime.
+ const actorParts=[...actorFixture('ci-alma','Alma',260),...actorFixture('ci-bo','Bo',540)],actorSource=JSON.stringify(actorParts);
+ await page.evaluate(({title,parts})=>{const t=$tw.wiki.getTiddler(title),scene=JSON.parse(t.fields.text);scene.parts.push(...parts);$tw.wiki.addTiddler(new $tw.Tiddler(t,{text:JSON.stringify(scene)}));},{title:production.stageTitle,parts:actorParts});
+ await show.locator('[data-cutout-id="ci-alma-mouth-open"]').waitFor({state:'attached'});
+
  await show.locator('.huw-musical-audio-button').click();let audio=show.locator('.huw-narration-workshop');await audio.locator('input[type=file]').setInputFiles({name:'dialogue.wav',mimeType:'audio/wav',buffer:voiceWav});
  await audio.locator('.huw-narration-clip').waitFor();await page.waitForFunction(()=>{const b=document.querySelector('.huw-narration-primary');return b&&!b.disabled;});
  for(const [label,value] of [['Placering i forestillingen (s)','1'],['Klip begyndelsen fra (s)','0.25'],['Slut i lydfil (s)','1.5']]){await audio.getByLabel(label,{exact:true}).fill(value);await audio.getByLabel(label,{exact:true}).blur();}
@@ -88,17 +105,28 @@ try{
  assert.equal(await audio.getByLabel('Klip begyndelsen fra (s)',{exact:true}).inputValue(),'0.25');await audio.getByRole('button',{name:'Annuller',exact:true}).click();await audio.waitFor({state:'detached'});
  passed('WAV import, trim, save, embedded media, reopen and timeline double-click');
 
- const line='FORTÆLLER: Nu begynder vores musical.';
+ const line='ALMA: Aaaaaa.';
  await show.locator('.huw-musical-manuscript-button').click();const manuscript=show.locator('.huw-script-workshop');await manuscript.getByRole('button',{name:'+ Ny replik',exact:true}).click();
  await manuscript.getByLabel('Tekst, som publikum ser',{exact:true}).fill(line);
- for(const [label,value] of [['Start (s)','1'],['Slut (s)','2.25']]){await manuscript.getByLabel(label,{exact:true}).fill(value);await manuscript.getByLabel(label,{exact:true}).blur();}
+ for(const [label,value] of [['Start (s)','1'],['Slut (s)','5']]){await manuscript.getByLabel(label,{exact:true}).fill(value);await manuscript.getByLabel(label,{exact:true}).blur();}
+ await manuscript.locator('.huw-script-lipsync-enable').check();await manuscript.locator('.huw-script-lipsync-actor').selectOption('ci-alma');await manuscript.locator('.huw-script-lipsync-open').selectOption('ci-alma-mouth-open');await manuscript.locator('.huw-script-lipsync-closed').selectOption('ci-alma-mouth-closed');await manuscript.locator('.huw-script-lipsync-timing').selectOption('script');
  await manuscript.getByRole('button',{name:'Indtal replik',exact:true}).click();audio=show.locator('.huw-narration-workshop');await audio.waitFor();
  assert.equal(await audio.locator('.huw-narration-reading-text').inputValue(),line);
  assert.equal(await audio.locator('.huw-narration-reading-text').evaluate(input=>{const r=input.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!hit&&!!hit.closest('.huw-narration-workshop');}),true,'recording editor is above the open manuscript and receives pointer events');
  await audio.getByLabel('Rolle / stemme',{exact:true}).click();await screenshot('manuscript-narration');
  await audio.getByRole('button',{name:'Annuller',exact:true}).click();await audio.waitFor({state:'detached'});assert.equal(await manuscript.getByLabel('Tekst, som publikum ser',{exact:true}).inputValue(),line);
  await manuscript.locator('.huw-script-header-actions').getByRole('button',{name:'Gem og tilbage',exact:true}).click();await manuscript.waitFor({state:'detached'});
- assert.equal((await savedProduction()).stage.parts.find(p=>p.id==='spoken-0')?.text,line);passed('manuscript dialogue opens recording above the script, retains text and saves captions');
+ production=await savedProduction();const savedCue=production.stage.parts.find(p=>p.id==='spoken-0');assert.equal(savedCue.text,line);assert.deepEqual(savedCue.lipSync,{enabled:true,target:'ci-alma',open:'ci-alma-mouth-open',closed:'ci-alma-mouth-closed',timing:'script',offset:0,strength:1});
+ await show.locator('.huw-musical-manuscript-button').click();await manuscript.locator('.huw-script-cue').filter({hasText:line}).click();assert.equal(await manuscript.locator('.huw-script-lipsync-enable').isChecked(),true);assert.equal(await manuscript.locator('.huw-script-lipsync-actor').inputValue(),'ci-alma');assert.equal(await manuscript.locator('.huw-script-lipsync-open').inputValue(),'ci-alma-mouth-open');assert.equal(await manuscript.locator('.huw-script-lipsync-closed').inputValue(),'ci-alma-mouth-closed');assert.equal(await manuscript.locator('.huw-script-lipsync-timing').inputValue(),'script');await screenshot('manuscript-lipsync');
+ await manuscript.locator('.huw-script-header-actions').getByRole('button',{name:'Annuller',exact:true}).click();await manuscript.waitFor({state:'detached'});
+ passed('manuscript dialogue opens recording above the script and saves/reopens the actor mouth binding');
+
+ const editorRange=show.locator('.huw-musical-range');async function seekEditor(time){await editorRange.evaluate((input,value)=>{input.value=String(value);input.dispatchEvent(new Event('input',{bubbles:true}));},time);}
+ await seekEditor(.5);await assertMouth(show,false);await seekEditor(1.4);await assertMouth(show,true);await screenshot('editor-lipsync');
+ await show.locator('.huw-musical-play').click();await page.waitForFunction(()=>Number(document.querySelector('.tc-tiddler-frame[data-tiddler-title="AniMus CI production"] .huw-musical-range')?.value)>1.6);await show.locator('.huw-musical-play').click();await seekEditor(1.4);await assertMouth(show,true);
+ const pausedEditorTime=await editorRange.inputValue();await page.waitForTimeout(100);assert.equal(await editorRange.inputValue(),pausedEditorTime);
+ await seekEditor(4.8);await assertMouth(show,false);await screenshot('editor-lipsync-rest');await seekEditor(5.5);await assertMouth(show,false);await show.locator('.huw-musical-stop').click();await assertMouth(show,false);
+ assert.equal(JSON.stringify((await savedProduction()).stage.parts.filter(p=>/^ci-(alma|bo)(?:-|$)/.test(p.id))),actorSource,'mouth playback must preserve source geometry and animation keys');passed('editor lipsync follows play/seek/pause, leaves the other actor silent and preserves the source shapes');
 
  await show.locator('.huw-musical-site-button').click();const publisher=page.locator('.husp-overlay');await publisher.waitFor();
  await publisher.locator('.husp-preview-switch').getByRole('button',{name:'Sitevisning',exact:true}).click();
@@ -110,6 +138,7 @@ try{
  await site.waitForSelector('.huw-site-animus[data-animus-ready="1"]',{timeout:30000});
  assert.match(await site.locator('.huw-animus-play').innerText(),/Afspil|Play/);assert.match(await site.locator('.huw-animus-stop').innerText(),/Stop/);assert.match(await site.locator('.huw-animus-fullscreen').innerText(),/Fuld skærm|Full screen/);
  const audienceLayer=site.locator(`[data-cutout-id="${layerPart.id}"] image`);assert.equal(await audienceLayer.getAttribute('href'),layerPart.variants[0].imageData,'Site renders the SVG frame without a base image');
+ await assertMouth(site,false);
  assert.equal(await site.locator('.huw-musical-workspace,.huwabc-edit-workshop,.huw-svg-workshop,.huw-narration-workshop').count(),0,'Site view must not show editors');
  const exported=await site.evaluate(()=>JSON.parse(document.getElementById('publisher-data').textContent));assert.ok(exported.cutoutRows[voice.asset]);assert.ok(!JSON.stringify(exported.cutoutRows).includes('svgDrawing'));
  await site.locator('.huw-animus-play').click();await site.waitForFunction(()=>document.querySelector('.huw-site-animus')?.getAttribute('data-audio-mode')==='playing',null,{timeout:30000});
@@ -117,11 +146,13 @@ try{
  assert.ok(sampleRequests.length>0,'real ABC sample engine must prepare the edited music');
  await site.locator('.huw-animus-play').click();const paused=Number(await site.locator('.huw-site-animus').getAttribute('data-time'));await page.waitForTimeout(150);assert.equal(Number(await site.locator('.huw-site-animus').getAttribute('data-time')),paused);
  await site.locator('.huw-animus-range').evaluate(input=>{input.value='1.4';input.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(Number(await site.locator('.huw-site-animus').getAttribute('data-time')),1.4);assert.equal(await site.locator('.huw-animus-line').innerText(),line);
+ await assertMouth(site,true);await screenshot('site-lipsync');
  const frameAtSeek=layerPart.keys.filter(k=>k.t<=1.4).sort((a,b)=>a.t-b.t).at(-1).variantId;assert.equal(await audienceLayer.getAttribute('href'),layerPart.variants.find(v=>v.id===frameAtSeek).imageData,'seek selects the matching SVG frame');
  await site.locator('.huw-animus-play').click();await site.waitForFunction(()=>Number(document.querySelector('.huw-site-animus')?.getAttribute('data-time'))>1.65);
  await site.locator('.huw-animus-stop').click();assert.equal(Number(await site.locator('.huw-site-animus').getAttribute('data-time')),0);assert.equal(await site.locator('.huw-site-animus').getAttribute('data-playing'),'false');
+ await assertMouth(site,false);assert.equal(JSON.stringify((await savedProduction()).stage.parts.filter(p=>/^ci-(alma|bo)(?:-|$)/.test(p.id))),actorSource);
  await screenshot('site-preview');await page.locator('.husp-head').getByRole('button',{name:'✕ Luk',exact:true}).click();await page.locator('.husp-overlay').waitFor({state:'detached'});
- passed('Site preview exports assets and plays, pauses, seeks, resumes and stops');
+ passed('Site preview exports assets and plays, pauses, seeks, resumes and stops with the same script lipsync');
  assert.deepEqual(errors,[],'no uncaught browser errors');await screenshot('production-complete');
  await writeFile(new URL('result.json',out),JSON.stringify({ok:true,manifest:manifest.version,checks,sampleRequests:sampleRequests.length,errors},null,2)+'\n');
  console.log(JSON.stringify({ok:true,manifest:manifest.version,checks,errors}));

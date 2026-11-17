@@ -1,0 +1,19 @@
+/*\
+title: $:/plugins/huwiki/musical/lipsync.css
+type: text/css
+tags: $:/tags/Stylesheet
+\*/
+.huw-script-lipsync{margin:1rem 0;padding:.85rem;border:1px solid var(--huw-script-border,#566278);border-radius:.7rem;background:rgba(127,145,177,.08)}
+.huw-script-lipsync h4{margin:0 0 .65rem;font-size:1rem}
+.huw-script-lipsync-toggle{display:flex;align-items:center;gap:.6rem;font-weight:600;cursor:pointer}
+.huw-script-lipsync-toggle input{width:1.1rem;height:1.1rem;margin:0;accent-color:#64cbb7}
+.huw-script-lipsync-controls{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.7rem;margin:.8rem 0}
+.huw-script-lipsync-controls .huw-script-field{margin:0;min-width:0}
+.huw-script-lipsync-controls select,.huw-script-lipsync-controls input{box-sizing:border-box;width:100%;min-width:0}
+.huw-script-lipsync-controls select{padding:.45rem;border:1px solid #62708a;border-radius:.35rem;background:#172236;color:#f5f7fb;font:inherit}
+.huw-script-lipsync-controls select:disabled,.huw-script-lipsync-controls input:disabled{opacity:.5}
+.huw-script-lipsync-hint,.huw-script-lipsync-warning{margin:.55rem 0 0;font-size:.8rem;line-height:1.45}
+.huw-script-lipsync-hint{opacity:.8}
+.huw-script-lipsync-warning{color:#ffcf81}
+.huw-script-lipsync-assign{width:100%;margin:.4rem 0 .8rem}
+@media(max-width:650px){.huw-script-lipsync-controls{grid-template-columns:1fr}}

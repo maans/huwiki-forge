@@ -33,11 +33,23 @@ function fixtures(){
   Secret:{title:'Secret',type:'text/plain',text:'This unrelated tiddler must not be exported'}
  };
 }
+function lipsyncFixtures(){
+ const rows=fixtures(),scene=JSON.parse(rows.Scene.text);
+ function actor(id,name,x){const pose=(opacity=1)=>({t:0,x:0,y:0,r:0,sx:1,sy:1,opacity});return [
+  {id,name,type:'group',parent:null,keys:[{...pose(),x,y:180}]},
+  {id:id+'-head',name:'Head',parent:id,type:'circle',geo:{r:40},fill:'#e4bc8b',keys:[pose()]},
+  {id:id+'-mouth-closed',name:'Mund lukket',parent:id,type:'path',geo:{d:'M -16 12 Q 0 20 16 12'},fill:'none',stroke:'#4c2929',strokeWidth:3,keys:[pose()]},
+  {id:id+'-mouth-open',name:'Mund åben',parent:id,type:'ellipse',geo:{rx:13,ry:10,cy:14},fill:'#4c2929',keys:[pose(0)]}
+ ];}
+ scene.parts.push(...actor('ci-alma','Alma',260),...actor('ci-bo','Bo',540));
+ const cue=scene.parts.find(p=>p.id==='spoken-0');cue.text='ALMA: Aaaaaa.';cue.keys=[{t:0,opacity:0,easing:'step'},{t:1,opacity:1,easing:'step'},{t:5,opacity:0,easing:'step'}];cue.lipSync={enabled:true,target:'ci-alma',open:'ci-alma-mouth-open',closed:'ci-alma-mouth-closed',timing:'script',offset:0,strength:1};
+ rows.Scene.text=JSON.stringify(scene);return rows;
+}
 function wiki(rows){return {getTiddler:k=>rows[k]?{fields:rows[k]}:null,getTiddlerText:(k,f='')=>rows[k]?.text??f,each(fn){Object.keys(rows).forEach(k=>fn({fields:rows[k]},k));},getTagMap:()=>({})};}
 function adapter(rows){return new Function('$tw','safe',adapters+'\nreturn {collectAnimus,isAnimusTitle,animusWidgetMarkup,animusWidgetPlaceholders,animusBundle};')({wiki:wiki(rows)},s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));}
 async function runtimeRows(rows=fixtures()){
  const all={...abcRows,...rows};
- for(const name of ['playlist','motion','sync','sfx','narration-player'])all[musical+name+'.js']={text:await read('plugins/musical/src/'+name+'.js')};
+ for(const name of ['playlist','motion','sync','sfx','narration-player','lipsync'])all[musical+name+'.js']={text:await read('plugins/musical/src/'+name+'.js')};
  all[base+'cutout/viewer.js']={text:cutout};all[base+'cutout/viewer.css']={text:'.huw-site-cutout{width:100%}'};
  all[base+'animus/viewer.js']={text:viewer};all[base+'animus/viewer.css']={text:await read('plugins/site-publisher/src/animus-viewer.css')};
  return all;
@@ -89,8 +101,14 @@ test('published HTML carries the actual shared runtime without editor or recorde
  const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
  for(const s of scripts){if(/type="(?:application\/json|text\/plain)"/.test(s[0].slice(0,s[0].indexOf('>'))))continue;new Script(s[1]);}
 });
+test('Site publication retains explicit mouth bindings and embeds the shared lipsync module',async()=>{
+ const rows=lipsyncFixtures(),ctx={rows:{},used:false};adapter(rows).collectAnimus('Film','',ctx);
+ const source=JSON.parse(rows.Scene.text).parts.find(p=>p.id==='spoken-0'),published=JSON.parse(ctx.rows.Scene.text).parts.find(p=>p.id==='spoken-0');
+ assert.deepEqual(published.lipSync,source.lipSync);assert.equal(published.text,source.text);
+ const html=await siteHtml(rows);assert.match(html,/musical\/lipsync\.js/);assert.match(html,/ci-alma-mouth-open/);assert.doesNotMatch(html,/PRIVATE DRAFT NOTE|musical\/manuscript\.js/);
+});
 
-async function playerHarness({delay=false,fail=false}={}){
+async function playerHarness({delay=false,fail=false,rows=fixtures()}={}){
  let now=0,nextFrame=0,frames=new Map(),audioContext=null,release;
  const controllers=[],media=[],calls={prepare:[],seek:[],tones:0};
  function element(tag){const attrs={},events={},children=[],classes=new Set();let text='';
@@ -123,9 +141,9 @@ async function playerHarness({delay=false,fail=false}={}){
  }};
  const context=createContext({window:win,document:doc,performance:{now:()=>now},requestAnimationFrame:fn=>{frames.set(++nextFrame,fn);return nextFrame;},cancelAnimationFrame:n=>frames.delete(n),console,Promise,URL,Uint8Array,Float32Array,setTimeout,clearTimeout});
  new Script(cutout).runInContext(context);modules['$:/plugins/huwiki/cutout/engine.js']=win.HUWikiCutOutSite;
- for(const name of ['playlist','motion','sync','sfx','narration-player']){context.exports={};context.require=name=>modules[name];new Script(await read('plugins/musical/src/'+name+'.js')).runInContext(context);modules[musical+name+'.js']=context.exports;}
+ for(const name of ['playlist','motion','sync','sfx','narration-player','lipsync']){context.exports={};context.require=name=>modules[name];new Script(await read('plugins/musical/src/'+name+'.js')).runInContext(context);modules[musical+name+'.js']=context.exports;}
  win.HUWikiAniMusModules={require:name=>{assert.ok(modules[name],name);return modules[name];}};new Script(viewer).runInContext(context);
- const ctx={rows:{},used:false};adapter(fixtures()).collectAnimus('Film','',ctx);const host=element('section');host.ownerDocument=doc;host.setAttribute('data-animus-title','Film');
+ const ctx={rows:{},used:false};adapter(rows).collectAnimus('Film','',ctx);const host=element('section');host.ownerDocument=doc;host.setAttribute('data-animus-title','Film');
  const player=win.HUWikiAniMusSite.mount(host,ctx.rows,{engineMode:'original'});
  const flush=async()=>{for(let i=0;i<12;i++)await Promise.resolve();};
  return {player,host,calls,controllers,media,flush,release:()=>release&&release(),tick(ms){now+=ms;const running=[...frames.values()];frames.clear();running.forEach(fn=>fn(now));},find(cls){const search=n=>n.className===cls?n:n.children.map(search).find(Boolean);return search(host);}};
@@ -146,6 +164,17 @@ test('late or failed music preparation never blocks the stage or starts sound af
  delayed.player.pause();delayed.release();await delayed.flush();assert.equal(delayed.controllers[0].isStarted,false);delayed.player.dispose();
  const failed=await playerHarness({fail:true});failed.player.play();await failed.flush();failed.tick(500);
  assert.ok(failed.player.value()>.4);assert.equal(failed.host.getAttribute('data-playing'),'true');assert.equal(failed.host.getAttribute('data-audio-mode'),'stage-only');assert.match(failed.find('huw-animus-status').textContent,/Samples unavailable/);failed.player.dispose();
+});
+test('Site mouth follows play, seek and pause while the other actor and source shapes stay unchanged',async()=>{
+ const h=await playerHarness({rows:lipsyncFixtures()}),scene=h.player.view.clips[0].view,source=JSON.stringify(scene.scene.parts),opacity=id=>Number(scene.nodes[id].el.getAttribute('opacity'));
+ assert.equal(opacity('ci-alma-mouth-open'),0);assert.equal(opacity('ci-alma-mouth-closed'),1);
+ h.player.seek(1.4);assert.ok(opacity('ci-alma-mouth-open')>0);assert.equal(opacity('ci-alma-mouth-closed'),0);assert.equal(opacity('ci-bo-mouth-open'),0);assert.equal(opacity('ci-bo-mouth-closed'),1);
+ h.player.play();await h.flush();h.tick(200);await h.flush();assert.ok(h.player.value()>1.4);assert.ok(opacity('ci-alma-mouth-open')>0);h.player.pause();
+ const paused=h.player.value(),mouth=opacity('ci-alma-mouth-open');h.tick(500);assert.equal(h.player.value(),paused);assert.equal(opacity('ci-alma-mouth-open'),mouth);
+ h.player.seek(4.8);assert.equal(opacity('ci-alma-mouth-open'),0,'punctuation closes the mouth while its caption is still visible');assert.equal(opacity('ci-alma-mouth-closed'),1);
+ h.player.seek(5.5);assert.equal(opacity('ci-alma-mouth-open'),0);assert.equal(opacity('ci-alma-mouth-closed'),1);
+ h.player.seek(1.4);assert.ok(opacity('ci-alma-mouth-open')>0);h.player.stop();assert.equal(opacity('ci-alma-mouth-open'),0);assert.equal(opacity('ci-alma-mouth-closed'),1);
+ assert.equal(JSON.stringify(scene.scene.parts),source,'lipsync changes rendered mouth state, not the original geometry or keys');h.player.dispose();
 });
 
 // Browser checks use the real bundled ABCJS + shared AudioController. Local
@@ -168,7 +197,7 @@ test('real Site view plays SVG, ABC music and recorded audio, seeks, pauses and 
  const browser=await browserRuntime(t);if(!browser)return;t.after(()=>browser.close());
  const page=await browser.newPage(),errors=[],requests=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://**/*',route=>{requests.push(route.request().url());return route.fulfill({status:200,contentType:'audio/wav',body:wave(.6)});});
- await page.setContent(await siteHtml(fixtures()),{waitUntil:'domcontentloaded'});
+ await page.setContent(await siteHtml(lipsyncFixtures()),{waitUntil:'domcontentloaded'});
  const host=page.locator('.huw-site-animus');await host.waitFor();assert.equal(await host.getAttribute('data-animus-ready'),'1');
  assert.match(await page.locator('.huw-animus-play').innerText(),/Play/);assert.match(await page.locator('.huw-animus-stop').innerText(),/Stop/);assert.match(await page.locator('.huw-animus-fullscreen').innerText(),/Full screen/);
  assert.equal(await page.locator('.huw-animus-stage svg').count(),2);assert.equal(await page.locator('.huw-puppet-workshop,.huw-musical-workspace').count(),0);
@@ -179,7 +208,11 @@ test('real Site view plays SVG, ABC music and recorded audio, seeks, pauses and 
  await page.locator('.huw-animus-play').click();const paused=Number(await host.getAttribute('data-time'));
  await page.waitForTimeout(150);assert.equal(Number(await host.getAttribute('data-time')),paused);
  await page.locator('.huw-animus-range').evaluate(n=>{n.value='1.5';n.dispatchEvent(new Event('input',{bubbles:true}));});
- assert.equal(Number(await host.getAttribute('data-time')),1.5);assert.equal(await page.locator('.huw-animus-line').textContent(),'A recorded line');
+ assert.equal(Number(await host.getAttribute('data-time')),1.5);assert.equal(await page.locator('.huw-animus-line').textContent(),'ALMA: Aaaaaa.');
+ const mouth=id=>page.locator(`[data-cutout-id="${id}"]`);assert.ok(Number(await mouth('ci-alma-mouth-open').getAttribute('opacity'))>0);assert.equal(Number(await mouth('ci-alma-mouth-closed').getAttribute('opacity')),0);assert.equal(Number(await mouth('ci-bo-mouth-open').getAttribute('opacity')),0);assert.equal(Number(await mouth('ci-bo-mouth-closed').getAttribute('opacity')),1);
+ await page.locator('.huw-animus-range').evaluate(n=>{n.value='4.8';n.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(Number(await mouth('ci-alma-mouth-open').getAttribute('opacity')),0);assert.equal(Number(await mouth('ci-alma-mouth-closed').getAttribute('opacity')),1);
+ await page.locator('.huw-animus-range').evaluate(n=>{n.value='5.5';n.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(Number(await mouth('ci-alma-mouth-open').getAttribute('opacity')),0);
+ await page.locator('.huw-animus-range').evaluate(n=>{n.value='1.5';n.dispatchEvent(new Event('input',{bubbles:true}));});assert.ok(Number(await mouth('ci-alma-mouth-open').getAttribute('opacity'))>0);
  const transform=await page.locator('[data-cutout-id="body"]').getAttribute('transform');assert.match(transform,/rotate\(/);assert.notEqual(transform,'translate(60 60) rotate(0) scale(1 1) translate(0 0)');
  await page.locator('.huw-animus-fullscreen').click();await page.waitForFunction(()=>document.querySelector('.huw-animus-fullscreen')?.getAttribute('aria-pressed')==='true');
  await page.locator('.huw-animus-fullscreen').click();await page.waitForFunction(()=>document.querySelector('.huw-animus-fullscreen')?.getAttribute('aria-pressed')==='false');

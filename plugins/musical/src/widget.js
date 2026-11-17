@@ -18,6 +18,7 @@ var Workspace=require("$:/plugins/huwiki/musical/workspace.js");
 var Playlist=require("$:/plugins/huwiki/musical/playlist.js");
 var SoundFx=require("$:/plugins/huwiki/musical/sfx.js");
 var Narration=require("$:/plugins/huwiki/musical/narration.js");
+var LipSync=require("$:/plugins/huwiki/musical/lipsync.js");
 function Musical(tree,options){this.initialise(tree,options);}
 Musical.prototype=new Widget();
 Musical.prototype.execute=function(){
@@ -56,6 +57,7 @@ Musical.prototype.render=function(parent,next){
  var scene=Engine.readScene(this.wiki,this.sceneTitle);
  if(!scene){node(doc,"p","huw-musical-error",L.missing,host);return;}
  var sfx=new SoundFx.Fx(scene.musical&&scene.musical.sfx);
+ var lipOptions={sceneTitle:this.sceneTitle,audioClips:scene.musical&&scene.musical.audioClips||[]};
  var voice=new Narration.Player({wiki:this.wiki,doc:doc,clips:scene.musical&&scene.musical.audioClips||[],onError:function(message){
   if(state)state.textContent=(L.scene==='Scene'?'Lydspor: ':'Audio track: ')+String(message&&message.message||message);
  }});
@@ -414,6 +416,7 @@ Musical.prototype.render=function(parent,next){
   Engine.paint(view,visualTime);
   Motion.paint(view,scene,t,beatClock);
   if(editor)editor.paint(t);
+  LipSync.apply(view,visualTime,t,lipOptions);
   updateCaptions(visualTime);
   // Seeking also updates the selection frame; playing never spends time
   // recalculating its SVG bounds when the frame is hidden.
@@ -531,7 +534,7 @@ Musical.prototype.render=function(parent,next){
   if(wasRunning){timeline.play();setPlaying(true);syncAudio(position);}
  });
  this._shutdown=function(){
-  self._dead=true;generation++;stopFrames();sfx.dispose();voice.dispose();clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
+  self._dead=true;generation++;stopFrames();sfx.dispose();voice.dispose();LipSync.reset(view);clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
   if(session)Playback.unregister(session);
   songs.forEach(function(song){
    var c=song.controller;if(!c)return;c._disposed=true;
@@ -554,7 +557,7 @@ Musical.prototype.render=function(parent,next){
   onEditScore:function(title){if(workspace)workspace.openScore(title);},
   onEditAudio:function(details){if(workspace)workspace.openNarration(details);},
   onEditScenes:function(){if(workspace)workspace.openScenes();},
-  onAudioChange:function(updated){voice.setClips(updated);duration=fullDuration();timeline.duration=duration;time.max=String(duration);},
+  onAudioChange:function(updated){voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);paint(timeline.value());},
   onSelect:function(t){if(workspace)workspace.selectTrack(t);},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}
@@ -563,7 +566,7 @@ Musical.prototype.render=function(parent,next){
  workspace=Workspace.mount({
   doc:doc,host:host,wiki:this.wiki,parentWidget:this,project:scene.name||"Musical",film:scene,sceneTitle:this.sceneTitle,stageTitle:this._stageTitle,
   scoreTitle:function(){return songs[activeIndex]&&songs[activeIndex].title||self.scoreTitle;},
-  onAudioChange:function(updated){voice.setClips(updated);duration=fullDuration();timeline.duration=duration;time.max=String(duration);if(editor)editor.redraw();},
+  onAudioChange:function(updated){voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);if(editor)editor.redraw();paint(timeline.value());},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},repaint:function(){paint(timeline.value());},
   layout:layout,transport:transport,play:play,view:view,editor:editor,
   seek:seek,position:function(){return timeline.value();},

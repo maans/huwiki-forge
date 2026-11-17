@@ -5,6 +5,7 @@ on:
     paths:
       - editions/animus/**
       - plugins/musical/**
+      - plugins/animus-example-fyrtoejet/**
       - plugins/cutout/**
       - plugins/abc/**
       - plugins/site-publisher/**
@@ -14,12 +15,15 @@ on:
       - scripts/build-site-publisher.mjs
       - scripts/animus-browser-smoke.mjs
       - tests/animus-site-view.test.mjs
+      - tests/animus-lipsync.test.mjs
+      - tests/animus-lipsync-editor.test.mjs
       - tests/site-layouts.test.mjs
       - .github/workflows/animus-browser-smoke.yml
   pull_request:
     paths:
       - editions/animus/**
       - plugins/musical/**
+      - plugins/animus-example-fyrtoejet/**
       - plugins/cutout/**
       - plugins/abc/**
       - plugins/site-publisher/**
@@ -29,6 +33,8 @@ on:
       - scripts/build-site-publisher.mjs
       - scripts/animus-browser-smoke.mjs
       - tests/animus-site-view.test.mjs
+      - tests/animus-lipsync.test.mjs
+      - tests/animus-lipsync-editor.test.mjs
       - tests/site-layouts.test.mjs
       - .github/workflows/animus-browser-smoke.yml
   workflow_dispatch:

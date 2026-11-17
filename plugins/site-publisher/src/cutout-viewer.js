@@ -164,6 +164,6 @@ function hydrate(root,rows){
 // AniMus uses the same scene, hierarchy, variants and camera renderer. This
 // read-only API deliberately excludes all CutOut editing and storage code.
 window.HUWikiCutOutSite={hydrate:hydrate,readScene:readScene,build:build,paint:paint,state:state,
- clipAt:clipAt,localTime:function(t,duration,settings){return timing(t,duration,settings).time;}};
+ clipAt:clipAt,imageHref:imageHref,localTime:function(t,duration,settings){return timing(t,duration,settings).time;}};
 })();
 

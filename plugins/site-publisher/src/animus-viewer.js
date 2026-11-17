@@ -22,10 +22,12 @@ function mount(host,rows,config){
  function module(name){return registry.require("$:/plugins/huwiki/"+name+".js");}
  var Playlist=module("musical/playlist"),Motion=module("musical/motion"),Timeline=module("musical/sync").Timeline;
  var SoundFx=module("musical/sfx"),Narration=module("musical/narration-player"),Audio=module("abc/audio-controller"),Acc=module("abc/accompaniment"),Start=module("abc/start-position");
+ var LipSync=module("musical/lipsync");
  var wiki=wikiFor(rows,config||{}),title=host.getAttribute("data-animus-title"),scene=Engine.readScene(wiki,title);
  if(!scene)throw Error(label("Forestillingen mangler: ","Production is missing: ")+title);
  var clips=Playlist.reflow(scene.musical&&scene.musical.songs,host.getAttribute("data-animus-score"));
  var recordings=scene.musical&&scene.musical.audioClips||[],fxCues=scene.musical&&scene.musical.sfx||[];
+ var lipOptions={sceneTitle:title,audioClips:recordings};
  var duration=Math.max(.1,scene.duration,Playlist.total(clips));
  recordings.forEach(function(c){duration=Math.max(duration,num(c.start,0)+num(c.duration,0));});
  fxCues.forEach(function(c){duration=Math.max(duration,num(c.t,0)+num(c.duration,0));});
@@ -123,7 +125,7 @@ function mount(host,rows,config){
    if(next)prepare(next);
   }
  }
- function paint(t){if(dead)return;var visual=clamp(t,0,scene.duration);Engine.paint(view,visual);Motion.paint(view,scene,t,beatClock);captions(visual);
+ function paint(t){if(dead)return;var visual=clamp(t,0,scene.duration);Engine.paint(view,visual);Motion.paint(view,scene,t,beatClock);LipSync.apply(view,visual,t,lipOptions);captions(visual);
   if(timeline&&timeline.running){fx.sync(t);voice.sync(t,timeline.rate);gains(t,false);syncMusic(t);}
   range.value=String(t);clock.textContent=timeLabel(t)+" / "+timeLabel(duration);host.setAttribute("data-time",t.toFixed(3));
  }
@@ -159,7 +161,7 @@ function mount(host,rows,config){
  function fullChanged(){if(doc.fullscreenElement===host)focus(true);else if(!doc.fullscreenElement)focus(false);}
  range.addEventListener("input",function(){seek(Number(range.value));});host.addEventListener("keydown",keydown);doc.addEventListener("fullscreenchange",fullChanged);
  var player={host:host,pause:pause,seek:seek,play:toggle,stop:stop,value:function(){return timeline.value();},view:view,
-  dispose:function(){if(dead)return;pause();dead=true;fx.dispose();voice.dispose();songs.forEach(release);doc.removeEventListener("fullscreenchange",fullChanged);host.removeEventListener("keydown",keydown);host.removeAttribute("data-animus-ready");focus(false);}}
+  dispose:function(){if(dead)return;pause();dead=true;fx.dispose();voice.dispose();LipSync.reset(view);songs.forEach(release);doc.removeEventListener("fullscreenchange",fullChanged);host.removeEventListener("keydown",keydown);host.removeAttribute("data-animus-ready");focus(false);}}
  ;
  // The stage is usable immediately, even if the embedded score is invalid or
  // Web Audio is unavailable. Every late music start seeks to the shared clock.
