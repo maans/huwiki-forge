@@ -55,3 +55,20 @@ test('ABC fallback uses hosted audio resources for public blob HTTPS demos',asyn
  assert.equal(sourceFor('blob:https://forge.måns.dk/07f3-123',false).mode,'local');
  assert.equal(sourceFor('blob:https://forge.måns.dk/07f3-123',true,'https://example.test/av/').mode,'local');
 });
+
+test('No forced backing instruments or metronome when AniMus ABC score has accompaniment off',async()=>{
+ const p=JSON.parse(await read('plugins/musical/dist/plugin.json'));
+ const score=JSON.parse(p.text).tiddlers['$:/plugins/huwiki/musical/widget.js'].text;
+ assert.match(score,/Accompaniment\.prepare\(ABC,song\.tune,song\.source,song\.config,song\.config\.enabled===true,song\.fields\)/);
+ assert.doesNotMatch(score,/Accompaniment\.prepare\(ABC,song\.tune,song\.source,song\.config,true,song\.fields\)/);
+ assert.match(score,/c\.start-t<=20/);
+ for(const path of ['plugins/animus-example-orchestra/dist/plugin.json','plugins/animus-example-fyrtoejet/dist/plugin.json']){
+  const examples=JSON.parse(JSON.parse(await read(path)).text).tiddlers;
+  const scoreTiddlers=Object.values(examples).filter(t=>t['abc-source']);
+  assert.ok(scoreTiddlers.length>=2,path);
+  for(const t of scoreTiddlers){
+   const config=JSON.parse(t['abc-accompaniment']||'{}');
+   assert.notEqual(config.enabled,true,t.title+' must use only its written notes');
+  }
+ }
+});
