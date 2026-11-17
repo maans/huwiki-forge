@@ -32,7 +32,7 @@ See the [live Edition catalogue](https://forge.måns.dk/) for the available choi
 
 ## ForgeShare 0.1.19 — Windows, Mac and Linux
 
-[Download ForgeShare](downloads/forgeshare/README.md) · [First-run and unsigned-app installation guide (Danish/English)](downloads/forgeshare/HOWTO.md)
+[Download ForgeShare](downloads/forgeshare/README.md) · [First-run and unsigned-app installation guide (English/Danish)](downloads/forgeshare/HOWTO.md)
 
 **Physically verified on 16 November 2026:** The owner used the normal, native Windows `ForgeShare.exe` with private Tailscale to Chrome on an iPad. Both Windows and iPad could create and save tiddlers in the same server wiki. The app also worked **without Run as administrator**, after its unsigned-app first-run confirmation. This is shared editing on one TiddlyWiki server, not synchronization of separate single-file wikis.
 
