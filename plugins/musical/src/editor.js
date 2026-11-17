@@ -97,7 +97,7 @@ function attach(o){
  function animation(t){return m.animationClips.find(function(c){return c.id===t.clipId;});}
  function activeDetail(){return m.animationClips.find(function(c){return c.id===detailClipId;});}
  function detailTrack(clip,partId){
-  var p=source&&source.parts.find(function(k){return k.id===partId;});
+  var p=partByDeepId(partId)||source&&source.parts.find(function(k){return k.id===partId;});
   var id="motion:"+clip.id+":"+partId;
   return map[id]||(map[id]={id:id,kind:"motion",clipId:clip.id,part:partId,name:p&&p.name||partId});
  }
@@ -138,8 +138,28 @@ function attach(o){
   if(t.kind==="accent")return v.accents||(v.accents=[]);
   if(t.kind==="animation")return [];
   return t.kind==="cut"?v.cuts:t.kind==="sfx"?v.sfx:(v.keys||(v.keys=[]));}
- function toFilm(time,t){if(t.kind!=="part")return lim(time,0,film.duration);var c=film.scenes&&film.scenes[0]||{};return lim((time-num(c.offset,0))/Math.max(.01,num(c.speed,1))+num(c.start,0),0,film.duration);}
- function fromFilm(time,t){if(t.kind!=="part")return time;var c=film.scenes&&film.scenes[0]||{};return Engine.localTime(time,source?source.duration:film.duration,c);}
+ function toFilm(time,t){
+  if(t.kind!=="part")return lim(time,0,film.duration);
+  var context=partContext(t.part,o.view,playhead,[],true,0);if(!context)return lim(time,0,film.duration);
+  var value=time;
+  for(var i=context.path.length-1;i>=0;i--){
+   var edge=context.path[i],settings=edge.settings||{},speed=num(settings.speed,1),offset=num(settings.offset,0),start=num(settings.start,0);
+   if(Math.abs(speed)<1e-8){value=edge.parentTime;continue;}
+   var input=start+(value-offset)/speed;
+   if(settings.loop&&edge.sourceDuration>0){
+    var raw=(Math.max(edge.input,start)-start)*speed+offset;
+    var cycle=Math.round((raw-value)/edge.sourceDuration),best=null,distance=Infinity;
+    for(var turn=cycle-2;turn<=cycle+2;turn++){
+     var candidate=start+(value+turn*edge.sourceDuration-offset)/speed;
+     if(candidate>=Math.max(0,start)-.00001&&candidate<=edge.limit+.00001&&Math.abs(candidate-edge.input)<distance){best=candidate;distance=Math.abs(candidate-edge.input);}
+    }
+    if(best!==null)input=best;
+   }
+   value=edge.timelineStart+lim(input,0,edge.limit);
+  }
+  return lim(value,0,film.duration);
+ }
+ function fromFilm(time,t){if(t.kind!=="part")return time;var context=partContext(t.part,o.view,time,[],true,0);return context?context.time:time;}
  function toAudio(time){return lim(time,0,o.duration());}
  function activeCam(time){var c="A";m.cuts.slice().sort(function(a,b){return a.t-b.t;}).forEach(function(k){if(num(k.t,0)<=time+1e-6)c=k.camera==="B"?"B":"A";});return c;}
  function cameraState(time){return Engine.cameraState({width:film.width,height:film.height,camera:activeCam(time)==="B"?m.cameraB:film.camera},time);}
@@ -849,16 +869,26 @@ function attach(o){
   });
   drawForm();
  }
- function selectPart(id){
-  if(detailClipId){
+ function selectPart(id,direct){
+  if(detailClipId&&!direct){
    var own=activeDetail();if(!own||!own.motion||!own.motion[id])return false;
    var mt=detailTrack(own,id),index=0,minimum=Infinity;
    var phase=Motion.phase(own,playhead,o.beatClock&&o.beatClock())||0;
    keys(mt).forEach(function(k,i){var d=Math.abs(num(k.t,0)-phase);if(d<minimum){minimum=d;index=i;}});
    choose(mt.id,index);return true;
   }
-  var motionClip=m.animationClips.find(function(c){return c.target===id||(c.motion&&c.motion[id]);});
-  if(motionClip){choose("animation:"+motionClip.id,0);return true;}
+  if(direct){
+   var clock=o.beatClock&&o.beatClock()||{at:function(t){return t*2;}},activeMotion=null;
+   // Motion.paint visits clips in array order; its last active definition wins.
+   m.animationClips.forEach(function(c){if(c.motion&&Array.isArray(c.motion[id])&&c.motion[id].length&&Motion.phase(c,playhead,clock)!==null)activeMotion=c;});
+   if(activeMotion){var mt=detailTrack(activeMotion,id),phase=Motion.phase(activeMotion,playhead,clock),index=0,minimum=Infinity;
+    keys(mt).forEach(function(k,i){var distance=Math.abs(num(k.t,0)-phase);if(distance<minimum){minimum=distance;index=i;}});
+    choose(mt.id,index);return true;
+   }
+  }else{
+   var motionClip=m.animationClips.find(function(c){return c.target===id||(c.motion&&c.motion[id]);});
+   if(motionClip){choose("animation:"+motionClip.id,0);return true;}
+  }
   var resolved=sceneForPart(id,o.view,0);if(!resolved||!resolved.parts)return false;source=resolved;
   var p=source.parts.find(function(item){return item.id===id;});if(!p)return false;
   var t=tracks.find(function(t){return (t.kind==="part"||t.kind==='film-part')&&t.part===id;});
@@ -869,30 +899,35 @@ function attach(o){
   choose(t.id,index);return true;
  }
  function beginPartMove(id,globalTime){
-  if(detailClipId){
-   var c=activeDetail();if(!c||!c.motion||!c.motion[id])return null;
-   var t=detailTrack(c,id),beat=round(Motion.phase(c,globalTime,o.beatClock&&o.beatClock())||0);
+  var selectedTrack=track(),selectedMotion=selectedTrack&&selectedTrack.kind==='motion'&&selectedTrack.part===id?animation(selectedTrack):null;
+  var sourceSelection=selectedTrack&&selectedTrack.part===id&&(selectedTrack.kind==='part'||selectedTrack.kind==='film-part');
+  var c=selectedMotion||(!sourceSelection&&detailClipId?activeDetail():null);
+  if(c){
+   if(!c.motion||!c.motion[id])return null;
+   var phase=Motion.phase(c,globalTime,o.beatClock&&o.beatClock()||{at:function(t){return t*2;}});if(phase===null)return null;
+   var t=detailTrack(c,id),beat=round(phase);
    var list=keys(t),index=list.findIndex(function(k){return Math.abs(num(k.t,0)-beat)<.05;});
    var inserted=index<0,k=inserted?Object.assign({t:beat},Motion.sample(list,beat)||{x:0,y:0,r:0,sx:1,sy:1,opacity:1}):list[index];
    if(inserted)list.push(k);
-   var oldX=num(k.x,0),oldY=num(k.y,0);
-   return {update:function(dx,dy){k.x=round(oldX+dx);k.y=round(oldY+dy);o.repaint();},
+   var before=Model.clone(k),oldX=num(k.x,0),oldY=num(k.y,0),oldR=num(k.r,0);
+   return {update:function(dx,dy,dr){if(dr===undefined||dx||dy){k.x=round(oldX+num(dx,0));k.y=round(oldY+num(dy,0));}if(dr!==undefined)k.r=round(oldR+num(dr,0));o.repaint();},
     commit:function(){list.sort(function(a,b){return a.t-b.t;});choice={id:t.id,key:list.indexOf(k)};save(t);draw();o.repaint();},
-    cancel:function(){if(inserted)list.splice(list.indexOf(k),1);else{k.x=oldX;k.y=oldY;}draw();o.repaint();}};
+    cancel:function(){if(inserted)list.splice(list.indexOf(k),1);else{Object.keys(k).forEach(function(field){delete k[field];});Object.assign(k,before);}draw();o.repaint();}};
   }
-  var t=tracks.find(function(t){return t.kind==="part"&&t.part===id;});
-  if(!t&&source&&source.parts){var candidate=source.parts.find(function(p){return p.id===id;});
-   if(candidate){t={id:"part:"+id,kind:"part",part:id,name:candidate.name||id};tracks.splice(tracks.length-3,0,t);map[t.id]=t;}}
+  var t=tracks.find(function(t){return (t.kind==="part"||t.kind==='film-part')&&t.part===id;});
+  var context=partContext(id,o.view,globalTime,[],true,0),resolved=context&&context.view.scene;
+  if(!t&&resolved&&resolved.parts){var candidate=resolved.parts.find(function(p){return p.id===id;});
+   if(candidate){t={id:"part:"+id,kind:resolved===film?'film-part':'part',part:id,name:candidate.name||id};tracks.splice(tracks.length-3,0,t);map[t.id]=t;}}
   if(!t||!part(t))return null;
   var at=round(fromFilm(globalTime,t)),list=keys(t),index=list.findIndex(function(k){return Math.abs(k.t-at)<.025;});
   var inserted=index<0;
   var k=inserted?Object.assign({t:at},Engine.state(part(t),at)):list[index];
   if(inserted){list.push(k);index=list.length-1;}
-  var oldX=num(k.x,0),oldY=num(k.y,0);
+  var before=Model.clone(k),oldX=num(k.x,0),oldY=num(k.y,0),oldR=num(k.r,0);
   return {
-   update:function(dx,dy){k.x=round(oldX+dx);k.y=round(oldY+dy);o.repaint();},
+   update:function(dx,dy,dr){if(dr===undefined||dx||dy){k.x=round(oldX+num(dx,0));k.y=round(oldY+num(dy,0));}if(dr!==undefined)k.r=round(oldR+num(dr,0));o.repaint();},
    commit:function(){list.sort(function(a,b){return a.t-b.t;});choice={id:t.id,key:list.indexOf(k)};save(t);draw();o.repaint();},
-   cancel:function(){if(inserted)list.splice(list.indexOf(k),1);else{k.x=oldX;k.y=oldY;}draw();o.repaint();}
+   cancel:function(){if(inserted)list.splice(list.indexOf(k),1);else{Object.keys(k).forEach(function(field){delete k[field];});Object.assign(k,before);}draw();o.repaint();}
   };
  }
  // Shared object-transform editor API, used by every Musical project.
@@ -935,15 +970,35 @@ function attach(o){
   var list=keys(t),index=0,distance=Infinity;list.forEach(function(k,i){var d=Math.abs(num(k.t,0)-playhead);if(d<distance){distance=d;index=i;}});
   choose(id,index);return true;
  }
- // Parts are nested (film -> act -> scene -> puppet), not only in clip 0.
- function sceneForPart(id,view,depth){if(!view||depth>16)return null;
-  if(view.nodes&&view.nodes[id])return view.scene;
-  var nested=null;Object.keys(view.nodes||{}).some(function(k){var n=view.nodes[k];if(n.nested){nested=sceneForPart(id,n.nested,depth+1);return !!nested;}return false;});
-  if(nested)return nested;
-  (view.clips||[]).some(function(c){nested=sceneForPart(id,c.view,depth+1);return !!nested;});return nested;
+ // Resolve both the source and its local clock through the rendered hierarchy.
+ // Prefer the active occurrence when a source scene is reused in a production.
+ function partContext(id,view,local,path,active,depth){
+  if(!view||depth>16)return null;
+  var fallback=null;
+  if(view.nodes&&view.nodes[id]){var own={view:view,time:local,path:path,active:active};if(active)return own;fallback=own;}
+  var sequence=view.scene.scenes||[],at=Engine.clipAt(sequence,local),from=0;
+  var clips=view.clips||[];
+  for(var i=0;i<clips.length;i++){
+   var c=clips[i],settings=c.settings||sequence[i]||{},duration=Math.max(.1,num(settings.duration,4)),input=lim(local-from,0,duration);
+   if(c.view){var sourceDuration=num(c.duration,c.view.scene.duration),childTime=Engine.localTime(input,sourceDuration,settings);
+    var edge={settings:settings,sourceDuration:sourceDuration,timelineStart:from,limit:duration,input:input,parentTime:local};
+    var found=partContext(id,c.view,childTime,path.concat([edge]),active&&i===at.index,depth+1);
+    if(found&&found.active)return found;if(found&&!fallback)fallback=found;
+   }from+=duration;
+  }
+  var ids=Object.keys(view.nodes||{});
+  for(var j=0;j<ids.length;j++){
+   var node=view.nodes[ids[j]];if(!node.nested)continue;
+   var nestedDuration=num(node.nested.duration,node.nested.scene.duration),timing=Engine.timing(local,nestedDuration,node.part);
+   var nestedEdge={settings:node.part,sourceDuration:nestedDuration,timelineStart:0,limit:Math.max(0,num(view.scene.duration,film.duration)),input:local,parentTime:local};
+   var nested=partContext(id,node.nested,timing.time,path.concat([nestedEdge]),active&&timing.active,depth+1);
+   if(nested&&nested.active)return nested;if(nested&&!fallback)fallback=nested;
+  }
+  return fallback;
  }
+ function sceneForPart(id,view,depth){var context=partContext(id,view,playhead,[],true,depth||0);return context&&context.view.scene;}
  function partByDeepId(id){var scene=sceneForPart(id,o.view,0);return scene&&scene.parts&&scene.parts.find(function(p){return p.id===id;});}
- function isJointMove(id){var clip=activeDetail(),p=partByDeepId(id);return !!(clip&&p&&id!==clip.target);}
+ function isJointMove(id){var selected=track(),clip=selected&&selected.kind==='motion'?animation(selected):null,p=partByDeepId(id);return !!(p&&p.parent&&(!clip||id!==clip.target));}
  function getPartPivot(id){var p=partByDeepId(id);return p&&p.pivot||{x:0,y:0};}
  function cameraMatrix(c){var r=num(c.r,0)*Math.PI/180,cos=Math.cos(r),sin=Math.sin(r),sx=Math.tan(lim(c.skewX,-35,35)*Math.PI/180),sy=Math.tan(lim(c.skewY,-35,35)*Math.PI/180);
   var a=cos-sin*sy,b=sin+cos*sy,cc=cos*sx-sin,d=sin*sx+cos,det=a*d-b*cc;

@@ -25,7 +25,8 @@ await mkdir(out,{recursive:true});
 // original ABC sample requests. No network, microphone mock or extra synth.
 function wav(seconds=2){const rate=8000,n=Math.round(seconds*rate),data=Buffer.alloc(44+n*2);data.write('RIFF');data.writeUInt32LE(36+n*2,4);data.write('WAVE',8);data.write('fmt ',12);data.writeUInt32LE(16,16);data.writeUInt16LE(1,20);data.writeUInt16LE(1,22);data.writeUInt32LE(rate,24);data.writeUInt32LE(rate*2,28);data.writeUInt16LE(2,32);data.writeUInt16LE(16,34);data.write('data',36);data.writeUInt32LE(n*2,40);for(let i=0;i<n;i++)data.writeInt16LE(Math.round(2400*Math.sin(i*440*2*Math.PI/rate)*Math.min(1,i/80,(n-i)/80)),44+i*2);return data;}
 const voiceWav=wav(2),instrumentWav=wav(.8);
-const server=createServer((req,res)=>{if(req.url==='/animus.html'||req.url==='/'){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(html);}else if(req.url==='/favicon.ico'){res.writeHead(204);res.end();}else{res.writeHead(404);res.end('Not found');}});
+const audiencePages=new Map();
+const server=createServer((req,res)=>{if(req.url==='/animus.html'||req.url==='/'||audiencePages.has(req.url)){res.writeHead(200,{'Content-Type':'text/html; charset=utf-8','Cache-Control':'no-store'});res.end(audiencePages.get(req.url)||html);}else if(req.url==='/favicon.ico'){res.writeHead(204);res.end();}else{res.writeHead(404);res.end('Not found');}});
 await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
 const address=server.address(),base=`http://127.0.0.1:${address.port}`;
 let browser,context,page,expectedConfirm=false;
@@ -43,6 +44,24 @@ async function assertMouth(scope,talking){
  const opacity=async id=>Number(await scope.locator(`[data-cutout-id="${id}"]`).getAttribute('opacity'));
  if(talking)assert.ok(await opacity('ci-alma-mouth-open')>0,'the bound actor opens her mouth during the line');else assert.equal(await opacity('ci-alma-mouth-open'),0,'the bound actor closes her mouth outside the line');
  assert.equal(await opacity('ci-alma-mouth-closed'),talking?0:1);assert.equal(await opacity('ci-bo-mouth-open'),0,'the other actor stays silent');assert.equal(await opacity('ci-bo-mouth-closed'),1);
+}
+async function stagePoint(part,x,y){return part.evaluate((node,p)=>{const point=node.ownerSVGElement.createSVGPoint();point.x=p.x;point.y=p.y;const screen=point.matrixTransform(node.getScreenCTM());return {x:screen.x,y:screen.y};},{x,y});}
+async function rotatePart(scope,id,handle,degrees){
+ const part=scope.locator('[data-cutout-id="'+id+'"]').first();await handle.scrollIntoViewIfNeeded();
+ const hand=scope.locator('[data-cutout-id="ci-alma-hand"]').first(),handBefore=await stagePoint(hand,0,0);
+ const start=await handle.evaluate(node=>{const box=node.getBBox(),point=node.ownerSVGElement.createSVGPoint();point.x=box.x+box.width/2;point.y=box.y+box.height/2;const screen=point.matrixTransform(node.getScreenCTM());return {x:screen.x,y:screen.y};});
+ // Follow a parent-local arc with real pointer input. Screen-space angles are
+ // deliberately insufficient here: the parent is rotated and scaled unevenly.
+ const geometry=await part.evaluate((node,opts)=>{
+  const svg=node.ownerSVGElement;
+  const parent=node.parentNode.getScreenCTM(),inverse=parent.inverse(),point=(x,y,matrix)=>{const p=svg.createSVGPoint();p.x=x;p.y=y;return p.matrixTransform(matrix);};
+  const pivot=point(4,2,node.getScreenCTM()),anchor=point(pivot.x,pivot.y,inverse),first=point(opts.start.x,opts.start.y,inverse),dx=first.x-anchor.x,dy=first.y-anchor.y;
+  const path=Array.from({length:12},(_,i)=>{const angle=opts.degrees*Math.PI/180*(i+1)/12;const p=point(anchor.x+dx*Math.cos(angle)-dy*Math.sin(angle),anchor.y+dx*Math.sin(angle)+dy*Math.cos(angle),parent);return {x:p.x,y:p.y};});
+  return {start:opts.start,pivot:{x:pivot.x,y:pivot.y},path};
+ },{start,degrees});
+ await page.mouse.move(geometry.start.x,geometry.start.y);await page.mouse.down();for(const point of geometry.path)await page.mouse.move(point.x,point.y);await page.mouse.up();
+ const after=await stagePoint(part,4,2);assert.ok(Math.hypot(after.x-geometry.pivot.x,after.y-geometry.pivot.y)<1,'rotating the arm must keep its world-space joint fixed');
+ const handAfter=await stagePoint(hand,0,0);assert.ok(Math.hypot(handAfter.x-handBefore.x,handAfter.y-handBefore.y)>3,'the attached hand follows the arm rotation');
 }
 try{
  browser=await playwright.chromium.launch({headless:true,executablePath,args:['--no-sandbox']});
@@ -86,9 +105,47 @@ try{
 
  // A named, prepared CutOut cast is test input. All speech bindings below
  // are created through the manuscript UI and rendered by the real runtime.
- const actorParts=[...actorFixture('ci-alma','Alma',260),...actorFixture('ci-bo','Bo',540)],actorSource=JSON.stringify(actorParts);
- await page.evaluate(({title,parts})=>{const t=$tw.wiki.getTiddler(title),scene=JSON.parse(t.fields.text);scene.parts.push(...parts);$tw.wiki.addTiddler(new $tw.Tiddler(t,{text:JSON.stringify(scene)}));},{title:production.stageTitle,parts:actorParts});
+ const actorParts=[...actorFixture('ci-alma','Alma',260),...actorFixture('ci-bo','Bo',540)];
+ Object.assign(actorParts.find(p=>p.id==='ci-alma').keys[0],{r:30,sx:1.5,sy:.8});
+ actorParts.push({id:'ci-alma-arm',name:'Almas arm',type:'rect',parent:'ci-alma',pivot:{x:4,y:2},geo:{x:0,y:-6,w:48,h:12},fill:'#e4bc8b',stroke:'#4c2929',strokeWidth:2,keys:[{t:0,x:20,y:5,r:12,sx:1,sy:1,opacity:1}]},
+  {id:'ci-alma-hand',name:'Almas hånd',type:'circle',parent:'ci-alma-arm',geo:{r:7},fill:'#e4bc8b',keys:[{t:0,x:48,y:2,r:0,sx:1,sy:1,opacity:1}]});
+ const armClip={id:'ci-arm-loop',name:'Almas armbevægelse',target:'ci-alma',start:0,duration:16,beatsPerLoop:8,rate:1,loop:true,motion:{'ci-alma-arm':[{t:0,r:0},{t:8,r:0}]}};
+ await page.evaluate(({title,filmTitle,parts,clip})=>{const t=$tw.wiki.getTiddler(title),scene=JSON.parse(t.fields.text);scene.parts.push(...parts);$tw.wiki.addTiddler(new $tw.Tiddler(t,{text:JSON.stringify(scene)}));const ft=$tw.wiki.getTiddler(filmTitle),film=JSON.parse(ft.fields.text);film.musical.animationClips.push(clip);$tw.wiki.addTiddler(new $tw.Tiddler(ft,{text:JSON.stringify(film)}));},{title:production.stageTitle,filmTitle:production.filmTitle,parts:actorParts,clip:armClip});
  await show.locator('[data-cutout-id="ci-alma-mouth-open"]').waitFor({state:'attached'});
+
+ // Use the real CutOut scene widget for the same scene, with a rotated,
+ // non-uniformly scaled figure and an arm whose pivot is not (0,0).
+ const sceneEditorTitle='AniMus CI · CutOut scene editor';
+ await page.evaluate(({title,scene})=>{$tw.wiki.addTiddler(new $tw.Tiddler({title,type:'text/vnd.tiddlywiki',text:'<$cutout-studio mode="scene" tiddler="'+scene+'"/>'}));$tw.rootWidget.dispatchEvent({type:'tm-navigate',navigateTo:title,navigateFromTitle:'AniMus CI production'});},{title:sceneEditorTitle,scene:production.stageTitle});
+ const cutoutFrame=page.locator('.tc-tiddler-frame[data-tiddler-title="'+sceneEditorTitle+'"]'),cutout=cutoutFrame.locator('.co-studio');await cutout.locator('.co-direct-toolbar').waitFor();
+ const originalAlma=actorParts.find(p=>p.id==='ci-alma'),originalArm=actorParts.find(p=>p.id==='ci-alma-arm');
+ const workingScene=()=>page.evaluate(title=>JSON.parse($tw.wiki.getTiddlerText('$:/CutOut/Drafts/'+title)||$tw.wiki.getTiddlerText(title)),production.stageTitle);
+ async function selectCutoutArm(){
+  await cutout.locator('.co-timeline input[type="range"]').evaluate(input=>{input.value='2';input.dispatchEvent(new Event('input',{bubbles:true}));});
+  const arm=cutout.locator('[data-cutout-id="ci-alma-arm"]').first();await arm.scrollIntoViewIfNeeded();const point=await stagePoint(arm,34,0);await page.mouse.click(point.x,point.y);
+  await cutout.locator('.co-direct-figure-box').waitFor();assert.notEqual(await cutout.locator('.co-direct-figure-box').evaluate(node=>getComputedStyle(node).strokeDasharray),'none','the selected figure has a dashed frame');
+  await cutout.locator('.co-direct-toolbar [data-direct-scope="part"]').click();await cutout.locator('.co-direct-part-select').selectOption('ci-alma-arm');await cutout.locator('.co-direct-part-box').waitFor();await cutout.locator('.co-direct-pivot').waitFor();
+ }
+ await selectCutoutArm();await rotatePart(cutout,'ci-alma-arm',cutout.locator('[data-direct-action="rotate"]'),35);
+ let editedScene=await workingScene(),editedArm=editedScene.parts.find(p=>p.id==='ci-alma-arm'),atTwo=editedArm.keys.find(k=>Math.abs(k.t-2)<.001);assert.ok(atTwo,'a gesture inserts a key at the cursor');assert.ok(Math.abs(atTwo.r-47)<1,'rotation is measured in the parent coordinate system');assert.deepEqual(editedScene.parts.find(p=>p.id==='ci-alma').keys,originalAlma.keys);assert.deepEqual(editedArm.pivot,originalArm.pivot);assert.deepEqual(editedArm.geo,originalArm.geo);
+ assert.deepEqual((await savedProduction()).stage.parts.find(p=>p.id==='ci-alma-arm').keys,originalArm.keys,'a CutOut draft is applied only with Gem projekt');
+ await cutout.locator('.co-direct-undo').click();assert.deepEqual((await workingScene()).parts.find(p=>p.id==='ci-alma-arm').keys,originalArm.keys,'Undo removes the gesture and the inserted key');
+ await cutout.locator('.co-direct-toolbar [data-direct-scope="part"]').click();await cutout.locator('.co-direct-part-select').selectOption('ci-alma-arm');await rotatePart(cutout,'ci-alma-arm',cutout.locator('[data-direct-action="rotate"]'),35);await screenshot('direct-cutout-rotation');
+ await cutout.getByRole('button',{name:'Gem projekt',exact:true}).click();await page.waitForFunction(title=>!$tw.wiki.getTiddler('$:/CutOut/Drafts/'+title),production.stageTitle);
+ const savedArm=(await savedProduction()).stage.parts.find(p=>p.id==='ci-alma-arm');assert.ok(savedArm.keys.some(k=>Math.abs(k.t-2)<.001&&Math.abs(k.r-47)<1));
+ await cutoutFrame.locator('.tc-tiddler-controls button').filter({has:page.locator('svg.tc-image-close-button')}).click();await cutoutFrame.waitFor({state:'detached'});
+ await page.evaluate(title=>$tw.rootWidget.dispatchEvent({type:'tm-navigate',navigateTo:title,navigateFromTitle:'AniMus CI production'}),sceneEditorTitle);await cutout.locator('.co-direct-toolbar').waitFor();await selectCutoutArm();assert.deepEqual((await workingScene()).parts.find(p=>p.id==='ci-alma-arm').keys,savedArm.keys);assert.equal(await cutout.locator('.co-key-strip [data-key-time="2"]').count(),1,'the saved key is present after reopening');
+ await cutoutFrame.locator('.tc-tiddler-controls button').filter({has:page.locator('svg.tc-image-close-button')}).click();await cutoutFrame.waitFor({state:'detached'});
+
+ // Continue directly on the AniMus stage: the same hand gesture now writes
+ // the arm's beat-loop key, using the soundtrack's 120 BPM clock.
+ await show.locator('.huw-musical-range').evaluate(input=>{input.value='1.75';input.dispatchEvent(new Event('input',{bubbles:true}));});
+ const stageArm=show.locator('[data-cutout-id="ci-alma-arm"]').first();await stageArm.scrollIntoViewIfNeeded();const armPoint=await stagePoint(stageArm,34,0);await page.mouse.click(armPoint.x,armPoint.y);
+ await show.locator('.huw-musical-transform-overlay[data-mode="figure"]').waitFor();await show.locator('.huw-musical-parts-button').click();await show.locator('.huw-musical-transform-overlay[data-mode="parts"]').waitFor();await show.locator('.huw-musical-part-pivot').waitFor();
+ await rotatePart(show,'ci-alma-arm',show.locator('.huw-musical-transform-overlay[data-mode="parts"] [data-transform-action="rotate"]'),25);
+ production=await savedProduction();const motionKey=production.film.musical.animationClips.find(c=>c.id==='ci-arm-loop').motion['ci-alma-arm'].find(k=>Math.abs(k.t-3.5)<.01);assert.ok(motionKey,'1.75 seconds at 120 BPM inserts the arm key at beat 3.5');assert.ok(Math.abs(motionKey.r-25)<1);assert.equal(motionKey.x,0);assert.equal(motionKey.y,0);assert.deepEqual(production.stage.parts.find(p=>p.id==='ci-alma-arm').keys,savedArm.keys,'editing a motion clip preserves the scene keys');assert.deepEqual(production.stage.parts.find(p=>p.id==='ci-alma').keys,originalAlma.keys);await screenshot('direct-animus-rotation');
+ const actorSource=JSON.stringify(production.stage.parts.filter(p=>/^ci-(alma|bo)(?:-|$)/.test(p.id)));await show.locator('.huw-musical-stop').click();
+ passed('direct figure/part rotation preserves the joint, inserts cursor keys, supports Undo and saves/reopens in CutOut and AniMus');
 
  await show.locator('.huw-musical-audio-button').click();let audio=show.locator('.huw-narration-workshop');await audio.locator('input[type=file]').setInputFiles({name:'dialogue.wav',mimeType:'audio/wav',buffer:voiceWav});
  await audio.locator('.huw-narration-clip').waitFor();await page.waitForFunction(()=>{const b=document.querySelector('.huw-narration-primary');return b&&!b.disabled;});
@@ -129,7 +186,7 @@ try{
  assert.equal(JSON.stringify((await savedProduction()).stage.parts.filter(p=>/^ci-(alma|bo)(?:-|$)/.test(p.id))),actorSource,'mouth playback must preserve source geometry and animation keys');passed('editor lipsync follows play/seek/pause, leaves the other actor silent and preserves the source shapes');
 
  await show.locator('.huw-musical-site-button').click();const publisher=page.locator('.husp-overlay');await publisher.waitFor();
- await publisher.locator('.husp-preview-switch').getByRole('button',{name:'Sitevisning',exact:true}).click();
+ assert.equal(await publisher.locator('.husp-preview-switch').getByRole('button',{name:'Program',exact:true}).count(),1);assert.match(await publisher.locator('.husp-settings-button').innerText(),/Publikumsvisning/);
  await page.waitForFunction(()=>{const status=document.querySelector('.husp-status')?.textContent||'',frame=document.querySelector('iframe.husp-preview');return status.startsWith('SitePublisher:')||!!frame?.srcdoc;},null,{timeout:30000});
  const publicationStatus=await publisher.locator('.husp-status').innerText();assert.doesNotMatch(publicationStatus,/^SitePublisher:/,'publication failed: '+publicationStatus);
  assert.equal(await publisher.getByRole('button',{name:'Hent HTML',exact:true}).isEnabled(),true,'publication must produce a downloadable site');
@@ -139,8 +196,8 @@ try{
  assert.match(await site.locator('.huw-animus-play').innerText(),/Afspil|Play/);assert.match(await site.locator('.huw-animus-stop').innerText(),/Stop/);assert.match(await site.locator('.huw-animus-fullscreen').innerText(),/Fuld skærm|Full screen/);
  const audienceLayer=site.locator(`[data-cutout-id="${layerPart.id}"] image`);assert.equal(await audienceLayer.getAttribute('href'),layerPart.variants[0].imageData,'Site renders the SVG frame without a base image');
  await assertMouth(site,false);
- assert.equal(await site.locator('.huw-musical-workspace,.huwabc-edit-workshop,.huw-svg-workshop,.huw-narration-workshop').count(),0,'Site view must not show editors');
- const exported=await site.evaluate(()=>JSON.parse(document.getElementById('publisher-data').textContent));assert.ok(exported.cutoutRows[voice.asset]);assert.ok(!JSON.stringify(exported.cutoutRows).includes('svgDrawing'));
+ assert.equal(await site.locator('.huw-musical-workspace,.huwabc-edit-workshop,.huw-svg-workshop,.huw-narration-workshop,.co-direct-toolbar,.co-direct-overlay,.huw-musical-transform-overlay,.huw-musical-part-pivot').count(),0,'Site view must not show editors or direct-edit handles');
+ const exported=await site.evaluate(()=>JSON.parse(document.getElementById('publisher-data').textContent));assert.equal(exported.presentation,'animus');assert.equal(exported.startView,'performance','one musical opens the player directly by default');assert.ok(exported.cutoutRows[voice.asset]);assert.ok(!JSON.stringify(exported.cutoutRows).includes('svgDrawing'));
  await site.locator('.huw-animus-play').click();await site.waitForFunction(()=>document.querySelector('.huw-site-animus')?.getAttribute('data-audio-mode')==='playing',null,{timeout:30000});
  await site.waitForFunction(()=>Number(document.querySelector('.huw-site-animus')?.getAttribute('data-time'))>.2);
  assert.ok(sampleRequests.length>0,'real ABC sample engine must prepare the edited music');
@@ -151,8 +208,43 @@ try{
  await site.locator('.huw-animus-play').click();await site.waitForFunction(()=>Number(document.querySelector('.huw-site-animus')?.getAttribute('data-time'))>1.65);
  await site.locator('.huw-animus-stop').click();assert.equal(Number(await site.locator('.huw-site-animus').getAttribute('data-time')),0);assert.equal(await site.locator('.huw-site-animus').getAttribute('data-playing'),'false');
  await assertMouth(site,false);assert.equal(JSON.stringify((await savedProduction()).stage.parts.filter(p=>/^ci-(alma|bo)(?:-|$)/.test(p.id))),actorSource);
- await screenshot('site-preview');await page.locator('.husp-head').getByRole('button',{name:'✕ Luk',exact:true}).click();await page.locator('.husp-overlay').waitFor({state:'detached'});
+ await screenshot('site-preview');
  passed('Site preview exports assets and plays, pauses, seeks, resumes and stops with the same script lipsync');
+
+ await publisher.locator('.husp-preview-switch').getByRole('button',{name:'Program',exact:true}).click();const overview=publisher.locator('.husp-overview');await overview.waitFor();const programCard=overview.locator('.husp-program-card');assert.equal(await programCard.count(),1);
+ assert.equal(await programCard.locator('.huw-animus-program-title').innerText(),production.film.name);assert.match(await programCard.locator('.huw-animus-program-duration').innerText(),/0:16/);assert.match(await programCard.locator('.huw-animus-program-scenes').innerText(),/Scene 1/);
+ assert.doesNotMatch(await overview.innerText(),/"(?:parts|musical|version|scenes)"\s*:|data:image\//,'Program must present the show instead of its JSON');await screenshot('publication-program');
+ await publisher.locator('.husp-settings-button').click();const publicationSettings=publisher.locator('.husp-config');await publicationSettings.waitFor();assert.doesNotMatch(await publicationSettings.innerText(),/Nodepult|Normal nodevisning|Vælg tag|Vælg liste/,'audience settings must not expose unrelated ABC and tag controls');
+ const startView=publisher.locator('.husp-program-start');assert.equal(await startView.inputValue(),'performance');assert.deepEqual(await startView.locator('option').allTextContents(),['Forestillingen','Programmet']);await startView.selectOption('program');
+ await publisher.locator('.husp-settings-button').click();await publisher.locator('.husp-preview-switch').getByRole('button',{name:'Sitevisning',exact:true}).click();
+ const previewProgram=site.locator('#animus-program');await previewProgram.waitFor({timeout:30000});assert.equal(await site.evaluate(()=>JSON.parse(document.getElementById('publisher-data').textContent).startView),'program');assert.equal(await site.locator('.huw-site-animus').isVisible(),false);assert.match(await previewProgram.innerText(),/AniMus CI production/);
+ await previewProgram.locator('.husp-program-open[data-entry-index="0"]').click();await site.waitForSelector('.huw-site-animus[data-animus-ready="1"]');assert.notEqual(await site.locator('.huw-site-animus').getAttribute('data-playing'),'true','opening the show from its program waits for Play');
+
+ // Download the real publication after navigating its preview. Opening those
+ // exact bytes afresh must still honour the saved Program start setting.
+ const pendingDownload=page.waitForEvent('download');await publisher.getByRole('button',{name:'Hent HTML',exact:true}).click();const download=await pendingDownload,downloadPath=fileURLToPath(new URL('audience-program.html',out));await download.saveAs(downloadPath);
+ const audienceHtml=await readFile(downloadPath,'utf8'),audiencePayload=audienceHtml.match(/<script\b[^>]*\bid="publisher-data"[^>]*>([\s\S]*?)<\/script>/);assert.ok(audiencePayload,'downloaded HTML must contain its publication settings');const audienceData=JSON.parse(audiencePayload[1]);assert.equal(audienceData.presentation,'animus');assert.equal(audienceData.startView,'program');audiencePages.set('/audience-program.html',audienceHtml);
+ const audience=await context.newPage();audience.on('pageerror',error=>errors.push(error.message));await audience.goto(base+'/audience-program.html',{waitUntil:'domcontentloaded'});const downloadedProgram=audience.locator('#animus-program');await downloadedProgram.waitFor();assert.equal(await audience.locator('.huw-site-animus').isVisible(),false);assert.match(await downloadedProgram.locator('.huw-animus-program-duration').innerText(),/0:16/);assert.match(await downloadedProgram.locator('.huw-animus-program-scenes').innerText(),/Scene 1/);
+ assert.doesNotMatch(await downloadedProgram.innerText(),/"(?:parts|musical|version|scenes)"\s*:|data:image\//);await audience.screenshot({path:fileURLToPath(new URL('downloaded-program.png',out)),fullPage:false});
+ await downloadedProgram.locator('.husp-program-open[data-entry-index="0"]').click();await audience.waitForSelector('.huw-site-animus[data-animus-ready="1"]');assert.notEqual(await audience.locator('.huw-site-animus').getAttribute('data-playing'),'true');await audience.close();
+ await publisher.locator('.husp-head').getByRole('button',{name:'✕ Luk',exact:true}).click();await publisher.waitFor({state:'detached'});passed('Program overview and audience settings control the preview and the downloaded HTML start view');
+
+ // This real example has both abc-source and an explicit reader in its body.
+ // The former ViewAddon rendered a second player, hence a second live mixer.
+ const readerTitle='Fyrtøjet · 02 · Træets tre rum (ABC)';
+ const readerFrame=page.locator('.tc-tiddler-frame[data-tiddler-title="'+readerTitle+'"]');
+ const mixers=page.locator('.huwabc-mini-mixer').filter({has:page.locator('.huwabc-mini-mixer-title',{hasText:readerTitle})});
+ for(let attempt=0;attempt<2;attempt++){
+  await page.evaluate(title=>$tw.rootWidget.dispatchEvent({type:'tm-navigate',navigateTo:title,navigateFromTitle:'AniMus CI production'}),readerTitle);
+  await readerFrame.locator('.huwabc-score').waitFor();
+  assert.equal(await readerFrame.locator('.huwabc-score').count(),1,'the score must mount one actual reader, not hide a duplicate');
+  await mixers.locator('.huwabc-mini-mixer-row').first().waitFor();
+  assert.equal(await mixers.count(),1,'there must be only one mixer in the DOM, including hidden panels');assert.equal(await mixers.locator('.huwabc-mini-mixer-row').count(),3);
+  if(attempt===1)await screenshot('abc-single-mixer');
+  await readerFrame.locator('.tc-tiddler-controls button').filter({has:page.locator('svg.tc-image-close-button')}).click();
+  await readerFrame.waitFor({state:'detached'});await mixers.waitFor({state:'detached'});
+ }
+ passed('Fyrtøjet score mounts one reader and one mixer, then cleans up across close and reopen');
  assert.deepEqual(errors,[],'no uncaught browser errors');await screenshot('production-complete');
  await writeFile(new URL('result.json',out),JSON.stringify({ok:true,manifest:manifest.version,checks,sampleRequests:sampleRequests.length,errors},null,2)+'\n');
  console.log(JSON.stringify({ok:true,manifest:manifest.version,checks,errors}));

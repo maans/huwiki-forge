@@ -146,3 +146,23 @@ test('the real runtime actor suggestions produce a valid editor binding without 
  chorus.ui.open();click(chorus.host,'Fordel taleroller');chooseCue(chorus);change(chorus,'enable',true);
  assert.equal(control(chorus,'actor').value,'','Even a single actor does not automatically represent a chorus');assert.equal(chorus.w.writes.length,0);
 });
+
+for(const heading of ['!!!','#!!'])test('scene notes use '+heading+' manuscript headings and keep identically named scenes in their own acts',()=>{
+ const f=fixture(),names=['Fyrtøjet · Akt 1 scene 1 · Hallen','Fyrtøjet · Akt 1 scene 2 · Haven','Fyrtøjet · Akt 2 scene 1 · Hallen'];
+ f.options.film.scenes=names.map(source=>({source,duration:8}));f.options.film.parts=[];f.options.film.duration=24;
+ names.forEach(title=>{f.w.records[title]={title,type:'application/json',text:JSON.stringify({name:'Fyrtøjet · '+title.split(' · ').at(-1),duration:8,parts:[]})};});
+ f.w.records['Fyrtøjet · Manuskript']={title:'Fyrtøjet · Manuskript',text:[
+  '!! AKT 1 — Begyndelsen',heading+' Scene 1.1 — Hallen',"''Handling:'' Første møde.","''Instruktion:'' Kig mod døren.","''Lydeffekter:'' Fodtrin.",
+  heading+' Scene 1.2 — Haven',"''Handling:'' En tur i haven.",
+  '!! AKT 2 — Hjemkomsten',"''Instruktion:'' Dette er en aktinstruktion, ikke havens note.",heading+' Scene 2.1 — Hallen',"''Handling:'' Nu er hallen tom.","''Instruktion:'' Luk døren.","''Lydeffekter:'' Stilhed."
+ ].join('\r\n\r\n')};
+ f.ui.open();const expected=['Handling: Første møde.\n\nInstruktion: Kig mod døren.\n\nLydeffekter: Fodtrin.','Handling: En tur i haven.','Handling: Nu er hallen tom.\n\nInstruktion: Luk døren.\n\nLydeffekter: Stilhed.'];
+ for(let i=0;i<names.length;i++){f.host.querySelectorAll('.huw-script-scene')[i].dispatch('click');assert.equal(f.host.querySelector('.huw-script-scene-notes').value,expected[i]);}
+ assert.equal(f.w.writes.length,0,'Reading existing manuscript notes does not save or overwrite scenes');
+});
+
+test('explicit saved scene notes take precedence over manuscript fallback text',()=>{
+ const f=fixture();f.options.film.name='Fyrtøjet · Hallen';f.options.film.sceneNotes='My saved direction';
+ f.w.records['Fyrtøjet · Manuskript']={title:'Fyrtøjet · Manuskript',text:"!!! Scene 1.1 — Hallen\n\n''Handling:'' Original direction."};
+ f.ui.open();assert.equal(f.host.querySelector('.huw-script-scene-notes').value,'My saved direction');
+});

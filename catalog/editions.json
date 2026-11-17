@@ -72,15 +72,15 @@
         "headingEn": "Notation, playback and teaching",
         "descriptionDa": "Skriv ABC-noder, importer fra MuseScore, og afspil TiddlyWiki Jingle med flytbar mixer og akkorder, der følger musikken.",
         "descriptionEn": "Write ABC notation, import from MuseScore, and play the TiddlyWiki Jingle with a detachable mixer and follow-along chord chart.",
-        "noteDa": "ABC 0.3.38-test.3 · tre mixerfaner · diskret akkordzoom −/+ · TinySynth offline-reserve.",
-        "noteEn": "ABC 0.3.38-test.3 · three mixer tabs · discreet chord zoom −/+ · offline TinySynth backup.",
+        "noteDa": "ABC 0.3.38-test.4 · tre mixerfaner · diskret akkordzoom −/+ · TinySynth offline-reserve.",
+        "noteEn": "ABC 0.3.38-test.4 · three mixer tabs · discreet chord zoom −/+ · offline TinySynth backup.",
         "order": "02"
       }
     },
     {
       "id": "animus",
       "name": "AniMus Forge I (beta)",
-      "version": "0.11.0-beta.2",
+      "version": "0.11.0-beta.3",
       "status": "test",
       "manifest": "../editions/animus/manifest.json",
       "description": "Experimental unified animation, music and theatre workshop for TiddlyWiki. The Fyrtøjet and Tændstikorkestret examples share one editor.",
@@ -150,7 +150,7 @@
     {
       "id": "cutout",
       "name": "CutOut Edition (test)",
-      "version": "0.6.2-test.2",
+      "version": "0.6.2-test.3",
       "status": "test",
       "manifest": "../editions/cutout/manifest.json",
       "description": "Original CutOut workshop, examples, Excalidraw drawing bridge, scenes, theatre, PasteUp and Slideshow; local export and native Dansk/English",
@@ -211,7 +211,7 @@
     {
       "id": "site-publisher",
       "name": "SitePublisher",
-      "version": "0.1.16-test.2",
+      "version": "0.1.16-test.3",
       "description": "HTML publishing for AniMus musicals, ABC music, CutOut, SVG drawings and embedded media.",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
@@ -243,7 +243,7 @@
     {
       "id": "cutout",
       "name": "CutOut",
-      "version": "0.6.2-test.2",
+      "version": "0.6.2-test.3",
       "description": "Offline animation workshop · Dukker, animationer og lokal ZIP · Test",
       "file": "../plugins/cutout/dist/plugin.json",
       "status": "test"

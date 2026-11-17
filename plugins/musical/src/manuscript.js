@@ -50,15 +50,26 @@ function collect(wiki,film,rootTitle){var result=[],active={};
  return result;}
 function notesFromExisting(wiki,scene){var text=wiki.getTiddlerText("Fyrtøjet · Manuskript","");
  if(!text||!scene.name)return "";
- var chunks=text.split(/\n#!!\s+Scene\s+/),name=String(scene.name).split("·").pop().trim().toLowerCase();
- for(var i=1;i<chunks.length;i++){
-  var c=chunks[i],head=(c.split("\n")[0]||"").toLowerCase();
-  if(head.indexOf(name)<0)continue;
-  var rows=[];
-  ["Handling","Instruktion","Lydeffekter"].forEach(function(label){var pattern=new RegExp("''"+label+":''\\s*([^\\n]+)","i"),m=pattern.exec(c);if(m)rows.push(label+": "+m[1].trim());});
-  return rows.join("\n\n");
- }
- return "";}
+ var name=String(scene.name).split("·").pop().trim().toLowerCase(),identity=/\bAkt\s+(\d+)\s+scene\s+(\d+)\b/i.exec(scene.title||""),blocks=[],active=null,act="";
+ function finish(){if(active)blocks.push(active);active=null;}
+ String(text).split(/\r?\n/).forEach(function(line){
+  var actHeading=/^!![ \t]+AKT[ \t]+(\d+)\b/i.exec(line);
+  if(actHeading){finish();act=actHeading[1];return;}
+  // !!! is a real TiddlyWiki heading. Keep reading the old #!! spelling
+  // so notes in an existing saved wiki remain associated with their scene.
+  var heading=/^(?:!!!|#!!)[ \t]+Scene[ \t]+(.+?)\s*$/i.exec(line);
+  if(heading){finish();var numbered=/^(\d+)(?:\.(\d+))?[ \t]*(?:[—–:-][ \t]*)?(.*)$/.exec(heading[1]);
+   active={act:numbered&&numbered[2]?numbered[1]:act,number:numbered?(numbered[2]||numbered[1]):"",name:(numbered?numbered[3]:heading[1]).trim().toLowerCase(),lines:[]};return;
+  }
+  if(/^!{1,2}(?:[ \t]|$)/.test(line)){finish();return;}
+  if(active)active.lines.push(line);
+ });finish();
+ var candidates=blocks.filter(function(block){return block.name===name;});
+ if(identity){var exact=candidates.filter(function(block){return block.act===identity[1]&&block.number===identity[2];});if(exact.length)candidates=exact;}
+ if(candidates.length!==1)return "";
+ var rows=[],body=candidates[0].lines.join("\n");
+ ["Handling","Instruktion","Lydeffekter"].forEach(function(label){var pattern=new RegExp("''"+label+":''[ \\t]*([^\\r\\n]+)","i"),m=pattern.exec(body);if(m)rows.push(label+": "+m[1].trim());});
+ return rows.join("\n\n");}
 function speakerChoices(scene){
  var found=LipSync.actors(scene).slice(),known={},cueIds={};found.forEach(function(actor){known[actor.id]=true;});captions(scene).forEach(function(p){cueIds[p.id]=true;});
  (scene.parts||[]).forEach(function(part){

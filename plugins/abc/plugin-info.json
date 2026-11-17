@@ -1,0 +1,14 @@
+{
+  "core-version": ">=5.4.1",
+  "name": "ABC Musik",
+  "title": "$:/plugins/huwiki/abc",
+  "stability": "experimental",
+  "description": "ABC Musik Edition – tre-fane minimixer med justerbar akkordstørrelse, triolkorrekt markering og TinySynth offline-fallback",
+  "plugin-type": "plugin",
+  "license": "MIT",
+  "type": "application/json",
+  "version": "0.3.38-test.4",
+  "author": "HUWiki",
+  "revision": "5",
+  "modified": "20261117175620909"
+}

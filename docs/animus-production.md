@@ -1,6 +1,6 @@
 # AniMus production tools
 
-AniMus 0.11.0-beta.2 includes production workshops and script-driven mouth animation on the existing stage and music timeline. The example productions remain separate plugins.
+AniMus 0.11.0-beta.3 includes production workshops, direct figure and joint editing, and script-driven mouth animation on the existing stage and music timeline. SitePublisher 0.1.16-test.3 adds audience programme and performance starting views. The example productions remain separate plugins.
 
 ## Create and edit a show
 
@@ -10,6 +10,7 @@ Open a show and use its toolbar:
 
 | Control | Work it supports |
 | --- | --- |
+| Figure / Parts and joints | Select a figure or body part directly on the stage and edit its pose at the playhead. |
 | Scenes | Change names, durations, backgrounds and order; add a scene. Choose whether timeline cues move with scenes. |
 | Draw SVG | Draw or import SVG layers. Add, duplicate, rename, reorder, hide and lock layers. Draw freehand paths, shapes and text. |
 | SVG frames | Add and duplicate drawings, see the previous frame, set frame rate and hold time, preview and loop. Save and reopen the editable drawing. |
@@ -26,6 +27,15 @@ Recorded audio is stored as an audio tiddler. The project references the recordi
 
 Use TiddlyWiki's Save button to save the complete wiki file. Recording asks for microphone access only after **Record** is pressed. Import is available when microphone recording is unavailable.
 
+## Edit a figure on the stage
+
+1. Pause the performance and place the playhead at the moment you want to change.
+2. Choose **Figure** and click a visible part of the character. The dashed frame selects the entire figure. Drag the figure to move it, or use its handles to resize or rotate it.
+3. Choose **Parts and joints** and click an arm, leg or other body part. The smaller dashed frame and marked pivot show the selected part and its attachment. Drag a mounted limb around that point, or use the round rotation handle. Its attached children follow the movement.
+4. Release the pointer to keep the change. AniMus saves a key at the current position in the relevant scene or motion loop. A loop edit applies to that beat position in each repetition. Press **Escape** during a drag to cancel it.
+
+The CutOut studio has the same **Figure** and **Parts and joints** choices, plus a part selector and **Move**, **Rotate** and **Size** tools. Use **Undo** and **Redo** for its completed direct edits, and **Save project** to apply the draft. AniMus applies a stage drag when you release it; saving the complete wiki file remains a separate TiddlyWiki action. Site view provides audience playback without editing frames or handles.
+
 ## Mouth animation from the script
 
 Give a character an **open mouth** part and, optionally, a **closed mouth** part under the same figure. Ordinary CutOut shapes and SVG layers can be used. Keep the character's body, head and mouth as separate parts so the mouth can move without changing the rest of the drawing.
@@ -37,7 +47,7 @@ Open **Script**, select a line and use **Lip sync**:
 3. Choose script timing, or the linked recording when one is available. Set an offset if the mouth needs to start earlier or later, and adjust the movement amount.
 4. Choose **Save and return**. Scrub the timeline or press **Play** to check the mouth. Reopen the script to change the binding or disable it.
 
-Speaker prefixes can help match lines to figures. The **Assign speaking roles** scene action offers this for multiple lines. Check the selected figure and mouth parts; explicit bindings determine which character moves. Other characters remain unchanged.
+Speaker prefixes can help match lines to figures. The **Assign speaking roles** scene action offers this for multiple lines. Check the selected figure and mouth parts; explicit bindings determine which character moves. **Speaking figure** is chosen separately for each spoken line or song lyric, so successive lines can belong to different characters. A binding controls only its selected figure. Other characters retain their own authored animation, including any separately animated mouth parts.
 
 The movement is an approximation derived from the written line: vowels, consonants and punctuation provide the opening rhythm and pauses. A linked recording can supply timing, but the engine does not analyse the voice or recognise spoken phonemes. Use the timing controls to align it with a performance. The same saved binding runs in the editor and Site view, including seeking and paused previews.
 
@@ -61,6 +71,19 @@ Bindings are stored on the caption part as `lipSync`, separately from its geomet
 
 The Site button uses the existing SitePublisher. It accepts a film tiddler or a `musical-stage` view, including the direct field references created by New show. The exported HTML includes referenced scenes, graphics, ABC scores and recorded audio; it omits authoring tools and scene notes.
 
+When opened from an AniMus production, the publisher uses controls for an audience programme:
+
+| Control | Meaning in AniMus |
+| --- | --- |
+| Programme | The production's title, running time and scenes in performance order, grouped into acts when the production has them. **Open performance** opens the selected show in the preview. |
+| Audience view | Settings for the audience page: its appearance, public title, whether that title is shown, the productions included and the starting view. |
+| Starting view → Performance | The HTML page opens on the stage, ready for the audience to press **Play**. This is the default for one production. |
+| Starting view → Programme | The HTML page opens with the programme. The audience chooses **Open performance**, then presses **Play**. This is the default when publishing several productions. |
+
+Choose **This performance** to publish the current show, or **Performances in this wiki** to select several. A show and its underlying film appear only once. The programme presents readable production information; scene data and private scene notes are not shown as article text. Switching between the programme and the performance is also available on the exported page.
+
+The starting view is saved into the downloaded HTML. Looking at the programme tab in the publisher is separate from choosing the exported starting view. Opening a performance does not start its sound automatically. **Download HTML** saves the prepared audience page; these settings do not alter the production's animation or recordings. In ordinary ABC publication, **Overview**, **Settings** and the **Music stand / Normal score view** choice retain their score-specific meaning.
+
 The audience player uses the shared AniMus clock, CutOut renderer, mouth animation, ABC audio controller, effects and narration player. Script bindings and their mouth parts are included in the exported page. Missing music does not block the visual performance. Automatic replacement by another music synthesizer is disabled in the publication's default mode. Instrument samples still follow the existing ABC sound library configuration; this release does not bundle the entire sample bank into every site.
 
 ## Build and verify
@@ -75,6 +98,10 @@ node --test tests/animus-*.test.mjs tests/site-cutout-media.test.mjs tests/site-
 The two build scripts support `--check`. AniMus module sources live in `plugins/musical/src`. SitePublisher sources and the publication viewer live in `plugins/site-publisher/src`.
 
 Tests exercise editable SVG round trips, generated frame playback in CutOut, recording lifecycle, audio seek/pause/overlap, scene retiming, score draft isolation, export dependencies and the shared audience clock. Mouth tests verify explicit character bindings, the real lipsync module in Site view, seek/play/pause behaviour, unchanged source shapes and a silent second character.
+
+Direct-edit tests dispatch pointer gestures through the CutOut editor and use the real AniMus editor and renderers. They check figure versus limb selection, rotation under a rotated and scaled parent, a fixed joint pivot, child movement, playhead keys, nested-scene timing, cancellation, undo/redo and source save/reopen. Browser acceptance also checks the rendered selection and gestures in Chrome. Pointer support does not substitute for a native iPad/Safari device test.
+
+Publication UI tests run the publisher's actual event handlers and HTML builder, then execute the exported navigation runtime. They cover readable programme content, both audience starting views, programme-to-performance navigation, multiple productions and the existing ABC music-stand setting.
 
 The browser acceptance script assembles the complete edition, creates a show through its UI, edits music, draws SVG frames, imports and trims a recording, binds a scripted line to a prepared character, saves and reopens the workshops, and plays the published Site view. Run it in an environment that supports Chrome:
 
@@ -94,12 +121,35 @@ Automatic cue movement during scene rearrangement supports ordinary sequential s
 
 SVG-værkstedet bevarer lag, tegninger, animationsbilleder og figurens eksisterende led. Musikværkstedet bruger den eksisterende ABC-editor med en særskilt kladde, så **Annuller** bevarer det oprindelige nodeark. Lydværkstedet gemmer optagelser i wikien og placerer klippene på den fælles tidslinje.
 
+### Figurer, dele og led direkte på scenen
+
+Sæt forestillingen på pause, og vælg tidspunktet på tidslinjen. Vælg **Figur**, og klik på figuren i scenen. Den stiplede ramme markerer hele figuren; træk for at flytte den, eller brug håndtagene til størrelse og rotation.
+
+Vælg **Dele og led**, og klik på den arm, det ben eller den del, du vil ændre. Rammen og det markerede drejepunkt viser den valgte del og dens montering. Træk en monteret kropsdel omkring leddet, eller brug det runde drejehåndtag. Dele monteret på den følger med. AniMus gemmer ændringen som en nøgle ved tidsmarkøren, når du slipper. I en gentaget bevægelse ændres det tilsvarende tidspunkt i bevægelsens løkke. **Escape** under trækket annullerer ændringen.
+
+I CutOut-studiet kan du også vælge delen i listen og bruge **Flyt**, **Drej** eller **Størrelse**. **Fortryd** og **Gentag** gælder de afsluttede direkte ændringer; tryk **Gem projekt** for at anvende kladden. AniMus gemmer scenetrækket ved slip. Gem hele wikien med TiddlyWikis Gem-knap for at beholde arbejdet som fil. **Sitevisning** viser forestillingen uden redigeringsrammer og håndtag.
+
 ### Læbesynkronisering
 
 Vælg en replik i **Manuskript**. Under **Læbesynkronisering** vælger du **Aktivér for denne replik**, **Talende figur**, **Åben mund** og eventuelt **Lukket mund**. Munddelene skal høre til den valgte figur. Under **Timing** vælger du **Kun manuskriptets tider** eller **Tilknyttet indtaling, ellers manuskript**. Brug **Tidsforskydning (s)** og **Mundbevægelse (%)** til at justere resultatet, og tryk **Gem og tilbage**.
 
-En replik som `ALMA: Aaaaaa.` kan hjælpe med at finde figuren Alma. **Fordel taleroller** hjælper med flere replikker i scenen; kontrollér figur- og mundvalgene. Læbesynkronisering aktiveres pr. replik. Figurer uden en aktiv binding bevæger ikke munden på grund af andres replikker.
+En replik som `ALMA: Aaaaaa.` kan hjælpe med at finde figuren Alma. **Fordel taleroller** hjælper med flere replikker i scenen; kontrollér figur- og mundvalgene. **Talende figur** vælges særskilt for hver replik eller sanglinje, så forskellige figurer kan skiftes til at tale eller synge. En binding styrer kun den valgte figur. Andre figurer bevarer deres egne animationer, herunder eventuelle særskilte mundnøgler.
 
 Mundrytmen tilnærmes ud fra teksten. En tilknyttet indtaling kan styre timingen, men stemmen analyseres ikke. Tegningen og dens oprindelige nøglebilleder bevares, og den samme mundbevægelse følger tidslinjen både i editoren og i **Sitevisning**.
 
-**Sitevisning** åbner den samme udgiver som ABC-nodevisningen. Publikum får forestillingen med musik, undertekster, lydeffekter og indtaling samt almindelig afspilningsbetjening. Gem hele wikien med TiddlyWikis Gem-knap for at beholde arbejdet som fil.
+### Program og publikumsvisning
+
+**Sitevisning** åbner udgiveren med valg, der passer til en musical:
+
+| Valg | Betydning i AniMus |
+| --- | --- |
+| **Program** | Et læsbart program med forestillingens titel, varighed og scener i rækkefølge, opdelt i akter når forestillingen har dem. **Åbn forestillingen** åbner den valgte forestilling i forhåndsvisningen. |
+| **Publikumsvisning** | Indstillinger for publikums side: **Sidens udseende**, **Publikumstitel**, visning af overskriften, forestillingerne der medtages og **Startvisning**. |
+| **Startvisning → Forestillingen** | HTML-siden åbner på scenen. Publikum trykker selv **Afspil**. Det er standarden ved én forestilling. |
+| **Startvisning → Programmet** | HTML-siden åbner med programmet. Publikum vælger **Åbn forestillingen** og trykker derefter **Afspil**. Det er standarden ved flere forestillinger. |
+
+Under **Indhold** kan du vælge **Denne forestilling** eller **Forestillinger i wikien**. En forestillingsside og dens bagvedliggende film medtages kun én gang. Programmet viser forestillingens oplysninger; rå scenedata og private scenenoter vises ikke som artikeltekst. Publikum kan også gå tilbage til programmet på den udgivne side.
+
+Valget i **Startvisning** gælder den HTML-fil, du henter. Det ændres ikke blot ved at kigge på fanen **Program** i udgiveren. Åbning af forestillingen starter ikke lyden automatisk. **Hent HTML** gemmer publikums side med musik, undertekster, lydeffekter, indtaling og afspilningsbetjening. Indstillingerne ændrer ikke forestillingens animationer eller optagelser.
+
+Ved almindelig udgivelse af ABC-noder bevares **Overblik**, **Indstillinger** og valget mellem **Nodepult** og **Normal nodevisning**. Gem hele wikien med TiddlyWikis Gem-knap for at beholde redigeringsarbejdet som fil.

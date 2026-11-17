@@ -1,0 +1,28 @@
+/*
+title: $:/plugins/huwiki/cutout/direct-edit.css
+tags: $:/tags/Stylesheet
+*/
+.co-studio .co-direct-toolbar{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:11px 12px;margin:8px 0;border:1px solid #9eb9d2;border-radius:9px;background:#f2f7fc}
+.co-studio .co-direct-selection{flex-basis:100%;font-size:14px;color:#173f63}
+.co-studio .co-direct-toolbar button{min-height:42px;padding:7px 11px;font-size:13px}
+.co-studio .co-direct-toolbar button[aria-pressed="true"]{background:#235b8c;border-color:#235b8c;color:white}
+.co-studio .co-direct-toolbar button:disabled{opacity:.45;cursor:default}
+.co-studio .co-direct-part-field{display:flex;align-items:center;gap:7px;font-size:13px;max-width:100%}
+.co-studio .co-direct-part-select{min-height:42px;max-width:min(330px,70vw)}
+.co-studio .co-direct-mount{font-size:12px;color:#426079}
+.co-studio .co-direct-hint{flex-basis:100%;font-size:12px;color:#426079;line-height:1.45;margin:1px 0 0}
+.co-studio .co-direct-overlay{pointer-events:none}
+.co-studio .co-direct-figure-box{stroke:#1979bf;stroke-width:2;stroke-dasharray:6 4;fill:none;pointer-events:none}
+.co-studio .co-direct-part-box{stroke:#be5c11;stroke-width:2;stroke-dasharray:4 3;fill:none;pointer-events:none}
+.co-studio .co-direct-rotation-guide{stroke:#a36a34;stroke-width:1.4;stroke-dasharray:3 3;pointer-events:none}
+.co-studio .co-direct-pivot{fill:#fff6db;stroke:#ab5b10;stroke-width:2;pointer-events:none}
+.co-studio .co-direct-pivot-center{fill:#ab5b10;pointer-events:none}
+.co-studio .co-direct-rotate,.co-studio .co-direct-scale{fill:white;stroke:#1979bf;stroke-width:2;pointer-events:none}
+.co-studio .co-direct-joint{fill:white;stroke:#b87b3e;stroke-width:1.5;pointer-events:none}
+.co-studio .co-direct-rotate-hit{pointer-events:all;cursor:grab;touch-action:none}
+.co-studio .co-direct-scale-hit{pointer-events:all;cursor:nwse-resize;touch-action:none}
+.co-studio .co-direct-joint-hit{pointer-events:all;cursor:pointer;touch-action:none}
+.co-studio .co-stage[data-direct-edit="yes"] [data-cutout-id]{touch-action:none;cursor:move}
+.co-studio .co-stage[data-direct-edit="yes"][data-direct-scope="part"] [data-cutout-id]{cursor:grab}
+.co-studio .co-stage.co-pan[data-direct-edit="yes"] [data-cutout-id]{cursor:grab}
+@media(max-width:600px){.co-studio .co-direct-toolbar button{min-height:44px}.co-studio .co-direct-part-field{flex-basis:100%}.co-studio .co-direct-part-select{flex:1;min-width:0}}

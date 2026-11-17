@@ -48,6 +48,34 @@ test('real Fyrtøjet actors resolve Danish and English role prefixes without gue
   assert.equal(lips.suggest(scene, 'CutOut-dukke: Hej!').length, 0);
 });
 
+test('Fyrtøjet silent judge and king stay closed when the actual speaker talks', () => {
+  const pkg = JSON.parse(fs.readFileSync(new URL('plugins/animus-example-fyrtoejet/dist/plugin.json', root), 'utf8'));
+  const ts = JSON.parse(pkg.text).tiddlers;
+  const cases = [
+    {title: 'Fyrtøjet · Akt 3 scene 1 · Kongens retssal', start: 216, speaker: 'a3s1-king', silent: 'a3s1-judge'},
+    {title: 'Fyrtøjet · Akt 3 scene 2 · Hundene på torvet', start: 252, speaker: 'a3s2-soldier', silent: 'a3s2-king'}
+  ];
+  for (const fixture of cases) {
+    const scene = {...JSON.parse(ts[fixture.title].text), _title: fixture.title};
+    const before = JSON.stringify(scene), view = viewFor(scene);
+    assert.ok(!lips.compile(scene).bindings.some(binding => binding.target === fixture.silent));
+    // These are real scene times: 224s in the court and 260s in the square.
+    // Unbound figures retain authored animation, so their legacy mouth keys
+    // must be closed in the example data as well as in the lipsync output.
+    for (const localTime of [8, 22, 28.5, 36, 7.5, 8]) {
+      engine.paint(view, localTime);
+      lips.apply(view, localTime, fixture.start + localTime, {sceneTitle: fixture.title, audioClips: []});
+      assert.equal(opacity(view, fixture.silent + '-mouth-open'), 0, fixture.silent + ' at ' + localTime);
+      assert.equal(opacity(view, fixture.silent + '-smile'), 1, fixture.silent + ' smile at ' + localTime);
+      if (localTime === 8) {
+        assert.equal(opacity(view, fixture.speaker + '-mouth-open'), 1, fixture.speaker + ' speaks');
+        assert.equal(opacity(view, fixture.speaker + '-smile'), 0, fixture.speaker + ' speaking mouth replaces smile');
+      }
+    }
+    assert.equal(JSON.stringify(scene), before, 'rendering and seeking preserve the source scene');
+  }
+});
+
 test('manuscript sampling follows vowels, bilabial closures and punctuation with deterministic seeks', () => {
   assert.equal(lips.sample('ALMA: Aaaaaa.', .4, 4).viseme, 'A');
   assert.equal(lips.sample('ALMA: Aaaaaa.', 3.8, 4).open, 0);

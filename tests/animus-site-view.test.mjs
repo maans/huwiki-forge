@@ -54,11 +54,12 @@ async function runtimeRows(rows=fixtures()){
  all[base+'animus/viewer.js']={text:viewer};all[base+'animus/viewer.css']={text:await read('plugins/site-publisher/src/animus-viewer.css')};
  return all;
 }
-async function siteHtml(rows){
+async function siteHtml(rows,options={}){
  const all=await runtimeRows(rows),exports={},context=createContext({exports,$tw:{wiki:wiki(all),modules:{execute(){throw Error('No score article requested');}}},document:{documentElement:{lang:'en'}},navigator:{language:'en'}});
  const source=publisher.replace('exports.startup=function(){','exports.build=makeSite;\nexports.startup=function(){');new Script(source).runInContext(context);
- return exports.build([{title:'Film'}],{title:'AniMus publication',lang:'en',layout:'standard'});
+ return exports.build([{title:'Film'}],{title:'AniMus publication',lang:'en',layout:'standard',...options});
 }
+function siteData(html){const match=html.match(/<script\b[^>]*\bid="publisher-data"[^>]*>([\s\S]*?)<\/script>/);assert.ok(match,'publication data must be embedded');return JSON.parse(match[1]);}
 test('AniMus export collects referenced scenes, scores and recorded audio, with no private URI or scene notes',()=>{
  const rows=fixtures(),api=adapter(rows),ctx={rows:{},used:false};
  assert.equal(api.isAnimusTitle('Film'),true);assert.equal(api.isAnimusTitle('Scene'),false);
@@ -106,6 +107,10 @@ test('Site publication retains explicit mouth bindings and embeds the shared lip
  const source=JSON.parse(rows.Scene.text).parts.find(p=>p.id==='spoken-0'),published=JSON.parse(ctx.rows.Scene.text).parts.find(p=>p.id==='spoken-0');
  assert.deepEqual(published.lipSync,source.lipSync);assert.equal(published.text,source.text);
  const html=await siteHtml(rows);assert.match(html,/musical\/lipsync\.js/);assert.match(html,/ci-alma-mouth-open/);assert.doesNotMatch(html,/PRIVATE DRAFT NOTE|musical\/manuscript\.js/);
+});
+test('a single musical opens the performance by default and preserves an explicit program start in exported HTML',async()=>{
+ const direct=siteData(await siteHtml(fixtures())),program=siteData(await siteHtml(fixtures(),{startView:'program'}));
+ assert.equal(direct.presentation,'animus');assert.equal(direct.startView,'performance');assert.equal(program.presentation,'animus');assert.equal(program.startView,'program');
 });
 
 async function playerHarness({delay=false,fail=false,rows=fixtures()}={}){
@@ -193,12 +198,16 @@ async function browserRuntime(t){
  // A skipped browser test must never turn a broken CI gate green.
  return playwright.chromium.launch({headless:true,executablePath,args:['--no-sandbox']});
 }
-test('real Site view plays SVG, ABC music and recorded audio, seeks, pauses and closes fullscreen',async t=>{
+test('real Site program opens the performance with SVG, ABC music, recorded audio and lipsync',async t=>{
  const browser=await browserRuntime(t);if(!browser)return;t.after(()=>browser.close());
  const page=await browser.newPage(),errors=[],requests=[];page.on('pageerror',e=>errors.push(e.message));
  await page.route('https://**/*',route=>{requests.push(route.request().url());return route.fulfill({status:200,contentType:'audio/wav',body:wave(.6)});});
- await page.setContent(await siteHtml(lipsyncFixtures()),{waitUntil:'domcontentloaded'});
+ await page.setContent(await siteHtml(lipsyncFixtures(),{startView:'program'}),{waitUntil:'domcontentloaded'});
+ const program=page.locator('#animus-program');await program.waitFor();const programText=await program.innerText();assert.match(programText,/A little musical/);assert.match(await program.locator('.huw-animus-program-duration').innerText(),/0:08/);assert.match(programText,/Scene/);assert.doesNotMatch(programText,/"(?:parts|musical|version|scenes)"\s*:|PRIVATE DRAFT NOTE|data:image\//);
+ assert.equal(await page.locator('.huw-site-animus').isVisible(),false,'program start must show the program before the stage');
+ await program.locator('.husp-program-open[data-entry-index="0"]').click();await program.waitFor({state:'hidden'});
  const host=page.locator('.huw-site-animus');await host.waitFor();assert.equal(await host.getAttribute('data-animus-ready'),'1');
+ assert.notEqual(await host.getAttribute('data-playing'),'true','opening the performance does not autoplay it');
  assert.match(await page.locator('.huw-animus-play').innerText(),/Play/);assert.match(await page.locator('.huw-animus-stop').innerText(),/Stop/);assert.match(await page.locator('.huw-animus-fullscreen').innerText(),/Full screen/);
  assert.equal(await page.locator('.huw-animus-stage svg').count(),2);assert.equal(await page.locator('.huw-puppet-workshop,.huw-musical-workspace').count(),0);
  await page.locator('.huw-animus-play').click();

@@ -14,7 +14,7 @@ for(const [title,fields] of Object.entries(metadata)){
 // Adapters are ordinary functions in the startup module. Keep the readable
 // copies identical so changing an adapter cannot silently leave dist stale.
 const startup=tiddlers['$:/plugins/huwiki/site-publisher/startup.js'].text;
-for(const name of ['media-export.js','drawing-export.js','animus-export.js']){
+for(const name of ['media-export.js','drawing-export.js','animus-export.js','animus-presentation.js']){
  const adapter=await readFile(path.join(directory,'src',name),'utf8');
  if(!startup.includes(adapter.trim()))throw Error(name+' must match its bundled section in publisher.js');
 }

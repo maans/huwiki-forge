@@ -12,11 +12,19 @@ on:
       - assembler/**
       - core/**
       - scripts/build-animus.mjs
+      - scripts/build-cutout-ui.mjs
+      - scripts/build-abc-ui.mjs
       - scripts/build-site-publisher.mjs
       - scripts/animus-browser-smoke.mjs
       - tests/animus-site-view.test.mjs
+      - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
       - tests/animus-lipsync-editor.test.mjs
+      - tests/animus-direct-edit.test.mjs
+      - tests/helpers/svg-test-dom.mjs
+      - tests/animus-presentation.test.mjs
+      - tests/animus-publication-ui.test.mjs
+      - tests/animus-manuscript-render.test.mjs
       - tests/site-layouts.test.mjs
       - .github/workflows/animus-browser-smoke.yml
   pull_request:
@@ -30,11 +38,19 @@ on:
       - assembler/**
       - core/**
       - scripts/build-animus.mjs
+      - scripts/build-cutout-ui.mjs
+      - scripts/build-abc-ui.mjs
       - scripts/build-site-publisher.mjs
       - scripts/animus-browser-smoke.mjs
       - tests/animus-site-view.test.mjs
+      - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
       - tests/animus-lipsync-editor.test.mjs
+      - tests/animus-direct-edit.test.mjs
+      - tests/helpers/svg-test-dom.mjs
+      - tests/animus-presentation.test.mjs
+      - tests/animus-publication-ui.test.mjs
+      - tests/animus-manuscript-render.test.mjs
       - tests/site-layouts.test.mjs
       - .github/workflows/animus-browser-smoke.yml
   workflow_dispatch:
@@ -52,6 +68,8 @@ jobs:
       - name: Verify reproducible plugin packages
         run: |
           node scripts/build-animus.mjs --check
+          node scripts/build-cutout-ui.mjs --check
+          node scripts/build-abc-ui.mjs --check
           node scripts/build-site-publisher.mjs --check
       - name: Install browser controller
         run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1

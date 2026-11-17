@@ -1,0 +1,11 @@
+title: $:/plugins/huwiki/abc/ViewAddon
+type: text/vnd.tiddlywiki
+tags: $:/tags/ViewTemplate
+list-before: $:/core/ui/ViewTemplate/body
+
+\whitespace trim
+<$list filter="[[$:/plugins/huwiki/music]!is[tiddler]]" variable="musicNotInstalled">
+<$list filter="[<currentTiddler>has[abc-source]!has[draft.of]huwiki-abc-needs-reader[]]" variable="abcItem">
+<$huwiki-abc tiddler=<<currentTiddler>>/>
+</$list>
+</$list>

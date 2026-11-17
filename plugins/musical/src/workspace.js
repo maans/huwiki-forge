@@ -44,7 +44,7 @@ function mount(o){
  var inspectorOpen=false,mode="split",focus=false,puppet=Puppet.mount(o),lastTap=null;
  var narration=Narration.mount(o),scoreWorkshop=ScoreWorkshop.mount(o),sceneWorkshop=SceneWorkshop.mount(o);
  var manuscript=Manuscript.mount(Object.assign({},o,{openNarration:function(details){narration.open(details);}}));
- var transformMode='',figureRoot='',cameraName='A',latestPart='';
+ var transformMode='',figureRoot='',cameraName='A',latestPart='',cancelGesture=null;
  function toggleFocus(){
   focus=!focus;host.classList.toggle("huw-musical--focus",focus);
   focusButton.textContent=focus?L.exit:L.focus;focusButton.setAttribute("aria-pressed",String(focus));
@@ -52,9 +52,10 @@ function mount(o){
  }
  var focusButton=button(actions,"huw-musical-focus-button",L.focus,toggleFocus);
  focusButton.setAttribute("aria-pressed","false");
- var figureButton=button(actions,'huw-musical-transform-button',L.scene==='Scene'?'Hele objekt':'Whole object',function(){toggleFigure();});
- figureButton.textContent=L.scene==='Scene'?'Hele objekt':'Whole object';
+ var figureButton=button(actions,'huw-musical-transform-button huw-musical-figure-button',L.scene==='Scene'?'Figur':'Figure',function(){toggleFigure();});
  figureButton.title=L.scene==='Scene'?'Flyt, skalér, drej og skævvrid hele figuren, rekvisitten eller kulissen':'Move, scale, rotate and skew entire object';
+ var partsButton=button(actions,'huw-musical-transform-button huw-musical-parts-button',L.scene==='Scene'?'Dele og led':'Parts and joints',function(){toggleParts();});
+ partsButton.title=L.scene==='Scene'?'Klik på en kropsdel. Træk den omkring sit led, eller brug drejehåndtaget. Ændringen gemmes ved tidsmarkøren.':'Select a body part. Drag it around its joint or use the rotation handle. Changes are keyed at the playhead.';
  var cameraButton=button(actions,'huw-musical-transform-button',L.scene==='Scene'?'Kameraramme':'Camera frame',function(){toggleCamera();});
  cameraButton.title=L.scene==='Scene'?'Vis og redigér kameraets udsnit på scenen':'Edit camera viewport directly on the stage';
  var manuscriptButton=button(actions,"huw-musical-manuscript-button",L.scene==='Scene'?"Manuskript":"Script",function(){manuscript.open();});
@@ -66,11 +67,11 @@ function mount(o){
  button(actions,'huw-musical-site-button',L.scene==='Scene'?'Sitevisning':'Site view',function(){
   o.pause();if(focus)toggleFocus();if($tw.rootWidget)$tw.rootWidget.dispatchEvent({type:'tm-huwiki-sitepublisher',param:o.sceneTitle});
  });
- function updateToolButtons(){figureButton.setAttribute('aria-pressed',String(transformMode==='figure'));cameraButton.setAttribute('aria-pressed',String(transformMode==='camera'));}
+ function updateToolButtons(){figureButton.setAttribute('aria-pressed',String(transformMode==='figure'));partsButton.setAttribute('aria-pressed',String(transformMode==='parts'));cameraButton.setAttribute('aria-pressed',String(transformMode==='camera'));}
  var previousPreviewMode=null;
  function useStageMode(){if(previousPreviewMode===null)previousPreviewMode=viewButton.value;viewButton.value='stage';viewButton.onchange();}
  function restorePreviewMode(){if(previousPreviewMode!==null){if(viewButton.value==='stage'){viewButton.value=previousPreviewMode;viewButton.onchange();}previousPreviewMode=null;}}
- function stopTool(){transformMode='';o.editor.setCameraEdit(false);updateToolButtons();restorePreviewMode();refreshHandles();}
+ function stopTool(){if(cancelGesture)cancelGesture();transformMode='';o.editor.setCameraEdit(false);updateToolButtons();restorePreviewMode();refreshHandles();}
  function chooseStageObject(id,quiet){
   // A figure, prop, background or other scene object is always selected by
   // its own root, never by an arbitrary character from another scene.
@@ -85,12 +86,22 @@ function mount(o){
  }
  function toggleFigure(){
   if(transformMode==='figure'){stopTool();return;}
+  if(cancelGesture)cancelGesture();
+  if(editor.inClipDetail&&editor.inClipDetail())editor.closeAnimation();
   var selected=o.editor.getSelection&&o.editor.getSelection();
   var candidate=latestPart||(selected&&selected.kind==='figure'&&selected.part)||'';
   transformMode='figure';figureRoot='';useStageMode();o.editor.setCameraEdit(false);
   if(candidate)chooseStageObject(candidate,true);
   updateToolButtons();refreshHandles();
   figureButton.title=L.scene==='Scene'?'Klik på en figur, rekvisit eller kulisse for at markere hele objektet':'Tap any figure, prop or scenery element to select the entire object';
+ }
+ function toggleParts(){
+  if(cancelGesture)cancelGesture();
+  if(transformMode==='parts'){if(editor.inClipDetail&&editor.inClipDetail())editor.closeAnimation();stopTool();return;}
+  var selected=editor.getSelection&&editor.getSelection(),candidate=latestPart||(selected&&selected.part)||'';
+  transformMode='parts';figureRoot='';useStageMode();o.pause();editor.setCameraEdit(false);
+  if(candidate&&editor.selectPart(candidate,true)){figureRoot=candidate;latestPart=candidate;setInspector(true);}
+  updateToolButtons();refreshHandles();
  }
  function toggleCamera(){if(transformMode==='camera'){stopTool();return;}
   if(o.editor.inClipDetail&&o.editor.inClipDetail())o.editor.closeAnimation();
@@ -187,6 +198,10 @@ function mount(o){
   // the corresponding dashed frame without aiming at a tiny stage shape.
   t=t||editor.getSelection();
   updateEditButtons();
+  if(transformMode==='parts'||(editor.inClipDetail&&editor.inClipDetail()&&t&&t.kind==='motion')){
+   if(t&&['part','film-part','motion'].indexOf(t.kind)>=0){figureRoot=t.part;latestPart=t.part;transformMode='parts';o.pause();editor.setCameraEdit(false);}
+   if(t&&['part','film-part','motion','animation'].indexOf(t.kind)>=0){updateToolButtons();setInspector(true);refreshHandles();return;}
+  }
   if(!(editor.inClipDetail&&editor.inClipDetail())){
    var id=t&&(t.kind==='animation'?t.target:(t.kind==='figure'||t.kind==='part'||t.kind==='film-part')?t.part:null);
    // Editing a whole object or camera should hold the synchronized show.
@@ -246,6 +261,7 @@ function mount(o){
   if(puppet.isOpen())return;
   if(e.altKey||e.ctrlKey||e.metaKey||editingField(e.target))return;
   if(e.key==="Escape"){
+   if(cancelGesture){e.preventDefault();cancelGesture();return;}
    if(editor.inClipDetail&&editor.inClipDetail()){e.preventDefault();editor.closeAnimation();return;}
    if(focus){e.preventDefault();toggleFocus();}
    else if(inspectorOpen){e.preventDefault();setInspector(false);}
@@ -271,6 +287,7 @@ function mount(o){
  handleSet.skewX=shape('rect','huw-musical-transform-skew','skewX');
  handleSet.skewY=shape('rect','huw-musical-transform-skew','skewY');
  var guideline=shape('line','huw-musical-transform-guide');
+ var partPivot=shape('circle','huw-musical-part-pivot');partPivot.setAttribute('r','5');partPivot.setAttribute('fill','#fff');partPivot.setAttribute('stroke','#b56e14');partPivot.setAttribute('stroke-width','2');partPivot.setAttribute('vector-effect','non-scaling-stroke');partPivot.style.pointerEvents='none';partPivot.style.display='none';
  var selectLabel=doc.createElementNS(SVG,'text');selectLabel.setAttribute('class','huw-musical-transform-label');handles.appendChild(selectLabel);
  var activeGeometry=null;
  function svgPoint(e,node){var matrix=node&&node.getScreenCTM&&node.getScreenCTM();if(!matrix)return null;
@@ -291,32 +308,41 @@ function mount(o){
   }
   var el=find(o.view,0),b;if(!el)return null;
   try{b=el.getBBox();}catch(err){return null;}
-  if(!b||!Number.isFinite(b.width)||b.width<=0)return null;
+  if(!b||!Number.isFinite(b.width)||!Number.isFinite(b.height)||(b.width<=0&&b.height<=0))return null;
+  // A straight SVG limb can have a zero-width/height geometry box. Give its
+  // selection frame room without changing the authored shape or its pivot.
+  var bw=Math.max(8,b.width),bh=Math.max(8,b.height);b={x:b.x-(bw-b.width)/2,y:b.y-(bh-b.height)/2,width:bw,height:bh};
   var corners=[{x:b.x,y:b.y},{x:b.x+b.width,y:b.y},{x:b.x+b.width,y:b.y+b.height},{x:b.x,y:b.y+b.height}].map(function(p){return svgPosition(p,el);});
   if(corners.some(function(p){return !p;}))return null;
   var center=svgPosition({x:b.x+b.width/2,y:b.y+b.height/2},el);
-  return {corners:corners,center:center,measureNode:el.parentNode,referenceWidth:b.width,referenceHeight:b.height,figureElement:el};
+  var pivot=editor.getPartPivot&&editor.getPartPivot(figureRoot),joint=pivot&&svgPosition({x:Number(pivot.x)||0,y:Number(pivot.y)||0},el);
+  return {corners:corners,center:center,pivot:joint||center,measureNode:el.parentNode,referenceWidth:b.width,referenceHeight:b.height,figureElement:el};
  }
  function refreshHandles(){
   var selectedTrack=editor.getSelection&&editor.getSelection();
   if(selectedTrack&&transformMode==='camera'&&selectedTrack.kind==='camera')cameraName=selectedTrack.id==='camera-B'?'B':'A';
   if(selectedTrack&&transformMode==='figure'&&selectedTrack.kind==='figure')figureRoot=selectedTrack.part;
+  if(selectedTrack&&transformMode==='parts'&&['part','film-part','motion'].indexOf(selectedTrack.kind)>=0)figureRoot=selectedTrack.part;
   if(!handles||!svg.isConnected||puppet.isOpen()||!transformMode||(o.editor.inClipDetail&&o.editor.inClipDetail()&&transformMode==='camera')||o.host.dataset.playing==='true'){
    handles.style.display='none';activeGeometry=null;return;
   }
   if(transformMode==='camera'&&o.host.querySelector('.huw-musical-play[aria-pressed="true"]')){handles.style.display='none';activeGeometry=null;return;}
   var geom=transformMode==='camera'?cameraGeometry():figureGeometry();if(!geom){handles.style.display='none';activeGeometry=null;return;}
   activeGeometry=geom;handles.dataset.mode=transformMode;handles.style.display='';var p=geom.corners;
+  var editingPart=transformMode==='parts';
+  outline.style.pointerEvents=editingPart?'none':'';
+  ['nw','ne','se','sw','skewX','skewY'].forEach(function(id){handleSet[id].style.display=editingPart?'none':'';});
+  partPivot.style.display=editingPart?'':'none';if(editingPart)setPos(partPivot,geom.pivot);
   outline.setAttribute('points',p.map(function(x){return x.x+','+x.y;}).join(' '));
   ['nw','ne','se','sw'].forEach(function(id,i){setPos(handleSet[id],p[i]);});
   var cx=(p[0].x+p[1].x)/2,cy=(p[0].y+p[1].y)/2,center=geom.center;
   var vx=cx-center.x,vy=cy-center.y,mag=Math.hypot(vx,vy)||1;
   var rotate={x:cx+25*vx/mag,y:cy+25*vy/mag};setPos(handleSet.rotate,rotate);
-  guideline.setAttribute('x1',cx);guideline.setAttribute('y1',cy);guideline.setAttribute('x2',rotate.x);guideline.setAttribute('y2',rotate.y);
+  guideline.setAttribute('x1',editingPart?geom.pivot.x:cx);guideline.setAttribute('y1',editingPart?geom.pivot.y:cy);guideline.setAttribute('x2',rotate.x);guideline.setAttribute('y2',rotate.y);
   function diamond(el,pos){el.setAttribute('x',pos.x-6);el.setAttribute('y',pos.y-6);el.setAttribute('width','12');el.setAttribute('height','12');}
   diamond(handleSet.skewX,{x:(p[0].x+p[1].x)/2,y:(p[0].y+p[1].y)/2});
   diamond(handleSet.skewY,{x:(p[1].x+p[2].x)/2,y:(p[1].y+p[2].y)/2});
-  var selectedScene=transformMode==='figure'&&editor.resolvePartScene&&editor.resolvePartScene(figureRoot);
+  var selectedScene=transformMode!=='camera'&&editor.resolvePartScene&&editor.resolvePartScene(figureRoot);
   var selectedPart=selectedScene&&selectedScene.parts&&selectedScene.parts.find(function(p){return p.id===figureRoot;});
   selectLabel.textContent=transformMode==='camera'?(L.scene==='Scene'?'Kamera '+cameraName:'Camera '+cameraName):(selectedPart&&(selectedPart.name||selectedPart.id)||figureRoot||(L.scene==='Scene'?'Hele objekt':'Whole object'));
   selectLabel.setAttribute('x',p[0].x+6);selectLabel.setAttribute('y',p[0].y-11);
@@ -326,7 +352,10 @@ function mount(o){
  function limit(n,a,b){return Math.min(b,Math.max(a,n));}
  handles.addEventListener('pointerdown',function(e){
   if(e.button!==0)return;var action=e.target.getAttribute('data-transform-action');if(!action||!activeGeometry)return;
+  var editingPart=transformMode==='parts',partId=figureRoot;
+  if(editingPart&&action!=='rotate')return;
   e.preventDefault();e.stopPropagation();o.pause();
+  host.focus({preventScroll:true});
   var geom=activeGeometry,node=geom.measureNode,ctm=node&&node.getScreenCTM&&node.getScreenCTM();
   if(!ctm)return;
   var inverse=ctm.inverse();
@@ -334,18 +363,19 @@ function mount(o){
   var start=frozenPoint(e),center=null;
   if(!start)return;
   // Convert center from stage coordinates into the part's parent-local coordinates.
-  var c=geom.center,stageMatrix=svg.getScreenCTM();
+  var c=editingPart?geom.pivot:geom.center,stageMatrix=svg.getScreenCTM();
   if(!stageMatrix)return;var stagePt=svg.createSVGPoint();stagePt.x=c.x;stagePt.y=c.y;
   var screen=stagePt.matrixTransform(stageMatrix);center=frozenPoint({clientX:screen.x,clientY:screen.y});
   if(!center)return;
-  var change=null,base=transformMode==='camera'?editor.cameraStateFor(o.position(),cameraName):editor.figureStateFor(o.position(),figureRoot);
+  var change=null,base=editingPart?{}:transformMode==='camera'?editor.cameraStateFor(o.position(),cameraName):editor.figureStateFor(o.position(),figureRoot);
   if(!base)return;
   var startDistance=Math.max(10,Math.hypot(start.x-center.x,start.y-center.y)),startAngle=angle(start,center);
   var width=Math.max(20,geom.referenceWidth),height=Math.max(20,geom.referenceHeight),closed=false;
   if(e.target.setPointerCapture)e.target.setPointerCapture(e.pointerId);
   function move(ev){var p=frozenPoint(ev);if(!p)return;
    var dx=p.x-start.x,dy=p.y-start.y,changes={};
-   if(!change){if(Math.hypot(dx,dy)<2.5)return;change=transformMode==='camera'?editor.beginCameraTransform(cameraName,o.position()):editor.beginFigureTransform(figureRoot,o.position());if(!change)return;base=change.initial;}
+   if(!change){if(Math.hypot(dx,dy)<2.5)return;change=editingPart?editor.beginPartMove(partId,o.position()):transformMode==='camera'?editor.beginCameraTransform(cameraName,o.position()):editor.beginFigureTransform(figureRoot,o.position());if(!change)return;if(!editingPart)base=change.initial;}
+   if(editingPart){change.update(0,0,deltaAngle(angle(p,center),startAngle));refreshHandles();return;}
    if(action==='move'){changes.x=(base.x||0)+dx;changes.y=(base.y||0)+dy;}
    else if(action==='rotate')changes.r=(base.r||0)+deltaAngle(angle(p,center),startAngle);
    else if(action==='scale'){
@@ -356,8 +386,9 @@ function mount(o){
    else if(action==='skewY')changes.skewY=limit((base.skewY||0)+dy/height*70,-35,35);
    change.update(changes);refreshHandles();
   }
-  function finish(commit){if(closed)return;closed=true;e.target.removeEventListener('pointermove',move);e.target.removeEventListener('pointerup',up);e.target.removeEventListener('pointercancel',cancel);if(change){if(commit)change.commit();else change.cancel();}refreshHandles();}
+  function finish(commit){if(closed)return;closed=true;if(cancelGesture===cancel)cancelGesture=null;e.target.removeEventListener('pointermove',move);e.target.removeEventListener('pointerup',up);e.target.removeEventListener('pointercancel',cancel);if(change){if(commit)change.commit();else change.cancel();}refreshHandles();}
   function up(){finish(true);}function cancel(){finish(false);}
+  cancelGesture=cancel;
   e.target.addEventListener('pointermove',move);e.target.addEventListener('pointerup',up);e.target.addEventListener('pointercancel',cancel);
  });
  // Click a CutOut part on the stage to select its original scene object.
@@ -366,9 +397,10 @@ function mount(o){
   if(e.button!==0)return;
   var partEl=e.target.closest&&e.target.closest("[data-cutout-id]");
   if(!partEl||!svg.contains(partEl))return;
+  host.focus({preventScroll:true});
   var id=partEl.getAttribute("data-cutout-id");latestPart=id;
   if(transformMode==='camera')return;
-  if(!(editor.inClipDetail&&editor.inClipDetail())){
+  if(transformMode!=='parts'&&!(editor.inClipDetail&&editor.inClipDetail())){
    // A single touch/click selects the whole object immediately. Dragging
    // the actual painted shape moves it; corners/handles edit scale/skew/rotation.
    o.pause();
@@ -389,18 +421,21 @@ function mount(o){
     drag.update({x:(drag.initial.x||0)+dx,y:(drag.initial.y||0)+dy});
     refreshHandles();
    }
-   function finish(save){if(done)return;done=true;
+   function finish(save){if(done)return;done=true;if(cancelGesture===cancel)cancelGesture=null;
     partEl.removeEventListener('pointermove',move);partEl.removeEventListener('pointerup',up);partEl.removeEventListener('pointercancel',cancel);
     if(drag){if(save)drag.commit();else drag.cancel();}
     if(moved)lastTap=null;
     refreshHandles();
    }
    function up(){finish(true);}function cancel(){finish(false);}
+   cancelGesture=cancel;
    partEl.addEventListener('pointermove',move);partEl.addEventListener('pointerup',up);partEl.addEventListener('pointercancel',cancel);
    return;
   }
-  var target=editor.selectPart(id);
+  o.pause();
+  var target=editor.selectPart(id,transformMode==='parts');
   if(!target)return;
+  e.preventDefault();figureRoot=id;transformMode='parts';updateToolButtons();refreshHandles();
   setInspector(true);
   var parent=partEl.parentNode;
   function coords(ev){
@@ -425,6 +460,9 @@ function mount(o){
   partEl.classList.add("huw-musical-selected-element");
   if(partEl.setPointerCapture)partEl.setPointerCapture(e.pointerId);
   function move(ev){
+   // A drag that starts exactly on a mounted joint has no usable angle.
+   // Keep its attachment fixed; the visible rotation handle remains usable.
+   if(joint&&!anchor)return;
    var at=coords(ev),dx=at.x-start.x,dy=at.y-start.y;
    if(!drag&&Math.hypot(dx,dy)<3)return;
    if(!drag){o.pause();lastTap=null;drag=editor.beginPartMove(id,o.position());}
@@ -440,12 +478,15 @@ function mount(o){
   }
   function finish(commit){
    if(finished)return;finished=true;
+   if(cancelGesture===cancel)cancelGesture=null;
    partEl.removeEventListener("pointermove",move);
    partEl.removeEventListener("pointerup",up);
    partEl.removeEventListener("pointercancel",cancel);
    if(drag){if(commit)drag.commit();else drag.cancel();}
+   refreshHandles();
   }
   function up(){finish(true);}function cancel(){finish(false);}
+  cancelGesture=cancel;
   partEl.addEventListener("pointermove",move);
   partEl.addEventListener("pointerup",up);
   partEl.addEventListener("pointercancel",cancel);
@@ -465,7 +506,7 @@ function mount(o){
  svg.addEventListener("pointerdown",pointerDown);
  return {showInspector:selection,selectTrack:selection,setInspector:setInspector,refreshHandles:refreshHandles,
   openScore:function(title){scoreWorkshop.open(title);},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},
-  dispose:function(){narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);
+  dispose:function(){if(cancelGesture)cancelGesture();narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);
   host.removeEventListener("keydown",keyboard);
   svg.removeEventListener("pointerdown",pointerDown);
   svg.removeEventListener("dblclick",openPuppet);svg.removeEventListener("pointerup",touchOpen);puppet.close();
