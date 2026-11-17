@@ -80,8 +80,8 @@
     "heading-en": "Notation, playback and teaching",
     "description-da": "Skriv ABC-noder, importer fra MuseScore, og afspil TiddlyWiki Jingle med flytbar mixer og akkorder, der følger musikken.",
     "description-en": "Write ABC notation, import from MuseScore, and play the TiddlyWiki Jingle with a detachable mixer and follow-along chord chart.",
-    "note-da": "ABC 0.3.38-test.2 · tre mixerfaner · diskret akkordzoom −/+ · TinySynth offline-reserve.",
-    "note-en": "ABC 0.3.38-test.2 · three mixer tabs · discreet chord zoom −/+ · offline TinySynth backup."
+    "note-da": "ABC 0.3.38-test.3 · tre mixerfaner · diskret akkordzoom −/+ · TinySynth offline-reserve.",
+    "note-en": "ABC 0.3.38-test.3 · three mixer tabs · discreet chord zoom −/+ · offline TinySynth backup."
   },
   {
     "title": "$:/huwiki/forge/edition/animus",
