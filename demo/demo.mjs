@@ -16,6 +16,18 @@ $('status').textContent=da?'Bygger demo…':'Building demo…';
 $('note').textContent=da?'Prøv wikien her. Brug TiddlyWikis Gem-knap for at beholde dine ændringer.':'Try this wiki here. Use TiddlyWiki’s Save button to keep your changes.';
 $('customize').textContent=da?'Tilpas og hent':'Customize & download';
 
+// Always obtain a fresh Edition recipe when opening a public demo. A previously
+// cached manifest can otherwise reintroduce plugins removed from Forge main.
+// Keep large, unchanged plugin assets eligible for normal browser caching.
+const fetchFreshEditionManifest=(resource,options)=>{
+ const url=new URL(resource,location.href);
+ if(url.origin===location.origin&&/\/editions\/[^/]+\/manifest\.json$/.test(url.pathname)){
+  url.searchParams.set('_forge_demo',String(Date.now()));
+  return fetch(url.href,{...options,cache:'no-store'});
+ }
+ return fetch(resource,options);
+};
+
 let blobUrl;
 async function start(){
  const editionId=params.get('edition')||'';
@@ -29,7 +41,7 @@ async function start(){
  document.title='TiddlyWiki Forge · '+$('name').textContent;
  const [core,assembled]=await Promise.all([
   loadOfficialCore(location.href),
-  composeWiki({choices,editionId,language:da?'da-DK':'en-GB'})
+  composeWiki({choices,editionId,language:da?'da-DK':'en-GB'},fetchFreshEditionManifest)
  ]);
  if(assembled.manifest.id!==editionId)throw Error('Unexpected Edition build');
  const html=assembleHtml(core.html,assembled.tiddlers);
