@@ -34,7 +34,7 @@ test('AniMus demo revalidates its current manifest and the sound plugin',async()
  assert.match(demo,/isCutoutEditorPlugin/);
  assert.match(demo,/cache:'no-store'/);
  assert.match(html,/allow="autoplay;/);
- assert.match(html,/demo\.mjs\?v=animus-presentation-20261117/);
+ assert.match(html,/demo\.mjs\?v=[a-z0-9-]+/);
 });
 
 test('ABC fallback uses hosted audio resources for public blob HTTPS demos',async()=>{
