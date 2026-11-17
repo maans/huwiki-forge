@@ -21,7 +21,9 @@ $('customize').textContent=da?'Tilpas og hent':'Customize & download';
 // Keep large, unchanged plugin assets eligible for normal browser caching.
 const fetchFreshEditionManifest=(resource,options)=>{
  const url=new URL(resource,location.href);
- if(url.origin===location.origin&&/\/editions\/[^/]+\/manifest\.json$/.test(url.pathname)){
+ const isEditionManifest=/\/editions\/[^/]+\/manifest\.json$/.test(url.pathname);
+ const isAniMusAudioPlugin=/\/plugins\/musical\/dist\/plugin\.json$/.test(url.pathname);
+ if(url.origin===location.origin&&(isEditionManifest||isAniMusAudioPlugin)){
   url.searchParams.set('_forge_demo',String(Date.now()));
   return fetch(url.href,{...options,cache:'no-store'});
  }
