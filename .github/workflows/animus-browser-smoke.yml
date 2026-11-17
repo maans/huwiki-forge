@@ -56,6 +56,27 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/animus-browser-smoke.mjs
+      - name: Report complete source suite with bounded diagnostics
+        if: always()
+        run: |
+          node <<'JS'
+          const {run}=require('node:test');
+          const {readdirSync}=require('node:fs');
+          (async()=>{
+          const files=readdirSync('tests').filter(name=>name.endsWith('.test.mjs')).map(name=>'tests/'+name);
+          let failures=0;
+          for await(const event of run({files})) {
+            if(event.type==='test:fail') {
+              failures++;
+              const data=event.data,error=data.details?.error,cause=error?.cause||error;
+              console.log('FAIL '+data.name+' ('+(data.file||'')+':'+(data.line||'')+')');
+              console.log(String(cause?.message||error||'').slice(0,1600));
+            }
+            if(event.type==='test:summary') console.log(JSON.stringify(event.data));
+          }
+          process.exitCode=failures?1:0;
+          })().catch(error=>{console.error(error);process.exitCode=1;});
+          JS
       - name: Retain screenshots and trace
         if: always()
         uses: actions/upload-artifact@v4

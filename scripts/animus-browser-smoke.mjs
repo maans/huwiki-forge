@@ -88,16 +88,36 @@ try{
  assert.equal(await audio.getByLabel('Klip begyndelsen fra (s)',{exact:true}).inputValue(),'0.25');await audio.getByRole('button',{name:'Annuller',exact:true}).click();await audio.waitFor({state:'detached'});
  passed('WAV import, trim, save, embedded media, reopen and timeline double-click');
 
- await show.locator('.huw-musical-site-button').click();const preview=page.locator('iframe.husp-preview');await preview.waitFor();
+ const line='FORTÆLLER: Nu begynder vores musical.';
+ await show.locator('.huw-musical-manuscript-button').click();const manuscript=show.locator('.huw-script-workshop');await manuscript.getByRole('button',{name:'+ Ny replik',exact:true}).click();
+ await manuscript.getByLabel('Tekst, som publikum ser',{exact:true}).fill(line);
+ for(const [label,value] of [['Start (s)','1'],['Slut (s)','2.25']]){await manuscript.getByLabel(label,{exact:true}).fill(value);await manuscript.getByLabel(label,{exact:true}).blur();}
+ await manuscript.getByRole('button',{name:'Indtal replik',exact:true}).click();audio=show.locator('.huw-narration-workshop');await audio.waitFor();
+ assert.equal(await audio.locator('.huw-narration-reading-text').inputValue(),line);
+ assert.equal(await audio.locator('.huw-narration-reading-text').evaluate(input=>{const r=input.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return !!hit&&!!hit.closest('.huw-narration-workshop');}),true,'recording editor is above the open manuscript and receives pointer events');
+ await audio.getByLabel('Rolle / stemme',{exact:true}).click();await screenshot('manuscript-narration');
+ await audio.getByRole('button',{name:'Annuller',exact:true}).click();await audio.waitFor({state:'detached'});assert.equal(await manuscript.getByLabel('Tekst, som publikum ser',{exact:true}).inputValue(),line);
+ await manuscript.locator('.huw-script-header-actions').getByRole('button',{name:'Gem og tilbage',exact:true}).click();await manuscript.waitFor({state:'detached'});
+ assert.equal((await savedProduction()).stage.parts.find(p=>p.id==='spoken-0')?.text,line);passed('manuscript dialogue opens recording above the script, retains text and saves captions');
+
+ await show.locator('.huw-musical-site-button').click();const publisher=page.locator('.husp-overlay');await publisher.waitFor();
+ await publisher.locator('.husp-preview-switch').getByRole('button',{name:'Sitevisning',exact:true}).click();
+ await page.waitForFunction(()=>{const status=document.querySelector('.husp-status')?.textContent||'',frame=document.querySelector('iframe.husp-preview');return status.startsWith('SitePublisher:')||!!frame?.srcdoc;},null,{timeout:30000});
+ const publicationStatus=await publisher.locator('.husp-status').innerText();assert.doesNotMatch(publicationStatus,/^SitePublisher:/,'publication failed: '+publicationStatus);
+ assert.equal(await publisher.getByRole('button',{name:'Hent HTML',exact:true}).isEnabled(),true,'publication must produce a downloadable site');
+ const preview=publisher.locator('iframe.husp-preview');await preview.waitFor();
  const site=await (await preview.elementHandle()).contentFrame();assert.ok(site,'Site preview iframe must be available');
  await site.waitForSelector('.huw-site-animus[data-animus-ready="1"]',{timeout:30000});
+ assert.match(await site.locator('.huw-animus-play').innerText(),/Afspil|Play/);assert.match(await site.locator('.huw-animus-stop').innerText(),/Stop/);assert.match(await site.locator('.huw-animus-fullscreen').innerText(),/Fuld skærm|Full screen/);
+ const audienceLayer=site.locator(`[data-cutout-id="${layerPart.id}"] image`);assert.equal(await audienceLayer.getAttribute('href'),layerPart.variants[0].imageData,'Site renders the SVG frame without a base image');
  assert.equal(await site.locator('.huw-musical-workspace,.huwabc-edit-workshop,.huw-svg-workshop,.huw-narration-workshop').count(),0,'Site view must not show editors');
  const exported=await site.evaluate(()=>JSON.parse(document.getElementById('publisher-data').textContent));assert.ok(exported.cutoutRows[voice.asset]);assert.ok(!JSON.stringify(exported.cutoutRows).includes('svgDrawing'));
  await site.locator('.huw-animus-play').click();await site.waitForFunction(()=>document.querySelector('.huw-site-animus')?.getAttribute('data-audio-mode')==='playing',null,{timeout:30000});
  await site.waitForFunction(()=>Number(document.querySelector('.huw-site-animus')?.getAttribute('data-time'))>.2);
  assert.ok(sampleRequests.length>0,'real ABC sample engine must prepare the edited music');
  await site.locator('.huw-animus-play').click();const paused=Number(await site.locator('.huw-site-animus').getAttribute('data-time'));await page.waitForTimeout(150);assert.equal(Number(await site.locator('.huw-site-animus').getAttribute('data-time')),paused);
- await site.locator('.huw-animus-range').evaluate(input=>{input.value='1.4';input.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(Number(await site.locator('.huw-site-animus').getAttribute('data-time')),1.4);
+ await site.locator('.huw-animus-range').evaluate(input=>{input.value='1.4';input.dispatchEvent(new Event('input',{bubbles:true}));});assert.equal(Number(await site.locator('.huw-site-animus').getAttribute('data-time')),1.4);assert.equal(await site.locator('.huw-animus-line').innerText(),line);
+ const frameAtSeek=layerPart.keys.filter(k=>k.t<=1.4).sort((a,b)=>a.t-b.t).at(-1).variantId;assert.equal(await audienceLayer.getAttribute('href'),layerPart.variants.find(v=>v.id===frameAtSeek).imageData,'seek selects the matching SVG frame');
  await site.locator('.huw-animus-play').click();await site.waitForFunction(()=>Number(document.querySelector('.huw-site-animus')?.getAttribute('data-time'))>1.65);
  await site.locator('.huw-animus-stop').click();assert.equal(Number(await site.locator('.huw-site-animus').getAttribute('data-time')),0);assert.equal(await site.locator('.huw-site-animus').getAttribute('data-playing'),'false');
  await screenshot('site-preview');await page.locator('.husp-head').getByRole('button',{name:'✕ Luk',exact:true}).click();await page.locator('.husp-overlay').waitFor({state:'detached'});
@@ -106,8 +126,10 @@ try{
  await writeFile(new URL('result.json',out),JSON.stringify({ok:true,manifest:manifest.version,checks,sampleRequests:sampleRequests.length,errors},null,2)+'\n');
  console.log(JSON.stringify({ok:true,manifest:manifest.version,checks,errors}));
 }catch(error){
+ let publisher=null;if(page)try{publisher=await page.evaluate(()=>({status:document.querySelector('.husp-status')?.textContent||'',text:document.querySelector('.husp-overlay')?.innerText||''}));}catch(_){}
+ console.error('BROWSER FAILURE '+JSON.stringify({failure:String(error.message||error),publisher,errors}));
  if(page)try{await screenshot('failure');await writeFile(new URL('failure.html',out),await page.content());}catch(_){}
- await writeFile(new URL('result.json',out),JSON.stringify({ok:false,checks,errors,failure:String(error.stack||error)},null,2)+'\n');throw error;
+ await writeFile(new URL('result.json',out),JSON.stringify({ok:false,checks,errors,publisher,failure:String(error.stack||error)},null,2)+'\n');throw error;
 }finally{
  if(context)try{await context.tracing.stop({path:fileURLToPath(new URL('trace.zip',out))});}catch(_){}
  if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));

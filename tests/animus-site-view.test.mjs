@@ -60,6 +60,18 @@ test('AniMus export reports missing score or recording before creating an incomp
  const rows=fixtures();delete rows['Recorded voice'];assert.throws(()=>adapter(rows).collectAnimus('Film','',{rows:{},used:false}),/recorded audio is missing/);
  const missing=fixtures();delete missing.Score;assert.throws(()=>adapter(missing).collectAnimus('Film','',{rows:{},used:false}),/missing score/);
 });
+test('SVG image parts with variant-only sources publish all frames and still reject missing frame media',async()=>{
+ const rows=fixtures(),scene=JSON.parse(rows.Scene.text),svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 30 30"><path d="M2 2L28 28" stroke="red"/></svg>',inline='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(svg);
+ const part={id:'svg-layer',type:'image',geo:{x:0,y:0,w:30,h:30},variants:[{id:'frame-1',imageData:inline},{id:'frame-2',asset:'SVG frame'}],keys:[{t:0,variantId:'frame-1'},{t:1,variantId:'frame-2',easing:'step'}]};
+ scene.parts.push(part);rows.Scene.text=JSON.stringify(scene);rows['SVG frame']={title:'SVG frame',type:'image/svg+xml',text:svg,_canonical_uri:'file:///private/frame.svg'};
+ const ctx={rows:{},used:false};adapter(rows).collectAnimus('Film','',ctx);
+ const exported=JSON.parse(ctx.rows.Scene.text).parts.find(p=>p.id==='svg-layer');
+ assert.equal(exported.imageData,undefined,'variant-only parts do not need a duplicate base image');assert.deepEqual(exported.variants,part.variants);assert.equal(ctx.rows['SVG frame'].text,svg);assert.equal(ctx.rows['SVG frame']._canonical_uri,undefined);
+ const html=await siteHtml(rows);assert.match(html,/svg-layer/);assert.match(html,/frame-2/);
+ delete part.variants[0].imageData;rows.Scene.text=JSON.stringify(scene);assert.throws(()=>adapter(rows).collectAnimus('Film','',{rows:{},used:false}),/lacks an image source/);
+ part.variants[0].imageData='https://example.com/frame.svg';rows.Scene.text=JSON.stringify(scene);assert.throws(()=>adapter(rows).collectAnimus('Film','',{rows:{},used:false}),/non-embedded image source/);
+ part.variants=[];rows.Scene.text=JSON.stringify(scene);assert.throws(()=>adapter(rows).collectAnimus('Film','',{rows:{},used:false}),/lacks an image source/);
+});
 test('musical-stage uses a publication placeholder and rejects unresolved widget attributes',()=>{
  const api=adapter(fixtures()),snippets=[],ctx={rows:{},used:false};
  const text=api.animusWidgetPlaceholders('<$musical-stage scene="Film" score="Score"/>',ctx,snippets);
@@ -158,6 +170,7 @@ test('real Site view plays SVG, ABC music and recorded audio, seeks, pauses and 
  await page.route('https://**/*',route=>{requests.push(route.request().url());return route.fulfill({status:200,contentType:'audio/wav',body:wave(.6)});});
  await page.setContent(await siteHtml(fixtures()),{waitUntil:'domcontentloaded'});
  const host=page.locator('.huw-site-animus');await host.waitFor();assert.equal(await host.getAttribute('data-animus-ready'),'1');
+ assert.match(await page.locator('.huw-animus-play').innerText(),/Play/);assert.match(await page.locator('.huw-animus-stop').innerText(),/Stop/);assert.match(await page.locator('.huw-animus-fullscreen').innerText(),/Full screen/);
  assert.equal(await page.locator('.huw-animus-stage svg').count(),2);assert.equal(await page.locator('.huw-puppet-workshop,.huw-musical-workspace').count(),0);
  await page.locator('.huw-animus-play').click();
  await page.waitForFunction(()=>document.querySelector('.huw-site-animus')?.getAttribute('data-audio-mode')==='playing',null,{timeout:15000});

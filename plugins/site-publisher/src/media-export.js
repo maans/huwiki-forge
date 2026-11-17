@@ -91,14 +91,14 @@ function collectCutout(title,ctx,stack){
  if(f["cutout-id"])copy["cutout-id"]=f["cutout-id"];
  if(f["cutout-kind"])copy["cutout-kind"]=f["cutout-kind"];
  ctx.rows[title]=copy;
- function addImage(p){
-  if(!p)return;
+ function addImage(p,required){
+  if(!p){if(required)throw publicationMediaError(title,"en billedvariant mangler sin billedkilde / image variant lacks an image source.");return;}
   var inline=p.imageData||p.src||"";
   if(inline&&!/^data:image\/(?:png|jpeg|gif|webp|svg\+xml)[;,]/i.test(inline))
    throw publicationMediaError(title,"billedkilden er ikke indlejret / non-embedded image source: "+String(inline).slice(0,90));
   var ref=cutoutReference(p.assetId,p.asset);
   if(ref&&!p.imageData)cutoutAsset(ref,ctx);
-  if(p.type==="image"&&!inline&&!ref)
+  if(required&&!inline&&!ref)
    throw publicationMediaError(title,"en billeddel mangler sin billedkilde / image part lacks an image source.");
  }
  (scene.parts||[]).forEach(function(part){
@@ -108,8 +108,11 @@ function collectCutout(title,ctx,stack){
    if(!child)throw publicationMediaError(title,"en indlejret animation mangler reference / nested animation has no reference.");
    collectCutout(child,ctx,next);
   }
-  if(part.type==="image"||part.asset||part.assetId)addImage(part);
-  (part.variants||[]).forEach(addImage);
+  var variants=Array.isArray(part.variants)?part.variants:[];
+  // The reader selects the active variant (or the first one) before looking
+  // for an image. Animated SVG layers therefore need no duplicate base image.
+  if(part.type==="image"||part.asset||part.assetId)addImage(part,part.type==="image"&&!variants.length);
+  variants.forEach(function(variant){addImage(variant,part.type==="image");});
  });
  (scene.scenes||[]).forEach(function(clip){
   var child=cutoutReference(clip.sourceId,clip.source||clip.animation||clip.theatre);
