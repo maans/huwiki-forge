@@ -67,7 +67,8 @@ test('No forced backing instruments or metronome when AniMus ABC score has accom
   const scoreTiddlers=Object.values(examples).filter(t=>t['abc-source']);
   assert.ok(scoreTiddlers.length>=2,path);
   for(const t of scoreTiddlers){
-   const config=JSON.parse(t['abc-accompaniment']||'{}');
+   const stored=String(t['abc-accompaniment']||'').trim();
+   const config=stored.startsWith('{')?JSON.parse(stored):{};
    assert.notEqual(config.enabled,true,t.title+' must use only its written notes');
   }
  }
