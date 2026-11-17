@@ -103,6 +103,18 @@ test('Music Jingle and every standalone lesson bundle are optional, independent 
  }
  await assert.rejects(composeWiki({choices,editionId:'music',excludedContentIds:['hupedia-examples']},fetcher),/non-optional Edition material/);
 });
+test('AniMus demo remains free of Music lessons, theatre legacy and Excalidraw',async()=>{
+ const {tiddlers,manifest}=await composeWiki({choices,editionId:'animus',language:'da-DK'},fetcher);
+ assert.equal(manifest.id,'animus');
+ const installed=tiddlers.filter(t=>t['plugin-type']==='plugin').map(t=>t.title).sort();
+ const expected=['abc','cutout','musical','musescore-import','site-publisher','print-article',
+  'animus-example-orchestra','animus-example-fyrtoejet'].map(title).sort();
+ assert.deepEqual(installed,expected,'AniMus Demo must not ship unrelated plugin packages');
+ for(const unwanted of ['music','theatre','pasteup','slideshow','lessons-basic','lessons-jazz',
+  'lessons-rhythm','lessons-balkan','lessons-india','lessons-folk','cutout-examples',
+  'cutout-excalidraw'])assert.ok(!installed.includes(title(unwanted)),unwanted);
+ assert.ok(!installed.includes('$:/plugins/itw/tw-excalidraw'),'Legacy Excalidraw is absent');
+});
 test('Every existing Edition remains buildable through the composer',async()=>{
  for(const e of choices.editions){
   const result=await composeWiki({choices,editionId:e.id},fetcher);
