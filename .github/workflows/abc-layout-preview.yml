@@ -1,0 +1,63 @@
+name: Stage ABC written-note layout preview
+on:
+  push:
+    branches:
+      - fix/abc-transposed-layout-20261118
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  stage:
+    if: github.ref == 'refs/heads/fix/abc-transposed-layout-20261118'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: fix/abc-transposed-layout-20261118
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check updated ABC and regenerate deterministic public Forge files
+        run: |
+          node scripts/build-abc-ui.mjs --check
+          node scripts/build-forge-plugin-library.mjs
+          node scripts/build-forge-home.mjs
+          node scripts/build-forge-home.mjs --check
+          git diff --check
+      - name: Verify ABC regression tests and Music Edition
+        run: node --test tests/abc-transposed-layout.test.mjs tests/abc-search-player.test.mjs tests/music-edition.test.mjs
+      - name: Build downloadable Music Edition preview for device acceptance
+        run: |
+          mkdir -p test-results/abc-layout
+          node --input-type=module <<'JS'
+          import {readFile,writeFile} from 'node:fs/promises';
+          import {loadEdition,assembleHtml} from './assembler/assemble.mjs';
+          const fetcher=async url=>{
+            const pathname=new URL(url).pathname;
+            if(!pathname.startsWith('/huwiki-forge/'))return {ok:false,status:403};
+            try{
+              const bytes=await readFile('.'+pathname.slice('/huwiki-forge'.length),'utf8');
+              return {ok:true,status:200,json:async()=>JSON.parse(bytes)};
+            }catch(error){return {ok:false,status:404};}
+          };
+          const {tiddlers}=await loadEdition('https://forge.example/huwiki-forge/editions/music/manifest.json',fetcher);
+          const core=await readFile('core/empty.html','utf8');
+          await writeFile('test-results/abc-layout/Music-Edition-Bb-Eb-preview.html',assembleHtml(core,tiddlers));
+          JS
+      - name: Retain independently testable Music Edition HTML
+        uses: actions/upload-artifact@v4
+        with:
+          name: Music-Edition-ABC-written-view-preview
+          path: test-results/abc-layout/Music-Edition-Bb-Eb-preview.html
+          retention-days: 14
+      - name: Save generated homepage only to ABC test branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- index.html
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(abc): sync Forge landing with written-note preview package'
+            git push origin HEAD:fix/abc-transposed-layout-20261118
+          fi
