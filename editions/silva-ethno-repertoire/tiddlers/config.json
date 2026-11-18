@@ -1,0 +1,23 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "Silva Ethno repertoire"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "Musik Edition · Henriks rækkefølge · MuseScore → ABC"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[Silva Ethno repertoire – Oversigt]]"
+  },
+  {
+    "title": "Silva Ethno repertoire – Oversigt",
+    "text": "! Silva Ethno repertoire\nDenne Musik Edition er et arbejdsudkast efter Henriks bruttoliste fra 5. november 2026. Rækkefølgen følger listen, men er ''ikke'' et endeligt vedtaget 45-minutters program. Henrik forventer højst 12 numre på scenen.\n\nDer er i øjeblikket 21 poster: 14 på hovedlisten, 2 usikre og 5 foreløbigt fravalgte. Til 17 poster er en senest kendt MuseScore-vedhæftning identificeret. Noder og lyd er ''endnu ikke'' importeret.\n\n!! Hovedliste\n<$list filter=\"[tag[SilvaEthnoTrack]field:silva-section[hovedliste]sort[silva-order]]\" variable=\"track\">\n* <$link to=<<track>>><<track>></$link>\n</$list>\n\n!! Usikre\n<$list filter=\"[tag[SilvaEthnoTrack]field:silva-section[usikre]sort[silva-order]]\" variable=\"track\">\n* <$link to=<<track>>><<track>></$link>\n</$list>\n\n!! Foreløbigt ude\n<$list filter=\"[tag[SilvaEthnoTrack]field:silva-section[ude]sort[silva-order]]\" variable=\"track\">\n* <$link to=<<track>>><<track>></$link>\n</$list>\n\n!! Import og kvalitet\nBrug ''[[HUWiki · MuseScore → ABC]]'' til lokal import af de hentede MSCZ-filer. Pluginet understøtter op til 20 filer ad gangen, med node-preview og efterfølgende godkendelse. Kontrollér hver ABC-konvertering, især stemmer, oktaver, fortegn, gentagelser og skiftende taktarter, inden et koncertsite bygges.\n\n''Manglende kilder:'' Oh verden; Hjul og Stejle nr. 6; Dance Me to the End of Love; Lulu Swing.\n\n''Udgivelse:'' Dette er kun en metadata- og importstruktur. Offentliggørelse af de fulde partiturer kræver nødvendige rettigheder og teknisk kontrol.",
+    "tags": "SilvaEthno"
+  }
+]
