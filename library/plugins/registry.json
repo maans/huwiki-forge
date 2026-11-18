@@ -31,6 +31,20 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/animus-caption-i18n",
+        "type": "application/json",
+        "name": "AniMus · bilingual captions / Tosprogede undertekster",
+        "description": "Caption translations displayed without modifying English sound, source text, timing, or lip-sync",
+        "author": "HUWiki",
+        "version": "0.1.0-beta.1",
+        "plugin-type": "plugin",
+        "requires-reload": "yes",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/animus-caption-i18n/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/animus-example-fyrtoejet",
         "type": "application/json",
         "name": "AniMus · Fyrtøjet",
