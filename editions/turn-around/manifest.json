@@ -9,6 +9,7 @@
     "tiddlers/recordings-01.json",
     "tiddlers/recordings-02.json",
     "tiddlers/recordings-03.json",
+    "tiddlers/layout-fix.json",
     "../shared/libraries.json"
   ],
   "plugins": [
