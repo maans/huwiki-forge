@@ -1,0 +1,13 @@
+{
+  "title": "$:/plugins/huwiki/animus-video-export",
+  "name": "AniMus Video Export · MP4 til LumaFusion",
+  "description": "Frame-by-frame H.264 MP4 export for AniMus, with original ABC music, dialogue, sound effects and editable WebVTT captions.",
+  "author": "HUWiki Forge",
+  "version": "0.1.0-beta.1",
+  "plugin-type": "plugin",
+  "type": "application/json",
+  "core-version": ">=5.4.1",
+  "stability": "experimental",
+  "dependents": "$:/plugins/huwiki/musical",
+  "requires-reload": "yes"
+}
