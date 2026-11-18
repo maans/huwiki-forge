@@ -2,11 +2,11 @@
   "schemaVersion": 1,
   "id": "silva-ethno-repertoire",
   "name": "Silba Etno Repertoire",
-  "version": "0.1.0-work-in-progress",
+  "version": "0.1.0-beta.1",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",
-    "tiddlers/songs.json",
+    "tiddlers/repertoire.json",
     "../shared/libraries.json"
   ],
   "plugins": [
