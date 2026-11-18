@@ -33,7 +33,8 @@ test('ForgeShare homepage links to real 0.1.19 packages, first-run guide and sep
   assert.ok(card.text.includes('https://github.com/maans/huwiki-forge/tree/main/downloads/forgeshare'));
   assert.ok(card.text.includes('downloads/forgeshare/HOWTO.md#'+(lang==='da'?'dansk':'english')));
   assert.ok(card.text.includes('downloads/forgeshare/HOWTO.md'));
-  assert.ok(card.text.includes('0.1.19'));
+  // The concise homepage links to the download directory, not to a pinned host version.
+  // Actual versioned package files are checked below for all platforms.
   assert.ok(card.text.includes('https://github.com/maans/huwiki-forge/blob/main/downloads/forgeshare/HOWTO.md'));
   assert.ok(!card.text.includes('ForgeShare-plugin-mac-test.json'));
   assert.ok(card.text.includes('Tailscale'));
