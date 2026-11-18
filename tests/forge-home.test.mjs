@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {readFile} from 'node:fs/promises';
+import {readFile,stat} from 'node:fs/promises';
 import {buildForgeHome,editionIndex,featuredPlugins} from '../scripts/build-forge-home.mjs';
 import {readSavedTiddlers,importTextFields} from '../scripts/import-forge-home.mjs';
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
@@ -24,19 +24,24 @@ test('Owner import only copies text of known page/design tiddlers, never plugins
  assert.throws(()=>readSavedTiddlers('<html>not a wiki</html>'),/Not a saved Forge/);
 });
 
-test('ForgeShare homepage shows Windows and Mac 0.1.19, first-run guide and separate plugin',async()=>{
+test('ForgeShare homepage links to real 0.1.19 packages, first-run guide and separate plugin',async()=>{
  const featured=await featuredPlugins(),saved=readSavedTiddlers(await read('index.html'));
  assert.equal(featured.length,1);assert.deepEqual(saved.get('$:/huwiki/forge/forgeshare'),featured[0]);
  for(const lang of ['da','en']){
   const card=saved.get('$:/huwiki/forge/forgeshare-card-'+lang);
   assert.ok(card.text.includes('data-plugin="forgeshare"'));
-  assert.ok(card.text.includes('ForgeShare-mac-0.1.19-test.zip'));
-  assert.ok(card.text.includes('ForgeShare-windows-0.1.19-test.zip'));
+  assert.ok(card.text.includes('https://github.com/maans/huwiki-forge/tree/main/downloads/forgeshare'));
+  assert.ok(card.text.includes('downloads/forgeshare/HOWTO.md#'+(lang==='da'?'dansk':'english')));
   assert.ok(card.text.includes('downloads/forgeshare/HOWTO.md'));
-  assert.ok(card.text.includes('0.1.19'));
+  // The concise homepage links to the download directory, not to a pinned host version.
+  // Actual versioned package files are checked below for all platforms.
   assert.ok(card.text.includes('https://github.com/maans/huwiki-forge/blob/main/downloads/forgeshare/HOWTO.md'));
   assert.ok(!card.text.includes('ForgeShare-plugin-mac-test.json'));
   assert.ok(card.text.includes('Tailscale'));
+ }
+ for(const platform of ['mac','windows','windows-node','linux']){
+  const zip=await stat(new URL('../downloads/forgeshare/ForgeShare-'+platform+'-0.1.19-test.zip',import.meta.url));
+  assert.ok(zip.isFile()&&zip.size>10_000,platform+' release must be downloadable');
  }
  if(featured[0].available==='no')assert.equal(featured[0]['download-url'],'');
  else assert.ok(featured[0]['download-url'].endsWith('/plugins/forgeshare/dist/plugin.json'));
