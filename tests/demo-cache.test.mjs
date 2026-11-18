@@ -8,6 +8,8 @@ test("public demos fetch the plugin registry and catalog fresh alongside bundled
  // Prevent a fresh ABC package from being rejected against an older cached registry.
  assert.ok(source.includes("const isPluginRegistry="));
  assert.ok(source.includes("const isEditionCatalog="));
+ assert.ok(source.includes("const isTurnAroundLayoutFix="));
+ assert.ok(source.includes("||isCutoutEditorPlugin||isTurnAroundLayoutFix"));
  assert.ok(source.includes("isEditionManifest||isPluginRegistry||isEditionCatalog"));
  assert.ok(source.includes("loadChoices(new URL('../assembler/',location.href).href,fetchFreshEditionManifest)"));
 });
