@@ -1,0 +1,22 @@
+/*\
+title: $:/plugins/huwiki/animus-video-export/styles.css
+type: text/css
+tags: $:/tags/Stylesheet
+\*/
+.huw-video-export-button{border:1px solid #bca06f!important;background:#d6af70!important;color:#211b14!important;border-radius:6px;min-height:38px;cursor:pointer;padding:7px 12px;font-weight:650}
+.huw-video-modal{position:fixed;inset:0;z-index:2147483646;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,13,17,.8);font:14px/1.5 system-ui,-apple-system,BlinkMacSystemFont,sans-serif;color:#f5f5f5}
+.huw-video-panel{box-sizing:border-box;background:#172125;color:#f4f3ef;border:1px solid #425056;border-radius:12px;padding:18px;width:min(580px,98vw);max-height:94vh;overflow-y:auto;box-shadow:0 20px 45px rgba(0,0,0,.35);outline:none}
+.huw-video-head,.huw-video-actions{display:flex;align-items:center;gap:9px;flex-wrap:wrap}.huw-video-head{justify-content:space-between;border-bottom:1px solid #3a4648;padding-bottom:10px}.huw-video-head strong{font-size:18px}
+.huw-video-options{padding:12px 0;display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.huw-video-options .huw-video-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.huw-video-options .huw-video-field span{color:#dbd2c0;font-size:12px}
+.huw-video-field input,.huw-video-field select{width:100%;min-height:37px;box-sizing:border-box;padding:5px 8px;border-radius:5px;background:#fff;color:#172125;border:1px solid #b5c0bf;font:inherit}
+.huw-video-range{display:flex;gap:12px;grid-column:1/-1}.huw-video-range .huw-video-field{flex:1}
+.huw-video-check{display:flex;align-items:center;gap:9px;grid-column:1/-1;cursor:pointer}.huw-video-check input{width:18px;height:18px;margin:0;accent-color:#dcb46b}
+.huw-video-hint{font-size:12px;color:#c1c8c6;grid-column:1/-1;margin:5px 0}
+.huw-video-output{border-top:1px solid #3a4648;padding:8px 0}.huw-video-output .huw-video-status{margin:8px 0;overflow-wrap:anywhere}
+.huw-video-progress{width:100%;height:12px;accent-color:#dcb46b}
+.huw-video-actions button,.huw-video-close{border-radius:6px;border:1px solid #6b7a7c;padding:8px 12px;min-height:39px;cursor:pointer;background:#27393e;color:white;font:inherit}
+.huw-video-actions button[hidden]{display:none}.huw-video-actions .huw-video-primary{background:#d6af70;border-color:#d6af70;color:#221d16;font-weight:700}
+.huw-video-actions button:disabled{opacity:.5;cursor:default}.huw-video-close{padding:2px 12px;font-size:24px}
+@media(max-width:500px){.huw-video-panel{padding:12px}.huw-video-options{grid-template-columns:1fr}.huw-video-head strong{font-size:16px}}
