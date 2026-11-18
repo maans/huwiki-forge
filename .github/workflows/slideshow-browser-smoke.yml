@@ -19,7 +19,11 @@ jobs:
         run: |
           node scripts/build-creative.mjs --check
           node scripts/build-slideshow.mjs --check
-          node scripts/build-cutout.mjs --check
+          # Reconstruct the original CutOut engine, then apply the shared AniMus editor layer.
+          # Comparing only the base bundle incorrectly reports the released overlay as stale.
+          node scripts/build-cutout.mjs
+          node scripts/build-cutout-ui.mjs
+          git diff --exit-code -- plugins/cutout/dist/plugin.json plugins/cutout/licenses/JSZip.txt
       - name: Install browser controller
         run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
       - name: Test original examples, local import, native languages and actual exported files
