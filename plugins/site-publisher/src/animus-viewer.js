@@ -23,6 +23,7 @@ function mount(host,rows,config){
  var Playlist=module("musical/playlist"),Motion=module("musical/motion"),Timeline=module("musical/sync").Timeline;
  var SoundFx=module("musical/sfx"),Narration=module("musical/narration-player"),Audio=module("abc/audio-controller"),Acc=module("abc/accompaniment"),Start=module("abc/start-position");
  var LipSync=module("musical/lipsync");
+ var VideoExport=null;try{VideoExport=module("animus-video-export/runtime");}catch(_optionalExport){}
  var wiki=wikiFor(rows,config||{}),title=host.getAttribute("data-animus-title"),scene=Engine.readScene(wiki,title);
  if(!scene)throw Error(label("Forestillingen mangler: ","Production is missing: ")+title);
  var clips=Playlist.reflow(scene.musical&&scene.musical.songs,host.getAttribute("data-animus-score"));
@@ -161,7 +162,7 @@ function mount(host,rows,config){
  function fullChanged(){if(doc.fullscreenElement===host)focus(true);else if(!doc.fullscreenElement)focus(false);}
  range.addEventListener("input",function(){seek(Number(range.value));});host.addEventListener("keydown",keydown);doc.addEventListener("fullscreenchange",fullChanged);
  var player={host:host,pause:pause,seek:seek,play:toggle,stop:stop,value:function(){return timeline.value();},view:view,
-  dispose:function(){if(dead)return;pause();dead=true;fx.dispose();voice.dispose();LipSync.reset(view);songs.forEach(release);doc.removeEventListener("fullscreenchange",fullChanged);host.removeEventListener("keydown",keydown);host.removeAttribute("data-animus-ready");focus(false);}}
+  dispose:function(){if(dead)return;pause();dead=true;if(player.exporter)player.exporter.dispose();fx.dispose();voice.dispose();LipSync.reset(view);songs.forEach(release);doc.removeEventListener("fullscreenchange",fullChanged);host.removeEventListener("keydown",keydown);host.removeAttribute("data-animus-ready");focus(false);}}
  ;
  // The stage is usable immediately, even if the embedded score is invalid or
  // Web Audio is unavailable. Every late music start seeks to the shared clock.
@@ -176,7 +177,13 @@ function mount(host,rows,config){
  duration=Math.max(duration,Playlist.total(clips));timeline.duration=duration;range.max=String(duration);
  beatClock=Motion.beatClock(clips,function(name){var tid=wiki.getTiddler(name);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
  ready=!!(ABC&&ABC.synth&&ABC.synth.supportsAudio&&ABC.synth.supportsAudio());
- host.setAttribute("data-animus-ready","1");paint(0);return player;
+ host.setAttribute("data-animus-ready","1");paint(0);
+ if(VideoExport&&VideoExport.attach)player.exporter=VideoExport.attach({
+  host:host,controls:controls,stage:stage,scene:scene,wiki:wiki,
+  seek:seek,pause:pause,position:function(){return timeline.value();},duration:function(){return duration;},
+  getABC:function(){return ABC;},getSongs:function(){return songs;},soundFont:function(){return config.soundFont;}
+ });
+ return player;
 }
 function prune(){players=players.filter(function(p){if(p.host.isConnected!==false)return true;p.dispose();return false;});}
 function hydrate(root,rows,config){if(!rows)return;prune();selected(root).forEach(function(host){if(host.getAttribute("data-animus-ready"))return;
