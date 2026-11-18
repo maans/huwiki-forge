@@ -18,7 +18,7 @@ on:
       - scripts/build-abc-ui.mjs
       - scripts/build-site-publisher.mjs
       - scripts/animus-browser-smoke.mjs
-      - tests/animus-video-export.test.mjs
+      - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
@@ -47,7 +47,7 @@ on:
       - scripts/build-abc-ui.mjs
       - scripts/build-site-publisher.mjs
       - scripts/animus-browser-smoke.mjs
-      - tests/animus-video-export.test.mjs
+      - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
@@ -78,7 +78,7 @@ jobs:
           node --check plugins/animus-video-export/src/audio.js
           node --check plugins/animus-video-export/src/runtime.js
           node --check plugins/animus-video-export/src/mp4.js
-          node --test tests/animus-video-export.test.mjs
+          node --test tests/animus-video-export*.test.mjs
           node scripts/build-cutout-ui.mjs --check
           node scripts/build-abc-ui.mjs --check
           node scripts/build-site-publisher.mjs --check

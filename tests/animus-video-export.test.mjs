@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {readFileSync} from "node:fs";
 import vm from "node:vm";
+import {svgDocument} from "./helpers/svg-test-dom.mjs";
 
 function source(path){return readFileSync(new URL("../"+path,import.meta.url),"utf8");}
 function load(path,dependencies={}){
@@ -68,11 +69,106 @@ test("MP4 includes separately addressable AAC audio",()=>{
 test("export range follows the current top-level stage segment",()=>{
  const rt=load("plugins/animus-video-export/src/runtime.js",{
   "$:/plugins/huwiki/animus-video-export/mp4.js":{},
-  "$:/plugins/huwiki/animus-video-export/audio.js":{}
+  "$:/plugins/huwiki/animus-video-export/audio.js":{},
+  "$:/plugins/huwiki/animus-video-export/bundle.js":{}
  });
  assert.deepEqual(Array.from(rt.currentRange({scenes:[{duration:4},{duration:7},{duration:3}]},8,14)),[4,11]);
  assert.deepEqual(Array.from(rt.currentRange({scenes:[]},2,14)),[0,14]);
  assert.match(rt.subtitles([{start:1,end:3,text:"Hej!"}],4),/00:00:01\.000 --> 00:00:03\.000\nHej!/);
+});
+
+function runtime(){return load("plugins/animus-video-export/src/runtime.js",{
+ "$:/plugins/huwiki/animus-video-export/mp4.js":{},
+ "$:/plugins/huwiki/animus-video-export/audio.js":{},
+ "$:/plugins/huwiki/animus-video-export/bundle.js":{}
+});}
+
+test("export dialog stays reachable in its player's fullscreen subtree and closes normally",()=>{
+ for(const scenario of ["normal","host","ancestor","webkit","unrelated"]){
+  const doc=svgDocument(),wrapper=doc.createElement("main"),host=doc.createElement("div");
+  doc.body.appendChild(wrapper);wrapper.appendChild(host);
+  const stage=doc.createElement("div"),controls=doc.createElement("div");
+  host.appendChild(stage);host.appendChild(controls);
+  if(scenario==="host")doc.fullscreenElement=host;
+  if(scenario==="ancestor")doc.fullscreenElement=wrapper;
+  if(scenario==="webkit")doc.webkitFullscreenElement=host;
+  if(scenario==="unrelated"){
+   doc.fullscreenElement=doc.createElement("div");doc.body.appendChild(doc.fullscreenElement);
+  }
+  let pauses=0;
+  const exporter=runtime().attach({host,stage,controls,scene:{name:"Show"},
+   duration:()=>40,position:()=>12,pause:()=>{pauses++;}});
+  exporter.open();
+  const dialog=doc.querySelector(".huw-video-modal");
+  const expected=scenario==="host"||scenario==="webkit"?host:scenario==="ancestor"?wrapper:doc.body;
+  assert.equal(dialog.parentNode,expected,scenario+" dialog belongs to the visible player surface");
+  assert.ok(dialog.contains(doc.activeElement),scenario+" dialog receives focus");
+  assert.equal(pauses,1);
+  dialog.querySelector(".huw-video-close").click();
+  assert.equal(doc.querySelector(".huw-video-modal"),null,scenario+" close removes the dialog");
+  assert.equal(controls.querySelectorAll("[data-animus-video-export]").length,1);
+  exporter.open();assert.equal(doc.querySelectorAll(".huw-video-modal").length,1);
+  exporter.dispose();
+  assert.equal(doc.querySelector(".huw-video-modal"),null);
+  assert.equal(controls.querySelectorAll("[data-animus-video-export]").length,0);
+ }
+});
+
+test("editing assets agree on whole-frame duration and preserve a nonzero source start",()=>{
+ const rt=runtime();
+ for(const fps of [24,30])for(const [start,end] of [[1,2.01],[20.5,25.75],[0,481]]){
+  const plan=rt.exportRange(start,end,fps);
+  assert.equal(plan.start,start);assert.equal(plan.end,end);
+  assert.equal(plan.audioFrames/48000,plan.videoFrames/fps);
+  assert.equal(plan.duration,plan.audioFrames/48000);
+  assert.ok(plan.duration>=end-start-1e-9);
+  assert.ok(plan.padding<1/fps+1e-9);
+ }
+ assert.equal(rt.exportRange(1,2.01,30).audioFrames,49600);
+ assert.equal(rt.exportRange(.1,.4,30).videoFrames,9,"floating point error must not add a frame");
+ assert.throws(()=>rt.exportRange(5,4,30));assert.throws(()=>rt.exportRange(0,1,29.97));
+});
+
+test("encoded video must preserve every frame in decoding order at the requested rate",()=>{
+ const rt=runtime();
+ for(const fps of [24,30]){
+  const samples=Array.from({length:61},(_,i)=>({key:i===0,timestamp:Math.round(i*1000000/fps)}));
+  assert.doesNotThrow(()=>rt.validateVideoSamples(samples,61,fps));
+  assert.throws(()=>rt.validateVideoSamples(samples.slice(1),61,fps),/every video frame/);
+  const reordered=samples.slice();[reordered[1],reordered[2]]=[reordered[2],reordered[1]];
+  assert.throws(()=>rt.validateVideoSamples(reordered,61,fps),/frame order or timing/);
+  assert.throws(()=>rt.validateVideoSamples([{...samples[0],key:false},...samples.slice(1)],61,fps),/keyframe/);
+  assert.throws(()=>rt.validateVideoSamples(samples.map((s,i)=>({...s,timestamp:s.timestamp+(i?100:0)})),61,fps),/timing/);
+ }
+});
+
+test("caption gaps remain empty when a later caption starts and sidecars end at the selected cut",()=>{
+ const rt=runtime(),segments=[];
+ rt.recordCaption(segments,{line:"First line",cue:""},0);
+ rt.recordCaption(segments,{line:"",cue:""},.5);
+ rt.recordCaption(segments,{line:"Second line",cue:""},1);
+ rt.recordCaption(segments,{line:"Second line",cue:""},1.5);
+ assert.equal(segments.length,2);
+ assert.equal(segments[0].end,.5);
+ const text=rt.subtitles(segments,2);
+ assert.match(text,/00:00:00\.000 --> 00:00:00\.500\nFirst line/);
+ assert.match(text,/00:00:01\.000 --> 00:00:02\.000\nSecond line/);
+ assert.doesNotMatch(rt.subtitles([{start:2,end:null,text:"At the cut"}],2),/At the cut/);
+});
+
+test("editing manifest records synchronization, clip warnings and a silent picture track",()=>{
+ const rt=runtime(),manifest=rt.packageManifest({name:"My show"},{start:1,end:2.01,fps:30,width:1280,burn:false},[
+  {id:"speech",sampleRate:48000,channels:2,bitsPerSample:16,frameCount:49600,duration:49600/48000,peak:1.2,clippedSamples:12}
+ ],{},true);
+ assert.equal(manifest.sourceRange.startSeconds,1);
+ assert.equal(manifest.timeline.startSeconds,0);
+ assert.equal(manifest.timeline.audioFrames,49600);
+ assert.equal(manifest.audio[0].startSeconds,0);
+ assert.equal(manifest.audio[0].clippedSamples,12);
+ assert.equal(manifest.audio[0].normalized,false);
+ assert.equal(manifest.video.audio,false);
+ assert.equal(manifest.video.burnedCaptions,false);
+ assert.equal(manifest.captions.directLumaFusionImportVerified,false);
 });
 
 test("optional video exporter is integrated in both editor and audience publishing",()=>{

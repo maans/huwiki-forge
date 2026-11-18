@@ -28,12 +28,13 @@ const fetchFreshEditionManifest=(resource,options)=>{
  const isAbcAudioPlugin=/\/plugins\/abc\/dist\/plugin\.json$/.test(url.pathname);
  const isAniMusScriptExample=/\/plugins\/animus-example-fyrtoejet\/dist\/plugin\.json$/.test(url.pathname);
  const isAniMusCaptionPlugin=/\/plugins\/animus-caption-i18n\/dist\/plugin\.json$/.test(url.pathname);
-  const isAniMusVideoExportPlugin=/\/plugins\/animus-video-export\/dist\/plugin\.json$/.test(url.pathname);
+ const isAniMusVideoExportPlugin=/\/plugins\/animus-video-export\/dist\/plugin\.json$/.test(url.pathname);
  const isTurnAroundCaptions=/\/editions\/turn-around\/tiddlers\/captions-da\.json$/.test(url.pathname);
  const isTurnAroundLayoutFix=/\/editions\/turn-around\/tiddlers\/layout-fix\.json$/.test(url.pathname);
+ const isTurnAroundVideoExport=/\/editions\/turn-around\/tiddlers\/video-export\.json$/.test(url.pathname);
  const isCutoutEditorPlugin=/\/plugins\/cutout\/dist\/plugin\.json$/.test(url.pathname);
  const isSitePublisherPlugin=/\/plugins\/site-publisher\/dist\/plugin\.json$/.test(url.pathname);
- if(url.origin===location.origin&&(isEditionManifest||isPluginRegistry||isEditionCatalog||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin||isTurnAroundLayoutFix||isAniMusCaptionPlugin||isAniMusVideoExportPlugin||isTurnAroundCaptions)){
+ if(url.origin===location.origin&&(isEditionManifest||isPluginRegistry||isEditionCatalog||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin||isTurnAroundLayoutFix||isAniMusCaptionPlugin||isAniMusVideoExportPlugin||isTurnAroundCaptions||isTurnAroundVideoExport)){
   url.searchParams.set('_forge_demo',String(Date.now()));
   return fetch(url.href,{...options,cache:'no-store'});
  }

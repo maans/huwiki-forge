@@ -577,6 +577,7 @@ Musical.prototype.render=function(parent,next){
  this._workspace=workspace;
  if(VideoExport&&VideoExport.attach)this._videoExporter=VideoExport.attach({
   host:host,controls:transport,stage:stage,scene:scene,wiki:this.wiki,
+  beginExport:function(){return editor&&editor.beginExport?editor.beginExport():null;},
   seek:seek,position:function(){return timeline.value();},duration:function(){return duration;},
   pause:function(){if(timeline.running)pauseAll();},getABC:function(){return ABCObject;},
   getSongs:function(){return songs.map(function(s){return {clip:s.clip,title:s.title,tune:s.tune,config:s.config||{}};});},

@@ -33,6 +33,16 @@ let browser,context,page,expectedConfirm=false;
 const errors=[],checks=[],sampleRequests=[];
 function passed(name){checks.push(name);console.log('PASS '+name);}
 async function screenshot(name){await page.screenshot({path:fileURLToPath(new URL(name+'.png',out)),fullPage:false});}
+async function openTiddler(title){
+ // tm-navigate bubbles to a parent navigator; dispatching it from rootWidget
+ // has no navigator above it and never opens a tiddler. Install this test
+ // fixture in the native story list and wait for its frame before editing.
+ await page.evaluate(title=>{
+  const story=$tw.wiki.getTiddlerList('$:/StoryList');
+  $tw.wiki.setText('$:/StoryList','list',undefined,[title,...story.filter(item=>item!==title)]);
+ },title);
+ await page.locator('.tc-tiddler-frame[data-tiddler-title="'+title+'"]').waitFor();
+}
 async function savedProduction(){return page.evaluate(name=>{const f=$tw.wiki.getTiddler(name).fields,film=JSON.parse($tw.wiki.getTiddlerText(f['animus-scene']));return {title:name,filmTitle:f['animus-scene'],scoreTitle:f['animus-score'],stageTitle:film.scenes[0].source,film,stage:JSON.parse($tw.wiki.getTiddlerText(film.scenes[0].source)),score:$tw.wiki.getTiddler(f['animus-score']).fields['abc-source']};},'AniMus CI production');}
 function actorFixture(id,name,x){const pose=(opacity=1)=>({t:0,x:0,y:0,r:0,sx:1,sy:1,opacity});return [
  {id,name,type:'group',parent:null,keys:[{...pose(),x,y:180}]},
@@ -160,7 +170,8 @@ try{
  // Use the real CutOut scene widget for the same scene, with a rotated,
  // non-uniformly scaled figure and an arm whose pivot is not (0,0).
  const sceneEditorTitle='AniMus CI · CutOut scene editor';
- await page.evaluate(({title,scene})=>{$tw.wiki.addTiddler(new $tw.Tiddler({title,type:'text/vnd.tiddlywiki',text:'<$cutout-studio mode="scene" tiddler="'+scene+'"/>'}));$tw.rootWidget.dispatchEvent({type:'tm-navigate',navigateTo:title,navigateFromTitle:'AniMus CI production'});},{title:sceneEditorTitle,scene:production.stageTitle});
+ await page.evaluate(({title,scene})=>{$tw.wiki.addTiddler(new $tw.Tiddler({title,type:'text/vnd.tiddlywiki',text:'<$cutout-studio mode="scene" tiddler="'+scene+'"/>'}));},{title:sceneEditorTitle,scene:production.stageTitle});
+ await openTiddler(sceneEditorTitle);
  const cutoutFrame=page.locator('.tc-tiddler-frame[data-tiddler-title="'+sceneEditorTitle+'"]'),cutout=cutoutFrame.locator('.co-studio');await cutout.locator('.co-direct-toolbar').waitFor();
  const originalAlma=actorParts.find(p=>p.id==='ci-alma'),originalArm=actorParts.find(p=>p.id==='ci-alma-arm');
  const workingScene=()=>page.evaluate(title=>JSON.parse($tw.wiki.getTiddlerText('$:/CutOut/Drafts/'+title)||$tw.wiki.getTiddlerText(title)),production.stageTitle);
@@ -178,7 +189,7 @@ try{
  await cutout.getByRole('button',{name:'Gem projekt',exact:true}).click();await page.waitForFunction(title=>!$tw.wiki.getTiddler('$:/CutOut/Drafts/'+title),production.stageTitle);
  const savedArm=(await savedProduction()).stage.parts.find(p=>p.id==='ci-alma-arm');assert.ok(savedArm.keys.some(k=>Math.abs(k.t-2)<.001&&Math.abs(k.r-47)<1));
  await cutoutFrame.locator('.tc-tiddler-controls button').filter({has:page.locator('svg.tc-image-close-button')}).click();await cutoutFrame.waitFor({state:'detached'});
- await page.evaluate(title=>$tw.rootWidget.dispatchEvent({type:'tm-navigate',navigateTo:title,navigateFromTitle:'AniMus CI production'}),sceneEditorTitle);await cutout.locator('.co-direct-toolbar').waitFor();await selectCutoutArm();assert.deepEqual((await workingScene()).parts.find(p=>p.id==='ci-alma-arm').keys,savedArm.keys);assert.equal(await cutout.locator('.co-key-strip [data-key-time="2"]').count(),1,'the saved key is present after reopening');
+ await openTiddler(sceneEditorTitle);await cutout.locator('.co-direct-toolbar').waitFor();await selectCutoutArm();assert.deepEqual((await workingScene()).parts.find(p=>p.id==='ci-alma-arm').keys,savedArm.keys);assert.equal(await cutout.locator('.co-key-strip [data-key-time="2"]').count(),1,'the saved key is present after reopening');
  await cutoutFrame.locator('.tc-tiddler-controls button').filter({has:page.locator('svg.tc-image-close-button')}).click();await cutoutFrame.waitFor({state:'detached'});
 
  // Continue directly on the AniMus stage: the same hand gesture now writes
@@ -280,7 +291,7 @@ try{
  const readerFrame=page.locator('.tc-tiddler-frame[data-tiddler-title="'+readerTitle+'"]');
  const mixers=page.locator('.huwabc-mini-mixer').filter({has:page.locator('.huwabc-mini-mixer-title',{hasText:readerTitle})});
  for(let attempt=0;attempt<2;attempt++){
-  await page.evaluate(title=>$tw.rootWidget.dispatchEvent({type:'tm-navigate',navigateTo:title,navigateFromTitle:'AniMus CI production'}),readerTitle);
+  await openTiddler(readerTitle);
   await readerFrame.locator('.huwabc-score').waitFor();
   assert.equal(await readerFrame.locator('.huwabc-score').count(),1,'the score must mount one actual reader, not hide a duplicate');
   await mixers.locator('.huwabc-mini-mixer-row').first().waitFor();
