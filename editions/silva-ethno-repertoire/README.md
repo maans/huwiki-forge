@@ -24,3 +24,7 @@ Datoerne i `songs.json` er maildatoer, ikke verificerede kompositionsrevisioner.
 6. Publicér først derefter Edition og Site på GitHub/Forge.
 
 Originale e-mails eller private kontaktoplysninger er ikke lagt i dette offentligt læsbare repository.
+
+## Fast importregel: alle stemmer
+
+Ved **hver eneste** MuseScore → ABC-konvertering vælges **alle nodesystemer og alle stemmer** fra originalfilen, også stemme 2 og eventuelle akkord-/akkompagnementsstemmer. Ingen automatisk beskæring til den første stemme, ingen grænse som `slice(0, 6)` og ingen udelukkelse udelukkende på grundlag af `count == 0`, da akkordsymboler kan ligge i en separat stemme. Der skal være en `V:`-definition for hver kilde-stemme (hvis kilden har flere stemmer), og alle akkordsymboler skal kontrolleres i det samlede ABC-resultat. Undgå at importeren vælger sin normale standard, hvor kun første stemme er afkrydset. Bevar instrumentnavne, transponering, dynamik hvor mulig, gentagelser og stemmesynkronisering. Sammenlign med originalen og gem eventuelle tab/konverteringsadvarsler.
