@@ -42,7 +42,7 @@ try {
 const sources=JSON.parse(await readFile(path.join(base,"tiddlers/songs.json"),"utf8"));
 const ready=sources.filter(s=>s["silva-musescore-file"]);
 if(ready.length!==17)throw Error("Expected exactly 17 known MuseScore files; got "+ready.length);
-const output=[],report=[],used=new Set();
+const output=[],report=[],used=new Set(),unconverted=[];
 for(const song of ready){
  const name=song["silva-musescore-file"];
  const bin=path.join(base,"sources",name);
@@ -60,7 +60,12 @@ for(const song of ready){
  }
  const heading=song.title.replace(/^Silba Etno · /,"");
  const rendered=converter.renderABC(model,selected,1,last,{title:heading,barsPerLine:4});
- if(rendered.notes<1||rendered.voices!==selected.length)throw Error("ABC notes/voices invalid: "+name);
+ if(rendered.notes<1||rendered.voices!==selected.length){
+  console.error("ABC conversion error",JSON.stringify({name,notes:rendered.notes,voices:rendered.voices,expectedVoices:selected.length,
+   staffSummary:model.staves.map(st=>({id:st.id,measures:st.measures.length,voices:st.voices.map(v=>({id:v.id,count:v.count}))})),
+   xmlTagCounts:{Chord:(raw.match(/<Chord(?:\\s|>)/g)||[]).length,Note:(raw.match(/<Note(?:\\s|>)/g)||[]).length,Measure:(raw.match(/<Measure(?:\\s|>)/g)||[]).length},xmlStart:raw.slice(0,350)}));
+  unconverted.push(name);continue;
+ }
  const bassVoice=selected.map(id=>{
   for(const st of model.staves){const v=st.voices.find(v=>v.id===id);if(v)return v;}
   return null;
@@ -105,6 +110,7 @@ for(const song of ready){
   "measures="+last,"voices="+rendered.voices,"notes="+rendered.notes,
   duplicateRemoved?"transposed-duplicate-trimmed":"");
 }
+if(unconverted.length)throw Error("Could not convert "+unconverted.length+" original files: "+unconverted.join(", "));
 const out=path.join(base,"tiddlers/repertoire.json");
 await writeFile(out,JSON.stringify(output,null,2)+"\n");
 await writeFile(path.join(base,"conversion-report.json"),JSON.stringify({
