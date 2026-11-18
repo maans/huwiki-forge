@@ -23,8 +23,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Reproduce original-source adaptation
-        run: node scripts/build-cutout.mjs --check
+      - name: Verify original CutOut source plus shared AniMus editing overlay
+        run: |
+          node scripts/build-cutout.mjs
+          node scripts/build-cutout-ui.mjs
+          git diff --exit-code -- plugins/cutout/dist/plugin.json plugins/cutout/licenses/JSZip.txt
       - name: Install browser controller
         run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
       - name: Check animation editing, languages, export and native save offline
