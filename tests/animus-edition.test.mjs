@@ -39,7 +39,7 @@ test("AniMus Edition and plugin registry reference exact beta packages",async()=
  assert.ok(home);
  assert.equal(home.version,manifest.version);
  assert.ok(index.some(x=>x["edition-id"]==="animus"&&x.version===manifest.version));
- for(const [filename,title] of packages){
+ for(const [filename,title] of packages.concat([["plugins/animus-video-export/dist/plugin.json","$:/plugins/huwiki/animus-video-export"]])){
   const pkg=await load(filename);
   const rel="../../"+filename;
   assert.ok(manifest.plugins.includes(rel),rel);
@@ -48,6 +48,8 @@ test("AniMus Edition and plugin registry reference exact beta packages",async()=
   assert.equal(record.path,rel);
   assert.equal(record.fields.version,pkg.version);
  }
+ const exported=await load("plugins/animus-video-export/dist/plugin.json");
+ assert.ok(JSON.parse(exported.text).tiddlers["$:/plugins/huwiki/animus-video-export/runtime.js"]);
  const gallery=await load("editions/animus/tiddlers/gallery.json");
  assert.ok(gallery.some(t=>t.title==="Musical Studio · Forestillinger"&&t.text.includes("Fyrtøjet")&&t.text.includes("Tændstikorkestret")));
 });
