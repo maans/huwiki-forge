@@ -68,7 +68,7 @@ test("Drawing SVG adapter is separate readable code bundled in one shared SitePu
  const plugin=JSON.parse(await read("plugins/site-publisher/dist/plugin.json"));
  const items=JSON.parse(plugin.text).tiddlers;
  const js=items[base+"/startup.js"].text;
- assert.equal(plugin.version,"0.1.16-test.3");
+ assert.equal(plugin.version,"0.1.16-test.4");
  assert.ok(js.includes(code.trim()));
  new Script(js);new Script(code);
  assert.equal(items[base+"/drawings/view.css"].type,"text/css");
