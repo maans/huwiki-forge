@@ -65,6 +65,8 @@ jobs:
           if ! git diff --cached --quiet; then
             git commit -m 'build(silba-etno): publish 17 editable ABC scores and SitePublisher audience view'
             git reset --hard HEAD
+            git status --short | head -25
+            git stash push -m 'runner-only working-tree changes' --quiet || true
             git fetch origin "${GITHUB_REF_NAME}"
             git rebase "origin/${GITHUB_REF_NAME}"
             git push origin "HEAD:${GITHUB_REF_NAME}"
