@@ -84,6 +84,27 @@
     "note-en": "ABC 0.3.38-test.4 · three mixer tabs · discreet chord zoom −/+ · offline TinySynth backup."
   },
   {
+    "title": "$:/huwiki/forge/edition/silva-ethno-repertoire",
+    "tags": "$:/huwiki/forge/edition",
+    "text": "",
+    "edition-id": "silva-ethno-repertoire",
+    "name": "Silba Etno Repertoire",
+    "status": "test",
+    "version": "0.1.0-beta.1",
+    "order": "02.2",
+    "build-url": "https://forge.måns.dk/assembler/?edition=silva-ethno-repertoire",
+    "build-url-da": "https://forge.måns.dk/assembler/?edition=silva-ethno-repertoire&lang=da",
+    "build-url-en": "https://forge.måns.dk/assembler/?edition=silva-ethno-repertoire&lang=en",
+    "demo-url-da": "https://forge.måns.dk/demo/?edition=silva-ethno-repertoire&lang=da",
+    "demo-url-en": "https://forge.måns.dk/demo/?edition=silva-ethno-repertoire&lang=en",
+    "heading-da": "Silba Etno Repertoire",
+    "heading-en": "Silba Etno Repertoire",
+    "description-da": "17 orkesterpartiturer med redigerbare ABC-noder, afspilning og en selvstændig publikumsvisning.",
+    "description-en": "17 ensemble scores with editable ABC notation, playback and a standalone audience view.",
+    "note-da": "Beta · noder og gentagelser skal kontrolleres mod MuseScore-originalerne.",
+    "note-en": "Beta · notation and repeats still need score-by-score review."
+  },
+  {
     "title": "$:/huwiki/forge/edition/animus",
     "tags": "$:/huwiki/forge/edition",
     "text": "",
