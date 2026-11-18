@@ -105,6 +105,27 @@
     "note-en": "Very early beta: core and examples may change without preserving your edits. iPad audio is unverified. Feedback welcome on Talk and GitHub."
   },
   {
+    "title": "$:/huwiki/forge/edition/turn-around",
+    "tags": "$:/huwiki/forge/edition",
+    "text": "",
+    "edition-id": "turn-around",
+    "name": "Turn Around — Beyond the Cave",
+    "status": "test",
+    "version": "0.1.0-demo.1",
+    "order": "02.41",
+    "build-url": "https://forge.måns.dk/assembler/?edition=turn-around",
+    "build-url-da": "https://forge.måns.dk/assembler/?edition=turn-around&lang=da",
+    "build-url-en": "https://forge.måns.dk/assembler/?edition=turn-around&lang=en",
+    "demo-url-da": "https://forge.måns.dk/demo/?edition=turn-around&lang=da",
+    "demo-url-en": "https://forge.måns.dk/demo/?edition=turn-around&lang=en",
+    "heading-da": "En AniMus-musical, du kan arbejde videre med",
+    "heading-en": "An AniMus musical to watch and remake",
+    "description-da": "AI-genereret animation skabt med AniMus: Platons hule som musical. Se forestillingen, og arbejd selv med lydoptagelser, musik og animation.",
+    "description-en": "An AI-generated animation made with AniMus: Plato’s cave as a musical. Watch the show, then work with audio recordings, music and animation.",
+    "note-da": "Engelsk forestilling med redigerbare scener, lydoptagelser og ABC-partiturer. Større download med indlejret lyd og malede kulisser.",
+    "note-en": "English performance with editable scenes, recordings and ABC scores. Larger download with embedded audio and painted backdrops."
+  },
+  {
     "title": "$:/huwiki/forge/edition/ai",
     "tags": "$:/huwiki/forge/edition",
     "text": "",

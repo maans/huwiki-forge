@@ -89,6 +89,16 @@
       "en": {
         "name": "Shop Edition (test)"
       }
+    },
+    "turn-around": {
+      "en": {
+        "name": "Turn Around — Beyond the Cave",
+        "description": "AI-generated animation made with AniMus. Watch an English musical of Plato’s cave, then edit audio recordings, music and animation in your own wiki."
+      },
+      "da": {
+        "name": "Turn Around — Beyond the Cave",
+        "description": "AI-genereret animation skabt med AniMus. Se en engelsk musical over Platons hule, og redigér lydoptagelser, musik og animation i din egen wiki."
+      }
     }
   },
   "packages": {
