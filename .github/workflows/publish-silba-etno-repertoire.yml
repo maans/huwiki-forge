@@ -1,4 +1,5 @@
 name: Build SilbaÄtno Repertoire from verified MuseScore files
+# Binary ForgeShare files are handled by .gitattributes; keep CI checkouts clean.
 on:
   push:
     branches:
