@@ -113,12 +113,13 @@ try{
   atoms.push(type);offset+=length;
  }
  assert.deepEqual(atoms,['ftyp','moov','mdat']);assert.ok(movie.length>1500,'nonempty AVC video payload');
- await exportDialog.locator('.huw-video-close').click();await exportDialog.waitFor({state:'detached'});
+
  passed('original AniMus stage exports a real H.264 MP4 without a screen recording');
  }else{
   assert.match(videoExportStatus,/No H\.264 MP4 encoder is supported/,'Unsupported AVC must be reported without altering the performance');
   passed('unsupported headless Linux AVC encoder yields a clear export error');
  }
+ await exportDialog.locator('.huw-video-close').click();await exportDialog.waitFor({state:'detached'});
 
 
  // Exercise the actual ABC editing widget mounted inside the AniMus draft.
