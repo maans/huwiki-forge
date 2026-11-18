@@ -471,6 +471,16 @@
         "name": "AniMus · Bilingual captions",
         "description": "Show Danish and English captions with automatic or manual language selection. Audio, cue timing and lip-sync stay unchanged."
       }
+    },
+    "$:/plugins/huwiki/animus-video-export": {
+      "da": {
+        "name": "AniMus · Videoeksport (MP4)",
+        "description": "Eksportér hele AniMus-forestillinger eller korte klip som H.264 MP4 til LumaFusion, med valgfri musik, tale, effekter og undertekster."
+      },
+      "en": {
+        "name": "AniMus · Video Export (MP4)",
+        "description": "Export full AniMus performances or short clips to LumaFusion as H.264 MP4, with optional music, speech, effects and subtitles."
+      }
     }
   }
 }
