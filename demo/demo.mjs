@@ -18,7 +18,7 @@ $('customize').textContent=da?'Tilpas og hent':'Customize & download';
 
 // Always obtain a fresh Edition recipe when opening a public demo. A previously
 // cached manifest can otherwise reintroduce plugins removed from Forge main.
-// Keep large, unchanged plugin assets eligible for normal browser caching.
+// Keep bulky media cacheable while refreshing small edition layout fixes.
 const fetchFreshEditionManifest=(resource,options)=>{
  const url=new URL(resource,location.href);
  const isEditionManifest=/\/editions\/[^/]+\/manifest\.json$/.test(url.pathname);
@@ -27,9 +27,10 @@ const fetchFreshEditionManifest=(resource,options)=>{
  const isAniMusAudioPlugin=/\/plugins\/musical\/dist\/plugin\.json$/.test(url.pathname);
  const isAbcAudioPlugin=/\/plugins\/abc\/dist\/plugin\.json$/.test(url.pathname);
  const isAniMusScriptExample=/\/plugins\/animus-example-fyrtoejet\/dist\/plugin\.json$/.test(url.pathname);
+ const isTurnAroundLayoutFix=/\/editions\/turn-around\/tiddlers\/layout-fix\.json$/.test(url.pathname);
  const isCutoutEditorPlugin=/\/plugins\/cutout\/dist\/plugin\.json$/.test(url.pathname);
  const isSitePublisherPlugin=/\/plugins\/site-publisher\/dist\/plugin\.json$/.test(url.pathname);
- if(url.origin===location.origin&&(isEditionManifest||isPluginRegistry||isEditionCatalog||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin)){
+ if(url.origin===location.origin&&(isEditionManifest||isPluginRegistry||isEditionCatalog||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin||isTurnAroundLayoutFix)){
   url.searchParams.set('_forge_demo',String(Date.now()));
   return fetch(url.href,{...options,cache:'no-store'});
  }
