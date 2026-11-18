@@ -108,7 +108,7 @@ test('AniMus demo remains free of Music lessons, theatre legacy and Excalidraw',
  assert.equal(manifest.id,'animus');
  const installed=tiddlers.filter(t=>t['plugin-type']==='plugin').map(t=>t.title).sort();
  const expected=['abc','cutout','musical','musescore-import','site-publisher','print-article',
-  'animus-example-orchestra','animus-example-fyrtoejet'].map(title).sort();
+  'animus-example-orchestra','animus-example-fyrtoejet','animus-caption-i18n'].map(title).sort();
  assert.deepEqual(installed,expected,'AniMus Demo must not ship unrelated plugin packages');
  for(const unwanted of ['music','theatre','pasteup','slideshow','lessons-basic','lessons-jazz',
   'lessons-rhythm','lessons-balkan','lessons-india','lessons-folk','cutout-examples',

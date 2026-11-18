@@ -99,6 +99,16 @@
         "name": "Turn Around — Beyond the Cave",
         "description": "AI-genereret animation skabt med AniMus. Se en engelsk musical over Platons hule, og redigér lydoptagelser, musik og animation i din egen wiki."
       }
+    },
+    "silva-ethno-repertoire": {
+      "da": {
+        "name": "SilbaÄtno Repertoire",
+        "description": "17 redigerbare nodeark i én samlet nodepult med afspilning og repertoireoverblik."
+      },
+      "en": {
+        "name": "SilbaÄtno Repertoire",
+        "description": "17 editable scores in one music-stand view with playback and a repertoire overview."
+      }
     }
   },
   "packages": {
@@ -450,6 +460,16 @@
       "en": {
         "name": "AniMus · The Tinderbox",
         "description": "Example show with three acts, nine scenes and a screenplay. Requires AniMus Editor."
+      }
+    },
+    "$:/plugins/huwiki/animus-caption-i18n": {
+      "da": {
+        "name": "AniMus · Tosprogede undertekster",
+        "description": "Vis danske og engelske undertekster med automatisk eller manuelt sprogvalg. Lyd, tidskoder og læbesynkronisering ændres ikke."
+      },
+      "en": {
+        "name": "AniMus · Bilingual captions",
+        "description": "Show Danish and English captions with automatic or manual language selection. Audio, cue timing and lip-sync stay unchanged."
       }
     }
   }
