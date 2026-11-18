@@ -13,7 +13,12 @@ var TYPES={curtain:"Tæppe / fabric",wind:"Vind / wind",steps:"Skridt / footstep
  sparkle:"Glitter / sparkle",drum:"Trommeslag / drum",applause:"Applaus / applause"};
 function num(v,d){v=Number(v);return Number.isFinite(v)?v:d;}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
-function Fx(cues,options){this.cues=Array.isArray(cues)?cues:[];this.ctx=options&&options.context||null;this.last=null;this.active=[];this.noise=null;this.bus=null;this.applauseBuffer=null;}
+function Fx(cues,options){this.cues=Array.isArray(cues)?cues:[];this.ctx=options&&options.context||null;this.last=null;this.active=[];this.noise=null;this.bus=null;this.applauseBuffer=null;
+ if(this.ctx&&this.ctx.createDynamicsCompressor){var comp=this.ctx.createDynamicsCompressor();
+  comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=5;comp.attack.value=.008;comp.release.value=.22;
+  comp.connect(options&&options.destination||this.ctx.destination);this.bus=comp;
+ }
+}
 Fx.prototype.ensure=function(){
  if(this.ctx)return this.ctx;
  var C=typeof window!=="undefined"&&(window.AudioContext||window.webkitAudioContext);
