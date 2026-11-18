@@ -86,10 +86,23 @@ The starting view is saved into the downloaded HTML. Looking at the programme ta
 
 The audience player uses the shared AniMus clock, CutOut renderer, mouth animation, ABC audio controller, effects and narration player. Script bindings and their mouth parts are included in the exported page. Missing music does not block the visual performance. Automatic replacement by another music synthesizer is disabled in the publication's default mode. Instrument samples still follow the existing ABC sound library configuration; this release does not bundle the entire sample bank into every site.
 
+## Video export for video editors (experimental)
+
+AniMus Video Export is a separately installable TiddlyWiki plugin (`$:/plugins/huwiki/animus-video-export`). In AniMus Forge I, it is included in the edition manifest. The plugin adds **Eksportér video / Export video** beside the transport in the editable stage, and in the published Site view when the plugin is installed at publication time. The current source remains editable and untouched.
+
+The export panel accepts a full production, current top-level segment or exact time interval. Initial export presets are **1280 × 720 or 1920 × 1080** at **24 or 30 fps** in **H.264 MP4**, intended for import into LumaFusion or another editor. Choose to burn captions into the image and/or download time-coded editable **WebVTT**. To correct or translate captions later in the video editor, leave burned-in subtitles off and retain the caption sidecar. The file's sound is optional and divided into original ABC music, recorded dialogue/vocals and generated sound effects, each with separate on/off controls. The **Share** action uses the native device share sheet where supported; otherwise download the MP4 into Files.
+
+Video frames are rendered from the shared CutOut/SVG scene, at exact positions in the AniMus performance timeline. H.264 and AAC encoding use the browser's WebCodecs APIs. The original ABCJS sample synthesizer supplies the orchestra's samples; recorded audio and the existing sound-effects module are rendered offline. Audio failures do not cause automatic substitution by TinySynth. If a soundbank is unavailable, a sound export fails visibly; a user can deliberately disable the unavailable track and render a silent video.
+
+**Current limitations:** Full MP4 export needs `VideoEncoder` and, when sound is enabled, `AudioEncoder` supporting AVC/AAC. Unsupported browser/device reports an error. The renderer does not guarantee faster-than-realtime performance on iPad. Very long videos may exhaust memory; export individual scenes at 720p first, then assemble and polish them in LumaFusion. H.264 has no alpha channel, so these exports are opaque 16:9 footage, not transparent overlays. Background art must be readable locally and embeddable in exported SVG. WebVTT is an external editable caption track, not burned into the scene by default when unchecked. Browser-level and iPad smoke testing are required before promoting from experimental beta.
+
+Build/check the plugin with `node scripts/build-animus-video-export.mjs` and `node scripts/build-animus-video-export.mjs --check`; tests include `node --test tests/animus-video-export.test.mjs`.
+
 ## Build and verify
 
 ```sh
 node scripts/build-animus.mjs
+node scripts/build-animus-video-export.mjs
 node scripts/build-site-publisher.mjs
 node scripts/build-forge-plugin-library.mjs
 node --test tests/animus-*.test.mjs tests/site-cutout-media.test.mjs tests/site-drawing-svg.test.mjs
