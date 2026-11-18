@@ -1,0 +1,8 @@
+[
+  {
+    "title": "$:/plugins/maans/plato/sidebar-layout.css",
+    "type": "text/css",
+    "tags": "$:/tags/Stylesheet",
+    "text": "/* Turn Around remains a native editable TiddlyWiki tiddler.\n   The production's cinematic stylesheet widens the story river to the\n   viewport and hides the titlebar. Restore TiddlyWiki navigation here,\n   while keeping the separate opt-in fullscreen player unchanged. */\n@media (min-width: 960px) {\n  body.tc-body .tc-story-river {\n    box-sizing: border-box;\n    position: relative;\n    left: 0 !important;\n    width: auto !important;\n    max-width: none !important;\n    margin: 0 280px 0 24px !important;\n    padding: 42px !important;\n  }\n  /* When the native sidebar is closed, reclaim its reserved space. */\n  body.tc-body:not(:has(.tc-sidebar-scrollable)) .tc-story-river {\n    margin-right: 0 !important;\n    padding-right: 3em !important;\n  }\n}\n.tc-tiddler-frame[data-tiddler-title=\"Turn Around\"] .tc-titlebar,\n.tc-tiddler-frame[data-tiddler-title=\"Turn Around\"] .tc-tags-wrapper {\n  display: block !important;\n}\n"
+  }
+]
