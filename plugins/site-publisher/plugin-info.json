@@ -2,7 +2,7 @@
   "title": "$:/plugins/huwiki/site-publisher",
   "name": "SitePublisher",
   "description": "HTML publishing for AniMus musicals, ABC music, CutOut, SVG drawings and embedded media.",
-  "version": "0.1.16-test.3",
+  "version": "0.1.16-test.4",
   "author": "HUWiki",
   "license": "MIT",
   "plugin-type": "plugin",
