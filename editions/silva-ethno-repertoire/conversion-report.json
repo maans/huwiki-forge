@@ -1,0 +1,204 @@
+{
+  "title": "Silba Etno Repertoire",
+  "created": "2026-11-18T08:29:34.856Z",
+  "converted": 17,
+  "omitted": [
+    "Silba Etno · Oh verden",
+    "Silba Etno · Hjul og Stejle nr. 6 – Bulgarsk Horo (G)",
+    "Silba Etno · Dance Me to the End of Love",
+    "Silba Etno · Lulu Swing (D-dur)"
+  ],
+  "entries": [
+    {
+      "title": "Silba Etno · Brudmarch från Jämtland",
+      "source": "brudmarch-fraan-jamtland.mscz",
+      "measures": 48,
+      "usedMeasures": 48,
+      "sourceStaves": 1,
+      "voices": 1,
+      "notes": 92,
+      "duplicateRemoved": false,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Låt från Dalarne",
+      "source": "laat-fraan-dalarna-cbb.mscz",
+      "measures": 38,
+      "usedMeasures": 19,
+      "sourceStaves": 1,
+      "voices": 1,
+      "notes": 34,
+      "duplicateRemoved": true,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Brudmasj fra Nord-gudbrandsdal",
+      "source": "bruremarsj-cbb.mscz",
+      "measures": 46,
+      "usedMeasures": 23,
+      "sourceStaves": 1,
+      "voices": 1,
+      "notes": 91,
+      "duplicateRemoved": true,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Ålidhems höjder",
+      "source": "aalidhems-hojder.mscz",
+      "measures": 21,
+      "usedMeasures": 21,
+      "sourceStaves": 1,
+      "voices": 1,
+      "notes": 121,
+      "duplicateRemoved": false,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Cupria Express (Fm)",
+      "source": "cuprija-ekspres.mscz",
+      "measures": 19,
+      "usedMeasures": 19,
+      "sourceStaves": 2,
+      "voices": 2,
+      "notes": 173,
+      "duplicateRemoved": false,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Mita, Barfly (Gm)",
+      "source": "mita-bekrijo-orkester.mscz",
+      "measures": 22,
+      "usedMeasures": 22,
+      "sourceStaves": 3,
+      "voices": 3,
+      "notes": 332,
+      "duplicateRemoved": false,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Gadjo Cocek (Dm/Iberisk A)",
+      "source": "gadjo_cocek_ceb.mscz",
+      "measures": 18,
+      "usedMeasures": 9,
+      "sourceStaves": 2,
+      "voices": 2,
+      "notes": 118,
+      "duplicateRemoved": true,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Cocek Srece",
+      "source": "cocec-srece.mscz",
+      "measures": 33,
+      "usedMeasures": 33,
+      "sourceStaves": 3,
+      "voices": 3,
+      "notes": 272,
+      "duplicateRemoved": false,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Silbaätno (Fm/Gm)",
+      "source": "silbaaetno-cbb.mscz",
+      "measures": 48,
+      "usedMeasures": 24,
+      "sourceStaves": 1,
+      "voices": 1,
+      "notes": 189,
+      "duplicateRemoved": true,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Majstore (Dm/Iberisk A)",
+      "source": "majstore-majstore.mscz",
+      "measures": 39,
+      "usedMeasures": 39,
+      "sourceStaves": 2,
+      "voices": 2,
+      "notes": 272,
+      "duplicateRemoved": false,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Syv sind (Em)",
+      "source": "syv-sind.mscz",
+      "measures": 20,
+      "usedMeasures": 20,
+      "sourceStaves": 2,
+      "voices": 2,
+      "notes": 190,
+      "duplicateRemoved": false,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Englishman in New York",
+      "source": "englishman-in-new-york.mscz",
+      "measures": 30,
+      "usedMeasures": 30,
+      "sourceStaves": 2,
+      "voices": 2,
+      "notes": 318,
+      "duplicateRemoved": false,
+      "warnings": [
+        "MuseScore-location/flyttede nodepositioner findes; kontrollér rytmer i preview."
+      ]
+    },
+    {
+      "title": "Silba Etno · Libertango (Am)",
+      "source": "libertango-3st.mscz",
+      "measures": 35,
+      "usedMeasures": 35,
+      "sourceStaves": 1,
+      "voices": 1,
+      "notes": 188,
+      "duplicateRemoved": false,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Purim Niggun",
+      "source": "purim-niggun-cbb.mscz",
+      "measures": 42,
+      "usedMeasures": 21,
+      "sourceStaves": 1,
+      "voices": 1,
+      "notes": 102,
+      "duplicateRemoved": true,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Arabsko Kolo (Dm)",
+      "source": "arabsko-kolo-cbb.mscz",
+      "measures": 18,
+      "usedMeasures": 9,
+      "sourceStaves": 2,
+      "voices": 2,
+      "notes": 196,
+      "duplicateRemoved": true,
+      "warnings": []
+    },
+    {
+      "title": "Silba Etno · Hotel Nora",
+      "source": "hotel-nora-ceb.mscz",
+      "measures": 30,
+      "usedMeasures": 15,
+      "sourceStaves": 3,
+      "voices": 3,
+      "notes": 151,
+      "duplicateRemoved": true,
+      "warnings": [
+        "Slagtøjsnotation (perc) kan ikke gengives fuldt ud i denne version."
+      ]
+    },
+    {
+      "title": "Silba Etno · Gucina Groove (Gm)",
+      "source": "gucina-groove-eb.mscz",
+      "measures": 8,
+      "usedMeasures": 8,
+      "sourceStaves": 1,
+      "voices": 1,
+      "notes": 78,
+      "duplicateRemoved": false,
+      "warnings": []
+    }
+  ]
+}
