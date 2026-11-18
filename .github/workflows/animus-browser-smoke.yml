@@ -73,6 +73,10 @@ jobs:
           node scripts/build-site-publisher.mjs --check
       - name: Install browser controller
         run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Verify B-flat and E-flat written ABC layouts in Chrome
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/abc-transposed-layout-browser-smoke.mjs
       - name: Test standalone Site playback in Chrome
         env:
           CHROME_BIN: /usr/bin/google-chrome
