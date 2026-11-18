@@ -90,7 +90,9 @@ try{
   if(/Musik|Tale|Lydeffekter/i.test(label))await enabledAudio.uncheck();
  }
  await exportDialog.locator('.huw-video-primary').click();
- await page.waitForFunction(()=>/MP4 klar:/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:45000});
+ await page.waitForFunction(()=>/MP4 klar:|Eksportfejl:|Export error:|Export cancelled/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:45000});
+ const videoExportStatus=await exportDialog.locator('.huw-video-status').innerText();
+ assert.match(videoExportStatus,/MP4 klar:/,'A real AVC output must be generated; status: '+videoExportStatus);
  const pendingVideoDownload=page.waitForEvent('download');
  await exportDialog.getByRole('button',{name:'Hent MP4',exact:true}).click();
  const videoDownload=await pendingVideoDownload,videoPath=fileURLToPath(new URL('animus-video-smoke.mp4',out));
