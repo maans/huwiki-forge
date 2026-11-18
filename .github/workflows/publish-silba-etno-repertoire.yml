@@ -1,0 +1,64 @@
+name: Build Silba Etno Repertoire from verified MuseScore files
+on:
+  push:
+    branches:
+      - feat/silva-ethno-repertoire-20261118
+    paths:
+      - 'editions/silva-ethno-repertoire/sources/**'
+      - 'editions/silva-ethno-repertoire/manifest.json'
+      - 'editions/silva-ethno-repertoire/tiddlers/songs.json'
+      - 'scripts/build-silba-etno-repertoire.mjs'
+      - 'scripts/assemble-silba-etno-repertoire.mjs'
+      - 'scripts/publish-silba-etno-site.mjs'
+      - '.github/workflows/publish-silba-etno-repertoire.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: silba-etno-repertoire-build
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install XML parser and browser controller
+        run: npm install --no-save --no-package-lock --ignore-scripts @xmldom/xmldom@0.9.8 playwright-core@1.56.1
+      - name: Convert all 17 MuseScore arrangements through existing importer
+        run: node scripts/build-silba-etno-repertoire.mjs
+      - name: Assemble native editable Music Edition
+        run: node scripts/assemble-silba-etno-repertoire.mjs
+      - name: Export original SitePublisher audience HTML
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/publish-silba-etno-site.mjs
+      - name: Link editor to verified audience Site
+        run: node scripts/assemble-silba-etno-repertoire.mjs --with-site
+      - name: Verify repertoire, links and files
+        run: |
+          node --input-type=module -e "
+          import fs from 'node:fs';
+          const p='editions/silva-ethno-repertoire/';
+          const a=JSON.parse(fs.readFileSync(p+'tiddlers/repertoire.json','utf8'));
+          if(a.length!==17||a.some(x=>!x['abc-source']||!x.tags.includes('ABC')))process.exit(1);
+          for(const f of ['index.html','site/index.html'])if(!fs.statSync(p+f).size)process.exit(2);
+          const wiki=fs.readFileSync(p+'index.html','utf8');
+          if(!wiki.includes('./site/index.html'))process.exit(3);
+          console.log('Verified 17 ABC scores and two linked HTML views');
+          "
+          git diff --check
+      - name: Commit verified generated repertoire
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- editions/silva-ethno-repertoire/index.html editions/silva-ethno-repertoire/site/index.html editions/silva-ethno-repertoire/tiddlers/repertoire.json editions/silva-ethno-repertoire/tiddlers/config.json editions/silva-ethno-repertoire/conversion-report.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'build(silba-etno): publish 17 editable ABC scores and SitePublisher audience view'
+            git push origin HEAD:feat/silva-ethno-repertoire-20261118
+          fi

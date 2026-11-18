@@ -1,0 +1,24 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "Silba Etno Repertoire"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "Musik Edition · Henriks rækkefølge · MuseScore → ABC"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[Silba Etno Repertoire – Oversigt]]"
+  },
+  {
+    "title": "Silba Etno Repertoire – Oversigt",
+    "text": "! Silba Etno Repertoire\n\n17 MuseScore-partiturer konverteret til redigerbare ABC-nodeark i Henriks rækkefølge. Dette er en bruttoliste, ikke et endeligt koncertprogram.\n\n!! Hovedliste\n<$list filter=\"[tag[SilvaEthnoTrack]field:silva-section[hovedliste]sort[silva-order]]\">\n* <$link/>\n</$list>\n\n!! Usikre\n<$list filter=\"[tag[SilvaEthnoTrack]field:silva-section[usikre]sort[silva-order]]\">\n* <$link/>\n</$list>\n\n!! Foreløbigt ude\n<$list filter=\"[tag[SilvaEthnoTrack]field:silva-section[ude]sort[silva-order]]\">\n* <$link/>\n</$list>\n\n!! Arbejdsnoter\nKlik på et nummer for ABC-nodeark, afspilning og redigering. Konverterede partiturer skal fortsat gennemgås mod originalerne, herunder gentagelser og becifringer. Fire titler uden sikker kilde er ikke medtaget.\n\n<p><a href=\"./site/index.html\" target=\"_blank\" rel=\"noopener\">Åbn publikumsvisningen (én HTML-fil)</a></p>",
+    "tags": "SilvaEthno",
+    "list": "[[Silba Etno · Brudmarch från Jämtland]] [[Silba Etno · Låt från Dalarne]] [[Silba Etno · Brudmasj fra Nord-gudbrandsdal]] [[Silba Etno · Ålidhems höjder]] [[Silba Etno · Cupria Express (Fm)]] [[Silba Etno · Mita, Barfly (Gm)]] [[Silba Etno · Gadjo Cocek (Dm/Iberisk A)]] [[Silba Etno · Cocek Srece]] [[Silba Etno · Silbaätno (Fm/Gm)]] [[Silba Etno · Majstore (Dm/Iberisk A)]] [[Silba Etno · Syv sind (Em)]] [[Silba Etno · Englishman in New York]] [[Silba Etno · Libertango (Am)]] [[Silba Etno · Purim Niggun]] [[Silba Etno · Arabsko Kolo (Dm)]] [[Silba Etno · Hotel Nora]] [[Silba Etno · Gucina Groove (Gm)]]"
+  }
+]

@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "id": "silva-ethno-repertoire",
+  "name": "Silba Etno Repertoire",
+  "version": "0.1.0-beta.1",
+  "coreVersion": "5.4.1",
+  "tiddlers": [
+    "tiddlers/config.json",
+    "tiddlers/repertoire.json",
+    "../shared/libraries.json"
+  ],
+  "plugins": [
+    "../../themes/modern/dist/theme.json",
+    "../../languages/da-DK/plugin.json",
+    "../../plugins/abc/dist/plugin.json",
+    "../../plugins/music/dist/plugin.json",
+    "../../plugins/musescore-import/dist/plugin.json",
+    "../../plugins/site-publisher/dist/plugin.json",
+    "../../plugins/print-article/dist/plugin.json"
+  ]
+}
