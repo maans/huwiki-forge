@@ -62,7 +62,8 @@ async function render(options){
  if(!music&&!speech&&!effects)return null;
  var from=Math.max(0,num(o.start,0)),to=Math.max(from,num(o.end,o.duration||0));
  if(to<=from)throw Error("Invalid soundtrack interval");
- var usedSongs=music?clips.filter(function(s){return s&&s.clip&&s.tune&&!s.clip.muted&&intersects(s.clip.start,s.clip.start+s.clip.duration,from,to);}):[];
+ var usedSongs=music?clips.filter(function(s){return s&&s.clip&&!s.clip.muted&&intersects(s.clip.start,s.clip.start+s.clip.duration,from,to);}):[];
+ if(usedSongs.some(function(s){return !s.tune;}))throw Error("ABC score is still loading; wait for the score to appear before exporting its original music.");
  var usedRecordings=speech?recordings.filter(function(c){return !c.muted&&c.volume>0&&intersects(c.start,c.start+c.duration,from,to);}):[];
  var usedFx=effects?fxCues.filter(function(c){return c&&!c.muted&&num(c.t,-1)>=from-8&&num(c.t,-1)<to;}):[];
  var musicBuffers=new Map(),voiceBuffers=new Map(),decoder=null;
