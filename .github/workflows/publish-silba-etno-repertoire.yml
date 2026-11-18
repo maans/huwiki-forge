@@ -52,7 +52,8 @@ jobs:
           if(a.length!==17||a.some(x=>!x['abc-source']||!x.tags.includes('ABC')))process.exit(1);
           for(const f of ['index.html','site/index.html'])if(!fs.statSync(p+f).size)process.exit(2);
           const wiki=fs.readFileSync(p+'index.html','utf8');
-          if(!wiki.includes('./site/index.html'))process.exit(3);
+          if(!wiki.includes('https://forge.måns.dk/editions/silva-ethno-repertoire/site/index.html'))process.exit(3);
+          if(a.some(x=>!x.tags.includes('SilbaÄtno')||x.title.startsWith('Silba Etno')))process.exit(4);
           console.log('Verified 17 ABC scores and two linked HTML views');
           "
           git diff --check
