@@ -21,6 +21,7 @@ jobs:
           node-version: 22
       - name: Check updated ABC and regenerate deterministic public Forge files
         run: |
+          node scripts/build-abc-ui.mjs
           node scripts/build-abc-ui.mjs --check
           node scripts/build-forge-plugin-library.mjs
           node scripts/build-forge-home.mjs
@@ -28,6 +29,12 @@ jobs:
           git diff --check
       - name: Verify ABC regression tests and Music Edition
         run: node --test tests/abc-transposed-layout.test.mjs tests/abc-search-player.test.mjs tests/music-edition.test.mjs
+      - name: Install browser controller
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Verify actual B-flat/E-flat layout in Chrome
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/abc-transposed-layout-browser-smoke.mjs
       - name: Build downloadable Music Edition preview for device acceptance
         run: |
           mkdir -p test-results/abc-layout
@@ -56,7 +63,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- index.html
+          git add -- plugins/abc/dist/plugin.json library/plugins/registry.json index.html
           if ! git diff --cached --quiet; then
             git commit -m 'build(abc): sync Forge landing with written-note preview package'
             git push origin HEAD:fix/abc-transposed-layout-20261118
