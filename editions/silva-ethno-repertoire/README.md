@@ -1,40 +1,41 @@
-# Silba Etno Repertoire (work in progress)
+# Silba Etno Repertoire
 
-Klargøring af selvstændig TiddlyWiki Musik Edition baseret på Henriks sætliste 5. november 2026. Branch: `feat/silva-ethno-repertoire-20261118`.
+A dedicated TiddlyWiki **Musik Edition** for Silba Etno's rehearsal repertoire, based on Henrik's provisional list of 5 November 2026.
 
-**Vigtigt:** Disse filer er kun en verificeret liste og kildemapping. MuseScore-partiturer, ABC og afspilning er ikke tilføjet endnu. Dette er ikke en færdig eller publiceret wiki og indgår ikke i Forge-kataloget.
+## Open the repertoire
 
-## Status
+- [Editable Music Edition](./index.html) — 17 complete, editable ABC scores, notation, mixer and playback.
+- [Audience SitePublisher view](./site/index.html) — all 17 scores in **one standalone HTML file** with navigation, notation and playback.
+- [Original MuseScore files](./sources/) — the 17 exact MSCZ attachments used as sources.
+- [Conversion report](./conversion-report.json) — source names, bar counts, voice counts, automatically trimmed transposed duplicates and warnings.
 
-- 14 numre i hovedlisten (13 med identificeret MSCZ, 1 uden)
-- 2 usikre (1 med identificeret MSCZ, 1 uden)
-- 5 foreløbigt ude (3 med identificeret MSCZ, 2 uden)
-- **17 af 21** med senest identificerede MuseScore-vedhæftning.
-- Ikke fundet: Oh verden; Hjul og Stejle nr. 6; Dance Me to the End of Love; Lulu Swing.
+The editor and audience versions link to one another. The audience HTML comes from the existing HUWiki SitePublisher, not a second custom viewer or synthesizer.
 
-Datoerne i `songs.json` er maildatoer, ikke verificerede kompositionsrevisioner. Nogle Ebbes versioner er gamle og kan være erstattet uden for e-mail. `Mita, Barfly` antages at være `Mita Bekrijo`; identificér inden import.
+## Content and programme order
 
-## Næste trin
+The original list comprises 21 entries: 14 on the main list, two uncertain, and five currently excluded. **Seventeen** have identifiable MuseScore sources and are included here, in their existing programme order. Four without an identifiable source remain excluded: *Oh verden*, *Hjul og Stejle nr. 6*, *Dance Me to the End of Love*, and *Lulu Swing*.
 
-1. Hent hver seneste relevante MSCZ fra brugerens personlige Gmail, med kildeversioner bevaret.
-2. Konvertér med Forge-pluginet MuseScore → ABC; kontrollér preview og rettelser. Kontrollér især mulige transponerede dobbeltpartier og skæve taktarter.
-3. Gem redigerbare ABC-tiddlere i `tiddlers/`, med kilde- og ordensmetadata.
-4. Test score-afspilning, nodegrafik, instrumentskift og den brugerbesluttede koncertsekvens; Henrik angiver max 12 numre på 45 minutter, og listen med 14 er ikke endelig.
-5. Afklar udgivelsesrettigheder for beskyttede kompositioner og arrangementer; offentliggør ikke score eller download uden lovligt grundlag.
-6. Publicér først derefter Edition og Site på GitHub/Forge.
+The 14 main-list items are a working selection, not a confirmed concert programme; the intended 45-minute performance is expected to contain at most 12.
 
-Originale e-mails eller private kontaktoplysninger er ikke lagt i dette offentligt læsbare repository.
+For each imported score the process selects all populated original staff voices (including separate chord/rest layers), preserves chord symbols where possible, and stores a documented source filename. If the importer's high-confidence fingerprint identifies a transposed duplicate second half, it omits that repeated half. Native part sources, changes of metre and repeats should still be reviewed visually.
 
-## Fast importregel: alle stemmer
+Accompaniment is enabled per score. When the second voice uses bass clef, the mixer routes bass from that voice rather than adding an independent generated style bass. Otherwise it uses the style bass.
 
-Ved **hver eneste** MuseScore → ABC-konvertering vælges **alle nodesystemer og alle stemmer** fra originalfilen, også stemme 2 og eventuelle akkord-/akkompagnementsstemmer. Ingen automatisk beskæring til den første stemme, ingen grænse som `slice(0, 6)` og ingen udelukkelse udelukkende på grundlag af `count == 0`, da akkordsymboler kan ligge i en separat stemme. Der skal være en `V:`-definition for hver kilde-stemme (hvis kilden har flere stemmer), og alle akkordsymboler skal kontrolleres i det samlede ABC-resultat. Undgå at importeren vælger sin normale standard, hvor kun første stemme er afkrydset. Bevar instrumentnavne, transponering, dynamik hvor mulig, gentagelser og stemmesynkronisering. Sammenlign med originalen og gem eventuelle tab/konverteringsadvarsler.
+## Quality and rights
 
-## Eksport til én HTML — brug kun den eksisterende SitePublisher
+The 17 source files converted through the repository's existing MuseScore-to-ABC converter and both HTML builds passed the GitHub Actions build checks. This is a **beta**, not a guarantee of note-perfect conversion, and human comparison against the original scores is still needed.
 
-**Ingen ny Site-generator, intet nyt afspilningssystem og ingen specialbygget eksport.** Byg først den redigerbare Musik Edition-wiki med ABC-nodeark og eksisterende ABC/Musik-afspilning. Når noder, alle stemmer, instrumenter, becifringer og playback er kontrolleret, anvendes wikiens **allerede indbyggede SitePublisher** til at vælge alle repertoiretiddlere og lægge dem i Henriks rækkefølge. SitePublisher har allerede valgene `Alle med tag` og `Liste i en tiddler`, mulighed for omarrangering og `Hent HTML`, som producerer én selvstændig HTML-fil. Brug wikiens eksisterende Sitevisning/Del-funktioner uden særskilt kode.
+Known import warnings: *Englishman in New York* has positioned-note/spacing warnings; *Hotel Nora* has percussion notation that is not yet fully supported in ABC. Automatic transposed-duplicate trimming should also be checked.
 
-**Ønsket GitHub-layout:** redigerbar demo-wiki `index.html` og SitePublisher-genereret afspilningsfil `site/index.html` under samme repertoiremappe. Begge skal hedde **Silba Etno Repertoire** i deres synlige titler. Tilføj et fungerende relativt link fra wiki til `./site/index.html` **først efter** SitePublisher-eksporten er gennemført og filen findes. GitHub Pages giver derefter et delbart HTTPS-link, når dette er verificeret. Bevar én HTML-fil til alle numre i sitevisningen.
+Several pieces and arrangements may be copyright-protected. Publication and reuse of scores, source attachments and arrangements require the appropriate permissions from their rights holders. The software remains subject to its respective licences.
 
-**Lyd:** Akkompagnement slået til for alle arrangementer. Har en noteret stemme 2 basnøgle, vælg stemme 2 som basskilde i mixerens `Bas fra`-valg (`bassSource: \"voice:1\"`, da indeks er nulbaseret). Dette skal erstatte den genererede stilartsbas, mens øvrigt akkompagnement fortsætter. Ellers behold `bassSource: \"style\"` så stilartsbas virker. Alle originale nodesystemer og stemmer importeres altid. Disse indstillinger sættes **pr. partitur**, ikke globalt for alle numre.
+## Rebuild
 
-**Aktuel virkelighed:** Kilder til 17 numre er matchet, men ABC-konvertering, verificeret afspilning, SitePublisher-eksport, wikiens HTML-build og GitHub Pages-udgivelse er endnu ikke fuldført. Ingen links til en ikke-eksisterende eksport skal vises som om de er aktive.
+Use the documented [MuseScore importer](../../plugins/musescore-import/) and [SitePublisher](../../plugins/site-publisher/) for user editing. A GitHub Actions workflow automates import and the **existing** SitePublisher export so the two HTML files remain reproducible:
+
+- Workflow: [Build Silba Etno Repertoire](../../.github/workflows/publish-silba-etno-repertoire.yml)
+- Import adapter: [build-silba-etno-repertoire.mjs](../../scripts/build-silba-etno-repertoire.mjs)
+- Native assembler adapter: [assemble-silba-etno-repertoire.mjs](../../scripts/assemble-silba-etno-repertoire.mjs)
+- SitePublisher browser automation: [publish-silba-etno-site.mjs](../../scripts/publish-silba-etno-site.mjs)
+
+The original tiddlers/songs.json retains the complete 21-item source mapping and is not included twice in the assembled wiki.
