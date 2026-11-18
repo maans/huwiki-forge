@@ -89,9 +89,19 @@ try{
   const label=await enabledAudio.locator('xpath=..').innerText();
   if(/Musik|Tale|Lydeffekter/i.test(label))await enabledAudio.uncheck();
  }
+ const canEncodeAvc=await page.evaluate(async()=>{
+  if(!window.VideoEncoder?.isConfigSupported)return false;
+  for(const codec of ['avc1.4d401f','avc1.42e01f']){
+   const config={codec,width:1280,height:720,bitrate:5000000,framerate:30,
+    latencyMode:'realtime',hardwareAcceleration:'prefer-hardware',avc:{format:'avc'}};
+   try{if((await VideoEncoder.isConfigSupported(config))?.supported)return true;}catch(_){}
+  }
+  return false;
+ });
  await exportDialog.locator('.huw-video-primary').click();
  await page.waitForFunction(()=>/MP4 klar:|Eksportfejl:|Export error:|Export cancelled/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:45000});
  const videoExportStatus=await exportDialog.locator('.huw-video-status').innerText();
+ if(canEncodeAvc){
  assert.match(videoExportStatus,/MP4 klar:/,'A real AVC output must be generated; status: '+videoExportStatus);
  const pendingVideoDownload=page.waitForEvent('download');
  await exportDialog.getByRole('button',{name:'Hent MP4',exact:true}).click();
@@ -105,6 +115,10 @@ try{
  assert.deepEqual(atoms,['ftyp','moov','mdat']);assert.ok(movie.length>1500,'nonempty AVC video payload');
  await exportDialog.locator('.huw-video-close').click();await exportDialog.waitFor({state:'detached'});
  passed('original AniMus stage exports a real H.264 MP4 without a screen recording');
+ }else{
+  assert.match(videoExportStatus,/No H\.264 MP4 encoder is supported/,'Unsupported AVC must be reported without altering the performance');
+  passed('unsupported headless Linux AVC encoder yields a clear export error');
+ }
 
 
  // Exercise the actual ABC editing widget mounted inside the AniMus draft.
