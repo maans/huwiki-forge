@@ -20,6 +20,8 @@ try {
  if(rows!==17)throw Error("Homepage malformed: expected 17 styled score rows, got "+rows);
  const photo=await page.locator(".silba-hero-photo img").getAttribute("src");
  if(!photo||!photo.includes("silbaaetno-2026.jpg"))throw Error("Orchestra photo is missing from start page");
+ const photoState=await page.locator(".silba-hero-photo img").evaluate(img=>({loaded:img.complete&&img.naturalWidth>0,width:img.naturalWidth}));
+ console.log("Orchestra photo on source site:",JSON.stringify(photoState));
  await page.evaluate(()=>{
   $tw.rootWidget.dispatchEvent({type:"tm-huwiki-sitepublisher"});
  });
@@ -74,6 +76,17 @@ try {
   html=html.replace("</body>",back+"</body>");
   await writeFile(sitePath,html);
  }
+ // Reopen the exported standalone file and verify that the first partiture opens in nodepult.
+ const audience=await browser.newPage();
+ try{
+  await audience.goto(pathToFileURL(sitePath).href,{waitUntil:"load",timeout:90000});
+  await audience.waitForFunction(()=>{
+   const frame=document.getElementById("score-frame");
+   return !!(frame&&frame.contentDocument&&frame.contentDocument.querySelector(".huwabc-page-is-desk"));
+  },undefined,{timeout:25000});
+  const buttons=await audience.locator("#chapters .chapter").count();
+  if(buttons!==17)throw Error("Site navigation does not contain 17 melodies: "+buttons);
+ }finally{await audience.close();}
  console.log("Published 17 scores via SitePublisher:",Buffer.byteLength(html),"bytes");
  await page.close();
 }finally{await browser.close();}
