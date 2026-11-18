@@ -130,7 +130,7 @@ async function videoFrames(o,settings,update,cancelled,captionSegments){
    o.seek(t);
    await rasterFrame(o,canvas,context,settings.burn);
    var caption=cuesFromStage(o.stage),key=lineKey(caption),last=captionSegments[captionSegments.length-1];
-   if(key){if(!last||last.text!==key){if(last)last.end=t-settings.start;captionSegments.push({start:t-settings.start,end:0,text:key});}}
+   if(key){if(!last||last.text!==key||last.end!==0){if(last)last.end=t-settings.start;captionSegments.push({start:t-settings.start,end:0,text:key});}}
    else if(last&&last.end===0)last.end=t-settings.start;
    var timestamp=Math.round(i*1000000/fps);
    var frame=new root.VideoFrame(canvas,{timestamp:timestamp,duration:Math.round(1000000/fps)});
