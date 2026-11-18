@@ -1,0 +1,7 @@
+{
+  "$:/plugins/huwiki/animus-video-export/README": {
+    "title": "$:/plugins/huwiki/animus-video-export/README",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! AniMus Video Export\n\nEksportér en AniMus-forestilling eller et afsnit som ''MP4 (H.264)'' til LumaFusion. Åbn forestillingen og vælg ''Eksportér video''. Vælg start/slut, 720p eller 1080p, 24/30 fps, brændte undertekster og evt. redigerbar VTT-fil.\n\nHvis browseren understøtter WebCodecs VideoEncoder og AudioEncoder, kan billed- og lyddata fremstilles uden realtidsoptagelse. Lyden laves med den originale ABCJS-lydbank og de eksisterende indtalings- og effektspor. Ingen nødsynthesizer bruges.\n\n''Vigtigt'': SoundFont skal være tilgængelig ved musikeksport. Manglende lyd afbryder eksporten med fejl; vælg eksplicit at eksportere uden musik for en stum film. Billedberegning, lyd og MP4 kan belaste hukommelsen på iPad – prøv et kort afsnit og 720p først. MP4 understøtter ikke alpha/transparens. Hold browserfanen åben. Ikke verificeret på alle enheder.\n\n!! English\n\nOpen an AniMus show and choose ''Export video''. Select a time range, 720p/1080p, 24/30 fps, burned-in captions, and optional editable WebVTT. The original ABCJS sample-based audio engine, recorded clips and sound effects are rendered to AAC offline when supported. SoundFont failures are explicit; switch off music for a deliberately silent picture. Video uses H.264 MP4. Long movies require memory on iPad; try a short 720p clip first. H.264 has no alpha channel.\n"
+  }
+}
