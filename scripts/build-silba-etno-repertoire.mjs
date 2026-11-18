@@ -46,11 +46,11 @@ try {
  converter=require(filename);
 }finally{await rm(tmp,{recursive:true,force:true});}
 const sources=JSON.parse(await readFile(path.join(base,"tiddlers/songs.json"),"utf8"));
-const ready=sources.filter(s=>s["silva-musescore-file"]);
+const ready=sources.filter(s=>s["silba-musescore-file"]);
 if(ready.length!==17)throw Error("Expected exactly 17 known MuseScore files; got "+ready.length);
 const output=[],report=[],used=new Set(),unconverted=[];
 for(const song of ready){
- const name=song["silva-musescore-file"];
+ const name=song["silba-musescore-file"];
  const bin=path.join(base,"sources",name);
  const zipEntries=execFileSync("unzip",["-Z1",bin],{encoding:"utf8"}).trim().split(/\r?\n/);
  const scorePath=zipEntries.filter(s=>/\.mscx$/i.test(s)&&!/(^|\/)META-INF\//.test(s))[0];
@@ -64,7 +64,7 @@ for(const song of ready){
  if(model.duplicate&&model.duplicate.confidence>=90&&model.duplicate.start>1){
   last=model.duplicate.start-1;duplicateRemoved=true;
  }
- const heading=song.title.replace(/^Silba Etno · /,"");
+ const heading=song.title.replace(/^SilbaÄtno · /,"");
  const rendered=converter.renderABC(model,selected,1,last,{title:heading,barsPerLine:4});
  if(rendered.notes<1||rendered.voices!==selected.length){
   console.error("ABC conversion error",JSON.stringify({name,notes:rendered.notes,voices:rendered.voices,expectedVoices:selected.length,
@@ -91,7 +91,7 @@ for(const song of ready){
    "Hele partituret er konverteret; kontrollér nodebillede, gentagelser og afspilning mod originalen.";
  const result={...song,
   "type":"text/vnd.tiddlywiki",
-  "tags":"ABC SilvaEthnoTrack",
+  "tags":"ABC SilbaÄtno SilbaÄtnoTrack",
   "abc-source":rendered.abc,
   "abc-view":"full",
   "abc-bars-per-line":"4",
@@ -100,9 +100,9 @@ for(const song of ready){
   "huwiki-import-format":"mscx",
   "huwiki-import-range":"1-"+last,
   "huwiki-import-original-instruments":model.staves.map(s=>s.name||s.id).join(" / "),
-  "silva-import-state":"abc-konverteret",
-  "silva-abc-voices":String(rendered.voices),
-  "silva-abc-notes":String(rendered.notes),
+  "silba-import-state":"abc-konverteret",
+  "silba-abc-voices":String(rendered.voices),
+  "silba-abc-notes":String(rendered.notes),
   "text":"! "+heading+"\n\nOriginal: "+name+" · "+rendered.voices+" stemmer · "+last+" takter.\n\n"+statusNote+
    (warn.length?"\n\n!! Importbemærkninger\n"+warn.map(w=>"* "+w).join("\n"):"")
  };
@@ -120,22 +120,10 @@ if(unconverted.length)throw Error("Could not convert "+unconverted.length+" orig
 const out=path.join(base,"tiddlers/repertoire.json");
 await writeFile(out,JSON.stringify(output,null,2)+"\n");
 await writeFile(path.join(base,"conversion-report.json"),JSON.stringify({
- title:"Silba Etno Repertoire",created:new Date().toISOString(),converted:report.length,
- omitted:sources.filter(s=>!s["silva-musescore-file"]).map(s=>s.title),
+ title:"SilbaÄtno Repertoire",created:new Date().toISOString(),converted:report.length,
+ omitted:sources.filter(s=>!s["silba-musescore-file"]).map(s=>s.title),
  entries:report
 },null,2)+"\n");
-const configPath=path.join(base,"tiddlers/config.json");
-const config=JSON.parse(await readFile(configPath,"utf8"));
-const overview=config.find(t=>t.title==="Silba Etno Repertoire – Oversigt");
-if(!overview)throw Error("Missing repertoire overview");
-overview.list=output.map(t=>"[["+t.title+"]]").join(" ");
-overview.text="! Silba Etno Repertoire\n\n17 MuseScore-partiturer konverteret til redigerbare ABC-nodeark i Henriks rækkefølge. "+
- "Dette er en bruttoliste, ikke et endeligt koncertprogram.\n\n"+
- "!! Hovedliste\n<$list filter=\"[tag[SilvaEthnoTrack]field:silva-section[hovedliste]sort[silva-order]]\">\n* <$link/>\n</$list>\n\n"+
- "!! Usikre\n<$list filter=\"[tag[SilvaEthnoTrack]field:silva-section[usikre]sort[silva-order]]\">\n* <$link/>\n</$list>\n\n"+
- "!! Foreløbigt ude\n<$list filter=\"[tag[SilvaEthnoTrack]field:silva-section[ude]sort[silva-order]]\">\n* <$link/>\n</$list>\n\n"+
- "!! Arbejdsnoter\nKlik på et nummer for ABC-nodeark, afspilning og redigering. "+
- "Konverterede partiturer skal fortsat gennemgås mod originalerne, herunder gentagelser og becifringer. "+
- "Fire titler uden sikker kilde er ikke medtaget.";
-await writeFile(configPath,JSON.stringify(config,null,2)+"\n");
-console.log("Silba Etno Repertoire: 17 editable ABC scores generated");
+// The designed homepage and stylesheet are source-controlled in tiddlers/config.json.
+// Do not overwrite the correct WikiText/HTML layout during conversion.
+console.log("SilbaÄtno Repertoire: 17 editable ABC scores generated");
