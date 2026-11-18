@@ -66,5 +66,9 @@ jobs:
           git add -- plugins/abc/dist/plugin.json library/plugins/registry.json index.html
           if ! git diff --cached --quiet; then
             git commit -m 'build(abc): sync Forge landing with written-note preview package'
+            # The branch may have received a newer source/test commit during CI.
+            # Integrate it without force-pushing away concurrent changes.
+            git fetch origin fix/abc-transposed-layout-20261118
+            git rebase origin/fix/abc-transposed-layout-20261118
             git push origin HEAD:fix/abc-transposed-layout-20261118
           fi
