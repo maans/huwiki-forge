@@ -1,0 +1,2 @@
+.huw-animus-caption-language { display:inline-flex; align-items:center; flex-wrap:wrap; gap:.35rem; margin:.2rem .4rem; font:inherit; font-size:.85rem; }
+.huw-animus-caption-language select { max-width:16rem; padding:.35rem .5rem; font:inherit; border:1px solid #8b96a6; border-radius:.45rem; background:var(--huw-panel,#fafafa); color:inherit; }

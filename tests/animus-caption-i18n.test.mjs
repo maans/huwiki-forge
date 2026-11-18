@@ -1,0 +1,24 @@
+import test from "node:test";
+import assert from "node:assert/strict";
+import {readFile} from "node:fs/promises";
+const json=async p=>JSON.parse(await readFile(new URL(p,import.meta.url),"utf8"));
+test("bilingual AniMus caption release covers all English dialogue and song cues",async()=>{
+ const [data,manA,manT,pl]=await Promise.all([json("../editions/turn-around/tiddlers/captions-da.json"),json("../editions/animus/manifest.json"),json("../editions/turn-around/manifest.json"),json("../plugins/animus-caption-i18n/dist/plugin.json")]);
+ assert.equal(data.length,1);
+ const captions=JSON.parse(data[0].text);
+ assert.equal(captions.targetLanguage,"da");
+ const expected=[6,7,10,8,6,10,7,6,9,6,6,6,6,10];
+ assert.deepEqual(Object.values(captions.scenes).map(x=>x.length),expected);
+ assert.equal(Object.values(captions.scenes).flat().length,103);
+ assert(Object.values(captions.scenes).flat().every(x=>typeof x==="string"&&x.trim()));
+ assert(manA.plugins.some(p=>p.includes("animus-caption-i18n")));
+ assert(manT.plugins.some(p=>p.includes("animus-caption-i18n")));
+ assert(manT.tiddlers.some(p=>p.includes("captions-da")));
+ assert(manT.tiddlers.some(p=>p.includes("layout-fix")));
+ const nested=JSON.parse(pl.text).tiddlers;
+ const entry=nested["$:/plugins/huwiki/animus-caption-i18n/startup.js"];
+ assert.equal(entry["module-type"],"startup");
+ assert(entry.text.includes("auto"));assert(entry.text.includes("Mut"+"ationObserver"));
+ const src=await readFile(new URL("../plugins/animus-caption-i18n/src/startup.js",import.meta.url),"utf8");
+ assert.equal(entry.text,src);
+});

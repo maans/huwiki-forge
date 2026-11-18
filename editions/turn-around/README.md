@@ -24,3 +24,7 @@ The wiki's **About and credits** page contains the narrative, instrument and sof
 ## Packaging
 
 `manifest.json` composes the native AniMus, CutOut and ABC packages with the project's loose tiddlers. The source recordings are divided between three JSON files to keep each transfer manageable; the resulting wiki still contains every recording in one HTML file. All production media are local to that single-file wiki, so playing the saved performance does not call an external speech or music service.
+
+## Danish and English captions
+
+All 103 timed captions are available in Danish (87 spoken lines and 16 sung lines). The separate `Turn Around · Captions (da)` tiddler contains only translated display text, aligned with the original cue order in `Turn Around · Timeline`. The original English audio, source scene captions, lip-sync/visemes and timeline remain untouched. A reusable AniMus caption-language plugin provides Automatic (wiki language), Dansk and English selection, remembered in the wiki. The same plugin is installed in the ordinary AniMus Forge I Edition. Changing the English script later requires updating its corresponding translation.

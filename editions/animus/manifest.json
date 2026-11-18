@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "animus",
   "name": "AniMus Forge I",
-  "version": "0.11.0-beta.3",
+  "version": "0.11.0-beta.4",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",
@@ -19,6 +19,7 @@
     "../../plugins/site-publisher/dist/plugin.json",
     "../../plugins/print-article/dist/plugin.json",
     "../../plugins/animus-example-orchestra/dist/plugin.json",
-    "../../plugins/animus-example-fyrtoejet/dist/plugin.json"
+    "../../plugins/animus-example-fyrtoejet/dist/plugin.json",
+    "../../plugins/animus-caption-i18n/dist/plugin.json"
   ]
 }

@@ -101,7 +101,7 @@
     {
       "id": "animus",
       "name": "AniMus Forge I (beta)",
-      "version": "0.11.0-beta.3",
+      "version": "0.11.0-beta.4",
       "status": "test",
       "manifest": "../editions/animus/manifest.json",
       "description": "Experimental unified animation, music and theatre workshop for TiddlyWiki. The Fyrtøjet and Tændstikorkestret examples share one editor.",
@@ -118,7 +118,7 @@
     {
       "id": "turn-around",
       "name": "Turn Around — Beyond the Cave",
-      "version": "0.1.0-demo.1",
+      "version": "0.1.0-demo.2",
       "status": "test",
       "manifest": "../editions/turn-around/manifest.json",
       "description": "An AI-generated musical animation made with AniMus. Explore Plato’s cave, then edit the audio recordings, music, characters, camera and animation.",
@@ -127,8 +127,8 @@
         "headingEn": "An AniMus musical to watch and remake",
         "descriptionDa": "AI-genereret animation skabt med AniMus: Platons hule som musical. Se forestillingen, og arbejd selv med lydoptagelser, musik og animation.",
         "descriptionEn": "An AI-generated animation made with AniMus: Plato’s cave as a musical. Watch the show, then work with audio recordings, music and animation.",
-        "noteDa": "Engelsk forestilling med redigerbare scener, lydoptagelser og ABC-partiturer. Større download med indlejret lyd og malede kulisser.",
-        "noteEn": "English performance with editable scenes, recordings and ABC scores. Larger download with embedded audio and painted backdrops.",
+        "noteDa": "Engelsk lyd og lip-sync med 103 danske eller engelske undertekster. 14 scener, ABC-partiturer og indlejrede lydoptagelser.",
+        "noteEn": "English audio and lip-sync with 103 captions in Danish or English. 14 scenes, ABC scores and embedded audio.",
         "order": "02.41"
       }
     },
