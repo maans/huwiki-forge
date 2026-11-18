@@ -16,7 +16,17 @@ test('written B-flat and E-flat scores use original concert system breaks withou
   const container=host(),rendered=[];
   const abc={renderAbc(node,source,settings){
    rendered.push({node,source,settings});
-   return [{lineBreaks:[[3],[2,5]]}];
+   return [{lineBreaks:[
+    {ogLine:0,line:0,staff:0,voice:0},
+    {ogLine:0,line:1,staff:0,voice:0},
+    {ogLine:0,line:2,staff:0,voice:0},
+    {ogLine:1,line:3,staff:0,voice:0}
+   ],lines:[
+    {staff:[{voices:[[{}, {el_type:'bar'}, {}, {el_type:'bar'}, {}, {el_type:'bar'}]]}]},
+    {staff:[{voices:[[{}, {el_type:'bar'}, {}, {el_type:'bar'}, {}, {el_type:'bar'}]]}]},
+    {staff:[{voices:[[{}, {el_type:'bar'}, {}, {el_type:'bar'}]]}]},
+    {staff:[{voices:[[{}, {el_type:'bar'}, {}, {el_type:'bar'}]]}]}
+   ]}];
   }};
   const base={visualTranspose:transpose,wrap:{minSpacing:1.5,preferredMeasuresPerLine:3},staffwidth:720,
    clickListener(){},afterParsing(){},responsive:'resize',expandToWidest:true};
@@ -29,7 +39,7 @@ test('written B-flat and E-flat scores use original concert system breaks withou
   assert.equal(fixed.visualTranspose,transpose);
   assert.equal(fixed.staffwidth,720);
   assert.equal(fixed.expandToWidest,true);
-  assert.deepEqual(JSON.parse(JSON.stringify(fixed.lineBreaks)),[[3],[2,5]]);
+  assert.deepEqual(JSON.parse(JSON.stringify(fixed.lineBreaks)),[[2,5],[]]);
   assert.equal(fixed.wrap,undefined);
   assert.equal(base.lineBreaks,undefined);
   assert.equal(container.children.length,0,'temporary reference cannot remain in the score DOM');
