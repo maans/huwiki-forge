@@ -78,6 +78,33 @@ try{
  await page.waitForFunction(()=>{const p=document.querySelector('.tc-tiddler-frame[data-tiddler-title="AniMus CI production"] .huw-musical-play');return p&&!p.disabled;});
  let production=await savedProduction();assert.equal(production.stage.parts.length,0);assert.equal(production.film.scenes.length,1);assert.match(production.score,/z4/);passed('create a complete editable project through its UI');
 
+ // Real WebCodecs export: a short silent 720p MP4, with no transport controls.
+ // Keep this test deterministic and small so it can run on every PR.
+ const videoExport=show.locator('.huw-video-export-button');
+ await videoExport.waitFor();await videoExport.click();
+ const exportDialog=page.locator('.huw-video-modal');await exportDialog.waitFor();
+ await exportDialog.locator('.huw-video-range input').nth(0).fill('0');
+ await exportDialog.locator('.huw-video-range input').nth(1).fill('0.4');
+ for(const enabledAudio of await exportDialog.locator('.huw-video-check input').all()){
+  const label=await enabledAudio.locator('xpath=..').innerText();
+  if(/Musik|Tale|Lydeffekter/i.test(label))await enabledAudio.uncheck();
+ }
+ await exportDialog.locator('.huw-video-primary').click();
+ await page.waitForFunction(()=>/MP4 klar:/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:45000});
+ const pendingVideoDownload=page.waitForEvent('download');
+ await exportDialog.getByRole('button',{name:'Hent MP4',exact:true}).click();
+ const videoDownload=await pendingVideoDownload,videoPath=fileURLToPath(new URL('animus-video-smoke.mp4',out));
+ await videoDownload.saveAs(videoPath);
+ const movie=await readFile(videoPath),atoms=[];for(let offset=0;offset+8<=movie.length;){
+  const length=movie.readUInt32BE(offset),type=movie.toString('ascii',offset+4,offset+8);
+  assert.ok(length>=8&&offset+length<=movie.length,'valid '+type+' MP4 atom');
+  atoms.push(type);offset+=length;
+ }
+ assert.deepEqual(atoms,['ftyp','moov','mdat']);assert.ok(movie.length>1500,'nonempty AVC video payload');
+ await exportDialog.locator('.huw-video-close').click();await exportDialog.waitFor({state:'detached'});
+ passed('original AniMus stage exports a real H.264 MP4 without a screen recording');
+
+
  // Exercise the actual ABC editing widget mounted inside the AniMus draft.
  const music='X:1\nT:AniMus CI melody\nM:4/4\nL:1/4\nQ:1/4=120\nK:C\nC D E F | G A B c |';
  await show.locator('.huw-musical-score-button').click();let score=show.locator('.huw-score-workshop');await score.locator('.huwabc-edit-workshop').waitFor();
@@ -194,6 +221,7 @@ try{
  const site=await (await preview.elementHandle()).contentFrame();assert.ok(site,'Site preview iframe must be available');
  await site.waitForSelector('.huw-site-animus[data-animus-ready="1"]',{timeout:30000});
  assert.match(await site.locator('.huw-animus-play').innerText(),/Afspil|Play/);assert.match(await site.locator('.huw-animus-stop').innerText(),/Stop/);assert.match(await site.locator('.huw-animus-fullscreen').innerText(),/Fuld skærm|Full screen/);
+ assert.equal(await site.locator('.huw-video-export-button').count(),1,'Site view also offers the independent video-export action');
  const audienceLayer=site.locator(`[data-cutout-id="${layerPart.id}"] image`);assert.equal(await audienceLayer.getAttribute('href'),layerPart.variants[0].imageData,'Site renders the SVG frame without a base image');
  await assertMouth(site,false);
  assert.equal(await site.locator('.huw-musical-workspace,.huwabc-edit-workshop,.huw-svg-workshop,.huw-narration-workshop,.co-direct-toolbar,.co-direct-overlay,.huw-musical-transform-overlay,.huw-musical-part-pivot').count(),0,'Site view must not show editors or direct-edit handles');
