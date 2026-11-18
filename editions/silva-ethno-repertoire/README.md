@@ -1,15 +1,17 @@
-# Silba Etno Repertoire
+# SilbaÄtno Repertoire
 
-A dedicated TiddlyWiki **Musik Edition** for Silba Etno's rehearsal repertoire, based on Henrik's provisional list of 5 November 2026.
+A dedicated TiddlyWiki **Musik Edition** for SilbaÄtno's rehearsal repertoire, based on Henrik's provisional list of 5 November 2026.
 
 ## Open the repertoire
+
+The landing page uses a photograph sourced from [the orchestra website](https://akustisk-elektrisk.dk/index3.html), with a link to the original. The repo does not redistribute the photo.
 
 - [Editable Music Edition](./index.html) — 17 complete, editable ABC scores, notation, mixer and playback.
 - [Audience SitePublisher view](./site/index.html) — all 17 scores in **one standalone HTML file** with navigation, notation and playback.
 - [Original MuseScore files](./sources/) — the 17 exact MSCZ attachments used as sources.
 - [Conversion report](./conversion-report.json) — source names, bar counts, voice counts, automatically trimmed transposed duplicates and warnings.
 
-The editor and audience versions link to one another. The audience HTML comes from the existing HUWiki SitePublisher, not a second custom viewer or synthesizer.
+The editor and audience versions link to one another. The audience Site opens the first score in the music stand (nodepult) and navigates between all 17 tunes. The editor homepage uses native WikiText-compatible HTML markup and a scoped stylesheet. The audience HTML comes from the existing HUWiki SitePublisher, not a second custom viewer or synthesizer.
 
 ## Content and programme order
 
@@ -33,7 +35,7 @@ Several pieces and arrangements may be copyright-protected. Publication and reus
 
 Use the documented [MuseScore importer](../../plugins/musescore-import/) and [SitePublisher](../../plugins/site-publisher/) for user editing. A GitHub Actions workflow automates import and the **existing** SitePublisher export so the two HTML files remain reproducible:
 
-- Workflow: [Build Silba Etno Repertoire](../../.github/workflows/publish-silba-etno-repertoire.yml)
+- Workflow: [Build SilbaÄtno Repertoire](../../.github/workflows/publish-silba-etno-repertoire.yml)
 - Import adapter: [build-silba-etno-repertoire.mjs](../../scripts/build-silba-etno-repertoire.mjs)
 - Native assembler adapter: [assemble-silba-etno-repertoire.mjs](../../scripts/assemble-silba-etno-repertoire.mjs)
 - SitePublisher browser automation: [publish-silba-etno-site.mjs](../../scripts/publish-silba-etno-site.mjs)

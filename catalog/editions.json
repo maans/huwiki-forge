@@ -79,9 +79,9 @@
     },
     {
       "id": "silva-ethno-repertoire",
-      "name": "Silba Etno Repertoire",
-      "description": "17 editable MuseScore-to-ABC ensemble scores in Henrik's order, with playback and a single-file audience SitePublisher view.",
-      "version": "0.1.0-beta.1",
+      "name": "SilbaÄtno Repertoire",
+      "description": "17 editable ABC ensemble scores and a SitePublisher nodepult audience view for SilbaÄtno, based on Henrik's provisional repertoire.",
+      "version": "0.1.1-beta.1",
       "status": "test",
       "manifest": "../editions/silva-ethno-repertoire/manifest.json",
       "bundledPlugins": [
@@ -89,12 +89,12 @@
         "musescore-import"
       ],
       "home": {
-        "headingDa": "Silba Etno Repertoire",
-        "headingEn": "Silba Etno Repertoire",
-        "descriptionDa": "17 orkesterpartiturer med redigerbare ABC-noder, afspilning og en selvstændig publikumsvisning.",
-        "descriptionEn": "17 ensemble scores with editable ABC notation, playback and a standalone audience view.",
-        "noteDa": "Beta · noder og gentagelser skal kontrolleres mod MuseScore-originalerne.",
-        "noteEn": "Beta · notation and repeats still need score-by-score review.",
+        "headingDa": "SilbaÄtno Repertoire",
+        "headingEn": "SilbaÄtno Repertoire",
+        "descriptionDa": "Orkestrets 17 redigerbare nodeark i én samlet nodepult med afspilning og et flot repertoireoverblik.",
+        "descriptionEn": "17 editable scores in a single music-stand audience view with playback and a clear repertoire homepage.",
+        "noteDa": "Beta · kontrollér notation og gentagelser mod originalpartiturerne.",
+        "noteEn": "Beta · check notation and repeats against the source scores.",
         "order": "02.2"
       }
     },

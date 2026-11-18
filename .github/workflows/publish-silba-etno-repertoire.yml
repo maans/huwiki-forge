@@ -1,12 +1,15 @@
-name: Build Silba Etno Repertoire from verified MuseScore files
+name: Build SilbaÄtno Repertoire from verified MuseScore files
 on:
   push:
     branches:
       - feat/silva-ethno-repertoire-20261118
+      - fix/silbaatno-home-nodepult-20261118
+      - main
     paths:
       - 'editions/silva-ethno-repertoire/sources/**'
       - 'editions/silva-ethno-repertoire/manifest.json'
       - 'editions/silva-ethno-repertoire/tiddlers/songs.json'
+      - 'editions/silva-ethno-repertoire/tiddlers/config.json'
       - 'scripts/build-silba-etno-repertoire.mjs'
       - 'scripts/assemble-silba-etno-repertoire.mjs'
       - 'scripts/publish-silba-etno-site.mjs'
@@ -49,7 +52,8 @@ jobs:
           if(a.length!==17||a.some(x=>!x['abc-source']||!x.tags.includes('ABC')))process.exit(1);
           for(const f of ['index.html','site/index.html'])if(!fs.statSync(p+f).size)process.exit(2);
           const wiki=fs.readFileSync(p+'index.html','utf8');
-          if(!wiki.includes('./site/index.html'))process.exit(3);
+          if(!wiki.includes('https://forge.måns.dk/editions/silva-ethno-repertoire/site/index.html'))process.exit(3);
+          if(a.some(x=>!x.tags.includes('SilbaÄtno')||x.title.startsWith('Silba Etno')))process.exit(4);
           console.log('Verified 17 ABC scores and two linked HTML views');
           "
           git diff --check
@@ -60,5 +64,5 @@ jobs:
           git add -- editions/silva-ethno-repertoire/index.html editions/silva-ethno-repertoire/site/index.html editions/silva-ethno-repertoire/tiddlers/repertoire.json editions/silva-ethno-repertoire/tiddlers/config.json editions/silva-ethno-repertoire/conversion-report.json
           if ! git diff --cached --quiet; then
             git commit -m 'build(silba-etno): publish 17 editable ABC scores and SitePublisher audience view'
-            git push origin HEAD:feat/silva-ethno-repertoire-20261118
+            git push origin "HEAD:${GITHUB_REF_NAME}"
           fi

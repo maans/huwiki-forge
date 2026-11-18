@@ -1,4 +1,4 @@
-/** Build Silba Etno Repertoire using the native Forge Edition Assembler. */
+/** Build SilbaÄtno Repertoire using the native Forge Edition Assembler. */
 import {readFile,writeFile} from "node:fs/promises";
 import path from "node:path";
 import {assembleHtml,loadEdition} from "../assembler/assemble.mjs";
@@ -17,21 +17,19 @@ async function localFetch(value){
  }
 }
 const folder=path.join(root,"editions/silva-ethno-repertoire");
-const configFile=path.join(folder,"tiddlers/config.json");
-const hasSite=process.argv.includes("--with-site");
-if(hasSite){
- const config=JSON.parse(await readFile(configFile,"utf8"));
- const overview=config.find(t=>t.title==="Silba Etno Repertoire – Oversigt");
- if(!overview)throw Error("Repertoire overview missing");
- const link='<p><a href="./site/index.html" target="_blank" rel="noopener">Åbn publikumsvisningen (én HTML-fil)</a></p>';
- if(!overview.text.includes("href=\"./site/index.html\""))overview.text+="\n\n"+link;
- await writeFile(configFile,JSON.stringify(config,null,2)+"\n");
+const config=JSON.parse(await readFile(path.join(folder,"tiddlers/config.json"),"utf8"));
+const overview=config.find(t=>t.title==="SilbaÄtno Repertoire – Oversigt");
+if(!overview||!overview.text.includes("/editions/silva-ethno-repertoire/site/index.html"))throw Error("Site link absent from homepage");
+if(process.argv.includes("--with-site")){
+ const {stat}=await import("node:fs/promises");
+ const result=await stat(path.join(folder,"site/index.html"));
+ if(result.size<30000)throw Error("SitePublisher audience HTML is missing");
 }
 const assembled=await loadEdition(
  "https://local.invalid/forge/editions/silva-ethno-repertoire/manifest.json",localFetch);
-const scores=assembled.tiddlers.filter(t=>String(t.tags||"").split(/\s+/).includes("SilvaEthnoTrack")&&t["abc-source"]);
+const scores=assembled.tiddlers.filter(t=>String(t.tags||"").split(/\s+/).includes("SilbaÄtnoTrack")&&t["abc-source"]);
 if(scores.length!==17)throw Error("Cannot publish: expected 17 playable ABC scores, got "+scores.length);
 const core=await readFile(path.join(root,"core/empty.html"),"utf8");
 const html=assembleHtml(core,assembled.tiddlers);
 await writeFile(path.join(folder,"index.html"),html);
-console.log("Editable Silba Etno Repertoire wiki:",Buffer.byteLength(html),"bytes",scores.length,"scores");
+console.log("Editable SilbaÄtno Repertoire wiki:",Buffer.byteLength(html),"bytes",scores.length,"scores");
