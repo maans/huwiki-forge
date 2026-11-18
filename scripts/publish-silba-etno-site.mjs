@@ -18,10 +18,9 @@ try {
  await page.waitForSelector(".silba-home",{timeout:30000});
  const rows=await page.locator(".silba-track-list li").count();
  if(rows!==17)throw Error("Homepage malformed: expected 17 styled score rows, got "+rows);
- const photo=await page.locator(".silba-hero-photo img").getAttribute("src");
- if(!photo||!photo.includes("silbaaetno-2026.jpg"))throw Error("Orchestra photo is missing from start page");
- const photoState=await page.locator(".silba-hero-photo img").evaluate(img=>({loaded:img.complete&&img.naturalWidth>0,width:img.naturalWidth}));
- console.log("Orchestra photo on source site:",JSON.stringify(photoState));
+ const photoStyle=await page.locator(".silba-photo-visual").evaluate(el=>getComputedStyle(el).backgroundImage);
+ if(!photoStyle.includes("silbaaetno-2026.jpg"))throw Error("Orchestra image CSS missing");
+ console.log("Photo uses source-site image with CSS fallback");
  await page.evaluate(()=>{
   $tw.rootWidget.dispatchEvent({type:"tm-huwiki-sitepublisher"});
  });
@@ -80,6 +79,18 @@ try {
  const audience=await browser.newPage();
  try{
   await audience.goto(pathToFileURL(sitePath).href,{waitUntil:"load",timeout:90000});
+  audience.on("pageerror",error=>console.error("Audience JavaScript:",error.message));
+  await audience.waitForTimeout(1500);
+  const detail=await audience.evaluate(()=>{
+   const frame=document.getElementById("score-frame");
+   let doc=null,err="";try{doc=frame?.contentDocument;}catch(e){err=String(e.message);}
+   const data=document.getElementById("publisher-data");
+   let settings={};try{const obj=JSON.parse(data?.textContent||"{}");settings={startDesk:obj.startDesk,count:obj.entries?.length,firstKind:obj.entries?.[0]?.kind};}catch(e){settings={error:String(e.message)};}
+   const nodes=doc?.querySelectorAll("[class*=desk]")||[];
+   return {title:document.title,frameExists:!!frame,frameHidden:frame?.hidden,srcdocLength:frame?.srcdoc?.length,frameReady:doc?.readyState,
+    frameBodyLength:doc?.body?.innerHTML?.length,frameBodyStart:doc?.body?.innerHTML?.slice(0,700),deskClasses:Array.from(nodes).slice(0,8).map(x=>x.className),err,settings};
+  });
+  console.log("AUDIENCE DIAGNOSTIC",JSON.stringify(detail));
   await audience.waitForFunction(()=>{
    const frame=document.getElementById("score-frame");
    return !!(frame&&frame.contentDocument&&frame.contentDocument.querySelector(".huwabc-page-is-desk"));
