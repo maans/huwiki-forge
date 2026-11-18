@@ -13,7 +13,7 @@ var TYPES={curtain:"Tæppe / fabric",wind:"Vind / wind",steps:"Skridt / footstep
  sparkle:"Glitter / sparkle",drum:"Trommeslag / drum",applause:"Applaus / applause"};
 function num(v,d){v=Number(v);return Number.isFinite(v)?v:d;}
 function clamp(v,a,b){return Math.max(a,Math.min(b,v));}
-function Fx(cues){this.cues=Array.isArray(cues)?cues:[];this.ctx=null;this.last=null;this.active=[];this.noise=null;this.bus=null;this.applauseBuffer=null;}
+function Fx(cues,options){this.cues=Array.isArray(cues)?cues:[];this.ctx=options&&options.context||null;this.last=null;this.active=[];this.noise=null;this.bus=null;this.applauseBuffer=null;}
 Fx.prototype.ensure=function(){
  if(this.ctx)return this.ctx;
  var C=typeof window!=="undefined"&&(window.AudioContext||window.webkitAudioContext);
@@ -78,8 +78,8 @@ Fx.prototype._applause=function(start,len,level){
  src.connect(f);f.connect(g);g.connect(this.bus||c.destination);
  src.start(start);src.stop(start+len+.04);this.active.push(g);
 };
-Fx.prototype.fire=function(cue){
- if(!this.ensure())return;var c=this.ctx,now=c.currentTime+.015;
+Fx.prototype.fire=function(cue,at){
+ if(!this.ensure())return;var c=this.ctx,now=Number.isFinite(Number(at))?Math.max(0,Number(at)):c.currentTime+.015;
  var type=String(cue.type||"magic"),vol=clamp(num(cue.volume,1),0,1),len=clamp(num(cue.duration,1),.08,8),gain=.36*vol;
  if(gain<.002)return;
  try{
