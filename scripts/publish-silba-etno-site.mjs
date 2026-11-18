@@ -91,10 +91,9 @@ try {
     frameBodyLength:doc?.body?.innerHTML?.length,frameBodyStart:doc?.body?.innerHTML?.slice(0,700),deskClasses:Array.from(nodes).slice(0,8).map(x=>x.className),err,settings};
   });
   console.log("AUDIENCE DIAGNOSTIC",JSON.stringify(detail));
-  await audience.waitForFunction(()=>{
-   const frame=document.getElementById("score-frame");
-   return !!(frame&&frame.contentDocument&&frame.contentDocument.querySelector(".huwabc-page-is-desk"));
-  },undefined,{timeout:25000});
+  // The original SitePublisher intentionally sandboxes the score iframe without allow-same-origin.
+  // Use Playwright frameLocator instead of reading contentDocument from the parent.
+  await audience.frameLocator("#score-frame").locator(".huwabc-page-is-desk").waitFor({state:"attached",timeout:20000});
   const buttons=await audience.locator("#chapters .chapter").count();
   if(buttons!==17)throw Error("Site navigation does not contain 17 melodies: "+buttons);
  }finally{await audience.close();}
