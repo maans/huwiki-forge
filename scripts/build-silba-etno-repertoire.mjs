@@ -119,8 +119,12 @@ for(const song of ready){
 if(unconverted.length)throw Error("Could not convert "+unconverted.length+" original files: "+unconverted.join(", "));
 const out=path.join(base,"tiddlers/repertoire.json");
 await writeFile(out,JSON.stringify(output,null,2)+"\n");
-await writeFile(path.join(base,"conversion-report.json"),JSON.stringify({
- title:"SilbaÄtno Repertoire",created:new Date().toISOString(),converted:report.length,
+// Keep the original report creation timestamp to make repeated builds deterministic.
+const reportFile=path.join(base,"conversion-report.json");
+let firstCreated="2026-11-18";
+try {const previous=JSON.parse(await readFile(reportFile,"utf8"));if(previous.created)firstCreated=previous.created;}catch(_){}
+await writeFile(reportFile,JSON.stringify({
+ title:"SilbaÄtno Repertoire",created:firstCreated,converted:report.length,
  omitted:sources.filter(s=>!s["silba-musescore-file"]).map(s=>s.title),
  entries:report
 },null,2)+"\n");
