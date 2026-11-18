@@ -18,11 +18,11 @@ test('Turn Around story river follows the native TiddlyWiki sidebar state',async
   assert.equal(state?.text,'[{$:/state/sidebar}match[no]then[plato-sidebar-closed]]');
 
   // The sidebar remains in the DOM even when collapsed. Presence is not visibility.
-  assert.doesNotMatch(style.text,/:has\\(\\.tc-sidebar-scrollable\\)/);
+  assert.doesNotMatch(style.text,/:has\(\.tc-sidebar-scrollable\)/);
   // Open: reserve room for the native sidebar; closed: reclaim that room.
-  assert.match(style.text,/margin:\\s*0 280px 0 24px !important/);
-  assert.match(style.text,/\\.plato-sidebar-closed \\.tc-story-river/);
-  assert.match(style.text,/margin-right:\\s*24px !important/);
+  assert.match(style.text,/margin:\s*0 280px 0 24px !important/);
+  assert.match(style.text,/\.plato-sidebar-closed \.tc-story-river/);
+  assert.match(style.text,/margin-right:\s*24px !important/);
   // Retain the native tiddler toolbar (the audience player is a separate UI).
-  assert.match(style.text,/\\.tc-titlebar/);
+  assert.match(style.text,/\.tc-titlebar/);
 });
