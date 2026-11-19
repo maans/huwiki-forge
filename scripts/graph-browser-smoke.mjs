@@ -48,7 +48,7 @@ try{
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'Nyt begreb',tags:['Graph/Mindmap'],text:'En ny redigerbar node.'}));
   assert.equal(await page.evaluate(()=>$tw.wiki.filterTiddlers('[tag[Graph/Mindmap]]').length),8);
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));
-  await page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-stage canvas').waitFor();
+  await page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-stage canvas').first().waitFor();
   assert.equal(await page.locator('.tc-error-form').count(),0,'No TiddlyWiki error dialogs');
   assert.deepEqual(errors,[],'No uncaught browser errors: '+errors.join('; '));
   console.log('PASS',language,'offline graph boot, three canvases, relation datasets, new editable node');
