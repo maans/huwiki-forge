@@ -31,3 +31,7 @@ Graph Edition's bilingual introduction and node tiddlers use HTML `<div>` and Ti
 The Graph Studio plugin provides an independent, localized `<$forge-graph-editor graph="$:/graph/Platon"/>` widget above the graph. It updates ordinary tagged tiddlers and graph relationship fields directly: **add node, add edge, choose shape, color, size, optional local SVG icon**. New nodes are tagged with the graph tiddler's `forge-node-tag`. The original Flibbles graph editor is still bundled unchanged, but its gesture-based manipulation bar is hidden in the Forge workbench to avoid duplicate controls. The Graph sidebar remains available.
 
 A copy of the upstream standard editable template is maintained as a small Forge graph template in the Graph Studio plugin. The only relevant visual addition is a local override of the `$node.default` macro to pass `graph-shape` and `graph-size` fields to the original `<$node>` widget. Graph tiddlers opt into it via their `template` field; no global upstream macros are overridden.
+
+## Version 0.2.0-beta.1
+
+The first direct-edit Graph Studio controls are tested in offline Chromium on Danish and English. Node and edge changes update TiddlyWiki tiddlers directly. The per-node style draft is retained even if a graph refresh happens while changing a shape, size, color or icon. Physical iPad touch verification remains pending.

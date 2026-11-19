@@ -97,7 +97,6 @@ try{
   await editor.locator('.forge-graph-style-size').fill('42');
   await editor.locator('.forge-graph-apply-style').click();
   const styleSnapshot=await page.evaluate(title=>({fields:$tw.wiki.getTiddler(title)?.fields,editors:Array.from(document.querySelectorAll('.forge-graph-editor')).map(x=>({shape:x.querySelector('.forge-graph-style-shape')?.value,node:x.querySelector('.forge-graph-style-node')?.value,feedback:x.querySelector('.forge-graph-feedback')?.textContent})).slice(-4)}),newNode);
-  console.log('SHAPE STYLE DEBUG',JSON.stringify(styleSnapshot).slice(0,1700));
   assert.equal(styleSnapshot.fields['graph-shape'],'diamond','Shape should be saved to the selected tiddler');
   const shape=await page.evaluate(title=>{let t=$tw.wiki.getTiddler(title);return [t.fields['graph-shape'],t.fields.color,t.fields['graph-size']];},newNode);
   assert.deepEqual(shape,['diamond','#9475ba','42']);
@@ -105,7 +104,6 @@ try{
   await editor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Sun');
   await editor.locator('.forge-graph-apply-style').click();
   const imageSnapshot=await page.evaluate(title=>({fields:$tw.wiki.getTiddler(title)?.fields,editors:Array.from(document.querySelectorAll('.forge-graph-editor')).map(x=>({shape:x.querySelector('.forge-graph-style-shape')?.value,icon:x.querySelector('.forge-graph-style-icon')?.value,node:x.querySelector('.forge-graph-style-node')?.value,feedback:x.querySelector('.forge-graph-feedback')?.textContent})).slice(-4)}),newNode);
-  console.log('IMAGE STYLE DEBUG',JSON.stringify(imageSnapshot).slice(0,1800));
   assert.equal(imageSnapshot.fields.icon,'GraphStudio/Sun','The SVG image is saved to the node tiddler');
   assert.equal(await page.locator('.tc-error-form').count(),0,'The direct graph editor must not trigger error dialogs');
   // The graph remains rendered after actions (no blank/disabled player).
