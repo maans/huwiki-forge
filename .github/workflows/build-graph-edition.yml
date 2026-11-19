@@ -6,6 +6,7 @@ on:
       - editions/graph/**
       - plugins/graph-studio/**
       - scripts/build-graph-edition.mjs
+      - scripts/graph-browser-smoke.mjs
       - .github/workflows/build-graph-edition.yml
   workflow_dispatch:
 permissions:
