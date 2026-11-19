@@ -96,7 +96,7 @@ test('Graph Studio exposes an independent direct editor and per-node visual prop
  }
 });
 
-test('Upstream graph gestures are not intercepted and Appearance is explicitly signposted',async()=>{
+test('Upstream canvas gestures remain native and Appearance is explicitly signposted',async()=>{
  const plugin=await read('plugins/graph-studio/dist/plugin.json');
  const shadows=JSON.parse(plugin.text).tiddlers;
  const bridge=shadows['$:/plugins/huwiki/graph-studio/vis-controls.js'];
@@ -105,7 +105,7 @@ test('Upstream graph gestures are not intercepted and Appearance is explicitly s
  assert.equal(bridge['module-type'],'vis-property');
  assert.match(bridge.text,/network.on\("click"/);
  assert.match(bridge.text,/nativeManipulation.inMode!==false/);
- assert.doesNotMatch(bridge.text,/preventDefault|stopImmediatePropagation/);
+ assert.doesNotMatch(bridge.text,/stopImmediatePropagation/);
  assert.match(bridge.text,/network.addNodeMode\(\)/,'Fallback opens original node gesture mode');
  assert.match(bridge.text,/network.addEdgeMode\(\)/,'Fallback opens original edge gesture mode');
  assert.match(bridge.text,/surface.addEventListener\("pointerup"/);

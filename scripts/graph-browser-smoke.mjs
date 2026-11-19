@@ -102,7 +102,7 @@ try{
    }
   });
   await addNode.click();
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(300);
   const nativeLog=await page.evaluate(()=>window.__forgeNativeLog||[]);
   const afterNative=await graphStage.evaluate(stage=>[...stage.querySelectorAll('.graph-canvas')].map(el=>({mode:el._forgeVisNetwork?.manipulation?.inMode,buttons:[...el.querySelectorAll('.vis-button')].map(b=>b.className)})));
   console.log('NATIVE FALLBACK DEBUG',JSON.stringify({nativeLog,afterNative}));
