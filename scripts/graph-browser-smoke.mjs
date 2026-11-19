@@ -94,7 +94,10 @@ try{
    editorClass:stage.querySelector('.forge-graph-editor')?.className,
    nativeButtons:[...stage.querySelectorAll('.vis-button')].map(n=>({c:n.className,t:n.textContent?.trim().slice(0,60)})),
    modules:Object.keys($tw.modules.getModulesByTypeAsHashmap('vis-property')).filter(x=>/forge/i.test(x)),
-   captured:window.__forgeActionEvents||[]
+   captured:window.__forgeActionEvents||[],
+   bridgeTags:[...stage.querySelectorAll('[data-forge-control-init]')].map(e=>({cls:e.className,flag:e.getAttribute('data-forge-control-init')})),
+   addAncestor:stage.querySelector('.vis-add')?.closest('.graph-canvas')?.className||null,
+   stageClass:stage.className
   }));
   console.log('GRAPH TOOL DEBUG',JSON.stringify(debug).slice(0,2500));
   assert.equal(await editor.isVisible(),true,'The original Add Node button opens the compact node editor');
