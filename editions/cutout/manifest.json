@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "cutout",
   "name": "CutOut Edition",
-  "version": "0.6.2-test.3",
+  "version": "0.6.2-test.4",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",

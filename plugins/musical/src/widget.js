@@ -670,13 +670,16 @@ Musical.prototype.render=function(parent,next){
   beatClock=Motion.beatClock(clips,function(title){var tid=self.wiki.getTiddler(title);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
   songs.forEach(function(song,i){song.clip=clips[i];});
   duration=fullDuration();timeline.duration=duration;
-  time.max=String(duration);showSong(0);paint(0);
+  // Studio entry and the editor can seek while ABC notation is still loading.
+  // Keep that preview position when notation becomes ready, including its
+  // active score and audio gains, instead of painting the opening black frame.
+  time.max=String(duration);seek(timeline.value());
   soundfont=self.wiki.getTiddlerText("$:/config/huwiki/abc/soundfont","https://paulrosen.github.io/midi-js-soundfonts/abcjs/").trim();
   ABCObject=ABC;soundReady=canAudio;
   // The notes and visual master clock are ready before samples finish loading.
   // Audio remains optional; no missing SoundFont can block the theatre.
   Playback.register(session);ready=true;play.disabled=false;state.textContent=canAudio?L.ready:L.noAudio;
-  applyGains(0,true);
+  applyGains(timeline.value(),true);
 
  }).catch(function(error){
   // ABC can be unavailable offline; the visual stage and timeline still run.
