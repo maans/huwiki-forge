@@ -72,6 +72,23 @@ test('opening a suggested line and saving without opting in never enables lip sy
  save(f);assert.equal(config(f),undefined);assert.equal(f.w.writes.length,0);
 });
 
+test('a caption-track link opens its exact source line and repeated scene without moving or saving the show',()=>{
+ const f=fixture(),titles=['Repeated scene','Other scene','Repeated scene'];
+ f.options.film.scenes=titles.map(source=>({source,duration:8}));f.options.film.parts=[];f.options.film.duration=24;
+ for(const title of new Set(titles))f.w.records[title]={title,type:'application/json',text:JSON.stringify({name:title,duration:8,parts:[line('spoken-0',title+': First line.'),line('spoken-1',title+': Selected line.')]})};
+ f.options.seek(2);
+ assert.equal(f.ui.open({sceneTitle:'Repeated scene',partId:'spoken-1',time:19}),true);
+ const scenes=f.host.querySelectorAll('.huw-script-scene');
+ assert.equal(f.host.querySelector('.huw-script-scene.is-active'),scenes[2],'the requested occurrence wins over the current playhead and the first copy');
+ assert.equal(f.host.querySelector('.huw-script-line-input').value,'Repeated scene: Selected line.');
+ assert.equal(f.host.querySelector('.huw-script-cue.is-active'),f.host.querySelectorAll('.huw-script-cue')[1]);
+ assert.equal(f.options.position(),2,'opening a caption editor does not change the preview position');
+ assert.equal(f.w.writes.length,0);save(f);assert.equal(f.w.writes.length,0,'opening and saving without edits leaves source cues unchanged');
+ f.ui.open({sceneTitle:'Missing scene',partId:'spoken-0',time:10});
+ assert.equal(f.host.querySelector('.huw-script-line-input'),null,'a missing source cannot select an identically named cue in another scene');
+ f.ui.dispose();
+});
+
 test('enable, actor, mouth and timing controls persist together and reopen faithfully',()=>{
  const f=fixture({nested:true});f.ui.open();chooseCue(f);change(f,'enable',true);
  assert.equal(control(f,'actor').disabled,false);assert.equal(control(f,'open').value,'actor-alma-mouth-open');

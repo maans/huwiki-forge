@@ -35,6 +35,7 @@ function total(clips){return normalizeClips(clips).reduce(function(v,c){return M
 // is primed from the user's Play gesture, then follows the common time/rate.
 function Player(o){
  o=o||{};this.wiki=o.wiki;this.doc=o.doc||(typeof document!=="undefined"?document:null);this.onError=o.onError||function(){};
+ this.isAudible=typeof o.isAudible==="function"?o.isAudible:function(){return true;};
  this.entries={};this.clips=[];this.time=0;this.rate=1;this.running=false;this.dead=false;this.setClips(o.clips||[]);
 }
 Player.prototype._report=function(entry,error){
@@ -63,13 +64,13 @@ Player.prototype.unlock=function(){
  Object.keys(this.entries).forEach(function(id){var e=self.entries[id],a=e.audio;if(!a||!e.source)return;
   e.blocked=false;e.reported=false;a.muted=true;
   try{var p=a.play();
-   var done=function(){if(self.dead)return;if(!e.wanted){try{a.pause();}catch(_){}}a.muted=e.clip.muted;};
-   if(p&&typeof p.then==="function")p.then(done,function(){a.muted=e.clip.muted;});else done();
-  }catch(_){a.muted=e.clip.muted;}
+   var done=function(){if(self.dead)return;if(!e.wanted){try{a.pause();}catch(_){}}a.muted=e.clip.muted||!self.isAudible(e.clip);};
+   if(p&&typeof p.then==="function")p.then(done,function(){a.muted=e.clip.muted||!self.isAudible(e.clip);});else done();
+  }catch(_){a.muted=e.clip.muted||!self.isAudible(e.clip);}
  });
 };
 Player.prototype._apply=function(e){
- var c=e.clip,a=e.audio,t=this.time,active=this.running&&!c.muted&&c.volume>0&&t>=c.start&&t<c.start+c.duration;
+ var c=e.clip,a=e.audio,t=this.time,active=this.running&&!c.muted&&this.isAudible(c)&&c.volume>0&&t>=c.start&&t<c.start+c.duration;
  e.wanted=active;
  if(!active){if(e.pending){e.token++;e.pending=false;}if(a&&!a.paused)try{a.pause();}catch(_){};return;}
  if(!a||!e.source){this._report(e,Error("Missing audio: "+c.asset));return;}

@@ -24,6 +24,9 @@ const fetchFreshEditionManifest=(resource,options)=>{
  const isEditionManifest=/\/editions\/[^/]+\/manifest\.json$/.test(url.pathname);
  const isPluginRegistry=/\/library\/plugins\/registry\.json$/.test(url.pathname);
  const isEditionCatalog=/\/catalog\/editions\.json$/.test(url.pathname);
+ const isAssemblerLocale=/\/catalog\/assembler-i18n\.json$/.test(url.pathname);
+ const isAniMusVideoExportPlugin=/\/plugins\/animus-video-export\/dist\/plugin\.json$/.test(url.pathname);
+ const isTurnAroundVideoExport=/\/editions\/turn-around\/tiddlers\/video-export\.json$/.test(url.pathname);
  const isAniMusAudioPlugin=/\/plugins\/musical\/dist\/plugin\.json$/.test(url.pathname);
  const isAbcAudioPlugin=/\/plugins\/abc\/dist\/plugin\.json$/.test(url.pathname);
  const isAniMusScriptExample=/\/plugins\/animus-example-fyrtoejet\/dist\/plugin\.json$/.test(url.pathname);
@@ -34,7 +37,7 @@ const fetchFreshEditionManifest=(resource,options)=>{
  const isGraphEditionTiddlers=/\/editions\/graph\/tiddlers\/(?:seed|config)\.json$/.test(url.pathname);
  const isCutoutEditorPlugin=/\/plugins\/cutout\/dist\/plugin\.json$/.test(url.pathname);
  const isSitePublisherPlugin=/\/plugins\/site-publisher\/dist\/plugin\.json$/.test(url.pathname);
- if(url.origin===location.origin&&(isEditionManifest||isPluginRegistry||isEditionCatalog||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin||isTurnAroundLayoutFix||isAniMusCaptionPlugin||isTurnAroundCaptions||isGraphEditionTiddlers||isGraphStudioPlugin)){
+ if(url.origin===location.origin&&(isEditionManifest||isPluginRegistry||isEditionCatalog||isAssemblerLocale||isAniMusVideoExportPlugin||isTurnAroundVideoExport||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin||isTurnAroundLayoutFix||isAniMusCaptionPlugin||isTurnAroundCaptions||isGraphEditionTiddlers||isGraphStudioPlugin)){
   url.searchParams.set('_forge_demo',String(Date.now()));
   return fetch(url.href,{...options,cache:'no-store'});
  }

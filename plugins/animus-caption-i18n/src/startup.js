@@ -11,6 +11,8 @@ exports.synchronous=true;
 exports.startup=function(){
  if(typeof document==="undefined"||typeof MutationObserver==="undefined"||typeof $tw==="undefined"||!$tw.wiki)return;
  var wiki=$tw.wiki,TAG="$:/tags/HUW/CaptionTranslations",CHOICE="$:/config/huwiki/animus/caption-language";
+ var HOSTS=".plato-player, .huw-musical",CAPTIONS=".plato-caption-text, .plato-caption-speaker, .huw-musical-caption-line, .huw-musical-caption-cue";
+ var TOOLBARS=".plato-options, .huw-musical-transport";
  var byLanguage=Object.create(null);
  var speakers={"Narrator":"Fortælleren","The Narrator":"Fortælleren","The Prisoner":"Fangen","Prisoner":"Fangen","The Guide":"Vejviseren","Guide":"Vejviseren","The Elder":"Den ældre","Elder":"Den ældre","Chorus":"Koret"};
  function chosen(){var v=wiki.getTiddlerText(CHOICE,"auto");return /^(auto|en|da)$/.test(v)?v:"auto";}
@@ -82,29 +84,54 @@ exports.startup=function(){
    updateAll();
   });
  }
- function updateAll(){
-  var lang=language();
-  var hosts=document.querySelectorAll(".plato-player, .huw-musical");
-  Array.prototype.forEach.call(hosts,function(host){
-   if(!Object.keys(byLanguage).length)return;
+ function updateHost(host,lang){
+   if(!Object.keys(byLanguage).length||host.isConnected===false)return;
    mount(host);
    if(host._huwCaptionSelect){
     var input=host._huwCaptionSelect.querySelector("select");if(input&&input.value!==chosen())input.value=chosen();
     updateChoiceLabels(host._huwCaptionSelect);
    }
-   var nodes=host.querySelectorAll(".plato-caption-text, .plato-caption-speaker, .huw-musical-caption-line, .huw-musical-caption-cue");
+   var nodes=host.querySelectorAll(CAPTIONS);
    Array.prototype.forEach.call(nodes,function(node){paintText(node,lang);});
+ }
+ function updateAll(){
+  var lang=language();
+  Array.prototype.forEach.call(document.querySelectorAll(HOSTS),function(host){updateHost(host,lang);});
+ }
+ function changed(records){
+  // Transport labels and SVG artwork change on every animation frame. Only
+  // new players/toolbars and changed caption text need translation work;
+  // repainting one player must not rescan every other open editor.
+  var hosts=new Set(),nodes=new Set();
+  function inspect(element){
+   if(!element||element.nodeType!==1||!element.matches)return;
+   if(element.matches(HOSTS))hosts.add(element);
+   if(element.matches(TOOLBARS)){
+    var host=element.closest(HOSTS);if(host)hosts.add(host);
+   }
+   if(element.matches(CAPTIONS))nodes.add(element);
+  }
+  records.forEach(function(record){
+   var element=record.target&&record.target.nodeType===1?record.target:record.target&&record.target.parentElement;
+   var caption=element&&element.closest&&element.closest(CAPTIONS);
+   if(caption){nodes.add(caption);return;}
+   Array.prototype.forEach.call(record.addedNodes||[],function(added){
+    if(added.nodeType!==1)return;
+    inspect(added);
+    if(added.querySelectorAll)Array.prototype.forEach.call(added.querySelectorAll(HOSTS+", "+TOOLBARS+", "+CAPTIONS),inspect);
+   });
+  });
+  if(!hosts.size&&!nodes.size)return;
+  var lang=language();
+  hosts.forEach(function(host){updateHost(host,lang);});
+  nodes.forEach(function(node){
+   var host=node.closest&&node.closest(HOSTS);
+   if(host&&!hosts.has(host)&&node.isConnected!==false&&node.textContent!==node._huwCaptionPainted)paintText(node,lang);
   });
  }
  function launch(){
   load();updateAll();
-  var observer=new MutationObserver(function(records){
-   var relevant=records.some(function(r){
-    var element=r.target&&r.target.nodeType===1?r.target:r.target&&r.target.parentElement;
-    return !!(element&&(element.closest&&element.closest(".plato-player, .huw-musical")||element.querySelector&&element.querySelector(".plato-player, .huw-musical")));
-   });
-   if(relevant)updateAll();
-  });
+  var observer=new MutationObserver(changed);
   observer.observe(document.body,{subtree:true,childList:true,characterData:true});
   wiki.addEventListener("change",function(changes){
    if(changes["$:/language"]||changes[CHOICE])updateAll();

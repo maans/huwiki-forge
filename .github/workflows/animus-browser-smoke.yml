@@ -5,6 +5,7 @@ on:
     paths:
       - editions/animus/**
       - plugins/musical/**
+      - plugins/animus-video-export/**
       - plugins/animus-example-fyrtoejet/**
       - plugins/cutout/**
       - plugins/abc/**
@@ -12,10 +13,12 @@ on:
       - assembler/**
       - core/**
       - scripts/build-animus.mjs
+      - scripts/build-animus-video-export.mjs
       - scripts/build-cutout-ui.mjs
       - scripts/build-abc-ui.mjs
       - scripts/build-site-publisher.mjs
       - scripts/animus-browser-smoke.mjs
+      - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
@@ -31,6 +34,7 @@ on:
     paths:
       - editions/animus/**
       - plugins/musical/**
+      - plugins/animus-video-export/**
       - plugins/animus-example-fyrtoejet/**
       - plugins/cutout/**
       - plugins/abc/**
@@ -38,10 +42,12 @@ on:
       - assembler/**
       - core/**
       - scripts/build-animus.mjs
+      - scripts/build-animus-video-export.mjs
       - scripts/build-cutout-ui.mjs
       - scripts/build-abc-ui.mjs
       - scripts/build-site-publisher.mjs
       - scripts/animus-browser-smoke.mjs
+      - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
@@ -68,6 +74,11 @@ jobs:
       - name: Verify reproducible plugin packages
         run: |
           node scripts/build-animus.mjs --check
+          node scripts/build-animus-video-export.mjs --check
+          node --check plugins/animus-video-export/src/audio.js
+          node --check plugins/animus-video-export/src/runtime.js
+          node --check plugins/animus-video-export/src/mp4.js
+          node --test tests/animus-video-export*.test.mjs
           node scripts/build-cutout-ui.mjs --check
           node scripts/build-abc-ui.mjs --check
           node scripts/build-site-publisher.mjs --check

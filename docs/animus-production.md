@@ -1,6 +1,6 @@
 # AniMus production tools
 
-AniMus 0.11.0-beta.3 includes production workshops, direct figure and joint editing, and script-driven mouth animation on the existing stage and music timeline. SitePublisher 0.1.16-test.3 adds audience programme and performance starting views. The example productions remain separate plugins.
+AniMus 0.12.0-beta.1 includes production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.17-test.1 provides audience programme and performance starting views with the shared exporter. The example productions remain separate plugins.
 
 ## Create and edit a show
 
@@ -35,6 +35,14 @@ Use TiddlyWiki's Save button to save the complete wiki file. Recording asks for 
 4. Release the pointer to keep the change. AniMus saves a key at the current position in the relevant scene or motion loop. A loop edit applies to that beat position in each repetition. Press **Escape** during a drag to cancel it.
 
 The CutOut studio has the same **Figure** and **Parts and joints** choices, plus a part selector and **Move**, **Rotate** and **Size** tools. Use **Undo** and **Redo** for its completed direct edits, and **Save project** to apply the draft. AniMus applies a stage drag when you release it; saving the complete wiki file remains a separate TiddlyWiki action. Site view provides audience playback without editing frames or handles.
+
+## Choose what you see and hear while editing
+
+Use the **eye** beside a visual track to hide or show its contribution in the editor. Use the **speaker** beside a music, voice or effects track to mute or hear it during preview. The **Captions** track has its own eye button, so subtitles can be hidden while you work on a face or an arm. Its timed caption blocks let you jump to a line; **Open manuscript and captions** opens the text workshop.
+
+Select a figure or body part with the dashed frame, then choose **Zoom to selection** above the stage. **Parts and joints** lets you select an individual arm, hand, head or other part before zooming. **Full screen** enlarges the editing stage, and **Reset zoom** returns to the normal preview. Press **Z** to zoom to the selection or **0** to reset. **Esc** cancels an active drag first; otherwise it exits stage fullscreen or resets selection zoom.
+
+These track buttons and selection zoom affect the editor preview only. They do not change the saved scene, film camera or export choices. Choose the video soundtrack and burned captions in **Export video**. After export, the editor returns to its previous preview settings and zoom.
 
 ## Mouth animation from the script
 
@@ -86,10 +94,27 @@ The starting view is saved into the downloaded HTML. Looking at the programme ta
 
 The audience player uses the shared AniMus clock, CutOut renderer, mouth animation, ABC audio controller, effects and narration player. Script bindings and their mouth parts are included in the exported page. Missing music does not block the visual performance. Automatic replacement by another music synthesizer is disabled in the publication's default mode. Instrument samples still follow the existing ABC sound library configuration; this release does not bundle the entire sample bank into every site.
 
+## Video export in the ordinary demo
+
+The AniMus and Turn Around edition manifests both include the independently installable `animus-video-export` plugin. The normal `/demo/?edition=turn-around&lang=da` route builds the audience player and native editor with the same exporter. Previous `/previews/animus-export/` links redirect to this demo, retaining the requested language and tiddler location.
+
+**Export video / Eksportér video** opens a single file list: MP4 video, music WAV, speech/singing WAV, effects WAV and WebVTT captions. Every checked item is created as a downloadable file. Each completed row has its own download arrow; multiple selected files can be downloaded together as a ZIP. Separate controls choose the MP4 soundtrack and whether its picture includes burned captions. Selecting a WAV or VTT file does not change the MP4 content.
+
+Completed files are reused within the current player session. Adding another file creates only missing or changed content. Closing the dialog preserves its settings and ready files; cancellation or an error retains earlier completed downloads. Reloading the page or destroying the player clears this temporary cache.
+
+Video is opaque 16:9 H.264 MP4 at 720p or 1080p and 24 or 30 fps. Mixed MP4 audio uses AAC; independent WAV stems are stereo PCM16 at 48 kHz. All exported files share the selected source interval and output origin. Audio keeps its offsets, mutes, levels, fades, leading silence and internal pauses. The output interval is padded to a complete video frame, with silence after the requested audio end. Export uses the original recordings, original ABC sample engine and existing theatre effects; unavailable audio does not trigger an alternative synthesizer.
+
+MP4 creation requires browser AVC support and AAC support when sound is included. WAV and caption files remain independently selectable. Native codec support and iPad/LumaFusion behavior require device acceptance; the code does not assume that a browser on every platform supports these codecs. Caption files use the selected player language and are rebased to the exported interval.
+
+The editor's export lifecycle temporarily restores the performance view before rendering, then returns to the original paused position. The scoped Turn Around adapter reads the current canonical film and live mixer without saving a second timeline. The exporter also appears in SitePublisher output when the optional plugin is installed while publishing.
+
+`animus-export-smoke.yml` checks the ordinary demo route, default composition, player-to-editor transition, delayed ABC startup, current captions and recorded stems. Its Linux and macOS browser jobs retain exported files and screenshots; the macOS job requires native H.264/AAC and checks decoded audio timing. Unit tests cover independent downloads, reuse, cancellation, source-change invalidation, sample alignment and the audience-player adapter.
+
 ## Build and verify
 
 ```sh
 node scripts/build-animus.mjs
+node scripts/build-animus-video-export.mjs
 node scripts/build-site-publisher.mjs
 node scripts/build-forge-plugin-library.mjs
 node --test tests/animus-*.test.mjs tests/site-cutout-media.test.mjs tests/site-drawing-svg.test.mjs
@@ -113,7 +138,7 @@ CHROME_BIN=/usr/bin/google-chrome node scripts/animus-browser-smoke.mjs
 
 The CI browser job runs these checks and keeps screenshots and traces. Enabled browser checks fail on browser or playback errors. Real microphone quality and iPad/Safari listening still need device testing.
 
-Automatic cue movement during scene rearrangement supports ordinary sequential scenes. If imported CutOut clips use speed changes, offsets or loops, the scene workshop disables automatic cue movement; their music and audio remain adjustable on the timeline. Video/MP4 export is outside this release.
+Automatic cue movement during scene rearrangement supports ordinary sequential scenes. If imported CutOut clips use speed changes, offsets or loops, the scene workshop disables automatic cue movement; their music and audio remain adjustable on the timeline. Video/MP4 export is available through the separately installable exporter described above.
 
 ## Dansk
 
@@ -128,6 +153,14 @@ Sæt forestillingen på pause, og vælg tidspunktet på tidslinjen. Vælg **Figu
 Vælg **Dele og led**, og klik på den arm, det ben eller den del, du vil ændre. Rammen og det markerede drejepunkt viser den valgte del og dens montering. Træk en monteret kropsdel omkring leddet, eller brug det runde drejehåndtag. Dele monteret på den følger med. AniMus gemmer ændringen som en nøgle ved tidsmarkøren, når du slipper. I en gentaget bevægelse ændres det tilsvarende tidspunkt i bevægelsens løkke. **Escape** under trækket annullerer ændringen.
 
 I CutOut-studiet kan du også vælge delen i listen og bruge **Flyt**, **Drej** eller **Størrelse**. **Fortryd** og **Gentag** gælder de afsluttede direkte ændringer; tryk **Gem projekt** for at anvende kladden. AniMus gemmer scenetrækket ved slip. Gem hele wikien med TiddlyWikis Gem-knap for at beholde arbejdet som fil. **Sitevisning** viser forestillingen uden redigeringsrammer og håndtag.
+
+### Vælg, hvad du ser og hører under redigering
+
+Brug **øjet** ved et visuelt spor til at skjule eller vise dets indhold i editoren. Brug **højttaleren** ved musik, indtaling eller lydeffekter til at slå lyden fra eller til i forhåndsvisningen. Sporet **Undertekster** har sit eget øje, så teksten kan skjules, mens du arbejder med et ansigt eller en arm. Klik på en undertekstblok for at gå til den replik; **Åbn manuskript og undertekster** åbner tekstværkstedet.
+
+Markér en figur eller kropsdel med den stiplede ramme, og vælg **Zoom til markering** over scenen. Med **Dele og led** kan du vælge eksempelvis arm, hånd eller hoved, før du zoomer. **Fuld skærm** forstørrer redigeringsscenen, og **Nulstil zoom** går tilbage til den normale forhåndsvisning. Tryk **Z** for at zoome til markeringen eller **0** for at nulstille. **Esc** annullerer først et igangværende træk; ellers forlader den scenens fuldskærmsvisning eller nulstiller zoom.
+
+Sporknapperne og zoom gælder kun editorens forhåndsvisning. De ændrer ikke den gemte scene, filmens kamera eller eksportvalgene. Vælg videoens lyd og indbrændte undertekster i **Eksportér video**. Efter eksport vender editoren tilbage til de tidligere visningsvalg og zoom.
 
 ### Læbesynkronisering
 

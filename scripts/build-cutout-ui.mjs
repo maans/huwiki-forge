@@ -1,5 +1,5 @@
-/** Apply readable editing UI modules to the existing CutOut distribution.
- * The animation engine, model, players and publishing modules are preserved.
+/** Apply readable CutOut source modules to the existing distribution.
+ * Modules without a source override retain their original bundled content.
  */
 import {readFile,writeFile,readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
@@ -27,4 +27,4 @@ const result=JSON.stringify({...base,...info,text:JSON.stringify(payload)},null,
 if(process.argv.includes('--check')){
  if(result!==original)throw Error('CutOut editing UI distribution is stale. Run node scripts/build-cutout-ui.mjs');
 }else await writeFile(target,result);
-console.log(info.name,info.version,'editing UI; animation engine preserved');
+console.log(info.name,info.version,'readable source modules applied');

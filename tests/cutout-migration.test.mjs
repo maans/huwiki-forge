@@ -7,8 +7,19 @@ const root=new URL('../',import.meta.url),read=p=>readFile(new URL(p,root),'utf8
 const original=JSON.parse(gunzipSync(Buffer.from((await read('migration/cutout/original-plugin.b64')).trim(),'base64')));
 const plugin=JSON.parse(await read('plugins/cutout/dist/plugin.json'));
 const before=JSON.parse(original.text).tiddlers,after=JSON.parse(plugin.text).tiddlers,prefix='$:/plugins/huwiki/cutout/';
-test('CutOut preserves original engine, project model, samples and vendor license',async()=>{
- for(const name of ['engine.js','model.js','clock.js','publish.js','vendor/jszip.js','vendor/jszip-license'])assert.deepEqual(after[prefix+name],before[prefix+name]);
+test('CutOut preserves original project model, samples and vendor license; engine changes are confined to rendering',async()=>{
+ for(const name of ['model.js','clock.js','publish.js','vendor/jszip.js','vendor/jszip-license'])assert.deepEqual(after[prefix+name],before[prefix+name]);
+ const engine=after[prefix+'engine.js'],originalEngine=before[prefix+'engine.js'];
+ assert.deepEqual({...engine,text:originalEngine.text},originalEngine,'Preserve engine metadata and authorship');
+ assert.equal(engine.text,await read('plugins/cutout/src/engine.js'),'Ship the reviewed readable engine source');
+ const withoutRenderingChanges=text=>text
+  // The root-only hit-testing stylesheet wraps the original tree builder.
+  // Normalize that wrapper and its internal calls, retaining the full geometry
+  // builder in this comparison rather than excluding it from the audit.
+  .replace(/function build\(doc,wiki,scene,editable,ancestry\)\{[\s\S]*?\n\}\nfunction buildTree\(/,'function build(')
+  .replace(/\bbuildTree\(/g,'build(')
+  .replace(/function paint\(view,t,selected\)\{[\s\S]*?\nfunction dependencies\(/,'function dependencies(');
+ assert.equal(withoutRenderingChanges(engine.text),withoutRenderingChanges(originalEngine.text),'Keep original parsing, geometry, clocks and dependencies intact');
  for(const title of ['Demo – Tændstikmand','Demo – Tændstikmand (dukke)'])assert.deepEqual(after[title],before[title]);
  assert.equal(plugin.author,original.author);assert.equal(plugin.license,original.license,'Do not invent a license absent from the original');
  assert.equal(await read('plugins/cutout/licenses/JSZip.txt'),before[prefix+'vendor/jszip-license'].text);

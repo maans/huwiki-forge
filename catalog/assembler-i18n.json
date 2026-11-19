@@ -511,6 +511,16 @@
         "name": "Graph Studio (Forge)",
         "description": "Contextual touch-friendly node, edge and appearance panels triggered by native Graph buttons and node selection."
       }
+    },
+    "$:/plugins/huwiki/animus-video-export": {
+      "da": {
+        "name": "AniMus · Videoeksport (MP4)",
+        "description": "Eksportér MP4 eller en redigeringspakke med video og synkroniserede WAV-spor til musik, tale og effekter."
+      },
+      "en": {
+        "name": "AniMus · Video Export (MP4)",
+        "description": "Export MP4 or an editing package with video and synchronized WAV tracks for music, speech and effects."
+      }
     }
   }
 }

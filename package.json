@@ -8,7 +8,9 @@
     "build:animus": "node scripts/build-animus.mjs",
     "check:animus": "node scripts/build-animus.mjs --check",
     "build:forgeshare": "node scripts/build-forgeshare.mjs",
-    "check:forgeshare": "node scripts/build-forgeshare.mjs --check"
+    "check:forgeshare": "node scripts/build-forgeshare.mjs --check",
+    "build:video": "node scripts/build-animus-video-export.mjs",
+    "check:video": "node scripts/build-animus-video-export.mjs --check"
   },
   "engines": {
     "node": ">=20"
@@ -17,4 +19,3 @@
     "tiddlywiki": "5.4.1"
   }
 }
-

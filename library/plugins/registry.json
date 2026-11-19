@@ -36,7 +36,7 @@
         "name": "AniMus · bilingual captions / Tosprogede undertekster",
         "description": "Caption translations displayed without modifying English sound, source text, timing, or lip-sync",
         "author": "HUWiki",
-        "version": "0.1.0-beta.1",
+        "version": "0.1.0-beta.2",
         "plugin-type": "plugin",
         "requires-reload": "yes",
         "core-version": ">=5.4.1"
@@ -82,7 +82,7 @@
         "name": "AniMus Forge I · Editor (beta)",
         "description": "AniMus production tools: layered SVG and drawn animation, ABC notation, recorded voices, scene timeline and Site view.",
         "author": "HUWiki Forge",
-        "version": "0.11.0-beta.3",
+        "version": "0.12.0-beta.1",
         "plugin-type": "plugin",
         "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/abc",
         "requires-reload": "yes",
@@ -90,6 +90,22 @@
         "core-version": ">=5.4.1"
       },
       "path": "../../plugins/musical/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/animus-video-export",
+        "type": "application/json",
+        "name": "AniMus Video Export · MP4 til LumaFusion",
+        "description": "Choose downloadable MP4, music, speech, effects and caption files independently; reuse completed exports in AniMus and LumaFusion workflows.",
+        "author": "HUWiki Forge",
+        "version": "0.1.0-beta.4",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/musical",
+        "requires-reload": "yes",
+        "stability": "experimental",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/animus-video-export/dist/plugin.json"
     },
     {
       "fields": {
@@ -124,7 +140,7 @@
         "name": "CutOut",
         "description": "Offline animation workshop · Dukker, animationer og lokal ZIP · Test",
         "author": "HUWiki",
-        "version": "0.6.2-test.3",
+        "version": "0.6.2-test.4",
         "plugin-type": "plugin",
         "stability": "experimental",
         "core-version": ">=5.3.0"
@@ -405,7 +421,7 @@
         "name": "SitePublisher",
         "description": "HTML publishing for AniMus musicals, ABC music, CutOut, SVG drawings and embedded media.",
         "author": "HUWiki",
-        "version": "0.1.16-test.3",
+        "version": "0.1.17-test.1",
         "plugin-type": "plugin",
         "license": "MIT",
         "core-version": ">=5.2.0"

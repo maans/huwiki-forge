@@ -1,0 +1,103 @@
+name: AniMus export smoke
+on:
+  push:
+    branches: [main]
+    paths:
+      - plugins/animus-video-export/**
+      - plugins/musical/**
+      - plugins/abc/**
+      - plugins/cutout/**
+      - plugins/animus-caption-i18n/**
+      - demo/**
+      - assembler/**
+      - catalog/**
+      - library/plugins/registry.json
+      - editions/turn-around/**
+      - scripts/animus-stems-browser-smoke.mjs
+      - scripts/animus-codec-browser-smoke.mjs
+      - scripts/plato-export-browser-smoke.mjs
+      - tests/animus-video-export*.test.mjs
+      - tests/turn-around-video-export.test.mjs
+      - tests/turn-around-demo.test.mjs
+      - tests/animus-editor-startup.test.mjs
+      - tests/animus-caption-i18n.test.mjs
+      - tests/cutout-active-scenes.test.mjs
+      - scripts/build-animus-caption-i18n.mjs
+      - .github/workflows/animus-export-smoke.yml
+  pull_request:
+    paths:
+      - plugins/animus-video-export/**
+      - plugins/musical/**
+      - plugins/abc/**
+      - plugins/cutout/**
+      - plugins/animus-caption-i18n/**
+      - demo/**
+      - assembler/**
+      - catalog/**
+      - library/plugins/registry.json
+      - editions/turn-around/**
+      - scripts/animus-stems-browser-smoke.mjs
+      - scripts/animus-codec-browser-smoke.mjs
+      - scripts/plato-export-browser-smoke.mjs
+      - tests/animus-video-export*.test.mjs
+      - tests/turn-around-video-export.test.mjs
+      - tests/turn-around-demo.test.mjs
+      - tests/animus-editor-startup.test.mjs
+      - tests/animus-caption-i18n.test.mjs
+      - tests/cutout-active-scenes.test.mjs
+      - scripts/build-animus-caption-i18n.mjs
+      - .github/workflows/animus-export-smoke.yml
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  export:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            chrome: /usr/bin/google-chrome
+          - os: macos-15
+            chrome: /Applications/Google Chrome.app/Contents/MacOS/Google Chrome
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Check package and synchronized media formats
+        run: |
+          node scripts/build-animus-video-export.mjs --check
+          node scripts/build-animus.mjs --check
+          node scripts/build-animus-caption-i18n.mjs --check
+          node scripts/build-cutout-ui.mjs --check
+          node --test tests/animus-video-export*.test.mjs tests/turn-around-video-export.test.mjs tests/turn-around-demo.test.mjs tests/animus-editor-startup.test.mjs tests/animus-caption-i18n.test.mjs tests/cutout-active-scenes.test.mjs
+      - name: Install browser controller
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Export isolated music, speech and effects with real Web Audio
+        env:
+          CHROME_BIN: ${{ matrix.chrome }}
+        run: node scripts/animus-stems-browser-smoke.mjs
+      - name: Verify native H.264 and AAC transient alignment
+        env:
+          CHROME_BIN: ${{ matrix.chrome }}
+          ANIMUS_REQUIRE_NATIVE_CODECS: ${{ matrix.os == 'macos-15' && '1' || '0' }}
+        run: node scripts/animus-codec-browser-smoke.mjs
+      - name: Verify the normal demo, editor switching and recorded-track exports
+        env:
+          CHROME_BIN: ${{ matrix.chrome }}
+          ANIMUS_REQUIRE_NATIVE_CODECS: ${{ matrix.os == 'macos-15' && '1' || '0' }}
+          ANIMUS_SKIP_HEADLESS_FULLSCREEN: ${{ matrix.os == 'macos-15' && '1' || '0' }}
+        run: node scripts/plato-export-browser-smoke.mjs
+      - name: Keep browser export evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: animus-export-evidence-${{ matrix.os }}
+          path: |
+            test-results/animus-stems/
+            test-results/animus-codec/
+            test-results/plato-export/
+          if-no-files-found: ignore

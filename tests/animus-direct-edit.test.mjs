@@ -7,7 +7,7 @@ import {Matrix,svgDocument} from './helpers/svg-test-dom.mjs';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 const cutout=JSON.parse(JSON.parse(await read('plugins/cutout/dist/plugin.json')).text).tiddlers;
 const directEditSource=await read('plugins/cutout/src/direct-edit.js');
-const sources=Object.fromEntries(await Promise.all(['playlist','motion','sfx','editor','puppet'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
+const sources=Object.fromEntries(await Promise.all(['playlist','motion','sfx','editor','puppet','track-preview'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
 const plain=value=>JSON.parse(JSON.stringify(value));
 class Tiddler {constructor(...items){this.fields=Object.assign({},...items.filter(Boolean).map(i=>i.fields||i));}}
 function wiki(initial){const records=plain(initial),writes=[];return {records,writes,getTiddler:title=>records[title]?new Tiddler(records[title]):null,getTiddlerText:(title,fallback='')=>records[title]?.text??fallback,getTiddlers:()=>Object.keys(records),each(fn){for(const [title,fields] of Object.entries(records))fn(new Tiddler(fields),title);},addTiddler(t){records[t.fields.title]=plain(t.fields);writes.push(t.fields.title);},getModificationFields:()=>({}),generateNewTitle:title=>title};}
@@ -162,4 +162,54 @@ test('the exported CutOut renderer remains read-only under the same pointer gest
  const code=await read('plugins/site-publisher/src/cutout-viewer.js'),doc=svgDocument(),window={};runInNewContext(code,{window,document:doc});const runtime=window.HUWikiCutOutSite,w=wiki({Scene:{title:'Scene',text:JSON.stringify(scene())}}),data=runtime.readScene(w,'Scene'),view=runtime.build(doc,w,data);doc.body.appendChild(view.svg);runtime.paint(view,2);
  const before=JSON.stringify(data),node=view.nodes.arm.el,transform=node.getAttribute('transform');node.dispatch('pointerdown',{clientX:100,clientY:100});node.dispatch('pointermove',{clientX:200,clientY:150});node.dispatch('pointerup',{clientX:200,clientY:150});
  assert.equal(JSON.stringify(data),before);assert.equal(node.getAttribute('transform'),transform);assert.equal(view.svg.querySelectorAll('.co-direct-overlay,.co-direct-toolbar').length,0);assert.equal(w.writes.length,0);
+});
+
+
+test('editor track switches are immediate, independently operable and never save project changes',()=>{
+ const h=editorHarness(),before=JSON.stringify(h.data),selection=h.editor.getSelection().id;let changes=0,selections=0;
+ h.options.onPreviewChange=()=>{changes++;};h.options.onSelect=()=>{selections++;};
+ const rows=h.host.querySelectorAll('.huw-musical-track');
+ assert.ok(rows.length>6);assert.equal(h.host.querySelectorAll('.huw-musical-preview-toggle').length,rows.length,'Every lane has a preview switch');
+ const speaker=h.host.querySelector('[data-preview-track="music:A"]');assert.equal(speaker.getAttribute('aria-pressed'),'true');speaker.click();
+ assert.equal(h.editor.isSongAudible({id:'music',lane:'A'}),false);assert.equal(h.editor.isSongAudible({id:'second',lane:'B'}),true);assert.equal(speaker.getAttribute('aria-pressed'),'false');
+ assert.equal(h.editor.getSelection().id,selection);assert.equal(selections,0,'A preview switch must not select a row or seek');
+ h.editor.setTrackAudible('audio-lane',false);assert.equal(h.editor.isAudioAudible({id:'voice'}),false);
+ h.editor.setTrackAudible('sfx',false);assert.equal(h.editor.isSfxAudible(),false);
+ assert.equal(changes,3);assert.deepEqual(h.w.writes,[]);assert.equal(JSON.stringify(h.data),before);
+});
+
+test('visual track hiding preserves authored opacity, timeline position and body part keys',()=>{
+ const h=editorHarness(),actor=h.view.clips[0].view.nodes.actor,other=h.view.clips[0].view.nodes.other,opacity=actor.el.getAttribute('opacity'),before=JSON.stringify(h.data),at=h.time;
+ h.editor.setTrackVisible('figure:actor',false);assert.equal(actor.el.style.display,'none');assert.ok(actor.el.classList.contains('huw-musical-preview-hidden'));assert.notEqual(other.el.style.display,'none');
+ h.options.seek(5);assert.equal(actor.el.style.display,'none');assert.equal(actor.el.getAttribute('opacity'),opacity);
+ h.editor.setTrackVisible('figure:actor',true);assert.equal(actor.el.style.display,'');assert.equal(actor.el.classList.contains('huw-musical-preview-hidden'),false);
+ assert.equal(JSON.stringify(h.data),before);assert.equal(h.w.writes.length,0);assert.equal(at,1.75);assert.equal(h.time,5);
+ h.editor.selectPart('arm',true);const selected=h.editor.getSelection();assert.equal(selected.part,'arm');
+ h.editor.setTrackVisible(selected.id,false);assert.equal(h.view.clips[0].view.nodes.arm.el.style.display,'none');assert.notEqual(actor.el.style.display,'none');
+ h.editor.dispose();assert.equal(h.view.clips[0].view.nodes.arm.el.style.display,'');
+});
+
+test('export bypasses preview switches and clip isolation, then restores them without saving',()=>{
+ const h=editorHarness(),before=JSON.stringify(h.data);h.editor.openAnimation('dance');
+ h.editor.setTrackVisible('figure:actor',false);h.editor.setTrackVisible('captions',false);h.editor.setTrackAudible('music:A',false);h.editor.setTrackAudible('audio-lane',false);h.editor.setTrackAudible('sfx',false);
+ const restore=h.editor.beginExport();assert.equal(h.editor.isExporting(),true);assert.equal(h.editor.isTrackVisible('captions'),true);assert.equal(h.editor.isSongAudible({id:'music',lane:'A'}),true);assert.equal(h.editor.isAudioAudible({id:'voice'}),true);assert.equal(h.editor.isSfxAudible(),true);assert.notEqual(h.view.clips[0].view.nodes.actor.el.style.display,'none');
+ restore();restore();assert.equal(h.editor.isExporting(),false);assert.equal(h.editor.isTrackVisible('captions'),false);assert.equal(h.editor.isSongAudible({id:'music',lane:'A'}),false);assert.equal(h.view.clips[0].view.nodes.actor.el.style.display,'none');
+ assert.equal(JSON.stringify(h.data),before);assert.equal(h.w.writes.length,0);assert.equal(h.editor.inClipDetail(),true);
+});
+
+test('caption lane presents timed blocks and selecting a subtitle seeks to its source without creating keys',()=>{
+ const initial=editorHarness().w.records,stage=JSON.parse(initial.Scene.text);stage.parts.push({id:'spoken-1',type:'text',text:'Hello, world.',keys:[pose(0,{opacity:0,easing:'step'}),pose(2,{opacity:1,easing:'step'}),pose(4,{opacity:0,easing:'step'})]});initial.Scene.text=JSON.stringify(stage);
+ const h=editorHarness(initial),before=JSON.stringify(h.data),cue=h.editor.getCaptionCues()[0];assert.equal(cue.start,2);assert.equal(cue.end,4);assert.equal(cue.sceneTitle,'Scene');
+ const block=h.host.querySelector('.huw-musical-caption-clip');assert.ok(block);assert.match(block.textContent,/Hello, world/);block.click();assert.equal(h.editor.getSelection().kind,'captions');assert.ok(h.time>=2&&h.time<4);assert.match(h.host.querySelector('.huw-musical-caption-text').textContent,/Hello, world/);
+ h.editor.addKeyframe();h.editor.removeKeyframe();assert.equal(JSON.stringify(h.data),before);assert.equal(h.w.writes.length,0);
+ const toggle=h.host.querySelector('[data-preview-track="captions"]');toggle.click();assert.equal(h.editor.isTrackVisible('captions'),false);assert.equal(h.editor.getCaptionCues().length,1,'Hiding captions keeps their track available');
+});
+
+
+test('preview visibility follows scene switches while leaving inactive scene display and authored visibility intact',()=>{
+ const initial=editorHarness().w.records,film=JSON.parse(initial.Film.text),second=JSON.parse(initial.Scene.text);film.duration=20;film.scenes.push({id:'next',source:'Second',duration:10});film.musical.songs[0].duration=20;film.musical.animationClips[0].duration=20;second.parts.find(p=>p.id==='other').keys[0].opacity=0;initial.Film.text=JSON.stringify(film);initial.Second={title:'Second',type:'application/json',text:JSON.stringify(second)};
+ const h=editorHarness(initial),first=h.view.clips[0],next=h.view.clips[1];h.editor.setTrackVisible('figure:actor',false);assert.equal(first.view.nodes.actor.el.style.display,'none');assert.notEqual(next.view.nodes.actor.el.style.display,'none','Hidden scene is not visited just to mask its actors');
+ h.options.seek(12);assert.equal(first.el.getAttribute('display'),'none');assert.equal(first.view.nodes.actor.el.style.display,'');assert.equal(next.view.nodes.actor.el.style.display,'none');assert.equal(next.view.nodes.other.el.getAttribute('opacity'),'0');
+ h.editor.setTrackVisible('scenes',false);assert.equal(next.el.style.display,'none');h.options.seek(2);assert.equal(first.el.style.display,'none');assert.equal(next.el.getAttribute('display'),'none');assert.equal(next.el.style.display,'');
+ h.editor.setTrackVisible('scenes',true);assert.equal(first.el.style.display,'');assert.equal(next.el.getAttribute('display'),'none');assert.equal(h.w.writes.length,0);
 });

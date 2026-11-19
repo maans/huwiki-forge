@@ -1,0 +1,18 @@
+/* Preview switches are controls, not saved animation properties. */
+.huw-musical-lane-title{gap:5px}
+.huw-musical-track-name{min-width:0;overflow:hidden;text-overflow:ellipsis;flex:1}
+.huw-musical .huw-musical-preview-toggle{flex:0 0 30px;width:30px;height:29px;padding:4px;border:1px solid #778d9b;border-radius:5px;background:#eaf1f6;color:#254e60;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;touch-action:manipulation}
+.huw-musical .huw-musical-preview-toggle svg{width:18px;height:18px;aspect-ratio:auto;pointer-events:none}
+.huw-musical .huw-musical-preview-toggle[aria-pressed="false"]{background:#edf0f2;color:#7c4b45;border-color:#ad8e89}
+.huw-musical .huw-musical-preview-toggle:focus-visible{outline:2px solid #eeb75e;outline-offset:2px}
+.huw-musical-track.is-preview-disabled>.huw-musical-lane>.huw-musical-key,.huw-musical-track.is-preview-disabled>.huw-musical-lane>.huw-musical-song-clip,.huw-musical-track.is-preview-disabled>.huw-musical-lane>.huw-musical-recorded-clip,.huw-musical-track.is-preview-disabled>.huw-musical-lane>.huw-musical-caption-clip,.huw-musical-track.is-preview-disabled>.huw-musical-lane>.huw-musical-motion-clip{opacity:.42}
+.huw-musical-preview-hidden{display:none!important}
+.huw-musical-caption-clip{position:absolute;top:6px;height:23px;min-width:3px;border:1px solid #986c27;border-radius:4px;padding:2px 5px;background:#dfc080;color:#3e301c;font:inherit;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:left;cursor:pointer}
+.huw-musical-caption-clip[data-caption-role="cue"]{top:1px;height:5px;border:0;background:#bf9454;font-size:0;opacity:.7}
+.huw-musical-caption-clip.is-selected{outline:2px solid #f5a63d;outline-offset:1px}
+.huw-musical-caption-text{width:100%;white-space:pre-wrap;line-height:1.5;margin:4px 0}
+.huw-musical-preview-note{font-size:11px;color:#667988}
+.huw-musical--workspace .huw-musical-preview-toggle{border-color:#506780;background:#25374c;color:#bce6f5}
+.huw-musical--workspace .huw-musical-preview-toggle[aria-pressed="false"]{border-color:#795957;background:#3e3038;color:#e8b2a4}
+.huw-musical--workspace .huw-musical-preview-note{color:#aebdcb}
+@media(pointer:coarse){.huw-musical .huw-musical-preview-toggle{width:36px;height:34px;flex-basis:36px}.huw-musical--workspace .huw-musical-lane-title{padding-top:2px;padding-bottom:2px}}
