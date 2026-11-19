@@ -26,3 +26,8 @@ Run `node scripts/build-graph-edition.mjs` to verify/download the pinned upstrea
 ## WikiText block-mode layout
 
 Graph Edition's bilingual introduction and node tiddlers use HTML `<div>` and TiddlyWiki's `<$list>` widgets. **Leave a blank line after each opening tag** before WikiText headings (`!`) or numbered lists (`#`) to keep the content in block parsing mode. See the official [HTML in WikiText](https://tiddlywiki.com/static/HTML%2520in%2520WikiText.html) and [parser mode transitions](https://tiddlywiki.com/static/WikiText%2520parser%2520mode%2520transitions.html). The browser smoke test verifies rendered headings and ordered list items in Danish and English.
+
+## Direct touch editor (Graph Studio)
+The Graph Studio plugin provides an independent, localized `<$forge-graph-editor graph="$:/graph/Platon"/>` widget above the graph. It updates ordinary tagged tiddlers and graph relationship fields directly: **add node, add edge, choose shape, color, size, optional local SVG icon**. New nodes are tagged with the graph tiddler's `forge-node-tag`. The original Flibbles graph editor is still bundled unchanged, but its gesture-based manipulation bar is hidden in the Forge workbench to avoid duplicate controls. The Graph sidebar remains available.
+
+A copy of the upstream standard editable template is maintained as a small Forge graph template in the Graph Studio plugin. The only relevant visual addition is a local override of the `$node.default` macro to pass `graph-shape` and `graph-size` fields to the original `<$node>` widget. Graph tiddlers opt into it via their `template` field; no global upstream macros are overridden.
