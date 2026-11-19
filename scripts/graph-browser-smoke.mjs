@@ -93,7 +93,7 @@ try{
    const c=stage.querySelector('.graph-canvas');
    return {mode:c._forgeVisNetwork?.manipulation?.inMode,toolbar:c.querySelector('.vis-manipulation')?.textContent?.slice(0,120)};
   });
-  console.log('ADD NODE MODE',JSON.stringify(afterAdd));
+  assert.equal(afterAdd.mode,'addNode','Native Add Node enters the original canvas-click mode');
   assert.equal(await editor.isVisible(),false,'Native Add Node must not open the Forge node form');
   const surface=graphStage.locator('.graph-canvas').first();
   const rect=await surface.boundingBox();
@@ -104,7 +104,7 @@ try{
    return {mode:c._forgeVisNetwork?.manipulation?.inMode,toolbar:c.querySelector('.vis-manipulation')?.textContent?.slice(0,120),
     overlays:document.querySelectorAll('.tc-modal-wrapper,.tc-modal').length,opened:[...document.querySelectorAll('.tc-modal-wrapper,.tc-modal')].map(x=>x.textContent.slice(0,100))};
   });
-  console.log('CANVAS CLICK MODE',JSON.stringify(afterCanvas));
+  assert.equal(afterCanvas.mode,'addNode','Native node modal should be triggered from the canvas');
   await page.locator('input.graph-select').first().waitFor({state:'visible'});
   assert.match(await page.locator('.tc-modal').first().innerText(),/Select tiddler/);
   const newNode='Brugerens grafprøve';
