@@ -41,6 +41,22 @@ test('AniMus limb drag records rotation at the paused beat cursor and retains it
  const reopened=editorHarness(h.w.records);assert.equal(reopened.clip.motion.arm.find(k=>k.t===3.5).r,57);
 });
 
+test('video export temporarily uses the performance camera and all actors, then restores editor preview',()=>{
+ const initial=editorHarness().w.records,film=JSON.parse(initial.Film.text);
+ film.musical.animationClips.push({...plain(film.musical.animationClips[0]),id:'other-dance',target:'other',motion:{}});
+ initial.Film.text=JSON.stringify(film);
+ const h=editorHarness(initial),performanceBox=h.view.svg.getAttribute('viewBox'),saved=JSON.stringify(h.w.records);
+ h.editor.openAnimation('dance');h.editor.setCameraEdit(true);h.repaint();
+ const previewBox=h.view.svg.getAttribute('viewBox'),other=h.view.clips[0].view.nodes.other.el;
+ assert.notEqual(previewBox,performanceBox);assert.equal(other.style.display,'none');
+ const restore=h.editor.beginExport();h.repaint();
+ assert.equal(h.view.svg.getAttribute('viewBox'),performanceBox);assert.equal(other.style.display,'');
+ assert.equal(h.editor.inClipDetail(),true,'the editing selection is preserved');
+ restore();
+ assert.equal(h.view.svg.getAttribute('viewBox'),previewBox);assert.equal(other.style.display,'none');
+ assert.equal(JSON.stringify(h.w.records),saved);assert.deepEqual(h.w.writes,[]);
+});
+
 test('cancel of a limb rotation restores both a new key and an existing key exactly',()=>{
  const h=editorHarness();h.editor.openAnimation('dance');h.editor.selectPart('arm');const original=JSON.stringify(h.clip.motion.arm);
  let drag=h.editor.beginPartMove('arm',1.75);drag.update(11,-7,60);drag.cancel();assert.equal(JSON.stringify(h.clip.motion.arm),original);assert.equal(h.w.writes.length,0);

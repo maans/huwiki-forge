@@ -86,10 +86,51 @@ The starting view is saved into the downloaded HTML. Looking at the programme ta
 
 The audience player uses the shared AniMus clock, CutOut renderer, mouth animation, ABC audio controller, effects and narration player. Script bindings and their mouth parts are included in the exported page. Missing music does not block the visual performance. Automatic replacement by another music synthesizer is disabled in the publication's default mode. Instrument samples still follow the existing ABC sound library configuration; this release does not bundle the entire sample bank into every site.
 
+## Video export for video editors (experimental)
+
+AniMus Video Export is a separately installable TiddlyWiki plugin (`$:/plugins/huwiki/animus-video-export`). In AniMus Forge I, it is included in the edition manifest. The plugin adds **Eksportér video / Export video** beside the transport in the editable stage, and in the published Site view when the plugin is installed at publication time. The current source remains editable and untouched.
+
+The export panel accepts a full production, current top-level segment or exact time interval. Video settings are **1280 × 720 or 1920 × 1080**, **24 or 30 fps**, in **H.264 MP4**.
+
+**Files to download** is the only output selection. Each checked row produces its own file:
+
+| File choice | Result |
+| --- | --- |
+| Video | `video.mp4` with the separately chosen movie content. |
+| Music | `music.wav`. |
+| Speech and singing | `speech.wav`. |
+| Sound effects | `effects.wav`. |
+| Captions | `captions.vtt` in the player's selected language. |
+
+The defaults select video and a VTT file. **Video content** separately chooses playback audio or silent video, and burned captions or clean picture. Selecting WAV files does not change the movie soundtrack; selecting VTT does not change the image. There is no mode selector that changes the meaning of the file checkboxes.
+
+Each file row retains its download arrow once ready. **Create selected files** creates only missing or changed artifacts; **Create missing files** is used when some work is already ready. Once selected files are ready, the primary action is **Save selected files**. One file downloads directly; multiple files are collected into a ZIP, with manifest and import instructions when WAVs are included. A different selection may require preparing a different ZIP, but never re-encoding unchanged media. Completed media is reused when a new WAV or VTT is selected after the MP4. Video export retains its caption cues so a later VTT can be written without rendering video frames again.
+
+Artifact identity includes the relevant source, mixer, range and output settings, never the output-file selection itself. Affected files are marked for updating when their content changes. Completed outputs and settings survive closing/reopening the dialog in the same player. Cancellation and errors retain previously finished work. Files are held for the current page session; reloading the page, closing the tab or destroying the player releases them.
+
+The interface follows the distinction in [Final Cut Pro's roles export](https://support.apple.com/en-mk/guide/final-cut-pro/verc9c84cdbc/mac) between output files and media content, and [Premiere's explicit caption export choices](https://helpx.adobe.com/premiere/desktop/render-and-export/export-files/overview-of-export-settings.html). AniMus' reuse of completed files is its own session-cache behavior, not a claim that all editors cache every finished export.
+
+WAVs are **48 kHz stereo PCM16**. Every selected track retains the same origin, leading silence, internal pauses and duration. Source offsets, mutes, levels and fades are retained; tracks are not independently normalized. Audio is rendered in bounded chunks and serialized before the next stem, avoiding retention of three full-length floating-point buffers. The uncompressed ZIP references the finished media blobs; CRC checks read bounded slices rather than copying an entire film into another byte array.
+
+For a selected source interval `[start, end)`, output starts at zero. Duration is rounded up to the next whole video frame; all WAVs contain the corresponding exact sample count (1,600 samples per frame at 30 fps or 2,000 at 24 fps). The last picture completes its frame and the tiny remainder after the requested end is silent in every WAV. `manifest.json` records the source range, common output duration, exact frame counts, levels and any clipping. Invalid PCM fails explicitly. Clipping is reported so source levels can be corrected before another export.
+
+Music includes the original ABCJS sample synthesis and recordings whose `kind` is `music`. Speech includes narration, recorded singing (`song`) and ordinary unclassified recordings. Recorded `sfx`/`effects` and generated theatre cues go to the effects stem. A previously mixed recording remains intact: this exporter does not isolate vocals from accompaniment inside one file. The Turn Around film uses its existing recorded sources and respects its muted ABC scores, avoiding duplicate music. Its scoped adapter attaches the same export panel to the film's own player, preserving the current mixer settings and returning to the original paused position after export.
+
+Burned subtitles are chosen independently of the file list. Optional **WebVTT** follows the player's currently selected caption language and is rebased to the selected clip. It remains a portable sidecar or timing reference; **direct VTT import in LumaFusion has not been verified**. LumaTouch's [official supported-media list](https://luma-touch.helpscoutdocs.com/article/5-what-types-of-media-are-supported-by-lumafusion) lists WAV and MP4. Unzip in Files, import the video and desired WAVs, and place every file at the same timeline start. The native **Share** action is offered where supported, alongside ZIP and individual media downloads.
+
+Video frames are rendered from the shared CutOut/SVG scene, at exact positions in the AniMus performance timeline. H.264 and AAC encoding use the browser's WebCodecs APIs. The original ABCJS sample synthesizer supplies the orchestra's samples; recorded audio and the existing sound-effects module are rendered offline. Audio failures do not cause automatic substitution by TinySynth. If a soundbank is unavailable, a sound export fails visibly; a user can deliberately choose **Without audio** for the video or adjust the source mixer before exporting.
+
+**Current limitations:** Full MP4 export needs `VideoEncoder` and, for a mixed soundtrack, `AudioEncoder` supporting AVC/AAC. Unsupported browser/device reports an error; WAV-only export remains independent of those encoders. A short, silent calibration measures the native AAC encoder's initial delay for the selected configuration; MP4 edit lists remove that delay and trim padded audio to the picture duration. The calibration is cached for the session and fails explicitly if reliable timing cannot be established. WAV packages retain exact PCM sample counts without a codec-dependent trim. The renderer does not guarantee faster-than-realtime performance on iPad. Very long videos may exhaust memory; try a 5–10 second 720p clip first. H.264 has no alpha channel, so these exports are opaque 16:9 footage. Background art must be readable locally and embeddable in exported SVG. Native iPad/LumaFusion acceptance is still required; this remains an experimental beta.
+
+Build/check the plugin with `node scripts/build-animus-video-export.mjs` and `node scripts/build-animus-video-export.mjs --check`; tests include `node --test tests/animus-video-export*.test.mjs`. The focused browser smoke `node scripts/animus-stems-browser-smoke.mjs` renders real Web Audio with H.264/AAC APIs disabled, decodes downloaded ZIP/WAVs independently and checks separation, gain, offsets, padding and restoration of the player position. Download-lifecycle tests exercise independent file selection, reuse of completed media, repeated downloads, changed-content invalidation and cancellation/error retention.
+
+The `AniMus export smoke` workflow additionally runs `scripts/animus-codec-browser-smoke.mjs` with native H.264/AAC encoders and measures decoded transient positions. Its macOS job requires both codecs. `scripts/plato-export-browser-smoke.mjs` opens the actual Turn Around audience player, verifies the export dialog in fullscreen, checks the recorded stems against live mixer gains and Danish captions, then exports and decodes a five-second scene with and without audio. The workflow retains these MP4/WAV results and a self-contained `turn-around-export-test.html` for device acceptance. A Linux-only WAV pass does not count as native MP4 verification.
+
 ## Build and verify
 
 ```sh
 node scripts/build-animus.mjs
+node scripts/build-animus-video-export.mjs
 node scripts/build-site-publisher.mjs
 node scripts/build-forge-plugin-library.mjs
 node --test tests/animus-*.test.mjs tests/site-cutout-media.test.mjs tests/site-drawing-svg.test.mjs
@@ -113,7 +154,7 @@ CHROME_BIN=/usr/bin/google-chrome node scripts/animus-browser-smoke.mjs
 
 The CI browser job runs these checks and keeps screenshots and traces. Enabled browser checks fail on browser or playback errors. Real microphone quality and iPad/Safari listening still need device testing.
 
-Automatic cue movement during scene rearrangement supports ordinary sequential scenes. If imported CutOut clips use speed changes, offsets or loops, the scene workshop disables automatic cue movement; their music and audio remain adjustable on the timeline. Video/MP4 export is outside this release.
+Automatic cue movement during scene rearrangement supports ordinary sequential scenes. If imported CutOut clips use speed changes, offsets or loops, the scene workshop disables automatic cue movement; their music and audio remain adjustable on the timeline. Video/MP4 export is available through the experimental, separately installable exporter described above.
 
 ## Dansk
 

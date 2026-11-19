@@ -1,0 +1,13 @@
+{
+  "title": "$:/plugins/huwiki/animus-video-export",
+  "name": "AniMus Video Export · MP4 til LumaFusion",
+  "description": "Choose downloadable MP4, music, speech, effects and caption files independently; reuse completed exports in AniMus and LumaFusion workflows.",
+  "author": "HUWiki Forge",
+  "version": "0.1.0-beta.3",
+  "plugin-type": "plugin",
+  "type": "application/json",
+  "core-version": ">=5.4.1",
+  "stability": "experimental",
+  "dependents": "$:/plugins/huwiki/musical",
+  "requires-reload": "yes"
+}

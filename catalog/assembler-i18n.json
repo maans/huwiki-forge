@@ -471,6 +471,16 @@
         "name": "AniMus · Bilingual captions",
         "description": "Show Danish and English captions with automatic or manual language selection. Audio, cue timing and lip-sync stay unchanged."
       }
+    },
+    "$:/plugins/huwiki/animus-video-export": {
+      "da": {
+        "name": "AniMus · Videoeksport (MP4)",
+        "description": "Eksportér MP4 eller en redigeringspakke med video og synkroniserede WAV-spor til musik, tale og effekter."
+      },
+      "en": {
+        "name": "AniMus · Video Export (MP4)",
+        "description": "Export MP4 or an editing package with video and synchronized WAV tracks for music, speech and effects."
+      }
     }
   }
 }

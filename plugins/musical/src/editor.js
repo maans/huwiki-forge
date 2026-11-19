@@ -65,7 +65,7 @@ function attach(o){
  var clipTitle=el(doc,"strong","huw-musical-clip-editor-title","",clipHeading);
  var clipMeta=el(doc,"span","huw-musical-clip-editor-meta","",clipHeading);
  var rows=el(doc,"div","huw-musical-tracks",undefined,root),inspector=el(doc,"div","huw-musical-inspector",undefined,root),status=el(doc,"output","huw-musical-edited-status","",root);
- var cameraEditActive=false,playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1,expandedClipId="",detailClipId="",detailReturn=null,lastClipTap=null,isolation="";
+ var cameraEditActive=false,exporting=false,playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1,expandedClipId="",detailClipId="",detailReturn=null,lastClipTap=null,isolation="";
  var tracks=[{id:"song",kind:"song",name:L.song},{id:"scenes",kind:"scene-range",name:L===translations.da?"Akter og scener":"Acts and scenes"},
   {id:"scene-objects",kind:"object-browser",name:L===translations.da?"Objekter i scenen":"Objects in scene"},
   {id:"backdrop",kind:"part",part:"stage-back",name:L.backdrop},{id:"stage",kind:"part",part:"stage-floor",name:L.stage},{id:"foreground",kind:"part",part:"foreground-flags",name:L.foreground},{id:"lights",kind:"light",name:L.light}];
@@ -219,17 +219,17 @@ function attach(o){
   updateFocus(time);
   // This is a preview-only camera and solo mode. The actual film camera and
   // all other animation clips remain unchanged in the saved TiddlyWiki.
-  var detail=activeDetail();
+  var detail=exporting?null:activeDetail(),visibleDetailId=exporting?"":detailClipId;
   if(detail){
    var person=source&&source.parts.find(function(p){return p.id===detail.target;});
    if(person){var pose=Engine.state(person,time);o.view.svg.setAttribute("viewBox",[round(pose.x-200),round(pose.y-165),400,225].join(" "));}
   }
-  if(isolation!==detailClipId){
+  if(isolation!==visibleDetailId){
    (o.view.clips||[]).forEach(function(filmClip){var nested=filmClip.view;if(!nested)return;
     m.animationClips.forEach(function(c){var node=nested.nodes&&nested.nodes[c.target];
-     if(node&&node.el)node.el.style.display=detailClipId&&c.id!==detailClipId?"none":"";
+     if(node&&node.el)node.el.style.display=visibleDetailId&&c.id!==visibleDetailId?"none":"";
     });
-   });isolation=detailClipId;
+   });isolation=visibleDetailId;
   }
   paintTransform(time);
   cameraLabel.textContent=detail?(L===translations.da?"Animation: ":"Animation: ")+detail.name:L.camera+" "+activeCam(time);playhead=time;
@@ -1037,7 +1037,7 @@ function attach(o){
   walk(o.view,time,0);
  }
  function paintTransform(time){var c=cameraStateFor(time,activeCam(time)),w=film.width/c.zoom,h=film.height/c.zoom,
-  editing=cameraEditActive&&!(o.isPlaying&&o.isPlaying());
+  editing=!exporting&&cameraEditActive&&!(o.isPlaying&&o.isPlaying());
   if(editing){o.view.svg.setAttribute('viewBox',[(-film.width*.14),(-film.height*.14),film.width*1.28,film.height*1.28].join(' '));cameraWorld.removeAttribute('transform');
    if(overlay){overlay.setAttribute('x',0);overlay.setAttribute('y',0);overlay.setAttribute('width',film.width);overlay.setAttribute('height',film.height);}
   }else{var inv=cameraMatrix(c);
@@ -1060,6 +1060,7 @@ function attach(o){
   selectFigure:selectFigure,ensureFigureTrack:ensureFigureTrack,beginFigureTransform:beginFigureTransform,figureStateFor:figureState,
   beginCameraTransform:beginCameraTransform,selectCamera:chooseCamera,activeCamera:activeCam,
   setCameraEdit:function(v){cameraEditActive=!!v;o.repaint();},cameraStateFor:cameraStateFor,
+  beginExport:function(){var previous=exporting;exporting=true;o.repaint();return function(){exporting=previous;o.repaint();};},
   isJointMove:isJointMove,getPartPivot:getPartPivot,
   resolvePartScene:function(id){return sceneForPart(id,o.view,0);},
   dispose:function(){if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};

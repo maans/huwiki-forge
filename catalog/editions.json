@@ -101,7 +101,7 @@
     {
       "id": "animus",
       "name": "AniMus Forge I (beta)",
-      "version": "0.11.0-beta.4",
+      "version": "0.11.0-beta.6",
       "status": "test",
       "manifest": "../editions/animus/manifest.json",
       "description": "Experimental unified animation, music and theatre workshop for TiddlyWiki. The Fyrtøjet and Tændstikorkestret examples share one editor.",
@@ -118,7 +118,7 @@
     {
       "id": "turn-around",
       "name": "Turn Around — Beyond the Cave",
-      "version": "0.1.0-demo.2",
+      "version": "0.1.0-demo.3",
       "status": "test",
       "manifest": "../editions/turn-around/manifest.json",
       "description": "An AI-generated musical animation made with AniMus. Explore Plato’s cave, then edit the audio recordings, music, characters, camera and animation.",
@@ -127,8 +127,8 @@
         "headingEn": "An AniMus musical to watch and remake",
         "descriptionDa": "AI-genereret animation skabt med AniMus: Platons hule som musical. Se forestillingen, og arbejd selv med lydoptagelser, musik og animation.",
         "descriptionEn": "An AI-generated animation made with AniMus: Plato’s cave as a musical. Watch the show, then work with audio recordings, music and animation.",
-        "noteDa": "Engelsk lyd og lip-sync med 103 danske eller engelske undertekster. 14 scener, ABC-partiturer og indlejrede lydoptagelser.",
-        "noteEn": "English audio and lip-sync with 103 captions in Danish or English. 14 scenes, ABC scores and embedded audio.",
+        "noteDa": "Engelsk lyd og 103 danske eller engelske undertekster. 14 scener, ABC-partiturer og indlejrede optagelser. Eksperimentel MP4- og WAV-eksport til efterbehandling.",
+        "noteEn": "English audio and 103 Danish or English captions. 14 scenes, ABC scores and embedded recordings. Experimental MP4 and WAV export for editing.",
         "order": "02.41"
       }
     },
@@ -249,7 +249,7 @@
     {
       "id": "site-publisher",
       "name": "SitePublisher",
-      "version": "0.1.16-test.3",
+      "version": "0.1.16-test.4",
       "description": "HTML publishing for AniMus musicals, ABC music, CutOut, SVG drawings and embedded media.",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"

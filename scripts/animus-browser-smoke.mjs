@@ -33,6 +33,16 @@ let browser,context,page,expectedConfirm=false;
 const errors=[],checks=[],sampleRequests=[];
 function passed(name){checks.push(name);console.log('PASS '+name);}
 async function screenshot(name){await page.screenshot({path:fileURLToPath(new URL(name+'.png',out)),fullPage:false});}
+async function openTiddler(title){
+ // tm-navigate bubbles to a parent navigator; dispatching it from rootWidget
+ // has no navigator above it and never opens a tiddler. Install this test
+ // fixture in the native story list and wait for its frame before editing.
+ await page.evaluate(title=>{
+  const story=$tw.wiki.getTiddlerList('$:/StoryList');
+  $tw.wiki.setText('$:/StoryList','list',undefined,[title,...story.filter(item=>item!==title)]);
+ },title);
+ await page.locator('.tc-tiddler-frame[data-tiddler-title="'+title+'"]').waitFor();
+}
 async function savedProduction(){return page.evaluate(name=>{const f=$tw.wiki.getTiddler(name).fields,film=JSON.parse($tw.wiki.getTiddlerText(f['animus-scene']));return {title:name,filmTitle:f['animus-scene'],scoreTitle:f['animus-score'],stageTitle:film.scenes[0].source,film,stage:JSON.parse($tw.wiki.getTiddlerText(film.scenes[0].source)),score:$tw.wiki.getTiddler(f['animus-score']).fields['abc-source']};},'AniMus CI production');}
 function actorFixture(id,name,x){const pose=(opacity=1)=>({t:0,x:0,y:0,r:0,sx:1,sy:1,opacity});return [
  {id,name,type:'group',parent:null,keys:[{...pose(),x,y:180}]},
@@ -78,6 +88,48 @@ try{
  await page.waitForFunction(()=>{const p=document.querySelector('.tc-tiddler-frame[data-tiddler-title="AniMus CI production"] .huw-musical-play');return p&&!p.disabled;});
  let production=await savedProduction();assert.equal(production.stage.parts.length,0);assert.equal(production.film.scenes.length,1);assert.match(production.score,/z4/);passed('create a complete editable project through its UI');
 
+ // Real WebCodecs export: a short silent 720p MP4, with no transport controls.
+ // Keep this test deterministic and small so it can run on every PR.
+ const videoExport=show.locator('.huw-video-export-button');
+ await videoExport.waitFor();await videoExport.click();
+ const exportDialog=page.locator('.huw-video-modal');await exportDialog.waitFor();
+ await exportDialog.locator('.huw-video-range input').nth(0).fill('0');
+ await exportDialog.locator('.huw-video-range input').nth(1).fill('0.4');
+ await exportDialog.locator('.huw-video-audio').selectOption('silent');
+ for(const id of ['music','speech','effects'])await exportDialog.locator('[data-export-file="'+id+'"]').uncheck();
+ const canEncodeAvc=await page.evaluate(async()=>{
+  if(!window.VideoEncoder?.isConfigSupported)return false;
+  for(const codec of ['avc1.4d401f','avc1.42e01f']){
+   const config={codec,width:1280,height:720,bitrate:5000000,framerate:30,
+    latencyMode:'realtime',hardwareAcceleration:'prefer-hardware',avc:{format:'avc'}};
+   try{if((await VideoEncoder.isConfigSupported(config))?.supported)return true;}catch(_){}
+  }
+  return false;
+ });
+ await exportDialog.locator('.huw-video-primary').click();
+ await page.waitForFunction(()=>/Filer klar:|Files ready:|Eksportfejl:|Export error:|Export cancelled/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:45000});
+ const videoExportStatus=await exportDialog.locator('.huw-video-status').innerText();
+ if(canEncodeAvc){
+ assert.match(videoExportStatus,/Filer klar:|Files ready:/,'A real AVC output must be generated; status: '+videoExportStatus);
+ const pendingVideoDownload=page.waitForEvent('download');
+ await exportDialog.getByRole('button',{name:'Hent video.mp4',exact:true}).click();
+ const videoDownload=await pendingVideoDownload,videoPath=fileURLToPath(new URL('animus-video-smoke.mp4',out));
+ await videoDownload.saveAs(videoPath);
+ const movie=await readFile(videoPath),atoms=[];for(let offset=0;offset+8<=movie.length;){
+  const length=movie.readUInt32BE(offset),type=movie.toString('ascii',offset+4,offset+8);
+  assert.ok(length>=8&&offset+length<=movie.length,'valid '+type+' MP4 atom');
+  atoms.push(type);offset+=length;
+ }
+ assert.deepEqual(atoms,['ftyp','moov','mdat']);assert.ok(movie.length>1500,'nonempty AVC video payload');
+
+ passed('original AniMus stage exports a real H.264 MP4 without a screen recording');
+ }else{
+  assert.match(videoExportStatus,/No H\.264 MP4 encoder is supported/,'Unsupported AVC must be reported without altering the performance');
+  passed('unsupported headless Linux AVC encoder yields a clear export error');
+ }
+ await exportDialog.locator('.huw-video-close').click();await exportDialog.waitFor({state:'detached'});
+
+
  // Exercise the actual ABC editing widget mounted inside the AniMus draft.
  const music='X:1\nT:AniMus CI melody\nM:4/4\nL:1/4\nQ:1/4=120\nK:C\nC D E F | G A B c |';
  await show.locator('.huw-musical-score-button').click();let score=show.locator('.huw-score-workshop');await score.locator('.huwabc-edit-workshop').waitFor();
@@ -116,7 +168,8 @@ try{
  // Use the real CutOut scene widget for the same scene, with a rotated,
  // non-uniformly scaled figure and an arm whose pivot is not (0,0).
  const sceneEditorTitle='AniMus CI · CutOut scene editor';
- await page.evaluate(({title,scene})=>{$tw.wiki.addTiddler(new $tw.Tiddler({title,type:'text/vnd.tiddlywiki',text:'<$cutout-studio mode="scene" tiddler="'+scene+'"/>'}));$tw.rootWidget.dispatchEvent({type:'tm-navigate',navigateTo:title,navigateFromTitle:'AniMus CI production'});},{title:sceneEditorTitle,scene:production.stageTitle});
+ await page.evaluate(({title,scene})=>{$tw.wiki.addTiddler(new $tw.Tiddler({title,type:'text/vnd.tiddlywiki',text:'<$cutout-studio mode="scene" tiddler="'+scene+'"/>'}));},{title:sceneEditorTitle,scene:production.stageTitle});
+ await openTiddler(sceneEditorTitle);
  const cutoutFrame=page.locator('.tc-tiddler-frame[data-tiddler-title="'+sceneEditorTitle+'"]'),cutout=cutoutFrame.locator('.co-studio');await cutout.locator('.co-direct-toolbar').waitFor();
  const originalAlma=actorParts.find(p=>p.id==='ci-alma'),originalArm=actorParts.find(p=>p.id==='ci-alma-arm');
  const workingScene=()=>page.evaluate(title=>JSON.parse($tw.wiki.getTiddlerText('$:/CutOut/Drafts/'+title)||$tw.wiki.getTiddlerText(title)),production.stageTitle);
@@ -134,7 +187,7 @@ try{
  await cutout.getByRole('button',{name:'Gem projekt',exact:true}).click();await page.waitForFunction(title=>!$tw.wiki.getTiddler('$:/CutOut/Drafts/'+title),production.stageTitle);
  const savedArm=(await savedProduction()).stage.parts.find(p=>p.id==='ci-alma-arm');assert.ok(savedArm.keys.some(k=>Math.abs(k.t-2)<.001&&Math.abs(k.r-47)<1));
  await cutoutFrame.locator('.tc-tiddler-controls button').filter({has:page.locator('svg.tc-image-close-button')}).click();await cutoutFrame.waitFor({state:'detached'});
- await page.evaluate(title=>$tw.rootWidget.dispatchEvent({type:'tm-navigate',navigateTo:title,navigateFromTitle:'AniMus CI production'}),sceneEditorTitle);await cutout.locator('.co-direct-toolbar').waitFor();await selectCutoutArm();assert.deepEqual((await workingScene()).parts.find(p=>p.id==='ci-alma-arm').keys,savedArm.keys);assert.equal(await cutout.locator('.co-key-strip [data-key-time="2"]').count(),1,'the saved key is present after reopening');
+ await openTiddler(sceneEditorTitle);await cutout.locator('.co-direct-toolbar').waitFor();await selectCutoutArm();assert.deepEqual((await workingScene()).parts.find(p=>p.id==='ci-alma-arm').keys,savedArm.keys);assert.equal(await cutout.locator('.co-key-strip [data-key-time="2"]').count(),1,'the saved key is present after reopening');
  await cutoutFrame.locator('.tc-tiddler-controls button').filter({has:page.locator('svg.tc-image-close-button')}).click();await cutoutFrame.waitFor({state:'detached'});
 
  // Continue directly on the AniMus stage: the same hand gesture now writes
@@ -194,6 +247,7 @@ try{
  const site=await (await preview.elementHandle()).contentFrame();assert.ok(site,'Site preview iframe must be available');
  await site.waitForSelector('.huw-site-animus[data-animus-ready="1"]',{timeout:30000});
  assert.match(await site.locator('.huw-animus-play').innerText(),/Afspil|Play/);assert.match(await site.locator('.huw-animus-stop').innerText(),/Stop/);assert.match(await site.locator('.huw-animus-fullscreen').innerText(),/Fuld skærm|Full screen/);
+ assert.equal(await site.locator('.huw-video-export-button').count(),1,'Site view also offers the independent video-export action');
  const audienceLayer=site.locator(`[data-cutout-id="${layerPart.id}"] image`);assert.equal(await audienceLayer.getAttribute('href'),layerPart.variants[0].imageData,'Site renders the SVG frame without a base image');
  await assertMouth(site,false);
  assert.equal(await site.locator('.huw-musical-workspace,.huwabc-edit-workshop,.huw-svg-workshop,.huw-narration-workshop,.co-direct-toolbar,.co-direct-overlay,.huw-musical-transform-overlay,.huw-musical-part-pivot').count(),0,'Site view must not show editors or direct-edit handles');
@@ -235,7 +289,7 @@ try{
  const readerFrame=page.locator('.tc-tiddler-frame[data-tiddler-title="'+readerTitle+'"]');
  const mixers=page.locator('.huwabc-mini-mixer').filter({has:page.locator('.huwabc-mini-mixer-title',{hasText:readerTitle})});
  for(let attempt=0;attempt<2;attempt++){
-  await page.evaluate(title=>$tw.rootWidget.dispatchEvent({type:'tm-navigate',navigateTo:title,navigateFromTitle:'AniMus CI production'}),readerTitle);
+  await openTiddler(readerTitle);
   await readerFrame.locator('.huwabc-score').waitFor();
   assert.equal(await readerFrame.locator('.huwabc-score').count(),1,'the score must mount one actual reader, not hide a duplicate');
   await mixers.locator('.huwabc-mini-mixer-row').first().waitFor();

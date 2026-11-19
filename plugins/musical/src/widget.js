@@ -15,6 +15,7 @@ var StartPosition=require("$:/plugins/huwiki/abc/start-position.js");
 var Timeline=require("$:/plugins/huwiki/musical/sync.js").Timeline;
 var Editor=require("$:/plugins/huwiki/musical/editor.js"),Motion=require("$:/plugins/huwiki/musical/motion.js");
 var Workspace=require("$:/plugins/huwiki/musical/workspace.js");
+var VideoExport=null;try{VideoExport=require("$:/plugins/huwiki/animus-video-export/runtime.js");}catch(_optionalExport){}
 var Playlist=require("$:/plugins/huwiki/musical/playlist.js");
 var SoundFx=require("$:/plugins/huwiki/musical/sfx.js");
 var Narration=require("$:/plugins/huwiki/musical/narration.js");
@@ -534,7 +535,7 @@ Musical.prototype.render=function(parent,next){
   if(wasRunning){timeline.play();setPlaying(true);syncAudio(position);}
  });
  this._shutdown=function(){
-  self._dead=true;generation++;stopFrames();sfx.dispose();voice.dispose();LipSync.reset(view);clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
+  self._dead=true;generation++;stopFrames();if(self._videoExporter)self._videoExporter.dispose();sfx.dispose();voice.dispose();LipSync.reset(view);clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
   if(session)Playback.unregister(session);
   songs.forEach(function(song){
    var c=song.controller;if(!c)return;c._disposed=true;
@@ -574,6 +575,35 @@ Musical.prototype.render=function(parent,next){
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}
  });
  this._workspace=workspace;
+ if(VideoExport&&VideoExport.attach)this._videoExporter=VideoExport.attach({
+  host:host,controls:transport,stage:stage,scene:scene,wiki:this.wiki,
+  beginExport:function(){return editor&&editor.beginExport?editor.beginExport():null;},
+  seek:seek,position:function(){return timeline.value();},duration:function(){return duration;},
+  pause:function(){if(timeline.running)pauseAll();},getABC:function(){return ABCObject;},
+  getSongs:function(){return songs.map(function(s){return {clip:s.clip,title:s.title,tune:s.tune,config:s.config||{}};});},
+  getDependencyTitles:function(){
+   var visual=Engine.dependencies?Object.keys(Engine.dependencies(view)):[self.sceneTitle],audio=[self.sceneTitle],captions=visual.slice();
+   songs.forEach(function(song){audio.push(song.title);visual.push(song.title);});
+   (scene.musical&&scene.musical.audioClips||[]).forEach(function(clip){audio.push(clip.asset);});
+   // Translation tables also depend on the original timeline they translate.
+   (self.wiki.filterTiddlers?self.wiki.filterTiddlers("[tag[$:/tags/HUW/CaptionTranslations]]"):[]).forEach(function(title){
+    captions.push(title);try{captions.push(JSON.parse(self.wiki.getTiddlerText(title,"{}")).sourceTiddler);}catch(_){}
+   });
+   function titles(values){return values.filter(function(title,index){return typeof title==="string"&&title&&values.indexOf(title)===index;}).sort();}
+   return {visual:titles(visual),audio:titles(audio),captions:titles(captions)};
+  },
+  getLiveExportState:function(){
+   function lipState(clip){var value={};["id","cueId","sceneTitle","start","offset","duration","sourceDuration","text"].forEach(function(key){if(clip[key]!==undefined)value[key]=clip[key];});return value;}
+   var selector=host.querySelector('[data-huw-animus-captions="language"]');
+   // Exclude tune/controller objects and the time-dependent playback gain.
+   return JSON.parse(JSON.stringify({
+    visual:{songs:clips.map(function(clip){return {id:clip.id,score:clip.score,start:clip.start,duration:clip.duration};}),lipSync:(scene.musical&&scene.musical.audioClips||[]).map(lipState)},
+    audio:{songs:songs.map(function(song){return {clip:song.clip,config:song.config||{}};}),recordings:scene.musical&&scene.musical.audioClips||[],effects:scene.musical&&scene.musical.sfx||[],soundFont:soundfont},
+    captions:{language:selector?selector.value:"auto"}
+   }));
+  },
+  soundFont:function(){return soundfont;}
+ });
  function installSongController(song,index){
   if(!soundReady||!ABCObject)return Promise.reject(Error("ABC audio unavailable"));
   if(song.controller)return Promise.resolve(song.controller);
