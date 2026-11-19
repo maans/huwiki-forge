@@ -113,11 +113,11 @@
     "graph": {
       "da": {
         "name": "Graph Edition (beta)",
-        "description": "Videnskort med to originale grafknapper og små redigeringspaneler, som kun vises ved behov."
+        "description": "Originale Add Node/Add Edge-bevægelser og tydelig formredigering ved klik på node."
       },
       "en": {
         "name": "Graph Edition (beta)",
-        "description": "Knowledge maps with two original graph buttons and small contextual editors, hidden by default."
+        "description": "Native Add Node/Add Edge gestures and clearly signposted shape editing on node click."
       }
     }
   },
@@ -505,11 +505,11 @@
     "$:/plugins/huwiki/graph-studio": {
       "da": {
         "name": "Graph Studio (Forge)",
-        "description": "Små, touch-venlige paneler via de originale Add Node/Add Edge-knapper og klik på noder. Fuld grafplads."
+        "description": "Bevar originalens grafgestus. Klik på en node for et lille panel til form, farve, størrelse og SVG."
       },
       "en": {
         "name": "Graph Studio (Forge)",
-        "description": "Contextual touch-friendly node, edge and appearance panels triggered by native Graph buttons and node selection."
+        "description": "Keep original graph gestures. Click a node for a small shape, color, size and SVG editor."
       }
     }
   }

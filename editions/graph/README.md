@@ -40,6 +40,6 @@ The first direct-edit Graph Studio controls are tested in offline Chromium on Da
 
 The original Vis-Network **Add Node** and **Add Edge** toolbar buttons are visible within each graph. Graph Studio listens in the Vis-Network `vis-property` lifecycle and opens the relevant **single, compact editor panel within the graph stage**. Clicking a node opens only its appearance editor. Closing or submitting hides the panel, preserving the full graph height. The original graph/Vis-Network packages are unchanged.
 
-## Version 0.2.2-beta.1: original graph gestures and clear appearance access
+## Version 0.2.3-beta.1: original graph gestures and clear appearance access
 
 Native Flibbles/Vis-Network interactions are authoritative again: **Add Node → click empty canvas → select or create a tiddler**, and **Add Edge → drag from one node to another → choose the relation field**. Graph Studio no longer intercepts pointerdown or click on those controls. The Forge-only enhancement is an unobtrusive, non-interactive hint beside the graph toolbar and a click-on-node appearance editor containing a localized Shape selector. The appearance editor stays hidden otherwise. If Vis-Network is in add-node or add-edge manipulation mode, a node click does not open appearance. Imported image functionality is handled in a separate follow-up change.

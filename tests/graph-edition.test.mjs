@@ -129,7 +129,7 @@ test('Graph Studio minor beta and on-demand Edition versions stay aligned',async
  const plugin=await read('plugins/graph-studio/dist/plugin.json');
  const edition=await read('editions/graph/manifest.json');
  const catalog=await read('catalog/editions.json');
- assert.equal(plugin.version,'0.2.2-beta.1');
+ assert.equal(plugin.version,'0.2.3-beta.1');
  assert.equal(edition.version,plugin.version);
  assert.equal(catalog.editions.find(e=>e.id==='graph').version,plugin.version);
 });
