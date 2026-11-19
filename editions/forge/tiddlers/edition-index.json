@@ -27,7 +27,7 @@
     "edition-id": "graph",
     "name": "Graph Edition (beta)",
     "status": "test",
-    "version": "0.2.0-beta.1",
+    "version": "0.2.1-beta.1",
     "order": "01.5",
     "build-url": "https://forge.måns.dk/assembler/?edition=graph",
     "build-url-da": "https://forge.måns.dk/assembler/?edition=graph&lang=da",
@@ -36,10 +36,10 @@
     "demo-url-en": "https://forge.måns.dk/demo/?edition=graph&lang=en",
     "heading-da": "Graph Edition – interaktive videnskort",
     "heading-en": "Graph Edition – interactive knowledge maps",
-    "description-da": "Byg videnskort med noder og relationer direkte på siden. Skift mellem bokse, diamanter, stjerner og SVG-billeder, eller udforsk Platons hule.",
-    "description-en": "Create nodes and relationships directly on the page. Choose boxes, diamonds, stars and SVG images, or explore Plato’s cave.",
-    "note-da": "Beta: Noder, forbindelser, farver og former kan ændres i det nye touch-venlige værksted. iPad-accept udestår.",
-    "note-en": "Beta: Edit nodes, connections, colors and shapes in the new touch-friendly editor. Physical iPad acceptance pending."
+    "description-da": "Brug de originale Add Node og Add Edge-knapper i grafen, og klik på en node for at ændre udseende. Ingen permanent konfigurator.",
+    "description-en": "Use the original Add Node and Add Edge buttons in the graph, and click a node to change its appearance. No persistent editor.",
+    "note-da": "Beta: Et lille panel åbnes kun ved node, forbindelse eller udseende. Både mus og touch-simulering testet; fysisk iPad-test mangler.",
+    "note-en": "Beta: A compact panel opens only when editing a node, edge or appearance. Mouse and simulated touch tested; physical iPad check pending."
   },
   {
     "title": "$:/huwiki/forge/edition/hupedia",
