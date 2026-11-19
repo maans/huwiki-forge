@@ -21,17 +21,17 @@
     {
       "id": "graph",
       "name": "Graph Edition (beta)",
-      "version": "0.1.0-beta.1",
+      "version": "0.2.0-beta.1",
       "status": "test",
       "manifest": "../editions/graph/manifest.json",
-      "description": "Knowledge graphs, mindmaps and project dependency maps in editable TiddlyWiki using Flibbles TW5-Graph and Vis-Network; bilingual Forge workbench.",
+      "description": "Touch-friendly knowledge maps, mindmaps and project dependencies, with editable node/edge controls, shapes, colors and local SVG icons; built on Flibbles TW5-Graph and Vis-Network.",
       "home": {
         "headingDa": "Graph Edition – interaktive videnskort",
         "headingEn": "Graph Edition – interactive knowledge maps",
-        "descriptionDa": "Udforsk Platons hule, byg mindmaps og vis projekters sammenhænge. Flyt noder, tegn forbindelser og redigér de tilhørende tiddlere.",
-        "descriptionEn": "Explore Plato's cave, make mind maps and map project dependencies. Move nodes, connect ideas and edit their tiddlers.",
-        "noteDa": "Beta: TW5-Graph og Vis-Network indlejret til offline brug. Originalpluginets værktøjer er på engelsk. iPad-accept udestår.",
-        "noteEn": "Beta: TW5-Graph and Vis-Network included for offline use. Upstream graph controls are in English. iPad acceptance pending.",
+        "descriptionDa": "Byg videnskort med noder og relationer direkte på siden. Skift mellem bokse, diamanter, stjerner og SVG-billeder, eller udforsk Platons hule.",
+        "descriptionEn": "Create nodes and relationships directly on the page. Choose boxes, diamonds, stars and SVG images, or explore Plato’s cave.",
+        "noteDa": "Beta: Noder, forbindelser, farver og former kan ændres i det nye touch-venlige værksted. iPad-accept udestår.",
+        "noteEn": "Beta: Edit nodes, connections, colors and shapes in the new touch-friendly editor. Physical iPad acceptance pending.",
         "order": "01.5"
       }
     },

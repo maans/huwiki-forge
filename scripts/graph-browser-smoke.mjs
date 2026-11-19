@@ -75,8 +75,43 @@ try{
   assert.equal((await node.locator('h1,h2').first().innerText()).trim(),'Hulen');
   assert.ok(await node.locator('p').count()>=1,'Node content should have paragraph formatting');
 
+  // Real editor acceptance: change tiddlers only through clickable controls.
+  await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));
+  const editor=page.locator('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-editor').first();
+  await editor.waitFor();
+  assert.equal(await editor.locator('.forge-graph-create-node').count(),1,'The Forge add-node button must be present');
+  assert.equal(await editor.locator('.forge-graph-add-edge').count(),1,'The Forge add-edge button must be present');
+  const newNode='Brugerens grafprøve';
+  await editor.locator('.forge-graph-node-name').fill(newNode);
+  await editor.locator('.forge-graph-create-node').click();
+  await page.waitForFunction(title=>window.$tw?.wiki?.getTiddler(title)?.hasTag('Graph/Mindmap'),newNode);
+  assert.equal(await page.evaluate(title=>$tw.wiki.getTiddler(title).fields['graph-shape'],newNode),'box');
+  await editor.locator('.forge-graph-edge-from').selectOption('Idéens kerne');
+  await editor.locator('.forge-graph-edge-to').selectOption(newNode);
+  await editor.locator('.forge-graph-edge-type').selectOption('forbinder');
+  await editor.locator('.forge-graph-add-edge').click();
+  await page.waitForFunction(title=>$tw.wiki.getTiddler('Idéens kerne').getFieldList('forbinder').includes(title),newNode);
+  await editor.locator('.forge-graph-style-node').selectOption(newNode);
+  await editor.locator('.forge-graph-style-shape').selectOption('diamond');
+  await editor.locator('.forge-graph-style-color').fill('#9475ba');
+  await editor.locator('.forge-graph-style-size').fill('42');
+  await editor.locator('.forge-graph-apply-style').click();
+  const styleSnapshot=await page.evaluate(title=>({fields:$tw.wiki.getTiddler(title)?.fields,editors:Array.from(document.querySelectorAll('.forge-graph-editor')).map(x=>({shape:x.querySelector('.forge-graph-style-shape')?.value,node:x.querySelector('.forge-graph-style-node')?.value,feedback:x.querySelector('.forge-graph-feedback')?.textContent})).slice(-4)}),newNode);
+  assert.equal(styleSnapshot.fields['graph-shape'],'diamond','Shape should be saved to the selected tiddler');
+  const shape=await page.evaluate(title=>{let t=$tw.wiki.getTiddler(title);return [t.fields['graph-shape'],t.fields.color,t.fields['graph-size']];},newNode);
+  assert.deepEqual(shape,['diamond','#9475ba','42']);
+  await editor.locator('.forge-graph-style-shape').selectOption('image');
+  await editor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Sun');
+  await editor.locator('.forge-graph-apply-style').click();
+  const imageSnapshot=await page.evaluate(title=>({fields:$tw.wiki.getTiddler(title)?.fields,editors:Array.from(document.querySelectorAll('.forge-graph-editor')).map(x=>({shape:x.querySelector('.forge-graph-style-shape')?.value,icon:x.querySelector('.forge-graph-style-icon')?.value,node:x.querySelector('.forge-graph-style-node')?.value,feedback:x.querySelector('.forge-graph-feedback')?.textContent})).slice(-4)}),newNode);
+  assert.equal(imageSnapshot.fields.icon,'GraphStudio/Sun','The SVG image is saved to the node tiddler');
+  assert.equal(await page.locator('.tc-error-form').count(),0,'The direct graph editor must not trigger error dialogs');
+  // The graph remains rendered after actions (no blank/disabled player).
+  await page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-stage canvas').first().waitFor();
+  console.log('PASS',language,'touch-style node creation, typed connections, shapes, color, size, SVG icons');
+
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'Nyt begreb',tags:['Graph/Mindmap'],text:'En ny redigerbar node.'}));
-  assert.equal(await page.evaluate(()=>$tw.wiki.filterTiddlers('[tag[Graph/Mindmap]]').length),8);
+  assert.equal(await page.evaluate(()=>$tw.wiki.filterTiddlers('[tag[Graph/Mindmap]]').length),9);
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));
   await page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-stage canvas').first().waitFor();
   assert.equal(await page.locator('.tc-error-form').count(),0,'No TiddlyWiki error dialogs');
@@ -84,4 +119,32 @@ try{
   console.log('PASS',language,'offline graph boot, three canvases, relation datasets, new editable node');
   await context.close();
  }
+
+ // Chromium touch emulation: verify the direct Forge editor works with taps,
+ // not just mouse clicks. This is not a substitute for physical iPad acceptance.
+ const touchContext=await browser.newContext({locale:'da-DK',hasTouch:true,isMobile:true,deviceScaleFactor:2,viewport:{width:834,height:1112}});
+ await touchContext.route('**/*',route=>route.request().url().startsWith('file:')?route.continue():route.abort());
+ const touchPage=await touchContext.newPage();touchPage.setDefaultTimeout(25000);
+ const touchErrors=[];touchPage.on('pageerror',error=>touchErrors.push(error.message));
+ await touchPage.goto(pathToFileURL(path.join(dir,'graph-da-DK.html')).href);
+ const touchEditor=touchPage.locator('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Start"] .forge-graph-editor').first();
+ await touchEditor.locator('.forge-graph-node-name').fill('Touch prøve');
+ await touchEditor.locator('.forge-graph-create-node').tap();
+ await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve')?.hasTag('Graph/Platon'));
+ await touchEditor.locator('.forge-graph-edge-from').selectOption('Hulen');
+ await touchEditor.locator('.forge-graph-edge-to').selectOption('Touch prøve');
+ await touchEditor.locator('.forge-graph-edge-type').selectOption('forbinder');
+ await touchEditor.locator('.forge-graph-add-edge').tap();
+ await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Hulen').getFieldList('forbinder').includes('Touch prøve'));
+ await touchEditor.locator('.forge-graph-style-node').selectOption('Touch prøve');
+ await touchEditor.locator('.forge-graph-style-shape').selectOption('star');
+ await touchEditor.locator('.forge-graph-apply-style').tap();
+ await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve').fields['graph-shape']==='star');
+ await touchEditor.locator('.forge-graph-style-shape').selectOption('image');
+ await touchEditor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Idea');
+ await touchEditor.locator('.forge-graph-apply-style').tap();
+ await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve').fields.icon==='GraphStudio/Idea');
+ assert.deepEqual(touchErrors,[],'No touch-only JavaScript errors');
+ console.log('PASS simulated iPad viewport: tap node, tap edge, tap style, local SVG image');
+ await touchContext.close();
 }finally{await browser.close();}
