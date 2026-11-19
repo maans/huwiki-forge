@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "graph",
   "name": "Graph Edition",
-  "version": "0.2.1-beta.1",
+  "version": "0.2.2-beta.1",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",

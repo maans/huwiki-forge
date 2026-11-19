@@ -128,7 +128,26 @@ test('Graph Studio minor beta and on-demand Edition versions stay aligned',async
  const plugin=await read('plugins/graph-studio/dist/plugin.json');
  const edition=await read('editions/graph/manifest.json');
  const catalog=await read('catalog/editions.json');
- assert.equal(plugin.version,'0.2.1-beta.1');
+ assert.equal(plugin.version,'0.2.2-beta.1');
  assert.equal(edition.version,plugin.version);
  assert.equal(catalog.editions.find(e=>e.id==='graph').version,plugin.version);
+});
+
+test('Graph Studio can import, reuse and draw native image tiddlers without a new heavy dependency',async()=>{
+ const p=await read('plugins/graph-studio/dist/plugin.json');
+ const shadows=JSON.parse(p.text).tiddlers;
+ const widget=shadows['$:/plugins/huwiki/graph-studio/widgets/editor.js'].text;
+ const styles=shadows['$:/plugins/huwiki/graph-studio/styles'].text;
+ assert.match(widget,/this\.wiki\.each\(/,'Existing uploaded/drawn wiki pictures are listed');
+ assert.match(widget,/forge-graph-upload-image/,'The user can upload pictures');
+ assert.match(widget,/reader\.readAsDataURL\(file\)/,'Bitmap source data is embedded in the wiki');
+ assert.match(widget,/reader\.readAsText\(file\)/,'SVG source is retained as text');
+ assert.match(widget,/type:"image\/svg\+xml"/,'Hand-drawn picture is a native SVG tiddler');
+ assert.match(widget,/tags:\["GraphStudio\/Image"\]/,'Media is indexed for later reuse');
+ assert.match(widget,/forge-graph-draw-toggle/,'Drawing is optional, not a permanent editor');
+ assert.match(widget,/pointerdown/,'Drawing supports pointer/touch');
+ assert.match(widget,/5\*1024\*1024/,'Large uploads are rejected before embedding');
+ assert.match(styles,/\.forge-graph-drawing\[hidden\]/,'Drawing stays hidden until requested');
+ assert.match(styles,/touch-action:none/,'Drawing does not scroll the page during touch strokes');
+ assert.doesNotMatch(widget,/fetch\(/,'No network dependency for private uploaded images');
 });

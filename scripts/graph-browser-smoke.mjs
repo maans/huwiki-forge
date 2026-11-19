@@ -132,6 +132,57 @@ try{
   await graphStage.locator('canvas').first().waitFor();
   console.log('PASS',language,'native Add Node/Add Edge buttons, contextual styling and SVG images');
 
+  // Upload a bitmap from the browser file picker, preserving binary content
+  // in the wiki's own image tiddlers. No HTTP network requests are permitted.
+  await editor.evaluate((element,title)=>element.dispatchEvent(new CustomEvent('forge-graph-action',{detail:{mode:'style',node:title}})),newNode);
+  await editor.locator('.forge-graph-upload-image').setInputFiles({
+   name:'My uploaded image.png',mimeType:'image/png',
+   buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg==','base64')
+  });
+  await page.waitForFunction(()=>$tw.wiki.getTiddler('My uploaded image')?.fields.type==='image/png');
+  const importedBitmap=await page.evaluate(()=>$tw.wiki.getTiddler('My uploaded image').fields);
+  assert.ok(importedBitmap.text.length>30 && !importedBitmap.text.startsWith('data:'),'Native bitmap tiddler contains only base64');
+  assert.ok(importedBitmap.tags.includes('GraphStudio/Image'));
+  assert.equal(await editor.locator('.forge-graph-style-shape').inputValue(),'image');
+  assert.equal(await editor.locator('.forge-graph-style-icon').inputValue(),'My uploaded image');
+  await editor.locator('.forge-graph-apply-style').click();
+  await page.waitForFunction(title=>$tw.wiki.getTiddler(title).fields.icon==='My uploaded image',newNode);
+  assert.equal(await editor.isVisible(),false);
+
+  // An existing externally drawn SVG, already in the wiki, must be selectable.
+  await page.evaluate(()=>$tw.wiki.addTiddler(new $tw.Tiddler({
+   title:'My own SVG drawing',type:'image/svg+xml',
+   text:'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 80 80"><circle cx="40" cy="40" r="25" fill="#ca9f45"/></svg>'
+  })));
+  await editor.evaluate((element,title)=>element.dispatchEvent(new CustomEvent('forge-graph-action',{detail:{mode:'style',node:title}})),newNode);
+  assert.ok(await editor.locator('.forge-graph-style-icon option[value="My own SVG drawing"]').count()>0,
+   'Existing user SVG drawings should appear in the image picker');
+  await editor.locator('.forge-graph-style-icon').selectOption('My own SVG drawing');
+  await editor.locator('.forge-graph-apply-style').click();
+  await page.waitForFunction(title=>$tw.wiki.getTiddler(title).fields.icon==='My own SVG drawing',newNode);
+
+  // Optional inline sketchpad creates an ordinary SVG image tiddler.
+  await editor.evaluate((element,title)=>element.dispatchEvent(new CustomEvent('forge-graph-action',{detail:{mode:'style',node:title}})),newNode);
+  await editor.locator('.forge-graph-draw-toggle').click();
+  const sketch=editor.locator('.forge-graph-sketch');
+  await sketch.waitFor({state:'visible'});
+  const sketchBounds=await sketch.boundingBox();
+  await page.mouse.move(sketchBounds.x+36,sketchBounds.y+48);
+  await page.mouse.down();
+  await page.mouse.move(sketchBounds.x+170,sketchBounds.y+74,{steps:6});
+  await page.mouse.up();
+  await editor.locator('.forge-graph-draw-save').click();
+  await page.waitForFunction(()=>$tw.wiki.getTiddler('My graph drawing')?.fields.type==='image/svg+xml' ||
+   $tw.wiki.getTiddler('Min graftegning')?.fields.type==='image/svg+xml');
+  const drawingTitle=language==='da-DK'?'Min graftegning':'My graph drawing';
+  const drawing=await page.evaluate(title=>$tw.wiki.getTiddler(title).fields,drawingTitle);
+  assert.ok(drawing.text.includes('<path') && drawing.text.includes('viewBox'));
+  assert.ok(drawing.tags.includes('GraphStudio/Image'));
+  assert.equal(await editor.locator('.forge-graph-style-icon').inputValue(),drawingTitle);
+  await editor.locator('.forge-graph-apply-style').click();
+  await page.waitForFunction(title=>$tw.wiki.getTiddler('Brugerens grafprøve').fields.icon===title,drawingTitle);
+  console.log('PASS',language,'uploaded image, existing SVG and hand-drawn SVG retained offline');
+
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'Nyt begreb',tags:['Graph/Mindmap'],text:'En ny redigerbar node.'}));
   assert.equal(await page.evaluate(()=>$tw.wiki.filterTiddlers('[tag[Graph/Mindmap]]').length),9);
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));
