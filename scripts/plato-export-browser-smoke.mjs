@@ -40,7 +40,7 @@ const server=createServer((req,res)=>{
  else{res.writeHead(404);res.end('Not found');}
 });
 await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
-const base=`http://127.0.0.1:${server.address().port}`,errors=[],checks=[],externalRequests=[];
+const base=`http://127.0.0.1:${server.address().port}`,errors=[],checks=[],skipped=[],externalRequests=[];
 const mp4Verification={video:false,mixedAudio:false,codecs:null};
 let browser,context,page;
 function passed(name){checks.push(name);console.log('PASS '+name);}
@@ -102,16 +102,23 @@ try{
  const savedScene=await player.locator('.plato-chapters').inputValue();
  passed('actual Turn Around audience player exposes one export button and the canonical recorded timeline');
 
- await player.getByRole('button',{name:'Show the performance in full screen',exact:true}).click();
- await page.waitForFunction(()=>document.fullscreenElement===document.querySelector('.plato-player'));
- await player.locator('.huw-video-export-button').click();
- const fullscreenDialog=player.locator('.huw-video-modal');await fullscreenDialog.waitFor();
- assert.equal(await fullscreenDialog.isVisible(),true,'export dialog is visible in the fullscreen player');
- await fullscreenDialog.locator('.huw-video-close').click();await fullscreenDialog.waitFor({state:'detached'});
- assert.equal(await player.evaluate(host=>document.fullscreenElement===host),true,'closing export preserves fullscreen playback view');
- await player.getByRole('button',{name:'Exit full screen',exact:true}).click();
- await page.waitForFunction(()=>!document.fullscreenElement);
- passed('fullscreen export controls stay visible and clickable without leaving the performance');
+ if(process.env.ANIMUS_SKIP_HEADLESS_FULLSCREEN==='1'){
+  // The macOS CI runner supplies real native codecs, but its headless window
+  // cannot enter native fullscreen. Ubuntu retains the strict UI acceptance.
+  const reason='fullscreen UI acceptance: headless macOS runner cannot enter native fullscreen; not verified on this runner';
+  skipped.push(reason);console.log('SKIP '+reason);
+ }else{
+  await player.getByRole('button',{name:'Show the performance in full screen',exact:true}).click();
+  await page.waitForFunction(()=>document.fullscreenElement===document.querySelector('.plato-player'));
+  await player.locator('.huw-video-export-button').click();
+  const fullscreenDialog=player.locator('.huw-video-modal');await fullscreenDialog.waitFor();
+  assert.equal(await fullscreenDialog.isVisible(),true,'export dialog is visible in the fullscreen player');
+  await fullscreenDialog.locator('.huw-video-close').click();await fullscreenDialog.waitFor({state:'detached'});
+  assert.equal(await player.evaluate(host=>document.fullscreenElement===host),true,'closing export preserves fullscreen playback view');
+  await player.getByRole('button',{name:'Exit full screen',exact:true}).click();
+  await page.waitForFunction(()=>!document.fullscreenElement);
+  passed('fullscreen export controls stay visible and clickable without leaving the performance');
+ }
 
  const nativeEncoders=await page.evaluateHandle(()=>({
   VideoEncoder:Object.getOwnPropertyDescriptor(window,'VideoEncoder'),
@@ -320,7 +327,7 @@ try{
 
  assert.deepEqual(externalRequests,[],'Turn Around exports embedded media without external services or a second ABC soundtrack');
  assert.deepEqual(errors,[],'no uncaught browser errors');
- const result={ok:true,editionVersion:manifest.version,checks,frames:240000,mp4Verification,errors,externalRequests};
+ const result={ok:true,editionVersion:manifest.version,checks,skipped,frames:240000,mp4Verification,errors,externalRequests};
  await writeFile(new URL('result.json',out),JSON.stringify(result,null,2)+'\n');console.log(JSON.stringify(result));
 }catch(error){
  let details=null;if(page)try{
@@ -328,7 +335,7 @@ try{
   await page.screenshot({path:fileURLToPath(new URL('failure.png',out)),fullPage:false});
   await writeFile(new URL('failure.html',out),await page.content());
  }catch(_){}
- const result={ok:false,checks,mp4Verification,errors,details,failure:String(error.stack||error)};
+ const result={ok:false,checks,skipped,mp4Verification,errors,details,failure:String(error.stack||error)};
  await writeFile(new URL('result.json',out),JSON.stringify(result,null,2)+'\n');console.error('PLATO EXPORT FAILURE '+JSON.stringify(result));throw error;
 }finally{
  if(context)try{await context.tracing.stop({path:fileURLToPath(new URL('trace.zip',out))});}catch(_){}

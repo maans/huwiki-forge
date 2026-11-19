@@ -64,6 +64,7 @@ jobs:
         env:
           CHROME_BIN: ${{ matrix.chrome }}
           ANIMUS_REQUIRE_NATIVE_CODECS: ${{ matrix.os == 'macos-15' && '1' || '0' }}
+          ANIMUS_SKIP_HEADLESS_FULLSCREEN: ${{ matrix.os == 'macos-15' && '1' || '0' }}
         run: node scripts/plato-export-browser-smoke.mjs
       - name: Keep browser export evidence
         if: always()
