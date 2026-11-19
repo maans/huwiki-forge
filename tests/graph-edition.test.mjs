@@ -50,3 +50,19 @@ test('Pinned release bundles are byte-for-byte verified and contain TiddlyWiki p
   assert.ok(Object.keys(JSON.parse(plugin.text).tiddlers).length>5);
  }
 });
+
+test('Graph WikiText keeps block mode for headings and numbered lists within bilingual widgets',async()=>{
+ const data=await read('editions/graph/tiddlers/seed.json');
+ const tiddlers=data.filter(t=>t.title.startsWith('Graph Edition · ')||t.tags?.startsWith('Graph/'));
+ assert.equal(tiddlers.length,32);
+ for(const t of tiddlers){
+  assert.match(t.text,/<\$list [^\n]+>\n\n! /,t.title+' must enter block mode after list widget');
+  assert.doesNotMatch(t.text,/<\$list [^\n]+>\n! /,t.title+' must not enter inline mode');
+  if(t.text.includes('class="forge-graph-workbench"')){
+   assert.ok(t.text.startsWith('<div class="forge-graph-workbench">\n\n'),t.title+' requires block mode after div');
+  }
+ }
+ const guide=tiddlers.find(t=>t.title==='Graph Edition · Kom i gang').text;
+ assert.match(guide,/\n\n# Åbn et af kortene/,'Danish WikiText numbered list');
+ assert.match(guide,/\n\n# Open one of the maps/,'English WikiText numbered list');
+});
