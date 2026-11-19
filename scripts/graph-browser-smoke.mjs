@@ -87,28 +87,7 @@ try{
   await addEdge.waitFor({state:'visible'});
   assert.equal(await editor.isVisible(),false,'Forge editor must be hidden until a graph action');
   assert.equal(await graphStage.locator('.forge-graph-editor-panels > .forge-graph-editor-panel').count(),3);
-  await editor.evaluate(node=>{
-   window.__forgeActionEvents=[];window.__forgeDomEvents=[];
-   node.addEventListener('forge-graph-action',e=>window.__forgeActionEvents.push(e.detail));
-   const stage=node.closest('.forge-graph-stage');
-   for(const el of [stage,stage.querySelector('.graph-canvas'),stage.querySelector('.vis-add')]){
-    for(const type of ['click','pointerdown','mousedown','touchstart']){
-     el.addEventListener(type,e=>window.__forgeDomEvents.push({on:el.className,kind:type,target:e.target.className}),true);
-    }
-   }
-  });
   await addNode.click();
-  const debug=await graphStage.evaluate(stage=>({
-   editorCount:stage.querySelectorAll('.forge-graph-editor').length,
-   editorClass:stage.querySelector('.forge-graph-editor')?.className,
-   nativeButtons:[...stage.querySelectorAll('.vis-button')].map(n=>({c:n.className,t:n.textContent?.trim().slice(0,60)})),
-   modules:Object.keys($tw.modules.getModulesByTypeAsHashmap('vis-property')).filter(x=>/forge/i.test(x)),
-   captured:window.__forgeActionEvents||[],domEvents:window.__forgeDomEvents||[],
-   bridgeTags:[...stage.querySelectorAll('[data-forge-control-init]')].map(e=>({cls:e.className,flag:e.getAttribute('data-forge-control-init')})),
-   addAncestor:stage.querySelector('.vis-add')?.closest('.graph-canvas')?.className||null,
-   stageClass:stage.className
-  }));
-  console.log('GRAPH TOOL DEBUG',JSON.stringify(debug).slice(0,2500));
   assert.equal(await editor.isVisible(),true,'The original Add Node button opens the compact node editor');
   assert.equal(await editor.locator('.forge-graph-editor-panel:visible').count(),1,'Only one context panel is open');
   await editor.locator('.forge-graph-close').click();
@@ -132,8 +111,6 @@ try{
   // A real Vis node click emits the matching context event via the adapter.
   // Dispatch the same event to verify the panel independently of canvas hit testing.
   await editor.evaluate((node,title)=>node.dispatchEvent(new CustomEvent('forge-graph-action',{detail:{mode:'style',node:title}})),newNode);
-  const appearanceState=await graphStage.evaluate(stage=>({klass:stage.querySelector('.forge-graph-editor')?.className,nodeOptions:[...stage.querySelectorAll('.forge-graph-style-node option')].map(x=>x.value).slice(-5),feedback:stage.querySelector('.forge-graph-feedback')?.textContent}));
-  console.log('GRAPH APPEARANCE DEBUG',JSON.stringify(appearanceState));
   assert.equal(await editor.isVisible(),true,'Node selection opens appearance');
   assert.equal(await editor.locator('.forge-graph-editor-panel:visible').count(),1);
   await editor.locator('.forge-graph-style-node').selectOption(newNode);
