@@ -102,6 +102,16 @@ function timing(t,duration,settings){settings=settings||{};var active=t>=finite(
 function localTime(t,duration,settings){return timing(t,duration,settings).time;}
 function clipAt(clips,t){var start=0,total=clips.reduce(function(n,c){return n+Math.max(.1,finite(c.duration,4));},0);t=clamp(t,0,total);for(var i=0;i<clips.length;i++){var d=Math.max(.1,finite(clips[i].duration,4));if(t<start+d||i===clips.length-1)return {index:i,time:t-start};start+=d;}return {index:-1,time:0};}
 function build(doc,wiki,scene,editable,ancestry){
+ var view=buildTree(doc,wiki,scene,editable,ancestry),style=createSvg(doc,'style');
+ // SVG opacity does not exclude invisible artwork from hit testing. Follow
+ // the final rendered attribute, including later Motion/lipsync overrides,
+ // without changing display, geometry or any authored pointer-event value.
+ // Descendants are included because joint handles may explicitly request all.
+ style.textContent='.huw-cutout-svg .huw-cutout-part[opacity="0"],.huw-cutout-svg .huw-cutout-part[opacity="0"] *{pointer-events:none!important}';
+ view.svg.appendChild(style);
+ return view;
+}
+function buildTree(doc,wiki,scene,editable,ancestry){
  ancestry=(ancestry||[]).slice();if(scene._title)ancestry.push(scene._title);
  var svg=createSvg(doc,'svg');svg.setAttribute('viewBox','0 0 '+scene.width+' '+scene.height);svg.setAttribute('class','huw-cutout-svg');svg.setAttribute('role','img');svg.setAttribute('aria-label',scene.name||'CutOut-animation');
  var back=createSvg(doc,'rect');set(back,'width',scene.width);set(back,'height',scene.height);set(back,'fill',scene.background===undefined?'transparent':scene.background);svg.appendChild(back);
@@ -114,7 +124,7 @@ function build(doc,wiki,scene,editable,ancestry){
   var nested=null,shape;
   if(p.type==='animation'){
    var target=M.resolve(wiki,p.animationId,p.animation);
-   if(target&&ancestry.indexOf(target)<0&&ancestry.length<16){var child=readScene(wiki,target);if(child){nested=build(doc,wiki,child,false,ancestry);nested.duration=child.duration;shape=nested.svg;shape.setAttribute('class','co-nested-svg');var geo=p.geo||{};set(shape,'x',finite(geo.x,-100));set(shape,'y',finite(geo.y,-75));set(shape,'width',finite(geo.w,200));set(shape,'height',finite(geo.h,150));}}
+   if(target&&ancestry.indexOf(target)<0&&ancestry.length<16){var child=readScene(wiki,target);if(child){nested=buildTree(doc,wiki,child,false,ancestry);nested.duration=child.duration;shape=nested.svg;shape.setAttribute('class','co-nested-svg');var geo=p.geo||{};set(shape,'x',finite(geo.x,-100));set(shape,'y',finite(geo.y,-75));set(shape,'width',finite(geo.w,200));set(shape,'height',finite(geo.h,150));}}
    if(!shape){shape=createSvg(doc,'text');shape.textContent=coUi.t('⚠ Manglende eller cirkulær kilde');set(shape,'font-size',14);set(shape,'fill','#b42318');}
   }
   if(!shape)shape=graphic(doc,wiki,p);
@@ -123,7 +133,7 @@ function build(doc,wiki,scene,editable,ancestry){
   if(editable){var joint=createSvg(doc,'circle');set(joint,'cx',finite((p.pivot||{}).x,0));set(joint,'cy',finite((p.pivot||{}).y,0));set(joint,'r',8);joint.setAttribute('class','huw-cutout-joint');joint.setAttribute('data-cutout-joint','yes');holder.appendChild(joint);}
  });}
  add(svg,'root',{},0);
- (scene.scenes||[]).forEach(function(c){var target=M.resolve(wiki,c.sourceId,c.source||c.animation||c.theatre),source=target&&ancestry.indexOf(target)<0&&ancestry.length<16&&readScene(wiki,target),nested=source&&build(doc,wiki,source,false,ancestry),holder=createSvg(doc,'g');svg.appendChild(holder);if(nested){holder.appendChild(nested.svg);nested.svg.setAttribute('class','co-nested-svg');set(nested.svg,'width',scene.width);set(nested.svg,'height',scene.height);}else{var warning=createSvg(doc,'text');warning.textContent=coUi.t('⚠ Scene mangler eller er cirkulær');set(warning,'y',40);holder.appendChild(warning);}clips.push({el:holder,view:nested,duration:source?source.duration:1,settings:c});});
+ (scene.scenes||[]).forEach(function(c){var target=M.resolve(wiki,c.sourceId,c.source||c.animation||c.theatre),source=target&&ancestry.indexOf(target)<0&&ancestry.length<16&&readScene(wiki,target),nested=source&&buildTree(doc,wiki,source,false,ancestry),holder=createSvg(doc,'g');svg.appendChild(holder);if(nested){holder.appendChild(nested.svg);nested.svg.setAttribute('class','co-nested-svg');set(nested.svg,'width',scene.width);set(nested.svg,'height',scene.height);}else{var warning=createSvg(doc,'text');warning.textContent=coUi.t('⚠ Scene mangler eller er cirkulær');set(warning,'y',40);holder.appendChild(warning);}clips.push({el:holder,view:nested,duration:source?source.duration:1,settings:c});});
  // Foreground roots (for example the proscenium) stay above every scene clip.
  parts.forEach(function(p){if(p.foreground&&!p.parent&&nodes[p.id])svg.appendChild(nodes[p.id].el);});
  return {svg:svg,nodes:nodes,back:back,clips:clips,wiki:wiki,scene:scene};

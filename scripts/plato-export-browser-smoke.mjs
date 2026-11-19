@@ -489,6 +489,28 @@ try{
  await captionSwitch.click();await audioSwitch.click();
  assert.equal(await captionSwitch.getAttribute('aria-pressed'),'false');assert.equal(await audioSwitch.getAttribute('aria-pressed'),'false');
  assert.equal(await editor.locator('.huw-musical-caption-overlay').evaluate(node=>node.hidden),true,'hiding captions clears the preview');
+ // Invisible facial layers must not intercept selection. Later animation and
+ // lipsync passes can override opacity after Engine.paint, so hit testing must
+ // follow the final attribute without another engine paint or source change.
+ const eyelidHitTesting=await editor.locator('[data-cutout-id="prisoner-eye-lids"]:visible').first().evaluate(holder=>{
+  const shape=holder.querySelector('image'),opacity=holder.getAttribute('opacity');
+  const pointer=shape.style.getPropertyValue('pointer-events'),priority=shape.style.getPropertyPriority('pointer-events');
+  try{
+   shape.style.setProperty('pointer-events','all');
+   const hidden={holder:getComputedStyle(holder).pointerEvents,child:getComputedStyle(shape).pointerEvents};
+   holder.setAttribute('opacity','1');
+   const visible=getComputedStyle(shape).pointerEvents;
+   holder.setAttribute('opacity','0');
+   return {opacity,hidden,visible,hiddenAgain:getComputedStyle(shape).pointerEvents};
+  }finally{
+   if(opacity===null)holder.removeAttribute('opacity');else holder.setAttribute('opacity',opacity);
+   if(pointer)shape.style.setProperty('pointer-events',pointer,priority);else shape.style.removeProperty('pointer-events');
+  }
+ });
+ assert.equal(eyelidHitTesting.opacity,'0','the regression uses the authored invisible eyelid at this frame');
+ assert.deepEqual(eyelidHitTesting.hidden,{holder:'none',child:'none'},'invisible groups suppress descendant pointer overrides');
+ assert.equal(eyelidHitTesting.visible,'all','a later opacity override restores the original descendant hit testing');
+ assert.equal(eyelidHitTesting.hiddenAgain,'none','a later hide immediately stops pointer interception again');
  await editor.locator('.huw-musical-parts-button').click();
  await editor.locator('[data-cutout-id="prisoner-head-drawing"]:visible image').first().click();
  const outline=editor.locator('.huw-musical-transform-overlay[data-mode="parts"] .huw-musical-transform-outline');
