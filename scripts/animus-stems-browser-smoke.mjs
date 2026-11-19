@@ -190,7 +190,11 @@ try{
  assert.ok(sampleRequests.length>0,'real ABCJS synthesis requested the original sample bank');
  passed('WAV-only export works with H.264 and AAC encoders absent');
 
- const archive=await download(dialog.locator('.huw-video-download'),'animus-stems-smoke.zip'),files=unzip(archive);
+ const allFiles=dialog.getByRole('button',{name:'Hent alle valgte filer',exact:true});
+ assert.equal(await allFiles.count(),1,'the completed package has one explicit all-files download');
+ assert.equal(await dialog.locator('.huw-video-recreate').innerText(),'Opret igen','creating again is separate from saving the completed files');
+ assert.equal(await dialog.locator('.huw-video-files').evaluate(element=>element===document.activeElement),true,'completed files receive focus');
+ const archive=await download(allFiles,'animus-stems-smoke.zip'),files=unzip(archive);
  assert.deepEqual([...files.keys()].sort(),['README.txt','captions.vtt','effects.wav','manifest.json','music.wav','speech.wav'].sort());
  const packageData=JSON.parse(files.get('manifest.json').toString('utf8'));
  assert.equal(packageData.format,'animus-editing-bundle');assert.equal(packageData.video,null);
@@ -229,10 +233,15 @@ try{
  assert.equal(packageData.captions.startSeconds,0);assert.equal(packageData.captions.directLumaFusionImportVerified,false);
  passed('captions spanning the cut start are rebased to the same local zero');
 
- const speechButton=dialog.locator('.huw-video-files button').filter({hasText:'speech.wav'});
- assert.equal(await speechButton.count(),1,'individual speech file is available');
- const directSpeech=await download(speechButton,'speech-individual.wav');
- assert.deepEqual(directSpeech,files.get('speech.wav'),'individual download matches the ZIP entry');
+ for(const name of ['music.wav','speech.wav','effects.wav','captions.vtt']){
+  const button=dialog.getByRole('button',{name:'Hent '+name,exact:true});
+  assert.equal(await button.count(),1,name+' has one accessible per-file download');
+  assert.match(await button.innerText(),/↓/,'the file row has a visible download arrow');
+ }
+ const directSpeech=await download(dialog.getByRole('button',{name:'Hent speech.wav',exact:true}),'speech-individual.wav');
+ assert.deepEqual(directSpeech,files.get('speech.wav'),'individual speech download matches the ZIP entry');
+ const directCaptions=await download(dialog.getByRole('button',{name:'Hent captions.vtt',exact:true}),'captions-individual.vtt');
+ assert.deepEqual(directCaptions,files.get('captions.vtt'),'the selected captions have their own exact download');
  assert.ok(Math.abs(Number(await show.locator('.huw-musical-range').inputValue())-savedTime)<.001,'player position restored');
  assert.equal(await show.locator('[data-cutout-id="stem-test-box"]').first().getAttribute('transform'),savedTransform,'stage pose restored');
  await page.screenshot({path:fileURLToPath(new URL('stems-complete.png',out)),fullPage:false});

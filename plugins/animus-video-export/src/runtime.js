@@ -240,8 +240,8 @@ function attach(o){
  var doc=o.host.ownerDocument,da=hasDanish(o),T=function(d,e){return da?d:e;};
  var trigger=ui(doc,"button",o.controls,"huw-video-export-button",T("↓ Eksportér video","↓ Export video"));
  trigger.type="button";trigger.setAttribute("data-animus-video-export","1");
- var overlay=null,busy=false,abort=false,disposed=false,result=null,subtitlesBlob=null,files=[];
- function disposeResult(){result=null;subtitlesBlob=null;files=[];}
+ var overlay=null,busy=false,abort=false,disposed=false,result=null,allResult=null,subtitlesBlob=null,files=[];
+ function disposeResult(){result=null;allResult=null;subtitlesBlob=null;files=[];}
  function dispose(){disposed=true;abort=true;if(trigger.parentNode)trigger.remove();if(overlay)overlay.remove();disposeResult();}
  function close(){if(busy){abort=true;return;}if(overlay)overlay.remove();overlay=null;disposeResult();}
  function open(){
@@ -273,39 +273,58 @@ function attach(o){
   var fps=ui(doc,"select");makeOption(fps,"24","24 fps");makeOption(fps,"30","30 fps");fps.value="30";label(form,T("Billedfrekvens","Frame rate"),fps);
   function checkbox(text,checked){var field=ui(doc,"label",form,"huw-video-check"),box=ui(doc,"input");box.type="checkbox";box.checked=checked;field.appendChild(box);ui(doc,"span",field,"",text);return box;}
   var burn=checkbox(T("Brænd undertekster ind i billedet","Burn subtitles into video"),true);
-  var vtt=checkbox(T("Hent også redigerbare undertekster (.vtt)","Also save editable captions (.vtt)"),true);
+  var vtt=checkbox(T("Separat undertekstfil (.vtt)","Separate caption file (.vtt)"),true);
   var music=checkbox(T("Musik (ABC og musikoptagelser)","Music (ABC and music recordings)"),true);
   var speech=checkbox(T("Tale og optaget sang","Speech and recorded singing"),true);
   var effects=checkbox(T("Lydeffekter","Sound effects"),true);
   var hint=ui(doc,"p",form,"huw-video-hint");
+  var summary=ui(doc,"section",form,"huw-video-summary");
+  ui(doc,"strong",summary,"",T("Filer ved næste eksport","Files in the next export"));
+  var summaryNames=ui(doc,"p",summary,"huw-video-summary-names"),summaryNote=ui(doc,"p",summary,"");
   ui(doc,"p",form,"huw-video-hint",T("Eksperimentel eksport · Prøv et kort klip først. Hold fanen åben under eksport. Undertekster følger det valgte sprog i afspilleren.","Experimental export · Try a short clip first. Keep the tab open. Captions follow the language selected in the player."));
   var output=ui(doc,"div",panel,"huw-video-output");
   var state=ui(doc,"p",output,"huw-video-status",T("Klar til eksport","Ready to export"));state.setAttribute("role","status");
+  var changedNotice=ui(doc,"p",output,"huw-video-changed",T("Indstillingerne er ændret. Filerne nedenfor er fra den seneste eksport.","Settings have changed. The files below are from the most recent export."));changedNotice.hidden=true;
   var bar=ui(doc,"progress",output,"huw-video-progress");bar.max=100;bar.value=0;
-  var fileList=ui(doc,"div",output,"huw-video-files");
+  var fileList=ui(doc,"div",output,"huw-video-files");fileList.tabIndex=-1;fileList.setAttribute("aria-label",T("Filer klar til at hente","Files ready to download"));
   var actions=ui(doc,"footer",panel,"huw-video-actions");
   var start=ui(doc,"button",actions,"huw-video-primary",T("Opret MP4","Create MP4"));start.type="button";
-  var download=ui(doc,"button",actions,"huw-video-download",T("Hent MP4","Save MP4"));download.type="button";download.hidden=true;
+  var downloadAll=ui(doc,"button",actions,"huw-video-download-all",T("↓ Hent alle valgte filer","↓ Save all selected files"));downloadAll.type="button";downloadAll.hidden=true;
+  downloadAll.setAttribute("aria-label",T("Hent alle valgte filer","Save all selected files"));
   var share=ui(doc,"button",actions,"",T("Del til Filer / LumaFusion","Share to Files / LumaFusion"));share.type="button";share.hidden=true;
-  var captionsButton=ui(doc,"button",actions,"",T("Hent VTT","Save VTT"));captionsButton.type="button";captionsButton.hidden=true;
   var cancel=ui(doc,"button",actions,"",T("Luk","Close"));cancel.type="button";cancel.onclick=close;
-  var currentName=fileName(o.scene&&o.scene.name||"AniMus");
+  var currentName=fileName(o.scene&&o.scene.name||"AniMus"),ready=false,completedSignature=null;
+  function settingsSignature(){return JSON.stringify([mode.value,begin.value,finish.value,resolution.value,fps.value,burn.checked,vtt.checked,music.checked,speech.checked,effects.checked]);}
   function refreshMode(){
    var editing=mode.value!=="movie",audioOnly=mode.value==="stems";
    resolution.disabled=audioOnly;burn.disabled=audioOnly;
-   start.textContent=editing?(audioOnly?T("Opret lydpakke","Create audio package"):T("Opret redigeringspakke","Create editing package")):T("Opret MP4","Create MP4");
+   start.textContent=ready?T("Opret igen","Create again"):editing?(audioOnly?T("Opret lydpakke","Create audio package"):T("Opret redigeringspakke","Create editing package")):T("Opret MP4","Create MP4");
+   if(ready)start.classList.add("huw-video-recreate");else start.classList.remove("huw-video-recreate");
+   changedNotice.hidden=!ready||completedSignature===settingsSignature();
+   var names=audioOnly?[]:["video.mp4"];
+   if(editing){if(music.checked)names.push("music.wav");if(speech.checked)names.push("speech.wav");if(effects.checked)names.push("effects.wav");}
+   if(vtt.checked)names.push("captions.vtt");
+   summaryNames.textContent=names.length?names.join(" · "):T("Vælg mindst ét lydspor","Select at least one audio track");
+   summaryNote.textContent=editing?T("Valgte lydspor bliver separate WAV-filer med fælles start og længde. ZIP-filen indeholder også manifest.json og README.txt med tidsoplysninger og importvejledning.","Selected audio tracks become separate WAV files with the same start and duration. The ZIP also includes manifest.json and README.txt with timing and import instructions."):
+    music.checked||speech.checked||effects.checked?T("De afkrydsede lydspor blandes i video.mp4. Vælg Pakke til videoredigering for at få dem som separate WAV-filer.","The checked audio tracks are mixed into video.mp4. Choose Video editing package to receive them as separate WAV files."):
+    T("Ingen lydspor er valgt: video.mp4 bliver uden lyd.","No audio tracks are selected: video.mp4 will be silent.");
    hint.textContent=editing?T("Separate WAV-spor med samme startpunkt, pauser og længde. Pak ZIP-filen ud og læg filerne ved samme startpunkt i LumaFusion. Optagelser bevares som de er. VTT-import i LumaFusion er ikke verificeret.","Separate WAV tracks share the same start, silence and duration. Unzip and place every file at the same start in LumaFusion. Recordings stay intact. VTT import in LumaFusion is not verified."):T("MP4 (H.264 + AAC) med de valgte spor blandet sammen. Eksporten beregnes lokalt; store film kan kræve meget hukommelse på iPad.","MP4 (H.264 + AAC) with the selected tracks mixed together. Encoded locally; long videos can require substantial iPad memory.");
   }
-  mode.onchange=function(){burn.checked=mode.value==="movie";refreshMode();};refreshMode();
+  mode.onchange=function(){burn.checked=mode.value==="movie";refreshMode();};
+  [music,speech,effects,vtt].forEach(function(input){input.onchange=refreshMode;});refreshMode();
+  form.addEventListener("change",refreshMode);
+  form.addEventListener("input",refreshMode);
   function update(phase,value){state.textContent=T("Eksport: ","Export: ")+phase+" "+Math.round(100*clamp(num(value,0),0,1))+" %";bar.value=Math.round(100*clamp(num(value,0),0,1));}
   start.onclick=async function(){
    if(busy)return;
    var a=num(begin.value,NaN),b=num(finish.value,NaN),duration=o.duration();
    if(!Number.isFinite(a)||!Number.isFinite(b)||a<0||b>duration+.001||b-a<.05){state.textContent=T("Ugyldigt tidsudsnit","Invalid export range");return;}
    if(mode.value==="stems"&&!music.checked&&!speech.checked&&!effects.checked){state.textContent=T("Vælg mindst ét lydspor","Select at least one audio track");return;}
-   busy=true;abort=false;disposeResult();start.disabled=true;closeBtn.disabled=false;cancel.textContent=T("Afbryd","Cancel export");bar.value=0;download.hidden=true;share.hidden=true;captionsButton.hidden=true;
+   busy=true;abort=false;ready=false;disposeResult();start.disabled=true;closeBtn.disabled=false;cancel.textContent=T("Afbryd","Cancel export");bar.value=0;downloadAll.hidden=true;share.hidden=true;
+   completedSignature=null;changedNotice.hidden=true;
+   start.classList.remove("huw-video-recreate");downloadAll.classList.remove("huw-video-download");
    fileList.textContent="";
-   var oldPosition=o.position(),opts={start:a,end:b,width:Number(resolution.value),fps:Number(fps.value),burn:burn.checked,
+   var oldPosition=o.position(),exportSignature=settingsSignature(),opts={start:a,end:b,width:Number(resolution.value),fps:Number(fps.value),burn:burn.checked,
     mode:mode.value,vtt:vtt.checked,music:music.checked,speech:speech.checked,effects:effects.checked};
    var range=exportRange(a,b,opts.fps),isCancelled=function(){return abort||disposed;},restoreExport=null;
    var inputs=Array.prototype.slice.call(form.querySelectorAll("input,select"));inputs.forEach(function(input){input.disabled=true;});
@@ -334,38 +353,66 @@ function attach(o){
     }else if(opts.vtt)segments=await captionFrames(o,opts,update,isCancelled);
     if(isCancelled())throw Error("Export cancelled");
     if(opts.vtt)subtitlesBlob=new Blob([subtitles(segments,b-a)],{type:"text/vtt;charset=utf-8"});
-    var name=currentName+"-"+a+"-"+b,extension=".mp4";
+    var name=currentName+"-"+a+"-"+b;
+    if(result)files.push({name:"video.mp4",blob:result,description:opts.mode==="movie"&&(opts.music||opts.speech||opts.effects)?T("Video med samlet lyd","Video with mixed audio"):T("Video uden lyd","Video without audio")});
+    var stemDescriptions={music:T("Musik","Music"),speech:T("Tale og optaget sang","Speech and recorded singing"),effects:T("Lydeffekter","Sound effects")};
+    stems.forEach(function(stem){files.push({name:stem.id+".wav",blob:stem.blob,description:stemDescriptions[stem.id]});});
+    if(subtitlesBlob)files.push({name:"captions.vtt",blob:subtitlesBlob,description:T("Separat undertekstfil","Separate caption file")});
     if(opts.mode!=="movie"){
-     if(result)files.push({name:"video.mp4",blob:result});
-     stems.forEach(function(stem){files.push({name:stem.id+".wav",blob:stem.blob});});
-     if(subtitlesBlob)files.push({name:"captions.vtt",blob:subtitlesBlob});
      var manifest=packageManifest(o.scene,opts,stems,video,!!subtitlesBlob);
-     files.push({name:"manifest.json",blob:new Blob([JSON.stringify(manifest,null,2)+"\n"],{type:"application/json"})});
-     files.push({name:"README.txt",blob:new Blob([packageReadme(manifest)],{type:"text/plain;charset=utf-8"})});
-     result=await Bundle.zip(files,{cancelled:isCancelled,progress:update});extension=".zip";
-     files.filter(function(file){return /\.(wav|mp4)$/.test(file.name);}).forEach(function(file){
-      var button=ui(doc,"button",fileList,"",T("Hent ","Save ")+file.name);button.type="button";
-      button.onclick=function(){saveFile(file.blob,name+"-"+file.name);};
-     });
+     files.push({name:"manifest.json",blob:new Blob([JSON.stringify(manifest,null,2)+"\n"],{type:"application/json"}),description:T("Tidsplacering og sporoplysninger","Track timing and details"),secondary:true});
+     files.push({name:"README.txt",blob:new Blob([packageReadme(manifest)],{type:"text/plain;charset=utf-8"}),description:T("Vejledning til import i videoprogram","Video editor import instructions"),secondary:true});
+     result=await Bundle.zip(files,{cancelled:isCancelled,progress:update});
+     allResult=result;
+    }else if(files.length>1){
+     // Package the already encoded picture and sidecar; downloading all files
+     // never re-renders video or relies on multiple automatic iOS downloads.
+     allResult=await Bundle.zip(files,{cancelled:isCancelled,progress:update});
+    }else{
+     allResult=result;
     }
     if(isCancelled())throw Error("Export cancelled");
-    download.textContent=extension===".zip"?T("Hent ZIP","Save ZIP"):T("Hent MP4","Save MP4");
-    share.textContent=extension===".zip"?T("Del ZIP til Filer","Share ZIP to Files"):T("Del til Filer / LumaFusion","Share to Files / LumaFusion");
-    download.onclick=function(){if(result)saveFile(result,name+extension);};
-    share.onclick=function(){if(result)shareFile(result,name+extension).catch(function(error){state.textContent=String(error&&error.message||error);});};
-    captionsButton.onclick=function(){if(subtitlesBlob)saveFile(subtitlesBlob,name+".vtt");};
-    download.hidden=false;share.hidden=false;captionsButton.hidden=!subtitlesBlob;
+    ui(doc,"strong",fileList,"huw-video-files-title",T("Filer klar til at hente","Files ready to download"));
+    ui(doc,"p",fileList,"huw-video-files-help",T("Hent alle filer samlet, eller vælg pilen ved den enkelte fil.","Save all files together, or choose the arrow beside an individual file."));
+    var metadataList=null;
+    files.forEach(function(file){
+     var parent=fileList;
+     if(file.secondary){
+      if(!metadataList){metadataList=ui(doc,"details",fileList,"huw-video-file-metadata");ui(doc,"summary",metadataList,"",T("Pakkeoplysninger og vejledning","Package details and instructions"));}
+      parent=metadataList;
+     }
+     var row=ui(doc,"div",parent,"huw-video-file-row"),info=ui(doc,"div",row,"huw-video-file-info");
+     ui(doc,"strong",info,"huw-video-file-name",file.name);
+     var size=file.blob.size>=1048576?(file.blob.size/1048576).toFixed(1)+" MB":Math.max(1,Math.ceil(file.blob.size/1024))+" KB";
+     ui(doc,"span",info,"huw-video-file-description",file.description+" · "+size);
+     var button=ui(doc,"button",row,"huw-video-file-download","↓");button.type="button";
+     button.setAttribute("aria-label",T("Hent ","Save ")+file.name);button.setAttribute("title",T("Hent ","Save ")+file.name);
+     if(opts.mode==="movie"&&file.name==="video.mp4")button.classList.add("huw-video-download");
+     var filename=opts.mode==="movie"&&file.name==="video.mp4"?name+".mp4":name+"-"+file.name;
+     button.onclick=function(){if(!busy&&ready&&!disposed)saveFile(file.blob,filename);};
+    });
+    var allExtension=opts.mode!=="movie"||files.length>1?".zip":".mp4";
+    if(opts.mode!=="movie")downloadAll.classList.add("huw-video-download");
+    downloadAll.textContent=T("↓ Hent alle valgte filer","↓ Save all selected files")+(allExtension===".zip"?" (ZIP)":"");
+    downloadAll.onclick=function(){if(!busy&&allResult&&!disposed)saveFile(allResult,name+allExtension);};
+    share.textContent=allExtension===".zip"?T("Del alle filer til Filer","Share all files to Files"):T("Del til Filer / LumaFusion","Share to Files / LumaFusion");
+    share.onclick=function(){if(!busy&&allResult&&!disposed)shareFile(allResult,name+allExtension).catch(function(error){if(!disposed&&overlay)state.textContent=String(error&&error.message||error);});};
+    ready=true;completedSignature=exportSignature;downloadAll.hidden=false;share.hidden=false;
     state.textContent=(opts.mode==="movie"?T("MP4 klar: ","MP4 ready: "):opts.mode==="stems"?T("Lydpakke klar: ","Audio package ready: "):T("Redigeringspakke klar: ","Editing package ready: "))+(result.size/1048576).toFixed(1)+" MB · "+range.duration.toFixed(3)+" s · "+opts.fps+" fps";
     var clipped=stems.filter(function(stem){return stem.clippedSamples>0;});
     if(clipped.length)state.textContent+=T(" · Overstyring i "," · Clipping in ")+clipped.map(function(stem){return stem.id+".wav";}).join(", ")+T(". Sænk kildesporets lydstyrke og eksportér igen.",". Lower source clip levels and export again.");
     bar.value=100;
    }catch(error){
+    disposeResult();ready=false;fileList.textContent="";downloadAll.hidden=true;share.hidden=true;
     if(!disposed)state.textContent=(abort?T("Eksport afbrudt","Export cancelled"):T("Eksportfejl: ","Export error: ")+String(error&&error.message||error));
    }finally{
     try{if(!disposed&&restoreExport)restoreExport();}catch(_){}
     try{if(!disposed){o.seek(oldPosition);o.pause();}}catch(_){}
     busy=false;start.disabled=false;cancel.textContent=T("Luk","Close");inputs.forEach(function(input){input.disabled=false;});refreshMode();
     if(disposed||abort){if(overlay){overlay.remove();overlay=null;}disposeResult();}
+    else if(ready){
+     try{fileList.focus({preventScroll:true});fileList.scrollIntoView({block:"nearest",behavior:"smooth"});}catch(_){}
+    }
    }
   };
   dlg.addEventListener("click",function(e){if(e.target===dlg)close();});

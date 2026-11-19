@@ -163,9 +163,21 @@ try{
   await page.waitForFunction(()=>/Lydpakke klar:|Audio package ready:|Eksportfejl:|Export error:/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:90000});
   const status=await dialog.locator('.huw-video-status').innerText();
   assert.match(status,/Lydpakke klar:|Audio package ready:/,'real embedded audio export succeeds: '+status);
-  const pending=page.waitForEvent('download');await dialog.locator('.huw-video-download').click();
+  assert.equal(await dialog.locator('.huw-video-recreate').innerText(),'Opret igen');
+  for(const name of [...tracks.map(id=>id+'.wav'),'captions.vtt']){
+   const button=dialog.getByRole('button',{name:'Hent '+name,exact:true});
+   assert.equal(await button.count(),1,name+' has an individual accessible download');
+   assert.match(await button.innerText(),/↓/);
+  }
+  const pending=page.waitForEvent('download');await dialog.getByRole('button',{name:'Hent alle valgte filer',exact:true}).click();
   const download=await pending,path=fileURLToPath(new URL(filename,out));await download.saveAs(path);
   const files=zipFiles(await readFile(path)),metadata=JSON.parse(files.get('manifest.json').toString('utf8'));
+  assert.deepEqual([...files.keys()].sort(),[...tracks.map(id=>id+'.wav'),'captions.vtt','manifest.json','README.txt'].sort(),'all-files ZIP contains precisely the selected outputs');
+  if(filename==='turn-around-original-levels.zip')for(const name of ['speech.wav','captions.vtt']){
+   const pendingFile=page.waitForEvent('download');await dialog.getByRole('button',{name:'Hent '+name,exact:true}).click();
+   const item=await pendingFile,itemPath=fileURLToPath(new URL('individual-'+name,out));await item.saveAs(itemPath);
+   assert.deepEqual(await readFile(itemPath),files.get(name),'individual '+name+' equals its ZIP entry');
+  }
   const duration=end-start,frames=Math.ceil(duration*30-1e-8)*1600;
   assert.deepEqual(metadata.sourceRange,{startSeconds:start,endSeconds:end});assert.equal(metadata.video,null);
   assert.equal(metadata.timeline.durationSeconds,frames/48000);assert.equal(metadata.timeline.audioFrames,frames);
@@ -266,10 +278,18 @@ try{
    await dialog.locator('.huw-video-primary').click();
    await page.waitForFunction(()=>/MP4 klar:|MP4 ready:|Eksportfejl:|Export error:/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:90000});
    assert.match(await dialog.locator('.huw-video-status').innerText(),/MP4 klar:|MP4 ready:/);
+   assert.equal(await dialog.locator('.huw-video-recreate').innerText(),'Opret igen');
+   assert.equal(await dialog.getByRole('button',{name:'Hent video.mp4',exact:true}).count(),1,'finished MP4 has its own download arrow');
+   assert.equal(await dialog.getByRole('button',{name:'Hent captions.vtt',exact:true}).count(),1,'selected movie captions have their own download arrow');
    const pending=page.waitForEvent('download');await dialog.locator('.huw-video-download').click();
    const download=await pending,filename=withSound?'turn-around-mixed.mp4':'turn-around-video-only.mp4',path=fileURLToPath(new URL(filename,out));
    await download.saveAs(path);const bytes=await readFile(path);
    assert.equal(bytes.toString('ascii',4,8),'ftyp');assert.ok(bytes.length>1000,'real encoded MP4 payload');
+   const pendingBundle=page.waitForEvent('download');await dialog.getByRole('button',{name:'Hent alle valgte filer',exact:true}).click();
+   const allDownload=await pendingBundle,allPath=fileURLToPath(new URL(filename.replace(/\.mp4$/,'.zip'),out));await allDownload.saveAs(allPath);
+   const allFiles=zipFiles(await readFile(allPath));assert.deepEqual([...allFiles.keys()].sort(),['captions.vtt','video.mp4']);
+   assert.deepEqual(allFiles.get('video.mp4'),bytes,'all-files saves the completed movie without re-encoding');
+   assert.match(allFiles.get('captions.vtt').toString('utf8'),/De kan tale, men de kan hverken dreje hovedet eller bevæge benene\./);
    // The native decoder must open and seek the actual downloaded file. Merely
    // detecting VideoEncoder or inspecting an MP4 header is not export proof.
    const decoded=await page.evaluate(async ({data,withSound})=>{
