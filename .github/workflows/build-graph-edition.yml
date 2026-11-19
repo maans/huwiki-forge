@@ -8,7 +8,7 @@ on:
       - scripts/graph-browser-smoke.mjs
       - .github/workflows/build-graph-edition.yml
   push:
-    branches: [main, fix/graph-context-tools-20261119]
+    branches: [main]
     paths:
       - editions/graph/**
       - plugins/graph-studio/**
@@ -17,7 +17,7 @@ on:
       - .github/workflows/build-graph-edition.yml
   workflow_dispatch:
 permissions:
-  contents: write
+  contents: read
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -43,13 +43,3 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/graph-browser-smoke.mjs
-      - name: Generate version-aligned registry and homepage in feature branch
-        if: github.event_name == 'push' && github.ref == 'refs/heads/fix/graph-context-tools-20261119'
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add library/plugins/registry.json editions/forge/tiddlers/edition-index.json index.html
-          if ! git diff --cached --quiet; then
-            git commit -m "build(graph): update registry, Edition card and landing wiki"
-            git push origin HEAD:fix/graph-context-tools-20261119
-          fi
