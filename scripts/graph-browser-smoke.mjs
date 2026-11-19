@@ -138,8 +138,6 @@ try{
   assert.equal(await editor.isVisible(),false,'Native modal closes without revealing Forge editing');
   console.log('PASS',language,'original canvas-click Select Tiddler modal and editable graph node');
 
-  const back=graphStage.locator('.vis-button.vis-back').first();
-  if(await back.isVisible())await back.click();
   const addEdge=graphStage.locator('.vis-button.vis-connect').first();
   await addEdge.waitFor({state:'visible'});
   await addEdge.click();
@@ -162,7 +160,6 @@ try{
   await page.getByRole('button',{name:'Okay',exact:true}).first().click();
   await page.waitForFunction(title=>$tw.wiki.getTiddler('Idéens kerne').getFieldList('forbinder').includes(title),newNode);
   assert.equal(await editor.isVisible(),false,'Native edge drag does not show the Forge edge form');
-  if(await back.isVisible())await back.click();
   console.log('PASS',language,'original drag-to-connect workflow and typed-field selector');
 
   // A normal click on a node, outside manipulation mode, opens only Appearance.
