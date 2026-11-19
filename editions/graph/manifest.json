@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "id": "graph",
+  "name": "Graph Edition",
+  "version": "0.1.0-beta.1",
+  "coreVersion": "5.4.1",
+  "tiddlers": [
+    "tiddlers/config.json",
+    "tiddlers/seed.json",
+    "../shared/libraries.json"
+  ],
+  "plugins": [
+    "../../themes/modern/dist/theme.json",
+    "../../languages/da-DK/plugin.json",
+    "../../plugins/flibbles-graph/dist/plugin.json",
+    "../../plugins/flibbles-vis-network/dist/plugin.json",
+    "../../plugins/graph-studio/dist/plugin.json"
+  ]
+}

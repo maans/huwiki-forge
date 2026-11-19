@@ -1,0 +1,1 @@
+Graph Studio (HUWiki Forge) is a small, independent MIT-licensed styling/dependency wrapper for Flibbles TW5-Graph and Vis-Network. The upstream plugins are separately bundled unchanged; see `editions/graph/README.md`.
