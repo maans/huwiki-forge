@@ -212,6 +212,35 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/flibbles/graph",
+        "type": "application/json",
+        "name": "Graph",
+        "description": "Lightweight and programmable graphing for Tiddlywiki",
+        "author": "Flibbles",
+        "version": "1.7.1",
+        "plugin-type": "plugin",
+        "stability": "STABILITY_2_STABLE",
+        "core-version": ">=5.3.7"
+      },
+      "path": "../../plugins/flibbles-graph/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/graph-studio",
+        "type": "application/json",
+        "name": "Graph Studio · Forge",
+        "description": "Bilingual Forge graph workbench and shared dependencies on TW5-Graph and Vis-Network",
+        "author": "HUWiki Forge",
+        "version": "0.1.0-beta.1",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/flibbles/graph $:/plugins/flibbles/vis-network",
+        "license": "MIT",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/graph-studio/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/hupedia",
         "type": "application/json",
         "name": "HUPedia — article tools / artikelværktøjer",
@@ -449,6 +478,20 @@
         "license": "MIT"
       },
       "path": "../../plugins/trim/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/flibbles/vis-network",
+        "type": "application/json",
+        "name": "Vis-Network",
+        "description": "TiddlyWiki5 plugin for the vis-network library",
+        "author": "Cameron Fischer",
+        "version": "10.6.3",
+        "plugin-type": "plugin",
+        "stability": "STABILITY_2_STABLE",
+        "core-version": ">=5.3.0"
+      },
+      "path": "../../plugins/flibbles-vis-network/dist/plugin.json"
     },
     {
       "fields": {
