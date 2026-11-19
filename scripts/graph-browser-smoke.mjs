@@ -88,7 +88,25 @@ try{
   await hint.waitFor();
   assert.match(await hint.innerText(),language==='da-DK'?/Klik på en node.*form/:/Click a node.*shape/);
   assert.equal(await editor.isVisible(),false,'No permanent Forge configurator');
+  await addNode.evaluate(button=>{
+   window.__forgeNativeTrace=[];
+   var stage=button.closest('.forge-graph-stage');
+   for(const type of ['pointerdown','mousedown','mouseup','click']){
+    stage.addEventListener(type,e=>{
+     const btn=e.target.closest&&e.target.closest('.vis-button');
+     if(!btn)return;
+     const surface=btn.closest('.graph-canvas');
+     const net=surface?._forgeVisNetwork;
+     window.__forgeNativeTrace.push({type,on:btn.className,mode:net?.manipulation?.inMode,canvasCount:stage.querySelectorAll('.graph-canvas').length});
+    },true);
+   }
+  });
   await addNode.click();
+  const trace=await graphStage.evaluate(stage=>({
+   events:window.__forgeNativeTrace||[],
+   canvases:[...stage.querySelectorAll('.graph-canvas')].map(c=>({mode:c._forgeVisNetwork?.manipulation?.inMode,hasHint:!!c.closest('.forge-graph-stage')?.querySelector('.forge-graph-shape-hint')}))
+  }));
+  console.log('NATIVE GESTURE TRACE',JSON.stringify(trace));
   const afterAdd=await graphStage.evaluate(stage=>{
    const c=stage.querySelector('.graph-canvas');
    return {mode:c._forgeVisNetwork?.manipulation?.inMode,toolbar:c.querySelector('.vis-manipulation')?.textContent?.slice(0,120)};
