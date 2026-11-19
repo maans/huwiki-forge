@@ -66,3 +66,32 @@ test('Graph WikiText keeps block mode for headings and numbered lists within bil
  assert.match(guide,/\n\n# Åbn et af kortene/,'Danish WikiText numbered list');
  assert.match(guide,/\n\n# Open one of the maps/,'English WikiText numbered list');
 });
+
+test('Graph Studio exposes an independent direct editor and per-node visual properties',async()=>{
+ const studio=await read('plugins/graph-studio/dist/plugin.json');
+ const components=JSON.parse(studio.text).tiddlers;
+ const nodeWidget=components['$:/plugins/huwiki/graph-studio/widgets/editor.js'];
+ const template=components['$:/plugins/huwiki/graph-studio/templates/forge-graph'];
+ assert.equal(nodeWidget['module-type'],'widget');
+ assert.match(nodeWidget.text,/exports\["forge-graph-editor"\]/);
+ assert.match(template.text,/shape=\{\{!!graph-shape\}\}/);
+ assert.match(template.text,/size=\{\{!!graph-size\}\}/);
+ assert.match(template.text,/<\$nodes\.writable \$field=filter>/,'Original editable graph engine remains in use');
+ for(const icon of ['GraphStudio/Sun','GraphStudio/Flame','GraphStudio/Idea']){
+  assert.equal(components[icon].type,'image/svg+xml');
+  assert.match(components[icon].text,/<svg[^>]+viewBox=/);
+ }
+ const nodes=await read('editions/graph/tiddlers/seed.json');
+ const shapes=new Set(nodes.filter(t=>t.tags?.startsWith('Graph/')).map(t=>t['graph-shape']));
+ assert.ok(shapes.size>=6,'Examples must use multiple shapes, not just circles');
+ for(const name of ['Platon','Mindmap','Projekt']){
+  const graph=nodes.find(t=>t.title==='$:/graph/'+name);
+  assert.equal(graph.template,'$:/plugins/huwiki/graph-studio/templates/forge-graph');
+  assert.equal(graph['forge-node-tag'],'Graph/'+name);
+  assert.notEqual(JSON.parse(graph['graph.nodes']).shape,'dot');
+ }
+ for(const title of ['Graph Edition · Start','Graph Edition · Platon','Graph Edition · Mindmap','Graph Edition · Projekt']){
+  const page=nodes.find(t=>t.title===title);
+  assert.match(page.text,/<\$forge-graph-editor graph="\$:/);
+ }
+});

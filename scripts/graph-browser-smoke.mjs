@@ -75,6 +75,39 @@ try{
   assert.equal((await node.locator('h1,h2').first().innerText()).trim(),'Hulen');
   assert.ok(await node.locator('p').count()>=1,'Node content should have paragraph formatting');
 
+  // Real editor acceptance: change tiddlers only through clickable controls.
+  await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));
+  const editor=page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-editor');
+  await editor.waitFor();
+  assert.equal(await editor.locator('.forge-graph-create-node').count(),1,'The Forge add-node button must be present');
+  assert.equal(await editor.locator('.forge-graph-add-edge').count(),1,'The Forge add-edge button must be present');
+  const newNode='Brugerens grafprøve';
+  await editor.locator('.forge-graph-node-name').fill(newNode);
+  await editor.locator('.forge-graph-create-node').click();
+  await page.waitForFunction(title=>window.$tw?.wiki?.getTiddler(title)?.hasTag('Graph/Mindmap'),newNode);
+  assert.equal(await page.evaluate(title=>$tw.wiki.getTiddler(title).fields['graph-shape'],newNode),'box');
+  await editor.locator('.forge-graph-edge-from').selectOption('Idéens kerne');
+  await editor.locator('.forge-graph-edge-to').selectOption(newNode);
+  await editor.locator('.forge-graph-edge-type').selectOption('forbinder');
+  await editor.locator('.forge-graph-add-edge').click();
+  await page.waitForFunction(title=>$tw.wiki.getTiddler('Idéens kerne').getFieldList('forbinder').includes(title),newNode);
+  await editor.locator('.forge-graph-style-node').selectOption(newNode);
+  await editor.locator('.forge-graph-style-shape').selectOption('diamond');
+  await editor.locator('.forge-graph-style-color').fill('#9475ba');
+  await editor.locator('.forge-graph-style-size').fill('42');
+  await editor.locator('.forge-graph-apply-style').click();
+  await page.waitForFunction(title=>$tw.wiki.getTiddler(title).fields['graph-shape']==='diamond',newNode);
+  const shape=await page.evaluate(title=>{let t=$tw.wiki.getTiddler(title);return [t.fields['graph-shape'],t.fields.color,t.fields['graph-size']];},newNode);
+  assert.deepEqual(shape,['diamond','#9475ba','42']);
+  await editor.locator('.forge-graph-style-shape').selectOption('image');
+  await editor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Sun');
+  await editor.locator('.forge-graph-apply-style').click();
+  await page.waitForFunction(title=>$tw.wiki.getTiddler(title).fields.icon==='GraphStudio/Sun',newNode);
+  assert.equal(await page.locator('.tc-error-form').count(),0,'The direct graph editor must not trigger error dialogs');
+  // The graph remains rendered after actions (no blank/disabled player).
+  await page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-stage canvas').first().waitFor();
+  console.log('PASS',language,'touch-style node creation, typed connections, shapes, color, size, SVG icons');
+
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'Nyt begreb',tags:['Graph/Mindmap'],text:'En ny redigerbar node.'}));
   assert.equal(await page.evaluate(()=>$tw.wiki.filterTiddlers('[tag[Graph/Mindmap]]').length),8);
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));
