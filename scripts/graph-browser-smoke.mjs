@@ -77,7 +77,7 @@ try{
 
   // Real editor acceptance: change tiddlers only through clickable controls.
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));
-  const editor=page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-editor');
+  const editor=page.locator('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-editor').first();
   await editor.waitFor();
   assert.equal(await editor.locator('.forge-graph-create-node').count(),1,'The Forge add-node button must be present');
   assert.equal(await editor.locator('.forge-graph-add-edge').count(),1,'The Forge add-edge button must be present');
