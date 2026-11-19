@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Turn Around · Videoeksport</title>
+<style>
+*{box-sizing:border-box}html,body{height:100%;margin:0}body{display:flex;flex-direction:column;min-height:100vh;min-height:100dvh;background:#f3f2ed;color:#163d46;font:14px/1.45 system-ui,sans-serif}header{display:flex;align-items:center;flex-wrap:wrap;gap:7px 16px;padding:10px 18px;border-bottom:1px solid #cfdbd2;background:#fffefa}#home{font-weight:700;text-decoration:none;color:#163d46;white-space:nowrap}#name{font-weight:650}#badge{border-radius:4px;padding:2px 7px;background:#fff0c9;color:#73520e;font-size:12px}#status{font-size:12px;color:#526765}nav{margin-left:auto;display:flex;align-items:center;gap:12px;flex-wrap:wrap}nav a{border-radius:7px;background:#163d46;color:white;padding:8px 13px;text-decoration:none;font-size:12px;font-weight:650}nav a[hidden]{display:none}#note{max-width:470px;font-size:12px;color:#526765}#viewer{flex:1;min-height:300px;position:relative}#wiki{display:none;position:absolute;inset:0;width:100%;height:100%;border:0;background:white}#error{display:none;max-width:700px;padding:24px;margin:30px auto;color:#8a3434;background:#fffefa;border-radius:10px}@media(max-width:680px){header{padding:8px 12px}#home,#name{font-size:12px}nav{margin-left:0;width:100%}#note{flex:1}}
+</style>
+</head>
+<body>
+<header>
+ <a id="home" href="../../">F · TiddlyWiki Forge</a>
+ <strong id="name">Turn Around · Videoeksport</strong>
+ <span id="badge">Testversion</span>
+ <span id="status" role="status" aria-live="polite">Åbner filmen…</span>
+ <nav>
+  <span id="note">Vælg Eksportér video i afspilleren. Prøv først et klip på 5 sekunder i 720p.</span>
+ </nav>
+</header>
+<main id="viewer" aria-label="Turn Around video export test">
+ <iframe id="wiki" title="Turn Around — Beyond the Cave" allow="autoplay; fullscreen; web-share; clipboard-read; clipboard-write" allowfullscreen></iframe>
+ <p id="error" role="alert"></p>
+</main>
+<script type="module" src="./preview.mjs?v=20261119-native-save"></script>
+</body>
+</html>
