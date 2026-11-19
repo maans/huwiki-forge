@@ -21,6 +21,27 @@
     "note-en": "Libraries and new downloads require internet access."
   },
   {
+    "title": "$:/huwiki/forge/edition/graph",
+    "tags": "$:/huwiki/forge/edition",
+    "text": "",
+    "edition-id": "graph",
+    "name": "Graph Edition (beta)",
+    "status": "test",
+    "version": "0.1.0-beta.1",
+    "order": "01.5",
+    "build-url": "https://forge.måns.dk/assembler/?edition=graph",
+    "build-url-da": "https://forge.måns.dk/assembler/?edition=graph&lang=da",
+    "build-url-en": "https://forge.måns.dk/assembler/?edition=graph&lang=en",
+    "demo-url-da": "https://forge.måns.dk/demo/?edition=graph&lang=da",
+    "demo-url-en": "https://forge.måns.dk/demo/?edition=graph&lang=en",
+    "heading-da": "Graph Edition – interaktive videnskort",
+    "heading-en": "Graph Edition – interactive knowledge maps",
+    "description-da": "Udforsk Platons hule, byg mindmaps og vis projekters sammenhænge. Flyt noder, tegn forbindelser og redigér de tilhørende tiddlere.",
+    "description-en": "Explore Plato's cave, make mind maps and map project dependencies. Move nodes, connect ideas and edit their tiddlers.",
+    "note-da": "Beta: TW5-Graph og Vis-Network indlejret til offline brug. Originalpluginets værktøjer er på engelsk. iPad-accept udestår.",
+    "note-en": "Beta: TW5-Graph and Vis-Network included for offline use. Upstream graph controls are in English. iPad acceptance pending."
+  },
+  {
     "title": "$:/huwiki/forge/edition/hupedia",
     "tags": "$:/huwiki/forge/edition",
     "text": "",

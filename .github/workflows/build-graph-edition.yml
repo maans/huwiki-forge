@@ -1,0 +1,47 @@
+name: Build Graph Edition from verified upstream bundles
+on:
+  push:
+    branches: [feat/graph-edition-20261119]
+    paths:
+      - editions/graph/**
+      - plugins/graph-studio/**
+      - scripts/build-graph-edition.mjs
+      - scripts/graph-browser-smoke.mjs
+      - .github/workflows/build-graph-edition.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Download and verify official plugin bundles, build registry and homepage
+        run: node scripts/build-graph-edition.mjs
+      - name: Verify Graph Edition and existing Forge tests
+        run: |
+          npm ci --ignore-scripts
+          npm test
+          node scripts/build-forge-home.mjs --check
+      - name: Install browser smoke-test dependencies
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Test live Graph canvas and editability offline in Chromium
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/graph-browser-smoke.mjs
+      - name: Commit generated packages and landing wiki on the feature branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add plugins/flibbles-graph/dist/plugin.json plugins/flibbles-vis-network/dist/plugin.json library/plugins/registry.json editions/forge/tiddlers/edition-index.json index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "build(graph): vendor verified bundles and update Forge landing"
+            git push origin HEAD:feat/graph-edition-20261119
+          fi

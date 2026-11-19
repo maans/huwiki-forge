@@ -109,6 +109,16 @@
         "name": "SilbaÄtno Repertoire",
         "description": "17 editable scores in one music-stand view with playback and a repertoire overview."
       }
+    },
+    "graph": {
+      "da": {
+        "name": "Graph Edition (beta)",
+        "description": "Interaktive videnskort, mindmaps og projektkort i en redigerbar wiki."
+      },
+      "en": {
+        "name": "Graph Edition (beta)",
+        "description": "Interactive knowledge graphs, mind maps and project maps in an editable wiki."
+      }
     }
   },
   "packages": {
@@ -470,6 +480,36 @@
       "en": {
         "name": "AniMus · Bilingual captions",
         "description": "Show Danish and English captions with automatic or manual language selection. Audio, cue timing and lip-sync stay unchanged."
+      }
+    },
+    "$:/plugins/flibbles/graph": {
+      "da": {
+        "name": "TW5-Graph (Flibbles)",
+        "description": "Den originale grafmotor til visning og redigering af relationer mellem tiddlere. Kræver også Vis-Network."
+      },
+      "en": {
+        "name": "TW5-Graph (Flibbles)",
+        "description": "Original graphing framework for editing and exploring relationships between tiddlers. Also requires Vis-Network."
+      }
+    },
+    "$:/plugins/flibbles/vis-network": {
+      "da": {
+        "name": "Vis-Network (Flibbles)",
+        "description": "Offline graftegning og interaktion for TW5-Graph, inklusive flytning af noder."
+      },
+      "en": {
+        "name": "Vis-Network (Flibbles)",
+        "description": "Offline graph rendering and interaction for TW5-Graph, including draggable nodes."
+      }
+    },
+    "$:/plugins/huwiki/graph-studio": {
+      "da": {
+        "name": "Graph Studio (Forge)",
+        "description": "Genbrugelige layout-, hjælpetekster og afhængigheder for Graph Edition. Kræver både TW5-Graph og Vis-Network."
+      },
+      "en": {
+        "name": "Graph Studio (Forge)",
+        "description": "Reusable layout, guidance and dependency package for Graph Edition. Requires TW5-Graph and Vis-Network."
       }
     }
   }

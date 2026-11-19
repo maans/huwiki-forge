@@ -1,0 +1,30 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "Graph Edition"
+  },
+  {
+    "title": "$:/SiteSubtitle",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\nVidenskort, mindmaps og projekter\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\nKnowledge graphs, mind maps and projects\n</$list>"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[Graph Edition · Start]]"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  },
+  {
+    "title": "$:/state/sidebar",
+    "text": "no"
+  },
+  {
+    "title": "$:/config/flibbles/graph/sidebar",
+    "text": "$:/graph/Platon"
+  },
+  {
+    "title": "$:/config/flibbles/graph/engine",
+    "text": "Vis-Network"
+  }
+]
