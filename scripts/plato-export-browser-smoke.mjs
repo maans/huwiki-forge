@@ -563,7 +563,7 @@ try{
  await createSelectedFiles();
  const vttDownload=page.waitForEvent('download');await dialog.getByRole('button',{name:'Hent captions.vtt',exact:true}).click();
  const vttFile=fileURLToPath(new URL('editor-hidden-captions.vtt',out));await (await vttDownload).saveAs(vttFile);
- assert.match(await readFile(vttFile,'utf8'),/De kan tale, men de kan hverken dreje hovedet eller bevæge benene\./,'the chosen captions export still contains the hidden Danish subtitles');
+ assert.match(await readFile(vttFile,'utf8'),/Dybt under jorden sidder fanger lænket med ansigtet mod en væg\./,'the chosen captions export still contains the hidden Danish subtitles');
  const wavDownload=page.waitForEvent('download');await dialog.getByRole('button',{name:'Hent speech.wav',exact:true}).click();
  const wavFile=fileURLToPath(new URL('editor-preview-muted-speech.wav',out));await (await wavDownload).saveAs(wavFile);
  const authoredVoice=pcm(await readFile(wavFile));assert.ok(authoredVoice.rms>1e-5,'temporarily muted preview audio is still exported from the authored recording');
