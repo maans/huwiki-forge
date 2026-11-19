@@ -198,25 +198,29 @@ function packageManifest(scene,settings,stems,video,hasCaptions){
   sourceRange:{startSeconds:range.start,endSeconds:range.end},
   timeline:{startSeconds:0,durationSeconds:range.duration,frameRate:range.fps,videoFrames:range.videoFrames,
    sampleRate:48000,audioFrames:range.audioFrames,endPaddingSeconds:range.padding},
-  video:video?{file:"video.mp4",audio:false,burnedCaptions:!!settings.burn,width:settings.width,height:Math.round(settings.width*9/16)}:null,
+  video:video?{file:"video.mp4",audio:settings.audio==="playback",burnedCaptions:!!settings.burn,width:settings.width,height:Math.round(settings.width*9/16)}:null,
   audio:stems.map(function(stem){return {id:stem.id,file:stem.id+".wav",startSeconds:0,sampleRate:stem.sampleRate,
    channels:stem.channels,bitsPerSample:stem.bitsPerSample,frames:stem.frameCount,durationSeconds:stem.duration,
    peak:stem.peak,clippedSamples:stem.clippedSamples||0,normalized:false};}),
-  captions:hasCaptions?{file:"captions.vtt",startSeconds:0,language:"current player selection",directLumaFusionImportVerified:false}:null,
+  captions:hasCaptions?{file:"captions.vtt",startSeconds:0,language:settings.captionLanguage||"current player selection",directLumaFusionImportVerified:false}:null,
   audioPolicy:"Original clip levels, fades, mutes and source offsets; no per-stem normalization. Recorded audio is kept intact, not source-separated."
  };
 }
 function packageReadme(manifest){
+ var video=manifest.video,daVideo=!video?"Pakken indeholder ingen video.":video.audio?"Videoen indeholder lyd fra afspilleren.":"Videoen har ingen lyd.";
+ var enVideo=!video?"This package contains no video.":video.audio?"The video includes the player's audio.":"The video has no audio.";
  var lines=["AniMus - pakke til videoredigering / editing bundle","",manifest.title,"",
-  "DA: Pak ZIP-filen ud i Filer. Importér video.mp4 og de ønskede WAV-filer i dit videoprogram.",
+  "DA: Pak ZIP-filen ud i Filer. "+(video?"Importér video.mp4 og de ønskede WAV-filer i dit videoprogram.":"Importér de ønskede WAV-filer i dit videoprogram."),
   "Læg alle filer ved samme startpunkt (00:00). Bevar stilheden i starten af lydsporene.",
-  "Videoen har ingen lyd. Tale/optaget sang: speech.wav. ABC-musik og musikoptagelser: music.wav. Effekter: effects.wav.",
+  daVideo+" Tale/optaget sang: speech.wav. ABC-musik og musikoptagelser: music.wav. Effekter: effects.wav.",
+  video&&video.audio?"Hvis WAV-sporene skal erstatte videoens lyd, skal videoens lyd slås fra.":"",
   "Kun de valgte spor er med. Allerede sammenblandet lyd i en optagelse bliver ikke skilt ad.",
   "Lydstyrker og fades er bevaret; sporene er ikke normaliseret hver for sig.",
   "Undertekster følger afspillerens valgte sprog. Direkte VTT-import i LumaFusion er ikke verificeret.",
-  "", "EN: Unzip in Files. Import video.mp4 and the selected WAV files into your editor.",
+  "", "EN: Unzip in Files. "+(video?"Import video.mp4 and the selected WAV files into your editor.":"Import the selected WAV files into your editor."),
   "Place every file at the SAME timeline start (00:00); keep leading silence intact.",
-  "Video has no audio. Speech/recorded singing: speech.wav. ABC music and music recordings: music.wav. Effects: effects.wav.",
+  enVideo+" Speech/recorded singing: speech.wav. ABC music and music recordings: music.wav. Effects: effects.wav.",
+  video&&video.audio?"Mute the video's audio when using the WAV tracks to replace its soundtrack.":"",
   "Only selected tracks are included. Pre-mixed recordings remain intact; this is not source separation.",
   "Clip levels and fades are preserved. No independent normalization is applied.",
   "Captions use the player's current language. Direct VTT import in LumaFusion has not been verified.",
@@ -240,184 +244,211 @@ function attach(o){
  var doc=o.host.ownerDocument,da=hasDanish(o),T=function(d,e){return da?d:e;};
  var trigger=ui(doc,"button",o.controls,"huw-video-export-button",T("↓ Eksportér video","↓ Export video"));
  trigger.type="button";trigger.setAttribute("data-animus-video-export","1");
- var overlay=null,busy=false,abort=false,disposed=false,result=null,allResult=null,subtitlesBlob=null,files=[];
- function disposeResult(){result=null;allResult=null;subtitlesBlob=null;files=[];}
- function dispose(){disposed=true;abort=true;if(trigger.parentNode)trigger.remove();if(overlay)overlay.remove();disposeResult();}
- function close(){if(busy){abort=true;return;}if(overlay)overlay.remove();overlay=null;disposeResult();}
+ var ids=["video","music","speech","effects","captions"],names={video:"video.mp4",music:"music.wav",speech:"speech.wav",effects:"effects.wav",captions:"captions.vtt"};
+ var labels={video:T("Video (.mp4)","Video (.mp4)"),music:T("Musik (.wav)","Music (.wav)"),speech:T("Tale og sang (.wav)","Speech and singing (.wav)"),effects:T("Lydeffekter (.wav)","Sound effects (.wav)"),captions:T("Undertekster (.vtt)","Captions (.vtt)")};
+ var settings={start:0,end:Math.round(o.duration()*1000)/1000,width:1280,fps:30,audio:"playback",captions:"burn"};
+ var selected={video:true,music:false,speech:false,effects:false,captions:true};
+ // One current reusable rendition plus the last displayed rendition per kind.
+ // Closing a dialog never releases its files; player teardown does.
+ var cached=Object.create(null),shown=Object.create(null),captionCache=null,batch=null;
+ var overlay=null,uiState=null,busy=false,abort=false,closeRequested=false,disposed=false,generation=0;
+ function release(){cached=Object.create(null);shown=Object.create(null);captionCache=null;batch=null;}
+ function hideDialog(){if(overlay)overlay.remove();overlay=null;uiState=null;}
+ function close(){if(busy){abort=true;closeRequested=true;return;}hideDialog();}
+ function cancel(){if(busy){abort=true;if(uiState)uiState.status.textContent=T("Afbryder eksport…","Cancelling export…");}else close();}
+ function dispose(){disposed=true;abort=true;if(o.wiki&&o.wiki.removeEventListener)o.wiki.removeEventListener("change",wikiChanged);if(trigger.parentNode)trigger.remove();hideDialog();release();}
+ function selectedIds(){return ids.filter(function(id){return selected[id];});}
+ function normalize(n){return Number.isFinite(Number(n))?Math.round(Number(n)*1000)/1000:NaN;}
+ function revisions(titles){
+  return Array.from(new Set(Array.isArray(titles)?titles:[])).sort().map(function(title){
+   return [title,o.wiki&&o.wiki.getChangeCount?o.wiki.getChangeCount(title):0];
+  });
+ }
+ function sourceState(){
+  var deps=o.getDependencyTitles?o.getDependencyTitles():null,live=o.getLiveExportState?o.getLiveExportState():{};
+  var revision=o.getSourceRevision?o.getSourceRevision():(!deps?generation:0),grouped=revision&&typeof revision==="object";
+  if(Array.isArray(deps))deps={visual:deps,audio:deps,captions:deps};deps=deps||{};live=live||{};
+  var wiki=o.wiki,choice=wiki&&wiki.getTiddlerText?wiki.getTiddlerText("$:/config/huwiki/animus/caption-language","auto"):"auto";
+  var language=wiki&&wiki.getTiddlerText?wiki.getTiddlerText("$:/language",""):doc.documentElement.lang||"";
+  var selector=o.host.querySelector('[data-huw-animus-captions="language"]');if(selector)choice=selector.value;
+  function part(kind){return JSON.stringify([grouped?revision[kind]:revision,revisions(deps[kind]),live[kind]||null]);}
+  return {visual:part("visual"),audio:JSON.stringify([part("audio"),o.soundFont?o.soundFont():""]),captions:JSON.stringify([part("captions"),choice,language]),captionLanguage:choice};
+ }
+ function wikiChanged(changes){
+  if(Object.keys(changes||{}).some(function(title){return !/^\$:\/(?:temp\/|state\/|status\/|StoryList$|HistoryList$)/.test(title);}))generation++;
+  if(uiState&&!busy)refresh();
+ }
+ if(o.wiki&&o.wiki.addEventListener)o.wiki.addEventListener("change",wikiChanged);
+ function plan(){
+  var s=Object.assign({},settings),start=normalize(s.start),end=normalize(s.end),duration=o.duration();
+  if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end>duration+.001||end-start<.05)throw Error(T("Ugyldigt tidsudsnit","Invalid export range"));
+  s.start=start;s.end=end;
+  var range=exportRange(start,end,s.fps),source=sourceState(),keys={};
+  keys.video=JSON.stringify([source.visual,start,end,s.width,s.fps,s.audio,s.audio==="playback"?source.audio:null,s.captions,s.captions==="burn"?source.captions:null]);
+  ["music","speech","effects"].forEach(function(id){keys[id]=JSON.stringify([source.audio,id,start,end,range.audioFrames]);});
+  keys.captions=JSON.stringify([source.captions,start,end,s.fps]);
+  return {settings:s,range:range,source:source,keys:keys,ids:selectedIds()};
+ }
+ function get(id,key){return cached[id]&&cached[id].key===key?cached[id]:shown[id]&&shown[id].key===key?shown[id]:null;}
+ function archiveKey(p){return JSON.stringify(p.ids.map(function(id){return [id,p.keys[id]];}));}
+ function contextText(id,s){
+  var text=s.start+"–"+s.end+" s";
+  if(id==="video")text+=" · "+Math.round(s.width*9/16)+"p · "+s.fps+" fps · "+(s.audio==="playback"?T("med lyd","with audio"):T("uden lyd","silent"));
+  return text;
+ }
+ function saveArtifact(id,artifact){if(artifact&&!disposed)saveFile(artifact.blob,artifact.filename);}
+ function refresh(){
+  if(!uiState)return;
+  var u=uiState,p=null;try{p=plan();}catch(_){}
+  var chosen=selectedIds(),missing=p?chosen.filter(function(id){return !get(id,p.keys[id]);}):chosen;
+  var complete=p&&chosen.length&&missing.length===0,packed=complete&&batch&&batch.key===archiveKey(p);
+  ids.forEach(function(id){
+   var row=u.rows[id],current=p&&get(id,p.keys[id]),artifact=current||shown[id]||cached[id];
+   row.check.checked=selected[id];row.check.disabled=busy;
+   row.arrow.disabled=!artifact;row.arrow.hidden=false;
+   row.arrow.classList.remove("huw-video-download");
+   if(id==="video"&&artifact)row.arrow.classList.add("huw-video-download");
+   row.arrow.onclick=function(){saveArtifact(id,artifact);};
+   row.context.textContent=artifact?contextText(id,artifact.settings):"";
+   row.status.textContent=artifact?(current&&artifact.key===p.keys[id]?T("Klar","Ready"):T("Skal opdateres · tidligere fil kan hentes","Needs updating · previous file can be saved")):current?T("Klar til at samle","Ready to package"):T("Ikke oprettet","Not created");
+   row.element.setAttribute("data-ready",artifact?"true":"false");row.element.setAttribute("data-current",current?"true":"false");
+  });
+  u.start.disabled=busy||!chosen.length||!!packed;
+  u.start.textContent=packed?T("Filerne er klar","Files are ready"):complete?T("Klargør valgte filer","Prepare selected files"):
+   missing.length<chosen.length?T("Opret manglende filer","Create missing files"):T("Opret valgte filer","Create selected files");
+  u.start.classList.remove("huw-video-recreate");
+  if(packed)u.start.classList.add("huw-video-secondary");else u.start.classList.remove("huw-video-secondary");
+  u.all.hidden=!packed;u.share.hidden=!packed;u.all.disabled=busy;
+  u.all.classList.remove("huw-video-download");if(packed&&!shown.video&&!cached.video)u.all.classList.add("huw-video-download");
+  u.all.textContent=T("↓ Hent alle valgte filer","↓ Save all selected files")+(packed&&batch.extension===".zip"?" (ZIP)":"");
+  u.cancel.textContent=busy?T("Afbryd","Cancel export"):T("Luk","Close");
+  [u.audio,u.burn,u.resolution,u.fps,u.scope,u.begin,u.end,u.selectAll].forEach(function(input){input.disabled=busy;});
+  u.audio.disabled=busy||!selected.video;u.burn.disabled=busy||!selected.video;u.resolution.disabled=busy||!selected.video;
+  u.note.textContent=!selected.video?"":T("Videoens lyd følger afspilleren. WAV-valgene ændrer kun, hvilke lydfiler du får.","Video audio follows the player. WAV selections only choose the separate files you receive.");
+  if(selected.video&&settings.audio==="silent")u.note.textContent=T("Videoen bliver uden lyd. De valgte WAV-filer hentes separat.","The video will be silent. Selected WAV files are saved separately.");
+ }
+ function commitArtifact(id,blob,p,extra){
+  var filename=fileName(o.scene&&o.scene.name||"AniMus")+"-"+p.settings.start+"-"+p.settings.end+(id==="video"?".mp4":"-"+names[id]);
+  var artifact=Object.assign({key:p.keys[id],blob:blob,settings:Object.assign({},p.settings),filename:filename},extra||{});
+  cached[id]=artifact;return artifact;
+ }
+ async function create(){
+  if(busy||disposed||!uiState)return;
+  var u=uiState,p;try{p=plan();if(!p.ids.length)throw Error(T("Vælg mindst én fil","Select at least one file"));}catch(error){u.status.textContent=String(error.message||error);return;}
+  var key=archiveKey(p),missing=p.ids.filter(function(id){return !get(id,p.keys[id]);});
+  if(!missing.length&&batch&&batch.key===key){u.status.textContent=T("De valgte filer er allerede klar","The selected files are already ready");refresh();return;}
+  busy=true;abort=false;closeRequested=false;u.bar.value=0;u.status.textContent=T("Opretter valgte filer…","Creating selected files…");refresh();
+  var oldPosition=o.position(),restoreExport=null,sourceSignature=JSON.stringify(p.source),range=p.range,s=p.settings;
+  function cancelled(){return abort||disposed;}
+  function ensureSource(){
+   if(cancelled())throw Error(T("Eksport afbrudt","Export cancelled"));
+   if(JSON.stringify(sourceState())!==sourceSignature)throw Error(T("Forestillingen blev ændret under eksport. Dine færdige filer er bevaret.","The production changed during export. Your completed files have been kept."));
+  }
+  function update(phase,value){if(uiState===u){u.status.textContent=phase+" "+Math.round(100*clamp(num(value,0),0,1))+" %";u.bar.value=Math.round(100*clamp(num(value,0),0,1));}}
+  try{
+   o.pause();
+   var scene=o.scene,songs=o.getSongs&&o.getSongs()||[],audioOptions={window:doc.defaultView||window,wiki:o.wiki,scene:scene,songs:songs,
+    ABC:o.getABC&&o.getABC(),soundFont:o.soundFont&&o.soundFont(),duration:o.duration(),start:s.start,end:s.end,frameCount:range.audioFrames,cancelled:cancelled,progress:update};
+   if(missing.indexOf("video")>=0){
+    var opts={start:s.start,end:s.end,width:s.width,fps:s.fps,burn:s.captions==="burn"},config=await videoConfig(o,opts);ensureSource();
+    if(o.beginExport)restoreExport=o.beginExport();
+    var sound=null;
+    if(s.audio==="playback")sound=await Soundtrack.render(Object.assign({},audioOptions,{music:true,speech:true,effects:true}));
+    ensureSource();
+    var segments=[],video=await videoFrames(o,opts,update,cancelled,segments,config);ensureSource();
+    var bytes=MP4.mux(video,sound),blob=new Blob([bytes],{type:"video/mp4"});bytes=null;
+    commitArtifact("video",blob,p,{video:{width:video.width,height:video.height,fps:video.fps}});
+    captionCache={key:p.keys.captions,segments:segments};
+    video.samples=[];if(sound)sound.samples=[];
+   }else if(p.ids.indexOf("video")>=0)u.status.textContent=T("Genbruger video.mp4","Reusing video.mp4");
+   if(missing.indexOf("captions")>=0){
+    var captions;
+    if(captionCache&&captionCache.key===p.keys.captions)captions=captionCache.segments;
+    else{
+     if(!restoreExport&&o.beginExport)restoreExport=o.beginExport();
+     captions=await captionFrames(o,{start:s.start,end:s.end,fps:s.fps},update,cancelled);ensureSource();
+     captionCache={key:p.keys.captions,segments:captions};
+    }
+    ensureSource();commitArtifact("captions",new Blob([subtitles(captions,s.end-s.start)],{type:"text/vtt;charset=utf-8"}),p);
+   }
+   var neededStems=missing.filter(function(id){return id==="music"||id==="speech"||id==="effects";});
+   if(neededStems.length){
+    var stems=await Soundtrack.renderStems(Object.assign({},audioOptions,{music:neededStems.indexOf("music")>=0,speech:neededStems.indexOf("speech")>=0,effects:neededStems.indexOf("effects")>=0}));ensureSource();
+    stems.forEach(function(stem){commitArtifact(stem.id,stem.blob,p,{stem:stem});});
+   }
+   ensureSource();
+   var files=p.ids.map(function(id){var artifact=get(id,p.keys[id]);if(!artifact)throw Error("Missing completed file: "+names[id]);return {name:names[id],blob:artifact.blob,id:id,artifact:artifact};});
+   var selectedStems=files.filter(function(file){return /\.wav$/.test(file.name);}).map(function(file){return file.artifact.stem;});
+   if(p.ids.length>1&&selectedStems.length){
+    var videoFile=files.find(function(file){return file.id==="video";}),manifest=packageManifest(scene,{start:s.start,end:s.end,fps:s.fps,width:s.width,burn:s.captions==="burn",audio:s.audio,captionLanguage:p.source.captionLanguage},selectedStems,videoFile&&videoFile.artifact.video,p.ids.indexOf("captions")>=0);
+    files.push({name:"manifest.json",blob:new Blob([JSON.stringify(manifest,null,2)+"\n"],{type:"application/json"})});
+    files.push({name:"README.txt",blob:new Blob([packageReadme(manifest)],{type:"text/plain;charset=utf-8"})});
+   }
+   var extension=files.length===1?files[0].name.slice(files[0].name.lastIndexOf(".")):".zip";
+   var allBlob=files.length===1?files[0].blob:await Bundle.zip(files,{cancelled:cancelled,progress:update});ensureSource();
+   // Replace the visible batch only once every requested file and its archive
+   // are complete. Earlier artifacts remain reusable after later-stage errors.
+   p.ids.forEach(function(id){shown[id]=get(id,p.keys[id]);});
+   batch={key:key,blob:allBlob,extension:extension,filename:files.length===1?files[0].artifact.filename:fileName(scene&&scene.name||"AniMus")+"-"+s.start+"-"+s.end+extension};
+   u.bar.value=100;u.status.textContent=T("Filer klar: ","Files ready: ")+p.ids.length+" · "+range.duration.toFixed(3)+" s";
+   var clipped=selectedStems.filter(function(stem){return stem.clippedSamples>0;}).map(function(stem){return stem.id+".wav";});
+   if(clipped.length)u.status.textContent+=" · "+T("Advarsel: ","Warning: ")+clipped.join(", ")+T(" har overstyring. Sænk kildens lydniveau og opret filerne igen."," contains clipped audio. Lower the source level and create the files again.");
+  }catch(error){
+   if(uiState===u)u.status.textContent=abort?T("Eksport afbrudt. Færdige filer er bevaret.","Export cancelled. Completed files have been kept."):T("Eksportfejl: ","Export error: ")+String(error&&error.message||error);
+  }finally{
+   try{if(!disposed&&restoreExport)restoreExport();}catch(_){}
+   try{if(!disposed){o.seek(oldPosition);o.pause();}}catch(_){}
+   busy=false;
+   if(disposed)release();
+   else if(closeRequested)hideDialog();
+   else if(uiState===u){refresh();try{u.files.focus({preventScroll:true});u.files.scrollIntoView({block:"nearest",behavior:"smooth"});}catch(_){}}
+  }
+ }
  function open(){
   if(overlay||disposed)return;
-  // Fullscreen hides elements outside its subtree, even a fixed dialog with a
-  // high z-index. Keep the export controls with this player's visible surface.
-  var fullscreen=doc.fullscreenElement||doc.webkitFullscreenElement;
-  var parent=fullscreen&&fullscreen.contains(o.host)?fullscreen:doc.body;
-  o.pause();var dlg=ui(doc,"div",parent,"huw-video-modal");
-  overlay=dlg;dlg.setAttribute("role","dialog");dlg.setAttribute("aria-modal","true");
+  var fullscreen=doc.fullscreenElement||doc.webkitFullscreenElement,parent=fullscreen&&fullscreen.contains(o.host)?fullscreen:doc.body;
+  o.pause();var dlg=ui(doc,"div",parent,"huw-video-modal");overlay=dlg;dlg.setAttribute("role","dialog");dlg.setAttribute("aria-modal","true");
   var panel=ui(doc,"section",dlg,"huw-video-panel"),head=ui(doc,"header",panel,"huw-video-head");
-  ui(doc,"strong",head,"",T("AniMus · Eksportér video","AniMus · Export video"));
+  ui(doc,"strong",head,"",T("AniMus · Eksportér filer","AniMus · Export files"));
   var closeBtn=ui(doc,"button",head,"huw-video-close","×");closeBtn.type="button";closeBtn.setAttribute("aria-label",T("Luk","Close"));closeBtn.onclick=close;
-  var form=ui(doc,"div",panel,"huw-video-options");
-  var mode=ui(doc,"select",null,"huw-video-mode");
-  makeOption(mode,"movie",T("MP4 med samlet lyd","MP4 with mixed audio"));
-  makeOption(mode,"bundle",T("Pakke til videoredigering (ZIP)","Video editing package (ZIP)"));
-  makeOption(mode,"stems",T("Kun separate lydspor (ZIP)","Separate audio tracks only (ZIP)"));
-  label(form,T("Eksporttype","Export type"),mode).classList.add("huw-video-wide");
-  var scope=ui(doc,"select");makeOption(scope,"all",T("Hele forestillingen","Full performance"));makeOption(scope,"part",T("Aktuelt afsnit","Current segment"));
-  label(form,T("Udsnit","Range"),scope);
-  var span=ui(doc,"div",form,"huw-video-range");
-  var begin=ui(doc,"input");begin.type="number";begin.min="0";begin.step=".01";begin.value="0";
-  var finish=ui(doc,"input");finish.type="number";finish.min=".01";finish.step=".01";finish.value=String(o.duration());
-  label(span,T("Fra (sek.)","From (seconds)"),begin);label(span,T("Til (sek.)","To (seconds)"),finish);
-  scope.onchange=function(){var r=scope.value==="part"?currentRange(o.scene,o.position(),o.duration()):[0,o.duration()];begin.value=String(r[0]);finish.value=String(r[1]);};
-  var resolution=ui(doc,"select");makeOption(resolution,"1280","HD 720p");makeOption(resolution,"1920","Full HD 1080p");
-  resolution.value="1280";label(form,T("Opløsning","Resolution"),resolution);
-  var fps=ui(doc,"select");makeOption(fps,"24","24 fps");makeOption(fps,"30","30 fps");fps.value="30";label(form,T("Billedfrekvens","Frame rate"),fps);
-  function checkbox(text,checked){var field=ui(doc,"label",form,"huw-video-check"),box=ui(doc,"input");box.type="checkbox";box.checked=checked;field.appendChild(box);ui(doc,"span",field,"",text);return box;}
-  var burn=checkbox(T("Brænd undertekster ind i billedet","Burn subtitles into video"),true);
-  var vtt=checkbox(T("Separat undertekstfil (.vtt)","Separate caption file (.vtt)"),true);
-  var music=checkbox(T("Musik (ABC og musikoptagelser)","Music (ABC and music recordings)"),true);
-  var speech=checkbox(T("Tale og optaget sang","Speech and recorded singing"),true);
-  var effects=checkbox(T("Lydeffekter","Sound effects"),true);
-  var hint=ui(doc,"p",form,"huw-video-hint");
-  var summary=ui(doc,"section",form,"huw-video-summary");
-  ui(doc,"strong",summary,"",T("Filer ved næste eksport","Files in the next export"));
-  var summaryNames=ui(doc,"p",summary,"huw-video-summary-names"),summaryNote=ui(doc,"p",summary,"");
-  ui(doc,"p",form,"huw-video-hint",T("Eksperimentel eksport · Prøv et kort klip først. Hold fanen åben under eksport. Undertekster følger det valgte sprog i afspilleren.","Experimental export · Try a short clip first. Keep the tab open. Captions follow the language selected in the player."));
-  var output=ui(doc,"div",panel,"huw-video-output");
-  var state=ui(doc,"p",output,"huw-video-status",T("Klar til eksport","Ready to export"));state.setAttribute("role","status");
-  var changedNotice=ui(doc,"p",output,"huw-video-changed",T("Indstillingerne er ændret. Filerne nedenfor er fra den seneste eksport.","Settings have changed. The files below are from the most recent export."));changedNotice.hidden=true;
+  var form=ui(doc,"div",panel,"huw-video-options"),scope=ui(doc,"select");
+  makeOption(scope,"all",T("Hele forestillingen","Full performance"));makeOption(scope,"part",T("Aktuelt afsnit","Current segment"));makeOption(scope,"custom",T("Valgt udsnit","Selected range"));scope.value=settings.start===0&&Math.abs(settings.end-o.duration())<.001?"all":"custom";
+  label(form,T("Udsnit","Range"),scope).classList.add("huw-video-wide");
+  var span=ui(doc,"div",form,"huw-video-range"),begin=ui(doc,"input"),end=ui(doc,"input");
+  [begin,end].forEach(function(input){input.type="number";input.min="0";input.step=".001";});begin.value=String(settings.start);end.value=String(settings.end);
+  label(span,T("Fra (sek.)","From (seconds)"),begin);label(span,T("Til (sek.)","To (seconds)"),end);
+  var files=ui(doc,"section",panel,"huw-video-files");files.tabIndex=-1;files.setAttribute("aria-label",T("Filer, du vil hente","Files to save"));
+  var fileHead=ui(doc,"div",files,"huw-video-files-heading");ui(doc,"strong",fileHead,"",T("Filer, du vil hente","Files to save"));
+  var selectAll=ui(doc,"button",fileHead,"huw-video-select-all",T("Vælg alle","Select all"));selectAll.type="button";
+  var rows={};
+  ids.forEach(function(id){
+   var row=ui(doc,"div",files,"huw-video-file-row"),field=ui(doc,"label",row,"huw-video-file-choice"),check=ui(doc,"input",field,"");check.type="checkbox";check.checked=selected[id];check.setAttribute("data-export-file",id);
+   var info=ui(doc,"span",field,"huw-video-file-info");ui(doc,"strong",info,"huw-video-file-name",labels[id]);
+   ui(doc,"span",info,"huw-video-file-filename",names[id]);
+   var status=ui(doc,"span",info,"huw-video-file-status"),context=ui(doc,"span",info,"huw-video-file-context");
+   var arrow=ui(doc,"button",row,"huw-video-file-download","↓");arrow.type="button";arrow.disabled=true;arrow.setAttribute("aria-label",T("Hent ","Save ")+names[id]);arrow.setAttribute("title",T("Hent ","Save ")+names[id]);
+   rows[id]={element:row,check:check,arrow:arrow,status:status,context:context};check.onchange=function(){selected[id]=check.checked;refresh();};
+  });
+  var videoOptions=ui(doc,"details",panel,"huw-video-content");videoOptions.open=true;ui(doc,"summary",videoOptions,"",T("Videoens indhold","Video content"));
+  var controls=ui(doc,"div",videoOptions,"huw-video-options"),audio=ui(doc,"select",null,"huw-video-audio");makeOption(audio,"playback",T("Som i afspilleren","As in the player"));makeOption(audio,"silent",T("Uden lyd","Without audio"));audio.value=settings.audio;label(controls,T("Lyd i video","Video audio"),audio);
+  var burn=ui(doc,"select",null,"huw-video-captions");makeOption(burn,"burn",T("Med undertekster","With captions"));makeOption(burn,"none",T("Uden undertekster","Without captions"));burn.value=settings.captions;label(controls,T("Undertekster i billedet","Captions in picture"),burn);
+  var resolution=ui(doc,"select",null,"huw-video-resolution");makeOption(resolution,"1280","HD 720p");makeOption(resolution,"1920","Full HD 1080p");resolution.value=String(settings.width);label(controls,T("Opløsning","Resolution"),resolution);
+  var fps=ui(doc,"select",null,"huw-video-fps");makeOption(fps,"24","24 fps");makeOption(fps,"30","30 fps");fps.value=String(settings.fps);label(controls,T("Billedfrekvens","Frame rate"),fps);
+  var note=ui(doc,"p",videoOptions,"huw-video-hint"),output=ui(doc,"div",panel,"huw-video-output"),status=ui(doc,"p",output,"huw-video-status",T("Vælg de filer, du vil hente.","Choose the files you want to save."));status.setAttribute("role","status");
   var bar=ui(doc,"progress",output,"huw-video-progress");bar.max=100;bar.value=0;
-  var fileList=ui(doc,"div",output,"huw-video-files");fileList.tabIndex=-1;fileList.setAttribute("aria-label",T("Filer klar til at hente","Files ready to download"));
-  var actions=ui(doc,"footer",panel,"huw-video-actions");
-  var start=ui(doc,"button",actions,"huw-video-primary",T("Opret MP4","Create MP4"));start.type="button";
-  var downloadAll=ui(doc,"button",actions,"huw-video-download-all",T("↓ Hent alle valgte filer","↓ Save all selected files"));downloadAll.type="button";downloadAll.hidden=true;
-  downloadAll.setAttribute("aria-label",T("Hent alle valgte filer","Save all selected files"));
-  var share=ui(doc,"button",actions,"",T("Del til Filer / LumaFusion","Share to Files / LumaFusion"));share.type="button";share.hidden=true;
-  var cancel=ui(doc,"button",actions,"",T("Luk","Close"));cancel.type="button";cancel.onclick=close;
-  var currentName=fileName(o.scene&&o.scene.name||"AniMus"),ready=false,completedSignature=null;
-  function settingsSignature(){return JSON.stringify([mode.value,begin.value,finish.value,resolution.value,fps.value,burn.checked,vtt.checked,music.checked,speech.checked,effects.checked]);}
-  function refreshMode(){
-   var editing=mode.value!=="movie",audioOnly=mode.value==="stems";
-   resolution.disabled=audioOnly;burn.disabled=audioOnly;
-   start.textContent=ready?T("Opret igen","Create again"):editing?(audioOnly?T("Opret lydpakke","Create audio package"):T("Opret redigeringspakke","Create editing package")):T("Opret MP4","Create MP4");
-   if(ready)start.classList.add("huw-video-recreate");else start.classList.remove("huw-video-recreate");
-   changedNotice.hidden=!ready||completedSignature===settingsSignature();
-   var names=audioOnly?[]:["video.mp4"];
-   if(editing){if(music.checked)names.push("music.wav");if(speech.checked)names.push("speech.wav");if(effects.checked)names.push("effects.wav");}
-   if(vtt.checked)names.push("captions.vtt");
-   summaryNames.textContent=names.length?names.join(" · "):T("Vælg mindst ét lydspor","Select at least one audio track");
-   summaryNote.textContent=editing?T("Valgte lydspor bliver separate WAV-filer med fælles start og længde. ZIP-filen indeholder også manifest.json og README.txt med tidsoplysninger og importvejledning.","Selected audio tracks become separate WAV files with the same start and duration. The ZIP also includes manifest.json and README.txt with timing and import instructions."):
-    music.checked||speech.checked||effects.checked?T("De afkrydsede lydspor blandes i video.mp4. Vælg Pakke til videoredigering for at få dem som separate WAV-filer.","The checked audio tracks are mixed into video.mp4. Choose Video editing package to receive them as separate WAV files."):
-    T("Ingen lydspor er valgt: video.mp4 bliver uden lyd.","No audio tracks are selected: video.mp4 will be silent.");
-   hint.textContent=editing?T("Separate WAV-spor med samme startpunkt, pauser og længde. Pak ZIP-filen ud og læg filerne ved samme startpunkt i LumaFusion. Optagelser bevares som de er. VTT-import i LumaFusion er ikke verificeret.","Separate WAV tracks share the same start, silence and duration. Unzip and place every file at the same start in LumaFusion. Recordings stay intact. VTT import in LumaFusion is not verified."):T("MP4 (H.264 + AAC) med de valgte spor blandet sammen. Eksporten beregnes lokalt; store film kan kræve meget hukommelse på iPad.","MP4 (H.264 + AAC) with the selected tracks mixed together. Encoded locally; long videos can require substantial iPad memory.");
-  }
-  mode.onchange=function(){burn.checked=mode.value==="movie";refreshMode();};
-  [music,speech,effects,vtt].forEach(function(input){input.onchange=refreshMode;});refreshMode();
-  form.addEventListener("change",refreshMode);
-  form.addEventListener("input",refreshMode);
-  function update(phase,value){state.textContent=T("Eksport: ","Export: ")+phase+" "+Math.round(100*clamp(num(value,0),0,1))+" %";bar.value=Math.round(100*clamp(num(value,0),0,1));}
-  start.onclick=async function(){
-   if(busy)return;
-   var a=num(begin.value,NaN),b=num(finish.value,NaN),duration=o.duration();
-   if(!Number.isFinite(a)||!Number.isFinite(b)||a<0||b>duration+.001||b-a<.05){state.textContent=T("Ugyldigt tidsudsnit","Invalid export range");return;}
-   if(mode.value==="stems"&&!music.checked&&!speech.checked&&!effects.checked){state.textContent=T("Vælg mindst ét lydspor","Select at least one audio track");return;}
-   busy=true;abort=false;ready=false;disposeResult();start.disabled=true;closeBtn.disabled=false;cancel.textContent=T("Afbryd","Cancel export");bar.value=0;downloadAll.hidden=true;share.hidden=true;
-   completedSignature=null;changedNotice.hidden=true;
-   start.classList.remove("huw-video-recreate");downloadAll.classList.remove("huw-video-download");
-   fileList.textContent="";
-   var oldPosition=o.position(),exportSignature=settingsSignature(),opts={start:a,end:b,width:Number(resolution.value),fps:Number(fps.value),burn:burn.checked,
-    mode:mode.value,vtt:vtt.checked,music:music.checked,speech:speech.checked,effects:effects.checked};
-   var range=exportRange(a,b,opts.fps),isCancelled=function(){return abort||disposed;},restoreExport=null;
-   var inputs=Array.prototype.slice.call(form.querySelectorAll("input,select"));inputs.forEach(function(input){input.disabled=true;});
-   try{
-    o.pause();
-    var sound=null,stems=[],video=null,segments=[],config=null;
-    // Check video support first; audio-only export deliberately bypasses it.
-    if(opts.mode!=="stems")config=await videoConfig(o,opts);
-    if(isCancelled())throw Error("Export cancelled");
-    if(o.beginExport)restoreExport=o.beginExport();
-    var audioOptions={window:doc.defaultView||window,wiki:o.wiki,scene:o.scene,
-     songs:o.getSongs&&o.getSongs()||[],ABC:o.getABC&&o.getABC(),soundFont:o.soundFont&&o.soundFont(),
-     duration:duration,start:a,end:b,frameCount:range.audioFrames,music:opts.music,speech:opts.speech,effects:opts.effects,
-     cancelled:isCancelled,progress:update};
-    if(opts.music||opts.speech||opts.effects){
-     update(T("Forbereder lyd","Preparing audio"),0);
-     if(opts.mode==="movie")sound=await Soundtrack.render(audioOptions);
-     else stems=await Soundtrack.renderStems(audioOptions);
-    }
-    if(opts.mode!=="stems"){
-     video=await videoFrames(o,opts,update,isCancelled,segments,config);
-     update(T("Samler MP4","Finalizing MP4"),.97);
-     var bytes=MP4.mux(video,sound);result=new Blob([bytes],{type:"video/mp4"});bytes=null;
-     // Release encoder chunks before packaging the original output Blob.
-     video.samples=[];if(sound)sound.samples=[];
-    }else if(opts.vtt)segments=await captionFrames(o,opts,update,isCancelled);
-    if(isCancelled())throw Error("Export cancelled");
-    if(opts.vtt)subtitlesBlob=new Blob([subtitles(segments,b-a)],{type:"text/vtt;charset=utf-8"});
-    var name=currentName+"-"+a+"-"+b;
-    if(result)files.push({name:"video.mp4",blob:result,description:opts.mode==="movie"&&(opts.music||opts.speech||opts.effects)?T("Video med samlet lyd","Video with mixed audio"):T("Video uden lyd","Video without audio")});
-    var stemDescriptions={music:T("Musik","Music"),speech:T("Tale og optaget sang","Speech and recorded singing"),effects:T("Lydeffekter","Sound effects")};
-    stems.forEach(function(stem){files.push({name:stem.id+".wav",blob:stem.blob,description:stemDescriptions[stem.id]});});
-    if(subtitlesBlob)files.push({name:"captions.vtt",blob:subtitlesBlob,description:T("Separat undertekstfil","Separate caption file")});
-    if(opts.mode!=="movie"){
-     var manifest=packageManifest(o.scene,opts,stems,video,!!subtitlesBlob);
-     files.push({name:"manifest.json",blob:new Blob([JSON.stringify(manifest,null,2)+"\n"],{type:"application/json"}),description:T("Tidsplacering og sporoplysninger","Track timing and details"),secondary:true});
-     files.push({name:"README.txt",blob:new Blob([packageReadme(manifest)],{type:"text/plain;charset=utf-8"}),description:T("Vejledning til import i videoprogram","Video editor import instructions"),secondary:true});
-     result=await Bundle.zip(files,{cancelled:isCancelled,progress:update});
-     allResult=result;
-    }else if(files.length>1){
-     // Package the already encoded picture and sidecar; downloading all files
-     // never re-renders video or relies on multiple automatic iOS downloads.
-     allResult=await Bundle.zip(files,{cancelled:isCancelled,progress:update});
-    }else{
-     allResult=result;
-    }
-    if(isCancelled())throw Error("Export cancelled");
-    ui(doc,"strong",fileList,"huw-video-files-title",T("Filer klar til at hente","Files ready to download"));
-    ui(doc,"p",fileList,"huw-video-files-help",T("Hent alle filer samlet, eller vælg pilen ved den enkelte fil.","Save all files together, or choose the arrow beside an individual file."));
-    var metadataList=null;
-    files.forEach(function(file){
-     var parent=fileList;
-     if(file.secondary){
-      if(!metadataList){metadataList=ui(doc,"details",fileList,"huw-video-file-metadata");ui(doc,"summary",metadataList,"",T("Pakkeoplysninger og vejledning","Package details and instructions"));}
-      parent=metadataList;
-     }
-     var row=ui(doc,"div",parent,"huw-video-file-row"),info=ui(doc,"div",row,"huw-video-file-info");
-     ui(doc,"strong",info,"huw-video-file-name",file.name);
-     var size=file.blob.size>=1048576?(file.blob.size/1048576).toFixed(1)+" MB":Math.max(1,Math.ceil(file.blob.size/1024))+" KB";
-     ui(doc,"span",info,"huw-video-file-description",file.description+" · "+size);
-     var button=ui(doc,"button",row,"huw-video-file-download","↓");button.type="button";
-     button.setAttribute("aria-label",T("Hent ","Save ")+file.name);button.setAttribute("title",T("Hent ","Save ")+file.name);
-     if(opts.mode==="movie"&&file.name==="video.mp4")button.classList.add("huw-video-download");
-     var filename=opts.mode==="movie"&&file.name==="video.mp4"?name+".mp4":name+"-"+file.name;
-     button.onclick=function(){if(!busy&&ready&&!disposed)saveFile(file.blob,filename);};
-    });
-    var allExtension=opts.mode!=="movie"||files.length>1?".zip":".mp4";
-    if(opts.mode!=="movie")downloadAll.classList.add("huw-video-download");
-    downloadAll.textContent=T("↓ Hent alle valgte filer","↓ Save all selected files")+(allExtension===".zip"?" (ZIP)":"");
-    downloadAll.onclick=function(){if(!busy&&allResult&&!disposed)saveFile(allResult,name+allExtension);};
-    share.textContent=allExtension===".zip"?T("Del alle filer til Filer","Share all files to Files"):T("Del til Filer / LumaFusion","Share to Files / LumaFusion");
-    share.onclick=function(){if(!busy&&allResult&&!disposed)shareFile(allResult,name+allExtension).catch(function(error){if(!disposed&&overlay)state.textContent=String(error&&error.message||error);});};
-    ready=true;completedSignature=exportSignature;downloadAll.hidden=false;share.hidden=false;
-    state.textContent=(opts.mode==="movie"?T("MP4 klar: ","MP4 ready: "):opts.mode==="stems"?T("Lydpakke klar: ","Audio package ready: "):T("Redigeringspakke klar: ","Editing package ready: "))+(result.size/1048576).toFixed(1)+" MB · "+range.duration.toFixed(3)+" s · "+opts.fps+" fps";
-    var clipped=stems.filter(function(stem){return stem.clippedSamples>0;});
-    if(clipped.length)state.textContent+=T(" · Overstyring i "," · Clipping in ")+clipped.map(function(stem){return stem.id+".wav";}).join(", ")+T(". Sænk kildesporets lydstyrke og eksportér igen.",". Lower source clip levels and export again.");
-    bar.value=100;
-   }catch(error){
-    disposeResult();ready=false;fileList.textContent="";downloadAll.hidden=true;share.hidden=true;
-    if(!disposed)state.textContent=(abort?T("Eksport afbrudt","Export cancelled"):T("Eksportfejl: ","Export error: ")+String(error&&error.message||error));
-   }finally{
-    try{if(!disposed&&restoreExport)restoreExport();}catch(_){}
-    try{if(!disposed){o.seek(oldPosition);o.pause();}}catch(_){}
-    busy=false;start.disabled=false;cancel.textContent=T("Luk","Close");inputs.forEach(function(input){input.disabled=false;});refreshMode();
-    if(disposed||abort){if(overlay){overlay.remove();overlay=null;}disposeResult();}
-    else if(ready){
-     try{fileList.focus({preventScroll:true});fileList.scrollIntoView({block:"nearest",behavior:"smooth"});}catch(_){}
-    }
-   }
-  };
-  dlg.addEventListener("click",function(e){if(e.target===dlg)close();});
-  dlg.addEventListener("keydown",function(e){if(e.key==="Escape"){e.preventDefault();close();}});
-  panel.tabIndex=-1;panel.focus({preventScroll:true});
+  var actions=ui(doc,"footer",panel,"huw-video-actions"),start=ui(doc,"button",actions,"huw-video-primary",T("Opret valgte filer","Create selected files"));start.type="button";start.onclick=create;
+  var all=ui(doc,"button",actions,"huw-video-download-all",T("↓ Hent alle valgte filer","↓ Save all selected files"));all.type="button";all.hidden=true;all.setAttribute("aria-label",T("Hent alle valgte filer","Save all selected files"));
+  all.onclick=function(){if(batch&&!disposed&&!busy)saveFile(batch.blob,batch.filename);};
+  var share=ui(doc,"button",actions,"huw-video-share",T("Del valgte filer","Share selected files"));share.type="button";share.hidden=true;share.onclick=function(){if(batch&&!disposed&&!busy)shareFile(batch.blob,batch.filename).catch(function(error){if(uiState)uiState.status.textContent=String(error.message||error);});};
+  var cancelButton=ui(doc,"button",actions,"huw-video-cancel",T("Luk","Close"));cancelButton.type="button";cancelButton.onclick=cancel;
+  uiState={panel:panel,files:files,rows:rows,status:status,bar:bar,start:start,all:all,share:share,cancel:cancelButton,note:note,audio:audio,burn:burn,resolution:resolution,fps:fps,scope:scope,begin:begin,end:end,selectAll:selectAll};
+  function readSettings(){settings.start=begin.value.trim()===""?NaN:normalize(begin.value);settings.end=end.value.trim()===""?NaN:normalize(end.value);settings.width=Number(resolution.value);settings.fps=Number(fps.value);settings.audio=audio.value;settings.captions=burn.value;refresh();}
+  [resolution,fps,audio,burn].forEach(function(input){input.onchange=readSettings;input.oninput=readSettings;});
+  [begin,end].forEach(function(input){input.onchange=input.oninput=function(){scope.value="custom";readSettings();};});
+  scope.onchange=function(){var r=scope.value==="part"?currentRange(o.scene,o.position(),o.duration()):scope.value==="all"?[0,o.duration()]:[settings.start,settings.end];begin.value=String(normalize(r[0]));end.value=String(normalize(r[1]));readSettings();};
+  selectAll.onclick=function(){ids.forEach(function(id){selected[id]=true;});refresh();};
+  dlg.addEventListener("click",function(event){if(event.target===dlg)close();});dlg.addEventListener("keydown",function(event){if(event.key==="Escape"){event.preventDefault();close();}});
+  refresh();panel.tabIndex=-1;panel.focus({preventScroll:true});
  }
  trigger.onclick=open;
  return {dispose:dispose,open:open};

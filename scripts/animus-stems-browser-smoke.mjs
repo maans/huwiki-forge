@@ -179,20 +179,22 @@ try{
  });
  await show.locator('.huw-video-export-button').click();
  const dialog=page.locator('.huw-video-modal');await dialog.waitFor();
- await dialog.locator('.huw-video-mode').selectOption('stems');
+ await dialog.locator('[data-export-file="video"]').uncheck();
+ for(const id of ['music','speech','effects','captions'])await dialog.locator('[data-export-file="'+id+'"]').check();
  await dialog.locator('.huw-video-range input').nth(0).fill(String(startSeconds));
  await dialog.locator('.huw-video-range input').nth(1).fill(String(endSeconds));
- await dialog.locator('select').filter({has:page.locator('option[value="30"]')}).selectOption('30');
+ await dialog.locator('.huw-video-fps').selectOption('30');
  await dialog.locator('.huw-video-primary').click();
- await page.waitForFunction(()=>/Lydpakke klar:|Audio package ready:|Eksportfejl:|Export error:/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:60000});
+ await page.waitForFunction(()=>/Filer klar:|Files ready:|Eksportfejl:|Export error:/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:60000});
  const status=await dialog.locator('.huw-video-status').innerText();
- assert.match(status,/Lydpakke klar:|Audio package ready:/,'actual WAV package export succeeds without video/audio encoders: '+status);
+ assert.match(status,/Filer klar:|Files ready:/,'actual WAV package export succeeds without video/audio encoders: '+status);
  assert.ok(sampleRequests.length>0,'real ABCJS synthesis requested the original sample bank');
  passed('WAV-only export works with H.264 and AAC encoders absent');
 
  const allFiles=dialog.getByRole('button',{name:'Hent alle valgte filer',exact:true});
  assert.equal(await allFiles.count(),1,'the completed package has one explicit all-files download');
- assert.equal(await dialog.locator('.huw-video-recreate').innerText(),'Opret igen','creating again is separate from saving the completed files');
+ assert.doesNotMatch(await dialog.locator('.huw-video-primary').innerText(),/Opret igen|Create again/i,'completed files are retained instead of inviting regeneration');
+ assert.equal(await dialog.locator('.huw-video-primary').isDisabled(),true,'all checked files are current and require no further creation');
  assert.equal(await dialog.locator('.huw-video-files').evaluate(element=>element===document.activeElement),true,'completed files receive focus');
  const archive=await download(allFiles,'animus-stems-smoke.zip'),files=unzip(archive);
  assert.deepEqual([...files.keys()].sort(),['README.txt','captions.vtt','effects.wav','manifest.json','music.wav','speech.wav'].sort());
@@ -242,6 +244,22 @@ try{
  assert.deepEqual(directSpeech,files.get('speech.wav'),'individual speech download matches the ZIP entry');
  const directCaptions=await download(dialog.getByRole('button',{name:'Hent captions.vtt',exact:true}),'captions-individual.vtt');
  assert.deepEqual(directCaptions,files.get('captions.vtt'),'the selected captions have their own exact download');
+ // One phone-width acceptance protects the real download path from a tall
+ // dialog hiding its actions or pushing the file arrows off the screen.
+ await page.setViewportSize({width:420,height:760});
+ const mobileSpeech=dialog.getByRole('button',{name:'Hent speech.wav',exact:true});await mobileSpeech.scrollIntoViewIfNeeded();
+ const reachable=button=>{
+  const r=button.getBoundingClientRect(),hit=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);
+  return r.left>=0&&r.top>=0&&r.right<=innerWidth&&r.bottom<=innerHeight&&!!hit&&(hit===button||button.contains(hit));
+ };
+ assert.equal(await mobileSpeech.evaluate(reachable),true,'the individual download arrow is reachable at 420 px width');
+ await allFiles.scrollIntoViewIfNeeded();assert.equal(await allFiles.evaluate(reachable),true,'the footer download action is reachable at 420 px width');
+ assert.equal(await dialog.locator('.huw-video-panel').evaluate(panel=>{
+  const r=panel.getBoundingClientRect();return panel.scrollWidth<=panel.clientWidth+2&&r.left>=0&&r.right<=innerWidth+1;
+ }),true,'the export panel does not overflow horizontally on a narrow screen');
+ await page.screenshot({path:fileURLToPath(new URL('stems-420x760.png',out)),fullPage:false});
+ await page.setViewportSize({width:1440,height:1000});
+ passed('420 px export dialog keeps individual arrows and the all-files footer reachable without horizontal overflow');
  assert.ok(Math.abs(Number(await show.locator('.huw-musical-range').inputValue())-savedTime)<.001,'player position restored');
  assert.equal(await show.locator('[data-cutout-id="stem-test-box"]').first().getAttribute('transform'),savedTransform,'stage pose restored');
  await page.screenshot({path:fileURLToPath(new URL('stems-complete.png',out)),fullPage:false});

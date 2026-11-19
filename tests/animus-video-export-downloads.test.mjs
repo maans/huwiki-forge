@@ -31,17 +31,28 @@ async function unzip(blob){
  assert.equal(at,end);assert.equal(files.size,count);return files;
 }
 
-function fixture({lang='da',audioGate}={}){
- const doc=svgDocument(),downloads=[],urls=new Map(),state={encoders:0,audioRenders:0,stemRenders:0,seeks:[],scrolled:[],position:.8};
+async function mp4TrackKinds(blob){
+ const bytes=Buffer.from(await blob.arrayBuffer());
+ function atoms(start,end){const rows=[];for(let at=start;at<end;){const size=bytes.readUInt32BE(at);assert.ok(size>=8&&at+size<=end);rows.push({type:bytes.toString('ascii',at+4,at+8),start:at+8,end:at+size});at+=size;}return rows;}
+ const moov=atoms(0,bytes.length).find(box=>box.type==='moov');assert.ok(moov);
+ return atoms(moov.start,moov.end).filter(box=>box.type==='trak').map(track=>{
+  const mdia=atoms(track.start,track.end).find(box=>box.type==='mdia');
+  const hdlr=atoms(mdia.start,mdia.end).find(box=>box.type==='hdlr');return bytes.toString('ascii',hdlr.start+8,hdlr.start+12);
+ });
+}
+function deferred(){let resolve;const promise=new Promise(done=>{resolve=done;});return {promise,resolve};}
+
+function fixture({lang='da'}={}){
+ const doc=svgDocument(),downloads=[],urls=new Map();
+ const state={encoders:0,audioRenders:0,stemIds:[],seeks:[],scrolled:[],position:.8,burnedText:0,
+  revision:{visual:0,audio:0,captions:0},audioStarted:deferred(),stemStarted:deferred()};
  doc.documentElement.lang=lang;
  const create=doc.createElement;
  doc.createElement=tag=>{
-  const node=create(tag);
-  node.scrollIntoView=()=>state.scrolled.push(node);
-  if(tag==='canvas')node.getContext=()=>({save(){},restore(){},fillRect(){},drawImage(){},fillText(){},measureText:text=>({width:text.length*6})});
+  const node=create(tag);node.scrollIntoView=()=>state.scrolled.push(node);
+  if(tag==='canvas')node.getContext=()=>({save(){},restore(){},fillRect(){},drawImage(){},fillText(){state.burnedText++;},measureText:text=>({width:text.length*6})});
   if(tag==='a')node.click=()=>{
-   assert.ok(urls.has(node.href),'download points at an existing result Blob');
-   downloads.push({name:node.download,blob:urls.get(node.href)});
+   assert.ok(urls.has(node.href),'download points at an existing result Blob');downloads.push({name:node.download,blob:urls.get(node.href)});
   };
   return node;
  };
@@ -49,8 +60,8 @@ function fixture({lang='da',audioGate}={}){
  doc.body.appendChild(host);host.append(stage,controls);
  const svg=doc.createElement('svg');svg.cloneNode=()=>doc.createElement('svg');stage.appendChild(svg);
  const caption=doc.createElement('span');caption.className='plato-caption-text';caption.textContent='De kan vende sig mod lyset.';stage.appendChild(caption);
- // These small media doubles let the real runtime reach its completed-download
- // state. Native encoding/decoding is verified separately by the browser smoke.
+ // Deterministic media doubles reach the real lifecycle and download handlers.
+ // Native encoder correctness is covered by the separate browser checks.
  class Encoder{
   static async isConfigSupported(config){return {supported:true,config};}
   constructor(callbacks){this.callbacks=callbacks;this.encodeQueueSize=0;state.encoders++;}
@@ -69,20 +80,23 @@ function fixture({lang='da',audioGate}={}){
  doc.defaultView.VideoEncoder=Encoder;doc.defaultView.VideoFrame=Frame;
  const wav=module('wav.js');
  const soundtrack={
-  async render(options){state.audioRenders++;state.audioOptions=options;if(audioGate)await audioGate;
+  async render(options){state.audioRenders++;state.audioOptions=options;state.audioStarted.resolve();if(state.audioGate)await state.audioGate;
+   if(options.cancelled?.())throw Error('Export cancelled');if(state.audioError)throw Error(state.audioError);
    return {sampleRate:48000,channels:2,frameCount:options.frameCount,description:Uint8Array.from([0x11,0x90]),
     samples:Array.from({length:Math.ceil(options.frameCount/1024)},(_,i)=>({data:Uint8Array.from([1,2,3,i]),timestamp:Math.round(i*1024/48000*1e6)}))};
   },
-  async renderStems(options){state.stemRenders++;state.audioOptions=options;
-   return ['music','speech','effects'].filter(id=>options[id]).map((id,index)=>{
-    const writer=new wav.Writer(48000,2,options.frameCount),data=new Float32Array(options.frameCount).fill(.1*(index+1));
+  async renderStems(options){
+   const selected=['music','speech','effects'].filter(id=>options[id]);state.stemIds.push(...selected);state.stemStarted.resolve();
+   if(state.stemGate)await state.stemGate;if(options.cancelled?.())throw Error('Export cancelled');if(state.stemError)throw Error(state.stemError);
+   return selected.map(id=>{
+    const writer=new wav.Writer(48000,2,options.frameCount),data=new Float32Array(options.frameCount).fill({music:.1,speech:.2,effects:.3}[id]);
     writer.append([data,data],0,data.length);return {id,...writer.finish()};
    });
   }
  };
  let nextUrl=0;
  const URL={createObjectURL(blob){const id='blob:test-'+(++nextUrl);urls.set(id,blob);return id;},revokeObjectURL(id){urls.delete(id);}};
- const runtime=module('runtime.js',{document:doc,window:doc.defaultView,navigator:{},URL,Image,XMLSerializer,
+ const runtime=module('runtime.js',{document:doc,window:doc.defaultView,navigator:{},URL,Image,XMLSerializer,clearTimeout,
   setTimeout(fn,delay){if(delay>=60000)return 0;return setTimeout(fn,delay);},
   require(name){return {
    '$:/plugins/huwiki/animus-video-export/mp4.js':module('mp4.js'),
@@ -90,104 +104,143 @@ function fixture({lang='da',audioGate}={}){
    '$:/plugins/huwiki/animus-video-export/bundle.js':module('bundle.js')
   }[name];}
  });
- const exporter=runtime.attach({host,stage,controls,scene:{name:'Turn Around',scenes:[{duration:1}]},duration:()=>1,
-  position:()=>state.position,pause(){},seek(time){state.position=time;state.seeks.push(time);}});
+ const exporter=runtime.attach({host,stage,controls,scene:{name:'Turn Around',scenes:[{duration:1}],musical:{audioClips:[]}},duration:()=>1,
+  getSourceRevision:()=>state.revision,position:()=>state.position,pause(){},seek(time){state.position=time;state.seeks.push(time);}});
  exporter.open();
- const dialog=doc.querySelector('.huw-video-modal'),start=dialog.querySelector('.huw-video-primary');
- const ranges=dialog.querySelectorAll('.huw-video-range input');ranges[0].value='.2';ranges[1].value='.3';
- function checkbox(pattern){
-  const found=dialog.querySelectorAll('.huw-video-check').find(row=>pattern.test(row.textContent));
-  assert.ok(found,'checkbox '+pattern);return found.querySelector('input');
- }
- function chooseMode(mode){const select=dialog.querySelector('.huw-video-mode');select.value=mode;select.dispatch('change');}
- function check(pattern,checked){const input=checkbox(pattern);input.checked=checked;input.dispatch('change');}
- function byFile(name){return dialog.querySelectorAll('.huw-video-file-download').find(button=>button.getAttribute('aria-label')===(lang==='da'?'Hent ':'Save ')+name);}
- function rowNames(){return dialog.querySelectorAll('.huw-video-file-download').map(button=>button.getAttribute('aria-label').replace(/^(Hent|Save) /,''));}
+ const dialog=()=>doc.querySelector('.huw-video-modal'),start=()=>dialog().querySelector('.huw-video-primary');
+ function setting(selector,value){const input=dialog().querySelector(selector);assert.ok(input,selector);input.value=value;input.dispatch('change');}
+ function check(id,checked){const input=dialog().querySelector('[data-export-file="'+id+'"]');assert.ok(input,id);input.checked=checked;input.dispatch('change');}
+ function selected(ids){for(const id of ['video','music','speech','effects','captions'])check(id,ids.includes(id));}
+ function range(from,to){const inputs=dialog().querySelectorAll('.huw-video-range input');inputs[0].value=String(from);inputs[1].value=String(to);inputs.forEach(input=>input.dispatch('change'));}
+ function byFile(name){return dialog().querySelectorAll('.huw-video-file-download').find(button=>button.getAttribute('aria-label')===(lang==='da'?'Hent ':'Save ')+name);}
  function download(button){assert.ok(button,'download control exists');assert.equal(button.hidden,false);assert.equal(button.disabled===true,false);const count=downloads.length;button.click();assert.equal(downloads.length,count+1);return downloads.at(-1);}
- return {doc,dialog,start,state,downloads,chooseMode,check,checkbox,byFile,rowNames,download,exporter,
-  summary:()=>dialog.querySelector('.huw-video-summary').textContent,
-  all:()=>dialog.querySelector('.huw-video-download-all'),
-  async run(){await start.onclick();assert.match(dialog.querySelector('.huw-video-status').textContent,/klar:|ready:/);}
+ range(.2,.3);
+ return {doc,caption,get dialog(){return dialog();},get start(){return start();},state,downloads,setting,check,selected,range,byFile,download,exporter,
+  all:()=>dialog().querySelector('.huw-video-download-all'),
+  async run(){await start().onclick();assert.doesNotMatch(dialog().querySelector('.huw-video-status').textContent,/Eksportfejl:|Export error:/);},
+  reopen(){dialog()?.querySelector('.huw-video-close').click();exporter.open();}
  };
 }
 
-test('completed MP4 plus selected captions offers both individual files and one complete ZIP without re-encoding',async()=>{
- const f=fixture();
- assert.match(f.summary(),/video\.mp4/);assert.match(f.summary(),/captions\.vtt/);
- assert.match(f.summary(),/samlet|blande|mix/i);
- await f.run();
- assert.equal(f.downloads.length,0,'completing an export does not trigger a download without the user');
- assert.deepEqual(f.rowNames().sort(),['captions.vtt','video.mp4']);
- const video=f.download(f.byFile('video.mp4')),caption=f.download(f.byFile('captions.vtt'));
- assert.equal(video.blob.type,'video/mp4');assert.match(await caption.blob.text(),/^WEBVTT\n/);
- assert.match(await caption.blob.text(),/De kan vende sig mod lyset/);
- const all=f.download(f.all());assert.match(all.name,/\.zip$/);assert.equal(all.blob.type,'application/zip');
- const files=await unzip(all.blob);
- assert.deepEqual([...files.keys()].sort(),['captions.vtt','video.mp4']);
+test('file-first defaults create a playback-audio MP4 and VTT, with separate accessible downloads and no automatic saves',async()=>{
+ const f=fixture();assert.equal(f.dialog.querySelector('.huw-video-mode'),null,'there is no export-mode coupling');
+ for(const id of ['video','music','speech','effects','captions'])assert.equal(f.dialog.querySelector('[data-export-file="'+id+'"]').checked,['video','captions'].includes(id),id+' default');
+ assert.equal(f.dialog.querySelector('.huw-video-audio').value,'playback');
+ assert.equal(f.dialog.querySelector('.huw-video-captions').value,'burn');
+ assert.equal(f.byFile('music.wav').disabled,true,'an uncreated file has no working download');
+ await f.run();assert.equal(f.downloads.length,0);
+ const video=f.download(f.byFile('video.mp4')),captions=f.download(f.byFile('captions.vtt'));
+ assert.deepEqual(await mp4TrackKinds(video.blob),['vide','soun'],'WAV boxes off never silences the MP4');
+ for(const kind of ['music','speech','effects'])assert.equal(f.state.audioOptions[kind],true,'playback MP4 includes '+kind);
+ assert.deepEqual(f.state.stemIds,[]);assert.ok(f.state.burnedText>0);
+ assert.match(await captions.blob.text(),/^WEBVTT\n/);assert.match(await captions.blob.text(),/De kan vende sig mod lyset/);
+ const files=await unzip(f.download(f.all()).blob);assert.deepEqual([...files.keys()].sort(),['captions.vtt','video.mp4']);
  assert.deepEqual(files.get('video.mp4'),Buffer.from(await video.blob.arrayBuffer()));
- assert.deepEqual(files.get('captions.vtt'),Buffer.from(await caption.blob.arrayBuffer()));
- assert.equal(f.state.encoders,1,'all downloads reuse the completed movie');assert.equal(f.state.audioRenders,1);
- assert.equal(f.dialog.querySelector('.huw-video-download'),f.byFile('video.mp4'),'existing direct-MP4 action stays available');
+ assert.deepEqual(files.get('captions.vtt'),Buffer.from(await captions.blob.arrayBuffer()));
+ for(const name of ['video.mp4','captions.vtt']){const button=f.byFile(name);assert.ok(button.closest('.huw-video-file-row'));assert.match(button.textContent,/↓/);}
  assert.equal(f.all().getAttribute('aria-label'),'Hent alle valgte filer');
- assert.equal(f.start.textContent,'Opret igen');assert.ok(f.start.classList.contains('huw-video-recreate'));
- const list=f.dialog.querySelector('.huw-video-files');assert.equal(f.doc.activeElement,list);assert.ok(f.state.scrolled.includes(list));
- assert.equal(f.state.position,.8,'download completion restores the paused source position');
+ assert.doesNotMatch(f.start.textContent,/Opret igen|Create again/i);assert.equal(f.start.disabled,true,'ready current files require no creation');
+ assert.equal(f.state.position,.8);assert.ok(f.state.scrolled.includes(f.dialog.querySelector('.huw-video-files')));
+ const counts=[f.state.encoders,f.state.audioRenders,f.state.stemIds.length,f.state.seeks.length];
+ await f.run();assert.deepEqual([f.state.encoders,f.state.audioRenders,f.state.stemIds.length,f.state.seeks.length],counts,'unchanged repeated start performs no media work');
 });
 
-test('unselected captions are absent from MP4 output and the single-file all action downloads the movie directly',async()=>{
- const f=fixture({lang:'en'});f.check(/\.vtt/i,false);
- assert.doesNotMatch(f.summary(),/captions\.vtt/);
- await f.run();assert.deepEqual(f.rowNames(),['video.mp4']);
- assert.equal(f.byFile('captions.vtt'),undefined);
- const all=f.download(f.all()),video=f.download(f.byFile('video.mp4'));
- assert.match(all.name,/\.mp4$/);assert.equal(all.blob.type,'video/mp4');
- assert.deepEqual(Buffer.from(await all.blob.arrayBuffer()),Buffer.from(await video.blob.arrayBuffer()));
+test('adding WAV and VTT after MP4 reuses the movie and captured captions, and ZIP includes only checked outputs',async()=>{
+ const f=fixture();f.selected(['video']);f.setting('.huw-video-captions','none');await f.run();
+ const original=f.download(f.byFile('video.mp4')),movieBytes=Buffer.from(await original.blob.arrayBuffer());
+ const framesBefore=f.state.seeks.filter(time=>time!==.8).length;
+ assert.equal(f.state.burnedText,0);assert.equal(f.byFile('captions.vtt').disabled,true);
+ f.check('music',true);f.check('captions',true);assert.equal(f.start.disabled,false);await f.run();
+ assert.equal(f.state.encoders,1);assert.equal(f.state.audioRenders,1);assert.deepEqual(f.state.stemIds,['music']);
+ assert.equal(f.state.seeks.filter(time=>time!==.8).length,framesBefore,'adding a sidecar reuses captured captions without seeking every frame');
+ const files=await unzip(f.download(f.all()).blob);
+ assert.deepEqual([...files.keys()].sort(),['README.txt','captions.vtt','manifest.json','music.wav','video.mp4']);
+ assert.deepEqual(files.get('video.mp4'),movieBytes,'adding separate files preserves the exact original mixed movie');
+ assert.deepEqual(Buffer.from(await f.download(f.byFile('music.wav')).blob.arrayBuffer()),files.get('music.wav'));
+ const manifest=JSON.parse(files.get('manifest.json'));assert.equal(manifest.video.audio,true);assert.equal(manifest.video.burnedCaptions,false);
+ assert.deepEqual(manifest.audio.map(track=>track.id),['music']);
+ f.check('music',false);await f.run();
+ const smaller=await unzip(f.download(f.all()).blob);assert.deepEqual([...smaller.keys()].sort(),['captions.vtt','video.mp4']);
+ assert.deepEqual(smaller.get('video.mp4'),movieBytes);assert.equal(f.byFile('music.wav').disabled,false,'previously ready WAV remains individually downloadable');
+ assert.equal(f.state.encoders,1);assert.equal(f.state.audioRenders,1);assert.deepEqual(f.state.stemIds,['music']);
+});
+
+test('silent MP4 is explicit and independent of selected WAVs and caption-file selection',async()=>{
+ const f=fixture({lang:'en'});f.selected(['video','speech']);f.setting('.huw-video-audio','silent');await f.run();
+ assert.deepEqual(await mp4TrackKinds(f.download(f.byFile('video.mp4')).blob),['vide']);
+ assert.equal(f.state.audioRenders,0);assert.deepEqual(f.state.stemIds,['speech']);
+ assert.ok(f.state.burnedText>0,'burned subtitles remain active when the VTT file is unchecked');
+ assert.equal(f.byFile('captions.vtt').disabled,true);
+ const files=await unzip(f.download(f.all()).blob);assert.deepEqual([...files.keys()].sort(),['README.txt','manifest.json','speech.wav','video.mp4']);
+ const manifest=JSON.parse(files.get('manifest.json'));assert.equal(manifest.video.audio,false);assert.equal(manifest.video.burnedCaptions,true);assert.equal(manifest.captions,null);
  assert.equal(f.all().getAttribute('aria-label'),'Save all selected files');
- assert.equal(f.state.encoders,1);
+ f.check('speech',false);await f.run();const only=f.download(f.all());assert.equal(only.blob.type,'video/mp4');
+ assert.equal(f.state.encoders,1,'unchecking a WAV never regenerates or changes MP4 sound');
 });
 
-test('editing and audio-only packages expose exactly the selected WAVs, captions and all package support files',async()=>{
- for(const mode of ['bundle','stems'])for(const captions of [false,true]){
-  const f=fixture();f.chooseMode(mode);f.check(/Musik|Music/,false);f.check(/Tale|Speech/,true);f.check(/Lydeffekter|Sound effects/,true);
-  f.check(/\.vtt/i,captions);
-  assert.match(f.summary(),/speech\.wav/);assert.match(f.summary(),/effects\.wav/);assert.doesNotMatch(f.summary(),/music\.wav/);
-  if(mode==='stems')assert.doesNotMatch(f.summary(),/video\.mp4/);
-  await f.run();
-  const expected=['speech.wav','effects.wav','manifest.json','README.txt'];
-  if(mode==='bundle')expected.push('video.mp4');if(captions)expected.push('captions.vtt');
-  assert.deepEqual(f.rowNames().sort(),expected.sort(),mode+' every actual output has an individual download');
-  const all=f.download(f.all()),files=await unzip(all.blob);assert.deepEqual([...files.keys()].sort(),expected.sort());
-  assert.equal(f.dialog.querySelector('.huw-video-download'),f.all(),'existing ZIP action remains the all-files action');
-  for(const name of expected){
-   const button=f.byFile(name);assert.ok(button?.closest('.huw-video-file-row'),name+' has its own accessible row');
-   assert.match(button.textContent,/↓/,'each file has its visible download arrow');
-   if(name==='manifest.json'||name==='README.txt'){
-    const details=button.closest('details');assert.ok(details,'support files are in the expandable package details');details.open=true;
-   }
-   const direct=f.download(button);assert.deepEqual(Buffer.from(await direct.blob.arrayBuffer()),files.get(name),name+' individual bytes equal ZIP bytes');
-  }
-  const manifest=JSON.parse(files.get('manifest.json'));assert.deepEqual(manifest.audio.map(stem=>stem.id).sort(),['effects','speech']);
-  assert.equal(!!manifest.video,mode==='bundle');assert.equal(!!manifest.captions,captions);
-  assert.equal(f.state.stemRenders,1);assert.equal(f.state.encoders,mode==='bundle'?1:0);
+test('selected audio files work without video codecs and support files accurately describe their common origin',async()=>{
+ const f=fixture();delete f.doc.defaultView.VideoEncoder;delete f.doc.defaultView.VideoFrame;
+ f.selected(['speech','effects','captions']);await f.run();
+ assert.equal(f.state.encoders,0);assert.equal(f.state.audioRenders,0);assert.deepEqual(f.state.stemIds.sort(),['effects','speech']);
+ const files=await unzip(f.download(f.all()).blob);assert.deepEqual([...files.keys()].sort(),['README.txt','captions.vtt','effects.wav','manifest.json','speech.wav']);
+ for(const name of ['speech.wav','effects.wav','captions.vtt']){
+  const button=f.byFile(name);assert.match(button.textContent,/↓/);assert.deepEqual(Buffer.from(await f.download(button).blob.arrayBuffer()),files.get(name));
  }
+ const manifest=JSON.parse(files.get('manifest.json'));assert.equal(manifest.video,null);assert.equal(manifest.timeline.audioFrames,4800);
+ assert.deepEqual(manifest.audio.map(stem=>stem.id).sort(),['effects','speech']);
+ assert.deepEqual(manifest.sourceRange,{startSeconds:.2,endSeconds:.3});
+ f.selected(['speech']);await f.run();
+ const single=f.download(f.all()),individual=f.download(f.byFile('speech.wav'));
+ assert.equal(single.blob.type,'audio/wav','one selected WAV downloads directly without an unnecessary ZIP');
+ assert.equal(single.name,individual.name,'all-files and the arrow keep the same identifiable WAV filename');
+ assert.match(single.name,/-speech\.wav$/);
+ assert.deepEqual(Buffer.from(await single.blob.arrayBuffer()),Buffer.from(await individual.blob.arrayBuffer()));
+ assert.deepEqual(f.state.stemIds.sort(),['effects','speech'],'changing the selection reuses the existing WAV');
 });
 
-test('an active export rejects a second creation and a deliberate Opret igen clears old outputs before replacing them',async()=>{
- let release;const gate=new Promise(resolve=>{release=resolve;});
- const f=fixture({audioGate:gate}),first=f.start.onclick();
- await Promise.resolve();await Promise.resolve();
- assert.equal(f.start.disabled,true);
- await f.start.onclick();assert.equal(f.state.audioRenders,1,'second active click does not render again');
- assert.equal(f.all().hidden,true);assert.equal(f.downloads.length,0);
- release();await first;assert.equal(f.state.audioRenders,1);assert.equal(f.state.encoders,1);
- assert.equal(f.start.textContent,'Opret igen');
- f.check(/\.vtt/i,false);
- assert.equal(f.dialog.querySelector('.huw-video-changed').hidden,false,'changed selections identify the existing files as the previous export');
- const second=f.start.onclick();
- assert.equal(f.all().hidden,true,'prior all-files download is hidden while rebuilding');
- assert.equal(f.dialog.querySelectorAll('.huw-video-file-download').length,0,'prior per-file controls are cleared immediately');
- await second;
- assert.deepEqual(f.rowNames(),['video.mp4']);assert.equal(f.state.audioRenders,2);assert.equal(f.state.encoders,2);
- assert.equal(f.dialog.querySelector('.huw-video-changed').hidden,true,'new output matches the current selections');
- const latest=f.download(f.all());assert.equal(latest.blob.type,'video/mp4','no stale VTT or prior ZIP survives the new export');
+test('closing and reopening preserves settings, ready files and reuse while source revisions invalidate the affected outputs',async()=>{
+ const f=fixture();f.selected(['video','music','captions']);f.setting('.huw-video-captions','none');await f.run();
+ const saved=f.download(f.byFile('video.mp4')).blob;
+ f.reopen();assert.equal(f.dialog.querySelector('.huw-video-captions').value,'none');assert.equal(f.dialog.querySelector('[data-export-file="music"]').checked,true);
+ assert.equal(f.dialog.querySelectorAll('.huw-video-range input')[0].value,'0.2');
+ assert.deepEqual(Buffer.from(await f.download(f.byFile('video.mp4')).blob.arrayBuffer()),Buffer.from(await saved.arrayBuffer()));
+ await f.run();assert.equal(f.state.encoders,1);assert.deepEqual(f.state.stemIds,['music']);
+ f.setting('.huw-video-resolution','1920');await f.run();assert.equal(f.state.encoders,2);assert.deepEqual(f.state.stemIds,['music'],'picture resolution does not invalidate WAV');
+ f.state.revision.visual++;f.reopen();await f.run();assert.equal(f.state.encoders,3);assert.deepEqual(f.state.stemIds,['music']);
+ f.state.revision.audio++;f.reopen();await f.run();assert.equal(f.state.encoders,4,'changed source sound invalidates a playback-audio movie');assert.deepEqual(f.state.stemIds,['music','music']);
+ f.caption.textContent='They can turn toward the light.';f.state.revision.captions++;f.reopen();await f.run();
+ assert.equal(f.state.encoders,4,'a caption-language change leaves clean-picture MP4 intact');
+ assert.match(await f.download(f.byFile('captions.vtt')).blob.text(),/They can turn toward the light/);
+ assert.deepEqual(f.state.stemIds,['music','music'],'caption changes do not rerender audio');
+ f.setting('.huw-video-captions','burn');await f.run();assert.equal(f.state.encoders,5);
+ f.caption.textContent='Nu kan de se lyset.';f.state.revision.captions++;f.reopen();await f.run();
+ assert.equal(f.state.encoders,6,'changed burned captions invalidate the picture');
+ assert.match(await f.download(f.byFile('captions.vtt')).blob.text(),/Nu kan de se lyset/);
+ f.range(.4,.5);await f.run();assert.equal(f.state.encoders,7);assert.deepEqual(f.state.stemIds,['music','music','music']);
+ const files=await unzip(f.download(f.all()).blob);assert.deepEqual(JSON.parse(files.get('manifest.json')).sourceRange,{startSeconds:.4,endSeconds:.5});
 });
+
+test('a failed new file leaves the completed movie downloadable and retry only produces the missing file',async()=>{
+ const f=fixture();f.selected(['video']);await f.run();const original=Buffer.from(await f.download(f.byFile('video.mp4')).blob.arrayBuffer());
+ f.check('music',true);f.state.stemError='Recording unavailable';await f.start.onclick();
+ assert.match(f.dialog.querySelector('.huw-video-status').textContent,/Recording unavailable/);
+ assert.deepEqual(Buffer.from(await f.download(f.byFile('video.mp4')).blob.arrayBuffer()),original);
+ assert.equal(f.byFile('music.wav').disabled,true);assert.equal(f.state.encoders,1);
+ f.reopen();assert.deepEqual(Buffer.from(await f.download(f.byFile('video.mp4')).blob.arrayBuffer()),original);
+ f.state.stemError=null;await f.run();assert.equal(f.state.encoders,1);assert.equal(f.state.audioRenders,1);
+ const files=await unzip(f.download(f.all()).blob);assert.deepEqual(files.get('video.mp4'),original);assert.ok(files.has('music.wav'));
+});
+
+test('cancelling an addition retains prior downloads and active duplicate clicks cannot create another render',async()=>{
+ const f=fixture();f.selected(['video']);await f.run();const original=Buffer.from(await f.download(f.byFile('video.mp4')).blob.arrayBuffer());
+ const gate=deferred();f.state.stemGate=gate.promise;f.check('speech',true);
+ const pending=f.start.onclick();await f.state.stemStarted.promise;
+ assert.equal(f.start.disabled,true);await f.start.onclick();assert.deepEqual(f.state.stemIds,['speech']);
+ assert.deepEqual(Buffer.from(await f.download(f.byFile('video.mp4')).blob.arrayBuffer()),original,'a finished file stays downloadable while another file is rendering');
+ const cancel=f.dialog.querySelector('.huw-video-cancel');assert.ok(cancel);cancel.click();gate.resolve();await pending;
+ assert.ok(f.dialog,'cancel keeps the export panel and its finished files');
+ assert.deepEqual(Buffer.from(await f.download(f.byFile('video.mp4')).blob.arrayBuffer()),original);
+ assert.equal(f.byFile('speech.wav').disabled,true);assert.equal(f.state.encoders,1);assert.equal(f.state.audioRenders,1);
+ f.state.stemGate=null;await f.run();assert.deepEqual(f.state.stemIds,['speech','speech']);assert.equal(f.state.encoders,1);
+});
+

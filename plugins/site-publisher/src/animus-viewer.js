@@ -181,7 +181,27 @@ function mount(host,rows,config){
  if(VideoExport&&VideoExport.attach)player.exporter=VideoExport.attach({
   host:host,controls:controls,stage:stage,scene:scene,wiki:wiki,
   seek:seek,pause:pause,position:function(){return timeline.value();},duration:function(){return duration;},
-  getABC:function(){return ABC;},getSongs:function(){return songs;},soundFont:function(){return config.soundFont;}
+  getABC:function(){return ABC;},getSongs:function(){return songs;},soundFont:function(){return config.soundFont;},
+  getDependencyTitles:function(){
+   var visual=Engine.dependencies?Object.keys(Engine.dependencies(view)):[title],audio=[title],captions=visual.slice();
+   songs.forEach(function(song){audio.push(song.title);visual.push(song.title);});
+   recordings.forEach(function(clip){audio.push(clip.asset);});
+   Object.keys(rows).forEach(function(name){
+    var tags=rows[name].tags||[];if(typeof tags==="string")tags=tags.split(/\s+/);
+    if(tags.indexOf("$:/tags/HUW/CaptionTranslations")<0)return;
+    captions.push(name);try{captions.push(JSON.parse(rows[name].text||"{}").sourceTiddler);}catch(_){}
+   });
+   function titles(values){return values.filter(function(name,index){return typeof name==="string"&&name&&values.indexOf(name)===index;}).sort();}
+   return {visual:titles(visual),audio:titles(audio),captions:titles(captions)};
+  },
+  getLiveExportState:function(){
+   function lipState(clip){var value={};["id","cueId","sceneTitle","start","offset","duration","sourceDuration","text"].forEach(function(key){if(clip[key]!==undefined)value[key]=clip[key];});return value;}
+   return JSON.parse(JSON.stringify({
+    visual:{songs:clips.map(function(clip){return {id:clip.id,score:clip.score,start:clip.start,duration:clip.duration};}),lipSync:recordings.map(lipState)},
+    audio:{songs:songs.map(function(song){return {clip:song.clip,config:song.config||{}};}),recordings:recordings,effects:fxCues,soundFont:config.soundFont},
+    captions:{language:doc.documentElement&&doc.documentElement.lang||"en"}
+   }));
+  }
  });
  return player;
 }

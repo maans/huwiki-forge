@@ -581,6 +581,27 @@ Musical.prototype.render=function(parent,next){
   seek:seek,position:function(){return timeline.value();},duration:function(){return duration;},
   pause:function(){if(timeline.running)pauseAll();},getABC:function(){return ABCObject;},
   getSongs:function(){return songs.map(function(s){return {clip:s.clip,title:s.title,tune:s.tune,config:s.config||{}};});},
+  getDependencyTitles:function(){
+   var visual=Engine.dependencies?Object.keys(Engine.dependencies(view)):[self.sceneTitle],audio=[self.sceneTitle],captions=visual.slice();
+   songs.forEach(function(song){audio.push(song.title);visual.push(song.title);});
+   (scene.musical&&scene.musical.audioClips||[]).forEach(function(clip){audio.push(clip.asset);});
+   // Translation tables also depend on the original timeline they translate.
+   (self.wiki.filterTiddlers?self.wiki.filterTiddlers("[tag[$:/tags/HUW/CaptionTranslations]]"):[]).forEach(function(title){
+    captions.push(title);try{captions.push(JSON.parse(self.wiki.getTiddlerText(title,"{}")).sourceTiddler);}catch(_){}
+   });
+   function titles(values){return values.filter(function(title,index){return typeof title==="string"&&title&&values.indexOf(title)===index;}).sort();}
+   return {visual:titles(visual),audio:titles(audio),captions:titles(captions)};
+  },
+  getLiveExportState:function(){
+   function lipState(clip){var value={};["id","cueId","sceneTitle","start","offset","duration","sourceDuration","text"].forEach(function(key){if(clip[key]!==undefined)value[key]=clip[key];});return value;}
+   var selector=host.querySelector('[data-huw-animus-captions="language"]');
+   // Exclude tune/controller objects and the time-dependent playback gain.
+   return JSON.parse(JSON.stringify({
+    visual:{songs:clips.map(function(clip){return {id:clip.id,score:clip.score,start:clip.start,duration:clip.duration};}),lipSync:(scene.musical&&scene.musical.audioClips||[]).map(lipState)},
+    audio:{songs:songs.map(function(song){return {clip:song.clip,config:song.config||{}};}),recordings:scene.musical&&scene.musical.audioClips||[],effects:scene.musical&&scene.musical.sfx||[],soundFont:soundfont},
+    captions:{language:selector?selector.value:"auto"}
+   }));
+  },
   soundFont:function(){return soundfont;}
  });
  function installSongController(song,index){

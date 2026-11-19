@@ -133,37 +133,38 @@ try{
  await player.locator('.huw-video-export-button').click();
  let dialog=page.locator('.huw-video-modal');await dialog.waitFor();
  assert.equal(await dialog.evaluate(element=>element.parentNode===document.body),true,'normal view keeps its dialog outside the stage');
- await dialog.locator('.huw-video-mode').selectOption('movie');
+ await selectFiles(['video']);
+ await dialog.locator('.huw-video-audio').selectOption('silent');
  await dialog.locator('.huw-video-range input').nth(0).fill('5');
  await dialog.locator('.huw-video-range input').nth(1).fill('5.1');
- for(const input of await dialog.locator('.huw-video-check input').all()){
-  const text=await input.locator('xpath=..').innerText();
-  if(/Musik|Tale|Lydeffekter|Music|Speech|Sound effects/i.test(text))await input.uncheck();
- }
  await dialog.locator('.huw-video-primary').click();
  await page.waitForFunction(()=>/Eksportfejl:|Export error:/.test(document.querySelector('.huw-video-status')?.textContent||''));
  assert.match(await dialog.locator('.huw-video-status').innerText(),/H\.264|WebCodecs/);
- assert.equal(await dialog.locator('.huw-video-download').isVisible(),false,'failed MP4 export produces no misleading download');
+ assert.equal(await dialog.getByRole('button',{name:'Hent video.mp4',exact:true}).isDisabled(),true,'failed MP4 export produces no misleading download');
  assert.ok(Math.abs((await player.evaluate(host=>host._platoPlayer.time()))-savedTime)<.001);
  await dialog.locator('.huw-video-close').click();await dialog.waitFor({state:'detached'});
  passed('missing H.264 encoder reports a useful error and restores the audience player');
 
+ async function selectFiles(ids){
+  for(const id of ['video','music','speech','effects','captions'])await dialog.locator('[data-export-file="'+id+'"]').setChecked(ids.includes(id));
+ }
+ async function createSelectedFiles(){
+  const create=dialog.locator('.huw-video-primary');
+  if(await create.isEnabled())await create.click();
+  await page.waitForFunction(()=>/Filer klar:|Files ready:|allerede klar|already ready|Eksportfejl:|Export error:/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:90000});
+  const status=await dialog.locator('.huw-video-status').innerText();
+  assert.match(status,/Filer klar:|Files ready:|allerede klar|already ready/,'the selected files are ready: '+status);
+  assert.doesNotMatch(await create.innerText(),/Opret igen|Create again/i,'the action never invites unnecessary regeneration');
+  assert.equal(await create.isDisabled(),true,'all checked files are current');
+ }
+
  async function exportPackage(filename,{start=5,end=10,tracks=['speech','music','effects'],captionText}={}){
   await player.locator('.huw-video-export-button').click();dialog=page.locator('.huw-video-modal');await dialog.waitFor();
-  await dialog.locator('.huw-video-mode').selectOption('stems');
+  await selectFiles([...tracks,'captions']);
   await dialog.locator('.huw-video-range input').nth(0).fill(String(start));
   await dialog.locator('.huw-video-range input').nth(1).fill(String(end));
-  for(const input of await dialog.locator('.huw-video-check input').all()){
-   const text=await input.locator('xpath=..').innerText();
-   const kind=/Musik|Music/.test(text)?'music':/Tale|Speech/.test(text)?'speech':/Lydeffekter|Sound effects/.test(text)?'effects':null;
-   if(kind)await input.setChecked(tracks.includes(kind));
-  }
-  await dialog.locator('select').filter({has:page.locator('option[value="30"]')}).selectOption('30');
-  await dialog.locator('.huw-video-primary').click();
-  await page.waitForFunction(()=>/Lydpakke klar:|Audio package ready:|Eksportfejl:|Export error:/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:90000});
-  const status=await dialog.locator('.huw-video-status').innerText();
-  assert.match(status,/Lydpakke klar:|Audio package ready:/,'real embedded audio export succeeds: '+status);
-  assert.equal(await dialog.locator('.huw-video-recreate').innerText(),'Opret igen');
+  await dialog.locator('.huw-video-fps').selectOption('30');
+  await createSelectedFiles();
   for(const name of [...tracks.map(id=>id+'.wav'),'captions.vtt']){
    const button=dialog.getByRole('button',{name:'Hent '+name,exact:true});
    assert.equal(await button.count(),1,name+' has an individual accessible download');
@@ -266,30 +267,49 @@ try{
   return result;
  });
  if(mp4Verification.codecs.h264){
+  // Count actual native encoders without replacing encoding behavior. The
+  // follow-up file selection below must reuse the completed MP4 byte-for-byte.
+  await page.evaluate(()=>{
+   const NativeVideoEncoder=window.VideoEncoder;window.__animusNativeVideoEncoders=0;
+   window.VideoEncoder=class extends NativeVideoEncoder{
+    constructor(...args){super(...args);window.__animusNativeVideoEncoders++;}
+   };
+  });
   async function exportMovie(withSound){
    await player.locator('.huw-video-export-button').click();dialog=page.locator('.huw-video-modal');await dialog.waitFor();
-   await dialog.locator('.huw-video-mode').selectOption('movie');
+   await selectFiles(['video']);
+   await dialog.locator('.huw-video-audio').selectOption(withSound?'playback':'silent');
+   await dialog.locator('.huw-video-captions').selectOption('none');
    await dialog.locator('.huw-video-range input').nth(0).fill('5');
    await dialog.locator('.huw-video-range input').nth(1).fill('10');
-   for(const input of await dialog.locator('.huw-video-check input').all()){
-    const text=await input.locator('xpath=..').innerText();
-    if(/Musik|Tale|Lydeffekter|Music|Speech|Sound effects/.test(text))await input.setChecked(withSound);
-   }
-   await dialog.locator('.huw-video-primary').click();
-   await page.waitForFunction(()=>/MP4 klar:|MP4 ready:|Eksportfejl:|Export error:/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:90000});
-   assert.match(await dialog.locator('.huw-video-status').innerText(),/MP4 klar:|MP4 ready:/);
-   assert.equal(await dialog.locator('.huw-video-recreate').innerText(),'Opret igen');
+   const countBefore=await page.evaluate(()=>window.__animusNativeVideoEncoders);
+   await createSelectedFiles();
+   const encodedCount=await page.evaluate(()=>window.__animusNativeVideoEncoders);
+   assert.equal(encodedCount,countBefore+1,'creating a new movie uses one native video encoder');
    assert.equal(await dialog.getByRole('button',{name:'Hent video.mp4',exact:true}).count(),1,'finished MP4 has its own download arrow');
-   assert.equal(await dialog.getByRole('button',{name:'Hent captions.vtt',exact:true}).count(),1,'selected movie captions have their own download arrow');
-   const pending=page.waitForEvent('download');await dialog.locator('.huw-video-download').click();
+   const pending=page.waitForEvent('download');await dialog.getByRole('button',{name:'Hent video.mp4',exact:true}).click();
    const download=await pending,filename=withSound?'turn-around-mixed.mp4':'turn-around-video-only.mp4',path=fileURLToPath(new URL(filename,out));
    await download.saveAs(path);const bytes=await readFile(path);
    assert.equal(bytes.toString('ascii',4,8),'ftyp');assert.ok(bytes.length>1000,'real encoded MP4 payload');
+   await dialog.locator('.huw-video-close').click();await dialog.waitFor({state:'detached'});
+   await player.locator('.huw-video-export-button').click();dialog=page.locator('.huw-video-modal');await dialog.waitFor();
+   assert.equal(await dialog.locator('.huw-video-audio').inputValue(),withSound?'playback':'silent','close/reopen retains movie audio setting');
+   assert.equal(await dialog.getByRole('button',{name:'Hent video.mp4',exact:true}).isEnabled(),true,'close/reopen retains the finished movie');
+   await dialog.locator('[data-export-file="captions"]').check();
+   if(withSound)await dialog.locator('[data-export-file="music"]').check();
+   await createSelectedFiles();
+   assert.equal(await page.evaluate(()=>window.__animusNativeVideoEncoders),encodedCount,'adding VTT/WAV does not encode the movie again');
+   assert.equal(await dialog.getByRole('button',{name:'Hent captions.vtt',exact:true}).isEnabled(),true,'the new selected caption file is downloadable');
    const pendingBundle=page.waitForEvent('download');await dialog.getByRole('button',{name:'Hent alle valgte filer',exact:true}).click();
    const allDownload=await pendingBundle,allPath=fileURLToPath(new URL(filename.replace(/\.mp4$/,'.zip'),out));await allDownload.saveAs(allPath);
-   const allFiles=zipFiles(await readFile(allPath));assert.deepEqual([...allFiles.keys()].sort(),['captions.vtt','video.mp4']);
+   const allFiles=zipFiles(await readFile(allPath));assert.deepEqual([...allFiles.keys()].sort(),
+    (withSound?['README.txt','captions.vtt','manifest.json','music.wav','video.mp4']:['captions.vtt','video.mp4']).sort());
    assert.deepEqual(allFiles.get('video.mp4'),bytes,'all-files saves the completed movie without re-encoding');
    assert.match(allFiles.get('captions.vtt').toString('utf8'),/De kan tale, men de kan hverken dreje hovedet eller bevæge benene\./);
+   if(withSound){
+    assert.ok(pcm(allFiles.get('music.wav')).rms>1e-5,'new music.wav contains the original recorded music');
+    assert.equal(JSON.parse(allFiles.get('manifest.json')).video.audio,true,'package metadata accurately says the reused MP4 still contains playback audio');
+   }
    // The native decoder must open and seek the actual downloaded file. Merely
    // detecting VideoEncoder or inspecting an MP4 header is not export proof.
    const decoded=await page.evaluate(async ({data,withSound})=>{
@@ -336,7 +356,7 @@ try{
   if(mp4Verification.codecs.aac){
    await level('Speech',1);await level('Singing',1);await level('Music',1);
    await exportMovie(true);mp4Verification.mixedAudio=true;
-   passed('native H.264/AAC MP4 with the actual recorded soundtrack downloads and decodes');
+   passed('native H.264/AAC MP4 retains playback audio with WAV boxes off; adding music.wav and VTT after close/reopen reuses the exact finished movie');
   }else console.log('UNVERIFIED native AAC export: this browser has no supported AAC encoder.');
  }else console.log('UNVERIFIED native MP4 export: this browser has no supported H.264 encoder; WAV tests remain valid.');
 

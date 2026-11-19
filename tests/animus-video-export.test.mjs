@@ -156,8 +156,8 @@ test("caption gaps remain empty when a later caption starts and sidecars end at 
  assert.doesNotMatch(rt.subtitles([{start:2,end:null,text:"At the cut"}],2),/At the cut/);
 });
 
-test("editing manifest records synchronization, clip warnings and a silent picture track",()=>{
- const rt=runtime(),manifest=rt.packageManifest({name:"My show"},{start:1,end:2.01,fps:30,width:1280,burn:false},[
+test("editing manifest records synchronization, clip warnings and the independent movie audio selection",()=>{
+ const rt=runtime(),manifest=rt.packageManifest({name:"My show"},{start:1,end:2.01,fps:30,width:1280,burn:false,audio:"silent"},[
   {id:"speech",sampleRate:48000,channels:2,bitsPerSample:16,frameCount:49600,duration:49600/48000,peak:1.2,clippedSamples:12}
  ],{},true);
  assert.equal(manifest.sourceRange.startSeconds,1);
@@ -169,6 +169,10 @@ test("editing manifest records synchronization, clip warnings and a silent pictu
  assert.equal(manifest.video.audio,false);
  assert.equal(manifest.video.burnedCaptions,false);
  assert.equal(manifest.captions.directLumaFusionImportVerified,false);
+ const mixed=rt.packageManifest({name:"My show"},{start:1,end:2.01,fps:30,width:1280,burn:true,audio:"playback"},[],{},false);
+ assert.equal(mixed.video.audio,true,"a playback-audio MP4 remains mixed even when no WAV is selected");
+ assert.equal(mixed.video.burnedCaptions,true);
+ assert.equal(mixed.captions,null,"a burned caption does not imply a selected VTT file");
 });
 
 test("optional video exporter is integrated in both editor and audience publishing",()=>{

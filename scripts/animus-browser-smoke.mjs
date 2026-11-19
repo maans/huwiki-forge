@@ -95,10 +95,8 @@ try{
  const exportDialog=page.locator('.huw-video-modal');await exportDialog.waitFor();
  await exportDialog.locator('.huw-video-range input').nth(0).fill('0');
  await exportDialog.locator('.huw-video-range input').nth(1).fill('0.4');
- for(const enabledAudio of await exportDialog.locator('.huw-video-check input').all()){
-  const label=await enabledAudio.locator('xpath=..').innerText();
-  if(/Musik|Tale|Lydeffekter/i.test(label))await enabledAudio.uncheck();
- }
+ await exportDialog.locator('.huw-video-audio').selectOption('silent');
+ for(const id of ['music','speech','effects'])await exportDialog.locator('[data-export-file="'+id+'"]').uncheck();
  const canEncodeAvc=await page.evaluate(async()=>{
   if(!window.VideoEncoder?.isConfigSupported)return false;
   for(const codec of ['avc1.4d401f','avc1.42e01f']){
@@ -109,12 +107,12 @@ try{
   return false;
  });
  await exportDialog.locator('.huw-video-primary').click();
- await page.waitForFunction(()=>/MP4 klar:|Eksportfejl:|Export error:|Export cancelled/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:45000});
+ await page.waitForFunction(()=>/Filer klar:|Files ready:|Eksportfejl:|Export error:|Export cancelled/.test(document.querySelector('.huw-video-status')?.textContent||''),null,{timeout:45000});
  const videoExportStatus=await exportDialog.locator('.huw-video-status').innerText();
  if(canEncodeAvc){
- assert.match(videoExportStatus,/MP4 klar:/,'A real AVC output must be generated; status: '+videoExportStatus);
+ assert.match(videoExportStatus,/Filer klar:|Files ready:/,'A real AVC output must be generated; status: '+videoExportStatus);
  const pendingVideoDownload=page.waitForEvent('download');
- await exportDialog.getByRole('button',{name:'Hent MP4',exact:true}).click();
+ await exportDialog.getByRole('button',{name:'Hent video.mp4',exact:true}).click();
  const videoDownload=await pendingVideoDownload,videoPath=fileURLToPath(new URL('animus-video-smoke.mp4',out));
  await videoDownload.saveAs(videoPath);
  const movie=await readFile(videoPath),atoms=[];for(let offset=0;offset+8<=movie.length;){
