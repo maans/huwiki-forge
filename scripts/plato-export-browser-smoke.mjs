@@ -512,9 +512,22 @@ try{
  assert.equal(eyelidHitTesting.visible,'all','a later opacity override restores the original descendant hit testing');
  assert.equal(eyelidHitTesting.hiddenAgain,'none','a later hide immediately stops pointer interception again');
  await editor.locator('.huw-musical-parts-button').click();
- await editor.locator('[data-cutout-id="prisoner-head-drawing"]:visible image').first().click();
+ const face=editor.locator('[data-cutout-id="prisoner-head-drawing"]:visible image').first();
+ await face.scrollIntoViewIfNeeded();
+ const headPoint=await face.evaluate(image=>{
+  // The authored head occupies (-69,-114,119,140). Its exposed upper area
+  // at (-9.5,-90) lies above the eyebrows and the eyes (-69..-44).
+  // The image centre is covered by the separately editable pupil layer.
+  const point=image.ownerSVGElement.createSVGPoint();point.x=-9.5;point.y=-90;
+  const screen=point.matrixTransform(image.getScreenCTM()),bounds=image.getBoundingClientRect();
+  return {x:screen.x-bounds.left,y:screen.y-bounds.top,
+   hit:image.ownerDocument.elementFromPoint(screen.x,screen.y)?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id')};
+ });
+ assert.equal(headPoint.hit,'prisoner-head-drawing','an exposed head region receives the ordinary selection click');
+ await face.click({position:{x:headPoint.x,y:headPoint.y}});
  const outline=editor.locator('.huw-musical-transform-overlay[data-mode="parts"] .huw-musical-transform-outline');
  await outline.waitFor();assert.notEqual(await outline.evaluate(node=>getComputedStyle(node).strokeDasharray),'none','selected face has the dashed editing frame');
+ assert.equal(await editor.locator('.huw-musical-transform-label').textContent(),'Face, hair and neck','the normal click selects the intended head artwork');
  await editor.locator('.huw-musical-zoom-selection:enabled').click();
  const zoomedViewBox=await stageSvg.getAttribute('viewBox');
  assert.ok(Number(zoomedViewBox.split(/\s+/)[2])<Number(authoredViewBox.split(/\s+/)[2])*.6,'Zoom to selection brings the face into a usable close view');
