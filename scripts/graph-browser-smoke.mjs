@@ -89,11 +89,22 @@ try{
   assert.match(await hint.innerText(),language==='da-DK'?/Klik på en node.*form/:/Click a node.*shape/);
   assert.equal(await editor.isVisible(),false,'No permanent Forge configurator');
   await addNode.click();
+  const afterAdd=await graphStage.evaluate(stage=>{
+   const c=stage.querySelector('.graph-canvas');
+   return {mode:c._forgeVisNetwork?.manipulation?.inMode,toolbar:c.querySelector('.vis-manipulation')?.textContent?.slice(0,120)};
+  });
+  console.log('ADD NODE MODE',JSON.stringify(afterAdd));
   assert.equal(await editor.isVisible(),false,'Native Add Node must not open the Forge node form');
   const surface=graphStage.locator('.graph-canvas').first();
   const rect=await surface.boundingBox();
   assert.ok(rect&&rect.width>350&&rect.height>300);
   await page.mouse.click(rect.x+rect.width*0.12,rect.y+rect.height*0.88);
+  const afterCanvas=await graphStage.evaluate(stage=>{
+   const c=stage.querySelector('.graph-canvas');
+   return {mode:c._forgeVisNetwork?.manipulation?.inMode,toolbar:c.querySelector('.vis-manipulation')?.textContent?.slice(0,120),
+    overlays:document.querySelectorAll('.tc-modal-wrapper,.tc-modal').length,opened:[...document.querySelectorAll('.tc-modal-wrapper,.tc-modal')].map(x=>x.textContent.slice(0,100))};
+  });
+  console.log('CANVAS CLICK MODE',JSON.stringify(afterCanvas));
   await page.locator('input.graph-select').first().waitFor({state:'visible'});
   assert.match(await page.locator('.tc-modal').first().innerText(),/Select tiddler/);
   const newNode='Brugerens grafprøve';
