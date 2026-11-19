@@ -3,31 +3,31 @@
     "title": "Graph Edition · Start",
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Pages",
-    "text": "<div class=\"forge-graph-workbench\">\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Videnskort, du kan arbejde i\n\n<div class=\"forge-graph-lead\">Start med Platons hule. Hver cirkel er en almindelig tiddler; hver linje er en relation, som kan redigeres. Dobbeltklik på en node for at åbne artiklen, og træk noderne for at ændre kortet. Skift mellem tre eksempler herunder.</div>\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Knowledge maps you can work in\n\n<div class=\"forge-graph-lead\">Start with Plato’s cave. Each node is an ordinary tiddler, and each line is an editable relationship. Double-click a node to open it; drag nodes to rearrange the map. Choose one of the three examples below.</div>\n</$list>\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n<div class=\"forge-graph-stage\">\n<$graph.view $tiddler=\"$:/graph/Platon\" />\n</div>\n</div>"
+    "text": "<div class=\"forge-graph-workbench\">\n\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Videnskort, du kan arbejde i\n\n<div class=\"forge-graph-lead\">Start med Platons hule. Hver cirkel er en almindelig tiddler; hver linje er en relation, som kan redigeres. Dobbeltklik på en node for at åbne artiklen, og træk noderne for at ændre kortet. Skift mellem tre eksempler herunder.</div>\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Knowledge maps you can work in\n\n<div class=\"forge-graph-lead\">Start with Plato’s cave. Each node is an ordinary tiddler, and each line is an editable relationship. Double-click a node to open it; drag nodes to rearrange the map. Choose one of the three examples below.</div>\n\n</$list>\n\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n\n<div class=\"forge-graph-stage\">\n<$graph.view $tiddler=\"$:/graph/Platon\" />\n</div>\n\n</div>"
   },
   {
     "title": "Graph Edition · Platon",
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Pages",
-    "text": "<div class=\"forge-graph-workbench\">\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Platons hulelignelse\n\nUdforsk forbindelserne mellem fangerne, skyggerne, solen og erkendelsen. Forbindelserne er eksempler, du frit kan ændre. [[Læs vejledningen|Graph Edition · Kom i gang]].\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Plato’s allegory of the cave\n\nExplore relationships between the prisoners, shadows, sun and knowledge. These connections are editable examples. [[Read the guide|Graph Edition · Kom i gang]].\n</$list>\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n<div class=\"forge-graph-stage\">\n<$graph.view $tiddler=\"$:/graph/Platon\" />\n</div>\n</div>"
+    "text": "<div class=\"forge-graph-workbench\">\n\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Platons hulelignelse\n\nUdforsk forbindelserne mellem fangerne, skyggerne, solen og erkendelsen. Forbindelserne er eksempler, du frit kan ændre. [[Læs vejledningen|Graph Edition · Kom i gang]].\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Plato’s allegory of the cave\n\nExplore relationships between the prisoners, shadows, sun and knowledge. These connections are editable examples. [[Read the guide|Graph Edition · Kom i gang]].\n\n</$list>\n\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n\n<div class=\"forge-graph-stage\">\n<$graph.view $tiddler=\"$:/graph/Platon\" />\n</div>\n\n</div>"
   },
   {
     "title": "Graph Edition · Mindmap",
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Pages",
-    "text": "<div class=\"forge-graph-workbench\">\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Mindmap · Fra idé til form\n\nEt simpelt idékort. Tilføj dine egne tiddlere med tagget `Graph/Mindmap`, eller dobbeltklik på en tom del af grafen for at vælge/oprette en node. Flyt dem, og gem wikien.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Mind map · From idea to form\n\nA simple idea map. Add tiddlers tagged `Graph/Mindmap`, or double-click empty graph space to choose/create a node. Arrange and save your wiki.\n</$list>\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n<div class=\"forge-graph-stage\">\n<$graph.view $tiddler=\"$:/graph/Mindmap\" />\n</div>\n</div>"
+    "text": "<div class=\"forge-graph-workbench\">\n\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Mindmap · Fra idé til form\n\nEt simpelt idékort. Tilføj dine egne tiddlere med tagget `Graph/Mindmap`, eller dobbeltklik på en tom del af grafen for at vælge/oprette en node. Flyt dem, og gem wikien.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Mind map · From idea to form\n\nA simple idea map. Add tiddlers tagged `Graph/Mindmap`, or double-click empty graph space to choose/create a node. Arrange and save your wiki.\n\n</$list>\n\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n\n<div class=\"forge-graph-stage\">\n<$graph.view $tiddler=\"$:/graph/Mindmap\" />\n</div>\n\n</div>"
   },
   {
     "title": "Graph Edition · Projekt",
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Pages",
-    "text": "<div class=\"forge-graph-workbench\">\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Projektkort · Afhængigheder\n\nEt eksempel på at visualisere opgaver og deres forudsætninger. Hver node har sit eget indhold og kan senere udvides med status, ansvarlige og tidsfrister.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Project map · Dependencies\n\nAn example of visualizing tasks and prerequisites. Every node has its own editable content and can later be extended with status, owners and deadlines.\n</$list>\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n<div class=\"forge-graph-stage\">\n<$graph.view $tiddler=\"$:/graph/Projekt\" />\n</div>\n</div>"
+    "text": "<div class=\"forge-graph-workbench\">\n\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Projektkort · Afhængigheder\n\nEt eksempel på at visualisere opgaver og deres forudsætninger. Hver node har sit eget indhold og kan senere udvides med status, ansvarlige og tidsfrister.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Project map · Dependencies\n\nAn example of visualizing tasks and prerequisites. Every node has its own editable content and can later be extended with status, owners and deadlines.\n\n</$list>\n\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n\n<div class=\"forge-graph-stage\">\n<$graph.view $tiddler=\"$:/graph/Projekt\" />\n</div>\n\n</div>"
   },
   {
     "title": "Graph Edition · Kom i gang",
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Pages",
-    "text": "<div class=\"forge-graph-workbench\">\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Kom i gang\n\n# Åbn et af kortene ovenfor. Dobbeltklik på en node for at læse eller redigere dens tiddler.\n# Træk en node til en anden placering. Positionen gemmes i graf-tiddleren `$:/graph/Platon` (eller det valgte kort).\n# Opret en ny artikel og giv den tagget `Graph/Platon`, `Graph/Mindmap` eller `Graph/Projekt` for at vise den i det tilsvarende kort.\n# Redigér forbindelser via tiddlerfelter: `symboliserer`, `fører-til`, `forudsætter` eller `forbinder`. Skriv tiddlertitler som TiddlyWiki-lister, fx `[[Erkendelse]]`.\n# Brug sidepanelets **Graph**-fane til at vælge kort og de indbyggede værktøjer. Pluginets originale værktøjer er foreløbig engelske.\n# Brug TiddlyWikis **Gem**-knap for at hente din redigerede HTML-fil. Browserdemoen gemmer ikke automatisk tilbage på Forge.\n\n! Nyt kort\n\nOpret en tiddler med titel `$:/graph/Mit kort`, type `application/json`, feltet `filter` sat til `[tag[MitKort]]`, og indholdet `{}`. Den dukker op i Graph-fanen. Tilføj tiddlere med tag `MitKort`. Sæt eventuelt `edges.fields` til `forbinder`.\n\nGraphmotoren er Flibbles' TW5-Graph 1.7.1 og Vis-Network 10.6.3. Begge leveres indlejret til offline brug. [[Om pluginet|Graph Studio · Om pluginet]].\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Get started\n\n# Open one of the maps above. Double-click a node to read or edit its tiddler.\n# Drag nodes to rearrange them. Their positions are stored in `$:/graph/Platon` (or the selected graph).\n# Create a tiddler tagged `Graph/Platon`, `Graph/Mindmap`, or `Graph/Projekt` to include it in that graph.\n# Edit relationships in the tiddler fields `symboliserer`, `fører-til`, `forudsætter`, or `forbinder`. Use TiddlyWiki title lists like `[[Erkendelse]]`.\n# The sidebar **Graph** tab gives access to each graph and the original graph tools (currently English-only).\n# Use TiddlyWiki's **Save** button to download your updated HTML. The demo does not publish your edits back to Forge.\n\n! New map\n\nCreate a tiddler called `$:/graph/My map`, type `application/json`, field `filter` set to `[tag[MyMap]]`, and body `{}`. It appears in the Graph sidebar. Tag articles with `MyMap` to add them. Optionally set `edges.fields` to `forbinder`.\n\nThe graph engine is Flibbles' TW5-Graph 1.7.1 with Vis-Network 10.6.3, bundled for offline use. [[About the plugin|Graph Studio · Om pluginet]].\n</$list>\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n\n</div>"
+    "text": "<div class=\"forge-graph-workbench\">\n\n<div class=\"forge-graph-eyebrow\">TiddlyWiki Forge · Graph Edition</div>\n\n<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Kom i gang\n\n# Åbn et af kortene ovenfor. Dobbeltklik på en node for at læse eller redigere dens tiddler.\n# Træk en node til en anden placering. Positionen gemmes i graf-tiddleren `$:/graph/Platon` (eller det valgte kort).\n# Opret en ny artikel og giv den tagget `Graph/Platon`, `Graph/Mindmap` eller `Graph/Projekt` for at vise den i det tilsvarende kort.\n# Redigér forbindelser via tiddlerfelter: `symboliserer`, `fører-til`, `forudsætter` eller `forbinder`. Skriv tiddlertitler som TiddlyWiki-lister, fx `[[Erkendelse]]`.\n# Brug sidepanelets **Graph**-fane til at vælge kort og de indbyggede værktøjer. Pluginets originale værktøjer er foreløbig engelske.\n# Brug TiddlyWikis **Gem**-knap for at hente din redigerede HTML-fil. Browserdemoen gemmer ikke automatisk tilbage på Forge.\n\n! Nyt kort\n\nOpret en tiddler med titel `$:/graph/Mit kort`, type `application/json`, feltet `filter` sat til `[tag[MitKort]]`, og indholdet `{}`. Den dukker op i Graph-fanen. Tilføj tiddlere med tag `MitKort`. Sæt eventuelt `edges.fields` til `forbinder`.\n\nGraphmotoren er Flibbles' TW5-Graph 1.7.1 og Vis-Network 10.6.3. Begge leveres indlejret til offline brug. [[Om pluginet|Graph Studio · Om pluginet]].\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Get started\n\n# Open one of the maps above. Double-click a node to read or edit its tiddler.\n# Drag nodes to rearrange them. Their positions are stored in `$:/graph/Platon` (or the selected graph).\n# Create a tiddler tagged `Graph/Platon`, `Graph/Mindmap`, or `Graph/Projekt` to include it in that graph.\n# Edit relationships in the tiddler fields `symboliserer`, `fører-til`, `forudsætter`, or `forbinder`. Use TiddlyWiki title lists like `[[Erkendelse]]`.\n# The sidebar **Graph** tab gives access to each graph and the original graph tools (currently English-only).\n# Use TiddlyWiki's **Save** button to download your updated HTML. The demo does not publish your edits back to Forge.\n\n! New map\n\nCreate a tiddler called `$:/graph/My map`, type `application/json`, field `filter` set to `[tag[MyMap]]`, and body `{}`. It appears in the Graph sidebar. Tag articles with `MyMap` to add them. Optionally set `edges.fields` to `forbinder`.\n\nThe graph engine is Flibbles' TW5-Graph 1.7.1 with Vis-Network 10.6.3, bundled for offline use. [[About the plugin|Graph Studio · Om pluginet]].\n\n</$list>\n\n<div class=\"forge-graph-nav\">[[Start|Graph Edition · Start]] [[Platons hule|Graph Edition · Platon]] [[Mindmap|Graph Edition · Mindmap]] [[Projektkort|Graph Edition · Projekt]] [[Vejledning|Graph Edition · Kom i gang]]</div>\n\n</div>"
   },
   {
     "title": "$:/config/flibbles/graph/edges/fields/symboliserer",
@@ -87,7 +87,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#738a9c",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Hulen\n\nRammen om lignelsen: en verden, hvor fangerne kun ser væggen.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Hulen\n\nThe setting: a world where prisoners see only the wall.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Hulen\n\nRammen om lignelsen: en verden, hvor fangerne kun ser væggen.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Hulen\n\nThe setting: a world where prisoners see only the wall.\n\n</$list>",
     "symboliserer": "[[Sanseverdenen]]"
   },
   {
@@ -95,7 +95,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#738a9c",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Fangerne\n\nDe lænkes fast og forveksler skygger med virkelighed.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Fangerne\n\nThe prisoners mistake shadows for reality.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Fangerne\n\nDe lænkes fast og forveksler skygger med virkelighed.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Fangerne\n\nThe prisoners mistake shadows for reality.\n\n</$list>",
     "forudsætter": "[[Skyggerne]]"
   },
   {
@@ -103,7 +103,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#c58a4b",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Bålet\n\nIlden bag fangerne kaster skygger på hulens væg.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Bålet\n\nA fire behind the prisoners casts shadows.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Bålet\n\nIlden bag fangerne kaster skygger på hulens væg.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Bålet\n\nA fire behind the prisoners casts shadows.\n\n</$list>",
     "fører-til": "[[Skyggerne]]"
   },
   {
@@ -111,7 +111,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#b39a6a",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Skyggerne\n\nSkyggerne er det tilsyneladende, som fangerne tager for sandhed.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Skyggerne\n\nThe shadows stand for appearances taken as truth.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Skyggerne\n\nSkyggerne er det tilsyneladende, som fangerne tager for sandhed.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Skyggerne\n\nThe shadows stand for appearances taken as truth.\n\n</$list>",
     "symboliserer": "[[Sanseverdenen]]"
   },
   {
@@ -119,14 +119,14 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#b39a6a",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Sanseverdenen\n\nDet, vi umiddelbart opfatter med sanserne.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Sanseverdenen\n\nThe world as immediately perceived through the senses.\n</$list>"
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Sanseverdenen\n\nDet, vi umiddelbart opfatter med sanserne.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Sanseverdenen\n\nThe world as immediately perceived through the senses.\n\n</$list>"
   },
   {
     "title": "Vendingen",
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#559e9b",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Vendingen\n\nEt smertefuldt skift: at vende sig væk fra væggen.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Vendingen\n\nA difficult turn away from the familiar wall.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Vendingen\n\nEt smertefuldt skift: at vende sig væk fra væggen.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Vendingen\n\nA difficult turn away from the familiar wall.\n\n</$list>",
     "fører-til": "[[Vejen op]]"
   },
   {
@@ -134,7 +134,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#559e9b",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Vejen op\n\nUddannelse og filosofisk undersøgelse kræver tilvænning.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Vejen op\n\nLearning and philosophy require adaptation.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Vejen op\n\nUddannelse og filosofisk undersøgelse kræver tilvænning.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Vejen op\n\nLearning and philosophy require adaptation.\n\n</$list>",
     "fører-til": "[[Solen]]"
   },
   {
@@ -142,7 +142,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#db9d3d",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Solen\n\nLyset uden for hulen synliggør tingene og deres årsager.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Solen\n\nSunlight reveals things and their causes.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Solen\n\nLyset uden for hulen synliggør tingene og deres årsager.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Solen\n\nSunlight reveals things and their causes.\n\n</$list>",
     "symboliserer": "[[Det gode]]"
   },
   {
@@ -150,21 +150,21 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#db9d3d",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Det gode\n\nI lignelsen peger solen mod det godes idé.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Det gode\n\nThe sun represents the Form of the Good.\n</$list>"
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Det gode\n\nI lignelsen peger solen mod det godes idé.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Det gode\n\nThe sun represents the Form of the Good.\n\n</$list>"
   },
   {
     "title": "Idéverdenen",
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#9c7bc2",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Idéverdenen\n\nEn filosofi om former/idéer, ikke blot enkelte sanseindtryk.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Idéverdenen\n\nA world of forms or ideas beyond individual perceptions.\n</$list>"
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Idéverdenen\n\nEn filosofi om former/idéer, ikke blot enkelte sanseindtryk.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Idéverdenen\n\nA world of forms or ideas beyond individual perceptions.\n\n</$list>"
   },
   {
     "title": "Erkendelse",
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#9c7bc2",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Erkendelse\n\nErkendelse kræver undersøgelse, kritik og omstilling.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Erkendelse\n\nKnowledge requires inquiry, criticism and change.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Erkendelse\n\nErkendelse kræver undersøgelse, kritik og omstilling.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Erkendelse\n\nKnowledge requires inquiry, criticism and change.\n\n</$list>",
     "forudsætter": "[[Vendingen]]",
     "fører-til": "[[Idéverdenen]]"
   },
@@ -173,7 +173,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#5a9b79",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Filosoffen\n\nDen, der har set lyset, får et ansvar for fællesskabet.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Filosoffen\n\nOne who has seen the light bears responsibility towards others.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Filosoffen\n\nDen, der har set lyset, får et ansvar for fællesskabet.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Filosoffen\n\nOne who has seen the light bears responsibility towards others.\n\n</$list>",
     "fører-til": "[[Tilbagevenden]]"
   },
   {
@@ -181,7 +181,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Platon",
     "color": "#5a9b79",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Tilbagevenden\n\nAt vende tilbage til hulen er vanskeligt, men politisk betydningsfuldt.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Tilbagevenden\n\nReturning to the cave is difficult but politically important.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Tilbagevenden\n\nAt vende tilbage til hulen er vanskeligt, men politisk betydningsfuldt.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Tilbagevenden\n\nReturning to the cave is difficult but politically important.\n\n</$list>",
     "fører-til": "[[Fangerne]]"
   },
   {
@@ -189,7 +189,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Mindmap",
     "color": "#2d8e87",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Idéens kerne\n\nSaml den centrale tanke i én redigerbar tiddler.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Idéens kerne\n\nKeep the central idea in one editable tiddler.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Idéens kerne\n\nSaml den centrale tanke i én redigerbar tiddler.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Idéens kerne\n\nKeep the central idea in one editable tiddler.\n\n</$list>",
     "forbinder": "[[Undersøgelse]] [[Skitsen]] [[Spørgsmål]]"
   },
   {
@@ -197,7 +197,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Mindmap",
     "color": "#6997bb",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Undersøgelse\n\nHvad ved vi, og hvilke kilder har vi?\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Undersøgelse\n\nWhat do we know, and what sources do we have?\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Undersøgelse\n\nHvad ved vi, og hvilke kilder har vi?\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Undersøgelse\n\nWhat do we know, and what sources do we have?\n\n</$list>",
     "forbinder": "[[Kilder]]"
   },
   {
@@ -205,7 +205,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Mindmap",
     "color": "#bd9d61",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Skitsen\n\nPrøv en foreløbig visuel udgave.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Skitsen\n\nSketch a provisional visual version.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Skitsen\n\nPrøv en foreløbig visuel udgave.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Skitsen\n\nSketch a provisional visual version.\n\n</$list>",
     "forbinder": "[[Prototype]]"
   },
   {
@@ -213,7 +213,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Mindmap",
     "color": "#9d7ab5",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Spørgsmål\n\nHvad er stadig uklart?\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Spørgsmål\n\nWhat remains unclear?\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Spørgsmål\n\nHvad er stadig uklart?\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Spørgsmål\n\nWhat remains unclear?\n\n</$list>",
     "forbinder": "[[Feedback]]"
   },
   {
@@ -221,14 +221,14 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Mindmap",
     "color": "#6997bb",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Kilder\n\nFøj dine noter, kilder og eksempler til.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Kilder\n\nAdd notes, sources, and examples.\n</$list>"
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Kilder\n\nFøj dine noter, kilder og eksempler til.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Kilder\n\nAdd notes, sources, and examples.\n\n</$list>"
   },
   {
     "title": "Prototype",
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Mindmap",
     "color": "#bd9d61",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Prototype\n\nByg den mindste udgave, der kan prøves.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Prototype\n\nBuild the smallest testable version.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Prototype\n\nByg den mindste udgave, der kan prøves.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Prototype\n\nBuild the smallest testable version.\n\n</$list>",
     "forbinder": "[[Feedback]]"
   },
   {
@@ -236,7 +236,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Mindmap",
     "color": "#8aab6c",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Feedback\n\nIndsaml kommentarer og forbedr den første idé.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Feedback\n\nCollect feedback and improve the original idea.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Feedback\n\nIndsaml kommentarer og forbedr den første idé.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Feedback\n\nCollect feedback and improve the original idea.\n\n</$list>",
     "fører-til": "[[Idéens kerne]]"
   },
   {
@@ -244,7 +244,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Projekt",
     "color": "#2d8e87",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Projektets mål\n\nBeskriv hvem projektet hjælper, og hvorfor.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Projektets mål\n\nDescribe whom the project serves and why.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Projektets mål\n\nBeskriv hvem projektet hjælper, og hvorfor.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Projektets mål\n\nDescribe whom the project serves and why.\n\n</$list>",
     "fører-til": "[[Behov og krav]]"
   },
   {
@@ -252,7 +252,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Projekt",
     "color": "#6997bb",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Behov og krav\n\nAfgræns de vigtigste behov og krav.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Behov og krav\n\nDefine the important needs and requirements.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Behov og krav\n\nAfgræns de vigtigste behov og krav.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Behov og krav\n\nDefine the important needs and requirements.\n\n</$list>",
     "fører-til": "[[Datamodel]] [[Brugerflade]]"
   },
   {
@@ -260,7 +260,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Projekt",
     "color": "#9d7ab5",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Datamodel\n\nGør relationerne mellem data tydelige.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Datamodel\n\nMake the data relationships explicit.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Datamodel\n\nGør relationerne mellem data tydelige.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Datamodel\n\nMake the data relationships explicit.\n\n</$list>",
     "fører-til": "[[Prototype og test]]"
   },
   {
@@ -268,7 +268,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Projekt",
     "color": "#bd9d61",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Brugerflade\n\nSkab et overskueligt workflow.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Brugerflade\n\nCreate a clear and simple workflow.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Brugerflade\n\nSkab et overskueligt workflow.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Brugerflade\n\nCreate a clear and simple workflow.\n\n</$list>",
     "fører-til": "[[Prototype og test]]"
   },
   {
@@ -276,7 +276,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Projekt",
     "color": "#5a9b79",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Prototype og test\n\nByg, afprøv og ret fejl.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Prototype og test\n\nBuild, test, and fix issues.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Prototype og test\n\nByg, afprøv og ret fejl.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Prototype og test\n\nBuild, test, and fix issues.\n\n</$list>",
     "fører-til": "[[Dokumentation]]"
   },
   {
@@ -284,7 +284,7 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Projekt",
     "color": "#738a9c",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Dokumentation\n\nForklar anvendelsen og de kendte begrænsninger.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Dokumentation\n\nExplain usage and known limitations.\n</$list>",
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Dokumentation\n\nForklar anvendelsen og de kendte begrænsninger.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Dokumentation\n\nExplain usage and known limitations.\n\n</$list>",
     "fører-til": "[[Udgivelse]]"
   },
   {
@@ -292,6 +292,6 @@
     "type": "text/vnd.tiddlywiki",
     "tags": "Graph/Projekt",
     "color": "#db9d3d",
-    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Udgivelse\n\nUdgiv en prøveudgave og saml erfaringer.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Udgivelse\n\nPublish a test version and collect feedback.\n</$list>"
+    "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Udgivelse\n\nUdgiv en prøveudgave og saml erfaringer.\n\n</$list>\n\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n\n! Udgivelse\n\nPublish a test version and collect feedback.\n\n</$list>"
   }
 ]

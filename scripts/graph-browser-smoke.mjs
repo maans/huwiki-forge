@@ -45,6 +45,36 @@ try{
    const pos=await page.evaluate(g=>JSON.parse($tw.wiki.getTiddlerText('$:/graph/'+g)),graph);
    assert.equal(Object.keys(pos).length,count,graph+' stored positions');
   }
+  // Check the rendered DOM. A single newline after a widget opening tag makes
+  // TiddlyWiki parse its contents inline, leaking ! and # as literal text.
+  const localized=language==='da-DK'
+   ?{guide:'Kom i gang',create:'Nyt kort',start:'Videnskort, du kan arbejde i'}
+   :{guide:'Get started',create:'New map',start:'Knowledge maps you can work in'};
+  for(const [title,heading] of [
+   ['Graph Edition · Start',localized.start],
+   ['Graph Edition · Platon',language==='da-DK'?'Platons hulelignelse':'Plato’s allegory of the cave'],
+   ['Graph Edition · Mindmap',language==='da-DK'?'Mindmap · Fra idé til form':'Mind map · From idea to form'],
+   ['Graph Edition · Projekt',language==='da-DK'?'Projektkort · Afhængigheder':'Project map · Dependencies'],
+   ['Graph Edition · Kom i gang',localized.guide]
+  ]){
+   await page.evaluate(title=>$tw.wiki.addTiddler({title:'$:/StoryList',list:[title]}),title);
+   const container=page.locator('[data-tiddler-title='+JSON.stringify(title)+'] .forge-graph-workbench');
+   const headingElement=container.locator('h1,h2').first();
+   await headingElement.waitFor();
+   assert.equal((await headingElement.innerText()).trim(),heading,title+' rendered heading');
+   assert.ok(await container.locator('p').count()>=1,title+' should have paragraph formatting');
+  }
+  await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Kom i gang']}));
+  const guide=page.locator('[data-tiddler-title="Graph Edition · Kom i gang"] .forge-graph-workbench');
+  assert.equal(await guide.locator('ol > li').count(),6,'Guide should have six numbered steps');
+  assert.equal((await guide.locator('h1,h2').nth(1).innerText()).trim(),localized.create,'Second heading should be formatted');
+  assert.doesNotMatch(await guide.innerText(),/(?:^|\n)\s*[!#]\s/,'Literal heading/list WikiText must not show');
+  await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Hulen']}));
+  const node=page.locator('[data-tiddler-title="Hulen"] .tc-tiddler-body');
+  await node.locator('h1,h2').first().waitFor();
+  assert.equal((await node.locator('h1,h2').first().innerText()).trim(),'Hulen');
+  assert.ok(await node.locator('p').count()>=1,'Node content should have paragraph formatting');
+
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'Nyt begreb',tags:['Graph/Mindmap'],text:'En ny redigerbar node.'}));
   assert.equal(await page.evaluate(()=>$tw.wiki.filterTiddlers('[tag[Graph/Mindmap]]').length),8);
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));

@@ -9,6 +9,8 @@ test("public demos fetch the plugin registry and catalog fresh alongside bundled
  assert.ok(source.includes("const isPluginRegistry="));
  assert.ok(source.includes("const isEditionCatalog="));
  assert.ok(source.includes("const isTurnAroundLayoutFix="));
+ assert.ok(source.includes("const isGraphEditionTiddlers="));
+ assert.ok(source.includes("||isTurnAroundCaptions||isGraphEditionTiddlers"));
  assert.ok(source.includes("||isCutoutEditorPlugin||isTurnAroundLayoutFix"));
  assert.ok(source.includes("isEditionManifest||isPluginRegistry||isEditionCatalog"));
  assert.ok(source.includes("loadChoices(new URL('../assembler/',location.href).href,fetchFreshEditionManifest)"));
