@@ -88,7 +88,7 @@
     "tags": "Graph/Platon",
     "color": "#738a9c",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Hulen\n\nRammen om lignelsen: en verden, hvor fangerne kun ser væggen.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Hulen\n\nThe setting: a world where prisoners see only the wall.\n</$list>",
-    "symboliserer": "[[ Sanseverdenen]]"
+    "symboliserer": "[[Sanseverdenen]]"
   },
   {
     "title": "Fangerne",
@@ -96,7 +96,7 @@
     "tags": "Graph/Platon",
     "color": "#738a9c",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Fangerne\n\nDe lænkes fast og forveksler skygger med virkelighed.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Fangerne\n\nThe prisoners mistake shadows for reality.\n</$list>",
-    "forudsætter": "[[ Skyggerne]]"
+    "forudsætter": "[[Skyggerne]]"
   },
   {
     "title": "Bålet",
@@ -104,7 +104,7 @@
     "tags": "Graph/Platon",
     "color": "#c58a4b",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Bålet\n\nIlden bag fangerne kaster skygger på hulens væg.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Bålet\n\nA fire behind the prisoners casts shadows.\n</$list>",
-    "fører-til": "[[ Skyggerne]]"
+    "fører-til": "[[Skyggerne]]"
   },
   {
     "title": "Skyggerne",
@@ -112,7 +112,7 @@
     "tags": "Graph/Platon",
     "color": "#b39a6a",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Skyggerne\n\nSkyggerne er det tilsyneladende, som fangerne tager for sandhed.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Skyggerne\n\nThe shadows stand for appearances taken as truth.\n</$list>",
-    "symboliserer": "[[ Sanseverdenen]]"
+    "symboliserer": "[[Sanseverdenen]]"
   },
   {
     "title": "Sanseverdenen",
@@ -127,7 +127,7 @@
     "tags": "Graph/Platon",
     "color": "#559e9b",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Vendingen\n\nEt smertefuldt skift: at vende sig væk fra væggen.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Vendingen\n\nA difficult turn away from the familiar wall.\n</$list>",
-    "fører-til": "[[ Vejen op]]"
+    "fører-til": "[[Vejen op]]"
   },
   {
     "title": "Vejen op",
@@ -135,7 +135,7 @@
     "tags": "Graph/Platon",
     "color": "#559e9b",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Vejen op\n\nUddannelse og filosofisk undersøgelse kræver tilvænning.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Vejen op\n\nLearning and philosophy require adaptation.\n</$list>",
-    "fører-til": "[[ Solen]]"
+    "fører-til": "[[Solen]]"
   },
   {
     "title": "Solen",
@@ -143,7 +143,7 @@
     "tags": "Graph/Platon",
     "color": "#db9d3d",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Solen\n\nLyset uden for hulen synliggør tingene og deres årsager.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Solen\n\nSunlight reveals things and their causes.\n</$list>",
-    "symboliserer": "[[ Det gode]]"
+    "symboliserer": "[[Det gode]]"
   },
   {
     "title": "Det gode",
@@ -165,8 +165,8 @@
     "tags": "Graph/Platon",
     "color": "#9c7bc2",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Erkendelse\n\nErkendelse kræver undersøgelse, kritik og omstilling.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Erkendelse\n\nKnowledge requires inquiry, criticism and change.\n</$list>",
-    "forudsætter": "[[ Vendingen]]",
-    "fører-til": "[[ Idéverdenen]]"
+    "forudsætter": "[[Vendingen]]",
+    "fører-til": "[[Idéverdenen]]"
   },
   {
     "title": "Filosoffen",
@@ -174,7 +174,7 @@
     "tags": "Graph/Platon",
     "color": "#5a9b79",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Filosoffen\n\nDen, der har set lyset, får et ansvar for fællesskabet.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Filosoffen\n\nOne who has seen the light bears responsibility towards others.\n</$list>",
-    "fører-til": "[[ Tilbagevenden]]"
+    "fører-til": "[[Tilbagevenden]]"
   },
   {
     "title": "Tilbagevenden",
@@ -182,7 +182,7 @@
     "tags": "Graph/Platon",
     "color": "#5a9b79",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Tilbagevenden\n\nAt vende tilbage til hulen er vanskeligt, men politisk betydningsfuldt.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Tilbagevenden\n\nReturning to the cave is difficult but politically important.\n</$list>",
-    "fører-til": "[[ Fangerne]]"
+    "fører-til": "[[Fangerne]]"
   },
   {
     "title": "Idéens kerne",
@@ -190,7 +190,7 @@
     "tags": "Graph/Mindmap",
     "color": "#2d8e87",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Idéens kerne\n\nSaml den centrale tanke i én redigerbar tiddler.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Idéens kerne\n\nKeep the central idea in one editable tiddler.\n</$list>",
-    "forbinder": "[[ Undersøgelse]] [[ Skitsen]] [[ Spørgsmål]]"
+    "forbinder": "[[Undersøgelse]] [[Skitsen]] [[Spørgsmål]]"
   },
   {
     "title": "Undersøgelse",
@@ -198,7 +198,7 @@
     "tags": "Graph/Mindmap",
     "color": "#6997bb",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Undersøgelse\n\nHvad ved vi, og hvilke kilder har vi?\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Undersøgelse\n\nWhat do we know, and what sources do we have?\n</$list>",
-    "forbinder": "[[ Kilder]]"
+    "forbinder": "[[Kilder]]"
   },
   {
     "title": "Skitsen",
@@ -206,7 +206,7 @@
     "tags": "Graph/Mindmap",
     "color": "#bd9d61",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Skitsen\n\nPrøv en foreløbig visuel udgave.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Skitsen\n\nSketch a provisional visual version.\n</$list>",
-    "forbinder": "[[ Prototype]]"
+    "forbinder": "[[Prototype]]"
   },
   {
     "title": "Spørgsmål",
@@ -214,7 +214,7 @@
     "tags": "Graph/Mindmap",
     "color": "#9d7ab5",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Spørgsmål\n\nHvad er stadig uklart?\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Spørgsmål\n\nWhat remains unclear?\n</$list>",
-    "forbinder": "[[ Feedback]]"
+    "forbinder": "[[Feedback]]"
   },
   {
     "title": "Kilder",
@@ -229,7 +229,7 @@
     "tags": "Graph/Mindmap",
     "color": "#bd9d61",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Prototype\n\nByg den mindste udgave, der kan prøves.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Prototype\n\nBuild the smallest testable version.\n</$list>",
-    "forbinder": "[[ Feedback]]"
+    "forbinder": "[[Feedback]]"
   },
   {
     "title": "Feedback",
@@ -237,7 +237,7 @@
     "tags": "Graph/Mindmap",
     "color": "#8aab6c",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Feedback\n\nIndsaml kommentarer og forbedr den første idé.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Feedback\n\nCollect feedback and improve the original idea.\n</$list>",
-    "fører-til": "[[ Idéens kerne]]"
+    "fører-til": "[[Idéens kerne]]"
   },
   {
     "title": "Projektets mål",
@@ -245,7 +245,7 @@
     "tags": "Graph/Projekt",
     "color": "#2d8e87",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Projektets mål\n\nBeskriv hvem projektet hjælper, og hvorfor.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Projektets mål\n\nDescribe whom the project serves and why.\n</$list>",
-    "fører-til": "[[ Behov og krav]]"
+    "fører-til": "[[Behov og krav]]"
   },
   {
     "title": "Behov og krav",
@@ -253,7 +253,7 @@
     "tags": "Graph/Projekt",
     "color": "#6997bb",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Behov og krav\n\nAfgræns de vigtigste behov og krav.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Behov og krav\n\nDefine the important needs and requirements.\n</$list>",
-    "fører-til": "[[ Datamodel]] [[ Brugerflade]]"
+    "fører-til": "[[Datamodel]] [[Brugerflade]]"
   },
   {
     "title": "Datamodel",
@@ -261,7 +261,7 @@
     "tags": "Graph/Projekt",
     "color": "#9d7ab5",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Datamodel\n\nGør relationerne mellem data tydelige.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Datamodel\n\nMake the data relationships explicit.\n</$list>",
-    "fører-til": "[[ Prototype og test]]"
+    "fører-til": "[[Prototype og test]]"
   },
   {
     "title": "Brugerflade",
@@ -269,7 +269,7 @@
     "tags": "Graph/Projekt",
     "color": "#bd9d61",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Brugerflade\n\nSkab et overskueligt workflow.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Brugerflade\n\nCreate a clear and simple workflow.\n</$list>",
-    "fører-til": "[[ Prototype og test]]"
+    "fører-til": "[[Prototype og test]]"
   },
   {
     "title": "Prototype og test",
@@ -277,7 +277,7 @@
     "tags": "Graph/Projekt",
     "color": "#5a9b79",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Prototype og test\n\nByg, afprøv og ret fejl.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Prototype og test\n\nBuild, test, and fix issues.\n</$list>",
-    "fører-til": "[[ Dokumentation]]"
+    "fører-til": "[[Dokumentation]]"
   },
   {
     "title": "Dokumentation",
@@ -285,7 +285,7 @@
     "tags": "Graph/Projekt",
     "color": "#738a9c",
     "text": "<$list filter=\"[{$:/language}prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Dokumentation\n\nForklar anvendelsen og de kendte begrænsninger.\n</$list>\n<$list filter=\"[{$:/language}!prefix[$:/languages/da]]\" variable=\"graphLocale\">\n! Dokumentation\n\nExplain usage and known limitations.\n</$list>",
-    "fører-til": "[[ Udgivelse]]"
+    "fører-til": "[[Udgivelse]]"
   },
   {
     "title": "Udgivelse",
