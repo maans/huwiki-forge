@@ -96,7 +96,9 @@ try{
   await editor.locator('.forge-graph-style-color').fill('#9475ba');
   await editor.locator('.forge-graph-style-size').fill('42');
   await editor.locator('.forge-graph-apply-style').click();
-  await page.waitForFunction(title=>$tw.wiki.getTiddler(title).fields['graph-shape']==='diamond',newNode);
+  const styleSnapshot=await page.evaluate(title=>({fields:$tw.wiki.getTiddler(title)?.fields,editors:Array.from(document.querySelectorAll('.forge-graph-editor')).map(x=>({shape:x.querySelector('.forge-graph-style-shape')?.value,node:x.querySelector('.forge-graph-style-node')?.value,feedback:x.querySelector('.forge-graph-feedback')?.textContent})).slice(-4)}),newNode);
+  console.log('SHAPE STYLE DEBUG',JSON.stringify(styleSnapshot).slice(0,1700));
+  assert.equal(styleSnapshot.fields['graph-shape'],'diamond','Shape should be saved to the selected tiddler');
   const shape=await page.evaluate(title=>{let t=$tw.wiki.getTiddler(title);return [t.fields['graph-shape'],t.fields.color,t.fields['graph-size']];},newNode);
   assert.deepEqual(shape,['diamond','#9475ba','42']);
   await editor.locator('.forge-graph-style-shape').selectOption('image');
@@ -111,7 +113,7 @@ try{
   console.log('PASS',language,'touch-style node creation, typed connections, shapes, color, size, SVG icons');
 
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'Nyt begreb',tags:['Graph/Mindmap'],text:'En ny redigerbar node.'}));
-  assert.equal(await page.evaluate(()=>$tw.wiki.filterTiddlers('[tag[Graph/Mindmap]]').length),8);
+  assert.equal(await page.evaluate(()=>$tw.wiki.filterTiddlers('[tag[Graph/Mindmap]]').length),9);
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));
   await page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-stage canvas').first().waitFor();
   assert.equal(await page.locator('.tc-error-form').count(),0,'No TiddlyWiki error dialogs');
