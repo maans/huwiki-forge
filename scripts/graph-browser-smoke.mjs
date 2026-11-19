@@ -75,40 +75,62 @@ try{
   assert.equal((await node.locator('h1,h2').first().innerText()).trim(),'Hulen');
   assert.ok(await node.locator('p').count()>=1,'Node content should have paragraph formatting');
 
-  // Real editor acceptance: change tiddlers only through clickable controls.
+  // Original Vis-Network Add Node / Add Edge buttons are the only persistent
+  // edit controls. The three Forge forms are mutually exclusive popovers.
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'$:/StoryList',list:['Graph Edition · Mindmap']}));
-  const editor=page.locator('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-editor').first();
-  await editor.waitFor();
-  assert.equal(await editor.locator('.forge-graph-create-node').count(),1,'The Forge add-node button must be present');
-  assert.equal(await editor.locator('.forge-graph-add-edge').count(),1,'The Forge add-edge button must be present');
+  const graphStage=page.locator('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-stage').first();
+  const editor=graphStage.locator('.forge-graph-editor').first();
+  const nativeTools=graphStage.locator('.vis-manipulation').first();
+  const addNode=nativeTools.locator('.vis-button.vis-add').first();
+  const addEdge=nativeTools.locator('.vis-button.vis-connect').first();
+  await addNode.waitFor({state:'visible'});
+  await addEdge.waitFor({state:'visible'});
+  assert.equal(await editor.isVisible(),false,'Forge editor must be hidden until a graph action');
+  assert.equal(await graphStage.locator('.forge-graph-editor-panels > .forge-graph-editor-panel').count(),3);
+  await addNode.click();
+  assert.equal(await editor.isVisible(),true,'The original Add Node button opens the compact node editor');
+  assert.equal(await editor.locator('.forge-graph-editor-panel:visible').count(),1,'Only one context panel is open');
+  await editor.locator('.forge-graph-close').click();
+  assert.equal(await editor.isVisible(),false,'Close returns to the full graph');
+  await addNode.click();
   const newNode='Brugerens grafprøve';
   await editor.locator('.forge-graph-node-name').fill(newNode);
   await editor.locator('.forge-graph-create-node').click();
   await page.waitForFunction(title=>window.$tw?.wiki?.getTiddler(title)?.hasTag('Graph/Mindmap'),newNode);
+  assert.equal(await editor.isVisible(),false,'Saving a node closes its context panel');
   assert.equal(await page.evaluate(title=>$tw.wiki.getTiddler(title).fields['graph-shape'],newNode),'box');
+  await addEdge.click();
+  assert.equal(await editor.isVisible(),true,'The original Add Edge button opens the connection editor');
+  assert.equal(await editor.locator('.forge-graph-editor-panel:visible').count(),1);
   await editor.locator('.forge-graph-edge-from').selectOption('Idéens kerne');
   await editor.locator('.forge-graph-edge-to').selectOption(newNode);
   await editor.locator('.forge-graph-edge-type').selectOption('forbinder');
   await editor.locator('.forge-graph-add-edge').click();
   await page.waitForFunction(title=>$tw.wiki.getTiddler('Idéens kerne').getFieldList('forbinder').includes(title),newNode);
+  assert.equal(await editor.isVisible(),false,'Saving an edge closes its context panel');
+  // A real Vis node click emits the matching context event via the adapter.
+  // Dispatch the same event to verify the panel independently of canvas hit testing.
+  await editor.dispatchEvent('forge-graph-action',{detail:{mode:'style',node:newNode}});
+  assert.equal(await editor.isVisible(),true,'Node selection opens appearance');
+  assert.equal(await editor.locator('.forge-graph-editor-panel:visible').count(),1);
   await editor.locator('.forge-graph-style-node').selectOption(newNode);
   await editor.locator('.forge-graph-style-shape').selectOption('diamond');
   await editor.locator('.forge-graph-style-color').fill('#9475ba');
   await editor.locator('.forge-graph-style-size').fill('42');
   await editor.locator('.forge-graph-apply-style').click();
-  const styleSnapshot=await page.evaluate(title=>({fields:$tw.wiki.getTiddler(title)?.fields,editors:Array.from(document.querySelectorAll('.forge-graph-editor')).map(x=>({shape:x.querySelector('.forge-graph-style-shape')?.value,node:x.querySelector('.forge-graph-style-node')?.value,feedback:x.querySelector('.forge-graph-feedback')?.textContent})).slice(-4)}),newNode);
-  assert.equal(styleSnapshot.fields['graph-shape'],'diamond','Shape should be saved to the selected tiddler');
+  await page.waitForFunction(title=>$tw.wiki.getTiddler(title).fields['graph-shape']==='diamond',newNode);
+  assert.equal(await editor.isVisible(),false,'Appearance closes after save');
   const shape=await page.evaluate(title=>{let t=$tw.wiki.getTiddler(title);return [t.fields['graph-shape'],t.fields.color,t.fields['graph-size']];},newNode);
   assert.deepEqual(shape,['diamond','#9475ba','42']);
+  await editor.dispatchEvent('forge-graph-action',{detail:{mode:'style',node:newNode}});
   await editor.locator('.forge-graph-style-shape').selectOption('image');
   await editor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Sun');
   await editor.locator('.forge-graph-apply-style').click();
-  const imageSnapshot=await page.evaluate(title=>({fields:$tw.wiki.getTiddler(title)?.fields,editors:Array.from(document.querySelectorAll('.forge-graph-editor')).map(x=>({shape:x.querySelector('.forge-graph-style-shape')?.value,icon:x.querySelector('.forge-graph-style-icon')?.value,node:x.querySelector('.forge-graph-style-node')?.value,feedback:x.querySelector('.forge-graph-feedback')?.textContent})).slice(-4)}),newNode);
-  assert.equal(imageSnapshot.fields.icon,'GraphStudio/Sun','The SVG image is saved to the node tiddler');
-  assert.equal(await page.locator('.tc-error-form').count(),0,'The direct graph editor must not trigger error dialogs');
-  // The graph remains rendered after actions (no blank/disabled player).
-  await page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-stage canvas').first().waitFor();
-  console.log('PASS',language,'touch-style node creation, typed connections, shapes, color, size, SVG icons');
+  await page.waitForFunction(title=>$tw.wiki.getTiddler(title).fields.icon==='GraphStudio/Sun',newNode);
+  assert.equal(await editor.isVisible(),false);
+  assert.equal(await page.locator('.tc-error-form').count(),0);
+  await graphStage.locator('canvas').first().waitFor();
+  console.log('PASS',language,'native Add Node/Add Edge buttons, contextual styling and SVG images');
 
   await page.evaluate(()=>$tw.wiki.addTiddler({title:'Nyt begreb',tags:['Graph/Mindmap'],text:'En ny redigerbar node.'}));
   assert.equal(await page.evaluate(()=>$tw.wiki.filterTiddlers('[tag[Graph/Mindmap]]').length),9);
@@ -120,31 +142,41 @@ try{
   await context.close();
  }
 
- // Chromium touch emulation: verify the direct Forge editor works with taps,
- // not just mouse clicks. This is not a substitute for physical iPad acceptance.
+ // Chromium touch emulation: original canvas buttons open the contextual panels,
+ // and taps inside them work without pushing the graph down the page.
  const touchContext=await browser.newContext({locale:'da-DK',hasTouch:true,isMobile:true,deviceScaleFactor:2,viewport:{width:834,height:1112}});
  await touchContext.route('**/*',route=>route.request().url().startsWith('file:')?route.continue():route.abort());
  const touchPage=await touchContext.newPage();touchPage.setDefaultTimeout(25000);
  const touchErrors=[];touchPage.on('pageerror',error=>touchErrors.push(error.message));
  await touchPage.goto(pathToFileURL(path.join(dir,'graph-da-DK.html')).href);
- const touchEditor=touchPage.locator('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Start"] .forge-graph-editor').first();
+ const touchStage=touchPage.locator('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Start"] .forge-graph-stage').first();
+ const touchEditor=touchStage.locator('.forge-graph-editor').first();
+ const touchTools=touchStage.locator('.vis-manipulation').first();
+ assert.equal(await touchEditor.isVisible(),false,'iPad graph starts with no large editor');
+ await touchTools.locator('.vis-button.vis-add').first().tap();
+ assert.equal(await touchEditor.isVisible(),true);
  await touchEditor.locator('.forge-graph-node-name').fill('Touch prøve');
  await touchEditor.locator('.forge-graph-create-node').tap();
  await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve')?.hasTag('Graph/Platon'));
+ assert.equal(await touchEditor.isVisible(),false);
+ await touchTools.locator('.vis-button.vis-connect').first().tap();
  await touchEditor.locator('.forge-graph-edge-from').selectOption('Hulen');
  await touchEditor.locator('.forge-graph-edge-to').selectOption('Touch prøve');
  await touchEditor.locator('.forge-graph-edge-type').selectOption('forbinder');
  await touchEditor.locator('.forge-graph-add-edge').tap();
  await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Hulen').getFieldList('forbinder').includes('Touch prøve'));
- await touchEditor.locator('.forge-graph-style-node').selectOption('Touch prøve');
+ assert.equal(await touchEditor.isVisible(),false);
+ await touchEditor.dispatchEvent('forge-graph-action',{detail:{mode:'style',node:'Touch prøve'}});
  await touchEditor.locator('.forge-graph-style-shape').selectOption('star');
  await touchEditor.locator('.forge-graph-apply-style').tap();
  await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve').fields['graph-shape']==='star');
+ await touchEditor.dispatchEvent('forge-graph-action',{detail:{mode:'style',node:'Touch prøve'}});
  await touchEditor.locator('.forge-graph-style-shape').selectOption('image');
  await touchEditor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Idea');
  await touchEditor.locator('.forge-graph-apply-style').tap();
  await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve').fields.icon==='GraphStudio/Idea');
+ assert.equal(await touchEditor.isVisible(),false);
  assert.deepEqual(touchErrors,[],'No touch-only JavaScript errors');
- console.log('PASS simulated iPad viewport: tap node, tap edge, tap style, local SVG image');
+ console.log('PASS simulated iPad viewport: native toolbar taps, one popover at a time');
  await touchContext.close();
 }finally{await browser.close();}

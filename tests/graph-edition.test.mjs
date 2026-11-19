@@ -95,3 +95,31 @@ test('Graph Studio exposes an independent direct editor and per-node visual prop
   assert.match(page.text,/<\$forge-graph-editor graph="\$:/);
  }
 });
+
+test('Native graph toolbar is restored while Forge panels are contextual and hidden by default',async()=>{
+ const plugin=await read('plugins/graph-studio/dist/plugin.json');
+ const shadows=JSON.parse(plugin.text).tiddlers;
+ const widget=shadows['$:/plugins/huwiki/graph-studio/widgets/editor.js'];
+ const bridge=shadows['$:/plugins/huwiki/graph-studio/vis-controls.js'];
+ const css=shadows['$:/plugins/huwiki/graph-studio/styles'].text;
+ assert.equal(bridge['module-type'],'vis-property');
+ assert.match(bridge.text,/vis-button/);
+ assert.match(bridge.text,/vis-add/);
+ assert.match(bridge.text,/vis-connect/);
+ assert.match(bridge.text,/network.on\("click"/);
+ assert.match(widget.text,/forge-graph-close/);
+ assert.match(widget.text,/nodePanel.hidden=/);
+ assert.match(widget.text,/edgePanel.hidden=/);
+ assert.match(widget.text,/stylePanel.hidden=/);
+ assert.match(css,/\.forge-graph-editor\{[\s\S]*display:none/);
+ assert.doesNotMatch(css,/\.vis-manipulation\{display:none/);
+ const pages=await read('editions/graph/tiddlers/seed.json');
+ for(const title of ['Graph Edition · Start','Graph Edition · Platon','Graph Edition · Mindmap','Graph Edition · Projekt']){
+  const page=pages.find(p=>p.title===title);
+  assert.match(page.text,/<div class="forge-graph-stage">\n\n<\$forge-graph-editor /,title+' overlays contextual controls on the canvas');
+ }
+ for(const name of ['Platon','Mindmap','Projekt']){
+  const graph=pages.find(p=>p.title==='$:/graph/'+name);
+  assert.notEqual(JSON.parse(graph['graph.graph']).hideControls,true,'Original manipulation controls must remain visible');
+ }
+});
