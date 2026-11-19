@@ -108,7 +108,7 @@ test('Upstream graph gestures are not intercepted and Appearance is explicitly s
  assert.doesNotMatch(bridge.text,/preventDefault|stopImmediatePropagation/);
  assert.match(bridge.text,/network.addNodeMode\(\)/,'Fallback opens original node gesture mode');
  assert.match(bridge.text,/network.addEdgeMode\(\)/,'Fallback opens original edge gesture mode');
- assert.match(bridge.text,/surface.addEventListener\("pointerdown",nativeToolFallback,true\)/);
+ assert.match(bridge.text,/surface.addEventListener\("pointerup",nativeToolFallback,true\)/);
  assert.doesNotMatch(bridge.text,/stopImmediatePropagation|preventDefault/,'Native gesture events must not be blocked');
  assert.match(bridge.text,/Klik på en node for at ændre form eller billede/);
  assert.match(editor.text,/SHAPE_NAMES/);
