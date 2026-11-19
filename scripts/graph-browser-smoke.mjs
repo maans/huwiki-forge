@@ -119,4 +119,32 @@ try{
   console.log('PASS',language,'offline graph boot, three canvases, relation datasets, new editable node');
   await context.close();
  }
+
+ // Chromium touch emulation: verify the direct Forge editor works with taps,
+ // not just mouse clicks. This is not a substitute for physical iPad acceptance.
+ const touchContext=await browser.newContext({locale:'da-DK',hasTouch:true,isMobile:true,deviceScaleFactor:2,viewport:{width:834,height:1112}});
+ await touchContext.route('**/*',route=>route.request().url().startsWith('file:')?route.continue():route.abort());
+ const touchPage=await touchContext.newPage();touchPage.setDefaultTimeout(25000);
+ const touchErrors=[];touchPage.on('pageerror',error=>touchErrors.push(error.message));
+ await touchPage.goto(pathToFileURL(path.join(dir,'graph-da-DK.html')).href);
+ const touchEditor=touchPage.locator('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Start"] .forge-graph-editor').first();
+ await touchEditor.locator('.forge-graph-node-name').fill('Touch prøve');
+ await touchEditor.locator('.forge-graph-create-node').tap();
+ await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve')?.hasTag('Graph/Platon'));
+ await touchEditor.locator('.forge-graph-edge-from').selectOption('Hulen');
+ await touchEditor.locator('.forge-graph-edge-to').selectOption('Touch prøve');
+ await touchEditor.locator('.forge-graph-edge-type').selectOption('forbinder');
+ await touchEditor.locator('.forge-graph-add-edge').tap();
+ await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Hulen').getFieldList('forbinder').includes('Touch prøve'));
+ await touchEditor.locator('.forge-graph-style-node').selectOption('Touch prøve');
+ await touchEditor.locator('.forge-graph-style-shape').selectOption('star');
+ await touchEditor.locator('.forge-graph-apply-style').tap();
+ await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve').fields['graph-shape']==='star');
+ await touchEditor.locator('.forge-graph-style-shape').selectOption('image');
+ await touchEditor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Idea');
+ await touchEditor.locator('.forge-graph-apply-style').tap();
+ await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve').fields.icon==='GraphStudio/Idea');
+ assert.deepEqual(touchErrors,[],'No touch-only JavaScript errors');
+ console.log('PASS simulated iPad viewport: tap node, tap edge, tap style, local SVG image');
+ await touchContext.close();
 }finally{await browser.close();}
