@@ -98,6 +98,7 @@ function audioHarness(options={}){
  const wiki={getTiddler(title){return {fields:{type:'audio/wav',_canonical_uri:'https://audio.test/'+title+'.wav'}};}};
  const audio=load('plugins/animus-video-export/src/audio.js',{
   '$:/plugins/huwiki/animus-video-export/wav.js':wav,
+  '$:/plugins/huwiki/animus-video-export/aac.js':{measure:async()=>0},
   '$:/plugins/huwiki/abc/accompaniment.js':accompaniment,
   '$:/plugins/huwiki/musical/playlist.js':playlist,
   '$:/plugins/huwiki/musical/narration-player.js':narration,

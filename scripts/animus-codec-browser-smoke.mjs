@@ -18,14 +18,18 @@ try{playwright=require('playwright-core');}catch(_){try{playwright=require('play
 let executablePath=process.env.CHROME_BIN||process.env.CHROMIUM_PATH;
 if(!executablePath)for(const path of ['/usr/bin/google-chrome','/usr/bin/chromium','/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'])try{await access(path);executablePath=path;break;}catch(_){}
 const source=await readFile(new URL('plugins/animus-video-export/src/mp4.js',root),'utf8');
+const aacSource=await readFile(new URL('plugins/animus-video-export/src/aac.js',root),'utf8');
 await mkdir(out,{recursive:true});
 const server=createServer((req,res)=>{
  if(req.url==='/mp4.js'){
   res.writeHead(200,{'Content-Type':'text/javascript'});
   res.end('(function(){var exports={};\n'+source+'\nwindow.AniMusMP4=exports;})();');
+ }else if(req.url==='/aac.js'){
+  res.writeHead(200,{'Content-Type':'text/javascript'});
+  res.end('(function(){var exports={};function require(){return window.AniMusMP4;}\n'+aacSource+'\nwindow.AniMusAAC=exports;})();');
  }else{
   res.writeHead(200,{'Content-Type':'text/html; charset=utf-8'});
-  res.end('<!doctype html><html><head><meta charset="utf-8"><script src="/mp4.js"></script></head><body>Native AniMus codec alignment test</body></html>');
+  res.end('<!doctype html><html><head><meta charset="utf-8"><script src="/mp4.js"></script><script src="/aac.js"></script></head><body>Native AniMus codec alignment test</body></html>');
  }
 });
 await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
@@ -76,6 +80,7 @@ try{
    }
    await ae.flush();await ve.flush();if(issue)throw issue;
    if(video.samples.length!==videoFrames||video.samples.some((s,i)=>Math.abs(s.timestamp-Math.round(i*1e6/fps))>1))throw Error('Native H.264 did not preserve the requested frame order/count');
+   sound.primingFrames=await window.AniMusAAC.measure(window,audioConfig);
    const bytes=window.AniMusMP4.mux(video,sound);
    const decoded=await new OfflineAudioContext(2,1,rate).decodeAudioData(bytes.buffer.slice(bytes.byteOffset,bytes.byteOffset+bytes.byteLength));
    const probes=[{channel:0,expected:12000},{channel:1,expected:24000},{channel:0,expected:40800}].map(probe=>{
@@ -84,7 +89,7 @@ try{
     return {...probe,observed:at,errorSamples:at-probe.expected,amplitude:peak};
    });
    let binary='';for(let at=0;at<bytes.length;at+=8192)binary+=String.fromCharCode(...bytes.subarray(at,at+8192));
-   return {verified:true,availability,bytes:btoa(binary),frameCount:frames,videoFrames,firstAudioTimestamp:sound.samples[0]?.timestamp,
+   return {verified:true,availability,bytes:btoa(binary),frameCount:frames,videoFrames,firstAudioTimestamp:sound.samples[0]?.timestamp,measuredPrimingFrames:sound.primingFrames,
     encodedAudioPackets:sound.samples.length,decoded:{frames:decoded.length,sampleRate:decoded.sampleRate,channels:decoded.numberOfChannels,duration:decoded.duration},probes};
   }finally{try{ae.close();}catch(_){}try{ve.close();}catch(_){}}
  });

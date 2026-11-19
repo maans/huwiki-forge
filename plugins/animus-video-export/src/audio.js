@@ -12,6 +12,7 @@ var Accompaniment=require("$:/plugins/huwiki/abc/accompaniment.js");
 var Narration=require("$:/plugins/huwiki/musical/narration-player.js");
 var SoundFx=require("$:/plugins/huwiki/musical/sfx.js");
 var WAV=require("$:/plugins/huwiki/animus-video-export/wav.js");
+var AAC=require("$:/plugins/huwiki/animus-video-export/aac.js");
 var RATE=48000,CHANNELS=2,CHUNK_FRAMES=393216,LOOK_BEHIND_FRAMES=396000;
 function num(n,f){n=Number(n);return Number.isFinite(n)?n:f;}
 function intersects(a,b,c,d){return a<d&&c<b;}
@@ -205,6 +206,7 @@ async function render(options){
   // Preserve the encoder's output order and timestamps. The muxer uses them
   // to retain priming information and detect discontinuous encoded audio.
   if(!result.samples.length)throw Error("The AAC encoder produced no samples");
+  result.primingFrames=await AAC.measure(root,support.config||config,o);cancelled(o);
   result.frameCount=spec.frameCount;result.duration=spec.frameCount/RATE;return result;
  }finally{try{encoder.close();}catch(_){}}
 }

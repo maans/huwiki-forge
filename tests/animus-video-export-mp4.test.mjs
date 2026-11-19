@@ -72,6 +72,20 @@ test('MP4 preserves non-packet-aligned AAC priming and explicit zero-delay trim'
  }
 });
 
+test('MP4 removes measured native priming when AAC timestamps start at zero',()=>{
+ const sound=audio({priming:2112});
+ sound.samples.forEach((sample,index)=>{sample.timestamp=Math.round(index*1024e6/48000);});
+ sound.primingFrames=2112;
+ const info=structure(muxer().mux(video(),sound));
+ assert.equal(info.tracks.find(t=>t.kind==='soun').priming,2112);
+ assert.equal(info.duration,49600);
+ const raw=structure(muxer().muxAudio({...sound,primingFrames:0,frameCount:sound.samples.length*1024}));
+ assert.equal(raw.tracks.length,1);assert.equal(raw.tracks[0].priming,0);
+ assert.equal(raw.duration,sound.samples.length*1024,'calibration decodes all raw packets without automatic trimming');
+ for(const invalid of [-1,1.5,Infinity,10000])
+  assert.throws(()=>muxer().mux(video(),{...sound,primingFrames:invalid}),/complete requested audio interval/);
+});
+
 test('MP4 rejects audio gaps, missing packets and mismatched requested durations',()=>{
  const m=muxer(),delayed=audio();delayed.samples.forEach(s=>s.timestamp+=100000);
  assert.throws(()=>m.mux(video(),delayed),/after the requested start/);

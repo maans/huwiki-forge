@@ -41,8 +41,11 @@ function audioTrack(audio){
     throw Error("AAC encoder returned discontinuous timestamps; use separate WAV audio");
   });
  }
- var priming=-first,frames=audio.frameCount===undefined?rawFrames-priming:Number(audio.frameCount);
- if(!Number.isSafeInteger(frames)||frames<=0||priming<0||priming+frames>rawFrames)
+ // Some native AAC encoders start timestamps at zero while still inserting
+ // priming samples. The encoder calibration may supply their measured count.
+ var priming=audio.primingFrames===undefined?-first:Number(audio.primingFrames);
+ var frames=audio.frameCount===undefined?rawFrames-priming:Number(audio.frameCount);
+ if(!Number.isSafeInteger(priming)||!Number.isSafeInteger(frames)||frames<=0||priming<0||priming+frames>rawFrames)
   throw Error("AAC encoder did not provide the complete requested audio interval");
  return Object.assign({},audio,{kind:"audio",timescale:rate,step:1024,
   presentationFrames:frames,primingFrames:priming});
@@ -129,6 +132,13 @@ function mux(video,audio){
    throw Error("Encoded video and audio durations do not match the requested export");
   tracks.push(sound);
  }
+ return pack(tracks);
+}
+function muxAudio(audio){
+ if(!audio||!audio.samples||!audio.samples.length)throw Error("No audio frames encoded");
+ return pack([audioTrack(audio)]);
+}
+function pack(tracks){
  var ft=box("ftyp",ascii("isom"),u32(512),ascii("isom"),ascii("iso2"),ascii("avc1"),ascii("mp41"));
  var lengths=tracks.map(function(t){return t.samples.reduce(function(n,s){return n+s.data.length;},0);});
  var offsets=tracks.map(function(){return 0;}),moov=movieBox(tracks,offsets);
@@ -144,5 +154,6 @@ function mux(video,audio){
  return result;
 }
 exports.mux=mux;
+exports.muxAudio=muxAudio;
 exports.box=box;
 })();

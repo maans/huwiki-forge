@@ -167,7 +167,12 @@ try{
   for(const id of tracks){
    audio[id]=pcm(files.get(id+'.wav'));assert.equal(audio[id].frames,frames,id+' has exact shared duration');
    const record=metadata.audio.find(stem=>stem.id===id);assert.equal(record.startSeconds,0);assert.equal(record.normalized,false);
-   assert.equal(record.clippedSamples,0);assert.ok(audio[id].rms>1e-5,id+' contains original non-silent audio');
+   assert.equal(record.clippedSamples,0);
+   // The original first-scene Foley recording is exactly silent at 5–10 s.
+   // Preserve that pause; an audible slice below independently proves that
+   // the effects stem still carries its source and follows the Music bus.
+   if(id==='effects'&&start===5&&end===10)assert.equal(audio[id].peak,0,'the original Foley pause remains silent');
+   else assert.ok(audio[id].rms>1e-5,id+' contains original non-silent audio');
   }
   const captions=files.get('captions.vtt').toString('utf8');
   assert.match(captions,/^WEBVTT\n/);assert.match(captions,/00:00:00\.000 -->/);
@@ -184,7 +189,8 @@ try{
   return {audio,metadata};
  }
  const full=await exportPackage('turn-around-original-levels.zip');
- passed('five seconds of real speech, recorded music and Foley export separately with Danish captions and common timing');
+ const fullFoley=await exportPackage('turn-around-foley-original-level.zip',{start:4,end:5,tracks:['effects']});
+ passed('real speech, recorded music and an audible Foley slice export separately with Danish captions and common timing; the original Foley pause stays silent');
 
  await player.getByRole('button',{name:'Adjust sound levels',exact:true}).click();
  for(const [name,value]of [['Speech, volume',.5],['Music, volume',.25]]){
@@ -193,8 +199,10 @@ try{
   },value);
  }
  const reduced=await exportPackage('turn-around-reduced-levels.zip');
+ const reducedFoley=await exportPackage('turn-around-foley-reduced-level.zip',{start:4,end:5,tracks:['effects']});
  for(const [id,gain]of [['speech',.5],['music',.25],['effects',.25]]){
-  const before=full.audio[id],after=reduced.audio[id];assert.equal(before.samples.length,after.samples.length);
+  const before=(id==='effects'?fullFoley:full).audio[id],after=(id==='effects'?reducedFoley:reduced).audio[id];
+  assert.equal(before.samples.length,after.samples.length);
   let error=0;for(let i=0;i<before.samples.length;i++)error=Math.max(error,Math.abs(after.samples[i]-before.samples[i]*gain));
   assert.ok(error<3/32768,id+' mixer gain is applied exactly once (maximum sample error '+error+')');
  }
