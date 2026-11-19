@@ -63,7 +63,7 @@ function workspaceHarness(){
   resolvePartScene:()=>scene,ensureFigureTrack(){},getPartPivot:()=>({x:0,y:0}),isJointMove:()=>false,
   selectPart(id){selected={id:'part:'+id,kind:'part',part:id};workspace?.selectTrack(selected);return true;},
   selectFigure(id,quiet){selected={id:'figure:'+id,kind:'figure',part:id};if(!quiet)workspace?.selectTrack(selected);return true;},
-  beginPartMove(){return {update(dx,dy,dr){change={dx,dy,dr};repaint();},commit(){committed++;},cancel(){change=null;}};},
+  beginPartMove(id){return {update(dx,dy,dr){change={id,dx,dy,dr};repaint();},commit(){committed++;},cancel(){change=null;}};},
   figureStateFor:()=>({x:0,y:0,r:0,sx:1,sy:1}),isExporting:()=>false};
  const inactive=()=>({isOpen:()=>false,open(){},close(){},dispose(){},draw(){}});
  const modules={
@@ -91,6 +91,20 @@ test('workspace actions zoom selected figure and arm, retain pointer coordinates
  const handle=h.svg.querySelector('.huw-musical-transform-rotate');near(Number(handle.getAttribute('r'))*h.svg.getScreenCTM().a,11,'rotation handle remains 11 screen pixels at any zoom');
  assert.equal(JSON.stringify(h.film),before);h.host.querySelector('.huw-musical-reset-preview-zoom').click();assert.equal(h.svg.getAttribute('viewBox'),'0 0 800 450');
  h.workspace.openManuscript({});assert.equal(h.scriptOpened,1);h.workspace.dispose();
+});
+test('switching from a clicked limb to Parts and joints keeps that limb as the rotation and zoom target',()=>{
+ const h=workspaceHarness(),click=h.arm.getScreenCTM().point({x:32,y:0});
+ h.shape.dispatch('pointerdown',{clientX:click.x,clientY:click.y});h.arm.dispatch('pointerup',{clientX:click.x,clientY:click.y});
+ assert.equal(h.selected.kind,'figure');assert.equal(h.selected.part,'actor','the initial click selects the containing figure');
+ h.host.querySelector('.huw-musical-parts-button').click();
+ assert.equal(h.selected.part,'arm','entering Parts and joints restores the actual clicked limb, not its parent figure');
+ assert.equal(h.svg.querySelector('.huw-musical-transform-label').textContent,'Arm');
+ h.workspace.zoomToSelection();
+ const handle=h.svg.querySelector('.huw-musical-transform-rotate'),start=h.svg.getScreenCTM().point({x:Number(handle.getAttribute('cx')),y:Number(handle.getAttribute('cy'))});
+ handle.dispatch('pointerdown',{clientX:start.x,clientY:start.y});
+ handle.dispatch('pointermove',{clientX:start.x+25,clientY:start.y+15});handle.dispatch('pointerup',{clientX:start.x+25,clientY:start.y+15});
+ assert.equal(h.change.id,'arm','the rotation gesture is committed to the mounted limb');assert.equal(h.committed,1);
+ assert.ok(Math.abs(h.change.dr)>0);h.workspace.dispose();
 });
 test('workspace export, fullscreen fallback, hidden selection and disposal restore the preview cleanly',()=>{
  const h=workspaceHarness();h.editor.selectFigure('actor');h.workspace.zoomToSelection();const focused=h.svg.getAttribute('viewBox');

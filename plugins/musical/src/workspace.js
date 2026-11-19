@@ -86,9 +86,13 @@ function mount(o){
   var scene=id&&o.editor.resolvePartScene&&o.editor.resolvePartScene(id);
   var root=id&&((scene&&Puppet.rootFor(id,scene,o.film))||id);
   if(!root)return false;
-  figureRoot=root;latestPart=id;transformMode='figure';
+  figureRoot=root;transformMode='figure';
   o.editor.setCameraEdit(false);
   o.editor.selectFigure(root,!!quiet);
+  // Selecting the root synchronously updates the timeline selection. Keep
+  // the actual hit part after that callback so Parts and joints returns to
+  // the clicked arm/face instead of silently editing the entire figure.
+  latestPart=id;
   updateToolButtons();refreshHandles();
   return true;
  }

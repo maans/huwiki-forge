@@ -428,7 +428,9 @@ try{
   scorePages:[...host.querySelectorAll('.huw-musical-score-page')].filter(page=>page.querySelector('svg')).length
  }));
  assert.equal(editorBeforeNotation.scorePages,0,'ABC load remains pending during the startup acceptance');
- assert.equal(editorBeforeNotation.duration,481.377,'the authored duration is available before notation');
+ // Sequential scene durations are summed in binary floating point; allow
+ // sub-nanosecond rounding without tolerating a changed timeline.
+ assert.ok(Math.abs(editorBeforeNotation.duration-481.377)<1e-9,'the authored duration is available before notation');
  assert.equal(editorBeforeNotation.position,1,'native animation workshop seeks beyond the opening fade');
  assert.equal(editorBeforeNotation.painted,1,'the delayed renderer does not hide the initial artwork');
  await assertPaintedStage(editor.locator('.huw-musical-canvas'),'canonical-editor-startup.png');
@@ -461,7 +463,7 @@ try{
   scorePages:[...host.querySelectorAll('.huw-musical-score-page')].filter(page=>page.querySelector('svg')).length
  }));
  assert.equal(editorStart.scorePages,1,'opening a long production renders only its visible muted guide');
- assert.equal(editorStart.duration,481.377,'muted guide scores preserve the authored 8:01 film duration');
+ assert.ok(Math.abs(editorStart.duration-481.377)<1e-9,'muted guide scores preserve the authored 8:01 film duration');
  assert.ok(Math.abs(editorStart.position-afterPendingPlayback.position)<.001,'late ABC completion retains the user playback position');
  assert.ok(Math.abs(editorStart.painted-afterPendingPlayback.painted)<.001,'late ABC completion retains the painted frame');
  assert.match(editorStart.clock,/\/\s*8:01$/);
