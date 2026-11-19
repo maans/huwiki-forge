@@ -102,7 +102,9 @@ try{
   await editor.locator('.forge-graph-style-shape').selectOption('image');
   await editor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Sun');
   await editor.locator('.forge-graph-apply-style').click();
-  await page.waitForFunction(title=>$tw.wiki.getTiddler(title).fields.icon==='GraphStudio/Sun',newNode);
+  const imageSnapshot=await page.evaluate(title=>({fields:$tw.wiki.getTiddler(title)?.fields,editors:Array.from(document.querySelectorAll('.forge-graph-editor')).map(x=>({shape:x.querySelector('.forge-graph-style-shape')?.value,icon:x.querySelector('.forge-graph-style-icon')?.value,node:x.querySelector('.forge-graph-style-node')?.value,feedback:x.querySelector('.forge-graph-feedback')?.textContent})).slice(-4)}),newNode);
+  console.log('IMAGE STYLE DEBUG',JSON.stringify(imageSnapshot).slice(0,1800));
+  assert.equal(imageSnapshot.fields.icon,'GraphStudio/Sun','The SVG image is saved to the node tiddler');
   assert.equal(await page.locator('.tc-error-form').count(),0,'The direct graph editor must not trigger error dialogs');
   // The graph remains rendered after actions (no blank/disabled player).
   await page.locator('[data-tiddler-title="Graph Edition · Mindmap"] .forge-graph-stage canvas').first().waitFor();
