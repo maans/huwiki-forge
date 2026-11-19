@@ -93,6 +93,7 @@ try{
    const c=stage.querySelector('.graph-canvas');
    return {mode:c._forgeVisNetwork?.manipulation?.inMode,toolbar:c.querySelector('.vis-manipulation')?.textContent?.slice(0,120)};
   });
+  console.log('Native Add Node mode:',afterAdd.mode,'toolbar:',afterAdd.toolbar);
   assert.equal(afterAdd.mode,'addNode','Native Add Node enters the original canvas-click mode');
   assert.equal(await editor.isVisible(),false,'Native Add Node must not open the Forge node form');
   const surface=graphStage.locator('.graph-canvas').first();
