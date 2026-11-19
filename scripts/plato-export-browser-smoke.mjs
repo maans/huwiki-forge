@@ -511,7 +511,12 @@ try{
  assert.deepEqual(eyelidHitTesting.hidden,{holder:'none',child:'none'},'invisible groups suppress descendant pointer overrides');
  assert.equal(eyelidHitTesting.visible,'all','a later opacity override restores the original descendant hit testing');
  assert.equal(eyelidHitTesting.hiddenAgain,'none','a later hide immediately stops pointer interception again');
- await editor.locator('.huw-musical-parts-button').click();
+ // The native Turn Around studio may already open in Parts mode. Clicking
+ // its toggle unconditionally would turn it off before the selection check.
+ const partsMode=editor.locator('.huw-musical-parts-button');
+ if(await partsMode.getAttribute('aria-pressed')!=='true')await partsMode.click();
+ assert.equal(await partsMode.getAttribute('aria-pressed'),'true','body-part editing is active before selecting the face');
+ assert.equal(await editor.getAttribute('data-preview-mode'),'stage','the editing stage stays expanded for face selection');
  const face=editor.locator('[data-cutout-id="prisoner-head-drawing"]:visible image').first();
  await face.scrollIntoViewIfNeeded();
  const headPoint=await face.evaluate(image=>{
