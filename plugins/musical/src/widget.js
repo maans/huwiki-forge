@@ -59,7 +59,7 @@ Musical.prototype.render=function(parent,next){
  var scene=Engine.readScene(this.wiki,this.sceneTitle);
  if(!scene){node(doc,"p","huw-musical-error",L.missing,host);return;}
  var sfx=new SoundFx.Fx(scene.musical&&scene.musical.sfx);
- var lipOptions={sceneTitle:this.sceneTitle,audioClips:scene.musical&&scene.musical.audioClips||[]};
+ var lipOptions={sceneTitle:this.sceneTitle,audioClips:scene.musical&&scene.musical.audioClips||[],film:scene};
  var voice=new Narration.Player({wiki:this.wiki,doc:doc,clips:scene.musical&&scene.musical.audioClips||[],
   isAudible:function(clip){return !editor||!editor.isAudioAudible||editor.isAudioAudible(clip);},onError:function(message){
   if(state)state.textContent=(L.scene==='Scene'?'Lydspor: ':'Audio track: ')+String(message&&message.message||message);
@@ -559,6 +559,16 @@ Musical.prototype.render=function(parent,next){
    try{c.destroy();}catch(_ignored){}
   });controller=null;
  };
+ // Script edits may rebuild this widget. Open the face workspace after that
+ // queued rebuild so the saved line and its character remain the context.
+ function openFace(details){
+  self._pendingFaceOpen=details;
+  Promise.resolve().then(function(){
+   var pending=self._pendingFaceOpen,current=self._workspace;
+   if(self._dead||!pending||!current||!current.openFace)return;
+   self._pendingFaceOpen=null;current.openFace(pending);
+  });
+ }
  editor=Editor.attach({doc:doc,host:host,wiki:this.wiki,film:scene,view:view,
   sceneTitle:this.sceneTitle,stageTitle:this._stageTitle,scoreTitle:this.scoreTitle,
   duration:function(){return duration;},clips:function(){return clips;},beatClock:function(){return beatClock;},
@@ -578,6 +588,7 @@ Musical.prototype.render=function(parent,next){
   onEditAudio:function(details){if(workspace)workspace.openNarration(details);},
   onEditScenes:function(){if(workspace)workspace.openScenes();},
   onEditCaptions:function(details){if(workspace&&workspace.openManuscript)workspace.openManuscript(details);},
+  onEditFace:openFace,
   onPreviewChange:function(){
    if(!timeline)return;
    var position=timeline.value();applyGains(position,true);
@@ -602,6 +613,7 @@ Musical.prototype.render=function(parent,next){
   scoreTitle:function(){return songs[activeIndex]&&songs[activeIndex].title||self.scoreTitle;},
   onAudioChange:function(updated){voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);if(editor)editor.redraw();paint(timeline.value());},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},repaint:function(){paint(timeline.value());},
+  openFace:openFace,
   layout:layout,transport:transport,play:play,view:view,editor:editor,
   seek:seek,position:function(){return timeline.value();},
   pause:function(){if(timeline.running)pauseAll();},
@@ -634,7 +646,7 @@ Musical.prototype.render=function(parent,next){
    var selector=host.querySelector('[data-huw-animus-captions="language"]');
    // Exclude tune/controller objects and the time-dependent playback gain.
    return JSON.parse(JSON.stringify({
-    visual:{songs:clips.map(function(clip){return {id:clip.id,score:clip.score,start:clip.start,duration:clip.duration};}),lipSync:(scene.musical&&scene.musical.audioClips||[]).map(lipState)},
+    visual:{faceKeys:scene.musical&&scene.musical.faceKeys||[],songs:clips.map(function(clip){return {id:clip.id,score:clip.score,start:clip.start,duration:clip.duration};}),lipSync:(scene.musical&&scene.musical.audioClips||[]).map(lipState)},
     audio:{songs:songs.map(function(song){return {clip:song.clip,config:song.config||{}};}),recordings:scene.musical&&scene.musical.audioClips||[],effects:scene.musical&&scene.musical.sfx||[],soundFont:soundfont},
     captions:{language:selector?selector.value:"auto"}
    }));

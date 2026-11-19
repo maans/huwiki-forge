@@ -49,7 +49,7 @@ function wiki(rows){return {getTiddler:k=>rows[k]?{fields:rows[k]}:null,getTiddl
 function adapter(rows){return new Function('$tw','safe',adapters+'\nreturn {collectAnimus,isAnimusTitle,animusWidgetMarkup,animusWidgetPlaceholders,animusBundle};')({wiki:wiki(rows)},s=>String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])));}
 async function runtimeRows(rows=fixtures()){
  const all={...abcRows,...rows};
- for(const name of ['playlist','motion','sync','sfx','narration-player','lipsync'])all[musical+name+'.js']={text:await read('plugins/musical/src/'+name+'.js')};
+ for(const name of ['playlist','motion','sync','sfx','narration-player','face','lipsync'])all[musical+name+'.js']={text:await read('plugins/musical/src/'+name+'.js')};
  all[base+'cutout/viewer.js']={text:cutout};all[base+'cutout/viewer.css']={text:'.huw-site-cutout{width:100%}'};
  all[base+'animus/viewer.js']={text:viewer};all[base+'animus/viewer.css']={text:await read('plugins/site-publisher/src/animus-viewer.css')};
  return all;
@@ -146,7 +146,7 @@ async function playerHarness({delay=false,fail=false,rows=fixtures()}={}){
  }};
  const context=createContext({window:win,document:doc,performance:{now:()=>now},requestAnimationFrame:fn=>{frames.set(++nextFrame,fn);return nextFrame;},cancelAnimationFrame:n=>frames.delete(n),console,Promise,URL,Uint8Array,Float32Array,setTimeout,clearTimeout});
  new Script(cutout).runInContext(context);modules['$:/plugins/huwiki/cutout/engine.js']=win.HUWikiCutOutSite;
- for(const name of ['playlist','motion','sync','sfx','narration-player','lipsync']){context.exports={};context.require=name=>modules[name];new Script(await read('plugins/musical/src/'+name+'.js')).runInContext(context);modules[musical+name+'.js']=context.exports;}
+ for(const name of ['playlist','motion','sync','sfx','narration-player','face','lipsync']){context.exports={};context.require=name=>modules[name];new Script(await read('plugins/musical/src/'+name+'.js')).runInContext(context);modules[musical+name+'.js']=context.exports;}
  win.HUWikiAniMusModules={require:name=>{assert.ok(modules[name],name);return modules[name];}};new Script(viewer).runInContext(context);
  const ctx={rows:{},used:false};adapter(rows).collectAnimus('Film','',ctx);const host=element('section');host.ownerDocument=doc;host.setAttribute('data-animus-title','Film');
  const player=win.HUWikiAniMusSite.mount(host,ctx.rows,{engineMode:'original'});

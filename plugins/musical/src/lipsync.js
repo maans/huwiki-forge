@@ -8,7 +8,9 @@ module-type: library
 // Deterministic manuscript animation. This is an approximation from letters
 // and punctuation, not audio analysis or speech recognition. It never alters
 // the authored scene, its keyframes, or a figure's parent transform.
-var Engine=require("$:/plugins/huwiki/cutout/engine.js");
+var Engine=require("$:/plugins/huwiki/cutout/engine.js"),Face;
+try{Face=require("$:/plugins/huwiki/musical/face.js");}catch(ignore){}
+if(!Face||typeof Face.resolve!=="function"||typeof Face.apply!=="function")Face=null;
 var views=new WeakMap();
 var ALIASES={soldat:"soldier",soldaten:"soldier",soldier:"soldier",heks:"witch",heksen:"witch",witch:"witch",prinsesse:"princess",prinsessen:"princess",princess:"princess",konge:"king",kongen:"king",king:"king",dronning:"queen",dronningen:"queen",queen:"queen",koebmand:"merchant",kobmand:"merchant",merchant:"merchant",barn:"child",barnet:"child",child:"child",dommer:"judge",dommeren:"judge",judge:"judge",hund:"dog",hunden:"dog",dog:"dog",fortaeller:"narrator",narrator:"narrator"};
 function num(value,fallback){value=Number(value);return Number.isFinite(value)?value:fallback;}
@@ -95,21 +97,37 @@ function appearance(cache,view,binding,value,cueId,strength){var open=view.nodes
 function evaluate(cue,local,global){var chosen=null;if(cue.mode==="auto"&&cue.recordings.length){cue.recordings.forEach(function(clip,index){var start=clip.start+cue.offset,elapsed=global-start;if(elapsed<0||elapsed>=clip.duration)return;if(!chosen||start>=chosen.start)chosen={start:start,order:index,value:samplePlan(clip.speech,clip.offset+elapsed,clip.sourceDuration)};});return chosen;}
  cue.intervals.forEach(function(interval,index){var start=interval.start+cue.offset,elapsed=local-start;if(elapsed<0||elapsed>=interval.end-interval.start)return;if(!chosen||start>=chosen.start)chosen={start:start,order:index,value:samplePlan(cue.speech,elapsed,interval.end-interval.start)};});return chosen;
 }
-function apply(view,localTime,globalTime,options){if(!view||!view.scene)return [];options=options||{};var local=num(localTime,0),global=num(globalTime,local),clips=Array.isArray(options.audioClips)?options.audioClips:[],rootDuration=Math.max(num(view.scene.duration,0),num(options.duration,0));clips.forEach(function(clip){rootDuration=Math.max(rootDuration,num(clip.start,0)+num(clip.duration,0));});var result=[];
- function visit(current,time,title,active,depth){if(!current||!current.scene||depth>16)return;title=String(current.scene._title||title||"");var cache=cacheFor(current,{audioClips:clips},title);cache.local=time;restoreShapes(cache,current,time,false);
-  if(options.enabled!==false){var byActor=Object.create(null),allowed=active&&local>=0&&local<rootDuration,captured=Object.create(null);
+function choose(plan,local,global){var byActor=Object.create(null);plan.cues.forEach(function(cue){var evaluated=evaluate(cue,local,global);if(!evaluated)return;var old=byActor[cue.binding.target];if(!old||evaluated.start>old.state.start||evaluated.start===old.state.start&&cue.index>old.cue.index)byActor[cue.binding.target]={cue:cue,state:evaluated};});return byActor;}
+function faceKeys(view,options){var film=options.film||view.scene;return film&&film.musical&&Array.isArray(film.musical.faceKeys)?film.musical.faceKeys:[];}
+// Once a branch leaves the stage, release its transient face once. Hidden
+// scenes then do no per-frame cue evaluation, image swapping, or facial work.
+function deactivate(view){if(!view)return;var cache=views.get(view);if(!cache||!cache.active)return;cache.active=false;if(Face)Face.reset(view);restoreShapes(cache,view,cache.local,false);if(cache.plan)cache.plan.bindings.forEach(function(binding){appearance(cache,view,binding,rest(),"",0);});(view.clips||[]).forEach(function(child){deactivate(child.view);});Object.keys(view.nodes||{}).forEach(function(id){if(view.nodes[id].nested)deactivate(view.nodes[id].nested);});}
+function apply(view,localTime,globalTime,options){if(!view||!view.scene)return [];options=options||{};var local=num(localTime,0),global=num(globalTime,local),clips=Array.isArray(options.audioClips)?options.audioClips:[],keys=faceKeys(view,options),rootDuration=Math.max(num(view.scene.duration,0),num(options.duration,0));clips.forEach(function(clip){rootDuration=Math.max(rootDuration,num(clip.start,0)+num(clip.duration,0));});var result=[];
+ function visit(current,time,title,active,depth){if(!current||!current.scene||depth>16)return;if(!active){deactivate(current);return;}title=String(current.scene._title||title||"");var cache=cacheFor(current,{audioClips:clips},title);cache.local=time;cache.active=true;if(Face)Face.prepare(current);restoreShapes(cache,current,time,false);var signals=Object.create(null);
+  if(options.enabled!==false){var byActor=local>=0&&local<rootDuration?choose(cache.plan,time,global):Object.create(null),captured=Object.create(null);
    cache.plan.bindings.forEach(function(binding){[binding.open,binding.closed].forEach(function(id){var node=id&&current.nodes&&current.nodes[id];if(node&&!captured[id]){captured[id]=true;var saved=keep(cache,node,id);saved.opacity=node.el.getAttribute("opacity");}});});
    cache.plan.bindings.forEach(function(binding){appearance(cache,current,binding,rest(),"",0);});
-   if(allowed)cache.plan.cues.forEach(function(cue){var state=evaluate(cue,time,global);if(!state)return;var old=byActor[cue.binding.target];if(!old||state.start>old.state.start||state.start===old.state.start&&cue.index>old.cue.index)byActor[cue.binding.target]={cue:cue,state:state};});
-   Object.keys(byActor).forEach(function(id){var chosen=byActor[id],cue=chosen.cue;appearance(cache,current,cue.binding,chosen.state.value,cue.id,cue.strength);result.push({sceneTitle:title,target:id,cueId:cue.id,viseme:cue.strength>0?chosen.state.value.viseme:"rest",open:chosen.state.value.open*cue.strength});});
+   Object.keys(byActor).forEach(function(id){var chosen=byActor[id],cue=chosen.cue;appearance(cache,current,cue.binding,chosen.state.value,cue.id,cue.strength);var signal={sceneTitle:title,target:id,cueId:cue.id,viseme:cue.strength>0?chosen.state.value.viseme:"rest",open:chosen.state.value.open*cue.strength};signals[id]=signal;result.push(signal);});
   }
+  if(Face)Face.apply(current,keys,time,global,signals);
   var sequence=current.scene.scenes||[],which=Engine.clipAt(sequence,time).index,elapsed=0;(current.clips||[]).forEach(function(child,index){var settings=child.settings||sequence[index]||{},duration=Math.max(.1,num(settings.duration,4)),childTime=Engine.localTime(clamp(time-elapsed,0,duration),num(child.duration,child.view&&child.view.scene.duration||0),settings);visit(child.view,childTime,settings.source||settings.animation||settings.theatre,active&&index===which,depth+1);elapsed+=duration;});
   Object.keys(current.nodes||{}).forEach(function(id){var node=current.nodes[id],part=node.part||{};if(!node.nested)return;var childDuration=num(node.nested.duration,node.nested.scene&&node.nested.scene.duration||0);visit(node.nested,Engine.localTime(time,childDuration,part),part.animation,active&&time>=num(part.start,0),depth+1);});
  }
  visit(view,local,options.sceneTitle,true,0);return result;
 }
+function faceContext(view,partId,localTime,globalTime,options){if(!Face||!view||!view.scene)return null;options=options||{};var global=num(globalTime,num(localTime,0)),clips=Array.isArray(options.audioClips)?options.audioClips:[];
+ function find(current,time,title,depth){if(!current||!current.scene||depth>16)return null;title=String(current.scene._title||title||"");var description=Face.resolve(current.scene,partId);
+  if(description){var cache=cacheFor(current,{audioClips:clips},title),chosen=options.enabled===false?null:choose(cache.plan,time,global)[description.actorPartId],cue=chosen&&chosen.cue,value=chosen&&cue.strength>0?chosen.state.value:rest(),pose=Face.state(faceKeys(view,options),global,description.actorId),maps=Face.variantMaps(current.scene,description,pose),fixed=pose.mouth.mode==="fixed"&&description.variants.some(function(variant){return variant.id===pose.mouth.variant;}),mapped=pose.mouthMap[value.viseme],custom=!!(fixed||mapped&&description.variants.some(function(variant){return variant.id===mapped;})),effective=fixed?pose.mouth.variant:maps.variantMap[value.viseme];
+   if(!custom&&value.open<=.06&&pose.mood==="surprised")effective=maps.defaultVariantMap.O||effective;
+   return Object.assign({},description,maps,{view:current,leafView:current,scene:current.scene,sceneTitle:title,localTime:time,globalTime:global,state:pose,viseme:value.viseme,cueId:cue?cue.id:"",cue:cue||null,open:value.open*(cue?cue.strength:0),effectiveVariant:effective||"",custom:custom});
+  }
+  var sequence=current.scene.scenes||[],at=Engine.clipAt(sequence,time),child=(current.clips||[])[at.index],found;if(child){var settings=child.settings||sequence[at.index]||{};found=find(child.view,Engine.localTime(at.time,num(child.duration,child.view&&child.view.scene.duration||0),settings),settings.source||settings.animation||settings.theatre,depth+1);if(found)return found;}
+  var ids=Object.keys(current.nodes||{});for(var i=0;i<ids.length;i++){var node=current.nodes[ids[i]],part=node.part||{};if(!node.nested||time<num(part.start,0))continue;found=find(node.nested,Engine.localTime(time,num(node.nested.duration,node.nested.scene&&node.nested.scene.duration||0),part),part.animation,depth+1);if(found)return found;}return null;
+ }
+ return find(view,num(localTime,0),options.sceneTitle,0);
+}
 function walk(view,callback,depth){if(!view||depth>16)return;callback(view);(view.clips||[]).forEach(function(child){walk(child.view,callback,depth+1);});Object.keys(view.nodes||{}).forEach(function(id){var node=view.nodes[id];if(node.nested)walk(node.nested,callback,depth+1);});}
-function invalidate(view){walk(view,function(current){var cache=views.get(current);if(cache)cache.plan=null;},0);}
-function reset(view){walk(view,function(current){var cache=views.get(current);if(!cache)return;restoreShapes(cache,current,cache.local,true);cache.nodes=Object.create(null);cache.plan=null;},0);}
-exports.actors=actors;exports.suggest=suggest;exports.timing=timing;exports.compile=compile;exports.sample=sample;exports.apply=apply;exports.invalidate=invalidate;exports.reset=reset;
+function invalidate(view){walk(view,function(current){var cache=views.get(current);if(cache)cache.plan=null;if(Face)Face.invalidate(current);},0);}
+function reset(view){walk(view,function(current){if(Face)Face.reset(current);var cache=views.get(current);if(!cache)return;restoreShapes(cache,current,cache.local,true);cache.nodes=Object.create(null);cache.plan=null;cache.active=false;},0);}
+exports.actors=actors;exports.suggest=suggest;exports.timing=timing;exports.compile=compile;exports.sample=sample;exports.apply=apply;exports.faceContext=faceContext;exports.invalidate=invalidate;exports.reset=reset;
 })();

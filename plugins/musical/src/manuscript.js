@@ -209,6 +209,15 @@ function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(w
   strength.className='huw-script-lipsync-strength';strength.min=0;strength.max=100;strength.step=1;strength.disabled=!config.enabled;
   if(config.enabled&&config.target&&!mouths.length)element(doc,'p','huw-script-lipsync-warning',L.lipNoParts,group);
   element(doc,'p','huw-script-lipsync-hint',config.enabled?L.lipSavedPreview:L.lipOff,group);
+  if(o.openFace){
+   var faceButton=button(group,en?'Save and open face workshop':'Gem og åbn ansigtsværksted',function(){
+    var interval=timing(part,entry.duration),start=entry.start+interval.start,end=entry.start+interval.end,current=num(o.position(),start);
+    var details={actorId:config.target,cueId:part.id,sceneTitle:entry.title,time:current>=start&&current<end?current:start+.01};
+    if(save())o.openFace(details);
+   },'huw-script-face-workshop');
+   faceButton.disabled=!config.target;
+   element(doc,'p','huw-script-lipsync-hint',en?'Choose expressions and teach autosync your preferred mouth shapes for this character.':'Vælg ansigtsudtryk og lær autosync dine foretrukne mundformer for denne figur.',group);
+  }
  }
  function redraw(){if(!popup)return;var entry=selectedEntry();
   refreshScenes();refreshList();

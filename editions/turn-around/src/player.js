@@ -356,8 +356,8 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
     if(state.filmView)Engine.paint(state.filmView,t);
     if(state.view)Engine.paint(state.view,local);
     var tree=nativeTree();Motion.paint(tree,timeline.film,t,beatClock);paintNativeVisuals(tree,t);
-    LipSync.apply(state.filmView,t,t,{sceneTitle:self.filmTitle,audioClips:timeline.audioClips,duration:duration});
-    if(state.view)LipSync.apply(state.view,local,t,{sceneTitle:scene.source,audioClips:timeline.audioClips,duration:duration});
+    LipSync.apply(state.filmView,t,t,{sceneTitle:self.filmTitle,audioClips:timeline.audioClips,duration:duration,film:timeline.film});
+    if(state.view)LipSync.apply(state.view,local,t,{sceneTitle:scene.source,audioClips:timeline.audioClips,duration:duration,film:timeline.film});
     updateCaption(local,t);
     if(!scrubbing) scrub.value=String(t);
     scrub.style.setProperty("--plato-progress",(t/duration*100).toFixed(3)+"%");

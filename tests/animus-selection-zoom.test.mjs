@@ -68,6 +68,7 @@ function workspaceHarness(){
  const inactive=()=>({isOpen:()=>false,open(){},close(){},dispose(){},draw(){}});
  const modules={
   '$:/plugins/huwiki/musical/selection-zoom.js':zoom,
+  '$:/plugins/huwiki/musical/face-panel.js':{mount:()=>({...inactive(),select:()=>false,refresh(){},hide(){},isWorkshopOpen:()=>false,relocate(){},suspend:()=>()=>{}})},
   '$:/plugins/huwiki/musical/puppet.js':{mount:inactive,rootFor:id=>id==='arm'?'actor':id},
   '$:/plugins/huwiki/musical/manuscript.js':{mount:()=>({...inactive(),open(){scriptOpened++;}})},
   '$:/plugins/huwiki/musical/narration.js':{mount:inactive},

@@ -40,13 +40,15 @@ test('scene ranges distinguish repeated use of the same scene and preserve neste
  const r=s.ranges(film,name=>name==='act'?act:scene);
  assert.deepEqual(Array.from(r,x=>x.start),[0,4,10,14]);assert.equal(new Set(r.map(x=>x.id)).size,4);assert.equal(r[0].id,'film/act-1/leaf-1');assert.equal(r[3].id,'film/act-2/leaf-2');
 });
-test('reordering scenes moves score, voice, effect, light, camera and per-scene animation cues together',()=>{
+test('reordering scenes moves score, voice, effect, light, camera, face and per-scene animation cues together',()=>{
  const s=scenes(),f=rangesFixture(),before=s.ranges(f.film,f.resolve);f.film.camera={keys:[{t:2,x:1},{t:12,x:2}]};f.film.parts=[{id:'curtain',keys:[{t:1,x:3}]}];
  f.film.musical={songs:[{start:2,score:'song',duration:5}],audioClips:[{start:11,asset:'voice',offset:2,duration:3}],sfx:[{t:14,type:'bell'}],cuts:[{t:10,camera:'B'}],lighting:{keys:[{t:3,intensity:.5}]},figureTransforms:{actor:{keys:[{t:15,x:22}]}},animationClips:[{start:0,duration:10,accents:[{t:4,x:1}],motion:{arm:[{t:0,r:0},{t:4,r:30}]}}]};
+ f.film.musical.faceKeys=[{actor:'actor',t:3,mouthMap:{O:'E'}},{actor:'actor',t:12,eyes:'closed'}];
  f.film.scenes.reverse();const after=s.ranges(f.film,f.resolve);s.retime(f.film,before,after);
  assert.equal(f.film.musical.songs[0].start,12);assert.equal(f.film.musical.audioClips[0].start,1);assert.equal(f.film.musical.audioClips[0].offset,2);assert.equal(f.film.musical.audioClips[0].duration,3);
  assert.equal(f.film.musical.sfx[0].t,4);assert.equal(f.film.musical.cuts[0].t,0);assert.equal(f.film.musical.lighting.keys[0].t,13);assert.equal(f.film.musical.figureTransforms.actor.keys[0].t,5);
  assert.deepEqual(Array.from(f.film.camera.keys,k=>k.t),[2,12]);assert.equal(f.film.camera.keys[0].x,2);assert.equal(f.film.parts[0].keys[0].t,11);
+ assert.deepEqual(f.film.musical.faceKeys,[{actor:'actor',t:2,eyes:'closed'},{actor:'actor',t:13,mouthMap:{O:'E'}}]);
  const animation=f.film.musical.animationClips[0];assert.equal(animation.start,10);assert.equal(animation.duration,10);assert.equal(animation.accents[0].t,14);assert.equal(animation.motion.arm[1].t,4);
 });
 test('whole-show animation survives scene reordering instead of shrinking to a fraction of a second',()=>{
