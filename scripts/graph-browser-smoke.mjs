@@ -87,14 +87,23 @@ try{
   await addEdge.waitFor({state:'visible'});
   assert.equal(await editor.isVisible(),false,'Forge editor must be hidden until a graph action');
   assert.equal(await graphStage.locator('.forge-graph-editor-panels > .forge-graph-editor-panel').count(),3);
-  await editor.evaluate(node=>{window.__forgeActionEvents=[];node.addEventListener('forge-graph-action',e=>window.__forgeActionEvents.push(e.detail));});
+  await editor.evaluate(node=>{
+   window.__forgeActionEvents=[];window.__forgeDomEvents=[];
+   node.addEventListener('forge-graph-action',e=>window.__forgeActionEvents.push(e.detail));
+   const stage=node.closest('.forge-graph-stage');
+   for(const el of [stage,stage.querySelector('.graph-canvas'),stage.querySelector('.vis-add')]){
+    for(const type of ['click','pointerdown','mousedown','touchstart']){
+     el.addEventListener(type,e=>window.__forgeDomEvents.push({on:el.className,kind:type,target:e.target.className}),true);
+    }
+   }
+  });
   await addNode.click();
   const debug=await graphStage.evaluate(stage=>({
    editorCount:stage.querySelectorAll('.forge-graph-editor').length,
    editorClass:stage.querySelector('.forge-graph-editor')?.className,
    nativeButtons:[...stage.querySelectorAll('.vis-button')].map(n=>({c:n.className,t:n.textContent?.trim().slice(0,60)})),
    modules:Object.keys($tw.modules.getModulesByTypeAsHashmap('vis-property')).filter(x=>/forge/i.test(x)),
-   captured:window.__forgeActionEvents||[],
+   captured:window.__forgeActionEvents||[],domEvents:window.__forgeDomEvents||[],
    bridgeTags:[...stage.querySelectorAll('[data-forge-control-init]')].map(e=>({cls:e.className,flag:e.getAttribute('data-forge-control-init')})),
    addAncestor:stage.querySelector('.vis-add')?.closest('.graph-canvas')?.className||null,
    stageClass:stage.className
