@@ -35,3 +35,7 @@ A copy of the upstream standard editable template is maintained as a small Forge
 ## Version 0.2.0-beta.1
 
 The first direct-edit Graph Studio controls are tested in offline Chromium on Danish and English. Node and edge changes update TiddlyWiki tiddlers directly. The per-node style draft is retained even if a graph refresh happens while changing a shape, size, color or icon. Physical iPad touch verification remains pending.
+
+## Version 0.2.1-beta.1: contextual editing
+
+The original Vis-Network **Add Node** and **Add Edge** toolbar buttons are visible within each graph. Graph Studio listens in the Vis-Network `vis-property` lifecycle and opens the relevant **single, compact editor panel within the graph stage**. Clicking a node opens only its appearance editor. Closing or submitting hides the panel, preserving the full graph height. The original graph/Vis-Network packages are unchanged.
