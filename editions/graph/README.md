@@ -22,3 +22,7 @@ Test `https://forge.måns.dk/demo/?edition=graph&lang=da` and the equivalent Eng
 ## Maintenance
 
 Run `node scripts/build-graph-edition.mjs` to verify/download the pinned upstream releases and rebuild the registry/homepage, then `npm test`. The Graph Edition workflow performs these steps on its feature branch and commits the generated files before merging.
+
+## WikiText block-mode layout
+
+Graph Edition's bilingual introduction and node tiddlers use HTML `<div>` and TiddlyWiki's `<$list>` widgets. **Leave a blank line after each opening tag** before WikiText headings (`!`) or numbered lists (`#`) to keep the content in block parsing mode. See the official [HTML in WikiText](https://tiddlywiki.com/static/HTML%2520in%2520WikiText.html) and [parser mode transitions](https://tiddlywiki.com/static/WikiText%2520parser%2520mode%2520transitions.html). The browser smoke test verifies rendered headings and ordered list items in Danish and English.
