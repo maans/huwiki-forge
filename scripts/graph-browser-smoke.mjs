@@ -87,7 +87,16 @@ try{
   await addEdge.waitFor({state:'visible'});
   assert.equal(await editor.isVisible(),false,'Forge editor must be hidden until a graph action');
   assert.equal(await graphStage.locator('.forge-graph-editor-panels > .forge-graph-editor-panel').count(),3);
+  await editor.evaluate(node=>{window.__forgeActionEvents=[];node.addEventListener('forge-graph-action',e=>window.__forgeActionEvents.push(e.detail));});
   await addNode.click();
+  const debug=await graphStage.evaluate(stage=>({
+   editorCount:stage.querySelectorAll('.forge-graph-editor').length,
+   editorClass:stage.querySelector('.forge-graph-editor')?.className,
+   nativeButtons:[...stage.querySelectorAll('.vis-button')].map(n=>({c:n.className,t:n.textContent?.trim().slice(0,60)})),
+   modules:Object.keys($tw.modules.getModulesByTypeAsHashmap('vis-property')).filter(x=>/forge/i.test(x)),
+   captured:window.__forgeActionEvents||[]
+  }));
+  console.log('GRAPH TOOL DEBUG',JSON.stringify(debug).slice(0,2500));
   assert.equal(await editor.isVisible(),true,'The original Add Node button opens the compact node editor');
   assert.equal(await editor.locator('.forge-graph-editor-panel:visible').count(),1,'Only one context panel is open');
   await editor.locator('.forge-graph-close').click();
