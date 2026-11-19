@@ -102,7 +102,10 @@ try{
    }
   });
   await addNode.click();
-  await page.waitForFunction(()=>Array.from(document.querySelectorAll('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Mindmap"] .graph-canvas')).some(el=>el._forgeVisNetwork?.manipulation?.inMode==='addNode'));
+  await page.waitForTimeout(150);
+  const nativeLog=await page.evaluate(()=>window.__forgeNativeLog||[]);
+  const afterNative=await graphStage.evaluate(stage=>[...stage.querySelectorAll('.graph-canvas')].map(el=>({mode:el._forgeVisNetwork?.manipulation?.inMode,buttons:[...el.querySelectorAll('.vis-button')].map(b=>b.className)})));
+  console.log('NATIVE FALLBACK DEBUG',JSON.stringify({nativeLog,afterNative}));
   const trace=await graphStage.evaluate(stage=>({
    events:window.__forgeNativeTrace||[],
    canvases:[...stage.querySelectorAll('.graph-canvas')].map(c=>({mode:c._forgeVisNetwork?.manipulation?.inMode,hasHint:!!c.closest('.forge-graph-stage')?.querySelector('.forge-graph-shape-hint')}))
