@@ -18,7 +18,7 @@ $('note').textContent=T('Vælg Eksportér video i afspilleren. Prøv først et k
 const fresh=async(resource,options)=>{
  const url=new URL(resource,location.href);
  if(/\/(manifest\.json|plugin\.json|turn-around-adapter\.json)$/.test(url.pathname)){
-  url.searchParams.set('_preview','20261119-downloads');
+  url.searchParams.set('_preview','20261119-files3');
   return fetch(url.href,{...options,cache:'no-store'});
  }
  return fetch(resource,options);
