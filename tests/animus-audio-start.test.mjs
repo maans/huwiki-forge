@@ -20,7 +20,9 @@ test('AniMus play gesture unlocks the shared ABC audio context before async Soun
  assert.ok(click.indexOf('unlockMusicAudio()')<click.indexOf('syncAudio(timeline.value())'));
  assert.match(widget,/onStatus:function\(info\)/);
  assert.match(widget,/retryFailedAudio\(\)/);
- assert.match(widget,/play\.disabled=false;\s*host\.dataset\.audioMode="stage-only"/);
+ const ready=widget.indexOf("Playback.register(session);ready=true;play.disabled=false;");
+ assert.ok(ready>0&&ready<widget.indexOf("Loader.load()"),"play remains available while notation is pending or unavailable");
+ assert.match(widget,/host\.dataset\.audioMode="stage-only"/);
  assert.equal(p.dependents,'$:/plugins/huwiki/cutout $:/plugins/huwiki/abc');
  assert.doesNotMatch(p.dependents,/\/music(?:\s|$)/);
 });
@@ -61,8 +63,8 @@ test('ABC fallback uses hosted audio resources for public blob HTTPS demos',asyn
 test('No forced backing instruments or metronome when AniMus ABC score has accompaniment off',async()=>{
  const p=JSON.parse(await read('plugins/musical/dist/plugin.json'));
  const score=JSON.parse(p.text).tiddlers['$:/plugins/huwiki/musical/widget.js'].text;
- assert.match(score,/Accompaniment\.prepare\(ABC,song\.tune,song\.source,song\.config,song\.config\.enabled===true,song\.fields\)/);
- assert.doesNotMatch(score,/Accompaniment\.prepare\(ABC,song\.tune,song\.source,song\.config,true,song\.fields\)/);
+ assert.match(score,/Accompaniment\.prepare\(ABCObject,song\.tune,song\.source,song\.config,song\.config\.enabled===true,song\.fields\)/);
+ assert.doesNotMatch(score,/Accompaniment\.prepare\(ABCObject,song\.tune,song\.source,song\.config,true,song\.fields\)/);
  assert.match(score,/c\.start-t<=20/);
  for(const path of ['plugins/animus-example-orchestra/dist/plugin.json','plugins/animus-example-fyrtoejet/dist/plugin.json']){
   const examples=JSON.parse(JSON.parse(await read(path)).text).tiddlers;

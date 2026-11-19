@@ -576,7 +576,7 @@
  background:rgba(8,12,20,.48);font-size:clamp(10px,1.15vw,15px);
  color:#ffdfa2;font-weight:600;
 }
-.huw-musical-caption-overlay [hidden]{display:none!important;}
+.huw-musical-caption-overlay[hidden],.huw-musical-caption-overlay [hidden]{display:none!important;}
 
 /* Musical inspector 0.9.2 — readable, context-specific, safely scrollable.
    All properties must fit on an iPad even in focus mode. */

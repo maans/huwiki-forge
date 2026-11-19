@@ -15,10 +15,12 @@ var StartPosition=require("$:/plugins/huwiki/abc/start-position.js");
 var Timeline=require("$:/plugins/huwiki/musical/sync.js").Timeline;
 var Editor=require("$:/plugins/huwiki/musical/editor.js"),Motion=require("$:/plugins/huwiki/musical/motion.js");
 var Workspace=require("$:/plugins/huwiki/musical/workspace.js");
+var VideoExport=null;try{VideoExport=require("$:/plugins/huwiki/animus-video-export/runtime.js");}catch(_optionalExport){}
 var Playlist=require("$:/plugins/huwiki/musical/playlist.js");
 var SoundFx=require("$:/plugins/huwiki/musical/sfx.js");
 var Narration=require("$:/plugins/huwiki/musical/narration.js");
 var LipSync=require("$:/plugins/huwiki/musical/lipsync.js");
+var ACTIVE_PAINT={activeOnly:true};
 function Musical(tree,options){this.initialise(tree,options);}
 Musical.prototype=new Widget();
 Musical.prototype.execute=function(){
@@ -58,7 +60,8 @@ Musical.prototype.render=function(parent,next){
  if(!scene){node(doc,"p","huw-musical-error",L.missing,host);return;}
  var sfx=new SoundFx.Fx(scene.musical&&scene.musical.sfx);
  var lipOptions={sceneTitle:this.sceneTitle,audioClips:scene.musical&&scene.musical.audioClips||[]};
- var voice=new Narration.Player({wiki:this.wiki,doc:doc,clips:scene.musical&&scene.musical.audioClips||[],onError:function(message){
+ var voice=new Narration.Player({wiki:this.wiki,doc:doc,clips:scene.musical&&scene.musical.audioClips||[],
+  isAudible:function(clip){return !editor||!editor.isAudioAudible||editor.isAudioAudible(clip);},onError:function(message){
   if(state)state.textContent=(L.scene==='Scene'?'Lydspor: ':'Audio track: ')+String(message&&message.message||message);
  }});
  function fullDuration(){return Math.max(.1,Playlist.total(clips),Number(scene.duration)||0,
@@ -68,7 +71,7 @@ Musical.prototype.render=function(parent,next){
  var songs=clips.map(function(c){
   var item=self.wiki.getTiddler(c.score),fields=item?item.fields:{};
   var source=fields["abc-source"]||fields.text||"";
-  return {clip:c,title:c.score,source:source,fields:fields,events:[],tune:null,controller:null,page:null,pending:null,settingUp:null,audioFailed:false};
+  return {clip:c,title:c.score,source:source,fields:fields,guideTiming:c.muted,config:Accompaniment.read(fields),events:[],tune:null,controller:null,page:null,pending:null,settingUp:null,audioFailed:false};
  });
  this._playlistTitles=songs.map(function(s){return s.title;});
  this._songStates=songs;
@@ -80,7 +83,7 @@ Musical.prototype.render=function(parent,next){
  node(doc,"h3","huw-musical-subtitle",L.scene,stagePanel);
  var stage=node(doc,"div","huw-musical-canvas",stagePanel);
  var view=Engine.build(doc,this.wiki,scene);
- this._view=view;stage.appendChild(view.svg);Engine.paint(view,0);
+ this._view=view;stage.appendChild(view.svg);Engine.paint(view,0,undefined,ACTIVE_PAINT);
  // Captions belong to the audience's camera view, not to scenery SVG.
  // The CutOut source stays editable and unchanged; only this performance
  // hides its scene-space subtitle glyphs and displays a fixed overlay.
@@ -121,6 +124,8 @@ Musical.prototype.render=function(parent,next){
   return answer;
  }
  function updateCaptions(timeValue){
+  var captionsVisible=!editor||!editor.isTrackVisible||editor.isTrackVisible("captions");
+  if(captionOverlay.hidden!==!captionsVisible)captionOverlay.hidden=!captionsVisible;
   var at=captionForTime(view,timeValue,0),cue="",line="";
   if(at){at.parts.forEach(function(p){var opacity=Engine.state(p,at.time).opacity;
    if(opacity<.45)return;
@@ -169,6 +174,9 @@ Musical.prototype.render=function(parent,next){
  function timeLabel(n){var s=Math.floor(Math.max(0,n));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
  var duration=fullDuration(),timeline=null,ready=false,controller=null,activeIndex=0,stopping=false,changingSpeed=false;
  var editor=null,workspace=null,session=null,preparing=false,generation=0,lastGainUpdate=0,visibleKey="",ABCObject=null,soundReady=false,soundfont="";
+ // Resolve export inputs before ABC arrives; loading notation must not make
+ // an unchanged recorded soundtrack appear to change during an export.
+ soundfont=self.wiki.getTiddlerText("$:/config/huwiki/abc/soundfont","https://paulrosen.github.io/midi-js-soundfonts/abcjs/").trim();
  var audioUnlockFailure="";
  this._stageTitle=scene.scenes&&scene.scenes[0]&&scene.scenes[0].source||null;
  songs.forEach(function(s){s.cursor={index:-1,notes:[],line:null};s.gain=0;s.appliedGain=-1;s.starting=false;s.finished=false;});
@@ -219,7 +227,7 @@ Musical.prototype.render=function(parent,next){
   host.dataset.activeSongCount=String(visible.length);
   if(scoreLink){scoreLink.setAttribute("href","#"+encodeURIComponent(songs[i].title));
    scoreLink.setAttribute("data-tiddler-title",songs[i].title);}
-  visible.forEach(function(j){showNotes(j,t);});
+  visible.forEach(function(j){ensureNotation(songs[j]);showNotes(j,t);});
  }
  // A click on ABC notation navigates the *master* musical timeline.
  // ABCJS provides performed timings, including expanded repeat passages.
@@ -286,13 +294,15 @@ Musical.prototype.render=function(parent,next){
   });
   return config;
  }
+ function authoredAudibleClip(clip){return !!clip&&!clip.muted&&clip.volume>0;}
+ function audibleClip(clip){return authoredAudibleClip(clip)&&(!editor||!editor.isSongAudible||editor.isSongAudible(clip));}
  function applyGains(t,force){
   // Existing ABC mixers smooth GainNode changes with setTargetAtTime.
   // Throttled gain updates avoid per-frame reallocation on mobile Safari.
   var now=performance.now();
   if(!force&&now-lastGainUpdate<28)return;lastGainUpdate=now;
   songs.forEach(function(song,i){
-   var gain=Playlist.gainAt(clips[i],t);
+   var gain=audibleClip(clips[i])?Playlist.gainAt(clips[i],t):0;
    song.gain=gain;
    if(song.controller&&song.controller.isLoaded&&song.controller.midiBuffer&&
       typeof song.controller.midiBuffer.setVolumes==="function"&&
@@ -374,6 +384,8 @@ Musical.prototype.render=function(parent,next){
  }
  function prepareSong(index){
   var song=songs[index];if(!song||song.audioFailed||song.pending||song.settingUp)return;
+  if(!audibleClip(song.clip))return;
+  ensureNotation(song);
   if(song.controller&&song.controller.isLoaded)return;
   if(!soundReady||!ABCObject)return;
   var task=Promise.resolve().then(function(){
@@ -402,7 +414,7 @@ Musical.prototype.render=function(parent,next){
   if(songs.some(function(song){return !!song.pending||!!song.settingUp;}))return;
   var candidates=[];
   songs.forEach(function(song,i){var c=clips[i];
-   if(!song.audioFailed&&(!song.controller||!song.controller.isLoaded)&&
+   if(audibleClip(c)&&!song.audioFailed&&(!song.controller||!song.controller.isLoaded)&&
       c.start+c.duration>t&&c.start-t<=20)candidates.push(i);
   });
   candidates.sort(function(a,b){var x=clips[a],y=clips[b];
@@ -413,18 +425,24 @@ Musical.prototype.render=function(parent,next){
  }
  function paint(t){
   var visualTime=Math.max(0,Math.min(scene.duration,t));
-  Engine.paint(view,visualTime);
+  Engine.paint(view,visualTime,undefined,ACTIVE_PAINT);
   Motion.paint(view,scene,t,beatClock);
   if(editor)editor.paint(t);
+  if(workspace&&workspace.paintPreview)workspace.paintPreview();
   LipSync.apply(view,visualTime,t,lipOptions);
   updateCaptions(visualTime);
   // Seeking also updates the selection frame; playing never spends time
   // recalculating its SVG bounds when the frame is hidden.
   if(workspace&&workspace.refreshHandles&&!(timeline&&timeline.running))workspace.refreshHandles();
   showSong(t);applyGains(t,false);
-  if(timeline&&timeline.running){sfx.sync(t);voice.sync(t,timeline.rate);syncAudio(t);}
+  if(timeline&&timeline.running){
+   if(!editor||!editor.isSfxAudible||editor.isSfxAudible())sfx.sync(t);
+   else sfx.last=t;
+   voice.sync(t,timeline.rate);syncAudio(t);
+  }
   if(doc.activeElement!==time)time.value=String(t);
-  clock.textContent=timeLabel(t)+" / "+timeLabel(duration);
+  var clockLabel=timeLabel(t)+" / "+timeLabel(duration);
+  if(clock.textContent!==clockLabel)clock.textContent=clockLabel;
   host.dataset.cameraTime=visualTime.toFixed(2);
  }
  timeline=new Timeline(duration,paint);
@@ -457,7 +475,7 @@ Musical.prototype.render=function(parent,next){
    state.textContent=L.finish;return;}
   prepareUpcoming(t);
   songs.forEach(function(song,index){
-   var c=song.controller,clip=clips[index],within=Playlist.isActive(clip,t);
+   var c=song.controller,clip=clips[index],within=audibleClip(clip)&&Playlist.isActive(clip,t);
    if(!c){if(within&&!song.audioFailed)prepareSong(index);return;}
    if(within&&!c.isLoaded&&!song.audioFailed)prepareSong(index);
    if(within&&c.isLoaded&&!song.audioFailed&&!song.finished&&!song.starting&&!c.isStarted){
@@ -466,7 +484,7 @@ Musical.prototype.render=function(parent,next){
     Promise.resolve(c.play()).then(function(){
      song.starting=false;
      if(alive()&&c.isStarted){host.dataset.audioMode="playing";state.textContent=L.ready;}
-     if(!alive()||stamp!==generation||!timeline.running||!Playlist.isActive(clips[index],timeline.value())){
+     if(!alive()||stamp!==generation||!timeline.running||!audibleClip(clips[index])||!Playlist.isActive(clips[index],timeline.value())){
       if(c.isStarted)c.pause();
      }
     }).catch(function(error){song.starting=false;
@@ -508,15 +526,15 @@ Musical.prototype.render=function(parent,next){
   var stamp=++generation;
   sfx.unlock();
   voice.unlock();
-  var audioActivated=unlockMusicAudio();
-  retryFailedAudio();
+  var hasMusic=clips.some(audibleClip),audioActivated=hasMusic&&unlockMusicAudio();
+  if(hasMusic)retryFailedAudio();
   sfx.seek(timeline.value()-.02);
   preparing=true;state.textContent=L.loading;
   // Start the theatrical clock immediately. Missing or offline SoundFonts
   // must not block scene animation, camera, light, or curtains.
   preparing=false;Playback.start(session);
   timeline.play();setPlaying(true);applyGains(timeline.value(),true);
-  state.textContent=audioActivated?L.loading:L.noAudio;
+  state.textContent=hasMusic?(audioActivated?L.loading:L.noAudio):L.ready;
   syncAudio(timeline.value());
  };
  time.addEventListener("input",function(){seek(Number(time.value));});
@@ -534,7 +552,7 @@ Musical.prototype.render=function(parent,next){
   if(wasRunning){timeline.play();setPlaying(true);syncAudio(position);}
  });
  this._shutdown=function(){
-  self._dead=true;generation++;stopFrames();sfx.dispose();voice.dispose();LipSync.reset(view);clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
+  self._dead=true;generation++;stopFrames();if(self._videoExporter)self._videoExporter.dispose();sfx.dispose();voice.dispose();LipSync.reset(view);clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
   if(session)Playback.unregister(session);
   songs.forEach(function(song){
    var c=song.controller;if(!c)return;c._disposed=true;
@@ -551,12 +569,28 @@ Musical.prototype.render=function(parent,next){
     else{var match=clips.find(function(c){return c.id===song.clip.id;});if(match)song.clip=match;}});
    duration=fullDuration();
    timeline.duration=duration;time.max=String(duration);applyGains(timeline.value(),true);
+   // A user's unmute gesture can unlock a previously unused ABC context.
+   if(timeline.running){if(clips.some(audibleClip))unlockMusicAudio();syncAudio(timeline.value());}
   },
   seek:seek,repaint:function(){paint(timeline.value());},
   pause:function(){if(timeline.running)pauseAll();},isPlaying:function(){return timeline.running;},
   onEditScore:function(title){if(workspace)workspace.openScore(title);},
   onEditAudio:function(details){if(workspace)workspace.openNarration(details);},
   onEditScenes:function(){if(workspace)workspace.openScenes();},
+  onEditCaptions:function(details){if(workspace&&workspace.openManuscript)workspace.openManuscript(details);},
+  onPreviewChange:function(){
+   if(!timeline)return;
+   var position=timeline.value();applyGains(position,true);
+   if(editor&&editor.isSfxAudible&&!editor.isSfxAudible())sfx.quiet();
+   sfx.last=position;
+   // This callback runs on the actual speaker-button gesture, so resuming a
+   // muted lane can unlock its existing media without changing stored clips.
+   if(timeline.running){
+    voice.sync(position,timeline.rate);
+    if(clips.some(audibleClip))unlockMusicAudio();
+    syncAudio(position);
+   }
+  },
   onAudioChange:function(updated){voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);paint(timeline.value());},
   onSelect:function(t){if(workspace)workspace.selectTrack(t);},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},
@@ -574,6 +608,39 @@ Musical.prototype.render=function(parent,next){
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}
  });
  this._workspace=workspace;
+ if(VideoExport&&VideoExport.attach)this._videoExporter=VideoExport.attach({
+  host:host,controls:transport,stage:stage,scene:scene,wiki:this.wiki,
+  beginExport:function(){
+   var restoreWorkspace=workspace&&workspace.beginExport?workspace.beginExport():null;
+   var restoreEditor=editor&&editor.beginExport?editor.beginExport():null;
+   return function(){try{if(restoreEditor)restoreEditor();}finally{if(restoreWorkspace)restoreWorkspace();}};
+  },
+  seek:seek,position:function(){return timeline.value();},duration:function(){return duration;},
+  pause:function(){if(timeline.running)pauseAll();},getABC:function(){return ABCObject;},
+  getSongs:function(){return songs.map(function(s){if(authoredAudibleClip(s.clip))ensureNotation(s);return {clip:s.clip,title:s.title,tune:s.tune,config:s.config||{}};});},
+  getDependencyTitles:function(){
+   var visual=Engine.dependencies?Object.keys(Engine.dependencies(view)):[self.sceneTitle],audio=[self.sceneTitle],captions=visual.slice();
+   songs.forEach(function(song){audio.push(song.title);visual.push(song.title);});
+   (scene.musical&&scene.musical.audioClips||[]).forEach(function(clip){audio.push(clip.asset);});
+   // Translation tables also depend on the original timeline they translate.
+   (self.wiki.filterTiddlers?self.wiki.filterTiddlers("[tag[$:/tags/HUW/CaptionTranslations]]"):[]).forEach(function(title){
+    captions.push(title);try{captions.push(JSON.parse(self.wiki.getTiddlerText(title,"{}")).sourceTiddler);}catch(_){}
+   });
+   function titles(values){return values.filter(function(title,index){return typeof title==="string"&&title&&values.indexOf(title)===index;}).sort();}
+   return {visual:titles(visual),audio:titles(audio),captions:titles(captions)};
+  },
+  getLiveExportState:function(){
+   function lipState(clip){var value={};["id","cueId","sceneTitle","start","offset","duration","sourceDuration","text"].forEach(function(key){if(clip[key]!==undefined)value[key]=clip[key];});return value;}
+   var selector=host.querySelector('[data-huw-animus-captions="language"]');
+   // Exclude tune/controller objects and the time-dependent playback gain.
+   return JSON.parse(JSON.stringify({
+    visual:{songs:clips.map(function(clip){return {id:clip.id,score:clip.score,start:clip.start,duration:clip.duration};}),lipSync:(scene.musical&&scene.musical.audioClips||[]).map(lipState)},
+    audio:{songs:songs.map(function(song){return {clip:song.clip,config:song.config||{}};}),recordings:scene.musical&&scene.musical.audioClips||[],effects:scene.musical&&scene.musical.sfx||[],soundFont:soundfont},
+    captions:{language:selector?selector.value:"auto"}
+   }));
+  },
+  soundFont:function(){return soundfont;}
+ });
  function installSongController(song,index){
   if(!soundReady||!ABCObject)return Promise.reject(Error("ABC audio unavailable"));
   if(song.controller)return Promise.resolve(song.controller);
@@ -616,7 +683,7 @@ Musical.prototype.render=function(parent,next){
      if(song.controller&&song.controller.midiBuffer)try{song.controller.midiBuffer.setVolumes();}catch(_ignored){}
     },
     onBeat:function(beat,total){
-     if(!alive()||!timeline.running||!Number.isFinite(Number(beat))||!(Number(total)>0))return;
+     if(!alive()||!timeline.running||!audibleClip(clips[index])||!Number.isFinite(Number(beat))||!(Number(total)>0))return;
      // Only the currently louder song corrects the visual master clock.
      // Both synths play independently; secondary beats cannot fight it.
      var chosen=Playlist.locate(clips,timeline.value());
@@ -636,11 +703,17 @@ Musical.prototype.render=function(parent,next){
    throw error;
   });
  }
- Loader.load().then(function(ABC){
-  if(!alive())return;
-  var canAudio=!!(ABC.synth&&ABC.synth.supportsAudio&&ABC.synth.supportsAudio());
-  songs.forEach(function(song){
-   var parsed=ABC.renderAbc(song.page,song.source,{responsive:"resize",add_classes:true});
+ // Scene animation and recorded takes are usable before notation finishes.
+ // A pending ABC library must never disable their shared Play gesture.
+ Playback.register(session);ready=true;play.disabled=false;state.textContent=L.ready;
+ // A long production can contain many muted guide scores. Only draw the
+ // visible guide; drawing all of them at once blocks the editor's main thread.
+ // Audible scores are still prepared up front so their performed lengths are
+ // known, while muted guides keep the film's authored timing.
+ function ensureNotation(song){
+  if(!ABCObject||!song||song.tune||song.notationFailed)return;
+  try{
+   var parsed=ABCObject.renderAbc(song.page,song.source,{responsive:"resize",add_classes:true});
    song.tune=parsed&&parsed[0];
    if(!song.tune)throw Error("ABC notation could not be rendered: "+song.title);
    var seconds=typeof song.tune.getTotalTime==="function"?Number(song.tune.getTotalTime()):NaN;
@@ -649,41 +722,53 @@ Musical.prototype.render=function(parent,next){
     var ev=song.tune.noteTimings||[];
     if(ev.length)seconds=Number(ev[ev.length-1].milliseconds)/1000;
    }
-   if(seconds>0&&Number.isFinite(seconds))song.clip.duration=seconds;
+   // Muted guide notation belongs to the authored film timeline. Its ABC
+   // rendition may be longer than the recorded take it accompanies. Keep
+   // that authored spacing if a guide is subsequently unmuted.
+   if(!song.guideTiming&&!song.clip.muted&&seconds>0&&Number.isFinite(seconds))song.clip.duration=seconds;
    try{if(!song.tune.noteTimings&&typeof song.tune.setTiming==="function")song.tune.setTiming();}catch(_ignored){}
    song.events=(song.tune.noteTimings||[]).filter(function(ev){
     return ev&&Number.isFinite(Number(ev.milliseconds))&&ev.elements&&ev.elements.length;
    }).slice().sort(function(a,b){return a.milliseconds-b.milliseconds;});
     indexScoreNotes(song);
-   song.config=Accompaniment.read(song.fields);
    if(typeof Accompaniment.prepare==="function")
     // 'live=true' in ABC forces bass, chords, drums and metronome ON for
     // synthesis even when the score has enabled:false. That silently loads
     // extra SoundFont instruments in every AniMus scene and can exhaust
     // iPad/Safari audio resources. Use live mode only when backing is enabled.
     // With enabled:false the written ABC voices still use ABC's shared mixer.
-    Accompaniment.prepare(ABC,song.tune,song.source,song.config,song.config.enabled===true,song.fields);
+    Accompaniment.prepare(ABCObject,song.tune,song.source,song.config,song.config.enabled===true,song.fields);
    var heading=node(doc,"div","huw-musical-score-label",song.title);
    song.page.insertBefore(heading,song.page.firstChild);
-  });
+  }catch(error){
+   song.notationFailed=true;song.tune=null;
+   song.page.textContent=L.error+String(error&&error.message||error);
+   song.page.classList.add("huw-musical-error");
+  }
+ }
+ Loader.load().then(function(ABC){
+  if(!alive())return;
+  var canAudio=!!(ABC.synth&&ABC.synth.supportsAudio&&ABC.synth.supportsAudio());
+  ABCObject=ABC;soundReady=canAudio;
+  songs.forEach(function(song){if(!song.clip.muted||!song.page.hidden)ensureNotation(song);});
   clips=Playlist.reflow(songs.map(function(song){return song.clip;}),self.scoreTitle);
   beatClock=Motion.beatClock(clips,function(title){var tid=self.wiki.getTiddler(title);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
   songs.forEach(function(song,i){song.clip=clips[i];});
   duration=fullDuration();timeline.duration=duration;
-  time.max=String(duration);showSong(0);paint(0);
-  soundfont=self.wiki.getTiddlerText("$:/config/huwiki/abc/soundfont","https://paulrosen.github.io/midi-js-soundfonts/abcjs/").trim();
-  ABCObject=ABC;soundReady=canAudio;
+  // The editor may already have sought past an opening fade while ABC loaded.
+  // Preserve that cursor instead of repainting an unrelated first frame.
+  var position=timeline.value();
+  time.max=String(duration);showSong(position);paint(position);
   // The notes and visual master clock are ready before samples finish loading.
   // Audio remains optional; no missing SoundFont can block the theatre.
-  Playback.register(session);ready=true;play.disabled=false;state.textContent=canAudio?L.ready:L.noAudio;
-  applyGains(0,true);
+  state.textContent=canAudio||!clips.some(audibleClip)?L.ready:L.noAudio;
+  applyGains(position,true);
 
  }).catch(function(error){
   // ABC can be unavailable offline; the visual stage and timeline still run.
   if(!alive())return;
-  Playback.register(session);ready=true;play.disabled=false;
   host.dataset.audioMode="stage-only";
-  state.textContent=L.noAudio+" ("+String(error&&error.message||error).slice(0,100)+")";
+  state.textContent=!clips.some(audibleClip)?L.ready:L.noAudio+" ("+String(error&&error.message||error).slice(0,100)+")";
  });
 };
 Musical.prototype.removeChildDomNodes=function(){

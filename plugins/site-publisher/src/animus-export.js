@@ -55,14 +55,17 @@ function animusBundle(ctx){
  if(!ctx.animus)return {script:"",css:"",config:null};
  function source(title){var text=$tw.wiki.getTiddlerText(title,"");if(!text)throw publicationMediaError("AniMus","afspillermodulet mangler / playback module is missing: "+title);return text;}
  function json(value){return JSON.stringify(value).replace(/</g,"\\u003c").replace(/\u2028/g,"\\u2028").replace(/\u2029/g,"\\u2029");}
- var names=["musical/playlist","musical/motion","musical/sync","musical/sfx","musical/lipsync","musical/narration-player","abc/audio-controller","abc/accompaniment","abc/start-position"],queue=names.map(function(n){return "$:/plugins/huwiki/"+n+".js";}),sources=Object.create(null),seen=Object.create(null);
+ var names=["musical/playlist","musical/motion","musical/sync","musical/sfx","musical/lipsync","musical/narration-player","abc/audio-controller","abc/accompaniment","abc/start-position"];
+ // Video Export is an optional, independently installable plugin.
+ if($tw.wiki.getTiddlerText("$:/plugins/huwiki/animus-video-export/runtime.js",""))names.push("animus-video-export/runtime");
+ var queue=names.map(function(n){return "$:/plugins/huwiki/"+n+".js";}),sources=Object.create(null),seen=Object.create(null);
  queue.forEach(function(title){seen[title]=true;});
  for(var i=0;i<queue.length;i++){
   var title=queue[i];if(title==="$:/plugins/huwiki/cutout/engine.js"||title==="$:/plugins/huwiki/abc/vendor/abcjs.js")continue;
   var code=source(title);sources[title]=code;
   var re=/require\s*\(\s*['"]([^'"]+)['"]\s*\)/g,match;
   while((match=re.exec(code))){var dependency=match[1];
-   if(!/^\$:\/plugins\/huwiki\/(?:abc|musical|cutout)\/[a-z0-9/-]+\.(?:js|json)$/i.test(dependency))throw publicationMediaError("AniMus","unsupported runtime dependency: "+dependency);
+   if(!/^\$:\/plugins\/huwiki\/(?:abc|musical|cutout|animus-video-export)\/[a-z0-9/-]+\.(?:js|json)$/i.test(dependency))throw publicationMediaError("AniMus","unsupported runtime dependency: "+dependency);
    if(!seen[dependency]){seen[dependency]=true;queue.push(dependency);}
   }
  }
@@ -80,7 +83,7 @@ function animusBundle(ctx){
  // normal sample engine; failure does not activate another synthesizer.
  if(["original","fluid","tiny"].indexOf(mode)<0)mode="original";
  return {script:source("$:/plugins/huwiki/abc/vendor/abcjs.js")+"\n"+bootstrap+"\n"+source(PUBLISHER_ANIMUS_BASE+"viewer.js"),
-  css:source(PUBLISHER_ANIMUS_BASE+"viewer.css"),license:license,
+  css:source(PUBLISHER_ANIMUS_BASE+"viewer.css")+"\n"+$tw.wiki.getTiddlerText("$:/plugins/huwiki/animus-video-export/styles.css",""),license:license,
   config:{soundFont:$tw.wiki.getTiddlerText("$:/config/huwiki/abc/soundfont","https://paulrosen.github.io/midi-js-soundfonts/abcjs/").trim(),
    reserveBase:$tw.wiki.getTiddlerText("$:/config/huwiki/abc/reserve-base","").trim(),engineMode:mode}};
 }

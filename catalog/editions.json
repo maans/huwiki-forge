@@ -118,15 +118,15 @@
     {
       "id": "animus",
       "name": "AniMus Forge I (beta)",
-      "version": "0.11.0-beta.4",
+      "version": "0.12.0-beta.1",
       "status": "test",
       "manifest": "../editions/animus/manifest.json",
       "description": "Experimental unified animation, music and theatre workshop for TiddlyWiki. The Fyrtøjet and Tændstikorkestret examples share one editor.",
       "home": {
         "headingDa": "AniMus Forge I – animation og teater",
         "headingEn": "AniMus Forge I – Animation & Theatre",
-        "descriptionDa": "Prøv Fyrtøjet og Tændstikorkestret i samme editor med dukker, SVG, musik, kamera, undertekster og manuskript.",
-        "descriptionEn": "Try The Tinderbox and Stick Orchestra in one editor with puppets, SVG, music, cameras, captions and scripts.",
+        "descriptionDa": "Redigér animation, musik og undertekster på egne spor. Skjul elementer under arbejdet, zoom til figurer og kropsdele, og eksportér video og lydfiler.",
+        "descriptionEn": "Edit animation, music and captions on separate tracks. Hide elements while editing, zoom to characters and body parts, and export video and audio files.",
         "noteDa": "Meget tidlig beta: motor og eksempler kan ændres uden garanti for dine data. iPad-lyd er ikke godkendt. Forslag og fejlmeldinger er velkomne på Talk og GitHub.",
         "noteEn": "Very early beta: core and examples may change without preserving your edits. iPad audio is unverified. Feedback welcome on Talk and GitHub.",
         "order": "02.4"
@@ -135,15 +135,15 @@
     {
       "id": "turn-around",
       "name": "Turn Around — Beyond the Cave",
-      "version": "0.1.0-demo.2",
+      "version": "0.1.0-demo.4",
       "status": "test",
       "manifest": "../editions/turn-around/manifest.json",
       "description": "An AI-generated musical animation made with AniMus. Explore Plato’s cave, then edit the audio recordings, music, characters, camera and animation.",
       "home": {
         "headingDa": "En AniMus-musical, du kan arbejde videre med",
         "headingEn": "An AniMus musical to watch and remake",
-        "descriptionDa": "AI-genereret animation skabt med AniMus: Platons hule som musical. Se forestillingen, og arbejd selv med lydoptagelser, musik og animation.",
-        "descriptionEn": "An AI-generated animation made with AniMus: Plato’s cave as a musical. Watch the show, then work with audio recordings, music and animation.",
+        "descriptionDa": "AI-genereret animation skabt med AniMus: Platons hule som musical. Se og redigér forestillingen, og hent video, lydspor og undertekster.",
+        "descriptionEn": "An AI-generated animation made with AniMus: Plato’s cave as a musical. Watch and edit the performance, then download video, audio tracks and captions.",
         "noteDa": "Engelsk lyd og lip-sync med 103 danske eller engelske undertekster. 14 scener, ABC-partiturer og indlejrede lydoptagelser.",
         "noteEn": "English audio and lip-sync with 103 captions in Danish or English. 14 scenes, ABC scores and embedded audio.",
         "order": "02.41"
@@ -205,7 +205,7 @@
     {
       "id": "cutout",
       "name": "CutOut Edition (test)",
-      "version": "0.6.2-test.3",
+      "version": "0.6.2-test.4",
       "status": "test",
       "manifest": "../editions/cutout/manifest.json",
       "description": "Original CutOut workshop, examples, Excalidraw drawing bridge, scenes, theatre, PasteUp and Slideshow; local export and native Dansk/English",
@@ -266,7 +266,7 @@
     {
       "id": "site-publisher",
       "name": "SitePublisher",
-      "version": "0.1.16-test.3",
+      "version": "0.1.17-test.1",
       "description": "HTML publishing for AniMus musicals, ABC music, CutOut, SVG drawings and embedded media.",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
@@ -298,7 +298,7 @@
     {
       "id": "cutout",
       "name": "CutOut",
-      "version": "0.6.2-test.3",
+      "version": "0.6.2-test.4",
       "description": "Offline animation workshop · Dukker, animationer og lokal ZIP · Test",
       "file": "../plugins/cutout/dist/plugin.json",
       "status": "test"

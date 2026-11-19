@@ -2,16 +2,17 @@
   "schemaVersion": 1,
   "id": "turn-around",
   "name": "Turn Around — Beyond the Cave",
-  "version": "0.1.0-demo.2",
+  "version": "0.1.0-demo.4",
   "coreVersion": "5.4.1",
   "tiddlers": [
-    "tiddlers/production.json",
+    "tiddlers/production.json?v=0.1.0-demo.4",
     "tiddlers/recordings-01.json",
     "tiddlers/recordings-02.json",
     "tiddlers/recordings-03.json",
     "tiddlers/layout-fix.json",
     "../shared/libraries.json",
-    "tiddlers/captions-da.json"
+    "tiddlers/captions-da.json",
+    "tiddlers/video-export.json"
   ],
   "plugins": [
     "../../themes/modern/dist/theme.json",
@@ -19,6 +20,7 @@
     "../../plugins/cutout/dist/plugin.json",
     "../../plugins/abc/dist/plugin.json",
     "../../plugins/musical/dist/plugin.json",
+    "../../plugins/animus-video-export/dist/plugin.json",
     "../../plugins/musescore-import/dist/plugin.json",
     "../../plugins/site-publisher/dist/plugin.json",
     "../../plugins/print-article/dist/plugin.json",

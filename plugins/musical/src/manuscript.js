@@ -232,12 +232,22 @@ function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(w
   if(part.id!=='sing-label')renderLipSync(right,entry,part);
   button(right,L.remove,function(){if(!entry)return;var d=data(entry);d.parts=d.parts.filter(function(p){return p!==part;});selectedId='';changed();redraw();},'huw-script-danger');
  }
- function open(){if(popup)return true;
+ function open(details){if(popup)return true;details=details||{};
   items=collect(wiki,o.film,o.sceneTitle);if(!items.length)return false;
   drafts={};originals={};items.forEach(function(item){if(!drafts[item.title]){drafts[item.title]=copy(item.scene);originals[item.title]=copy(item.scene);}});
   ensureStyle();initialStyle=copy(style);originalStyle=copy(o.film.musical&&o.film.musical.captionStyle||{});dirty=false;
-  // Open on the current scene, even in the middle of a multi-act musical.
-  var t=o.position();selectedScene=Math.max(0,items.findIndex(function(e){return t>=e.start&&t<e.start+e.duration;}));selectedId='';o.pause();
+  // Caption-track links identify their original cue. Prefer the occurrence
+  // at that master time when the same source scene appears more than once.
+  var t=num(details.time,o.position());
+  selectedScene=Math.max(0,items.findIndex(function(e){return t>=e.start&&t<e.start+e.duration;}));selectedId='';
+  if(details.sceneTitle){
+   var match=items.findIndex(function(e){return e.title===details.sceneTitle&&t>=e.start&&t<e.start+e.duration;});
+   if(match<0)match=items.findIndex(function(e){return e.title===details.sceneTitle;});
+   if(match>=0)selectedScene=match;
+  }
+  var entry=selectedEntry();
+  if(details.partId&&(!details.sceneTitle||entry.title===details.sceneTitle)&&findCue(entry,details.partId))selectedId=details.partId;
+  o.pause();
   popup=element(doc,'section','huw-script-workshop',undefined,host);popup.setAttribute('role','dialog');popup.setAttribute('aria-modal','true');popup.setAttribute('aria-label',L.title);popup.tabIndex=-1;
   var header=element(doc,'header','huw-script-header',undefined,popup);
   var heading=element(doc,'div','',undefined,header);element(doc,'h2','',L.title,heading);element(doc,'p','',L.subtitle,heading);

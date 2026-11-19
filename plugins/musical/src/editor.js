@@ -7,6 +7,7 @@ module-type: library
 "use strict";
 var Sfx=require("$:/plugins/huwiki/musical/sfx.js");
 var Model=require("$:/plugins/huwiki/cutout/model.js");
+var TrackPreview=require("$:/plugins/huwiki/musical/track-preview.js");
 function optionalSvgLayers(){
  try{var api=require("$:/plugins/huwiki/cutout/svg-layers.js");return api&&typeof api.open==="function"?api:null;}
  catch(_missing){return null;}
@@ -65,9 +66,11 @@ function attach(o){
  var clipTitle=el(doc,"strong","huw-musical-clip-editor-title","",clipHeading);
  var clipMeta=el(doc,"span","huw-musical-clip-editor-meta","",clipHeading);
  var rows=el(doc,"div","huw-musical-tracks",undefined,root),inspector=el(doc,"div","huw-musical-inspector",undefined,root),status=el(doc,"output","huw-musical-edited-status","",root);
- var cameraEditActive=false,playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1,expandedClipId="",detailClipId="",detailReturn=null,lastClipTap=null,isolation="";
+ var preview=TrackPreview.create(),previewControls=[],previewHidden=[],captionCues=TrackPreview.captions(o.view,Engine);
+ var cameraEditActive=false,playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1,expandedClipId="",detailClipId="",detailReturn=null,lastClipTap=null;
  var tracks=[{id:"song",kind:"song",name:L.song},{id:"scenes",kind:"scene-range",name:L===translations.da?"Akter og scener":"Acts and scenes"},
   {id:"scene-objects",kind:"object-browser",name:L===translations.da?"Objekter i scenen":"Objects in scene"},
+  {id:"captions",kind:"captions",name:L===translations.da?"Undertekster":"Captions"},
   {id:"backdrop",kind:"part",part:"stage-back",name:L.backdrop},{id:"stage",kind:"part",part:"stage-floor",name:L.stage},{id:"foreground",kind:"part",part:"foreground-flags",name:L.foreground},{id:"lights",kind:"light",name:L.light}];
  if((film.parts||[]).some(function(p){return p.id==="curtain-left";}))tracks.push({id:"curtain-left-track",kind:"film-part",part:"curtain-left",name:L===translations.da?"Venstre fortæppe":"Left curtain"});
  if((film.parts||[]).some(function(p){return p.id==="curtain-right";}))tracks.push({id:"curtain-right-track",kind:"film-part",part:"curtain-right",name:L===translations.da?"Højre fortæppe":"Right curtain"});
@@ -86,11 +89,73 @@ function attach(o){
  tracks=tracks.filter(function(t){return t.kind!=='part'||!!sceneForPart(t.part,o.view,0);});
  var map={};tracks.forEach(function(t){map[t.id]=t;});
  m.animationClips.forEach(function(c){map["accent:"+c.id]={id:"accent:"+c.id,kind:"accent",clipId:c.id,name:(c.name||c.id)+" · solo"};});
+ function audioTrack(t){return ["song","song-lane","audio","audio-lane","sfx"].indexOf(t.kind)>=0;}
+ function setPreviewEnabled(id,enabled){
+  preview.set(id,enabled!==false);previewControls.forEach(function(control){control.update();});
+  if(o.onPreviewChange)o.onPreviewChange();o.repaint();
+ }
+ function addPreviewControl(title,row,t){
+  // Keep the switch separate from selecting the row, especially on touch.
+  var text=title.textContent;title.textContent="";
+  el(doc,"span","huw-musical-track-name",text,title);
+  var sound=audioTrack(t),button=el(doc,"button","huw-musical-preview-toggle",undefined,title);button.type="button";
+  button.dataset.previewTrack=t.id;button.dataset.previewKind=sound?"audio":"visibility";
+  var svg=doc.createElementNS(NS,"svg");svg.setAttribute("viewBox","0 0 24 24");svg.setAttribute("aria-hidden","true");svg.setAttribute("fill","none");svg.setAttribute("stroke","currentColor");svg.setAttribute("stroke-width","1.7");svg.setAttribute("stroke-linecap","round");svg.setAttribute("stroke-linejoin","round");button.appendChild(svg);
+  var icon=doc.createElementNS(NS,"path");icon.setAttribute("d",sound?"M3 9h4l5-4v14l-5-4H3z M16 8a6 6 0 0 1 0 8 M19 5a10 10 0 0 1 0 14":"M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0");svg.appendChild(icon);
+  var slash=doc.createElementNS(NS,"path");slash.setAttribute("d","M3 3l18 18");svg.appendChild(slash);
+  function update(){var enabled=preview.enabled(t.id),da=L===translations.da;
+   button.setAttribute("aria-pressed",String(enabled));row.classList.toggle("is-preview-disabled",!enabled);slash.setAttribute("display",enabled?"none":"inline");
+   var action=sound?(enabled?(da?"Slå lyd fra":"Mute"):(da?"Slå lyd til":"Unmute")):(enabled?(da?"Skjul":"Hide"):(da?"Vis":"Show"));
+   button.title=action+": "+t.name+(da?" · kun i editoren":" · editor preview only");button.setAttribute("aria-label",button.title);
+  }
+  button.onclick=function(ev){ev.preventDefault();ev.stopPropagation();setPreviewEnabled(t.id,!preview.enabled(t.id));};
+  button.ondblclick=function(ev){ev.stopPropagation();};
+  button.onpointerdown=function(ev){ev.stopPropagation();};
+  button.onkeydown=function(ev){ev.stopPropagation();};
+  previewControls.push({update:update});update();
+ }
+ function clearPreviewVisibility(){
+  previewHidden.forEach(function(entry){entry.el.classList.remove("huw-musical-preview-hidden");entry.el.style.display=entry.display;});previewHidden=[];
+ }
+ function applyPreviewVisibility(time){
+  var disabled=preview.disabled(),detail=preview.exporting()?null:activeDetail();
+  if(!disabled.length&&!detail){if(previewHidden.length)clearPreviewVisibility();return;}
+  var ids=Object.create(null),hideScene=!preview.enabled("scenes"),hideObjects=!preview.enabled("scene-objects"),next=[];
+  disabled.forEach(function(id){var t=map[id],c;
+   if(!t)return;
+   if(t.kind==="animation"||t.kind==="accent"){c=animation(t);if(c&&time>=num(c.start,0)&&time<num(c.start,0)+num(c.duration,0))ids[c.target]=true;}
+   else if(t.part)ids[t.part]=true;
+  });
+  if(detail)m.animationClips.forEach(function(c){if(c.target&&c.target!==detail.target)ids[c.target]=true;});
+  function hide(node){if(node&&next.indexOf(node)<0)next.push(node);}
+  function walk(view,local,depth){if(!view||depth>16)return;
+   var nodes=view.nodes||{},keys=Object.keys(nodes);
+   keys.forEach(function(id){var node=nodes[id];
+    if(ids[id]||(hideObjects&&!node.part.parent))hide(node.el);
+    if(node.nested&&(!node.el||node.el.getAttribute("display")!=="none")){
+     var timing=Engine.timing(local,num(node.nested.duration,node.nested.scene.duration),node.part);
+     if(timing.active)walk(node.nested,timing.time,depth+1);
+    }
+   });
+   var active=Engine.clipAt(view.scene.scenes||[],local),clip=(view.clips||[])[active.index];
+   if(clip&&clip.view){if(hideScene)hide(clip.el);walk(clip.view,Engine.localTime(active.time,clip.duration,clip.settings),depth+1);}
+   else if(hideScene&&view===o.view)keys.forEach(function(id){hide(nodes[id].el);});
+  }
+  if(!preview.enabled("lights"))hide(overlay);
+  if(hideScene||hideObjects||Object.keys(ids).length)walk(o.view,time,0);
+  var retained=[];
+  previewHidden.forEach(function(entry){if(next.indexOf(entry.el)>=0)retained.push(entry);
+   else{entry.el.classList.remove("huw-musical-preview-hidden");entry.el.style.display=entry.display;}
+  });
+  next.forEach(function(node){if(retained.some(function(entry){return entry.el===node;}))return;
+   retained.push({el:node,display:node.style.display||""});node.classList.add("huw-musical-preview-hidden");node.style.display="none";
+  });previewHidden=retained;
+ }
  function songTracks(){return m.songs.map(function(s,i){return {id:"song:"+s.id,kind:"song",index:i,name:"♫ "+(i+1)+". "+s.score};});}
  function audioTracks(){return m.audioClips.map(function(c,i){return {id:'audio:'+c.id,kind:'audio',index:i,name:c.name||c.role||c.id};});}
  function musicLanes(){return [{id:"music:A",kind:"song-lane",lane:"A",name:L===translations.da?"♫ Musik A":"♫ Music A"},
   {id:"music:B",kind:"song-lane",lane:"B",name:L===translations.da?"♫ Musik B":"♫ Music B"}];}
- function group(t){return (t.kind==="song"||t.kind==="song-lane"||t.kind==="sfx"||t.kind==='audio'||t.kind==='audio-lane')?"music":(t.kind==="camera"||t.kind==="cut")?"camera":(t.id==="lights"||["backdrop","stage","foreground"].indexOf(t.id)>=0)?"scene":"animation";}
+ function group(t){return (t.kind==="song"||t.kind==="song-lane"||t.kind==="sfx"||t.kind==='audio'||t.kind==='audio-lane')?"music":(t.kind==="camera"||t.kind==="cut")?"camera":(t.id==="lights"||t.kind==="captions"||["backdrop","stage","foreground"].indexOf(t.id)>=0)?"scene":"animation";}
  function track(){return songTracks().concat(audioTracks()).find(function(s){return s.id===choice.id;})||map[choice.id]||songTracks()[0]||tracks[0];}
  function axisDuration(){return Math.max(1,o.duration(),film.duration,Playlist.total(m.songs));}
  function part(t){var scene=t.kind==='film-part'?film:sceneForPart(t.part,o.view,0)||source;return scene&&(scene.parts||[]).find(function(p){return p.id===t.part;});}
@@ -161,8 +226,8 @@ function attach(o){
  }
  function fromFilm(time,t){if(t.kind!=="part")return time;var context=partContext(t.part,o.view,time,[],true,0);return context?context.time:time;}
  function toAudio(time){return lim(time,0,o.duration());}
- function activeCam(time){var c="A";m.cuts.slice().sort(function(a,b){return a.t-b.t;}).forEach(function(k){if(num(k.t,0)<=time+1e-6)c=k.camera==="B"?"B":"A";});return c;}
- function cameraState(time){return Engine.cameraState({width:film.width,height:film.height,camera:activeCam(time)==="B"?m.cameraB:film.camera},time);}
+ function activeCam(time){if(!preview.enabled("cuts"))return "A";var c="A";m.cuts.slice().sort(function(a,b){return a.t-b.t;}).forEach(function(k){if(num(k.t,0)<=time+1e-6)c=k.camera==="B"?"B":"A";});return c;}
+ function cameraState(time){return preview.enabled("camera-"+activeCam(time))?Engine.cameraState({width:film.width,height:film.height,camera:activeCam(time)==="B"?m.cameraB:film.camera},time):{x:film.width/2,y:film.height/2,zoom:1};}
  function illumination(time){return lim(interpolate(m.lighting.keys,time,"intensity",1),0,1);}
  var overlay=doc.createElementNS(NS,"rect");overlay.setAttribute("class","huw-musical-light-overlay");overlay.setAttribute("pointer-events","none");o.view.svg.appendChild(overlay);
  // The previous global dimmer also darkened the actors *inside* their spotlights.
@@ -219,26 +284,21 @@ function attach(o){
   updateFocus(time);
   // This is a preview-only camera and solo mode. The actual film camera and
   // all other animation clips remain unchanged in the saved TiddlyWiki.
-  var detail=activeDetail();
+  var detail=preview.exporting()?null:activeDetail();
   if(detail){
    var person=source&&source.parts.find(function(p){return p.id===detail.target;});
    if(person){var pose=Engine.state(person,time);o.view.svg.setAttribute("viewBox",[round(pose.x-200),round(pose.y-165),400,225].join(" "));}
   }
-  if(isolation!==detailClipId){
-   (o.view.clips||[]).forEach(function(filmClip){var nested=filmClip.view;if(!nested)return;
-    m.animationClips.forEach(function(c){var node=nested.nodes&&nested.nodes[c.target];
-     if(node&&node.el)node.el.style.display=detailClipId&&c.id!==detailClipId?"none":"";
-    });
-   });isolation=detailClipId;
-  }
-  paintTransform(time);
-  cameraLabel.textContent=detail?(L===translations.da?"Animation: ":"Animation: ")+detail.name:L.camera+" "+activeCam(time);playhead=time;
+  paintTransform(time);applyPreviewVisibility(time);
+  var cameraText=detail?(L===translations.da?"Animation: ":"Animation: ")+detail.name:L.camera+" "+activeCam(time);
+  if(cameraLabel.textContent!==cameraText)cameraLabel.textContent=cameraText;playhead=time;
+  var axis=axisDuration();
   playheads.forEach(function(e){
    if(e.dataset.cursorMode==="beat"){
     var phase=detail&&Motion.phase(detail,time,o.beatClock&&o.beatClock());
     e.style.display=phase===null?"none":"";
     e.style.left=phase===null?"0%":(100*phase/Math.max(.125,num(detail.beatsPerLoop,8)))+"%";
-   }else e.style.left=(100*time/axisDuration())+"%";
+   }else e.style.left=(100*time/axis)+"%";
   });
  }
  function save(t){var isPart=t.kind==="part",partScene=isPart&&(sceneForPart(t.part,o.view,0)||source),name=isPart?(partScene&&partScene._title||o.stageTitle):o.sceneTitle,value=isPart?partScene:film,old=o.wiki.getTiddler(name);if(!old||!value)return;
@@ -249,7 +309,7 @@ function attach(o){
   if(t.kind==="animation")expandedClipId=t.id;
   if(t.kind==="motion"||t.kind==="accent")expandedClipId="animation:"+t.clipId;
   draw();if(o.onSelect)o.onSelect(track());}
- function selected(){return track().kind==="song"?m.songs[track().index]:track().kind==='audio'?m.audioClips[track().index]:track().kind==="animation"?animation(track()):keys(track())[choice.key];}
+ function selected(){return track().kind==="captions"?captionCues[choice.key]:track().kind==="song"?m.songs[track().index]:track().kind==='audio'?m.audioClips[track().index]:track().kind==="animation"?animation(track()):keys(track())[choice.key];}
  function newPoint(t,time){if(t.kind==="song"||((t.kind==='part'||t.kind==='film-part')&&!part(t)))return;
   if(t.kind==="animation"){
    var c=animation(t);if(!c)return;
@@ -397,7 +457,7 @@ function attach(o){
    "film-part":da?"Sceneobjekt / rekvisit":"Stage object / prop","camera":da?"Kamera":"Camera",
    "motion":da?"Ledbevægelse":"Limb motion","accent":da?"Bevægelsesaccent":"Motion accent",
    "light":da?"Lys":"Lighting","sfx":da?"Lydeffekt":"Sound effect","cut":da?"Kameraklip":"Camera cut",
-   "scene-range":da?"Scene":"Scene","object-browser":da?"Objektvælger":"Object picker"};
+   "captions":da?"Undertekster":"Captions","scene-range":da?"Scene":"Scene","object-browser":da?"Objektvælger":"Object picker"};
   el(doc,"span","huw-musical-inspector-type",kindNames[t.kind]||(da?"Egenskaber":"Properties"),inspector);
   el(doc,"strong","huw-musical-inspector-selection",t.name,inspector);
   var explanation=t.kind==="figure"?(da?"Flyt, drej, skalér eller skævvrid hele objektet. Ændringer kan gemmes som nøglebilleder; dukkeleddene bevares.":"Move, rotate, scale or skew the whole object. Changes are keyframed; the puppet joints are preserved."):
@@ -408,6 +468,12 @@ function attach(o){
    t.kind==="motion"?(da?"Dette punkt ændrer én del af figurens bevægelsesløkke.":"This point changes one part of the figure's motion loop."):
    t.kind==="sfx"?(da?"Redigér én lydeffekt og dens tidspunkt i forestillingen.":"Edit one sound effect cue and its timing in the show."):"";
   if(explanation)el(doc,"p","huw-musical-inspector-help",explanation,inspector);
+  if(t.kind==="captions"){
+   el(doc,"p","huw-musical-preview-note",da?"Øjet skjuler kun undertekster i editoren. Videoens undertekster vælges ved eksport.":"The eye hides captions only in the editor. Choose the video's captions when exporting.",inspector);
+   if(k){el(doc,"p","huw-musical-caption-text",String(k.part.text||k.text),inspector);el(doc,"p","huw-musical-song-info",round(k.start)+"–"+round(k.end)+" s · "+k.sceneTitle,inspector);}
+   if(o.onEditCaptions){var captionButton=el(doc,"button","huw-musical-edit-captions",da?"Åbn manuskript og undertekster":"Open manuscript and captions",inspector);captionButton.type="button";captionButton.onclick=function(){o.onEditCaptions(k?{partId:k.partId,sceneTitle:k.sceneTitle,time:k.start}:{});};}
+   return;
+  }
   if(t.kind==="scene-range"){
    var sceneButton=el(doc,'button','huw-musical-edit-scenes',da?'Redigér scener og rækkefølge':'Edit scenes and order',inspector);sceneButton.type='button';sceneButton.onclick=function(){if(o.onEditScenes)o.onEditScenes();};return;}
   if(t.kind==='audio-lane'||t.kind==='audio'){
@@ -526,7 +592,7 @@ function attach(o){
    row.dataset.trackId=t.id;row.dataset.group="animation";
    if(choice.id===t.id)row.classList.add("is-selected");
    var caption=el(doc,"div","huw-musical-lane-title",t.name,row);
-   caption.onclick=function(){choose(t.id,0);};
+   caption.onclick=function(){choose(t.id,0);};addPreviewControl(caption,row,t);
    var lane=el(doc,"div","huw-musical-lane huw-musical-beat-lane",undefined,row);
    lane.onclick=function(ev){if(ev.target.closest&&ev.target.closest(".huw-musical-key"))return;
     var box=lane.getBoundingClientRect(),beat=lim((ev.clientX-box.left)/Math.max(1,box.width),0,1)*span;
@@ -563,7 +629,7 @@ function attach(o){
   soloRow.dataset.group="animation";soloRow.dataset.trackId=accent.id;
   if(choice.id===accent.id)soloRow.classList.add("is-selected");
   var soloTitle=el(doc,"div","huw-musical-lane-title",L===translations.da?"Solobevægelser":"Solo accents",soloRow);
-  soloTitle.onclick=function(){choose(accent.id,0);};
+  soloTitle.onclick=function(){choose(accent.id,0);};addPreviewControl(soloTitle,soloRow,accent);
   var soloLane=el(doc,"div","huw-musical-lane",undefined,soloRow);
   (clip.accents||[]).forEach(function(k,index){
    var dot=el(doc,"button","huw-musical-key huw-musical-accent-key",undefined,soloLane);
@@ -576,7 +642,7 @@ function attach(o){
   cursor.dataset.cursorMode="seconds";playheads.push(cursor);
   drawForm();
  }
- function draw(){rows.textContent="";playheads=[];
+ function draw(){rows.textContent="";playheads=[];previewControls=[];
   if(detailClipId){drawDetail();return;}
   var axis=axisDuration();
   var ruler=el(doc,"div","huw-musical-timeline-ruler",undefined,rows);
@@ -623,9 +689,10 @@ function attach(o){
     title.ondblclick=function(ev){ev.preventDefault();ev.stopPropagation();selectTrackTitle();};
     title.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();selectTrackTitle();}};
    }
+   addPreviewControl(title,row,t);
    var lane=el(doc,"div","huw-musical-lane",undefined,row);
    lane.onclick=function(ev){
-    if(ev.target.closest&&ev.target.closest(".huw-musical-key,.huw-musical-song-clip"))return;
+    if(ev.target.closest&&ev.target.closest(".huw-musical-key,.huw-musical-song-clip,.huw-musical-caption-clip"))return;
     var rect=lane.getBoundingClientRect(),u=lim((ev.clientX-rect.left)/Math.max(1,rect.width),0,1);
     o.seek(toAudio(u*axis));if(t.kind!=="song-lane"&&choice.id!==t.id)choose(t.id,0);
    };
@@ -655,6 +722,16 @@ function attach(o){
     title.onclick=function(){populateObjects();picker.focus();};
     title.ondblclick=function(ev){ev.preventDefault();ev.stopPropagation();populateObjects();picker.focus();};
     populateObjects();
+   }else if(t.kind==="captions"){
+    captionCues.forEach(function(cue,index){
+     var b=el(doc,"button","huw-musical-caption-clip",String(cue.part.text||cue.text),lane);b.type="button";
+     b.dataset.captionRole=cue.role;b.dataset.captionId=cue.id;
+     b.style.left=(100*cue.start/axis)+"%";b.style.width=(100*Math.max(.03,cue.end-cue.start)/axis)+"%";
+     b.title=String(cue.part.text||cue.text)+" · "+round(cue.start)+"–"+round(cue.end)+"s";b.setAttribute("aria-label",b.title);
+     b.classList.toggle("is-selected",choice.id==="captions"&&choice.key===index);
+     b.onclick=function(ev){ev.stopPropagation();if(o.pause)o.pause();choose("captions",index);o.seek(Math.min(cue.end-.001,cue.start+.01));};
+     b.ondblclick=function(ev){ev.preventDefault();ev.stopPropagation();if(o.onEditCaptions)o.onEditCaptions({partId:cue.partId,sceneTitle:cue.sceneTitle,time:cue.start});};
+    });
    }else if(t.kind==='audio-lane'){
     m.audioClips.forEach(function(c){
      var b=el(doc,'button','huw-musical-recorded-clip',(c.role?c.role+': ':'')+(c.name||c.text||'Audio'),lane);b.type='button';
@@ -855,7 +932,7 @@ function attach(o){
      var nestedRow=el(doc,"div","huw-musical-track huw-musical-motion-row",undefined,expanded);
      nestedRow.dataset.trackId=child.id;
      var nestedTitle=el(doc,"div","huw-musical-lane-title",child.name,nestedRow);
-     nestedTitle.onclick=function(){choose(child.id,0);};
+     nestedTitle.onclick=function(){choose(child.id,0);};addPreviewControl(nestedTitle,nestedRow,child);
      var nestedLane=el(doc,"div","huw-musical-lane huw-musical-beat-lane",undefined,nestedRow);
      (animation(t).motion[partId]||[]).forEach(function(k,index){
       var dot=el(doc,"button","huw-musical-key huw-musical-motion-key",undefined,nestedLane);
@@ -1036,8 +1113,8 @@ function attach(o){
   }
   walk(o.view,time,0);
  }
- function paintTransform(time){var c=cameraStateFor(time,activeCam(time)),w=film.width/c.zoom,h=film.height/c.zoom,
-  editing=cameraEditActive&&!(o.isPlaying&&o.isPlaying());
+ function paintTransform(time){var c=preview.enabled("camera-"+activeCam(time))?cameraStateFor(time,activeCam(time)):{x:film.width/2,y:film.height/2,zoom:1},w=film.width/c.zoom,h=film.height/c.zoom,
+  editing=!preview.exporting()&&cameraEditActive&&!(o.isPlaying&&o.isPlaying());
   if(editing){o.view.svg.setAttribute('viewBox',[(-film.width*.14),(-film.height*.14),film.width*1.28,film.height*1.28].join(' '));cameraWorld.removeAttribute('transform');
    if(overlay){overlay.setAttribute('x',0);overlay.setAttribute('y',0);overlay.setAttribute('width',film.width);overlay.setAttribute('height',film.height);}
   }else{var inv=cameraMatrix(c);
@@ -1051,8 +1128,8 @@ function attach(o){
   return true;
  }
  function setZoom(value){zoom=lim(value,1,5);rows.style.setProperty("--musical-zoom",String(zoom));draw();}
- function addKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser'].indexOf(t.kind)<0)newPoint(t,playhead);}
- function removeKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser'].indexOf(t.kind)<0)removePoint(t);}
+ function addKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)newPoint(t,playhead);}
+ function removeKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)removePoint(t);}
  draw();return {paint:paint,redraw:draw,selectPart:selectPart,selectSong:selectSong,beginPartMove:beginPartMove,
   openAnimation:openAnimation,closeAnimation:closeAnimation,inClipDetail:function(){return !!detailClipId;},getDetailClip:activeDetail,
   addKeyframe:addKeyframe,removeKeyframe:removeKeyframe,setFilter:setFilter,setZoom:setZoom,
@@ -1060,9 +1137,13 @@ function attach(o){
   selectFigure:selectFigure,ensureFigureTrack:ensureFigureTrack,beginFigureTransform:beginFigureTransform,figureStateFor:figureState,
   beginCameraTransform:beginCameraTransform,selectCamera:chooseCamera,activeCamera:activeCam,
   setCameraEdit:function(v){cameraEditActive=!!v;o.repaint();},cameraStateFor:cameraStateFor,
+  isTrackVisible:preview.enabled,isSongAudible:preview.song,isAudioAudible:preview.audio,isSfxAudible:preview.effects,
+  setTrackVisible:setPreviewEnabled,setTrackAudible:setPreviewEnabled,isExporting:preview.exporting,
+  beginExport:function(){var restore=preview.beginExport();if(o.onPreviewChange)o.onPreviewChange();o.repaint();return function(){restore();if(o.onPreviewChange)o.onPreviewChange();o.repaint();};},
+  getCaptionCues:function(){return captionCues.slice();},
   isJointMove:isJointMove,getPartPivot:getPartPivot,
   resolvePartScene:function(id){return sceneForPart(id,o.view,0);},
-  dispose:function(){if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};
+  dispose:function(){clearPreviewVisibility();if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};
 }
 exports.attach=attach;exports.ensureMusical=ensureMusical;exports.interpolate=interpolate;
 })();

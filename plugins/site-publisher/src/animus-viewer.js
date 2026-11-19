@@ -23,6 +23,7 @@ function mount(host,rows,config){
  var Playlist=module("musical/playlist"),Motion=module("musical/motion"),Timeline=module("musical/sync").Timeline;
  var SoundFx=module("musical/sfx"),Narration=module("musical/narration-player"),Audio=module("abc/audio-controller"),Acc=module("abc/accompaniment"),Start=module("abc/start-position");
  var LipSync=module("musical/lipsync");
+ var VideoExport=null;try{VideoExport=module("animus-video-export/runtime");}catch(_optionalExport){}
  var wiki=wikiFor(rows,config||{}),title=host.getAttribute("data-animus-title"),scene=Engine.readScene(wiki,title);
  if(!scene)throw Error(label("Forestillingen mangler: ","Production is missing: ")+title);
  var clips=Playlist.reflow(scene.musical&&scene.musical.songs,host.getAttribute("data-animus-score"));
@@ -161,7 +162,7 @@ function mount(host,rows,config){
  function fullChanged(){if(doc.fullscreenElement===host)focus(true);else if(!doc.fullscreenElement)focus(false);}
  range.addEventListener("input",function(){seek(Number(range.value));});host.addEventListener("keydown",keydown);doc.addEventListener("fullscreenchange",fullChanged);
  var player={host:host,pause:pause,seek:seek,play:toggle,stop:stop,value:function(){return timeline.value();},view:view,
-  dispose:function(){if(dead)return;pause();dead=true;fx.dispose();voice.dispose();LipSync.reset(view);songs.forEach(release);doc.removeEventListener("fullscreenchange",fullChanged);host.removeEventListener("keydown",keydown);host.removeAttribute("data-animus-ready");focus(false);}}
+  dispose:function(){if(dead)return;pause();dead=true;if(player.exporter)player.exporter.dispose();fx.dispose();voice.dispose();LipSync.reset(view);songs.forEach(release);doc.removeEventListener("fullscreenchange",fullChanged);host.removeEventListener("keydown",keydown);host.removeAttribute("data-animus-ready");focus(false);}}
  ;
  // The stage is usable immediately, even if the embedded score is invalid or
  // Web Audio is unavailable. Every late music start seeks to the shared clock.
@@ -176,7 +177,33 @@ function mount(host,rows,config){
  duration=Math.max(duration,Playlist.total(clips));timeline.duration=duration;range.max=String(duration);
  beatClock=Motion.beatClock(clips,function(name){var tid=wiki.getTiddler(name);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
  ready=!!(ABC&&ABC.synth&&ABC.synth.supportsAudio&&ABC.synth.supportsAudio());
- host.setAttribute("data-animus-ready","1");paint(0);return player;
+ host.setAttribute("data-animus-ready","1");paint(0);
+ if(VideoExport&&VideoExport.attach)player.exporter=VideoExport.attach({
+  host:host,controls:controls,stage:stage,scene:scene,wiki:wiki,
+  seek:seek,pause:pause,position:function(){return timeline.value();},duration:function(){return duration;},
+  getABC:function(){return ABC;},getSongs:function(){return songs;},soundFont:function(){return config.soundFont;},
+  getDependencyTitles:function(){
+   var visual=Engine.dependencies?Object.keys(Engine.dependencies(view)):[title],audio=[title],captions=visual.slice();
+   songs.forEach(function(song){audio.push(song.title);visual.push(song.title);});
+   recordings.forEach(function(clip){audio.push(clip.asset);});
+   Object.keys(rows).forEach(function(name){
+    var tags=rows[name].tags||[];if(typeof tags==="string")tags=tags.split(/\s+/);
+    if(tags.indexOf("$:/tags/HUW/CaptionTranslations")<0)return;
+    captions.push(name);try{captions.push(JSON.parse(rows[name].text||"{}").sourceTiddler);}catch(_){}
+   });
+   function titles(values){return values.filter(function(name,index){return typeof name==="string"&&name&&values.indexOf(name)===index;}).sort();}
+   return {visual:titles(visual),audio:titles(audio),captions:titles(captions)};
+  },
+  getLiveExportState:function(){
+   function lipState(clip){var value={};["id","cueId","sceneTitle","start","offset","duration","sourceDuration","text"].forEach(function(key){if(clip[key]!==undefined)value[key]=clip[key];});return value;}
+   return JSON.parse(JSON.stringify({
+    visual:{songs:clips.map(function(clip){return {id:clip.id,score:clip.score,start:clip.start,duration:clip.duration};}),lipSync:recordings.map(lipState)},
+    audio:{songs:songs.map(function(song){return {clip:song.clip,config:song.config||{}};}),recordings:recordings,effects:fxCues,soundFont:config.soundFont},
+    captions:{language:doc.documentElement&&doc.documentElement.lang||"en"}
+   }));
+  }
+ });
+ return player;
 }
 function prune(){players=players.filter(function(p){if(p.host.isConnected!==false)return true;p.dispose();return false;});}
 function hydrate(root,rows,config){if(!rows)return;prune();selected(root).forEach(function(host){if(host.getAttribute("data-animus-ready"))return;
