@@ -102,6 +102,7 @@ try{
    }
   });
   await addNode.click();
+  await page.waitForFunction(()=>Array.from(document.querySelectorAll('.tc-tiddler-frame[data-tiddler-title="Graph Edition · Mindmap"] .graph-canvas')).some(el=>el._forgeVisNetwork?.manipulation?.inMode==='addNode'));
   const trace=await graphStage.evaluate(stage=>({
    events:window.__forgeNativeTrace||[],
    canvases:[...stage.querySelectorAll('.graph-canvas')].map(c=>({mode:c._forgeVisNetwork?.manipulation?.inMode,hasHint:!!c.closest('.forge-graph-stage')?.querySelector('.forge-graph-shape-hint')}))
