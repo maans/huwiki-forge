@@ -131,7 +131,9 @@ try{
   assert.equal(await editor.isVisible(),false,'Saving an edge closes its context panel');
   // A real Vis node click emits the matching context event via the adapter.
   // Dispatch the same event to verify the panel independently of canvas hit testing.
-  await editor.dispatchEvent('forge-graph-action',{detail:{mode:'style',node:newNode}});
+  await editor.evaluate((node,title)=>node.dispatchEvent(new CustomEvent('forge-graph-action',{detail:{mode:'style',node:title}})),newNode);
+  const appearanceState=await graphStage.evaluate(stage=>({klass:stage.querySelector('.forge-graph-editor')?.className,nodeOptions:[...stage.querySelectorAll('.forge-graph-style-node option')].map(x=>x.value).slice(-5),feedback:stage.querySelector('.forge-graph-feedback')?.textContent}));
+  console.log('GRAPH APPEARANCE DEBUG',JSON.stringify(appearanceState));
   assert.equal(await editor.isVisible(),true,'Node selection opens appearance');
   assert.equal(await editor.locator('.forge-graph-editor-panel:visible').count(),1);
   await editor.locator('.forge-graph-style-node').selectOption(newNode);
@@ -143,7 +145,7 @@ try{
   assert.equal(await editor.isVisible(),false,'Appearance closes after save');
   const shape=await page.evaluate(title=>{let t=$tw.wiki.getTiddler(title);return [t.fields['graph-shape'],t.fields.color,t.fields['graph-size']];},newNode);
   assert.deepEqual(shape,['diamond','#9475ba','42']);
-  await editor.dispatchEvent('forge-graph-action',{detail:{mode:'style',node:newNode}});
+  await editor.evaluate((node,title)=>node.dispatchEvent(new CustomEvent('forge-graph-action',{detail:{mode:'style',node:title}})),newNode);
   await editor.locator('.forge-graph-style-shape').selectOption('image');
   await editor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Sun');
   await editor.locator('.forge-graph-apply-style').click();
@@ -187,11 +189,11 @@ try{
  await touchEditor.locator('.forge-graph-add-edge').tap();
  await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Hulen').getFieldList('forbinder').includes('Touch prøve'));
  assert.equal(await touchEditor.isVisible(),false);
- await touchEditor.dispatchEvent('forge-graph-action',{detail:{mode:'style',node:'Touch prøve'}});
+ await touchEditor.evaluate(node=>node.dispatchEvent(new CustomEvent('forge-graph-action',{detail:{mode:'style',node:'Touch prøve'}})));
  await touchEditor.locator('.forge-graph-style-shape').selectOption('star');
  await touchEditor.locator('.forge-graph-apply-style').tap();
  await touchPage.waitForFunction(()=>$tw.wiki.getTiddler('Touch prøve').fields['graph-shape']==='star');
- await touchEditor.dispatchEvent('forge-graph-action',{detail:{mode:'style',node:'Touch prøve'}});
+ await touchEditor.evaluate(node=>node.dispatchEvent(new CustomEvent('forge-graph-action',{detail:{mode:'style',node:'Touch prøve'}})));
  await touchEditor.locator('.forge-graph-style-shape').selectOption('image');
  await touchEditor.locator('.forge-graph-style-icon').selectOption('GraphStudio/Idea');
  await touchEditor.locator('.forge-graph-apply-style').tap();
