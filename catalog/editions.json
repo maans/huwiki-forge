@@ -21,17 +21,17 @@
     {
       "id": "graph",
       "name": "Graph Edition (beta)",
-      "version": "0.2.0-beta.1",
+      "version": "0.2.1-beta.1",
       "status": "test",
       "manifest": "../editions/graph/manifest.json",
-      "description": "Touch-friendly knowledge maps, mindmaps and project dependencies, with editable node/edge controls, shapes, colors and local SVG icons; built on Flibbles TW5-Graph and Vis-Network.",
+      "description": "Graph Edition using native TW5-Graph add-node/add-edge toolbar buttons and compact contextual editing for relations and appearance.",
       "home": {
         "headingDa": "Graph Edition – interaktive videnskort",
         "headingEn": "Graph Edition – interactive knowledge maps",
-        "descriptionDa": "Byg videnskort med noder og relationer direkte på siden. Skift mellem bokse, diamanter, stjerner og SVG-billeder, eller udforsk Platons hule.",
-        "descriptionEn": "Create nodes and relationships directly on the page. Choose boxes, diamonds, stars and SVG images, or explore Plato’s cave.",
-        "noteDa": "Beta: Noder, forbindelser, farver og former kan ændres i det nye touch-venlige værksted. iPad-accept udestår.",
-        "noteEn": "Beta: Edit nodes, connections, colors and shapes in the new touch-friendly editor. Physical iPad acceptance pending.",
+        "descriptionDa": "Brug de originale Add Node og Add Edge-knapper i grafen, og klik på en node for at ændre udseende. Ingen permanent konfigurator.",
+        "descriptionEn": "Use the original Add Node and Add Edge buttons in the graph, and click a node to change its appearance. No persistent editor.",
+        "noteDa": "Beta: Et lille panel åbnes kun ved node, forbindelse eller udseende. Både mus og touch-simulering testet; fysisk iPad-test mangler.",
+        "noteEn": "Beta: A compact panel opens only when editing a node, edge or appearance. Mouse and simulated touch tested; physical iPad check pending.",
         "order": "01.5"
       }
     },

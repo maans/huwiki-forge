@@ -113,11 +113,11 @@
     "graph": {
       "da": {
         "name": "Graph Edition (beta)",
-        "description": "Interaktive videnskort, mindmaps og projektkort – nu med redigering af noder, forbindelser, farver og former."
+        "description": "Videnskort med to originale grafknapper og små redigeringspaneler, som kun vises ved behov."
       },
       "en": {
         "name": "Graph Edition (beta)",
-        "description": "Interactive knowledge, mind and project maps with direct node, edge and style editing."
+        "description": "Knowledge maps with two original graph buttons and small contextual editors, hidden by default."
       }
     }
   },
@@ -505,11 +505,11 @@
     "$:/plugins/huwiki/graph-studio": {
       "da": {
         "name": "Graph Studio (Forge)",
-        "description": "Touch-venlig Graph-editor med noder, relationer, former, farver og SVG-ikoner; genbrugeligt sammen med TW5-Graph og Vis-Network."
+        "description": "Små, touch-venlige paneler via de originale Add Node/Add Edge-knapper og klik på noder. Fuld grafplads."
       },
       "en": {
         "name": "Graph Studio (Forge)",
-        "description": "Reusable touch-friendly graph editor with node, relation, shape, color and SVG image controls; requires TW5-Graph and Vis-Network."
+        "description": "Contextual touch-friendly node, edge and appearance panels triggered by native Graph buttons and node selection."
       }
     }
   }
