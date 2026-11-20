@@ -21,6 +21,8 @@ test("ABC ships one shared musician reader instead of forking the notation engin
  assert.match(widget,/if\(this\._reader\)\{this\._readerState=this\._reader\.snapshot\(\)/);
  assert.match(widget,/if\(self\._reader\)self\._reader\.update\(\)/);
  assert.ok(css.includes("min-height:0!important"));
+ assert.match(css,/huwabc-reader-active > \\.huwabc-page-shell/, "show PageView's actual paginated shell");
+ assert.doesNotMatch(css,/huwabc-reader-active > \\.huwabc-paper\\{/, "the raw score is nested inside the page shell");
  assert.ok(css.includes("z-index:30100"));
 });
 test("Reader supports page and tune boundaries, preserving playing score",()=>{
