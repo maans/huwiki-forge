@@ -556,15 +556,20 @@ function mount(o){
    else if(workshopMode==='face'){if(editor.faceContext&&editor.faceContext(workshopPart))facePanel.refresh();else hideWorkshop();}
   }
   var raf=doc.defaultView&&doc.defaultView.requestAnimationFrame;
-  if(raf)previewRefreshFrame=raf.call(doc.defaultView,refresh);else refresh();
+  if(raf)previewRefreshFrame=raf.call(doc.defaultView,function(){
+   // Give the browser a paint opportunity for the new timeline cursor first.
+   previewRefreshFrame=disposed?0:raf.call(doc.defaultView,refresh);
+  });else refresh();
  }
  function requestHandleRefresh(){
   if(disposed||handlesRefreshFrame)return;
   // Transform handles need getBBox/getScreenCTM; don't force synchronous layout
   // inside the same task as a touch seek on a complex SVG scene.
   var raf=doc.defaultView&&doc.defaultView.requestAnimationFrame;
-  if(raf)handlesRefreshFrame=raf.call(doc.defaultView,function(){handlesRefreshFrame=0;if(!disposed)refreshHandles();});
-  else refreshHandles();
+  if(raf)handlesRefreshFrame=raf.call(doc.defaultView,function(){
+   // SVG getBBox/getScreenCTM can be slow on iPad; first allow the playhead to paint.
+   handlesRefreshFrame=disposed?0:raf.call(doc.defaultView,function(){handlesRefreshFrame=0;if(!disposed)refreshHandles();});
+  });else refreshHandles();
  }
  function screenUnit(){
   var matrix=svg.getScreenCTM&&svg.getScreenCTM(),scale=matrix&&Math.sqrt(Math.abs(matrix.a*matrix.d-matrix.b*matrix.c));
