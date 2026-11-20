@@ -7,7 +7,8 @@
   "tiddlers": [
     "tiddlers/config.json",
     "tiddlers/repertoire.json",
-    "../shared/libraries.json"
+    "../shared/libraries.json",
+    "tiddlers/repertoire-workspace.json"
   ],
   "plugins": [
     "../../themes/modern/dist/theme.json",
@@ -16,6 +17,7 @@
     "../../plugins/music/dist/plugin.json",
     "../../plugins/musescore-import/dist/plugin.json",
     "../../plugins/site-publisher/dist/plugin.json",
-    "../../plugins/print-article/dist/plugin.json"
+    "../../plugins/print-article/dist/plugin.json",
+    "../../plugins/repertoire/dist/plugin.json"
   ]
 }
