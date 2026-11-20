@@ -18,12 +18,12 @@ on:
 permissions:
   contents: read
 concurrency:
-  group: abc-reader-edit-${{ github.workflow }}-${{ github.ref }}
+  group: abc-reader-edit-${{ github.head_ref || github.ref_name }}
   cancel-in-progress: true
 jobs:
   native-reader-edit:
     name: Native reader edit (${{ matrix.browser }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
