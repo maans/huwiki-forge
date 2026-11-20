@@ -93,3 +93,39 @@ test("SilbaÄtno Edition links all 17 scores and leaves their ABC bodies untouch
  assert.equal((set.list.match(/\[\[/g)||[]).length,17);
  for(const r of records)assert.ok(set.list.includes("[["+r.title+"]]"));
 });
+
+test("Repertoire Nodebog ships its live reader and link in the workshop",()=>{
+ const book=tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"];
+ const layout=tiddlers["$:/plugins/huwiki/repertoire/book-layout.js"];
+ assert.equal(book["module-type"],"widget");
+ assert.equal(layout["module-type"],"library");
+ assert.match(tiddlers["Repertoire – Nodebog"].text,/<\$huwiki-repertoire-book\/>/);
+ assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Åbn nodebogen/);
+ assert.match(book.text,/\\.huwabc-page-select/);
+ assert.match(book.text,/huwrep-book-fullscreen/);
+ assert.match(book.text,/this\.disposeScore\(\);host\.textContent="";/,"destroy the previous score before loading another");
+ assert.match(tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text,/huwrep-book-fullscreen/);
+});
+
+test("Nodebogen adapts page pairs to iPad rotation and crosses song boundaries",()=>{
+ const source=tiddlers["$:/plugins/huwiki/repertoire/book-layout.js"].text;
+ const exports={};runInNewContext(source,{exports});
+ const b=exports;
+ assert.equal(b.mode("auto",820,1180),"single");
+ assert.equal(b.mode("auto",1180,820),"spread");
+ assert.equal(b.mode("single",1180,820),"single");
+ assert.equal(b.mode("spread",820,1180),"spread");
+ assert.deepEqual({...b.direction(1,3,1,1,0,17)},{kind:"page",delta:1});
+ assert.deepEqual({...b.direction(1,3,2,1,0,17)},{kind:"page",delta:1});
+ assert.deepEqual({...b.direction(3,3,2,1,0,17)},{kind:"song",index:1});
+ assert.deepEqual({...b.direction(1,3,1,-1,3,17)},{kind:"song",index:2,lastPage:true});
+ assert.equal(b.direction(3,3,1,1,16,17).kind,"end");
+ assert.equal(b.direction(1,3,1,-1,0,17).kind,"start");
+ assert.equal(b.direction(1,0,1,1,0,17).kind,"unready");
+});
+
+test("The built SilbaÄtno manifest retains all 17 scores and Repertoire Nodebog plugin",async()=>{
+ const file=JSON.parse(await readFile(path.join(root,"editions/silva-ethno-repertoire/manifest.json"),"utf8"));
+ assert.ok(file.plugins.includes("../../plugins/repertoire/dist/plugin.json"));
+ assert.equal(file.tiddlers.filter(x=>x==="tiddlers/repertoire-workspace.json").length,1);
+});
