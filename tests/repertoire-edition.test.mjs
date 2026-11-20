@@ -36,6 +36,20 @@ test("Repertoire package is independent of the ABC plugin",()=>{
  assert.match(tiddlers["HUWiki Repertoire – Start"].text,/<\$huwiki-repertoire\/>/);
 });
 
+test("Repertoire uses a responsive three-column, tap-to-toggle selection grid",()=>{
+ const widget=tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text;
+ const css=tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text;
+ assert.ok(widget.includes("huwrep-song-grid"));
+ assert.ok(widget.includes("huwrep-song-card"));
+ assert.ok(widget.includes('tile.setAttribute("aria-pressed"'));
+ assert.ok(widget.includes("model.addEntry(wiki,setTitle,id)"));
+ assert.ok(widget.includes("model.setEntries(wiki,setTitle,current.filter"));
+ assert.ok(!widget.includes('button(doc,"Tilføj til sætliste"'));
+ assert.ok(css.includes("grid-template-columns:repeat(3,minmax(0,1fr))"));
+ assert.ok(css.includes("@container (max-width:720px)"));
+ assert.ok(css.includes("@container (max-width:450px)"));
+});
+
 test("multiple orchestras share one original score but keep their own agreements",()=>{
  const {model,wiki,Tiddler}=makeWiki();
  const original=new Tiddler({title:"SilbaÄtno · Brudmarch från Jämtland","abc-source":"K:Gm",text:"Original"});

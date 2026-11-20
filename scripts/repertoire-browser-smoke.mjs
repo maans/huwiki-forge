@@ -24,6 +24,20 @@ try{
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.waitForFunction(()=>window.$tw&&$tw.wiki&&$tw.rootWidget);
  await page.locator(".silba-home").waitFor();
+ // Visit the workshop first: compact cards add/remove songs without a separate button.
+ await page.getByRole("link",{name:"Åbn repertoireværksted"}).click();
+ const grid=page.locator(".huwrep-repertoire .huwrep-song-grid");
+ await grid.waitFor();
+ const cards=grid.locator(".huwrep-song-card");
+ assert.equal(await cards.count(),17,"Each score is a full-card tap target");
+ assert.equal(await cards.first().getAttribute("aria-pressed"),"true");
+ assert.ok(!(await cards.first().innerText()).includes("SilbaÄtno ·"),"No repeated orchestra prefix");
+ await cards.first().click();
+ await page.waitForFunction(()=>document.querySelector(".huwrep-song-card")?.getAttribute("aria-pressed")==="false");
+ await grid.locator(".huwrep-song-card").first().click();
+ await page.waitForFunction(()=>document.querySelector(".huwrep-song-card")?.getAttribute("aria-pressed")==="true");
+ await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
+ await page.locator(".silba-home").waitFor();
  const homeLink=page.getByRole("link",{name:"Åbn nodebogen"});
  await homeLink.waitFor();
  await homeLink.click();

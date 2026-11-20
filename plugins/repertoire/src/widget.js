@@ -67,12 +67,12 @@ Repertoire.prototype.draw=function(){
  orchList.forEach(function(t){option(doc,orchestraSel,t.fields.title,t.fields.name||t.fields.title);});
  orchestraSel.value=this.orchestraTitle;
  orchestraSel.addEventListener("change",function(){
-  self.orchestraTitle=this.value;self.setlistTitle="";self.activeItem="";self.message="";self.draw();
+  self.orchestraTitle=this.value;self.setlistTitle="";self.activeItem="";self.message="";self.selectionMessage="";self.draw();
  });
  orchestraLabel.appendChild(orchestraSel);top.appendChild(orchestraLabel);
  var fresh=labelled(doc,"Nyt orkester","","input");top.appendChild(fresh.wrap);
  top.appendChild(button(doc,"Opret orkester",function(){
-  try{self.orchestraTitle=model.orchestra(wiki,fresh.input.value);self.setlistTitle="";self.activeItem="";
+  try{self.orchestraTitle=model.orchestra(wiki,fresh.input.value);self.setlistTitle="";self.activeItem="";self.selectionMessage="";
    self.alert("Orkester oprettet.");}catch(e){self.alert(e.message);}
  },"huwrep-primary"));
  if(!this.orchestraTitle)return;
@@ -113,12 +113,12 @@ Repertoire.prototype.draw=function(){
  option(doc,setSel,"","Vælg sætliste");
  currentSets.forEach(function(s){option(doc,setSel,s.fields.title,s.fields.name||s.fields.title);});
  setSel.value=this.setlistTitle;
- setSel.addEventListener("change",function(){self.setlistTitle=this.value;self.activeItem="";self.message="";self.draw();});
+ setSel.addEventListener("change",function(){self.setlistTitle=this.value;self.activeItem="";self.message="";self.selectionMessage="";self.draw();});
  row.appendChild(setSel);
  var newSet=labelled(doc,"Ny sætliste","","input");
  row.appendChild(newSet.wrap);
  row.appendChild(button(doc,"Opret sætliste",function(){
-  try{self.setlistTitle=model.createSetlist(wiki,orch,newSet.input.value);self.activeItem="";
+  try{self.setlistTitle=model.createSetlist(wiki,orch,newSet.input.value);self.activeItem="";self.selectionMessage="";
    self.alert("Sætlisten er oprettet. Tilføj numre fra orkestrets repertoire.");}
   catch(e){self.alert(e.message);}
  },"huwrep-primary"));
@@ -141,20 +141,40 @@ Repertoire.prototype.draw=function(){
   },"huwrep-primary"));
  }
  var setTitle=this.setlistTitle,list=setTitle?model.entries(wiki,setTitle):[];
- var repertoire=el(doc,"div","huwrep-panel");host.appendChild(repertoire);
- repertoire.appendChild(el(doc,"h3","","Orkestrets repertoire ("+known.length+")"));
- var ul=el(doc,"ol","huwrep-list");repertoire.appendChild(ul);
+ var repertoire=el(doc,"section","huwrep-panel huwrep-repertoire");host.appendChild(repertoire);
+ var heading=el(doc,"div","huwrep-repertoire-heading");repertoire.appendChild(heading);
+ heading.appendChild(el(doc,"h3","","Orkestrets repertoire"));
+ heading.appendChild(el(doc,"span","huwrep-repertoire-count",known.length+" numre · "+list.length+" valgt"));
+ var hint=el(doc,"p","huwrep-repertoire-hint",
+  this.selectionMessage||(setTitle?"Tryk på en titel for at vælge nummeret. Tryk igen for at fjerne det fra sætlisten.":"Vælg eller opret en sætliste ovenfor for at vælge numre."));
+ hint.setAttribute("role","status");repertoire.appendChild(hint);
+ var ul=el(doc,"ul","huwrep-song-grid");repertoire.appendChild(ul);
  known.forEach(function(item){
-  var li=el(doc,"li","huwrep-item");
-  var name=item.fields["music-title"];
-  li.appendChild(button(doc,shortSheetName(wiki,item.fields.title),function(){self.navigate(name);},"huwrep-link"));
+  var id=item.fields.title,title=shortSheetName(wiki,id),selected=list.indexOf(id)>=0;
+  var li=el(doc,"li","huwrep-song-item");
+  var tile=button(doc,"",function(){
+   if(!setTitle)return;
+   try{
+    var current=model.entries(wiki,setTitle),included=current.indexOf(id)>=0;
+    if(included){
+     model.setEntries(wiki,setTitle,current.filter(function(x){return x!==id;}));
+     if(self.activeItem===id)self.activeItem="";
+    }else{
+     model.addEntry(wiki,setTitle,id);self.activeItem=id;
+    }
+    self.selectionMessage=(included?"Fjernet: ":"Tilføjet: ")+title;
+    self.message="";self.draw();
+   }catch(e){self.alert(e.message);}
+  },"huwrep-song-card"+(selected?" is-in-setlist":""));
+  tile.disabled=!setTitle;
+  tile.setAttribute("aria-pressed",String(selected));
+  tile.setAttribute("aria-label",(selected?"Fjern ":"Tilføj ")+title+(selected?" fra sætlisten":" til sætlisten"));
+  tile.appendChild(el(doc,"span","huwrep-song-title",title));
   var details=[item.fields["repertoire-key"],item.fields["repertoire-tempo"]].filter(Boolean).join(" · ");
-  if(details)li.appendChild(el(doc,"span","huwrep-muted",details));
-  if(setTitle)li.appendChild(button(doc,"Tilføj til sætliste",function(){
-   try{model.addEntry(wiki,setTitle,item.fields.title);self.activeItem=item.fields.title;self.alert("Tilføjet til sætlisten.");}
-   catch(e){self.alert(e.message);}
-  }));
-  ul.appendChild(li);
+  if(details)tile.appendChild(el(doc,"span","huwrep-song-detail",details));
+  var indicator=el(doc,"span","huwrep-song-indicator",selected?"✓":"+");
+  indicator.setAttribute("aria-hidden","true");tile.appendChild(indicator);
+  li.appendChild(tile);ul.appendChild(li);
  });
  if(!known.length)repertoire.appendChild(el(doc,"p","huwrep-muted","Orkestret har endnu ingen melodier."));
  if(!setTitle)return;

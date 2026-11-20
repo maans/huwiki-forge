@@ -22,6 +22,10 @@ for(const file of (await readdir(path.join(directory,'src'))).filter(name=>name.
   throw Error('Invalid module header in '+file);
  payload.tiddlers[title]={...payload.tiddlers[title],title,type:'application/javascript','module-type':moduleType,text:src};
 }
+// Keep the Repertoire stylesheet in source control as well as the plugin package.
+const stylesheetTitle="$:/plugins/huwiki/repertoire/styles.css";
+if(!payload.tiddlers[stylesheetTitle])throw Error("Missing Repertoire stylesheet");
+payload.tiddlers[stylesheetTitle]={...payload.tiddlers[stylesheetTitle],text:await readFile(path.join(directory,"src/styles.css"),"utf8")};
 const next=JSON.stringify({...base,...info,text:JSON.stringify(payload)},null,2)+'\n';
 if(process.argv.includes('--check')){
  if(next!==original)throw Error('Repertoire plugin is stale. Run node scripts/build-repertoire-plugin.mjs');
