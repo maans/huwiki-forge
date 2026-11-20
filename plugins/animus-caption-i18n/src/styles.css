@@ -1,2 +1,21 @@
 .huw-animus-caption-language { display:inline-flex; align-items:center; flex-wrap:wrap; gap:.35rem; margin:.2rem .4rem; font:inherit; font-size:.85rem; }
 .huw-animus-caption-language select { max-width:16rem; padding:.35rem .5rem; font:inherit; border:1px solid #8b96a6; border-radius:.45rem; background:var(--huw-panel,#fafafa); color:inherit; }
+
+/* Readable, responsive audience controls without touching the animation stage. */
+.plato-player{box-sizing:border-box;min-width:0;max-width:100%}
+.plato-player .plato-transport{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+.plato-player .plato-timeline{display:flex;align-items:center;gap:8px;flex:1 1 230px;min-width:0}
+.plato-player .plato-scrub{flex:1 1 120px;min-width:80px;max-width:100%}
+.plato-player .plato-time{flex:0 0 auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+.plato-player .plato-options{display:flex;align-items:center;flex-wrap:wrap;gap:8px;min-width:0}
+.plato-player .plato-chapters{flex:1 1 220px;max-width:100%;min-width:120px;text-overflow:ellipsis}
+.plato-player .plato-options .plato-button{white-space:nowrap}
+.plato-player .plato-mixer{box-sizing:border-box;max-width:min(92vw,440px)}
+.plato-player .huw-animus-caption-language{min-width:0;max-width:100%}
+.plato-player .huw-animus-caption-language select{min-width:0;max-width:100%}
+@media(max-width:700px){
+ .plato-player .plato-timeline{order:2;flex-basis:100%}
+ .plato-player .plato-chapters{flex-basis:100%}
+ .plato-player .plato-options .plato-button{min-height:36px}
+ .plato-player .huw-animus-caption-language{flex:1 1 100%;justify-content:space-between}
+}

@@ -68,6 +68,70 @@ exports.startup=function(){
   var aria=da?"Sprog for undertekster":"Caption language";
   if(list.getAttribute("aria-label")!==aria)list.setAttribute("aria-label",aria);
  }
+
+ // Translate the audience player's own controls as well as its captions.
+ // The native player resets play/fullscreen labels when their state changes;
+ // update only these small controls, never animation SVG frames.
+ function localizePlayer(host){
+  if(!host.classList.contains("plato-player"))return;
+  var da=autoLanguage()==="da",T=function(d,e){return da?d:e;};
+  function txt(selector,value){var n=host.querySelector(selector);if(n&&n.textContent!==value)n.textContent=value;return n;}
+  function att(selector,key,value){var n=host.querySelector(selector);if(n&&n.getAttribute(key)!==value)n.setAttribute(key,value);}
+  var busy=host.getAttribute("aria-busy")==="true",playing=host.getAttribute("data-plato-playing")==="true";
+  txt(".plato-preparing",T("Forbereder lyd …","Preparing sound …"));
+  txt(".plato-play",busy?T("Forbereder …","Preparing …"):playing?"Ⅱ Pause":T("▶ Afspil","▶ Play"));
+  att(".plato-play","aria-label",busy?T("Afbryd klargøring","Cancel preparation"):playing?T("Sæt forestillingen på pause","Pause the performance"):T("Afspil forestillingen","Play the performance"));
+  att(".plato-stop","aria-label",T("Stop, og gå til begyndelsen","Stop and return to the beginning"));
+  att(".plato-stop","title","Stop");
+  att(".plato-scrub","aria-label",T("Position i forestillingen","Position in the performance"));
+  att(".plato-chapters","aria-label",T("Vælg afsnit","Choose a chapter"));
+  txt(".plato-options > .plato-secondary:not(.plato-fullscreen)",T("Undertekster","Captions"));
+  att(".plato-options > .plato-secondary:not(.plato-fullscreen)","aria-label",T("Vis undertekster","Show captions"));
+  txt(".plato-sound-wrap .plato-button",T("Lyd","Sound"));
+  att(".plato-sound-wrap .plato-button","aria-label",T("Juster lydniveauer","Adjust sound levels"));
+  att(".plato-mixer","aria-label",T("Lydniveauer","Sound levels"));
+  var channels=[["speech","Tale","Speech"],["song","Sang","Singing"],["music","Musik","Music"]];
+  Array.prototype.forEach.call(host.querySelectorAll(".plato-mixer-row"),function(row,index){
+   var pair=channels[index];if(!pair)return;
+   var label=row.querySelector("span"),range=row.querySelector("input.plato-level");
+   if(label&&label.textContent!==T(pair[1],pair[2]))label.textContent=T(pair[1],pair[2]);
+   if(range){
+    if(range.getAttribute("data-plato-kind")!==pair[0])range.setAttribute("data-plato-kind",pair[0]);
+    var name=T(pair[1]+" · lydstyrke",pair[2]+", volume");
+    if(range.getAttribute("aria-label")!==name)range.setAttribute("aria-label",name);
+   }
+  });
+  var full=host.querySelector(".plato-fullscreen");
+  if(full){
+   var active=!!(host.ownerDocument.fullscreenElement||host.ownerDocument.webkitFullscreenElement);
+   var title=T(active?"Afslut fuld skærm":"Fuld skærm",active?"Exit full screen":"Full screen");
+   if(full.textContent!==title)full.textContent=title;
+   var aria=T(active?"Afslut fuld skærm":"Vis forestillingen i fuld skærm",active?"Exit full screen":"Show the performance in full screen");
+   if(full.getAttribute("aria-label")!==aria)full.setAttribute("aria-label",aria);
+  }
+  [".plato-progress",".plato-static"].forEach(function(selector){
+   var n=host.querySelector(selector);if(!n)return;
+   var match=/^([0-9]+) (scenes|scener)(?= ·)/.exec(n.textContent||"");
+   if(match){
+    var text=n.textContent.replace(match[0],match[1]+" "+T("scener","scenes"));
+    if(text!==n.textContent)n.textContent=text;
+   }
+  });
+  var status=host.querySelector(".plato-status");
+  if(status){
+   var current=status.textContent||"";
+   if(current!==status._huwPlayerPainted)status._huwPlayerSource=current;
+   var source=status._huwPlayerSource||"",messages={
+    "Sound was interrupted. The performance continues silently; pause and play to resume sound.":"Lyden blev afbrudt. Forestillingen fortsætter uden lyd. Sæt på pause og afspil igen for at genoptage lyden.",
+    "Audio is unavailable in this browser. The performance continues silently.":"Lyd er ikke tilgængelig i denne browser. Forestillingen fortsætter uden lyd.",
+    "Audio could not start. The performance continues silently; pause and play to try again.":"Lyden kunne ikke starte. Forestillingen fortsætter uden lyd. Sæt på pause og prøv igen.",
+    "Audio could not be prepared. The performance continues silently.":"Lyden kunne ikke klargøres. Forestillingen fortsætter uden lyd.",
+    "An audio track could not start. Animation and other sound will continue.":"Et lydspor kunne ikke starte. Animation og øvrig lyd fortsætter."
+   };
+   var next=da?(messages[source]||source):source;status._huwPlayerPainted=next;
+   if(current!==next)status.textContent=next;
+  }
+ }
  function mount(host){
   var toolbar=host.querySelector(".plato-options")||host.querySelector(".huw-musical-transport");
   if(!toolbar||host._huwCaptionSelect)return;
@@ -85,7 +149,9 @@ exports.startup=function(){
   });
  }
  function updateHost(host,lang){
-   if(!Object.keys(byLanguage).length||host.isConnected===false)return;
+   if(host.isConnected===false)return;
+   localizePlayer(host);
+   if(!Object.keys(byLanguage).length)return;
    mount(host);
    if(host._huwCaptionSelect){
     var input=host._huwCaptionSelect.querySelector("select");if(input&&input.value!==chosen())input.value=chosen();
@@ -115,6 +181,10 @@ exports.startup=function(){
    var element=record.target&&record.target.nodeType===1?record.target:record.target&&record.target.parentElement;
    var caption=element&&element.closest&&element.closest(CAPTIONS);
    if(caption){nodes.add(caption);return;}
+   // Only seek/play/status labels, not frame-by-frame SVG updates.
+   if(element&&element.closest&&element.closest(".plato-play, .plato-fullscreen, .plato-status, .plato-progress")){
+    var player=element.closest(".plato-player");if(player)hosts.add(player);
+   }
    Array.prototype.forEach.call(record.addedNodes||[],function(added){
     if(added.nodeType!==1)return;
     inspect(added);
