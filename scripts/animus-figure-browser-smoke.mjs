@@ -73,20 +73,23 @@ async function actorPose(scope){
 function stage(){return editor.locator('.huw-musical-canvas > svg');}
 function figurePanel(){return editor.locator('[data-figure-panel]:visible');}
 function figurePreview(){return figurePanel().locator('[data-figure-preview]');}
-async function nativePoint(locator,allowed,localPoints){
+async function nativePoint(locator,allowed,localPoints,{avoidControls=false,minClearance=12}={}){
  await locator.scrollIntoViewIfNeeded();let previous=null,point=null,last=[];
  for(let attempt=0;attempt<60;attempt++){
-  last=await locator.evaluate((node,points)=>{
+  last=await locator.evaluate((node,{points,avoidControls})=>{
    const bb=node.getBBox(),matrix=node.getScreenCTM();
-   const candidates=points||[.25,.5,.75].flatMap(y=>[.35,.5,.65].map(x=>({x:bb.x+bb.width*x,y:bb.y+bb.height*y})));
+   const candidates=points||(avoidControls?[.1,.2,.3,.4,.5,.6,.7,.8,.9]:[.25,.5,.75]).flatMap(y=>[.35,.5,.65].map(x=>({x:bb.x+bb.width*x,y:bb.y+bb.height*y})));
+   const scope=node.closest('[data-figure-preview],.huw-musical-canvas'),controls=avoidControls&&scope?[...scope.querySelectorAll('[data-figure-action],[data-transform-action],.huw-musical-figure-overlay [role="button"],.huw-musical-transform-overlay [role="button"]')].map(control=>control.getBoundingClientRect()).filter(rect=>rect.width>0&&rect.height>0):[];
    return candidates.map(local=>{const p=node.ownerSVGElement.createSVGPoint();p.x=local.x;p.y=local.y;const screen=p.matrixTransform(matrix),hit=node.ownerDocument.elementFromPoint(screen.x,screen.y);
-    return {x:screen.x,y:screen.y,hit:hit?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id'),tag:hit?.tagName,className:hit?.getAttribute('class')};});
-  },localPoints);
-  const current=last.find(point=>allowed.includes(point.hit));
+    const clearance=controls.length?Math.min(...controls.map(rect=>Math.hypot(Math.max(rect.left-screen.x,0,screen.x-rect.right),Math.max(rect.top-screen.y,0,screen.y-rect.bottom)))):1e9;
+    return {x:screen.x,y:screen.y,hit:hit?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id'),tag:hit?.tagName,className:hit?.getAttribute('class'),clearance};});
+  },{points:localPoints,avoidControls});
+  const exposed=last.filter(point=>allowed.includes(point.hit)&&(!avoidControls||point.clearance>=minClearance));if(avoidControls)exposed.sort((a,b)=>b.clearance-a.clearance);
+  const current=exposed[0];
   if(current&&previous&&Math.hypot(current.x-previous.x,current.y-previous.y)<.5){point=current;break;}
   previous=current;await page.waitForTimeout(50);
  }
- assert.ok(point,'a stable exposed painted region receives native input: '+JSON.stringify(last));return point;
+ assert.ok(point,'a stable exposed painted region'+(avoidControls?' at least '+minClearance+'px away from editing controls':'')+' receives native input: '+JSON.stringify(last));return point;
 }
 async function touchPoint(point){const offset=await pageOffset();await page.touchscreen.tap(point.x+offset.x,point.y+offset.y);}
 async function blankPoint(locator){
@@ -101,8 +104,19 @@ async function blankPoint(locator){
  assert.ok(point,'a visible empty canvas region receives a native tap, without selecting the painted backdrop');return point;
 }
 async function tapFigurePart(id){
+ await wiki.evaluate(()=>{
+  if(window.__figureInputEvents)return;window.__figureInputEvents=[];window.__figureTapTargets=[];
+  for(const type of ['pointerdown','pointerup','pointercancel','gotpointercapture','lostpointercapture'])document.addEventListener(type,event=>{
+   const target=event.target,canvas=document.querySelector('.huw-musical-figure-canvas');if(!canvas?.contains(target))return;
+   window.__figureInputEvents.push({type,time:performance.now(),pointerId:event.pointerId,pointerType:event.pointerType,primary:event.isPrimary,x:event.clientX,y:event.clientY,tag:target.tagName,part:target.closest('[data-cutout-id]')?.getAttribute('data-cutout-id'),action:target.closest('[data-figure-action]')?.getAttribute('data-figure-action'),captured:canvas.hasPointerCapture(event.pointerId),selected:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-selected')});
+   if(window.__figureInputEvents.length>80)window.__figureInputEvents.shift();
+  },true);
+ });
  const painting=figurePreview().locator('[data-cutout-id="'+(id===joint?drawing:id)+'"] image').first();
- await touchPoint(await nativePoint(painting,[id===joint?drawing:id]));
+ // A touch near a blue handle can be adjusted to that interactive control
+ // by the browser. Aim at visibly exposed artwork with a measured margin.
+ const point=await nativePoint(painting,[id===joint?drawing:id],undefined,{avoidControls:true});
+ await wiki.evaluate(target=>window.__figureTapTargets.push(target),{id,...point});await touchPoint(point);
  assert.equal(await figurePanel().getAttribute('data-figure-selected'),id,'one native tap selects '+id);
 }
 async function assertFigureCleared(pose,time,zoom,message){
@@ -379,7 +393,7 @@ try{
  await writeFile(new URL('result.json',out),JSON.stringify({ok:true,route:'/demo/?edition=turn-around&lang=da',checks,errors,actor,joint,scene:selectedScene.source,currentTime,localTime,key,faceKey,sourceHashes:sourceHashes(finalSources),exportFrames:frames},null,2)+'\n');
  console.log('FIGURE ACCEPTANCE '+JSON.stringify({ok:true,checks:checks.length}));
 }catch(error){
- let details=null;try{details=await (wiki||page)?.evaluate(()=>({workshop:document.querySelector('[data-animus-workshop]')?.getAttribute('data-animus-workshop'),figure:document.querySelector('[data-figure-panel]')?.textContent,actor:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-actor'),part:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-selected'),status:document.querySelector('.huw-musical-status')?.textContent}));if(page)await page.screenshot({path:fileURLToPath(new URL('failure.png',out)),fullPage:false});}catch(_){}
+ let details=null;try{details=await (wiki||page)?.evaluate(()=>({workshop:document.querySelector('[data-animus-workshop]')?.getAttribute('data-animus-workshop'),figure:document.querySelector('[data-figure-panel]')?.textContent,actor:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-actor'),part:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-selected'),status:document.querySelector('.huw-musical-status')?.textContent,inputEvents:window.__figureInputEvents||[],tapTargets:window.__figureTapTargets||[]}));if(page)await page.screenshot({path:fileURLToPath(new URL('failure.png',out)),fullPage:false});}catch(_){}
  await writeFile(new URL('result.json',out),JSON.stringify({ok:false,checks,errors,details,failure:String(error.stack||error)},null,2)+'\n');throw error;
 }finally{
  if(context)try{await context.tracing.stop({path:fileURLToPath(new URL('trace.zip',out))});}catch(_){}

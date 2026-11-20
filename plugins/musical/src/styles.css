@@ -76,7 +76,8 @@
    Preview + score always sit directly above the timeline; the inspector
    is contextual and never consumes a permanent vertical row. */
 .huw-musical.huw-musical--workspace{
- --musical-preview-height:clamp(180px,29vh,295px);
+ /* Keep the canvas height when the touch-friendly preview controls grow by 16px. */
+ --musical-preview-height:clamp(196px,calc(29vh + 16px),311px);
  --musical-track-label-width:166px;
  --musical-panel:#141e2e;
  --musical-panel-2:#192638;
@@ -96,7 +97,7 @@
  position:fixed;inset:0;z-index:2147481000;
  height:100dvh;min-height:0;width:100dvw;max-width:none;
  border:0;border-radius:0;margin:0;
- --musical-preview-height:clamp(240px,40vh,500px)
+ --musical-preview-height:clamp(256px,calc(40vh + 16px),516px)
 }
 .huw-musical--workspace .huw-musical-appbar{
  flex:0 0 42px;min-height:42px;display:flex;
