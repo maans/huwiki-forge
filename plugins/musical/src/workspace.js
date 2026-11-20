@@ -53,6 +53,7 @@ function mount(o){
  var manuscript=Manuscript.mount(Object.assign({},o,{openNarration:function(details){narration.open(details);},openFace:o.openFace||openFace}));
  var transformMode='',figureRoot='',cameraName='A',latestPart='',cancelGesture=null;
  var previewZoom=SelectionZoom.create(o.view.svg,function(){return editor.isExporting&&editor.isExporting();}),zoomTarget='',zoomElement=null,selectingOnStage=false;
+ var previewRefreshFrame=0,handlesRefreshFrame=0,lastPreviewRefresh=0;
  var stagePanel=host.querySelector('.huw-musical-stage'),fullscreenFallback=false,fullscreenPending=false,exportSuspended=0,disposed=false;
  var workshopMode='',workshopPart='',workshopActor='',lastBodyPart='',routingWorkshop=false,selectionCleared=false,clearingSelection=false;
  var clearButtons=[];
@@ -262,6 +263,8 @@ function mount(o){
  viewButton.value="split";
  viewButton.onchange=function(){
   mode=viewButton.value;host.dataset.previewMode=mode;
+  // Render the current score only when the score view becomes visible.
+  if(mode!=='stage'&&o.refreshScore)o.refreshScore();
   reframeAfterLayout();
  };
  var previewTools=el(doc,'div','huw-musical-preview-tools',undefined,stagePanel||actions);
@@ -538,10 +541,36 @@ function mount(o){
   if(!disposed&&o.repaint)o.repaint();
   if(!disposed)refreshHandles();
  }
- function paintPreview(){if(!disposed){previewZoom.apply();if(!selectingOnStage&&!cancelGesture&&!exportSuspended){
-  if(workshopMode==='figure'){if(figurePanel.refresh()===false&&!figurePanel.isOpen())hideWorkshop();}
-  else if(workshopMode==='face'){if(editor.faceContext&&editor.faceContext(workshopPart))facePanel.refresh();else hideWorkshop();}
- }}}
+ function paintPreview(){
+  if(disposed)return;
+  previewZoom.apply();
+  if(!workshopMode||selectingOnStage||cancelGesture||exportSuspended||previewRefreshFrame)return;
+  // Refresh the independent character workshop after the scene and cursor,
+  // rather than forcing costly SVG cloning and bounding-box reads mid-seek.
+  if(o.host.dataset.playing==='true'&&Date.now()-lastPreviewRefresh<120)return;
+  function refresh(){
+   previewRefreshFrame=0;
+   if(disposed||selectingOnStage||cancelGesture||exportSuspended)return;
+   lastPreviewRefresh=Date.now();
+   if(workshopMode==='figure'){if(figurePanel.refresh()===false&&!figurePanel.isOpen())hideWorkshop();}
+   else if(workshopMode==='face'){if(editor.faceContext&&editor.faceContext(workshopPart))facePanel.refresh();else hideWorkshop();}
+  }
+  var raf=doc.defaultView&&doc.defaultView.requestAnimationFrame;
+  if(raf)previewRefreshFrame=raf.call(doc.defaultView,function(){
+   // Give the browser a paint opportunity for the new timeline cursor first.
+   previewRefreshFrame=disposed?0:raf.call(doc.defaultView,refresh);
+  });else refresh();
+ }
+ function requestHandleRefresh(){
+  if(disposed||handlesRefreshFrame)return;
+  // Transform handles need getBBox/getScreenCTM; don't force synchronous layout
+  // inside the same task as a touch seek on a complex SVG scene.
+  var raf=doc.defaultView&&doc.defaultView.requestAnimationFrame;
+  if(raf)handlesRefreshFrame=raf.call(doc.defaultView,function(){
+   // SVG getBBox/getScreenCTM can be slow on iPad; first allow the playhead to paint.
+   handlesRefreshFrame=disposed?0:raf.call(doc.defaultView,function(){handlesRefreshFrame=0;if(!disposed)refreshHandles();});
+  });else refreshHandles();
+ }
  function screenUnit(){
   var matrix=svg.getScreenCTM&&svg.getScreenCTM(),scale=matrix&&Math.sqrt(Math.abs(matrix.a*matrix.d-matrix.b*matrix.c));
   return Number.isFinite(scale)&&scale>1e-7?1/scale:1;
@@ -792,11 +821,13 @@ function mount(o){
   routingWorkshop=true;try{editor.selectPart(context.headId,true);}finally{routingWorkshop=false;}
   showFaceWorkshop(context.headId,'expression');updateToolButtons();setInspector(false);refreshHandles();return true;
  }
- return {showInspector:selection,selectTrack:selection,setInspector:setInspector,refreshHandles:refreshHandles,clearSelection:clearSelection,
+ return {showInspector:selection,selectTrack:selection,setInspector:setInspector,refreshHandles:refreshHandles,requestHandleRefresh:requestHandleRefresh,clearSelection:clearSelection,
   zoomToSelection:zoomToSelection,resetPreviewZoom:resetPreviewZoom,paintPreview:paintPreview,
   beginExport:function(){exportSuspended++;var restore=previewZoom.suspend(),restoreFace=facePanel.suspend(),restoreFigure=figurePanel.suspend(),restored=false;syncWorkshop();refreshHandles();return function(){if(restored)return;restored=true;exportSuspended=Math.max(0,exportSuspended-1);syncWorkshop();restoreFace();restoreFigure();restore();if(!disposed){refreshHandles();reframeAfterLayout();}};},
   openFace:openFace,openObject:openAppearance,openScore:function(title){scoreWorkshop.open(title);},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},openManuscript:openManuscript,
-  dispose:function(){disposed=true;cancelBlankTap();stageCanvas.removeEventListener('pointerdown',startBlankTap);if(cancelGesture)cancelGesture();previewZoom.dispose();fullscreenFallback=false;if(stagePanel)stagePanel.classList.remove('huw-musical-stage--expanded');doc.removeEventListener('fullscreenchange',syncStageFullscreen);if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen)try{Promise.resolve(doc.exitFullscreen()).catch(function(){});}catch(_closed){}
+  dispose:function(){disposed=true;var cancelFrame=doc.defaultView&&doc.defaultView.cancelAnimationFrame;
+   if(cancelFrame){if(previewRefreshFrame)cancelFrame.call(doc.defaultView,previewRefreshFrame);if(handlesRefreshFrame)cancelFrame.call(doc.defaultView,handlesRefreshFrame);}previewRefreshFrame=handlesRefreshFrame=0;
+   cancelBlankTap();stageCanvas.removeEventListener('pointerdown',startBlankTap);if(cancelGesture)cancelGesture();previewZoom.dispose();fullscreenFallback=false;if(stagePanel)stagePanel.classList.remove('huw-musical-stage--expanded');doc.removeEventListener('fullscreenchange',syncStageFullscreen);if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen)try{Promise.resolve(doc.exitFullscreen()).catch(function(){});}catch(_closed){}
   facePanel.dispose();figurePanel.dispose();workshop.remove();workshopAnchor.remove();host.classList.remove('huw-musical--workshop-open');narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);
   host.removeEventListener("keydown",keyboard);
   host.removeEventListener('keydown',escapeSelection,true);

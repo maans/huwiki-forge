@@ -191,7 +191,7 @@ Musical.prototype.render=function(parent,next){
  }
  function showNotes(index,t){
   var song=songs[index],events=song&&song.events||[],local=Number(t)-clips[index].start;
-  if(!events.length)return;
+  if(!events.length||song.page.hidden||host.dataset.previewMode==='stage')return;
   var ms=Math.max(0,local)*1000,lo=0,hi=events.length;
   while(lo<hi){var mid=(lo+hi)>>1;if(events[mid].milliseconds<=ms+3)lo=mid+1;else hi=mid;}
   var pos=Math.max(0,lo-1),cursor=song.cursor;
@@ -227,7 +227,10 @@ Musical.prototype.render=function(parent,next){
   host.dataset.activeSongCount=String(visible.length);
   if(scoreLink){scoreLink.setAttribute("href","#"+encodeURIComponent(songs[i].title));
    scoreLink.setAttribute("data-tiddler-title",songs[i].title);}
-  visible.forEach(function(j){ensureNotation(songs[j]);showNotes(j,t);});
+  // In stage-only editing there is no visible notation to render. ABCJS
+  // renderAbc can block the iPad main thread during an otherwise simple seek.
+  // Switching to split/score view prepares the selected score on demand.
+  if(host.dataset.previewMode!=='stage')visible.forEach(function(j){ensureNotation(songs[j]);showNotes(j,t);});
  }
  // A click on ABC notation navigates the *master* musical timeline.
  // ABCJS provides performed timings, including expanded repeat passages.
@@ -435,7 +438,10 @@ Musical.prototype.render=function(parent,next){
   updateCaptions(visualTime);
   // Seeking also updates the selection frame; playing never spends time
   // recalculating its SVG bounds when the frame is hidden.
-  if(workspace&&workspace.refreshHandles&&!(timeline&&timeline.running))workspace.refreshHandles();
+  if(workspace&&!(timeline&&timeline.running)){
+   if(workspace.requestHandleRefresh)workspace.requestHandleRefresh();
+   else if(workspace.refreshHandles)workspace.refreshHandles();
+  }
   showSong(t);applyGains(t,false);
   if(timeline&&timeline.running){
    if(!editor||!editor.isSfxAudible||editor.isSfxAudible())sfx.sync(t);
@@ -617,6 +623,7 @@ Musical.prototype.render=function(parent,next){
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},repaint:function(){paint(timeline.value());},
   openFace:openFace,
   layout:layout,transport:transport,play:play,view:view,editor:editor,
+  refreshScore:function(){showSong(timeline.value());},
   seek:seek,position:function(){return timeline.value();},
   pause:function(){if(timeline.running)pauseAll();},
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}
@@ -764,7 +771,9 @@ Musical.prototype.render=function(parent,next){
   if(!alive())return;
   var canAudio=!!(ABC.synth&&ABC.synth.supportsAudio&&ABC.synth.supportsAudio());
   ABCObject=ABC;soundReady=canAudio;
-  songs.forEach(function(song){if(!song.clip.muted||!song.page.hidden)ensureNotation(song);});
+  // Prepare the initially visible guide once for score and export workflows.
+   // Later stage-only seeks skip rendering new guides until a score is opened.
+   songs.forEach(function(song){if(!song.clip.muted||!song.page.hidden)ensureNotation(song);});
   clips=Playlist.reflow(songs.map(function(song){return song.clip;}),self.scoreTitle);
   beatClock=Motion.beatClock(clips,function(title){var tid=self.wiki.getTiddler(title);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
   songs.forEach(function(song,i){song.clip=clips[i];});

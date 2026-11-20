@@ -809,7 +809,9 @@ function attach(o){
    lane.onclick=function(ev){
     if(ev.target.closest&&ev.target.closest(".huw-musical-key,.huw-musical-song-clip,.huw-musical-caption-clip"))return;
     var rect=lane.getBoundingClientRect(),u=lim((ev.clientX-rect.left)/Math.max(1,rect.width),0,1);
-    o.seek(toAudio(u*axis));if(t.kind!=="song-lane"&&choice.id!==t.id)choose(t.id,0);
+    // Tapping a lane navigates the show; it should not rebuild the entire
+    // timeline and inspector just because the user scrubbed on a touch screen.
+    o.seek(toAudio(u*axis));
    };
    if(t.kind==="object-browser"){
     // This single compact lane is a fast selector for *untracked* props and
