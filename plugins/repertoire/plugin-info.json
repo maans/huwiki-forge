@@ -1,5 +1,5 @@
 {
-  "version": "0.1.4-beta.5",
-  "description": "Repertoire med live transponering og tempo i nodebog, touch-sortering, aftaler og PDF/site",
-  "modified": "20261121003200000"
+  "version": "0.1.4-beta.6",
+  "description": "Repertoire med stabil StoryView-lignende rækkefølgesortering, lokal touch-rulning, live transponering og tempo",
+  "modified": "20261121004800000"
 }

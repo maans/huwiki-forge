@@ -40,7 +40,7 @@ Repertoireværkstedet viser en responsiv oversigt og et kompakt redigeringsområ
 
 - Original toneart og tempo hentes fra ABC-partiturets `K:` og `Q:` i musikbiblioteket. Eksempelvis angives `Q:1/2=70` som 70 halve noder pr. minut, ikke 70 fjerdedele.
 - En ændret toneart eller et nyt tempo kan gemmes **kun i den aktuelle sætliste** eller **som orkestrets standard**. Uændrede værdier henviser fortsat til originalen, i stedet for at kopiere standarden ind i alle sætlister.
-- Listen kan sorteres ved at trække i grebet på Mac, iPad og touchskærme. På tastatur markeres grebet med Tab og flyttes med pil op/ned. Design og statusklasser følger de kendte TiddlyWiki-sorteringsmønstre, men selve input bruger Pointer Events for at undgå TiddlyWikis HTML5-drag-and-drop-begrænsning på iPad.
+- Listen kan sorteres ved at trække i grebet på Mac, iPad og touchskærme. På tastatur markeres grebet med Tab og flyttes med pil op/ned. Udseendet følger TiddlyWikis StoryView/dragmarkering, men den eksisterende liste omarrangeres uden fuld genopbygning. Listen har sin egen rulning; når man trækker ved kanten, ruller kun nummerlisten – ikke hele wikiens vindue.
 - Klik på titlen i rækkefølgelisten for at ændre sangens aftaler. Fjern-knappen (×) fjerner kun sangen fra sætlisten, ikke fra musikbiblioteket.
 
 **Nodebog:** Tonearts- og tempoaftaler anvendes nu på en midlertidig ABC-version under visning og afspilning. Det transponerer melodistemmer og becifringer samt ændrer Q-tempo uden at skrive til de originale tiddlers. Relative dur/mol-signaturer respekteres: `K:F` og `K:Dm` deler fortegn. Ved ikke-understøttede ABC-tonearter vises en kort fejl.

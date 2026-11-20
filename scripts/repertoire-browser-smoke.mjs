@@ -72,6 +72,7 @@ try{
  // Pointer dragging is shared by mouse and iPad touch rather than HTML5 drag events.
  const beforeMouse=await order.locator(".huwrep-order-title").first().innerText();
  await page.evaluate(()=>document.querySelector(".huwrep-order-handle")?.scrollIntoView({block:"center",behavior:"instant"}));
+ const beforeMousePage=await page.evaluate(()=>window.scrollY);
  const grip=await order.locator(".huwrep-order-handle").first().boundingBox();
  const destination=await order.locator(".huwrep-order-row").nth(2).boundingBox();
  await page.mouse.move(grip.x+grip.width/2,grip.y+grip.height/2);
@@ -79,9 +80,13 @@ try{
  await page.mouse.move(destination.x+40,destination.y+destination.height*.8,{steps:12});
  await page.mouse.up();
  await page.waitForFunction(text=>document.querySelector(".huwrep-order-title")?.textContent!==text,beforeMouse);
+ const afterMousePage=await page.evaluate(()=>window.scrollY);
+ assert.ok(Math.abs(afterMousePage-beforeMousePage)<3,
+  "Mouse reorder must not scroll the outer TiddlyWiki story: "+beforeMousePage+" -> "+afterMousePage);
  // A Chrome touch stream exercises the iPad pathway and the same order persistence.
  const beforeTouch=await order.locator(".huwrep-order-title").first().innerText();
  await page.evaluate(()=>document.querySelector(".huwrep-order-handle")?.scrollIntoView({block:"center",behavior:"instant"}));
+ const beforeTouchPage=await page.evaluate(()=>window.scrollY);
  const tg=await order.locator(".huwrep-order-handle").first().boundingBox();
  const dest=await order.locator(".huwrep-order-row").nth(2).boundingBox();
  const cdp=await context.newCDPSession(page);
@@ -92,7 +97,35 @@ try{
  await cdp.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[destPoint]});
  await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
  await page.waitForFunction(text=>document.querySelector(".huwrep-order-title")?.textContent!==text,beforeTouch);
+ const afterTouchPage=await page.evaluate(()=>window.scrollY);
+ assert.ok(Math.abs(afterTouchPage-beforeTouchPage)<3,
+  "iPad touch reorder must not scroll the page: "+beforeTouchPage+" -> "+afterTouchPage);
  await cdp.detach();
+ // At the bottom edge the setlist should scroll internally, not move StoryView.
+ await page.evaluate(()=>{
+  const list=document.querySelector(".huwrep-order-list");
+  list.scrollTop=0;
+  list.scrollIntoView({block:"center",behavior:"instant"});
+ });
+ const local=await page.evaluate(()=>{
+  const list=document.querySelector(".huwrep-order-list"),rect=list.getBoundingClientRect();
+  const handle=list.querySelector(".huwrep-order-handle").getBoundingClientRect();
+  return {pageY:window.scrollY,listTop:list.scrollTop,
+   from:{x:handle.left+handle.width/2,y:handle.top+handle.height/2},
+   to:{x:handle.left+handle.width/2,y:rect.bottom-7}};
+ });
+ assert.equal(local.listTop,0);
+ await page.mouse.move(local.from.x,local.from.y);
+ await page.mouse.down();
+ await page.mouse.move(local.to.x,local.to.y,{steps:12});
+ await page.waitForTimeout(240);
+ const localEnd=await page.evaluate(()=>({
+  listTop:document.querySelector(".huwrep-order-list").scrollTop,pageY:window.scrollY
+ }));
+ await page.mouse.up();
+ assert.ok(localEnd.listTop>0,"Dragging towards the list edge must auto-scroll only the setlist");
+ assert.ok(Math.abs(localEnd.pageY-local.pageY)<3,
+  "The surrounding StoryView must remain stationary during local auto-scroll");
  // Live setlist notation and sound share the transformed ABC, without rewriting the source.
  await page.getByRole("button",{name:"Åbn nodebogen"}).click();
  const arrangementBook=page.locator(".huwrep-book").first();

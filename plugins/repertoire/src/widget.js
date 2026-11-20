@@ -266,6 +266,7 @@ Repertoire.prototype.draw=function(){
  list.forEach(function(id,index){
   var selected=id===self.activeItem,title=shortSheetName(wiki,id);
   var li=el(doc,"li","huwrep-order-row tc-droppable"+(selected?" is-active":""));
+  li.setAttribute("data-repertoire-item",id);
   var grip=button(doc,"⠿",function(){},"huwrep-order-handle tc-draggable");
   grip.setAttribute("aria-label","Flyt "+title+" med træk eller pil op/ned");
   grip.title="Træk eller brug ↑ og ↓ på tastaturet";
@@ -282,25 +283,57 @@ Repertoire.prototype.draw=function(){
   remove.setAttribute("aria-label","Fjern "+title+" fra sætlisten");
   li.appendChild(remove);order.appendChild(li);
  });
- this._orderDispose=Reorder.mount(order,list,function(newOrder,id,keyboard){
-  model.setEntries(wiki,setTitle,newOrder);
-  self.activeItem=id;
-  if(keyboard)self._focusOrderId=id;
-  self.draw();
- });
- if(this._focusOrderId){
-  var targetIndex=list.indexOf(this._focusOrderId);
-  var grips=order.querySelectorAll(".huwrep-order-handle");
-  if(grips[targetIndex]&&grips[targetIndex].focus){
-   try{grips[targetIndex].focus({preventScroll:true});}catch(_e){grips[targetIndex].focus();}
+ // StoryView-inspired stable rows: reorder the existing DOM nodes in place.
+ // Rebuilding the entire TiddlyWiki story after every drop changes page height
+ // and Safari then scroll-anchors the outer viewport unexpectedly.
+ function onReorder(next,id,keyboard){
+  var scrollTop=order.scrollTop,win=doc.defaultView;
+  var pageY=win&&win.scrollY;
+  var current=wiki.getTiddler(setTitle);
+  var safe=model.setEntries(wiki,setTitle,next);
+  self._ownReorder={title:setTitle,list:wiki.getTiddler(setTitle).fields.list};
+  // Reuse the exact same interactive rows, preserving editor inputs and focus.
+  if(self._orderDispose){self._orderDispose();self._orderDispose=null;}
+  var byId=Object.create(null);
+  Array.prototype.forEach.call(order.children,function(row){
+   byId[row.getAttribute("data-repertoire-item")]=row;
+  });
+  safe.forEach(function(itemTitle,index){
+   var row=byId[itemTitle];if(!row)return;
+   order.appendChild(row);
+   var number=row.querySelector(".huwrep-order-position");
+   if(number)number.textContent=String(index+1).padStart(2,"0");
+   row.classList.toggle("is-active",itemTitle===self.activeItem);
+   var select=row.querySelector(".huwrep-order-title");
+   if(select)select.setAttribute("aria-current",String(itemTitle===self.activeItem));
+  });
+  order.scrollTop=scrollTop;
+  var position=editorPanel.querySelector(".huwrep-editor-position");
+  if(position)position.textContent="NUMMER "+(safe.indexOf(self.activeItem)+1)+" AF "+safe.length;
+  self._orderDispose=Reorder.mount(order,safe,onReorder);
+  if(keyboard){
+   var grip=byId[id]&&byId[id].querySelector(".huwrep-order-handle");
+   if(grip&&grip.focus){
+    try{grip.focus({preventScroll:true});}catch(_error){grip.focus();}
+   }
   }
-  this._focusOrderId="";
+  // Guard against the browser's automatic scroll anchoring on DOM moves.
+  if(win&&typeof win.scrollTo==="function"&&Number.isFinite(pageY)&&Math.abs(win.scrollY-pageY)>1){
+   win.scrollTo(win.scrollX,pageY);
+  }
  }
+ this._orderDispose=Reorder.mount(order,list,onReorder);
 };
 Repertoire.prototype.refresh=function(changedTiddlers){
- var affected=Object.keys(changedTiddlers).some(function(title){
-  return title.indexOf("Repertoire/")===0;
- });
+ var keys=Object.keys(changedTiddlers||{}),pending=this._ownReorder;
+ // Reorder has already updated the existing rows; ignore only this exact
+ // internal list write. Other edits or external changes must refresh normally.
+ if(pending&&keys.length===1&&keys[0]===pending.title){
+  var actual=this.wiki.getTiddler(pending.title);
+  if(actual&&actual.fields.list===pending.list){this._ownReorder=null;return false;}
+ }
+ if(pending&&keys.indexOf(pending.title)>=0)this._ownReorder=null;
+ var affected=keys.some(function(title){return title.indexOf("Repertoire/")===0;});
  if(affected){this.refreshSelf();return true;}
  return false;
 };

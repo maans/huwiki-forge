@@ -29,7 +29,7 @@ function makeWiki(){
 
 test("Repertoire package is independent of the ABC plugin",()=>{
  assert.equal(pkg.title,"$:/plugins/huwiki/repertoire");
- assert.equal(pkg.version,"0.1.4-beta.5");
+ assert.equal(pkg.version,"0.1.4-beta.6");
  assert.equal(pkg["plugin-type"],"plugin");
  assert.equal(pkg.dependents,undefined);
  assert.equal(tiddlers["$:/plugins/huwiki/repertoire/widget.js"]["module-type"],"widget");
@@ -138,6 +138,12 @@ test("Repertoire sorting supports pointer and keyboard with TiddlyWiki drag-high
  assert.match(css,/\.huwrep-order-handle\{touch-action:none/);
  assert.match(reorderTiddler.text,/pointercancel/);
  assert.match(reorderTiddler.text,/ArrowDown/);
+ assert.doesNotMatch(reorderTiddler.text,/win\\.scrollBy/,"never scroll the whole StoryView");
+ assert.match(reorderTiddler.text,/order\\.scrollTop=before\\+delta/,"edge scroll belongs to local list");
+ assert.match(css,/\\.huwrep-order-list\\{[^}]*overscroll-behavior:contain/);
+ assert.match(css,/\\.huwrep-order-list\\{[^}]*overflow-anchor:none/);
+ assert.match(widget,/order\\.appendChild\\(row\\)/,"move existing rows, do not reconstruct story DOM");
+ assert.match(widget,/_ownReorder/,"local list updates do not trigger a story rebuild");
  assert.doesNotMatch(widget,/button\(doc,"↑"/);
 });
 

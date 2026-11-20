@@ -54,7 +54,8 @@
 .huwrep-order-heading{display:flex;align-items:baseline;justify-content:space-between;gap:.6rem;padding:0 .35rem}
 .huwrep-order-heading h4{margin:0;font-size:1.06em}
 .huwrep-order-hint{font-size:.81em;line-height:1.4;color:#63766b;margin:.25rem .35rem .75rem}
-.huwrep-order-list{list-style:none;margin:0;padding:0;max-height:none;overflow:visible}
+.huwrep-order-list{list-style:none;margin:0;padding:0;max-height:min(62dvh,560px);overflow-x:hidden;overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;scrollbar-gutter:stable;touch-action:pan-y;scroll-behavior:auto;overflow-anchor:none}
+.huwrep-order-list.huwrep-order-is-dragging{scroll-snap-type:none;user-select:none;-webkit-user-select:none}
 .huwrep-order-row.tc-droppable{position:relative;display:grid;grid-template-columns:40px 25px minmax(0,1fr) 36px;align-items:center;gap:.24rem;min-height:46px;box-sizing:border-box;padding:.15rem .3rem;border-bottom:1px solid #e1e9e4;background:transparent}
 .huwrep-order-row:last-child{border-bottom:0}
 .huwrep-order-row.is-active{background:#e8f4ec;border-radius:.4rem}

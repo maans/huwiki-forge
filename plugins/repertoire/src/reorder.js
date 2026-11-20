@@ -44,17 +44,22 @@ function mount(order,items,onMove){
   row.classList.add("tc-dragover");
   row.setAttribute("data-drop-side",boundary===rows.length?"after":"before");
  }
+ // Auto-scroll ONLY the local setlist. The outer story/viewport must never move.
  function autoScroll(){
   if(!active||!active.dragging||!win||typeof win.requestAnimationFrame!=="function")return;
-  var y=active.clientY,limit=60,height=win.innerHeight||0,delta=0;
-  if(y<limit)delta=-Math.min(13,Math.ceil((limit-y)/5));
-  if(y>height-limit)delta=Math.min(13,Math.ceil((y-(height-limit))/5));
-  if(delta){
-   win.scrollBy(0,delta);
-   active.boundary=boundaryAt(y);
-   mark(active.boundary);
-   active.frame=win.requestAnimationFrame(autoScroll);
-  }else active.frame=0;
+  active.frame=0;
+  var rect=order.getBoundingClientRect(),y=active.clientY;
+  var edge=Math.max(20,Math.min(52,rect.height/5)),delta=0;
+  // Allow a small outside margin so the player can reach either end.
+  if(y>=rect.top-24&&y<rect.top+edge)delta=-Math.min(13,Math.max(2,Math.ceil((rect.top+edge-y)/5)));
+  else if(y<=rect.bottom+24&&y>rect.bottom-edge)delta=Math.min(13,Math.max(2,Math.ceil((y-(rect.bottom-edge))/5)));
+  if(!delta)return;
+  var before=order.scrollTop;
+  order.scrollTop=before+delta;
+  if(order.scrollTop===before)return;
+  active.boundary=boundaryAt(y);
+  mark(active.boundary);
+  active.frame=win.requestAnimationFrame(autoScroll);
  }
  function pointerMove(event){
   if(!active||event.pointerId!==active.pointerId)return;
