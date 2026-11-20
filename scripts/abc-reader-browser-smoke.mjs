@@ -68,7 +68,22 @@ try{
  await score.locator(".huwabc-reader-close").click();
  assert.ok(!await score.evaluate(el=>el.classList.contains("huwabc-reader-active")),"Normal ABC controls return on exit");
  assert.notEqual(await score.locator(".huwabc-head").evaluate(el=>getComputedStyle(el).display),"none");
+
+ // The next-page gesture at the last staff must open the next setlist tune,
+ // with the same immersive reader state; the ordinary Wiki story stays hidden.
+ const book=page.locator(".huwrep-book").first();
+ const heading=book.locator(".huwrep-book-heading h2");
+ const firstTune=await heading.textContent();
+ await score.locator(".huwabc-open-reader").click();
+ let crossed=false;
+ for(let attempt=0;attempt<10;attempt++){
+  await score.locator(".huwabc-reader-next").click({timeout:18000});
+  if((await heading.textContent())!==firstTune){crossed=true;break;}
+ }
+ assert.ok(crossed,"A page turn at the end of the tune must open the next setlist tune");
+ assert.ok(await score.evaluate(el=>el.classList.contains("huwabc-reader-active")),
+  "Turning to another tune must keep the full-screen reading mode");
  assert.ok(!runtimeErrors.some(e=>/reader-mode|ReaderMode|Cannot read properties of undefined/.test(e)),runtimeErrors.join("; "));
- console.log("ABC shared reader: fullscreen, editor hidden, Vis/Øv, page selection, fit and exit verified");
+ console.log("ABC shared reader: fullscreen, editor hidden, Vis/Øv, page selection, fit and cross-tune turning verified");
  await context.close();
 }finally{await browser.close();}
