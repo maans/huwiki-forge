@@ -53,9 +53,23 @@ tags: $:/tags/Stylesheet
  background:#ebeeea!important
 }
 .huwabc-reader-active .huwabc-page-toolbar{display:none!important}
+/* The OUTER shell is a full-height stage, not a paper-sized card.
+   Keep shadows on the actual page elements instead of capping the stage. */
+.huwabc-reader-active > .huwabc-page-shell{
+ height:100%!important;
+ max-height:100%!important;
+ align-items:stretch!important;
+ justify-content:flex-start!important;
+ box-shadow:none!important;
+}
+.huwabc-reader-active .huwabc-page-viewport{
+ margin:0 auto!important;
+ max-width:none!important;
+ max-height:none!important;
+ flex:0 0 auto!important;
+}
 .huwabc-reader-active .huwabc-page-shell{
- margin:4px auto!important;
- box-shadow:0 1px 8px rgba(0,0,0,.08)!important
+ box-shadow:none!important
 }
 .huwabc-reader-active .huwabc-page-viewport{
  transform:none!important;
