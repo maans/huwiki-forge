@@ -4,6 +4,8 @@ on:
     branches: [main]
     paths:
       - 'plugins/repertoire/dist/plugin.json'
+      - 'plugins/repertoire/src/**'
+      - 'tests/repertoire-edition.test.mjs'
       - 'editions/silva-ethno-repertoire/manifest.json'
       - 'editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json'
       - 'editions/silva-ethno-repertoire/tiddlers/config.json'
