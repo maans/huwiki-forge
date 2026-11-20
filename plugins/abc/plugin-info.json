@@ -3,12 +3,12 @@
   "name": "ABC Musik",
   "title": "$:/plugins/huwiki/abc",
   "stability": "experimental",
-  "description": "ABC Musik Edition – tre-fane minimixer med justerbar akkordstørrelse, triolkorrekt markering og TinySynth offline-fallback",
+  "description": "ABC Musik Edition – Vis/Øv/Redigér med fuldskærmsnoder, sidevending og bevaret lydmotor",
   "plugin-type": "plugin",
   "license": "MIT",
   "type": "application/json",
-  "version": "0.3.38-test.6",
+  "version": "0.3.39-test.1",
   "author": "HUWiki",
-  "revision": "6",
-  "modified": "20261117175620909"
+  "revision": "7",
+  "modified": "20261120153000000"
 }
