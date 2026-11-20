@@ -29,6 +29,8 @@ const fetchFreshEditionManifest=(resource,options)=>{
  const isTurnAroundVideoExport=/\/editions\/turn-around\/tiddlers\/video-export\.json$/.test(url.pathname);
  const isAniMusAudioPlugin=/\/plugins\/musical\/dist\/plugin\.json$/.test(url.pathname);
  const isAbcAudioPlugin=/\/plugins\/abc\/dist\/plugin\.json$/.test(url.pathname);
+ // Keep the registry and Repertoire package on the same release (beta updates frequently).
+ const isRepertoirePlugin=/\/plugins\/repertoire\/dist\/plugin\.json$/.test(url.pathname);
  const isAniMusScriptExample=/\/plugins\/animus-example-fyrtoejet\/dist\/plugin\.json$/.test(url.pathname);
  const isAniMusCaptionPlugin=/\/plugins\/animus-caption-i18n\/dist\/plugin\.json$/.test(url.pathname);
  const isTurnAroundCaptions=/\/editions\/turn-around\/tiddlers\/captions-da\.json$/.test(url.pathname);
@@ -37,7 +39,7 @@ const fetchFreshEditionManifest=(resource,options)=>{
  const isGraphEditionTiddlers=/\/editions\/graph\/tiddlers\/(?:seed|config)\.json$/.test(url.pathname);
  const isCutoutEditorPlugin=/\/plugins\/cutout\/dist\/plugin\.json$/.test(url.pathname);
  const isSitePublisherPlugin=/\/plugins\/site-publisher\/dist\/plugin\.json$/.test(url.pathname);
- if(url.origin===location.origin&&(isEditionManifest||isPluginRegistry||isEditionCatalog||isAssemblerLocale||isAniMusVideoExportPlugin||isTurnAroundVideoExport||isAniMusAudioPlugin||isAbcAudioPlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin||isTurnAroundLayoutFix||isAniMusCaptionPlugin||isTurnAroundCaptions||isGraphEditionTiddlers||isGraphStudioPlugin)){
+ if(url.origin===location.origin&&(isEditionManifest||isPluginRegistry||isEditionCatalog||isAssemblerLocale||isAniMusVideoExportPlugin||isTurnAroundVideoExport||isAniMusAudioPlugin||isAbcAudioPlugin||isRepertoirePlugin||isSitePublisherPlugin||isAniMusScriptExample||isCutoutEditorPlugin||isTurnAroundLayoutFix||isAniMusCaptionPlugin||isTurnAroundCaptions||isGraphEditionTiddlers||isGraphStudioPlugin)){
   url.searchParams.set('_forge_demo',String(Date.now()));
   return fetch(url.href,{...options,cache:'no-store'});
  }
