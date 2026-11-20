@@ -101,7 +101,7 @@ test("Repertoire Nodebog ships its live reader and link in the workshop",()=>{
  assert.equal(layout["module-type"],"library");
  assert.match(tiddlers["Repertoire – Nodebog"].text,/<\$huwiki-repertoire-book\/>/);
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Åbn nodebogen/);
- assert.match(book.text,/\\.huwabc-page-select/);
+ assert.ok(book.text.includes(".huwabc-page-select"));
  assert.match(book.text,/huwrep-book-fullscreen/);
  assert.match(book.text,/this\.disposeScore\(\);host\.textContent="";/,"destroy the previous score before loading another");
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text,/huwrep-book-fullscreen/);
