@@ -44,7 +44,7 @@ function render(wiki){
 test('readable ABC reader fallback is the code shipped in the plugin',()=>{
  assert.equal(tiddlers[moduleTitle].text,source);
  assert.match(tiddlers[templateTitle].text,/huwiki-abc-needs-reader/);
- assert.equal(plugin.version,'0.3.39-test.2');
+ assert.equal(plugin.version,'0.3.39-test.3');
 });
 test('ordinary ABC fields with prose still receive exactly one fallback reader',()=>{
  assert.deepEqual(render(createWiki('These are the rehearsal notes.')),[fixtureTitle]);

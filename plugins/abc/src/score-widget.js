@@ -423,7 +423,8 @@ ABCWidget.prototype.draw=function(){
   // One shared musician view for stand-alone ABC scores and embedded notation.
   // Switching it changes only CSS/controls; it never recreates the score or player.
   self._reader=ReaderMode.mount({host:host,paper:score,actions:actions,title:self.title,
-   pager:function(){return self._pager;},state:self._readerState});
+    pager:function(){return self._pager;},state:self._readerState,
+    onEdit:this.getAttribute("preview")==="yes"?null:function(){return openEditor("notes");}});
   self._instrumentViewControls=InstrumentView.mount(instrumentBar,{wiki:self.wiki,onChange:function(){
    if(!ABC)return;
    var restore=ViewportAnchor.capture(score,visual,host);

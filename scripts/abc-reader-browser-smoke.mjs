@@ -50,8 +50,8 @@ try{
  await page.waitForFunction(()=>document.querySelector(".huwabc-page-select")?.value==="single");
  await option.selectOption("spread");
  await page.waitForFunction(()=>document.querySelector(".huwabc-page-select")?.value==="spread");
- await score.locator(".huwabc-reader-fit").click();
- assert.ok(await score.evaluate(el=>el.classList.contains("huwabc-reader-fill")),"Width-fit is reader only");
+ await score.locator(".huwabc-reader-fit-choice").selectOption("width");
+ assert.ok(await score.locator(".huwabc-page-viewport").evaluate(el=>Number(el.style.zoom)>0),"Width-fit sizes the existing score");
  await score.locator(".huwabc-reader-close").click();
  assert.ok(!await score.evaluate(el=>el.classList.contains("huwabc-reader-active")),"Normal ABC controls return on exit");
  assert.notEqual(await score.locator(".huwabc-head").evaluate(el=>getComputedStyle(el).display),"none");

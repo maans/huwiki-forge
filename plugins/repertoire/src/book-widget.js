@@ -42,6 +42,8 @@ Book.prototype.disposeScore=function(){
  this.children=[];
 };
 Book.prototype.onDestroy=function(){
+ if(this._editCheck&&this._win)this._win.clearTimeout(this._editCheck);
+ this._editCheck=null;this._editReturn=null;this._returnPage=null;
  this.disposeScore();
  if(this.host&&this._boundKeys)this.host.removeEventListener("keydown",this._boundKeys);
  if(this.host&&this._readerBoundary)this.host.removeEventListener("huwabc-reader-boundary",this._readerBoundary);
@@ -62,6 +64,7 @@ Book.prototype.render=function(parent,nextSibling){
   return;
  }
  this._win=doc.defaultView;
+ this.addEventListener("tm-edit-tiddler","handleEditTiddler");
  this.preference=this.wiki.getTiddlerText(MODE)||"auto";
  if(["auto","single","spread"].indexOf(this.preference)<0)this.preference="auto";
  this.setlistTitle=this.getAttribute("setlist","")||this.wiki.getTiddlerText(TEMP)||"";
@@ -85,6 +88,60 @@ Book.prototype.render=function(parent,nextSibling){
   this._win.addEventListener("resize",this._resize);
   this._win.addEventListener("orientationchange",this._orientation);
  }
+ this.draw();
+};
+Book.prototype.handleEditTiddler=function(event){
+ var title=event.param||event.tiddlerTitle,score=this._score;
+ // A second click from the old menu must not open another draft while the
+ // first request is being handed to TiddlyWiki's normal navigator.
+ if(this._editReturn&&this._editReturn.source===title)return false;
+ if(!score||score.title!==title)return true;
+ var pager=this.pager(),story=this.getVariable("tv-story-list")||"$:/StoryList";
+ var reader=score._reader?score._reader.snapshot():this._readerCarry;
+ if(reader)reader=Object.assign({},reader,{controlsOpen:false});
+ var state={source:title,item:this.activeItem,setlist:this.setlistTitle,
+  reader:reader,
+  anchor:pager&&pager.anchor?pager.anchor():null,
+  fullscreen:this.host.classList.contains("huwrep-book-fullscreen"),
+  story:story,sourceWasOpen:this.wiki.getTiddlerList(story).indexOf(title)>=0,
+  draft:null};
+ this._editReturn=state;
+ // Release the old SVG, audio and observers before the draft editor renders.
+ // Merely leaving ABC's reader otherwise leaves the fullscreen book on top.
+ this.disposeScore();
+ this.host.classList.remove("huwrep-book-fullscreen","huwrep-reader-active","huwrep-reader-practice");
+ this.host.hidden=true;this.host.textContent="";
+ this.queueEditorCheck();
+ return true; // Forward this same event exactly once; the navigator owns drafts.
+};
+Book.prototype.queueEditorCheck=function(){
+ if(!this._editReturn||this._editCheck||!this._win)return;
+ var self=this;
+ // The navigator creates/reuses the draft synchronously after our handler.
+ // Inspect on the next turn, never between edit-focus and draft creation.
+ this._editCheck=this._win.setTimeout(function(){
+  self._editCheck=null;self.checkEditorReturn();
+ },0);
+};
+Book.prototype.checkEditorReturn=function(){
+ var state=this._editReturn;
+ if(!state||!this.host||!this.host.isConnected)return;
+ var draft=this.wiki.findDraft(state.source),story=this.wiki.getTiddlerList(state.story);
+ if(draft&&story.indexOf(draft)>=0){state.draft=draft;return;}
+ // Save/cancel replace the draft with the original in the story. If the song
+ // was opened just for this edit, the book remains its one reader on return.
+ if(!state.sourceWasOpen&&story.indexOf(state.source)>=0){
+  this.wiki.addTiddler(new $tw.Tiddler(this.wiki.getTiddler(state.story),{
+   title:state.story,list:story.filter(function(title){return title!==state.source;})
+  }));
+  // A StoryList write schedules TiddlyWiki's DOM refresh. Let it dispose the
+  // temporary standalone reader before mounting the embedded score again.
+  state.returning=true;this.queueEditorCheck();return;
+ }
+ this._editReturn=null;
+ this.activeItem=state.item;this.setlistTitle=state.setlist;
+ this._readerCarry=state.reader;this._returnPage=state.anchor;
+ this.host.hidden=false;this.host.classList.toggle("huwrep-book-fullscreen",state.fullscreen);
  this.draw();
 };
 Book.prototype.navigate=function(title){
@@ -122,6 +179,11 @@ Book.prototype.updateMode=function(){
  if(this.lastPage&&pager.info().count>0){
   this.lastPage=false;
   pager.go(pager.info().count-1,false);
+ }
+ if(this._returnPage&&pager.info().count>0){
+  var anchor=this._returnPage;this._returnPage=null;
+  if(!Number.isInteger(anchor.event)||!pager.revealOrdinal||!pager.revealOrdinal(anchor.event,true))
+   pager.go(Number(anchor.page)||0,false);
  }
 };
 Book.prototype.turn=function(delta){
@@ -228,7 +290,7 @@ Book.prototype.practicePanel=function(doc){
 };
 Book.prototype.draw=function(){
  var self=this,doc=this.document,wiki=this.wiki,host=this.host;
- if(!host)return;
+ if(!host||this._editReturn)return;
  this.disposeScore();host.textContent="";
  var sets=model.orchestras(wiki).flatMap(function(o){return model.setlists(wiki,o.fields.title);});
  if(!sets.some(function(s){return s.fields.title===self.setlistTitle;}))
@@ -383,6 +445,12 @@ Book.prototype.draw=function(){
  this.updateMode();
 };
 Book.prototype.refresh=function(changed){
+ changed=changed||{};
+ if(this._editReturn){
+  var state=this._editReturn;
+  if(!state.draft||changed[state.draft]||changed[state.source]||changed[state.story])this.queueEditorCheck();
+  return false;
+ }
  var titles=Object.keys(changed||{});
  if(titles.some(function(title){return title.indexOf("Repertoire/")===0;})){
   this.draw();return true;

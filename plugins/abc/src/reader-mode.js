@@ -27,6 +27,7 @@ function pageAction(info,delta){
 }
 function Reader(options){
  this.host=options.host;this.paper=options.paper;this.actions=options.actions;
+ this.onEdit=options.onEdit;
  this.getPager=options.pager;this.title=options.title||"Nodeark";
  this.doc=this.host.ownerDocument;this.win=this.doc.defaultView;
  this.book=this.host.closest(".huwrep-book");
@@ -79,11 +80,8 @@ Reader.prototype.create=function(){
  var modes=node(doc,"div","huwabc-reader-modes");
  this.vis=action(doc,"Vis","huwabc-reader-mode-button",function(){self.mode="vis";self.sync();});
  this.practice=action(doc,"Øv","huwabc-reader-mode-button",function(){self.mode="practice";self.sync();});
- this.edit=action(doc,"Redigér","huwabc-reader-mode-button",function(){
-  self.exit();
-  var editor=self.actions.querySelector(".huwabc-primary");
-  if(editor)editor.click();
- });
+ this.edit=action(doc,"Redigér","huwabc-reader-mode-button",function(event){self.openEditor(event);});
+ this.edit.disabled=typeof this.onEdit!=="function";
  this.vis.setAttribute("aria-pressed","true");
  this.practice.setAttribute("aria-pressed","false");
  modes.append(this.vis,this.practice,this.edit);
@@ -141,13 +139,29 @@ Reader.prototype.create=function(){
   if(e.target===self.paper){self.controlsOpen=!self.controlsOpen;self.sync();}
  });
 };
+Reader.prototype.openEditor=function(event){
+ if(event){event.preventDefault();event.stopPropagation();}
+ if(!this.host||this._openingEditor||typeof this.onEdit!=="function")return false;
+ // Keep the current page/reader state until the owning widget hands it to
+ // TiddlyWiki's draft editor. Exiting first would resize the old score and
+ // leave an embedded Repertoire player running underneath the new editor.
+ this._openingEditor=true;this.edit.disabled=true;
+ try{
+  if(this.onEdit()!==false)return true;
+ }catch(error){
+  this._openingEditor=false;this.edit.disabled=false;throw error;
+ }
+ this._openingEditor=false;this.edit.disabled=false;
+ return false;
+};
 Reader.prototype.enter=function(state){
  if(state){this.mode=state.mode==="practice"?"practice":"vis";this.fitMode=["fit","width","original"].includes(state.fitMode)?state.fitMode:(state.fill?"width":this.fitMode);this.controlsOpen=!!state.controlsOpen;}
  else {this.mode="vis";this.controlsOpen=false;}
  this.active=true;this.fitChoice.value=this.fitMode;if(this.book){var list=this.book.querySelector(".huwrep-book-list");if(list)list.hidden=true;}this.sync();this.applyPages();this.update();this.updateScale();
  if(this.win)this.win.dispatchEvent(new this.win.Event("resize"));
 };
-Reader.prototype.exit=function(){
+Reader.prototype.exit=function(options){
+ var wasActive=this.active;
  this.active=false;this._touch=null;this.controlsOpen=false;
  if(this.book){
   var list=this.book.querySelector(".huwrep-book-list");
@@ -157,7 +171,8 @@ Reader.prototype.exit=function(){
  }
  this.clearScale();
  this.host.classList.remove("huwabc-reader-active","huwabc-reader-practice","huwabc-reader-controls-open","huwabc-reader-fill");
- this.sync();if(this.win)this.win.dispatchEvent(new this.win.Event("resize"));
+ this.sync();
+ if(wasActive&&(!options||options.notify!==false)&&this.win)this.win.dispatchEvent(new this.win.Event("resize"));
 };
 Reader.prototype.applyPages=function(){
  var pager=this.getPager(),select=pager&&pager.element&&pager.element.querySelector(".huwabc-page-select");
@@ -267,12 +282,14 @@ Reader.prototype.updateScale=function(){
  }finally{this._scaling=false;}
 };
 Reader.prototype.destroy=function(){
- this.exit();
+ // Teardown must not wake every other score's resize listeners while the
+ // old DOM and audio resources are being removed for an editor transition.
+ this.exit({notify:false});
  this.cleanup.splice(0).forEach(function(fn){fn();});
  if(this.entry&&this.entry.parentNode)this.entry.parentNode.removeChild(this.entry);
  if(this.toolbar&&this.toolbar.parentNode)this.toolbar.parentNode.removeChild(this.toolbar);
  if(this.edges&&this.edges.parentNode)this.edges.parentNode.removeChild(this.edges);
- this.host=null;this.paper=null;
+ this.onEdit=null;this.host=null;this.paper=null;
 };
 exports.mount=function(options){return new Reader(options);};
 exports.pageAction=pageAction;
