@@ -89,7 +89,10 @@ function audience(html,{hash=''}={}){
  const calls={hydrate:0,dispose:0},events={},location={hash},win={addEventListener(type,fn){(events[type]??=[]).push(fn);},getSelection:()=>'',HUWikiAniMusSite:{hydrate(){calls.hydrate++;},dispose(){calls.dispose++;}},HUWikiCutOutSite:{hydrate(){}}};
  const scripts=[...html.matchAll(/<script>([\s\S]*?)<\/script>/g)];assert.ok(scripts.length);const runtime=scripts.at(-1)[1];
  new Script(runtime,{filename:'exported-site-runtime.js'}).runInContext(createContext({document:doc,window:win,location,history:{replaceState(_state,_unused,url){location.hash=url;}},console,decodeURIComponent,encodeURIComponent,requestAnimationFrame:fn=>fn()}));
- return {doc,win,data,calls,location};
+ return {doc,win,data,calls,location,sendFrameMessage(type,direction){
+  const source=doc.getElementById('score-frame').contentWindow;
+  for(const fn of events.message||[])fn({source,data:{type,direction}});
+ }};
 }
 
 test('a single AniMus publication has a useful programme and defaults to the performance',async()=>{
@@ -186,4 +189,27 @@ test('repertoire export uses short source labels and shows arrangement below the
  assert.equal(site.doc.getElementById('husp-repertoire-agreements').hidden,false);
  assert.match(visibleText(site.doc.getElementById('husp-repertoire-agreements')),/AABB/);
  assert.match(visibleText(site.doc.getElementById('husp-repertoire-agreements')),/Fløjte/);
+});
+
+test('site repertoire index is clickable and every tune has a way back',async()=>{
+ const rows=records(),root='$:/temp/huwiki/repertoire/publication/nav/site/c/',summary=root+'summary',list=root+'order';
+ rows[summary]={title:summary,caption:'SilbaÄtno · Øverepertoire',
+   'repertoire-publication-orchestra':'SilbaÄtno',
+   text:'<a data-tiddler-title="Score">1. Score</a>'};
+ rows[list]={title:list,list:[summary,'Score'],text:''};
+ const h=await harness({title:summary,rows,preset:{listTitle:list,siteTitle:'SilbaÄtno · Øverepertoire · C'}});
+ const published=audience(h.html),back=published.doc.getElementById('husp-back-to-index');
+ assert.equal(back.hidden,true,'Back control stays out of the index');
+ const link=published.doc.getElementById('article-view').querySelector('[data-site-tiddler]');
+ assert.ok(link,'Index must export a usable linked song');
+ link.click();
+ assert.equal(published.doc.getElementById('score-frame').hidden,false);
+ assert.equal(back.hidden,false,'Back to index is visible from a song');
+ assert.equal(published.doc.getElementById('husp-next-tune').disabled,true);
+ published.sendFrameMessage('husp-reader-boundary',-1);
+ assert.equal(published.doc.getElementById('article-view').hidden,false,'PageUp at first song returns to index');
+ assert.equal(back.hidden,true);
+ published.doc.getElementById('chapters').querySelectorAll('.chapter')[1].click();
+ back.click();
+ assert.equal(published.doc.getElementById('article-view').hidden,false);
 });
