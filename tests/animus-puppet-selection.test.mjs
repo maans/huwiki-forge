@@ -44,7 +44,7 @@ test('Escape releases the selected puppet part from a field without closing or c
   assert.equal(event.defaultPrevented, true);assert.equal(event.stopped, true);
   assert.equal(h.panel.isOpen(), true);assert.equal(selected(h), '');assert.equal(h.confirms, 0);
   assert.equal(h.canvas.querySelector('.huw-cutout-selected'), null);assert.equal(h.canvas.firstChild.getAttribute('viewBox'), frame);
-  assert.equal(h.doc.activeElement, h.overlay);assert.match(h.overlay.querySelector('.huw-puppet-fields').textContent, /Vælg en del|Select a part/);
+  assert.equal(h.doc.activeElement, h.overlay);assert.match(h.overlay.querySelector('.huw-puppet-fields').textContent, /Vælg en del|Select a part|Vælg objektet|Select the object/);
   h.overlay.dispatch('keydown', {key: 'Escape'});assert.equal(h.panel.isOpen(), true);
   assert.equal(JSON.stringify(h.source), before);assert.deepEqual(h.writes, []);
 });

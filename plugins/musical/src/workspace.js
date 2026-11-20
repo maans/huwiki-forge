@@ -58,7 +58,7 @@ function mount(o){
  var clearButtons=[];
  function clearButton(parent){var b=button(parent,'huw-musical-clear-selection',L.clearSelection,function(){clearSelection();});b.dataset.action='clear-selection';b.title=L.clearSelection+' (Esc)';clearButtons.push(b);return b;}
  var workshop=el(doc,'section','huw-musical-workshop-dock'),workshopAnchor=doc.createComment('figure and face workshop');
- workshop.hidden=true;workshop.setAttribute('data-animus-workshop','');workshop.setAttribute('aria-label',L.scene==='Scene'?'Figur- og ansigtsværksted':'Character and face workshop');
+ workshop.hidden=true;workshop.setAttribute('data-animus-workshop','');workshop.setAttribute('aria-label',L.scene==='Scene'?'Værksted for figurer, objekter og ansigter':'Character, object and face workshop');
  host.insertBefore(workshopAnchor,o.layout.nextSibling);host.insertBefore(workshop,workshopAnchor);
  var workshopTop=el(doc,'header','huw-musical-workshop-top',undefined,workshop);
  el(doc,'strong','',L.scene==='Scene'?'Værksted':'Workshop',workshopTop);
@@ -74,6 +74,7 @@ function mount(o){
   position:o.position,pause:o.pause,onLayout:reframeAfterLayout,
   onSelect:function(id){selectionCleared=false;lastBodyPart=id;latestPart=id;figureRoot=id;workshopPart=id;transformMode='parts';useStageMode();editor.setCameraEdit(false);updateToolButtons();setInspector(false);refreshHandles();},
   onDeselect:function(){clearSelection();},
+  onEditAppearance:openAppearance,onProperties:showObjectProperties,
   onFace:function(details){showFaceWorkshop(details.partId,details.tab);}
  });
  var facePanel=FacePanel.mount({doc:doc,wiki:o.wiki,host:host,film:o.film,parent:workshopBody,dock:workshopBody,stage:stagePanel,
@@ -96,6 +97,9 @@ function mount(o){
  function syncWorkshop(){
   var visible=!!workshopMode&&!exportSuspended&&!disposed;workshop.hidden=!visible;
   workshop.dataset.animusWorkshop=workshopMode;host.classList.toggle('huw-musical--workshop-open',visible);
+  var context=figurePanel&&figurePanel.context&&figurePanel.context(),object=workshopMode==='figure'&&context&&context.kind==='object';
+  workshop.dataset.workshopKind=object?'object':workshopMode;
+  bodyTab.textContent=object?(L.scene==='Scene'?'Objekt':'Object'):(L.scene==='Scene'?'Figur':'Character');faceTab.hidden=!!object;
   bodyTab.setAttribute('aria-pressed',String(workshopMode==='figure'));faceTab.setAttribute('aria-pressed',String(workshopMode==='face'));
   faceTab.disabled=!faceContextFor(workshopPart);
  }
@@ -148,16 +152,35 @@ function mount(o){
   return hadSelection;
  }
  function openManuscript(details){
+  return outsideStage(function(){manuscript.open(details);});
+ }
+ function outsideStage(action){
   // Native fullscreen only displays descendants of the stage. Return the
-  // shared dock before opening the script dialog in the editor host.
+  // shared dock before opening another workshop in the editor host.
   if(stageIsFullscreen()){
    fullscreenFallback=false;
    if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen){
-    return Promise.resolve(doc.exitFullscreen()).then(function(){if(!disposed){syncStageFullscreen();manuscript.open(details);}},syncStageFullscreen);
+    return Promise.resolve(doc.exitFullscreen()).then(function(){if(!disposed){syncStageFullscreen();action();}},syncStageFullscreen);
    }
    syncStageFullscreen();
   }
-  manuscript.open(details);
+  return action();
+ }
+ function openAppearance(id){
+  if(!id||disposed||exportSuspended)return false;
+  if(cancelGesture)cancelGesture();figurePanel.cancelGesture();o.pause();
+  return outsideStage(function(){return puppet.open(id);});
+ }
+ function showObjectProperties(id){
+  if(!id||disposed||exportSuspended)return false;
+  if(cancelGesture)cancelGesture();figurePanel.cancelGesture();o.pause();
+  return outsideStage(function(){
+   routingWorkshop=true;
+   try{transformMode='parts';useStageMode();editor.setCameraEdit(false);if(!editor.selectPart(id,true))return false;figureRoot=latestPart=id;}
+   finally{routingWorkshop=false;}
+   figurePanel.select(id);syncWorkshop();updateToolButtons();setInspector(true);refreshHandles();
+   if(drawer.scrollIntoView)drawer.scrollIntoView({block:'nearest'});drawer.tabIndex=-1;drawer.focus({preventScroll:true});return true;
+  });
  }
  function toggleFocus(){
   focus=!focus;host.classList.toggle("huw-musical--focus",focus);
@@ -358,6 +381,9 @@ function mount(o){
   t=t===undefined?editor.getSelection():t;
   if(clearingSelection)return;
   if(!t){clearSelection(true);return;}
+  // Choosing another key of the object being inspected should keep its
+  // numeric controls available, including the inspector's Add key button.
+  var keepInspector=inspectorOpen&&workshopMode==='figure'&&workshopPart===t.part;
   selectionCleared=false;
   // Choosing a timeline key or object rebuilds its controls. Restore lost
   // keyboard focus so Escape still reaches this editor after that click.
@@ -373,7 +399,7 @@ function mount(o){
   if(!selectingOnStage&&!routingWorkshop){var partId=t&&['part','film-part','motion','figure'].indexOf(t.kind)>=0?t.part:null;if(partId)showPartWorkshop(partId);else hideWorkshop();}
   if(transformMode==='parts'||(editor.inClipDetail&&editor.inClipDetail()&&t&&t.kind==='motion')){
    if(t&&['part','film-part','motion'].indexOf(t.kind)>=0){figureRoot=t.part;latestPart=t.part;transformMode='parts';o.pause();editor.setCameraEdit(false);}
-   if(t&&['part','film-part','motion','animation'].indexOf(t.kind)>=0){updateToolButtons();setInspector(!workshopMode);refreshHandles();return;}
+   if(t&&['part','film-part','motion','animation'].indexOf(t.kind)>=0){updateToolButtons();setInspector(keepInspector||!workshopMode);refreshHandles();return;}
   }
   if(!(editor.inClipDetail&&editor.inClipDetail())){
    var id=t&&(t.kind==='animation'?t.target:(t.kind==='figure'||t.kind==='part'||t.kind==='film-part')?t.part:null);
@@ -397,7 +423,7 @@ function mount(o){
     transformMode='';figureRoot='';editor.setCameraEdit(false);
    }
   }
-  updateToolButtons();setInspector(!workshopMode);refreshHandles();
+  updateToolButtons();setInspector(keepInspector||!workshopMode);refreshHandles();
  }
  // Adjustable divider keeps the preview and timeline visible together.
  var grip=el(doc,"div","huw-musical-layout-resize");
@@ -769,7 +795,7 @@ function mount(o){
  return {showInspector:selection,selectTrack:selection,setInspector:setInspector,refreshHandles:refreshHandles,clearSelection:clearSelection,
   zoomToSelection:zoomToSelection,resetPreviewZoom:resetPreviewZoom,paintPreview:paintPreview,
   beginExport:function(){exportSuspended++;var restore=previewZoom.suspend(),restoreFace=facePanel.suspend(),restoreFigure=figurePanel.suspend(),restored=false;syncWorkshop();refreshHandles();return function(){if(restored)return;restored=true;exportSuspended=Math.max(0,exportSuspended-1);syncWorkshop();restoreFace();restoreFigure();restore();if(!disposed){refreshHandles();reframeAfterLayout();}};},
-  openFace:openFace,openScore:function(title){scoreWorkshop.open(title);},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},openManuscript:openManuscript,
+  openFace:openFace,openObject:openAppearance,openScore:function(title){scoreWorkshop.open(title);},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},openManuscript:openManuscript,
   dispose:function(){disposed=true;cancelBlankTap();stageCanvas.removeEventListener('pointerdown',startBlankTap);if(cancelGesture)cancelGesture();previewZoom.dispose();fullscreenFallback=false;if(stagePanel)stagePanel.classList.remove('huw-musical-stage--expanded');doc.removeEventListener('fullscreenchange',syncStageFullscreen);if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen)try{Promise.resolve(doc.exitFullscreen()).catch(function(){});}catch(_closed){}
   facePanel.dispose();figurePanel.dispose();workshop.remove();workshopAnchor.remove();host.classList.remove('huw-musical--workshop-open');narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);
   host.removeEventListener("keydown",keyboard);

@@ -213,3 +213,33 @@ test('preview visibility follows scene switches while leaving inactive scene dis
  h.editor.setTrackVisible('scenes',false);assert.equal(next.el.style.display,'none');h.options.seek(2);assert.equal(first.el.style.display,'none');assert.equal(next.el.getAttribute('display'),'none');assert.equal(next.el.style.display,'');
  h.editor.setTrackVisible('scenes',true);assert.equal(first.el.style.display,'');assert.equal(next.el.getAttribute('display'),'none');assert.equal(h.w.writes.length,0);
 });
+
+function appearanceHarness(){
+ const row=(title,data)=>({title,type:'application/json',text:JSON.stringify(data)}),text=(id,value,fill)=>({id,type:'text',text:value,fill,keys:[pose()]}),rect=(id,fill)=>({id,type:'rect',fill,geo:{x:0,y:0,w:60,h:40},keys:[pose()]}),
+  first=scene([rect('shared','#112233'),text('shared-text','First scene','#223344'),text('film-text','Nested first','#334455')]),
+  second=scene([rect('shared','#445566'),rect('only-later','#556677'),text('shared-text','Later scene','#667788'),text('film-text','Nested later','#778899')]),
+  film={version:1,width:800,height:450,duration:30,parts:[text('film-text','Whole film','#8899aa')],scenes:[{source:'First',duration:10},{source:'Second',duration:10},{source:'Second',duration:10}],musical:{songs:[{id:'music',score:'Score',start:0,duration:30}],animationClips:[]}};
+ return editorHarness({Film:row('Film',film),First:row('First',first),Second:row('Second',second),Score:{title:'Score',text:'X:1\nK:C\nC D E F|'},'$:/language':{title:'$:/language',text:'$:/languages/en-GB'}});
+}
+function editAppearanceText(h,value){const label=h.host.querySelectorAll('.huw-musical-property').find(node=>node.querySelector('span')?.textContent==='Text'),input=label&&label.querySelector('input');assert.ok(input);input.value=value;input.dispatch('change');}
+function editAppearanceFill(h,value){const input=h.host.querySelector('.huw-musical-color-input');assert.ok(input);input.value=value;input.dispatch('change');}
+
+test('later-scene color and text edits update the active and repeated source without painting a distinct scene with matching IDs',()=>{
+ const h=appearanceHarness(),first=h.view.clips[0].view,second=h.view.clips[1].view,repeated=h.view.clips[2].view,firstBefore=h.w.records.First.text,filmBefore=h.w.records.Film.text,keys=plain(second.nodes.shared.part.keys);
+ assert.notEqual(second.scene,repeated.scene,'reused sources really have distinct model instances');h.options.seek(12);h.editor.selectPart('shared',true);editAppearanceFill(h,'#abcdef');h.editor.selectPart('shared-text',true);editAppearanceText(h,'Changed later text');
+ assert.equal(first.nodes.shared.shape.getAttribute('fill'),'#112233');assert.equal(first.nodes['shared-text'].shape.textContent,'First scene');
+ for(const view of [second,repeated]){assert.equal(view.nodes.shared.shape.getAttribute('fill'),'#abcdef');assert.equal(view.nodes.shared.part.fill,'#abcdef');assert.equal(view.nodes['shared-text'].shape.textContent,'Changed later text');assert.equal(view.nodes['shared-text'].part.text,'Changed later text');assert.deepEqual(plain(view.nodes.shared.part.keys),keys);}
+ assert.equal(h.w.records.First.text,firstBefore);assert.equal(h.w.records.Film.text,filmBefore);assert.deepEqual(h.w.writes,['Second','Second']);
+ h.options.seek(22);h.editor.selectPart('shared-text',true);editAppearanceText(h,'Saved from the repeated occurrence');const saved=JSON.parse(h.w.records.Second.text);assert.equal(saved.parts.find(part=>part.id==='shared').fill,'#abcdef','editing the repeated instance cannot resave its previous fill');assert.equal(saved.parts.find(part=>part.id==='shared-text').text,'Saved from the repeated occurrence');assert.equal(second.nodes['shared-text'].shape.textContent,'Saved from the repeated occurrence');assert.equal(first.nodes['shared-text'].shape.textContent,'First scene');assert.equal(h.time,22);
+});
+
+test('a unique object in a later scene immediately paints its new color and saves only that source',()=>{
+ const h=appearanceHarness(),firstBefore=h.w.records.First.text,filmBefore=h.w.records.Film.text;h.options.seek(14);h.editor.selectPart('only-later',true);editAppearanceFill(h,'#b03050');
+ assert.equal(h.view.clips[0].view.nodes['only-later'],undefined);for(const view of [h.view.clips[1].view,h.view.clips[2].view])assert.equal(view.nodes['only-later'].shape.getAttribute('fill'),'#b03050');assert.equal(JSON.parse(h.w.records.Second.text).parts.find(part=>part.id==='only-later').fill,'#b03050');assert.equal(h.w.records.First.text,firstBefore);assert.equal(h.w.records.Film.text,filmBefore);assert.deepEqual(h.w.writes,['Second']);assert.equal(h.time,14);
+});
+
+test('film-part appearance editing stays on the film even when scene sources reuse its part ID',()=>{
+ const h=appearanceHarness(),firstBefore=h.w.records.First.text,secondBefore=h.w.records.Second.text;h.options.seek(12);h.editor.selectPart('film-text',true);assert.equal(h.editor.getSelection().kind,'film-part');editAppearanceFill(h,'#aabbcc');editAppearanceText(h,'Updated whole film');
+ assert.equal(h.view.nodes['film-text'].shape.getAttribute('fill'),'#aabbcc');assert.equal(h.view.nodes['film-text'].shape.textContent,'Updated whole film');assert.equal(h.view.clips[0].view.nodes['film-text'].shape.textContent,'Nested first');for(const view of [h.view.clips[1].view,h.view.clips[2].view]){assert.equal(view.nodes['film-text'].shape.textContent,'Nested later');assert.equal(view.nodes['film-text'].shape.getAttribute('fill'),'#778899');}
+ const saved=JSON.parse(h.w.records.Film.text).parts.find(part=>part.id==='film-text');assert.equal(saved.fill,'#aabbcc');assert.equal(saved.text,'Updated whole film');assert.equal(h.w.records.First.text,firstBefore);assert.equal(h.w.records.Second.text,secondBefore);assert.deepEqual(h.w.writes,['Film','Film']);assert.equal(h.time,12);
+});
