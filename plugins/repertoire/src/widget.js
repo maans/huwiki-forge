@@ -7,6 +7,7 @@ module-type: widget
 "use strict";
 var Widget=require("$:/core/modules/widgets/widget.js").widget;
 var model=require("$:/plugins/huwiki/repertoire/model.js");
+var Printing=require("$:/plugins/huwiki/repertoire/print.js");
 function el(doc,tag,cls,text) {
  var n=doc.createElement(tag);if(cls)n.className=cls;
  if(text!==undefined)n.textContent=String(text);return n;
@@ -118,6 +119,10 @@ Repertoire.prototype.draw=function(){
  },"huwrep-primary"));
  setPanel.appendChild(row);
  if(this.setlistTitle){
+  setPanel.appendChild(button(doc,"Udskriv sætliste / PDF",function(){
+   var result=Printing.open(wiki,self.setlistTitle,doc.defaultView,{scores:false});
+   if(result&&result.error)self.alert(result.error);
+  }));
   setPanel.appendChild(button(doc,"Åbn nodebogen",function(){
    wiki.addTiddler(new $tw.Tiddler({title:"$:/temp/huwiki/repertoire/active-setlist",type:"text/plain",text:self.setlistTitle}));
    self.navigate("Repertoire – Nodebog");
@@ -165,20 +170,24 @@ Repertoire.prototype.draw=function(){
  var effective=model.effective(wiki,setTitle,this.activeItem);
  var form=el(doc,"div","huwrep-form");
  var key=labelled(doc,"Toneart",effective.key),tempo=labelled(doc,"Tempo",effective.tempo),
-  arrangement=labelled(doc,"Form, intro, soloer og afslutning",effective.form,"textarea");
- arrangement.input.rows=3;
- form.append(key.wrap,tempo.wrap,arrangement.wrap);
+  arrangement=labelled(doc,"Form: intro, dele, soloer og afslutning",effective.form,"textarea"),
+  instrumentation=labelled(doc,"Instrumentering: hvem spiller hvad?",effective.instrumentation,"textarea"),
+  cues=labelled(doc,"Indsatser, tegn og andre aftaler",effective.cues,"textarea");
+ arrangement.input.rows=3;instrumentation.input.rows=2;cues.input.rows=2;
+ form.append(key.wrap,tempo.wrap,arrangement.wrap,instrumentation.wrap,cues.wrap);
+ function agreementValues(){return {key:key.input.value,tempo:tempo.input.value,form:arrangement.input.value,
+  instrumentation:instrumentation.input.value,cues:cues.input.value};}
  stand.appendChild(form);
  var actions=el(doc,"div","huwrep-inline");stand.appendChild(actions);
  actions.appendChild(button(doc,"Gem kun i denne sætliste",function(){
   try{model.saveArrangement(wiki,self.activeItem,setTitle,
-   {key:key.input.value,tempo:tempo.input.value,form:arrangement.input.value},"setlist");
+   agreementValues(),"setlist");
    self.alert("Aftalen gælder kun denne sætliste.");}
   catch(e){self.alert(e.message);}
  },"huwrep-primary"));
  actions.appendChild(button(doc,"Gem som orkestrets standard",function(){
   try{model.saveArrangement(wiki,self.activeItem,setTitle,
-   {key:key.input.value,tempo:tempo.input.value,form:arrangement.input.value},"orchestra");
+   agreementValues(),"orchestra");
    self.alert("Orkestrets standard er opdateret. Særskilte sætlisteaftaler bevares.");}
   catch(e){self.alert(e.message);}
  }));

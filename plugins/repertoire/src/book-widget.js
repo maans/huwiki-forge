@@ -9,6 +9,7 @@ var Widget=require("$:/core/modules/widgets/widget.js").widget;
 var model=require("$:/plugins/huwiki/repertoire/model.js");
 var Layout=require("$:/plugins/huwiki/repertoire/book-layout.js");
 var Practice=require("$:/plugins/huwiki/repertoire/practice.js");
+var Printing=require("$:/plugins/huwiki/repertoire/print.js");
 var TEMP="$:/temp/huwiki/repertoire/active-setlist";
 var MODE="$:/temp/huwiki/repertoire/book-mode";
 function el(doc,tag,cls,label){
@@ -308,6 +309,17 @@ Book.prototype.draw=function(){
   self.updateMode();
  },"huwrep-book-fullscreen-button");
  toolbar.appendChild(fullScreenButton);
+ var printMenu=el(doc,"details","huwrep-book-print-menu");
+ printMenu.appendChild(el(doc,"summary","","PDF / Udskriv"));
+ var printActions=el(doc,"div","huwrep-book-print-actions");
+ function openPrint(scores){
+  printMenu.open=false;
+  var result=Printing.open(wiki,self.setlistTitle,self._win,{scores:scores});
+  if(result&&result.error&&self._win&&self._win.alert)self._win.alert(result.error);
+ }
+ printActions.appendChild(btn(doc,"Sætliste og aftaler",function(){openPrint(false);}));
+ printActions.appendChild(btn(doc,"Hele nodebogen med noder",function(){openPrint(true);},"huwrep-primary"));
+ printMenu.appendChild(printActions);toolbar.appendChild(printMenu);
  var selector=el(doc,"select","huwrep-input huwrep-book-select");
  selector.setAttribute("aria-label","Vælg sætliste");
  sets.forEach(function(s){
@@ -369,7 +381,9 @@ Book.prototype.draw=function(){
  var row=el(doc,"div","huwrep-book-agreement"),agreement=model.effective(wiki,this.setlistTitle,this.activeItem);
  if(agreement.key)row.appendChild(el(doc,"span","","Aftalt toneart: "+agreement.key));
  if(agreement.tempo)row.appendChild(el(doc,"span","","Tempo: "+agreement.tempo));
- if(agreement.form)row.appendChild(el(doc,"span","huwrep-book-form",agreement.form));
+ if(agreement.form)row.appendChild(el(doc,"span","huwrep-book-form","Form: "+agreement.form));
+ if(agreement.instrumentation)row.appendChild(el(doc,"span","huwrep-book-form","Instrumentering: "+agreement.instrumentation));
+ if(agreement.cues)row.appendChild(el(doc,"span","huwrep-book-form","Tegn: "+agreement.cues));
  if(row.childNodes.length)host.appendChild(row);
  var stage=el(doc,"main","huwrep-book-stage");host.appendChild(stage);
  var source=wiki.getTiddler(name(wiki,this.activeItem)),f=source&&source.fields;

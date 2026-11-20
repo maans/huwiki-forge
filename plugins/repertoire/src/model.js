@@ -53,7 +53,7 @@ function addItem(wiki,orchestraTitle,musicTitle){
  var title=itemTitle(orchestraTitle,musicTitle);
  if(wiki.tiddlerExists(title))return {title:title,created:false};
  create(wiki,{title:title,"repertoire-kind":"orchestra-item","orchestra-title":orchestraTitle,
-  "music-title":musicTitle,"repertoire-key":"","repertoire-tempo":"","repertoire-form":"",text:""});
+  "music-title":musicTitle,"repertoire-key":"","repertoire-tempo":"","repertoire-form":"","repertoire-instrumentation":"","repertoire-cues":"",text:""});
  return {title:title,created:true};
 }
 function importTitles(wiki,orchestraTitle,text){
@@ -97,16 +97,18 @@ function overrides(setlist){
 }
 function effective(wiki,setlistTitle,itemTitle){
  var item=wiki.getTiddler(itemTitle);
- if(!item)return {key:"",tempo:"",form:""};
- var f=item.fields,defaults={key:f["repertoire-key"]||"",tempo:f["repertoire-tempo"]||"",form:f["repertoire-form"]||""};
+ if(!item)return {key:"",tempo:"",form:"",instrumentation:"",cues:""};
+ var f=item.fields,defaults={key:f["repertoire-key"]||"",tempo:f["repertoire-tempo"]||"",form:f["repertoire-form"]||"",instrumentation:f["repertoire-instrumentation"]||"",cues:f["repertoire-cues"]||""};
  var setlist=wiki.getTiddler(setlistTitle),override=setlist&&overrides(setlist)[itemTitle];
  return Object.assign(defaults,override||{});
 }
 function saveArrangement(wiki,itemTitle,setlistTitle,values,scope){
  var item=wiki.getTiddler(itemTitle);if(!item||item.fields[KIND]!=="orchestra-item")throw Error("Repertoirepost mangler.");
- var details={key:normalized(values.key),tempo:normalized(values.tempo),form:String(values.form||"").trim()};
+ var details={key:normalized(values.key),tempo:normalized(values.tempo),form:String(values.form||"").trim(),
+  instrumentation:String(values.instrumentation||"").trim(),cues:String(values.cues||"").trim()};
  if(scope==="orchestra"){
-  update(wiki,item,{"repertoire-key":details.key,"repertoire-tempo":details.tempo,"repertoire-form":details.form});
+  update(wiki,item,{"repertoire-key":details.key,"repertoire-tempo":details.tempo,"repertoire-form":details.form,
+   "repertoire-instrumentation":details.instrumentation,"repertoire-cues":details.cues});
  }else if(scope==="setlist"){
   var list=wiki.getTiddler(setlistTitle);
   if(!list||list.fields["orchestra-title"]!==item.fields["orchestra-title"]||entries(wiki,setlistTitle).indexOf(itemTitle)<0)

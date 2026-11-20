@@ -52,9 +52,12 @@ test("multiple orchestras share one original score but keep their own agreements
  const setTwo=model.createSetlist(wiki,orchestraA,"Koncert");
  model.addEntry(wiki,setOne,a);model.addEntry(wiki,setOne,a);model.addEntry(wiki,setTwo,a);
  assert.equal(model.entries(wiki,setOne).length,1,"same song appears once within a setlist");
- model.saveArrangement(wiki,a,setOne,{key:"Dm",tempo:"95",form:"Intro 4 takter"},"setlist");
+ model.saveArrangement(wiki,a,setOne,{key:"Dm",tempo:"95",form:"Intro 4 takter",instrumentation:"Fløjte på A, bas på B",cues:"Tegn til sidste A"},"setlist");
  assert.equal(model.effective(wiki,setOne,a).key,"Dm");
+ assert.equal(model.effective(wiki,setOne,a).instrumentation,"Fløjte på A, bas på B");
+ assert.equal(model.effective(wiki,setOne,a).cues,"Tegn til sidste A");
  assert.equal(model.effective(wiki,setTwo,a).key,"","other setlist must retain default");
+ assert.equal(model.effective(wiki,setTwo,a).instrumentation,"");
  model.saveArrangement(wiki,b,"",{key:"Gm",tempo:"120",form:"Orkester B"},"orchestra");
  assert.equal(model.effective(wiki,"",b).key,"Gm");
  assert.equal(model.effective(wiki,setTwo,a).key,"");
@@ -161,4 +164,14 @@ test("SilbaÄtno homepage links straight to the setlist book",async()=>{
  const home=config.find(x=>x.title==="SilbaÄtno Repertoire – Oversigt");
  assert.ok(home);
  assert.match(home.text,/<\$link to="Repertoire – Nodebog" class="silba-primary">Åbn nodebogen<\/\$link>/);
+});
+
+test("Nodebog prints PDF scores and cues with hidden-safe editor state",()=>{
+ const printing=tiddlers["$:/plugins/huwiki/repertoire/print.js"];
+ assert.equal(printing["module-type"],"library");
+ assert.match(printing.text,/oneSvgPerLine:true/);
+ assert.match(printing.text,/Print \/ gem som PDF/);
+ assert.match(tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"].text,/Hele nodebogen med noder/);
+ assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Instrumentering: hvem spiller hvad/);
+ assert.match(tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text,/\.huwrep-book\[hidden\]\{display:none!important\}/);
 });
