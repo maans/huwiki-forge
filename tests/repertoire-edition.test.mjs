@@ -99,7 +99,7 @@ test("Repertoire Nodebog ships its live reader and link in the workshop",()=>{
  const layout=tiddlers["$:/plugins/huwiki/repertoire/book-layout.js"];
  assert.equal(book["module-type"],"widget");
  assert.equal(layout["module-type"],"library");
- assert.match(tiddlers["Repertoire – Nodebog"].text,/<\$huwiki-repertoire-book\/>/);
+ assert.ok(tiddlers["Repertoire – Nodebog"].text.includes("<$huwiki-repertoire-book"));
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Åbn nodebogen/);
  assert.ok(book.text.includes(".huwabc-page-select"));
  assert.match(book.text,/huwrep-book-fullscreen/);
