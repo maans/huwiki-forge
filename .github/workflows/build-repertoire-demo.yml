@@ -8,6 +8,8 @@ on:
       - 'plugins/abc/src/**'
       - 'plugins/abc/plugin-info.json'
       - 'plugins/repertoire/src/**'
+      - 'plugins/repertoire/plugin-info.json'
+      - 'scripts/build-repertoire-plugin.mjs'
       - 'tests/repertoire-edition.test.mjs'
       - 'scripts/repertoire-browser-smoke.mjs'
       - 'scripts/abc-reader-browser-smoke.mjs'
@@ -37,6 +39,10 @@ jobs:
           node-version: 22
       - name: Assemble common ABC reader from the latest sources
         run: node scripts/build-abc-ui.mjs
+      - name: Build Repertoire plugin from versioned source modules
+        run: node scripts/build-repertoire-plugin.mjs
+      - name: Synchronize native Forge plugin registry
+        run: node scripts/build-forge-plugin-library.mjs
       - name: Verify orchestra, setlist and iPad book navigation
         run: node --test tests/repertoire-edition.test.mjs
       - name: Assemble interactive Repertoire demo with original ABC scores
@@ -72,6 +78,7 @@ jobs:
           assert.equal(m.filter(t=>t['repertoire-kind']==='orchestra-item').length,17);
           console.log('Repertoire demo has 17 original scores and a book linked from the workshop');
           "
+          node scripts/build-repertoire-plugin.mjs --check
           git diff --check
       - name: Commit editable demo HTML to the existing Forge Pages directory
         run: |
@@ -80,7 +87,7 @@ jobs:
           # The ABC package is published by its own workflow. Keep this job
           # focused on the assembled demo so concurrent builds can rebase.
           git restore -- plugins/abc/dist/plugin.json
-          git add -- editions/silva-ethno-repertoire/index.html
+          git add -- plugins/repertoire/dist/plugin.json library/plugins/registry.json editions/silva-ethno-repertoire/index.html
           if ! git diff --cached --quiet; then
             git commit -m "build(repertoire): publish interactive 17-score Nodebog demo"
             git fetch origin main
