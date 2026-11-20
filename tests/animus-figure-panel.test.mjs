@@ -56,10 +56,11 @@ function scene(mirror = false) {
     {id: 'caption', type: 'text', text: 'OOOO', keys: [pose(0), pose(10, {opacity: 0})], lipSync: {enabled: true, target: 'prisoner', open: 'prisoner-mouth-open', closed: 'prisoner-mouth-closed', timing: 'script', strength: .9, visemeText: 'OOOO', visemes: [{t: 0, viseme: 'O', open: .7}, {t: 9, viseme: 'rest'}]}}
   ]};
 }
-function harness({initial, motion = false, reentry = true, globals = {}, faceWork} = {}) {
+function harness({initial, motion = false, reentry = true, globals = {}, faceWork, extraParts = []} = {}) {
   const row = (title, data) => ({title, type: 'application/json', text: JSON.stringify(data)});
+  const withObjects = value => ({...value, parts: [...value.parts, ...plain(extraParts)]});
   const film = {version: 1, width: 800, height: 450, duration: 20, parts: [], camera: {keys: [{t: 0, x: 400, y: 225, zoom: 1.7, r: 13, skewX: 4}]}, scenes: [{source: 'First', duration: 10}, {source: 'Second', duration: 10, speed: 2, offset: 1, loop: true}], musical: {songs: [{id: 'music', score: 'Score', start: 0, duration: 20}], animationClips: motion ? [{id: 'arm-loop', name: 'Arm loop', target: 'prisoner', start: 10, duration: 10, beatsPerLoop: 8, loop: true, motion: {'prisoner-forearm-right': [pose(0, {y: 76, r: 10}), pose(8, {y: 76, r: 50})]}}] : [], faceKeys: [{actor: 'prisoner', t: 0, eyes: 'squint', mouthMap: {O: 'E'}}]}};
-  const records = plain(initial || {Film: row('Film', film), First: row('First', scene()), Second: row('Second', scene(true)), Score: {title: 'Score', type: 'text/vnd.abc', text: 'X:1\nK:C\nC D E F|'}}), writes = [], selections = [], faces = [], deselections = [];
+  const records = plain(initial || {Film: row('Film', film), First: row('First', withObjects(scene())), Second: row('Second', withObjects(scene(true))), Score: {title: 'Score', type: 'text/vnd.abc', text: 'X:1\nK:C\nC D E F|'}}), writes = [], selections = [], faces = [], deselections = [], appearanceOpens = [], propertiesOpens = [];
   const wiki = {getTiddler: title => records[title] ? new Tiddler(records[title]) : null, getTiddlerText: (title, fallback = '') => records[title]?.text ?? fallback, getTiddlers: () => Object.keys(records), each(fn) {for(const [title, fields] of Object.entries(records)) fn(new Tiddler(fields), title);}, addTiddler(t) {records[t.fields.title] = plain(t.fields);writes.push(t.fields.title);}, getModificationFields: () => ({}), generateNewTitle: title => title};
   const api = modules(globals), doc = svgDocument(), data = api.engine.readScene(wiki, 'Film'), view = api.engine.build(doc, wiki, data, false), host = doc.createElement('main'), dock = doc.createElement('section');doc.body.appendChild(host);host.appendChild(view.svg);host.appendChild(dock);
   const native = nativeEvents(doc);
@@ -68,9 +69,9 @@ function harness({initial, motion = false, reentry = true, globals = {}, faceWor
   function repaint() {api.engine.paint(view, time);api.motion.paint(view, data, time, clock);api.lips.apply(view, time, time);if(editor) editor.paint(time);if(panel) panel.refresh();}
   const options = {doc, host, wiki, film: data, view, sceneTitle: 'Film', stageTitle: 'First', scoreTitle: 'Score', duration: () => data.duration, beatClock: () => clock, pause() {}, isPlaying: () => false, position: () => time, seek(t) {time = t;repaint();}, repaint, markOwnWrite() {}, onSelect(track) {if(reentry && panel && track.part) panel.select(track.part);}};
   editor = api.editor.attach(options);repaint();
-  panel = api.panel.mount({doc, wiki, host, parent: dock, view, film: data, editor, position: () => time, pause() {}, onSelect(id) {selections.push(id);if(reentry) panel.select(id);}, onDeselect() {deselections.push({actorId: panel.context()?.actorId, partId: panel.selectedPart()});}, onFace(value) {faces.push(plain(value));if(faceWork) faceWork(value);}, onLayout() {layouts++;if(panel) panel.refresh(true);}});
+  panel = api.panel.mount({doc, wiki, host, parent: dock, view, film: data, editor, position: () => time, pause() {}, onSelect(id) {selections.push(id);if(reentry) panel.select(id);}, onDeselect() {deselections.push({actorId: panel.context()?.actorId, partId: panel.selectedPart()});}, onFace(value) {faces.push(plain(value));if(faceWork) faceWork(value);}, onEditAppearance(id) {appearanceOpens.push(id);}, onProperties(id) {propertiesOpens.push(id);}, onLayout() {layouts++;if(panel) panel.refresh(true);}});
   const preview = dock.querySelector('[data-figure-preview]');preview.screenMatrix = new Matrix(.85, 0, 0, .85, 900, 260);
-  return {api, doc, host, dock, data, view, editor, options, records, writes, selections, faces, deselections, panel, preview, native, get time() {return time;}, get layouts() {return layouts;}, get leaf() {return panel.context()?.view || view.clips[1].view;}};
+  return {api, doc, host, dock, data, view, editor, options, records, writes, selections, faces, deselections, appearanceOpens, propertiesOpens, panel, preview, native, get time() {return time;}, get layouts() {return layouts;}, get leaf() {return panel.context()?.view || view.clips[1].view;}};
 }
 const close = (a, b, label) => assert.ok(Math.abs(a - b) < 1e-7, label || `${a} should equal ${b}`);
 function pointClose(a, b) {close(a.x, b.x);close(a.y, b.y);}
@@ -85,6 +86,16 @@ function drag(h, id, degrees, finish = 'pointerup', viaHandle = false) {
   const canvas = h.dock.querySelector('.huw-musical-figure-canvas');canvas.dispatch('pointermove', {clientX: end.x, clientY: end.y, pointerId: 7, pointerType: 'touch'});
   if(finish) canvas.dispatch(finish, {clientX: end.x, clientY: end.y, pointerId: 7, pointerType: 'touch'});
   return {node, canvas, start, end};
+}
+function moveObject(h, id, dx, dy, finish = 'pointerup', target) {
+  const node = clonePart(h, id), shape = target || node.firstChild, box = shape.getBBox(), start = shape.getScreenCTM().point({x: box.x + box.width / 2, y: box.y + box.height / 2}), parent = node.parentNode.getScreenCTM(), local = parent.inverse().point(start), end = parent.point({x: local.x + dx, y: local.y + dy}), canvas = h.dock.querySelector('.huw-musical-figure-canvas');
+  shape.dispatch('pointerdown', {pointerId: 7, pointerType: 'touch', clientX: start.x, clientY: start.y});canvas.dispatch('pointermove', {pointerId: 7, pointerType: 'touch', clientX: end.x, clientY: end.y});
+  if(finish)canvas.dispatch(finish, {pointerId: 7, pointerType: 'touch', clientX: end.x, clientY: end.y});return {canvas, end};
+}
+let horseSource;
+function realHorse(){
+  if(!horseSource){const rows = JSON.parse(read('editions/turn-around/tiddlers/production.json')),source = rows.find(row => row.title === 'Turn Around · 01 · The Whole World');assert.ok(source);horseSource = JSON.parse(source.text).parts.find(part => part.id === 'shadow-horse');assert.ok(horseSource);}
+  return plain(horseSource);
 }
 
 test('selecting a forearm shows only its whole active actor with the current authored and runtime pose', () => {
@@ -247,4 +258,46 @@ test('isolated preview removes editor-only hiding while preserving authored invi
   assert.equal(clonePart(h, 'prisoner-eye-lids').getAttribute('opacity'), '0');assert.equal(stage.nodes.prisoner.el.classList.contains('huw-musical-preview-hidden'), true);assert.equal(stage.nodes.prisoner.el.getAttribute('style'), 'display:none;opacity:.8');
   const handle = h.preview.querySelector('[data-figure-action="rotate"]');assert.equal(handle.getAttribute('tabindex'), '0');assert.equal(h.preview.getAttribute('role'), 'group');
   handle.dispatch('keydown', {key: 'ArrowRight'});assert.equal(stage.nodes['prisoner-forearm-right'].part.keys.find(key => key.t === 7).r, 65);assert.deepEqual(h.writes, ['Second']);
+});
+
+test('the real horse shadow opens as a current-time object, with explicit read-only help at its invisible first frame', () => {
+  const horse = realHorse(), h = harness({extraParts: [horse]}), before = JSON.stringify(h.records);h.options.seek(1);assert.equal(h.panel.select(horse.id), true);
+  const panel = h.dock.querySelector('[data-figure-panel]'), appearance = panel.querySelector('[data-object-appearance]'), properties = panel.querySelector('[data-object-properties]'), notice = panel.querySelector('[data-object-visibility]'), reveal = panel.querySelector('[data-object-reveal]'), ghost = h.preview.querySelector('[data-figure-ghost]');
+  assert.equal(h.panel.context().kind, 'object');assert.equal(h.panel.context().hasJoints, false);assert.equal(h.panel.context().isObject, true);assert.equal(panel.getAttribute('data-figure-kind'), 'object');assert.equal(panel.getAttribute('aria-label'), 'Hele objektet');
+  assert.equal(panel.querySelector('[data-figure-fit]').textContent, 'Vis hele objektet');assert.equal(panel.querySelector('.huw-musical-figure-parts').hidden, true);assert.equal(appearance.hidden, false);assert.equal(properties.hidden, false);
+  assert.ok(Number(clonePart(h, horse.id).getAttribute('opacity')) > 0);assert.equal(clonePart(h, horse.id).getAttribute('opacity'), h.leaf.nodes[horse.id].el.getAttribute('opacity'));assert.equal(clonePart(h, horse.id).getAttribute('transform'), h.leaf.nodes[horse.id].el.getAttribute('transform'));
+  assert.equal(h.api.engine.state(horse, 0).opacity, 0, 'the production shadow really starts with its authored invisible key');assert.notEqual(h.api.engine.state(horse, 1).x, h.api.engine.state(horse, 0).x);assert.equal(notice.hidden, true);assert.equal(ghost.getAttribute('display'), 'none');
+  appearance.click();properties.click();assert.deepEqual(h.appearanceOpens, [horse.id]);assert.deepEqual(h.propertiesOpens, [horse.id]);assert.deepEqual(h.faces, []);assert.equal(JSON.stringify(h.records), before);assert.deepEqual(h.writes, []);
+  h.options.seek(0);assert.equal(clonePart(h, horse.id).getAttribute('opacity'), '0');assert.equal(notice.hidden, false);assert.match(notice.textContent, /usynligt ved dette tidspunkt/);assert.equal(ghost.getAttribute('display'), 'none', 'opening or seeking never silently reveals hidden artwork');
+  reveal.click();assert.equal(reveal.getAttribute('aria-pressed'), 'true');assert.equal(ghost.getAttribute('display'), null);assert.equal(ghost.firstChild.getAttribute('opacity'), '1');assert.match(notice.textContent, /stadig usynligt i animationen/);assert.equal(clonePart(h, horse.id).getAttribute('opacity'), '0');assert.equal(h.leaf.nodes[horse.id].el.getAttribute('opacity'), '0');
+  const guide = ghost.firstChild;h.panel.refresh(true);assert.equal(ghost.firstChild, guide, 'the optional guide is updated in place');h.panel.clearSelection();assert.equal(h.panel.isOpen(), true);assert.equal(h.panel.selectedPart(), '');assert.equal(ghost.getAttribute('display'), null);
+  h.options.seek(1);assert.equal(notice.hidden, true);assert.equal(ghost.getAttribute('display'), 'none');assert.equal(h.panel.selectedPart(), '');assert.equal(clonePart(h, horse.id).getAttribute('opacity'), h.leaf.nodes[horse.id].el.getAttribute('opacity'));
+  h.panel.select('prisoner-head');assert.equal(h.panel.context().kind, 'figure');assert.equal(h.panel.context().hasJoints, true);assert.equal(appearance.hidden, true);assert.equal(properties.hidden, true);assert.equal(panel.querySelector('.huw-musical-figure-parts').hidden, false);assert.equal(ghost.childNodes.length, 0);
+  assert.equal(JSON.stringify(h.records), before);assert.deepEqual(h.writes, []);
+});
+
+for(const [name, make] of [
+  ['vector shadow', realHorse],
+  ['bitmap backdrop', () => ({id: 'backdrop-test', name: 'Backdrop', type: 'image', geo: {x: -160, y: -90, w: 320, h: 180}, variants: [{id: 'stone', imageData: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 180"><rect width="320" height="180" fill="#262024"/></svg>'}], pivot: {x: 12, y: 8}, keys: [pose(0, {x: 140, y: 90, sx: -1.2, sy: .9, opacity: .7}), pose(10, {x: 430, y: 170, r: 24, sx: -1.2, sy: .9, opacity: .7})]})]
+])test('a single '+name+' moves and rotates at the active local time; Escape rolls back without changing visibility', () => {
+  const object = make(), h = harness({extraParts: [object]});assert.equal(h.panel.select(object.id), true);const source = h.leaf.scene, initial = plain(source.parts), state = plain(h.api.engine.state(source.parts.find(part => part.id === object.id), 7)),firstBefore = h.records.First.text, filmBefore = h.records.Film.text;
+  moveObject(h, object.id, 34, -18);
+  // The existing editor stores edited positions to two decimal places.
+  const movedX = Math.round((state.x + 34) * 100) / 100,movedY = Math.round((state.y - 18) * 100) / 100;
+  let part = source.parts.find(part => part.id === object.id),key = part.keys.find(key => key.t === 7);assert.ok(key);close(key.x, movedX);close(key.y, movedY);close(key.r, state.r);close(key.opacity, state.opacity);assert.equal(h.panel.context().localTime, 7);assert.equal(h.panel.context().globalTime, 13);
+  drag(h, object.id, 21, 'pointerup', true);part = source.parts.find(part => part.id === object.id);key = part.keys.find(key => key.t === 7);close(key.r, state.r + 21);close(key.x, movedX);close(key.y, movedY);close(key.opacity, state.opacity);assert.equal(part.keys.filter(key => key.t === 7).length, 1);
+  assert.deepEqual(plain(source.parts.filter(part => part.id !== object.id)), initial.filter(part => part.id !== object.id));assert.deepEqual(h.writes, ['Second', 'Second']);assert.equal(h.records.First.text, firstBefore);assert.equal(h.records.Film.text, filmBefore);
+  const committed = JSON.stringify(source.parts),stored = JSON.stringify(h.records),poseBefore = clonePart(h, object.id).getAttribute('transform'),edit = moveObject(h, object.id, 48, 12, null);assert.notEqual(JSON.stringify(source.parts), committed);
+  edit.canvas.dispatch('keydown', {key: 'Escape'});edit.canvas.dispatch('pointerup', {pointerId: 7, clientX: edit.end.x, clientY: edit.end.y});assert.equal(JSON.stringify(source.parts), committed);assert.equal(JSON.stringify(h.records), stored);assert.equal(clonePart(h, object.id).getAttribute('transform'), poseBefore);assert.equal(h.panel.selectedPart(), '');assert.equal(h.panel.context().rootId, object.id);assert.equal(h.panel.isOpen(), true);assert.deepEqual(h.writes, ['Second', 'Second']);
+});
+
+test('moving an explicitly revealed invisible object keeps its authored opacity at zero', () => {
+  const horse = realHorse(),h = harness({extraParts: [horse]});h.options.seek(0);h.panel.select(horse.id);const before = plain(h.leaf.nodes[horse.id].part.keys),reveal = h.dock.querySelector('[data-object-reveal]');reveal.click();const guide = h.preview.querySelector('[data-figure-ghost]').firstChild;
+  moveObject(h, horse.id, 15, 8, 'pointerup', guide.firstChild);
+  const changed = h.leaf.nodes[horse.id].part.keys;assert.equal(changed[0].opacity, 0);assert.equal(changed[0].x, before[0].x + 15);assert.equal(changed[0].y, before[0].y + 8);assert.deepEqual(plain(changed.slice(1)), before.slice(1));assert.equal(h.leaf.nodes[horse.id].el.getAttribute('opacity'), '0');assert.equal(clonePart(h, horse.id).getAttribute('opacity'), '0');assert.deepEqual(h.writes, ['First']);
+});
+
+test('a prop wrapper with one generated drawing is an object while articulated characters remain figures', () => {
+  const h = harness({extraParts: [{id: 'prop', name: 'Carved horse on a pole', type: 'group', keys: [pose(0, {x: 180, y: 190})]}, {id: 'prop-drawing', type: 'rect', parent: 'prop', geo: {x: -40, y: -85, w: 80, h: 150}, keys: [pose()]}]});h.panel.select('prop-drawing');assert.equal(h.panel.selectedPart(), 'prop');assert.equal(h.panel.context().kind, 'object');assert.equal(h.panel.context().parts.length, 2);assert.equal(h.panel.context().hasJoints, false);assert.ok(clonePart(h, 'prop-drawing'));
+  h.panel.select('prisoner-forearm-right-drawing');assert.equal(h.panel.context().kind, 'figure');assert.equal(h.panel.context().hasJoints, true);assert.equal(h.panel.context().isObject, false);assert.deepEqual(h.writes, []);
 });

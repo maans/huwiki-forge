@@ -82,7 +82,7 @@ function workspaceHarness(options={}){
  create('header','huw-musical-editor-header',root);create('p','',root);create('div','huw-musical-inspector',root);
  const film={width:800,height:450,camera:{keys:[{t:0,x:400,y:225,zoom:1}]},parts:[{id:'actor',name:'Actor'},{id:'arm',parent:'actor',name:'Arm'}]};
  if(options.face)film.parts.push({id:'head',parent:'actor',name:'Head',type:'group'},{id:'mouth',parent:'head',name:'Mouth',type:'image',variants:[{id:'o',name:'Round'},{id:'e',name:'Smile'}]},{id:'eyes',parent:'head',name:'Eyes'});
- const scene=film;let selected={id:'song:music',kind:'song'},workspace,change=null,committed=0,paused=0,scriptOpened=0,puppetOpened=0,position=2,seeks=0,figureOptions,figureSelected='',figureOpened=false,figureSuspended=0;
+ const scene=film;let selected={id:'song:music',kind:'song'},workspace,change=null,committed=0,paused=0,scriptOpened=0,puppetOpened=0,puppetPart='',position=2,seeks=0,figureOptions,figureSelected='',figureOpened=false,figureSuspended=0,figureContext=null;
  const faceCommands=[],figureCalls=[];
  function repaint(){svg.setAttribute('viewBox','0 0 800 450');workspace?.paintPreview();workspace?.refreshHandles();}
  const editor={getSelection:()=>selected,setFilter(){},setZoom(){},getZoom:()=>1,addKeyframe(){},removeKeyframe(){},setCameraEdit(){repaint();},inClipDetail:()=>false,
@@ -104,9 +104,9 @@ function workspaceHarness(options={}){
  const modules={
   '$:/plugins/huwiki/musical/selection-zoom.js':zoom,
   '$:/plugins/huwiki/musical/face-panel.js':options.face?facePanel:{mount:()=>({...inactive(),select:()=>false,refresh(){},hide(){},isWorkshopOpen:()=>false,relocate(){},suspend:()=>()=>{}})},
-  '$:/plugins/huwiki/musical/figure-panel.js':{mount:config=>{figureOptions=config;return {select(id){figureCalls.push(id);figureSelected=id.replace(/-drawing$/,'');figureOpened=true;return true;},selectedPart:()=>figureSelected,clearSelection(){figureSelected='';},refresh(){},hide(){figureOpened=false;},isOpen:()=>figureOpened&&!figureSuspended,isDragging:()=>false,cancelGesture(){},
+  '$:/plugins/huwiki/musical/figure-panel.js':{mount:config=>{figureOptions=config;return {select(id){figureCalls.push(id);figureSelected=id.replace(/-drawing$/,'');figureContext={kind:options.objectIds?.includes(id)?'object':'figure',rootId:id};figureOpened=true;return true;},selectedPart:()=>figureSelected,context:()=>figureContext,clearSelection(){figureSelected='';},refresh(){},hide(){figureOpened=false;},isOpen:()=>figureOpened&&!figureSuspended,isDragging:()=>false,cancelGesture(){},
    suspend(){figureSuspended++;let restored=false;return ()=>{if(!restored){restored=true;figureSuspended--;}};},dispose(){figureOpened=false;}};}},
-  '$:/plugins/huwiki/musical/puppet.js':{mount:()=>({...inactive(),open(){puppetOpened++;}}),rootFor:id=>id==='arm'?'actor':id},
+  '$:/plugins/huwiki/musical/puppet.js':{mount:()=>({...inactive(),open(id){puppetOpened++;puppetPart=id;return true;}}),rootFor:id=>id==='arm'?'actor':id},
   '$:/plugins/huwiki/musical/manuscript.js':{mount:()=>({...inactive(),open(){scriptOpened++;}})},
   '$:/plugins/huwiki/musical/narration.js':{mount:inactive},
   '$:/plugins/huwiki/musical/score-workshop.js':{mount:inactive},
@@ -116,8 +116,8 @@ function workspaceHarness(options={}){
  const view={svg,nodes:{actor:{el:actor},arm:{el:arm}},clips:[]};
  workspace=api.mount({doc,host,editor,film,view,layout,transport,play,project:'Show',sceneTitle:'Film',wiki:{getTiddlerText:()=>'$:/languages/en-GB'},scoreTitle:()=>'',position:()=>position,pause(){paused++;},seek(time){position=time;seeks++;},repaint});
  return {...h,host,stage,canvas,film,view,workspace,editor,repaint,faceCommands,figureCalls,openFigureFace(id){figureOptions.onFace({partId:id,actorId:'actor',headId:'head',tab:id==='mouth'?'mouth':'eyes'});},
-  deselectFigure(){figureOptions.onDeselect();},get figureSelected(){return figureSelected;},
-  get selected(){return selected;},get change(){return change;},get committed(){return committed;},get paused(){return paused;},get scriptOpened(){return scriptOpened;},get puppetOpened(){return puppetOpened;},get position(){return position;},get seeks(){return seeks;},get figureOpen(){return figureOpened&&!figureSuspended;}};
+  deselectFigure(){figureOptions.onDeselect();},editAppearance(id){return figureOptions.onEditAppearance(id);},showProperties(id){return figureOptions.onProperties(id);},get figureSelected(){return figureSelected;},
+  get selected(){return selected;},get change(){return change;},get committed(){return committed;},get paused(){return paused;},get scriptOpened(){return scriptOpened;},get puppetOpened(){return puppetOpened;},get puppetPart(){return puppetPart;},get position(){return position;},get seeks(){return seeks;},get figureOpen(){return figureOpened&&!figureSuspended;}};
 }
 test('workspace actions zoom selected figure and arm, retain pointer coordinates and leave camera data unchanged',()=>{
  const h=workspaceHarness(),before=JSON.stringify(h.film),zoomButton=h.host.querySelector('.huw-musical-zoom-selection');
@@ -295,4 +295,29 @@ test('timeline control replacement restores keyboard focus without stealing it f
  h.doc.activeElement.dispatch('keydown',{key:'Escape'});assert.equal(h.selected,null);
  const kept=h.host.querySelector('[data-workshop-mode="figure"]');kept.focus();h.editor.selectPart('arm');assert.equal(h.doc.activeElement,kept,'surviving controls retain their focus');
  h.workspace.dispose();
+});
+
+test('plain objects share the dock, keep one-tap selection and expose properties without creating a key',()=>{
+ const h=workspaceHarness({objectIds:['actor']}),dock=h.host.querySelector('[data-animus-workshop]'),before=JSON.stringify(h.film),time=h.position;
+ h.editor.selectPart('actor');
+ assert.equal(dock.dataset.workshopKind,'object');assert.equal(dock.querySelector('[data-workshop-mode="figure"]').textContent,'Object');assert.equal(dock.querySelector('[data-workshop-mode="face"]').hidden,true);
+ h.showProperties('actor');assert.equal(h.host.classList.contains('huw-musical--inspector-open'),true);assert.equal(h.selected.part,'actor');assert.equal(h.doc.activeElement,h.host.querySelector('.huw-musical-inspector-drawer'));
+ h.editor.selectPart('actor');assert.equal(h.host.classList.contains('huw-musical--inspector-open'),true,'a key selection callback for the inspected object keeps its controls visible');
+ h.host.querySelector('.huw-musical-inspector-close').click();h.editor.selectPart('actor');assert.equal(h.host.classList.contains('huw-musical--inspector-open'),false,'explicitly closing Properties is respected');h.showProperties('actor');
+ h.host.dispatch('keydown',{key:'Escape'});assert.equal(h.selected,null);assert.equal(dock.hidden,false);assert.equal(dock.dataset.workshopKind,'object');assert.equal(h.figureSelected,'');
+ h.editAppearance('actor');assert.equal(h.puppetOpened,1);assert.equal(h.puppetPart,'actor','replacement opens the object whose preview remained available after clearing selection');
+ h.editor.selectPart('arm');assert.equal(dock.dataset.workshopKind,'figure');assert.equal(dock.querySelector('[data-workshop-mode="figure"]').textContent,'Character');assert.equal(dock.querySelector('[data-workshop-mode="face"]').hidden,false);
+ assert.equal(h.selected.part,'arm');assert.equal(h.position,time);assert.equal(h.seeks,0);assert.equal(h.committed,0);assert.equal(JSON.stringify(h.film),before);h.workspace.dispose();
+});
+
+test('object appearance and properties leave fullscreen before showing controls outside the stage',async()=>{
+ const h=workspaceHarness({objectIds:['actor']}),dock=h.host.querySelector('[data-animus-workshop]'),before=JSON.stringify(h.film);h.editor.selectPart('actor');
+ h.doc.fullscreenElement=h.stage;h.doc.dispatch('fullscreenchange',{});assert.equal(dock.parentNode,h.stage);
+ let finishExit;h.doc.exitFullscreen=()=>new Promise(resolve=>{finishExit=()=>{h.doc.fullscreenElement=null;h.doc.dispatch('fullscreenchange',{});resolve();};});
+ const opening=h.editAppearance('actor');assert.equal(h.puppetOpened,0,'the appearance editor waits until it can be displayed');finishExit();await opening;
+ assert.equal(h.puppetOpened,1);assert.equal(h.puppetPart,'actor');assert.equal(dock.parentNode,h.host);
+ h.doc.fullscreenElement=h.stage;h.doc.dispatch('fullscreenchange',{});
+ const properties=h.showProperties('actor');assert.equal(h.host.classList.contains('huw-musical--inspector-open'),false);finishExit();await properties;
+ assert.equal(h.host.classList.contains('huw-musical--inspector-open'),true);assert.equal(dock.parentNode,h.host);assert.equal(h.selected.part,'actor');assert.equal(dock.dataset.workshopKind,'object');
+ assert.equal(h.seeks,0);assert.equal(h.committed,0);assert.equal(JSON.stringify(h.film),before);h.workspace.dispose();
 });

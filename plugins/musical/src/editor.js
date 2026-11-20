@@ -178,6 +178,20 @@ function attach(o){
  function track(){if(!choice.id)return null;return songTracks().concat(audioTracks()).find(function(s){return s.id===choice.id;})||map[choice.id]||songTracks()[0]||tracks[0];}
  function axisDuration(){return Math.max(1,o.duration(),film.duration,Playlist.total(m.songs));}
  function part(t){var scene=t.kind==='film-part'?film:sceneForPart(t.part,o.view,0)||source;return scene&&(scene.parts||[]).find(function(p){return p.id===t.part;});}
+ function paintPartAppearance(scene,id,field,value){
+  if(!scene)return;var title=scene._title;
+  // Reused source scenes have separate rendered trees and model objects.
+  // Keep those occurrences consistent without touching another source that
+  // happens to contain an identically named part.
+  function walk(view,depth){if(!view||depth>16)return;
+   if(view.scene===scene||title&&view.scene&&view.scene._title===title){
+    var item=(view.scene.parts||[]).find(function(p){return p.id===id;}),node=view.nodes&&view.nodes[id];if(item)item[field]=value;
+    if(node&&node.shape){if(field==='text')node.shape.textContent=value;else node.shape.setAttribute(field,value);}
+   }
+   (view.clips||[]).forEach(function(clip){walk(clip.view,depth+1);});
+   Object.keys(view.nodes||{}).forEach(function(key){if(view.nodes[key].nested)walk(view.nodes[key].nested,depth+1);});
+  }walk(o.view,0);
+ }
  function animation(t){return m.animationClips.find(function(c){return c.id===t.clipId;});}
  function activeDetail(){return m.animationClips.find(function(c){return c.id===detailClipId;});}
  function detailTrack(clip,partId){
@@ -621,8 +635,7 @@ function attach(o){
   }else if(t.kind==="accent"){
    formNumber(k,L.x,"x",1,-1000,1000);formNumber(k,L.y,"y",1,-1000,1000);formNumber(k,L.r,"r",1,-360,360);
   }else if(t.kind==="part"||t.kind==="film-part"){
-   var item=part(t),nested=o.view.clips&&o.view.clips[0]&&o.view.clips[0].view,
-    visual=t.kind==="film-part"?(o.view.nodes[t.part]&&o.view.nodes[t.part].shape):nested&&nested.nodes&&nested.nodes[t.part]&&nested.nodes[t.part].shape;
+   var item=part(t),location=t.kind==='film-part'?{view:o.view}:partContext(t.part,o.view,playhead,[],true,0),appearanceScene=location&&location.view.scene;
    if(item){
     formText(item,L.name,"name",function(value){t.name=value||t.part;});
     if(typeof item.fill==="string"&&/^#[0-9a-f]{6}$/i.test(item.fill)){
@@ -630,11 +643,11 @@ function attach(o){
      el(doc,"span","",L.color,colorLabel);var color=el(doc,"input","huw-musical-color-input",undefined,colorLabel);
      color.type="color";color.value=item.fill;
      color.onchange=function(){
-      item.fill=color.value;if(visual)visual.setAttribute("fill",item.fill);
+      item.fill=color.value;paintPartAppearance(appearanceScene,t.part,'fill',item.fill);
       save(t);o.repaint();
      };
     }
-    if(item.type==="text")formText(item,L.text,"text",function(value){if(visual)visual.textContent=value;});
+    if(item.type==="text")formText(item,L.text,"text",function(value){paintPartAppearance(appearanceScene,t.part,'text',value);});
     // Props and scenery use exactly the same lightweight SVG layer editor as puppets.
     var drawVisual=el(doc,"button","huw-musical-edit-svg",L===translations.da?"✎ SVG-lag / rekvisit":"✎ SVG layers / prop",inspector);
     drawVisual.type="button";drawVisual.onclick=function(){

@@ -1,6 +1,6 @@
 # AniMus production tools
 
-AniMus 0.13.0-beta.2 includes a large figure workshop beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
+AniMus 0.13.0-beta.4 includes large figure and object workshops beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
 
 ## Create and edit a show
 
@@ -41,6 +41,18 @@ Press **Escape**, tap empty space in the scene or a workshop, or use **Clear sel
 Clearing selection creates no key and does not erase a saved pose, facial choice or mouth mapping. In the face workshop, the cards continue to show the current choices. Switching between **Face** and **Character** keeps the editing selection empty until you choose a part again.
 
 The CutOut studio has the same **Figure** and **Parts and joints** choices, plus a part selector and **Move**, **Rotate** and **Size** tools. Use **Undo** and **Redo** for its completed direct edits, and **Save project** to apply the draft. AniMus applies a stage drag when you release it; saving the complete wiki file remains a separate TiddlyWiki action. Site view provides audience playback without editing frames or handles.
+
+## Edit a shadow, prop or background
+
+Select an object on the stage or choose it in **Objects in scene**. A single vector shape, image or text object opens the **Object** workshop beneath the stage. It shows that object's current animated position and shape on a light background. Drag it to move it, or use the blue handle to rotate it. Releasing the pointer saves a key at the playhead, using the active scene's local time. **Escape** cancels an unfinished drag and clears selection; a completed edit remains saved.
+
+Use **Properties** for numeric position, scale, rotation and opacity. To animate a new value, place the playhead where the change belongs and use **Add keyframe**, then edit its values. Existing stage handles in **Figure** mode can also resize or skew the whole object.
+
+**Edit / replace** opens the appearance workshop with the object framed at the current scene time. Change its fill or stroke, edit its SVG drawing, or replace its artwork. **Save and return** applies the appearance change while preserving the object's identity, parent, pivot and existing animation keys. This replaces the artwork used by that source object throughout its animation; it does not create a timed appearance change. **Cancel** leaves the source untouched.
+
+If an object's animation makes it invisible at the selected time, the live workshop explains this and offers **Show as guide**. The guide is for editing only: its visibility is never written to the source or exported. The appearance workshop similarly labels any temporary reveal. In Turn Around, the horse shadow has an invisible first frame, so opening its appearance editor no longer produces an unexplained empty canvas.
+
+A silhouette drawn as one shape moves as one object. Independent leg, head or tail movements require separate parts and joints. An object that already has those parts uses the shared figure tools.
 
 ## Choose what you see and hear while editing
 

@@ -22,6 +22,7 @@ on:
       - scripts/animus-browser-smoke.mjs
       - scripts/animus-face-browser-smoke.mjs
       - scripts/animus-figure-browser-smoke.mjs
+      - scripts/animus-object-browser-smoke.mjs
       - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
       - tests/animus-face*.test.mjs
@@ -58,6 +59,7 @@ on:
       - scripts/animus-browser-smoke.mjs
       - scripts/animus-face-browser-smoke.mjs
       - scripts/animus-figure-browser-smoke.mjs
+      - scripts/animus-object-browser-smoke.mjs
       - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
       - tests/animus-face*.test.mjs
@@ -122,6 +124,11 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/animus-figure-browser-smoke.mjs
+      - name: Test object editing and replacement through the ordinary Turn Around demo
+        if: ${{ !cancelled() }}
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/animus-object-browser-smoke.mjs
       - name: Report complete source suite with bounded diagnostics
         if: always()
         run: |
