@@ -23,22 +23,9 @@ try{
  await page.getByRole("link",{name:"Åbn nodebogen"}).click();
  const score=page.locator(".huwrep-book .huwabc-score").first();
  await score.waitFor();
- const readerLaunch=score.locator(".huwabc-open-reader").first();
- try {
-  await readerLaunch.waitFor({state:"visible",timeout:12000});
- } catch(error) {
-  const debug=await score.evaluate(el=>({
-   className:el.className,
-   children:Array.from(el.children).map(n=>({class:n.className,tag:n.tagName,hidden:n.hidden})),
-   actions:Array.from(el.querySelectorAll(".huwabc-actions button")).map(b=>({text:b.textContent,html:b.outerHTML.slice(0,500),display:getComputedStyle(b).display})),
-   head:el.querySelector(".huwabc-head")?.outerHTML.slice(0,1000),
-   reader:el.querySelector(".huwabc-reader-toolbar")?.outerHTML.slice(0,450),
-   book:el.closest(".huwrep-book")?.className
-  }));
-  console.error("ABC reader launch diagnostics",JSON.stringify({debug,runtimeErrors}));
-  throw error;
- }
- await readerLaunch.click();
+ // Repertoire opens directly on the notation, just like forScore.
+ await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-score.huwabc-reader-active"),
+  undefined,{timeout:20000});
  await page.waitForFunction(()=>document.querySelector(".huwabc-score.huwabc-reader-active"));
  assert.ok(await score.evaluate(el=>Math.abs(el.getBoundingClientRect().width-innerWidth)<5),"Reader must own the viewport");
  assert.equal(await score.locator(".huwabc-head").evaluate(el=>getComputedStyle(el).display),"none","Editor tools should disappear during performance");
