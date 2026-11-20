@@ -1,0 +1,65 @@
+name: ABC reader editor transition on iPad WebKit
+on:
+  push:
+    branches: [fix/abc-ipad-reader-edit-crash]
+  pull_request:
+    paths:
+      - 'plugins/abc/**'
+      - 'plugins/repertoire/**'
+      - 'editions/silva-ethno-repertoire/**'
+      - 'tests/abc-reader-*.test.mjs'
+      - 'tests/repertoire-*.test.mjs'
+      - 'scripts/build-abc-ui.mjs'
+      - 'scripts/build-repertoire-plugin.mjs'
+      - 'scripts/assemble-silba-etno-repertoire.mjs'
+      - 'scripts/abc-reader-edit-browser-smoke.mjs'
+      - '.github/workflows/abc-reader-edit.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: abc-reader-edit-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  native-reader-edit:
+    name: Native reader edit (${{ matrix.browser }})
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [webkit, chromium]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install the pinned wiki and browser runtimes
+        run: |
+          npm ci --ignore-scripts
+          npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1
+          npx playwright install --with-deps ${{ matrix.browser }}
+      - name: Build the shared plugins and the ordinary Repertoire demo
+        run: |
+          node scripts/build-abc-ui.mjs
+          node scripts/build-repertoire-plugin.mjs
+          node scripts/build-forge-plugin-library.mjs
+          node scripts/assemble-silba-etno-repertoire.mjs
+      - name: Check reader, draft handoff and edition regressions
+        run: |
+          node --test tests/abc-reader-edit.test.mjs tests/repertoire-editor-handoff.test.mjs tests/abc-reader-mode.test.mjs tests/abc-reader-fallback.test.mjs tests/repertoire-edition.test.mjs tests/music-edition.test.mjs tests/forge-libraries.test.mjs
+          node scripts/build-abc-ui.mjs --check
+          node scripts/build-repertoire-plugin.mjs --check
+      - name: Open, edit, cancel and save through the real browser controls
+        env:
+          ABC_READER_BROWSER: ${{ matrix.browser }}
+        run: node scripts/abc-reader-edit-browser-smoke.mjs
+      - name: Keep bounded diagnostics, screenshots and native traces
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: abc-reader-edit-${{ matrix.browser }}
+          path: test-results/abc-reader-edit/
+          if-no-files-found: ignore
+          retention-days: 7
