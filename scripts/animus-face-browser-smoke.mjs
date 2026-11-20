@@ -74,6 +74,7 @@ async function tapPart(id,head=false){
  if(!head){await tapPart('prisoner-head-drawing',true);await editor.locator('.huw-musical-zoom-selection:enabled').tap();}
  const part=editor.locator('.huw-musical-canvas > svg [data-cutout-id="'+id+'"]:visible').first();await part.scrollIntoViewIfNeeded();
  const painted=part.locator('image,path,ellipse,circle').first();
+ const eyeSource=id==='prisoner-pupils'?await sourceSnapshot():null,eyeTime=eyeSource?await position():null;
  if(head){
   const measure=()=>painted.evaluate(node=>{const box=node.getBBox(),p=node.ownerSVGElement.createSVGPoint();p.x=box.x+box.width*.5;p.y=box.y+box.height*.17;
    const screen=p.matrixTransform(node.getScreenCTM()),bounds=node.getBoundingClientRect();return {x:screen.x-bounds.x,y:screen.y-bounds.y,
@@ -96,9 +97,19 @@ async function tapPart(id,head=false){
    assert.deepEqual(await sourceSnapshot(),originalSource,'selecting and focusing an off-camera character does not write source data');
   }
   assert.equal(point.hit,id,'an exposed face region receives the touch');await painted.tap({position:{x:point.x,y:point.y}});
+ }else if(id==='prisoner-pupils'){
+  // Tap the actually drawn left pupil, not the centre between the eyes.
+  // Its visible eye region overlaps the brow image's transparent rectangle,
+  // so native hit testing may correctly deliver the touch to that eye layer.
+  const point=await painted.evaluate(node=>{const p=node.ownerSVGElement.createSVGPoint();p.x=-14;p.y=-58;const screen=p.matrixTransform(node.getScreenCTM());return {x:screen.x,y:screen.y,hit:node.ownerDocument.elementFromPoint(screen.x,screen.y)?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id')};});
+  assert.ok(['prisoner-pupils','prisoner-eyes','prisoner-brows','prisoner-eye-lids'].includes(point.hit),'the visible pupil receives a native eye-component hit: '+JSON.stringify(point));
+  let offset={x:0,y:0};if(wiki!==page){const frame=await wiki.frameElement(),bounds=await frame.boundingBox(),border=await frame.evaluate(node=>({x:node.clientLeft,y:node.clientTop}));assert.ok(bounds);offset={x:bounds.x+border.x,y:bounds.y+border.y};}
+  await page.touchscreen.tap(point.x+offset.x,point.y+offset.y);
  }else await painted.tap();
  const panel=editor.locator('[data-face-panel]:visible').first();await panel.waitFor();
- assert.equal(await panel.getAttribute('data-face-target'),'prisoner','the face controls belong to the touched actor');return panel;
+ assert.equal(await panel.getAttribute('data-face-target'),'prisoner','the face controls belong to the touched actor');
+ if(eyeSource){const tab=panel.locator('[data-face-tab="eyes"]');assert.equal(await tab.getAttribute('aria-selected'),'true','the eye palette is selected for the touched face');assert.ok(Math.abs(await position()-eyeTime)<.001);assert.deepEqual(await sourceSnapshot(),eyeSource,'touching the visible eye and opening its palette do not write source data');}
+ return panel;
 }
 async function choose(panel,channel,value){
  const card=panel.locator('[data-face-channel="'+channel+'"][data-face-value="'+value+'"]');await card.waitFor();
