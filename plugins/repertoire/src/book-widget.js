@@ -28,6 +28,12 @@ function choice(doc,id,label){
 function name(wiki,item){
  var t=wiki.getTiddler(item);return t?t.fields["music-title"]||item:item;
 }
+function shortName(wiki,item){
+ var original=name(wiki,item),post=wiki.getTiddler(item);
+ var orchestra=post&&wiki.getTiddler(post.fields["orchestra-title"]),label=orchestra&&(orchestra.fields.name||orchestra.fields.title)||"";
+ var prefix=label+" · ";
+ return label&&original.indexOf(prefix)===0?original.slice(prefix.length):original;
+}
 function Book(parseTreeNode,options){this.initialise(parseTreeNode,options);}
 Book.prototype=new Widget();
 Book.prototype.disposeScore=function(){
@@ -354,7 +360,7 @@ Book.prototype.draw=function(){
   host.appendChild(el(doc,"p","huwrep-muted","Vælg en sætliste med numre i Repertoireværkstedet."));
   return;
  }
- header.appendChild(el(doc,"h2","",name(wiki,this.activeItem)));
+ header.appendChild(el(doc,"h2","",shortName(wiki,this.activeItem)));
  header.appendChild(el(doc,"span","huwrep-muted",(index+1)+" / "+all.length+" numre"));
  var listBox=el(doc,"aside","huwrep-book-list");listBox.hidden=true;
  listBox.setAttribute("aria-label","Numre i den aktuelle sætliste");host.appendChild(listBox);
@@ -376,7 +382,7 @@ Book.prototype.draw=function(){
  listBox.appendChild(search);
  var list=el(doc,"nav","huwrep-book-list-items");listBox.appendChild(list);
  all.forEach(function(id,i){
-  var b=btn(doc,(i+1)+". "+name(wiki,id),function(){
+  var b=btn(doc,(i+1)+". "+shortName(wiki,id),function(){
    listBox.hidden=true;self.selectItem(id,false);
   },id===self.activeItem?"huwrep-primary":"");
   b.setAttribute("aria-current",id===self.activeItem?"true":"false");
@@ -449,7 +455,7 @@ Book.prototype.draw=function(){
    else if(data)imageSrc="data:image/svg+xml;charset=utf-8,"+encodeURIComponent(data);
   }else if(imageTitle&&/^https?:\/\//.test(imageTitle)){imageSrc=imageTitle;}
   if(imageSrc){
-   var img=el(doc,"img","huwrep-book-image");img.alt=name(wiki,this.activeItem);
+   var img=el(doc,"img","huwrep-book-image");img.alt=shortName(wiki,this.activeItem);
    img.src=imageSrc;stage.appendChild(img);
   }else{
    stage.appendChild(el(doc,"p","huwrep-muted","Ingen ABC-noder eller scannet nodebillede knyttet til melodien. Aftalerne kan stadig læses her."));
