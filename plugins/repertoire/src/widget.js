@@ -119,8 +119,12 @@ Repertoire.prototype.draw=function(){
  },"huwrep-primary"));
  setPanel.appendChild(row);
  if(this.setlistTitle){
+  if(wiki.getTiddler("$:/plugins/huwiki/site-publisher"))setPanel.appendChild(button(doc,"Udgiv repertoire-site",function(){
+   var result=Printing.open(wiki,self.setlistTitle,self,{scores:true,site:true});
+   if(result&&result.error)self.alert(result.error);
+  }));
   setPanel.appendChild(button(doc,"Udskriv sætliste / PDF",function(){
-   var result=Printing.open(wiki,self.setlistTitle,doc.defaultView,{scores:false});
+   var result=Printing.open(wiki,self.setlistTitle,self,{scores:false});
    if(result&&result.error)self.alert(result.error);
   }));
   setPanel.appendChild(button(doc,"Åbn nodebogen",function(){

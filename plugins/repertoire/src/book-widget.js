@@ -312,14 +312,22 @@ Book.prototype.draw=function(){
  var printMenu=el(doc,"details","huwrep-book-print-menu");
  printMenu.appendChild(el(doc,"summary","","PDF / Udskriv"));
  var printActions=el(doc,"div","huwrep-book-print-actions");
+ var printInstrument=el(doc,"select","huwrep-input");
+ printInstrument.setAttribute("aria-label","Instrument i udgivelsen");
+ [["c","C · klingende"],["bb","B♭ · +2 halvtoner"],["eb","E♭ · sopranino"],["ebalto","E♭ · altsaxofon"]].forEach(function(p){printInstrument.appendChild(choice(doc,p[0],p[1]));});
+ printActions.appendChild(printInstrument);
  function openPrint(scores){
   printMenu.open=false;
-  var result=Printing.open(wiki,self.setlistTitle,self._win,{scores:scores});
+  var result=Printing.open(wiki,self.setlistTitle,self,{scores:scores,instrumentId:printInstrument.value});
   if(result&&result.error&&self._win&&self._win.alert)self._win.alert(result.error);
  }
  printActions.appendChild(btn(doc,"Sætliste og aftaler",function(){openPrint(false);}));
  printActions.appendChild(btn(doc,"Hele nodebogen med noder",function(){openPrint(true);},"huwrep-primary"));
  printMenu.appendChild(printActions);toolbar.appendChild(printMenu);
+ if(wiki.getTiddler("$:/plugins/huwiki/site-publisher"))toolbar.appendChild(btn(doc,"Udgiv site",function(){
+  var result=Printing.open(wiki,self.setlistTitle,self,{scores:true,site:true,instrumentId:printInstrument.value});
+  if(result&&result.error&&self._win&&self._win.alert)self._win.alert(result.error);
+ }));
  var selector=el(doc,"select","huwrep-input huwrep-book-select");
  selector.setAttribute("aria-label","Vælg sætliste");
  sets.forEach(function(s){

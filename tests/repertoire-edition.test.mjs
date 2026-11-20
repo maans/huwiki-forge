@@ -169,8 +169,9 @@ test("SilbaÄtno homepage links straight to the setlist book",async()=>{
 test("Nodebog prints PDF scores and cues with hidden-safe editor state",()=>{
  const printing=tiddlers["$:/plugins/huwiki/repertoire/print.js"];
  assert.equal(printing["module-type"],"library");
- assert.match(printing.text,/oneSvgPerLine:true/);
- assert.match(printing.text,/Print \/ gem som PDF/);
+ assert.match(printing.text,/tm-huwiki-print-article/);
+ assert.match(printing.text,/tm-huwiki-sitepublisher/);
+ assert.doesNotMatch(printing.text,/window\.open|owner\.open|win\.print/);
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"].text,/Hele nodebogen med noder/);
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Instrumentering: hvem spiller hvad/);
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text,/\.huwrep-book\[hidden\]\{display:none!important\}/);
