@@ -116,7 +116,7 @@ Reader.prototype.create=function(){
  edges.append(this.prev,this.next);this.host.appendChild(edges);
  this.edges=edges;
  this.listen(this.win,"resize",function(){if(self.active){self.update();self.updateScale();}});
- this.listen(this.host,"keydown",function(e){
+ this.listen(this.doc,"keydown",function(e){
   if(!self.active||e.altKey||e.metaKey||e.ctrlKey||e.shiftKey)return;
   if(e.target&&e.target.closest&&e.target.closest("input,select,textarea,[contenteditable=true]"))return;
   if(e.key==="Escape"){self.exit();e.preventDefault();e.stopPropagation();}

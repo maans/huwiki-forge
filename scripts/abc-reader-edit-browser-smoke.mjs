@@ -165,7 +165,16 @@ try{
    await activate(menu);
    await book.locator(".huwabc-reader-page-choice").selectOption("single");
    await activate(menu);
+   const rightZone=await book.locator(".huwabc-reader-next").boundingBox();
+   const viewportHeight=await page.evaluate(()=>innerHeight);
+   assert.ok(rightZone&&rightZone.height>viewportHeight*.6,
+    "The page-turn target must cover most of the right screen edge");
    await activate(book.locator(".huwabc-reader-next"));
+   await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-paper")?._huwabcPager?.info().page>1);
+   await page.evaluate(()=>document.activeElement?.blur());
+   await page.keyboard.press("ArrowLeft");
+   await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-paper")?._huwabcPager?.info().page===1);
+   await page.keyboard.press("ArrowRight");
    await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-paper")?._huwabcPager?.info().page>1);
    let expected=await assertSettled(page,"Initial reader");
    assert.equal(expected.scores,1,"Exactly one source score is mounted before editing");

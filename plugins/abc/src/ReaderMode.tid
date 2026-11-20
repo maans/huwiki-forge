@@ -193,31 +193,45 @@ tags: $:/tags/Stylesheet
 .huwabc-reader-field{display:flex;flex-direction:column;gap:4px;font-size:12px}
 .huwabc-reader-page-choice{min-height:40px;max-width:100%;border-radius:7px;border:1px solid #82958b;background:#e5ebe6;color:#162923;padding:4px}
 .huwabc-reader-counter{display:block;font-size:12px;opacity:.85;margin-top:7px}
+/* Tall edge targets permit a tap on either side of the sheet. The central
+   notation is unobstructed, preserving its existing pinch-to-zoom gesture. */
 .huwabc-reader-edges{
  position:absolute;
  z-index:190;
  pointer-events:none;
- inset:auto 0 calc(8px + env(safe-area-inset-bottom,0px)) 0;
+ inset:calc(62px + env(safe-area-inset-top,0px)) 0 0 0;
  display:flex;
  justify-content:space-between;
- align-items:center;
- padding:0 8px
+ align-items:stretch;
+ padding:0 6px
 }
 .huwabc-reader-edges button{
+ box-sizing:border-box;
+ display:flex;
+ flex:0 0 auto;
+ align-items:flex-end;
+ justify-content:center;
  pointer-events:auto;
- border:1px solid #77878066;
- border-radius:10px;
- background:#f7faf0b0;
+ border:0;
+ border-radius:0;
+ background:transparent;
  color:#2b4135;
  font-size:26px;
  line-height:1;
- min-height:49px;
- min-width:43px;
- opacity:.52;
+ width:clamp(44px,6vw,72px);
+ min-width:44px;
+ height:100%;
+ min-height:0;
+ padding:0 0 calc(12px + env(safe-area-inset-bottom,0px));
+ opacity:.48;
  cursor:pointer
 }
 .huwabc-reader-edges button:focus-visible,
-.huwabc-reader-edges button:hover{opacity:1;outline:2px solid #386e57}
+.huwabc-reader-edges button:hover{
+ opacity:1;
+ outline:2px solid #386e57;
+ background:#f7faf055
+}
 .huwabc-reader-edges button:disabled{opacity:.18;cursor:default}
 .huwabc-reader-active.huwabc-reader-practice .huwabc-reader-edges{
  bottom:calc(min(34dvh,290px) + 8px)
@@ -226,7 +240,7 @@ tags: $:/tags/Stylesheet
  .huwabc-reader-menu-panel{width:min(310px,calc(100vw - 72px))}
  .huwabc-reader-toolbar{padding:5px}
  .huwabc-reader-edges{padding:0 3px}
- .huwabc-reader-edges button{min-width:39px;min-height:44px}
+ .huwabc-reader-edges button{min-width:44px;min-height:0}
 }
 
 /* The reader and Repertoire share one window. The optional number drawer and

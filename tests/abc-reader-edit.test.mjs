@@ -20,7 +20,7 @@ function harness(onEdit){
   localStorage:{getItem(){return null;}},Event:class{constructor(type){this.type=type;}}
  });
  win.addEventListener("resize",()=>resizeCount++);
- const doc={defaultView:win,createElement(tag){
+ const doc=Object.assign(target(),{defaultView:win,createElement(tag){
   const classes=new Set(),n=Object.assign(target(),{tagName:tag.toUpperCase(),children:[],ownerDocument:doc,
    parentNode:null,attrs:{},hidden:false,disabled:false,value:"",
    classList:{add(...names){names.forEach(x=>classes.add(x));},remove(...names){names.forEach(x=>classes.delete(x));},
@@ -32,7 +32,7 @@ function harness(onEdit){
    setAttribute(name,value){this.attrs[name]=String(value);},
    closest(){return null;},querySelector(){return null;}
   });return n;
- }};
+ }});
  const host=doc.createElement("section"),actions=doc.createElement("div"),paper=doc.createElement("div");
  host.append(actions,paper);
  // A presentation class must never be used to redispatch a synthetic click.
@@ -43,7 +43,7 @@ function harness(onEdit){
   const event={type:"click",preventDefault(){this.prevented=true;},stopPropagation(){this.stopped=true;}};
   reader.edit.dispatchEvent(event);return event;
  };
- return {reader,host,win,actions,click,counts:()=>({resizeCount,syntheticClicks})};
+ return {reader,host,doc,win,actions,click,counts:()=>({resizeCount,syntheticClicks})};
 }
 
 test("reader edit hands off once with the current reader state and without reflowing the old score",()=>{
@@ -86,7 +86,7 @@ test("destroying active or dormant readers does not resize other scores",()=>{
   const before=h.counts();h.reader.destroy();
   assert.deepEqual(h.counts(),before);
   assert.equal(h.win.listenerCount("resize"),1);
-  assert.equal(h.host.listenerCount("keydown"),0);
+  assert.equal(h.doc.listenerCount("keydown"),0);
  }
 });
 
@@ -94,4 +94,26 @@ test("ordinary exit resizes once and repeated exit stays idle",()=>{
  const h=harness(()=>true);h.reader.enter();const before=h.counts().resizeCount;
  h.reader.exit();h.reader.exit();
  assert.equal(h.counts().resizeCount,before+1);
+});
+
+test("arrows work without score focus, but text fields keep their own arrows",()=>{
+ const h=harness(()=>true),moves=[];
+ h.reader.turn=delta=>moves.push(delta);
+ h.reader.enter();
+ const press=(key,target)=>{
+  const event={type:"keydown",key,target:target||{closest(){return null;}},
+   preventDefault(){this.prevented=true;},stopPropagation(){this.stopped=true;}};
+  h.doc.dispatchEvent(event);return event;
+ };
+ const right=press("ArrowRight");
+ assert.deepEqual(moves,[1]);
+ assert.equal(right.prevented,true);
+ press("ArrowLeft");
+ assert.deepEqual(moves,[1,-1]);
+ press("ArrowRight",{closest(){return {tagName:"INPUT"};}});
+ assert.deepEqual(moves,[1,-1],"Text fields must retain arrow keys");
+ h.reader.exit();press("ArrowRight");
+ assert.deepEqual(moves,[1,-1],"Inactive readers must not capture keys");
+ h.reader.destroy();
+ assert.equal(h.doc.listenerCount("keydown"),0);
 });
