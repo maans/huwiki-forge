@@ -32,6 +32,10 @@ function Reader(options){
  this.mode="vis";this.controlsOpen=false;this.fill=false;this.active=false;
  this.cleanup=[];this._touch=null;
  this.create();
+ // Repertoire already owns a reading preference. Show the same selected mode
+ // instead of silently resetting it when a musician enters ABC's reader.
+ var book=this.host.closest(".huwrep-book"),outerChoice=book&&book.querySelector(".huwrep-book-view");
+ if(outerChoice&&/^(auto|single|spread)$/.test(outerChoice.value))this.pageChoice.value=outerChoice.value;
  if(options.state&&options.state.active)this.enter(options.state);
  else this.sync(); // The dormant overlay must not intercept repertoire controls.
 }
@@ -133,6 +137,13 @@ Reader.prototype.applyPages=function(){
  var pager=this.getPager(),select=pager&&pager.element&&pager.element.querySelector(".huwabc-page-select");
  if(!select||!this.win)return;
  var choice=this.pageChoice.value;
+ // Repertoire's parent book also watches the page layout. Keep its selector
+ // synchronized or it can undo the new ABC choice on the next DOM mutation.
+ var book=this.host.closest(".huwrep-book"),outerChoice=book&&book.querySelector(".huwrep-book-view");
+ if(outerChoice&&outerChoice.value!==choice){
+  outerChoice.value=choice;
+  outerChoice.dispatchEvent(new this.win.Event("change",{bubbles:true}));
+ }
  if(choice==="auto")choice=this.win.innerWidth>=900&&this.win.innerWidth>this.win.innerHeight?"spread":"single";
  if(select.value!==choice){
   select.value=choice;
