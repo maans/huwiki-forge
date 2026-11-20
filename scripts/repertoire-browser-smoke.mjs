@@ -37,7 +37,8 @@ try{
  assert.ok(await book.evaluate(el=>el.classList.contains("huwrep-book-fullscreen")),
   "The dedicated nodebook should start in full width, without the ordinary StoryList chrome.");
  await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-page-select")?.value==="spread");
- const toggle=book.getByRole("button",{name:/Nummerliste/});
+ const toggle=book.locator(".huwabc-reader-list");
+ await toggle.waitFor({state:"visible",timeout:20000});
  await toggle.click();
  const drawer=book.locator(".huwrep-book-list");
  assert.equal(await drawer.isVisible(),true,"The number list opens as a side drawer");
@@ -49,6 +50,9 @@ try{
   document.querySelector(".huwrep-book-heading h2")?.textContent?.includes("Cupria Express"));
  const title="SilbaÄtno · Cupria Express (Fm)";
  const original=await page.evaluate(t=>$tw.wiki.getTiddler(t).fields["abc-accompaniment"],title);
+ // The practice panel is a floating overlay only when the musician chooses Øv.
+ await book.locator(".huwabc-reader-menu").click();
+ await book.locator(".huwabc-reader-modes button").nth(1).click();
  const practice=book.locator(".huwrep-book-practice");
  await practice.locator("summary").click();
  await practice.locator("input[type=checkbox]").first().check();
