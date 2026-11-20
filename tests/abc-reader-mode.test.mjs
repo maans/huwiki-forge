@@ -36,4 +36,5 @@ test("Reader supports page and tune boundaries, preserving playing score",()=>{
  assert.ok(!/\.destroy\(\)\s*;\s*.*_audioController/.test(code),"reader should not destroy an audio controller");
  assert.ok(code.includes("this.host.classList.toggle"),"mode switches use CSS rather than rerendering the score");
  assert.ok(code.includes("huwabc-reader-boundary"),"Repertoire can listen for cross-song turns");
+ assert.ok(code.includes("outerChoice.dispatchEvent"),"manual ABC page modes must not conflict with a parent Repertoire book");
 });
