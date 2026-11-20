@@ -92,6 +92,19 @@ tags: $:/tags/Stylesheet
 .huwabc-reader-toolbar button,
 .huwabc-reader-toolbar select,
 .huwabc-reader-edges button{font:inherit;touch-action:manipulation}
+.huwabc-reader-list{
+ pointer-events:auto;
+ cursor:pointer;
+ border:1px solid #9aa8a0;
+ box-shadow:0 1px 8px #0002;
+ background:#f8faf7ef;
+ color:#172d27;
+ border-radius:9px;
+ min-height:44px;
+ padding:7px 13px;
+ font-size:14px!important;
+ font-weight:650
+}
 .huwabc-reader-menu{
  pointer-events:auto;
  cursor:pointer;
@@ -190,4 +203,42 @@ tags: $:/tags/Stylesheet
  .huwabc-reader-toolbar{padding:5px}
  .huwabc-reader-edges{padding:0 3px}
  .huwabc-reader-edges button{min-width:39px;min-height:44px}
+}
+
+/* The reader and Repertoire share one window. The optional number drawer and
+   Music Minus One controls float above the notation, never resize the page. */
+.huwrep-book.huwrep-reader-active .huwrep-book-list:not([hidden]){
+ position:fixed!important;
+ z-index:30200!important;
+ top:calc(62px + env(safe-area-inset-top,0px))!important;
+ left:9px!important;
+ right:auto!important;
+ width:min(405px,calc(100vw - 18px))!important;
+ max-height:calc(90dvh - 72px)!important;
+ overflow:auto!important;
+ border-radius:12px!important;
+ box-shadow:0 14px 45px #14251c66!important
+}
+.huwrep-book.huwrep-reader-practice .huwrep-book-practice{
+ position:fixed!important;
+ z-index:30150!important;
+ top:calc(62px + env(safe-area-inset-top,0px))!important;
+ right:8px!important;
+ left:auto!important;
+ width:min(420px,calc(100vw - 18px))!important;
+ box-sizing:border-box!important;
+ margin:0!important;
+ max-height:50dvh!important;
+ overflow:auto!important;
+ box-shadow:0 12px 32px #14251c55!important;
+ border:1px solid #d4dfd3!important;
+ border-radius:10px!important;
+ background:#f4f8f0!important
+}
+@media(max-width:700px){
+ .huwrep-book.huwrep-reader-practice .huwrep-book-practice{
+  top:auto!important;
+  bottom:calc(58px + env(safe-area-inset-bottom,0px))!important;
+  max-height:43dvh!important
+ }
 }
