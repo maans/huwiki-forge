@@ -29,7 +29,7 @@ function makeWiki(){
 
 test("Repertoire package is independent of the ABC plugin",()=>{
  assert.equal(pkg.title,"$:/plugins/huwiki/repertoire");
- assert.equal(pkg.version,"0.1.4-beta.3");
+ assert.equal(pkg.version,"0.1.4-beta.4");
  assert.equal(pkg["plugin-type"],"plugin");
  assert.equal(pkg.dependents,undefined);
  assert.equal(tiddlers["$:/plugins/huwiki/repertoire/widget.js"]["module-type"],"widget");
@@ -48,6 +48,63 @@ test("Repertoire uses a responsive three-column, tap-to-toggle selection grid",(
  assert.ok(css.includes("grid-template-columns:repeat(3,minmax(0,1fr))"));
  assert.ok(css.includes("@container (max-width:720px)"));
  assert.ok(css.includes("@container (max-width:450px)"));
+});
+
+test("ABC K and Q headers seed the fields without mutating the original score",()=>{
+ const {model,wiki,Tiddler}=makeWiki();
+ const source=new Tiddler({title:"Hjemlig vals","abc-source":"X:1\nT:Hjemlig vals\nM:2/2\nQ:1/2=70\nK:Gm\nG A |"});
+ wiki.addTiddler(source);
+ const orch=model.orchestra(wiki,"Prøveorkester"),item=model.addItem(wiki,orch,source.fields.title).title;
+ const rehearsal=model.createSetlist(wiki,orch,"Øve"),concert=model.createSetlist(wiki,orch,"Koncert");
+ model.addEntry(wiki,rehearsal,item);model.addEntry(wiki,concert,item);
+ assert.deepEqual({...model.sourceAgreement(wiki,item)},{key:"Gm",tempo:"1/2=70"});
+ assert.equal(model.effective(wiki,rehearsal,item).key,"Gm");
+ assert.equal(model.effective(wiki,rehearsal,item).tempo,"1/2=70");
+ model.saveArrangement(wiki,item,rehearsal,{key:"Dm",tempo:"1/2=84",form:"AABB"},"setlist");
+ assert.equal(model.effective(wiki,rehearsal,item).key,"Dm");
+ assert.equal(model.effective(wiki,rehearsal,item).tempo,"1/2=84");
+ assert.equal(model.effective(wiki,concert,item).key,"Gm");
+ assert.equal(model.effective(wiki,concert,item).tempo,"1/2=70");
+ assert.equal(wiki.getTiddler(source.fields.title),source);
+ model.saveArrangement(wiki,item,rehearsal,{key:"Gm",tempo:"1/2=70",form:""},"setlist");
+ assert.equal(JSON.parse(wiki.getTiddler(rehearsal).fields["repertoire-overrides"])[item],undefined);
+ model.saveArrangement(wiki,item,"",{key:"Fm",tempo:"1/2=90"},"orchestra");
+ assert.equal(model.effective(wiki,rehearsal,item).key,"Fm");
+ assert.equal(model.effective(wiki,concert,item).tempo,"1/2=90");
+ assert.equal(model.sourceAgreement(wiki,item).key,"Gm");
+ assert.equal(wiki.getTiddler(source.fields.title),source);
+});
+
+test("SilbaÄtno score headers preserve relative minor vs key signatures and tempo beat values",async()=>{
+ const scores=JSON.parse(await readFile(path.join(root,"editions/silva-ethno-repertoire/tiddlers/repertoire.json"),"utf8"));
+ const {model,wiki,Tiddler}=makeWiki(),orch=model.orchestra(wiki,"SilbaÄtno");
+ const pick=title=>scores.find(x=>x.title.includes(title));
+ const samples=[pick("Brudmarch från Jämtland"),pick("Ålidhems höjder"),pick("Cupria Express")];
+ const items=samples.map(song=>{wiki.addTiddler(new Tiddler(song));return model.addItem(wiki,orch,song.title).title;});
+ assert.deepEqual({...model.sourceAgreement(wiki,items[0])},{key:"Gm",tempo:"1/4=100"});
+ assert.deepEqual({...model.sourceAgreement(wiki,items[1])},{key:"Gm",tempo:"1/2=70"});
+ assert.deepEqual({...model.sourceAgreement(wiki,items[2])},{key:"Ab",tempo:"1/4=100"});
+});
+
+test("Repertoire sorting supports pointer and keyboard with TiddlyWiki drag-highlight classes",()=>{
+ const reorderTiddler=tiddlers["$:/plugins/huwiki/repertoire/reorder.js"];
+ assert.ok(reorderTiddler,"Repertoire drag implementation must be packaged");
+ const exports={};runInNewContext(reorderTiddler.text,{exports});
+ const move=exports.move;
+ assert.deepEqual([...move(["a","b","c","d"],0,4)],["b","c","d","a"]);
+ assert.deepEqual([...move(["a","b","c","d"],3,1)],["a","d","b","c"]);
+ assert.deepEqual([...move(["a","b","c","d"],1,2)],["a","b","c","d"]);
+ const widget=tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text;
+ const css=tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text;
+ assert.match(widget,/Reorder\.mount\(order,list/);
+ assert.match(widget,/model\.sourceAgreement\(wiki,this\.activeItem\)/);
+ assert.match(widget,/tempoForSave\(tempo\.input\.value,beat,effective\.tempo\)/);
+ assert.match(widget,/keyField\(doc,effective\.key\)/);
+ assert.match(css,/\.huwrep-order-row\.tc-dragover/);
+ assert.match(css,/\.huwrep-order-handle\{touch-action:none/);
+ assert.match(reorderTiddler.text,/pointercancel/);
+ assert.match(reorderTiddler.text,/ArrowDown/);
+ assert.doesNotMatch(widget,/button\(doc,"↑"/);
 });
 
 test("multiple orchestras share one original score but keep their own agreements",()=>{
@@ -71,11 +128,11 @@ test("multiple orchestras share one original score but keep their own agreements
  assert.equal(model.effective(wiki,setOne,a).key,"Dm");
  assert.equal(model.effective(wiki,setOne,a).instrumentation,"Fløjte på A, bas på B");
  assert.equal(model.effective(wiki,setOne,a).cues,"Tegn til sidste A");
- assert.equal(model.effective(wiki,setTwo,a).key,"","other setlist must retain default");
+ assert.equal(model.effective(wiki,setTwo,a).key,"Gm","other setlist uses original ABC K");
  assert.equal(model.effective(wiki,setTwo,a).instrumentation,"");
  model.saveArrangement(wiki,b,"",{key:"Gm",tempo:"120",form:"Orkester B"},"orchestra");
  assert.equal(model.effective(wiki,"",b).key,"Gm");
- assert.equal(model.effective(wiki,setTwo,a).key,"");
+ assert.equal(model.effective(wiki,setTwo,a).key,"Gm");
 });
 
 test("reordering does not mutate the orchestra repertoire",()=>{

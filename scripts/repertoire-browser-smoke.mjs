@@ -36,6 +36,61 @@ try{
  await page.waitForFunction(()=>document.querySelector(".huwrep-song-card")?.getAttribute("aria-pressed")==="false");
  await grid.locator(".huwrep-song-card").first().click();
  await page.waitForFunction(()=>document.querySelector(".huwrep-song-card")?.getAttribute("aria-pressed")==="true");
+ // The editor derives both values from the actual ABC header, including the beat unit.
+ const keyInput=page.locator(".huwrep-editor-panel .huwrep-key-field select");
+ const tempoInput=page.locator(".huwrep-editor-panel .huwrep-tempo-field input");
+ await keyInput.waitFor();
+ assert.equal(await keyInput.inputValue(),"Gm","K:Gm seeds the current key");
+ assert.equal(await tempoInput.inputValue(),"100","Q:1/4=100 seeds the visible tempo");
+ assert.ok((await page.locator(".huwrep-tempo-field .huwrep-field-help").innerText()).includes("fjerdedelsnode"));
+ const brudmarchTitle="SilbaÄtno · Brudmarch från Jämtland";
+ const uneditedScore=await page.evaluate(title=>$tw.wiki.getTiddler(title).fields["abc-source"],brudmarchTitle);
+ await keyInput.selectOption("Dm");
+ await tempoInput.fill("118");
+ await page.getByRole("button",{name:"Gem kun i denne sætliste"}).click();
+ await page.waitForFunction(()=>
+  document.querySelector(".huwrep-key-field select")?.value==="Dm"&&
+  document.querySelector(".huwrep-tempo-field input")?.value==="118");
+ const changedOverrides=await page.evaluate(()=>{
+  const t=$tw.wiki.allTitles().map(t=>$tw.wiki.getTiddler(t))
+   .find(t=>t&&t.fields["repertoire-kind"]==="setlist");
+  return JSON.parse(t.fields["repertoire-overrides"]);
+ });
+ assert.ok(Object.values(changedOverrides).some(v=>v.key==="Dm"&&v.tempo==="1/4=118"),
+  "Only this setlist gets the edited tempo and key with original beat duration");
+ assert.equal(await page.evaluate(title=>$tw.wiki.getTiddler(title).fields["abc-source"],brudmarchTitle),
+  uneditedScore,"Original ABC notation must never be rewritten by rehearsal choices");
+ const order=page.locator(".huwrep-order-list");
+ const firstTitle=await order.locator(".huwrep-order-title").first().innerText();
+ await order.locator(".huwrep-order-handle").first().focus();
+ await page.keyboard.press("ArrowDown");
+ await page.waitForFunction(text=>document.querySelector(".huwrep-order-title")?.textContent!==text,firstTitle);
+ assert.equal(await page.evaluate(()=>document.activeElement?.classList.contains("huwrep-order-handle")),true,
+  "Keyboard reordering keeps the grab handle focused");
+ // Pointer dragging is shared by mouse and iPad touch rather than HTML5 drag events.
+ const beforeMouse=await order.locator(".huwrep-order-title").first().innerText();
+ await order.locator(".huwrep-order-handle").first().scrollIntoViewIfNeeded();
+ const grip=await order.locator(".huwrep-order-handle").first().boundingBox();
+ const destination=await order.locator(".huwrep-order-row").nth(2).boundingBox();
+ await page.mouse.move(grip.x+grip.width/2,grip.y+grip.height/2);
+ await page.mouse.down();
+ await page.mouse.move(destination.x+40,destination.y+destination.height*.8,{steps:12});
+ await page.mouse.up();
+ await page.waitForFunction(text=>document.querySelector(".huwrep-order-title")?.textContent!==text,beforeMouse);
+ // A Chrome touch stream exercises the iPad pathway and the same order persistence.
+ const beforeTouch=await order.locator(".huwrep-order-title").first().innerText();
+ await order.locator(".huwrep-order-handle").first().scrollIntoViewIfNeeded();
+ const tg=await order.locator(".huwrep-order-handle").first().boundingBox();
+ const dest=await order.locator(".huwrep-order-row").nth(2).boundingBox();
+ const cdp=await context.newCDPSession(page);
+ const sourcePoint={x:tg.x+tg.width/2,y:tg.y+tg.height/2,id:7};
+ const destPoint={x:dest.x+40,y:dest.y+dest.height*.8,id:7};
+ await cdp.send("Input.dispatchTouchEvent",{type:"touchStart",touchPoints:[sourcePoint]});
+ await cdp.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[{...destPoint,y:sourcePoint.y+12}]});
+ await cdp.send("Input.dispatchTouchEvent",{type:"touchMove",touchPoints:[destPoint]});
+ await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
+ await page.waitForFunction(text=>document.querySelector(".huwrep-order-title")?.textContent!==text,beforeTouch);
+ await cdp.detach();
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.locator(".silba-home").waitFor();
  const homeLink=page.getByRole("link",{name:"Åbn nodebogen"});

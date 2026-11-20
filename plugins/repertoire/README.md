@@ -34,6 +34,17 @@ I værkstedet kan du:
 - **Øvetilstand / Music Minus One:** Aktiver via den lille sektion under overskriften. Slå metronomen til, og vælg en **noteret stemme** som skal være lydløs, mens ABC's eksisterende note- og sidefølge fortsætter. Øveblandingen ændrer kun de aktive GainNodes og bliver ikke gemt i originalnoder eller orkestrets aftaler. De allerede eksisterende ABC-lydkontroller bruges – ingen ny lydmotor.
 - **Fuldskærm:** Brug ⛶ Fuldskærm til koncentreret spil. Kun det aktuelle nummer indlæses i notationswidget'en.
 
+## Sætlister, originale tempi og sortering
+
+Repertoireværkstedet viser en responsiv oversigt og et kompakt redigeringsområde: **rækkefølge** og **aftaler for valgt nummer** side om side på brede skærme.
+
+- Original toneart og tempo hentes fra ABC-partiturets `K:` og `Q:` i musikbiblioteket. Eksempelvis angives `Q:1/2=70` som 70 halve noder pr. minut, ikke 70 fjerdedele.
+- En ændret toneart eller et nyt tempo kan gemmes **kun i den aktuelle sætliste** eller **som orkestrets standard**. Uændrede værdier henviser fortsat til originalen, i stedet for at kopiere standarden ind i alle sætlister.
+- Listen kan sorteres ved at trække i grebet på Mac, iPad og touchskærme. På tastatur markeres grebet med Tab og flyttes med pil op/ned. Design og statusklasser følger de kendte TiddlyWiki-sorteringsmønstre, men selve input bruger Pointer Events for at undgå TiddlyWikis HTML5-drag-and-drop-begrænsning på iPad.
+- Klik på titlen i rækkefølgelisten for at ændre sangens aftaler. Fjern-knappen (×) fjerner kun sangen fra sætlisten, ikke fra musikbiblioteket.
+
+**Vigtigt:** Tonearts- og tempoaftaler er endnu metadata for det enkelte nummer. Automatisk transponering af ABC-partituret og ændring af afspilningstempoet ud fra sætlisteaftalen er ikke implementeret i denne version. Særligt ved indførte flerstemmige partiturer kan den notationsmæssige `K:` være en relativ dur-toneart, selv om nummerets titel angiver en mol-toneart.
+
 ## Bevidste afgrænsninger i denne version
 
 - Forhandling af toneart i værkstedet opdaterer aftalefelterne. Automatisk transponering af det viste ABC-partitur implementeres senere og må ikke forveksles med den lagrede aftale.

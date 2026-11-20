@@ -95,25 +95,57 @@ function overrides(setlist){
   return data&&typeof data==="object"&&!Array.isArray(data)?data:{};
  }catch(_e){return {};}
 }
+// Read the score header without modifying the original music tiddler.
+// A K: field describes the notated key signature; do not guess a concert key from the title.
+function sourceAgreement(wiki,itemTitle){
+ var item=wiki.getTiddler(itemTitle),source=item&&wiki.getTiddler(item.fields["music-title"]);
+ var abc=source&&(source.fields["abc-source"]||"");
+ if(!abc&&source&&source.fields.type==="text/vnd.abc")abc=source.fields.text||"";
+ var key="",tempo="",lines=String(abc||"").split(/\r?\n/);
+ for(var i=0;i<lines.length;i++){
+  var line=lines[i],q=/^\s*Q:\s*(.*?)\s*$/.exec(line),k=/^\s*K:\s*(.*?)\s*$/.exec(line);
+  if(q&&!tempo)tempo=q[1];
+  if(k){key=(k[1].match(/^\S+/)||[])[0]||"";break;}
+ }
+ return {key:key,tempo:tempo};
+}
+function baseline(wiki,itemTitle){
+ var item=wiki.getTiddler(itemTitle),f=item&&item.fields||{},source=sourceAgreement(wiki,itemTitle);
+ return {key:f["repertoire-key"]||source.key,tempo:f["repertoire-tempo"]||source.tempo,
+  form:f["repertoire-form"]||"",instrumentation:f["repertoire-instrumentation"]||"",cues:f["repertoire-cues"]||""};
+}
 function effective(wiki,setlistTitle,itemTitle){
- var item=wiki.getTiddler(itemTitle);
- if(!item)return {key:"",tempo:"",form:"",instrumentation:"",cues:""};
- var f=item.fields,defaults={key:f["repertoire-key"]||"",tempo:f["repertoire-tempo"]||"",form:f["repertoire-form"]||"",instrumentation:f["repertoire-instrumentation"]||"",cues:f["repertoire-cues"]||""};
- var setlist=wiki.getTiddler(setlistTitle),override=setlist&&overrides(setlist)[itemTitle];
- return Object.assign(defaults,override||{});
+ var details=baseline(wiki,itemTitle),setlist=wiki.getTiddler(setlistTitle);
+ var override=setlist&&overrides(setlist)[itemTitle]||{};
+ Object.keys(override).forEach(function(k){
+  if(!Object.prototype.hasOwnProperty.call(details,k))return;
+  // Older repertoire files stored empty key/tempo overrides even when no override was intended.
+  if((k==="key"||k==="tempo")&&!override[k])return;
+  details[k]=override[k];
+ });
+ return details;
 }
 function saveArrangement(wiki,itemTitle,setlistTitle,values,scope){
  var item=wiki.getTiddler(itemTitle);if(!item||item.fields[KIND]!=="orchestra-item")throw Error("Repertoirepost mangler.");
- var details={key:normalized(values.key),tempo:normalized(values.tempo),form:String(values.form||"").trim(),
-  instrumentation:String(values.instrumentation||"").trim(),cues:String(values.cues||"").trim()};
+ var source=sourceAgreement(wiki,itemTitle),base=baseline(wiki,itemTitle),details={
+  key:normalized(values.key)||base.key,tempo:normalized(values.tempo)||base.tempo,
+  form:String(values.form||"").trim(),instrumentation:String(values.instrumentation||"").trim(),cues:String(values.cues||"").trim()
+ };
  if(scope==="orchestra"){
-  update(wiki,item,{"repertoire-key":details.key,"repertoire-tempo":details.tempo,"repertoire-form":details.form,
-   "repertoire-instrumentation":details.instrumentation,"repertoire-cues":details.cues});
+  // An unchanged value keeps following the score instead of freezing a copy of its header.
+  update(wiki,item,{"repertoire-key":details.key===source.key?"":details.key,
+   "repertoire-tempo":details.tempo===source.tempo?"":details.tempo,
+   "repertoire-form":details.form,"repertoire-instrumentation":details.instrumentation,"repertoire-cues":details.cues});
  }else if(scope==="setlist"){
   var list=wiki.getTiddler(setlistTitle);
   if(!list||list.fields["orchestra-title"]!==item.fields["orchestra-title"]||entries(wiki,setlistTitle).indexOf(itemTitle)<0)
    throw Error("Vælg en sætliste med denne melodi.");
-  var changes=overrides(list);changes[itemTitle]=details;
+  var changes=overrides(list),delta={};
+  ["key","tempo","form","instrumentation","cues"].forEach(function(field){
+   if(details[field]!==base[field])delta[field]=details[field];
+  });
+  if(Object.keys(delta).length)changes[itemTitle]=delta;
+  else delete changes[itemTitle];
   update(wiki,list,{"repertoire-overrides":JSON.stringify(changes)});
  }else throw Error("Ukendt lagringstype.");
  return details;
@@ -131,6 +163,8 @@ exports.createSetlist=createSetlist;
 exports.entries=entries;
 exports.setEntries=setEntries;
 exports.addEntry=addEntry;
+exports.sourceAgreement=sourceAgreement;
+exports.baseline=baseline;
 exports.effective=effective;
 exports.saveArrangement=saveArrangement;
 })();
