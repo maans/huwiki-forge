@@ -139,7 +139,7 @@ test("Music Minus One uses the ABC mixer as a temporary overlay without rewritin
  const original=JSON.stringify(base);
  const one=module.overlay(base,{enabled:true,metronome:true,voice:"1"});
  assert.equal(one.metronome,true);
- assert.equal(one.backingModes.metronome,"normal");
+ assert.equal(one.backingModes.metronome,"solo","metronome joins the existing solo mix");
  assert.equal(one.voiceSettings["1"].mode,"mute");
  assert.equal(module.isAudible(base,{enabled:true,metronome:true,voice:"1"},1),false);
  assert.equal(module.isAudible(base,{enabled:true,metronome:true,voice:"1"},0),true);

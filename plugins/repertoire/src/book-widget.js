@@ -10,6 +10,7 @@ var model=require("$:/plugins/huwiki/repertoire/model.js");
 var Layout=require("$:/plugins/huwiki/repertoire/book-layout.js");
 var Practice=require("$:/plugins/huwiki/repertoire/practice.js");
 var TEMP="$:/temp/huwiki/repertoire/active-setlist";
+var ITEM="$:/temp/huwiki/repertoire/active-item";
 var MODE="$:/temp/huwiki/repertoire/book-mode";
 function el(doc,tag,cls,label){
  var n=doc.createElement(tag);
@@ -31,6 +32,7 @@ function Book(parseTreeNode,options){this.initialise(parseTreeNode,options);}
 Book.prototype=new Widget();
 Book.prototype.disposeScore=function(){
  this._practiceBaseline=null;this._practiceAppliedKey=null;
+ this._practiceVoiceSignature="";
  this._practiceScoreHost=null;this._practiceControls=null;
  if(this._observer){this._observer.disconnect();this._observer=null;}
  if(this._score){
@@ -62,7 +64,7 @@ Book.prototype.render=function(parent,nextSibling){
  this.preference=this.wiki.getTiddlerText(MODE)||"auto";
  if(["auto","single","spread"].indexOf(this.preference)<0)this.preference="auto";
  this.setlistTitle=this.getAttribute("setlist","")||this.wiki.getTiddlerText(TEMP)||"";
- this.activeItem="";
+ this.activeItem=this.wiki.getTiddlerText(ITEM)||"";this.lastPage=false;
  this.practiceEnabled=false;this.practiceMetronome=false;
  this.practiceMuteByItem=Object.create(null);this.practiceOpen=false;
  this._resize=this.updateMode.bind(this);
@@ -81,13 +83,27 @@ Book.prototype.navigate=function(title){
   navigateSuppressNavigation:false});
 };
 Book.prototype.selectSetlist=function(title){
- this.setlistTitle=title;this.activeItem="";
+ this.setlistTitle=title;this.activeItem=model.entries(this.wiki,title)[0]||"";this.lastPage=false;
  this.wiki.addTiddler(new $tw.Tiddler({title:TEMP,type:"text/plain",text:title}));
+ this.wiki.addTiddler(new $tw.Tiddler({title:ITEM,type:"text/plain",text:this.activeItem}));
  this.draw();
 };
 Book.prototype.selectItem=function(title,last){
  this.activeItem=title;this.lastPage=!!last;
+ this.wiki.addTiddler(new $tw.Tiddler({title:ITEM,type:"text/plain",text:title}));
  this.draw();
+};
+Book.prototype.returnToWorkshop=function(){
+ this.disposeScore();
+ if(this.host)this.host.classList.remove("huwrep-book-fullscreen");
+ this.navigate("HUWiki Repertoire – Start");
+ // Closing the dedicated book lets its next opening recreate a working score
+ // and restore fullscreen. Hiding its host left an already-open tiddler inert.
+ if(this.getVariable("currentTiddler")==="Repertoire – Nodebog"){
+  this.dispatchEvent({type:"tm-close-tiddler",param:"Repertoire – Nodebog"});
+ }else{
+  this.draw();
+ }
 };
 Book.prototype.pager=function(){
  return this._score&&this._score._pager&&this._score._pager.element&&this._score._pager.element.isConnected?
@@ -134,6 +150,15 @@ Book.prototype.turn=function(delta){
 Book.prototype.applyPractice=function(){
  var score=this._score,control=score&&score._accompControls;
  if(!control||!control.config||!control.setConfig)return;
+ if(!this.practiceEnabled){
+  // Ordinary mixer edits must remain live while practice is off. Capture the
+  // baseline only when entering practice, and restore it once when leaving.
+  if(this._practiceBaseline)control.setConfig(this._practiceBaseline,false);
+  this._practiceBaseline=null;this._practiceAppliedKey=null;
+  if(this._practiceControls&&this._practiceControls.status)
+   this._practiceControls.status.textContent="Øvetilstand er slået fra. Den almindelige lydblanding er aktiv.";
+  return;
+ }
  if(!this._practiceBaseline){
   // Preserve the original mix, without modifying its tiddler.
   this._practiceBaseline=JSON.parse(JSON.stringify(control.config()));
@@ -226,7 +251,7 @@ Book.prototype.draw=function(){
  var index=all.indexOf(this.activeItem);
  var toolbar=el(doc,"header","huwrep-book-header");host.appendChild(toolbar);
  toolbar.appendChild(btn(doc,"← Repertoireværksted",function(){
-  self.disposeScore();host.classList.remove("huwrep-book-fullscreen");host.hidden=true;self.navigate("HUWiki Repertoire – Start");
+  self.returnToWorkshop();
  }));
  var fullScreenButton=btn(doc,host.classList.contains("huwrep-book-fullscreen")?"⛶ Mindre visning":"⛶ Fuldskærm",function(){
   var isFull=host.classList.toggle("huwrep-book-fullscreen");
@@ -364,6 +389,17 @@ Book.prototype.draw=function(){
 };
 Book.prototype.refresh=function(changed){
  var titles=Object.keys(changed||{});
+ if(changed&&(changed[TEMP]||changed[ITEM])){
+  var targetSet=this.getAttribute("setlist","")||this.wiki.getTiddlerText(TEMP)||this.setlistTitle;
+  var targetItems=model.entries(this.wiki,targetSet);
+  var requested=this.wiki.getTiddlerText(ITEM)||"";
+  var targetItem=targetItems.indexOf(requested)>=0?requested:
+   (targetSet===this.setlistTitle&&targetItems.indexOf(this.activeItem)>=0?this.activeItem:targetItems[0]||"");
+  if(targetSet!==this.setlistTitle||targetItem!==this.activeItem){
+   this.setlistTitle=targetSet;this.activeItem=targetItem;this.lastPage=false;
+   this.draw();return true;
+  }
+ }
  if(titles.some(function(title){return title.indexOf("Repertoire/")===0;})){
   this.draw();return true;
  }

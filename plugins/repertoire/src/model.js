@@ -89,6 +89,21 @@ function setEntries(wiki,setlistTitle,titles){
  update(wiki,list,{list:$tw.utils.stringifyList(safe)});
  return safe;
 }
+function reorderEntries(wiki,setlistTitle,titles){
+ var list=wiki.getTiddler(setlistTitle);if(!list||list.fields[KIND]!=="setlist")throw Error("Sætlisten findes ikke.");
+ var current=entries(wiki,setlistTitle),counts=Object.create(null);
+ var error="Rækkefølgen skal indeholde præcis de samme numre som sætlisten.";
+ if(!Array.isArray(titles)||titles.length!==current.length)throw Error(error);
+ current.forEach(function(title){counts[title]=(counts[title]||0)+1;});
+ titles.forEach(function(title){
+  if(typeof title!=="string"||!counts[title])throw Error(error);counts[title]--;
+ });
+ var next=titles.slice();
+ // Reordering cannot add/remove members, including references whose source or
+ // repertoire record is temporarily unavailable. Only explicit edits may do so.
+ update(wiki,list,{list:$tw.utils.stringifyList(next)});
+ return next;
+}
 function addEntry(wiki,setlistTitle,item){return setEntries(wiki,setlistTitle,entries(wiki,setlistTitle).concat([item]));}
 function overrides(setlist){
  try{var data=JSON.parse(setlist&&setlist.fields["repertoire-overrides"]||"{}");
@@ -99,7 +114,10 @@ function effective(wiki,setlistTitle,itemTitle){
  var item=wiki.getTiddler(itemTitle);
  if(!item)return {key:"",tempo:"",form:""};
  var f=item.fields,defaults={key:f["repertoire-key"]||"",tempo:f["repertoire-tempo"]||"",form:f["repertoire-form"]||""};
- var setlist=wiki.getTiddler(setlistTitle),override=setlist&&overrides(setlist)[itemTitle];
+ var setlist=wiki.getTiddler(setlistTitle);
+ var applies=setlist&&setlist.fields[KIND]==="setlist"&&setlist.fields["orchestra-title"]===f["orchestra-title"]&&
+  entries(wiki,setlistTitle).indexOf(itemTitle)>=0;
+ var override=applies&&overrides(setlist)[itemTitle];
  return Object.assign(defaults,override||{});
 }
 function saveArrangement(wiki,itemTitle,setlistTitle,values,scope){
@@ -116,6 +134,78 @@ function saveArrangement(wiki,itemTitle,setlistTitle,values,scope){
  }else throw Error("Ukendt lagringstype.");
  return details;
 }
+function headerValue(source,field){
+ var found=String(source||"").match(new RegExp("^[ \\t]*"+field+":[ \\t]*(.*)$","m"));
+ return found?normalized(found[1]):"";
+}
+function tempoValue(value){
+ var text=normalized(value),beat=text.match(/=\s*(\d+(?:\.\d+)?)/);
+ if(beat)return beat[1];
+ // ABC also permits a bare metronome value or a description without a value.
+ return text.replace(/^"([^"]*)"$/,"$1");
+}
+function searchText(value){
+ return String(value||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+  .toLocaleLowerCase("da").replace(/æ/g,"ae").replace(/ø/g,"o");
+}
+function natural(a,b){return String(a||"").localeCompare(String(b||""),"da",{numeric:true,sensitivity:"base"});}
+function compareRows(a,b,sort){
+ var result=0;
+ if(sort==="tempo"){
+  var av=Number(tempoValue(a.tempo)),bv=Number(tempoValue(b.tempo));
+  var an=Number.isFinite(av)&&av>0,bn=Number.isFinite(bv)&&bv>0;
+  result=an&&bn?av-bv:an?-1:bn?1:0;
+ }else if(sort==="key"){
+  result=a.key&&b.key?natural(a.key,b.key):a.key?-1:b.key?1:0;
+ }else if(sort==="type")result=natural(a.kind,b.kind);
+ return result||natural(a.label,b.label)||natural(a.title,b.title)||natural(a.itemTitle,b.itemTitle);
+}
+// Searching and ordering a catalogue are views over the existing records. They
+// never rewrite source notation, orchestra agreements or a setlist's order.
+function catalog(wiki,orchestraTitle,options){
+ var opts=options||{},known=items(wiki,orchestraTitle),members=Object.create(null);
+ known.forEach(function(item){members[item.fields["music-title"]]=item;});
+ var set=wiki.getTiddler(opts.setlistTitle||""),selected=Object.create(null);
+ var validSet=!!(set&&set.fields[KIND]==="setlist"&&set.fields["orchestra-title"]===orchestraTitle);
+ if(validSet)entries(wiki,opts.setlistTitle).forEach(function(title){selected[title]=true;});
+ var titles=opts.scope==="library"?songs(wiki).map(function(t){return t.fields.title;}):
+  known.map(function(t){return t.fields["music-title"];});
+ // An orchestra may refer to a plain text tiddler which predates this plugin.
+ // Keep those original sources visible in the shared library as well.
+ if(opts.scope==="library")byKind(wiki,"orchestra-item").forEach(function(item){
+  var title=item.fields["music-title"];
+  if(title&&wiki.tiddlerExists(title))titles.push(title);
+ });
+ var seen=Object.create(null),rows=[];
+ titles.forEach(function(title){
+  if(!title||seen[title])return;seen[title]=true;
+  var source=wiki.getTiddler(title),f=source?source.fields:{},abc=f["abc-source"];
+  var member=members[title],id=member?member.fields.title:"",inSetlist=!!selected[id];
+  var values=id?effective(wiki,inSetlist?opts.setlistTitle:"",id):{key:"",tempo:""};
+  var sourceKey=headerValue(abc,"K").split(/\s|%/)[0];
+  var sourceTempo=tempoValue(headerValue(abc,"Q").split("%")[0]);
+  rows.push({title:title,label:normalized(f.caption)||headerValue(abc,"T")||title,
+   itemTitle:id,key:values.key||sourceKey,tempo:values.tempo||sourceTempo,
+   kind:typeof abc==="string"?"abc":(f["repertoire-image"]||/^image\//.test(f.type||""))?"image":"text",
+   inSetlist:inSetlist});
+ });
+ var words=searchText(opts.query).trim().split(/\s+/).filter(Boolean);
+ if(words.length)rows=rows.filter(function(row){
+  var types=row.kind==="abc"?"ABC noder notation":row.kind==="image"?"billede image scan":"tekst text";
+  var haystack=searchText([row.label,row.title,row.key,row.tempo,types].join(" "));
+  return words.every(function(word){return haystack.indexOf(word)>=0;});
+ });
+ return rows.sort(function(a,b){return compareRows(a,b,opts.sort);});
+}
+function sortEntries(wiki,setlistTitle,sort){
+ var list=wiki.getTiddler(setlistTitle),original=entries(wiki,setlistTitle).slice();
+ if(!list||list.fields[KIND]!=="setlist")return original;
+ var rows=catalog(wiki,list.fields["orchestra-title"],{setlistTitle:setlistTitle,sort:sort});
+ var sorted=rows.filter(function(row){return row.inSetlist;}).map(function(row){return row.itemTitle;});
+ // A missing source or foreign reference must not silently disappear on sort.
+ original.forEach(function(title){if(sorted.indexOf(title)<0)sorted.push(title);});
+ return sorted;
+}
 exports.orchestras=orchestras;
 exports.orchestra=orchestra;
 exports.songs=songs;
@@ -128,7 +218,10 @@ exports.setlists=setlists;
 exports.createSetlist=createSetlist;
 exports.entries=entries;
 exports.setEntries=setEntries;
+exports.reorderEntries=reorderEntries;
 exports.addEntry=addEntry;
 exports.effective=effective;
 exports.saveArrangement=saveArrangement;
+exports.catalog=catalog;
+exports.sortEntries=sortEntries;
 })();
