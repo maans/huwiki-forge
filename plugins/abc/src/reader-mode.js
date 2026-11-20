@@ -142,7 +142,7 @@ Reader.prototype.create=function(){
  });
 };
 Reader.prototype.enter=function(state){
- if(state){this.mode=state.mode==="practice"?"practice":"vis";this.fitMode=["fit","width","original"].includes(state.fitMode)?state.fitMode:(state.fill?"width":"fit");this.controlsOpen=!!state.controlsOpen;}
+ if(state){this.mode=state.mode==="practice"?"practice":"vis";this.fitMode=["fit","width","original"].includes(state.fitMode)?state.fitMode:(state.fill?"width":this.fitMode);this.controlsOpen=!!state.controlsOpen;}
  else {this.mode="vis";this.controlsOpen=false;}
  this.active=true;this.fitChoice.value=this.fitMode;if(this.book){var list=this.book.querySelector(".huwrep-book-list");if(list)list.hidden=true;}this.sync();this.applyPages();this.update();this.updateScale();
  if(this.win)this.win.dispatchEvent(new this.win.Event("resize"));
