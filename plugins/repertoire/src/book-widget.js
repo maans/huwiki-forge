@@ -34,6 +34,8 @@ Book.prototype.disposeScore=function(){
  this._practiceScoreHost=null;this._practiceControls=null;
  if(this._observer){this._observer.disconnect();this._observer=null;}
  if(this._score){
+  // Keep the immersive ABC reading state when a page turn changes melody.
+  if(this._score._reader&&this._score._reader.active)this._readerCarry=this._score._reader.snapshot();
   try{this._score.onDestroy();}catch(_ignored){}
   this._score=null;
  }
@@ -42,7 +44,8 @@ Book.prototype.disposeScore=function(){
 Book.prototype.onDestroy=function(){
  this.disposeScore();
  if(this.host&&this._boundKeys)this.host.removeEventListener("keydown",this._boundKeys);
- this._boundKeys=null;
+ if(this.host&&this._readerBoundary)this.host.removeEventListener("huwabc-reader-boundary",this._readerBoundary);
+ this._boundKeys=null;this._readerBoundary=null;
  if(this._win&&this._resize)this._win.removeEventListener("resize",this._resize);
  if(this._win&&this._orientation)this._win.removeEventListener("orientationchange",this._orientation);
  this._win=null;this._resize=null;this._orientation=null;
@@ -69,6 +72,15 @@ Book.prototype.render=function(parent,nextSibling){
  this._orientation=this.updateMode.bind(this);
  this._boundKeys=this._onKeyDown.bind(this);
  host.addEventListener("keydown",this._boundKeys);
+ var self=this;
+ this._readerBoundary=function(event){
+  if(!event||!event.detail)return;
+  var delta=Number(event.detail.direction);
+  if(delta!==1&&delta!==-1)return;
+  event.stopPropagation();
+  self.turn(delta);
+ };
+ host.addEventListener("huwabc-reader-boundary",this._readerBoundary);
  if(this._win){
   this._win.addEventListener("resize",this._resize);
   this._win.addEventListener("orientationchange",this._orientation);
@@ -316,6 +328,10 @@ Book.prototype.draw=function(){
    this._score=new Score(tree,{wiki:wiki,parentWidget:this,document:doc});
    this.children=[this._score];
    this._score.render(scoreHost,null);
+   // Keep the same reader state as we cross a tune boundary.
+   if(this._readerCarry&&this._readerCarry.active&&this._score._reader){
+    this._score._reader.enter(this._readerCarry);
+   }
    var win=this._win;
    if(win&&win.MutationObserver){
     this._observer=new win.MutationObserver(function(){
