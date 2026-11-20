@@ -35,7 +35,7 @@ Book.prototype.disposeScore=function(){
  if(this._observer){this._observer.disconnect();this._observer=null;}
  if(this._score){
   // Keep the immersive ABC reading state when a page turn changes melody.
-  if(this._score._reader&&this._score._reader.active)this._readerCarry=this._score._reader.snapshot();
+  if(this._score._reader)this._readerCarry=this._score._reader.snapshot();
   try{this._score.onDestroy();}catch(_ignored){}
   this._score=null;
  }
@@ -329,8 +329,12 @@ Book.prototype.draw=function(){
    this.children=[this._score];
    this._score.render(scoreHost,null);
    // Keep the same reader state as we cross a tune boundary.
-   if(this._readerCarry&&this._readerCarry.active&&this._score._reader){
-    this._score._reader.enter(this._readerCarry);
+   if(this._score._reader){
+    // A repertoire book opens on the notation, not on six editor panels.
+    // An explicit exit is respected on subsequent tunes.
+    var readerState=this._readerCarry===undefined?
+     {active:true,mode:"vis",controlsOpen:false,fill:false}:this._readerCarry;
+    if(readerState.active)this._score._reader.enter(readerState);
    }
    var win=this._win;
    if(win&&win.MutationObserver){
