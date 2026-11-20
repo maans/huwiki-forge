@@ -194,7 +194,8 @@ test("Repertoire Publisher prepares instrument-specific collections without repl
  assert.equal(events[0].paramObject.instrumentId,"bb");
  const site=out.open(wiki,set,widget,{scores:true,site:true,instrumentId:"ebalto"});
  assert.equal(site.instrumentId,"ebalto");assert.equal(events[1].type,"tm-huwiki-sitepublisher");
- assert.match(wiki.getTiddler(site.summary).fields.text,/altsaxofon/);
+ assert.doesNotMatch(wiki.getTiddler(site.summary).fields.text,/altsaxofon/,"Site index should not repeat instrument already shown in the site header");
+ assert.match(events[1].paramObject.siteTitle,/altsaxofon/,"The chosen instrument remains visible in the publication title");
  assert.equal(wiki.getTiddler("Melodi"),source);
 });
 
