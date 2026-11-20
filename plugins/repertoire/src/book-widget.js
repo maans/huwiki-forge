@@ -53,6 +53,7 @@ Book.prototype.render=function(parent,nextSibling){
  var doc=this.document;
  var host=this.host=el(doc,"section","huwrep-book");
  parent.insertBefore(host,nextSibling);this.domNodes.push(host);
+ if(this.getAttribute("fullscreen","no")==="yes")host.classList.add("huwrep-book-fullscreen");
  if(doc.isTiddlyWikiFakeDom){
   host.appendChild(el(doc,"p","","Nodebogen er interaktiv. Åbn wikien i browseren for at bruge den."));
   return;
@@ -227,9 +228,12 @@ Book.prototype.draw=function(){
  toolbar.appendChild(btn(doc,"← Repertoireværksted",function(){
   self.disposeScore();host.classList.remove("huwrep-book-fullscreen");host.hidden=true;self.navigate("HUWiki Repertoire – Start");
  }));
- toolbar.appendChild(btn(doc,"⛶ Fuldskærm",function(){
-  host.classList.toggle("huwrep-book-fullscreen");self.updateMode();
- },"huwrep-book-fullscreen-button"));
+ var fullScreenButton=btn(doc,host.classList.contains("huwrep-book-fullscreen")?"⛶ Mindre visning":"⛶ Fuldskærm",function(){
+  var isFull=host.classList.toggle("huwrep-book-fullscreen");
+  fullScreenButton.textContent=isFull?"⛶ Mindre visning":"⛶ Fuldskærm";
+  self.updateMode();
+ },"huwrep-book-fullscreen-button");
+ toolbar.appendChild(fullScreenButton);
  var selector=el(doc,"select","huwrep-input huwrep-book-select");
  selector.setAttribute("aria-label","Vælg sætliste");
  sets.forEach(function(s){
