@@ -16,7 +16,7 @@ function deferred(){let resolve;const promise=new Promise(done=>{resolve=done;})
 // presentation are controlled here, with browser integration tested separately.
 function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false,recordings=[]}={}){
  const doc=svgDocument(),load=deferred(),pendingAudio=deferred(),painted=[],frames=new Map(),audios=[];
- let now=0,nextFrame=0,editorOptions=null,exportOptions=null,audioPreparations=0,contextRequests=0,registrations=0,notationRenders=0;
+ let now=0,nextFrame=0,editorOptions=null,workspaceOptions=null,exportOptions=null,audioPreparations=0,contextRequests=0,registrations=0,notationRenders=0;
  const preview={captions:true,music:true,audio:true,sfx:true};let effectsSynced=0,effectsQuieted=0,exporting=false;
  for(const method of ['createElement','createElementNS']){
   const original=doc[method];doc[method]=(...args)=>{
@@ -66,7 +66,7 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
    isAudioAudible:()=>exporting||preview.audio,isSfxAudible:()=>exporting||preview.sfx,
    beginExport(){exporting=true;options.repaint();return ()=>{exporting=false;options.repaint();};}
   };}},
-  '$:/plugins/huwiki/musical/workspace.js':{mount:()=>({refreshHandles(){},dispose(){}})},
+  '$:/plugins/huwiki/musical/workspace.js':{mount:options=>{workspaceOptions=options;return {refreshHandles(){},dispose(){}};}},
   '$:/plugins/huwiki/musical/motion.js':{beatClock:()=>({at:t=>t}),paint(){}},
   '$:/plugins/huwiki/musical/sfx.js':{Fx:Sound},
   '$:/plugins/huwiki/musical/narration.js':localModule('narration-player'),
@@ -80,6 +80,7 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
  const range=widget.host.querySelector('.huw-musical-range'),play=widget.host.querySelector('.huw-musical-play');
  return {widget,range,play,painted,scene,audios,exportOptions,preview,
   previewChange(changes){Object.assign(preview,changes);editorOptions.onPreviewChange();editorOptions.repaint();},
+   previewMode(mode){widget.host.dataset.previewMode=mode;if(mode!=='stage')workspaceOptions.refreshScore();},
   seek(time){range.value=String(time);range.dispatch('input');},
   updateClips(rows){editorOptions.updateClips(rows);},
   async load(){load.resolve(ABC);await load.promise;await Promise.resolve();assert.equal(play.disabled,false);assert.ok(widget._songStates.filter(song=>!song.clip.muted||!song.page.hidden).every(song=>song.tune));},
@@ -220,4 +221,19 @@ test('unmuting an unseen guide keeps its authored duration when the lazy notatio
  f.seek(30);assert.ok(f.widget._songStates[1].tune);
  assert.equal(f.widget._songStates[1].clip.duration,film.musical.songs[1].duration);
  assert.equal(f.duration,481.377);
+});
+
+
+test('iPad stage-only seek updates the cursor without rendering the next hidden ABC score',async()=>{
+ const f=fixture();await f.load();assert.equal(f.notationRenders,1);
+ f.previewMode('stage');f.seek(60);
+ assert.equal(Number(f.range.value),60);
+ assert.equal(f.widget.host.dataset.cameraTime,'60.00');
+ assert.equal(f.notationRenders,1,'the stage cursor must not wait for hidden ABC rendering');
+ f.previewMode('split');
+ assert.equal(f.notationRenders,2,'the current score renders on entering split view');
+ assert.ok(f.widget._songStates[2].tune);
+ f.previewMode('stage');f.seek(30);
+ assert.equal(f.notationRenders,2,'another stage-only seek does not render another hidden score');
+ f.widget._shutdown();
 });
