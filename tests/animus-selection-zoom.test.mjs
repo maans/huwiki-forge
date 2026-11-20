@@ -81,7 +81,7 @@ function workspaceHarness(options={}){
  const transport=create('div','huw-musical-transport'),play=create('button','huw-musical-play',transport),root=create('section','huw-musical-editor');
  create('header','huw-musical-editor-header',root);create('p','',root);create('div','huw-musical-inspector',root);
  const film={width:800,height:450,camera:{keys:[{t:0,x:400,y:225,zoom:1}]},parts:[{id:'actor',name:'Actor'},{id:'arm',parent:'actor',name:'Arm'}]};
- if(options.face)film.parts.push({id:'head',parent:'actor',name:'Head'},{id:'mouth',parent:'head',name:'Mouth'},{id:'eyes',parent:'head',name:'Eyes'});
+ if(options.face)film.parts.push({id:'head',parent:'actor',name:'Head',type:'group'},{id:'mouth',parent:'head',name:'Mouth',type:'image',variants:[{id:'o',name:'Round'},{id:'e',name:'Smile'}]},{id:'eyes',parent:'head',name:'Eyes'});
  const scene=film;let selected={id:'song:music',kind:'song'},workspace,change=null,committed=0,paused=0,scriptOpened=0,position=2,seeks=0,figureOptions,figureSelected='',figureOpened=false,figureSuspended=0;
  const faceCommands=[],figureCalls=[];
  function repaint(){svg.setAttribute('viewBox','0 0 800 450');workspace?.paintPreview();workspace?.refreshHandles();}
@@ -93,8 +93,8 @@ function workspaceHarness(options={}){
   figureStateFor:()=>({x:0,y:0,r:0,sx:1,sy:1}),isExporting:()=>false};
  if(options.face){
   film.musical={faceKeys:[]};const faceView={scene:film,nodes:{}};
-  editor.faceContext=id=>film.parts.some(p=>p.id===id)?{actorId:'actor',actorPartId:'actor',headId:'head',label:'Actor',scene:film,view:faceView,time:position,localTime:position,
-   state:face.state(film.musical.faceKeys,position,'actor'),parts:{open:'mouth',eyes:['eyes']},variants:[{id:'o',name:'Round'},{id:'e',name:'Smile'}],viseme:'O',variantMap:{O:'o',E:'e'},defaultVariantMap:{O:'o',E:'e'},cue:{partId:'cue',text:'Hello',time:position}}:null;
+  editor.faceContext=id=>{const resolved=face.resolve(film,id);return resolved?{...resolved,scene:film,view:faceView,time:position,localTime:position,
+   state:face.state(film.musical.faceKeys,position,'actor'),viseme:'O',variantMap:{O:'o',E:'e'},defaultVariantMap:{O:'o',E:'e'},cue:{partId:'cue',text:'Hello',time:position}}:null;};
   editor.faceHistory=()=>film.musical.faceKeys;
   editor.chooseFace=(id,command)=>{faceCommands.push({id,...plain(command)});const patch=command.channel==='mouth'?{mouth:{mode:'auto'},mouthMap:{[command.viseme]:command.value==='auto'?null:command.value}}:command.channel==='eyes'?{eyes:command.value}:face.preset(command.value);
    film.musical.faceKeys=face.withKey(film.musical.faceKeys,'actor',position,patch);selected={id:'face:actor',kind:'face',part:'head',actorId:'actor'};repaint();workspace.selectTrack(selected);return true;};
@@ -182,6 +182,10 @@ test('shared workshop keeps head posing separate from facial choices and returns
  assert.equal(dock.hidden,true);assert.equal(h.figureCalls.length,0,'mounting does not select or open a figure');
  h.editor.selectPart('head');assert.equal(dock.dataset.animusWorkshop,'figure');assert.equal(h.figureCalls.at(-1),'head','a head is still a rotatable joint');
  h.editor.selectPart('arm');assert.equal(h.figureOpen,true);
+ assert.equal(h.editor.faceContext('arm'),null,'the runtime resolves faces only from the actor or head descendants, not a limb');
+ const faceTab=dock.querySelector('[data-workshop-mode="face"]');assert.equal(faceTab.disabled,false,'the shared Face tab resolves the limb’s owning actor');
+ faceTab.click();assert.equal(dock.dataset.animusWorkshop,'face');assert.equal(dock.querySelector('[data-face-panel]').dataset.facePart,'head','entering Face from a limb passes a valid facial part');
+ dock.querySelector('[data-face-back="figure"]').click();assert.equal(h.selected.part,'arm','returning from the common Face tab restores the selected limb');
  h.openFigureFace('eyes');assert.equal(dock.dataset.animusWorkshop,'face');assert.equal(h.figureOpen,false);
  assert.equal(dock.querySelector('[data-face-tab="eyes"]').getAttribute('aria-selected'),'true');
  dock.querySelector('[data-face-back="figure"]').click();

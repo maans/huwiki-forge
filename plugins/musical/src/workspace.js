@@ -81,25 +81,34 @@ function mount(o){
   position:o.position,seek:o.seek,pause:o.pause,onScript:openManuscript,
   onBack:returnToFigure,onClose:function(){hideWorkshop();host.focus({preventScroll:true});},onLayout:reframeAfterLayout
  });
+ function faceContextFor(id){
+  if(!id||!editor.faceContext)return null;
+  var context=editor.faceContext(id);if(context)return context;
+  // Face lookup accepts the actor or its facial parts. A limb must first
+  // resolve its owning actor before offering the shared Face tab.
+  var source=editor.resolvePartScene&&editor.resolvePartScene(id),actor=source&&Puppet.rootFor(id,source,o.film);
+  return actor&&actor!==id?editor.faceContext(actor):null;
+ }
  function syncWorkshop(){
   var visible=!!workshopMode&&!exportSuspended&&!disposed;workshop.hidden=!visible;
   workshop.dataset.animusWorkshop=workshopMode;host.classList.toggle('huw-musical--workshop-open',visible);
   bodyTab.setAttribute('aria-pressed',String(workshopMode==='figure'));faceTab.setAttribute('aria-pressed',String(workshopMode==='face'));
-  faceTab.disabled=!(workshopPart&&editor.faceContext&&editor.faceContext(workshopPart));
+  faceTab.disabled=!faceContextFor(workshopPart);
  }
  function showFigureWorkshop(id){
   if(!id||disposed)return false;
   facePanel.hide();workshopMode='figure';workshopPart=id;syncWorkshop();
   if(!figurePanel.select(id)){workshopMode='';syncWorkshop();return false;}
   lastBodyPart=figurePanel.selectedPart?figurePanel.selectedPart():id;workshopPart=lastBodyPart;
-  var context=editor.faceContext&&editor.faceContext(id);workshopActor=context&&context.actorId||'';
+  var context=faceContextFor(lastBodyPart);workshopActor=context&&context.actorId||'';
   syncWorkshop();setInspector(false);reframeAfterLayout();return true;
  }
  function showFaceWorkshop(id,tab){
-  var context=id&&editor.faceContext&&editor.faceContext(id);if(!context||disposed)return false;
+  var context=faceContextFor(id);if(!context||disposed)return false;
+  var faceId=editor.faceContext(id)?id:context.headId||context.actorPartId||context.actorId;
   if(workshopActor!==context.actorId||!lastBodyPart)lastBodyPart=context.headId||context.actorPartId||id;
-  workshopActor=context.actorId;workshopPart=id;o.pause();figurePanel.hide();
-  workshopMode='face';syncWorkshop();facePanel.select(id,tab,true);facePanel.openWorkshop();setInspector(false);reframeAfterLayout();return true;
+  workshopActor=context.actorId;workshopPart=faceId;o.pause();figurePanel.hide();
+  workshopMode='face';syncWorkshop();facePanel.select(faceId,tab,true);facePanel.openWorkshop();setInspector(false);reframeAfterLayout();return true;
  }
  function returnToFigure(details){
   var id=lastBodyPart||details&&details.headId||workshopPart;if(!id)return;

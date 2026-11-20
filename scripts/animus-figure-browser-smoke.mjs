@@ -165,6 +165,15 @@ try{
  assert.ok(fit.width>=300&&fit.height>=300&&fit.actorHeight>=200,'the whole figure has a large editing preview: '+JSON.stringify(fit));
  assert.equal(fit.other,false,'the figure preview does not include the other actor');
  assert.ok(fit.parts.every(part=>part.inside),'head and both lower legs fit inside the figure preview');
+ const sharedFaceTab=dock.locator('[data-workshop-mode="face"]');
+ assert.equal(await sharedFaceTab.isEnabled(),true,'a selected forearm offers its owning actor\'s Face tab');
+ await sharedFaceTab.tap();
+ const initialFaceWorkshop=editor.locator('.huw-face-workshop--inline:visible');await initialFaceWorkshop.waitFor();
+ assert.equal(await initialFaceWorkshop.locator('[data-face-panel]').getAttribute('data-face-target'),actor);
+ await initialFaceWorkshop.locator('[data-face-back="figure"]').tap();await figurePanel().waitFor();
+ assert.equal(await figurePanel().getAttribute('data-figure-selected'),joint,'Face and Whole figure retain the original anatomical forearm selection');
+ assert.ok(Math.abs(await position()-currentTime)<.001);await assertSources(originalSources,'the shared Face tab and Back do not add a key');
+ assert.deepEqual(await actorPose(figurePreview()),initialPose,'the shared Face tab preserves the complete current pose');
  passed('a native forearm selection opens the whole current actor below the stage, without creating a key');
 
  const degrees=23,initialRotation=Number(/rotate\(([-+\d.eE]+)/.exec(initialPose[joint].transform)?.[1]);assert.ok(Number.isFinite(initialRotation));
