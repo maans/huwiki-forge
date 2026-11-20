@@ -140,14 +140,16 @@ try{
   const reason='fullscreen UI acceptance: headless macOS runner cannot enter native fullscreen; not verified on this runner';
   skipped.push(reason);console.log('SKIP '+reason);
  }else{
-  await player.getByRole('button',{name:'Show the performance in full screen',exact:true}).click();
+  assert.equal(await player.locator('.plato-fullscreen').getAttribute('aria-label'),'Vis forestillingen i fuld skærm');
+   await player.locator('.plato-fullscreen').click();
   await wiki.waitForFunction(()=>document.fullscreenElement===document.querySelector('.plato-player'));
   await player.locator('.huw-video-export-button').click();
   const fullscreenDialog=player.locator('.huw-video-modal');await fullscreenDialog.waitFor();
   assert.equal(await fullscreenDialog.isVisible(),true,'export dialog is visible in the fullscreen player');
   await fullscreenDialog.locator('.huw-video-close').click();await fullscreenDialog.waitFor({state:'detached'});
   assert.equal(await player.evaluate(host=>document.fullscreenElement===host),true,'closing export preserves fullscreen playback view');
-  await player.getByRole('button',{name:'Exit full screen',exact:true}).click();
+  assert.equal(await player.locator('.plato-fullscreen').getAttribute('aria-label'),'Afslut fuld skærm');
+   await player.locator('.plato-fullscreen').click();
   await wiki.waitForFunction(()=>!document.fullscreenElement);
   passed('fullscreen export controls stay visible and clickable without leaving the performance');
  }
@@ -244,9 +246,10 @@ try{
  const fullFoley=await exportPackage('turn-around-foley-original-level.zip',{start:4,end:5,tracks:['effects']});
  passed('real speech, recorded music and an audible Foley slice export separately with Danish captions and common timing; the original Foley pause stays silent');
 
- await player.getByRole('button',{name:'Adjust sound levels',exact:true}).click();
- for(const [name,value]of [['Speech, volume',.5],['Music, volume',.25]]){
-  await player.locator('.plato-level[aria-label="'+name+'"]').evaluate((input,level)=>{
+ assert.equal(await player.locator('.plato-sound-wrap .plato-button').getAttribute('aria-label'),'Juster lydniveauer');
+  await player.locator('.plato-sound-wrap .plato-button').click();
+ for(const [kind,value]of [['speech',.5],['music',.25]]){
+  await player.locator('.plato-level[data-plato-kind="'+kind+'"]').evaluate((input,level)=>{
    input.value=String(level);input.dispatchEvent(new Event('input',{bubbles:true}));
   },value);
  }
@@ -262,14 +265,14 @@ try{
 
  // The performance has a separate Singing fader. Muting spoken dialogue must
  // not mute a sung take, and only selected stems should enter the package.
- async function level(name,value){
-  await player.locator('.plato-level[aria-label="'+name+', volume"]').evaluate((input,gain)=>{
+ async function level(kind,value){
+  await player.locator('.plato-level[data-plato-kind="'+kind+'"]').evaluate((input,gain)=>{
    input.value=String(gain);input.dispatchEvent(new Event('input',{bubbles:true}));
   },value);
  }
- await level('Speech',0);await level('Music',0);await level('Singing',1);
+ await level('speech',0);await level('music',0);await level('song',1);
  const sung=await exportPackage('turn-around-singing.zip',{start:83,end:84,tracks:['speech']});
- await level('Singing',.5);
+ await level('song',.5);
  const quietSinging=await exportPackage('turn-around-singing-half-level.zip',{start:83,end:84,tracks:['speech']});
  let singingError=0;
  for(let i=0;i<sung.audio.speech.samples.length;i++)singingError=Math.max(singingError,
