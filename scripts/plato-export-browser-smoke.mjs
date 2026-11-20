@@ -451,10 +451,6 @@ try{
  passed('actual audience Play → Open in AniMus stops the audience clock and audio, and editor Play works before ABC loads');
 
  await wiki.evaluate(()=>window.__animusReleaseNotation());
- await wiki.waitForFunction(()=>{
-  const visible=document.querySelector('.plato-native-studio .huw-musical-score-page:not([hidden])');
-  return !!visible?.querySelector('svg');
- });
  const editorStart=await editor.evaluate(host=>({
   duration:Number(host.querySelector('.huw-musical-range').max),
   position:Number(host.querySelector('.huw-musical-range').value),
@@ -462,17 +458,29 @@ try{
   clock:host.querySelector('.huw-musical-time').textContent,
   scorePages:[...host.querySelectorAll('.huw-musical-score-page')].filter(page=>page.querySelector('svg')).length
  }));
- assert.equal(editorStart.scorePages,1,'opening a long production renders only its visible muted guide');
+ assert.equal(await editor.locator('.huw-musical-view-mode').inputValue(),'stage');
+ assert.equal(editorStart.scorePages,0,'finishing ABC loading does not render hidden guide scores in Scene view');
  assert.ok(Math.abs(editorStart.duration-481.377)<1e-9,'muted guide scores preserve the authored 8:01 film duration');
  assert.ok(Math.abs(editorStart.position-afterPendingPlayback.position)<.001,'late ABC completion retains the user playback position');
  assert.ok(Math.abs(editorStart.painted-afterPendingPlayback.painted)<.001,'late ABC completion retains the painted frame');
  assert.match(editorStart.clock,/\/\s*8:01$/);
+ // Guide notation is now lazy: a completed library load must keep Scene
+ // editing light, and explicitly showing the score must still render it.
+ await editor.locator('.huw-musical-view-mode').selectOption('split');
+ await wiki.waitForFunction(()=>{
+  const visible=document.querySelector('.plato-native-studio .huw-musical-score-page:not([hidden])');
+  return !!visible?.querySelector('svg');
+ });
+ assert.equal(await editor.locator('.huw-musical-score-page').evaluateAll(pages=>pages.filter(page=>page.querySelector('svg')).length),1,'showing the score renders only the current muted guide');
+ assert.ok(Math.abs(Number(await editor.locator('.huw-musical-range').inputValue())-editorStart.position)<.001,'showing the guide retains the user playback position');
+ assert.ok(Math.abs(Number(await editor.getAttribute('data-camera-time'))-editorStart.painted)<.001,'showing the guide retains the painted frame');
  await assertPaintedStage(editor.locator('.huw-musical-canvas'),'canonical-editor-playback.png');
- passed('canonical AniMus keeps the authored duration and playhead after delayed ABC, renders one guide and exposes shared export controls');
+ passed('canonical AniMus preserves the authored duration and playhead after delayed ABC, keeps hidden guides unrendered and draws the current guide on demand');
 
  // Exercise the editing controls through the normal demo. Preview choices
  // must remain local to the workbench and must not erase export content.
  await editor.locator('.huw-musical-view-mode').selectOption('stage');
+ assert.equal(await editor.locator('.huw-musical-score-page svg').count(),0,'returning to Scene view releases the muted guide artwork');
  await editor.locator('.huw-musical-range').evaluate(input=>{input.value='5.5';input.dispatchEvent(new Event('input',{bubbles:true}));});
  await editor.locator('[data-huw-animus-captions="language"]').selectOption('da');
  const stageSvg=editor.locator('.huw-musical-canvas > svg'),authoredViewBox=await stageSvg.getAttribute('viewBox');

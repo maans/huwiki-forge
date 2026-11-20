@@ -74,5 +74,9 @@ start().catch(error=>{
  $('error').textContent=error.message||String(error);
  $('error').style.display='block';
 });
-window.addEventListener('pagehide',()=>{if(blobUrl)URL.revokeObjectURL(blobUrl);});
+// This URL belongs to the live editable iframe. pagehide also fires when the
+// browser keeps the page in its back/forward cache; revoking it then can leave
+// the returning iframe blank. Keep it valid for this document's lifetime.
+// The browser releases its object URLs when the document is finally discarded.
+// In particular, do not rebuild the iframe on return: it may contain unsaved edits.
 

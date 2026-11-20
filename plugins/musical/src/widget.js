@@ -54,7 +54,7 @@ Musical.prototype.render=function(parent,next){
  this.parentDomNode=parent;this.computeAttributes();this.execute();
  var self=this,doc=this.document,L=labels(this.wiki);
  var host=node(doc,"section","huw-musical");
- this.host=host;this._dead=false;this._frame=0;this._audio=null;this._pendingSeek=null;this._ownWritten={};this._editor=null;
+ this.host=host;this._dead=false;this._frame=0;this._audio=null;this._pendingSeek=null;this._ownWritten={};this._editor=null;this._timeline=null;
  parent.insertBefore(host,next);this.domNodes.push(host);
  var scene=Engine.readScene(this.wiki,this.sceneTitle);
  if(!scene){node(doc,"p","huw-musical-error",L.missing,host);return;}
@@ -174,6 +174,13 @@ Musical.prototype.render=function(parent,next){
  function timeLabel(n){var s=Math.floor(Math.max(0,n));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
  var duration=fullDuration(),timeline=null,ready=false,controller=null,activeIndex=0,stopping=false,changingSpeed=false;
  var editor=null,workspace=null,session=null,preparing=false,generation=0,lastGainUpdate=0,visibleKey="",ABCObject=null,soundReady=false,soundfont="";
+ var notationFrame=0,notationKey="",notationVisibilityKey="";
+ var compactScore=doc.defaultView&&typeof doc.defaultView.matchMedia==="function"?doc.defaultView.matchMedia("(max-width:650px)"):null;
+ function notationViewportChanged(){if(alive()&&timeline)showSong(timeline.value());}
+ if(compactScore){
+  if(compactScore.addEventListener)compactScore.addEventListener("change",notationViewportChanged);
+  else if(compactScore.addListener)compactScore.addListener(notationViewportChanged);
+ }
  // Resolve export inputs before ABC arrives; loading notation must not make
  // an unchanged recorded soundtrack appear to change during an export.
  soundfont=self.wiki.getTiddlerText("$:/config/huwiki/abc/soundfont","https://paulrosen.github.io/midi-js-soundfonts/abcjs/").trim();
@@ -191,6 +198,7 @@ Musical.prototype.render=function(parent,next){
  }
  function showNotes(index,t){
   var song=songs[index],events=song&&song.events||[],local=Number(t)-clips[index].start;
+  if(!scoreVisible()||!song||song.page.hidden)return;
   if(!events.length)return;
   var ms=Math.max(0,local)*1000,lo=0,hi=events.length;
   while(lo<hi){var mid=(lo+hi)>>1;if(events[mid].milliseconds<=ms+3)lo=mid+1;else hi=mid;}
@@ -217,6 +225,44 @@ Musical.prototype.render=function(parent,next){
     if(rect.top<panel.top+35||rect.bottom>panel.bottom-16)scorePanel.scrollTop+=rect.top-panel.top-90;}
   }
  }
+ function scoreVisible(){
+  var mode=host.dataset.previewMode||"split";
+  return mode!=="stage"&&!scorePanel.hidden&&!host.classList.contains("huw-musical--clip-detail")&&
+   !(mode==="split"&&compactScore&&compactScore.matches);
+ }
+ function cancelNotation(){if(notationFrame)cancelAnimationFrame(notationFrame);notationFrame=0;notationKey="";}
+ function releaseNotation(song,index){
+  // Written music used by a synth must keep its timing and controller objects.
+  // A muted guide has no such owner: its SVG, event elements and click map can
+  // all be discarded when the score leaves the visible window.
+  if(authoredAudibleClip(song.clip)||song.controller||song.pending||song.settingUp||!song.tune)return;
+  clearNotes(index);song.tune=null;song.events=[];song.noteClickTimes=null;
+  song.page.textContent="";
+ }
+ function updateNotation(visible,t){
+  if(!alive()){cancelNotation();return;}
+  var shown=scoreVisible(),visibilityKey=(shown?"score:":"stage:")+visible.join(",");
+  if(visibilityKey!==notationVisibilityKey){
+   notationVisibilityKey=visibilityKey;cancelNotation();
+   songs.forEach(function(song,index){
+    if(!shown||visible.indexOf(index)<0){clearNotes(index);releaseNotation(song,index);}
+   });
+  }
+  if(!shown||!ABCObject)return;
+  visible.forEach(function(index){if(songs[index].tune)showNotes(index,t);});
+  var pending=visible.filter(function(index){return !songs[index].tune&&!songs[index].notationFailed;}),key=pending.join(",");
+  if(!pending.length){cancelNotation();return;}
+  if(notationFrame&&notationKey===key)return;
+  cancelNotation();notationKey=key;
+  // Let the seek paint its new frame before expensive notation work begins.
+  // Two frames also coalesce rapid scrubbing into the final visible score.
+  notationFrame=requestAnimationFrame(function(){notationFrame=requestAnimationFrame(function(){
+   notationFrame=0;notationKey="";
+   if(!alive()||!scoreVisible())return;
+   var position=timeline?timeline.value():t;
+   pending.forEach(function(index){var song=songs[index];if(song.page.hidden)return;ensureNotation(song);showNotes(index,position);});
+  });});
+ }
  function showSong(t){
   var active=Playlist.activeAt(clips,t),primary=Playlist.locate(clips,t),i=primary.index;
   if(i<0)return;
@@ -227,7 +273,7 @@ Musical.prototype.render=function(parent,next){
   host.dataset.activeSongCount=String(visible.length);
   if(scoreLink){scoreLink.setAttribute("href","#"+encodeURIComponent(songs[i].title));
    scoreLink.setAttribute("data-tiddler-title",songs[i].title);}
-  visible.forEach(function(j){ensureNotation(songs[j]);showNotes(j,t);});
+  updateNotation(visible,t);
  }
  // A click on ABC notation navigates the *master* musical timeline.
  // ABCJS provides performed timings, including expanded repeat passages.
@@ -447,7 +493,7 @@ Musical.prototype.render=function(parent,next){
   if(clock.textContent!==clockLabel)clock.textContent=clockLabel;
   host.dataset.cameraTime=visualTime.toFixed(2);
  }
- timeline=new Timeline(duration,paint);
+ this._timeline=timeline=new Timeline(duration,paint);
  function frame(){
   self._frame=0;if(!alive()||!timeline.running)return;
   paint(timeline.value());
@@ -554,7 +600,11 @@ Musical.prototype.render=function(parent,next){
   if(wasRunning){timeline.play();setPlaying(true);syncAudio(position);}
  });
  this._shutdown=function(){
-  self._dead=true;generation++;stopFrames();if(self._videoExporter)self._videoExporter.dispose();sfx.dispose();voice.dispose();LipSync.reset(view);clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
+  self._dead=true;generation++;stopFrames();cancelNotation();if(self._videoExporter)self._videoExporter.dispose();sfx.dispose();voice.dispose();LipSync.reset(view);clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
+  if(compactScore){
+   if(compactScore.removeEventListener)compactScore.removeEventListener("change",notationViewportChanged);
+   else if(compactScore.removeListener)compactScore.removeListener(notationViewportChanged);
+  }
   if(session)Playback.unregister(session);
   songs.forEach(function(song){
    var c=song.controller;if(!c)return;c._disposed=true;
@@ -617,8 +667,16 @@ Musical.prototype.render=function(parent,next){
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},repaint:function(){paint(timeline.value());},
   openFace:openFace,
   layout:layout,transport:transport,play:play,view:view,editor:editor,
+  onPreviewModeChange:function(){if(timeline)showSong(timeline.value());},
   seek:seek,position:function(){return timeline.value();},
   pause:function(){if(timeline.running)pauseAll();},
+  startScorePreview:function(preview){
+   // Preview an unsaved score without resetting this show's editing position.
+   // Keep all other ABC players exclusive; borrow our registration only for
+   // the synchronous stop broadcast, and always restore a still-live session.
+   pauseAll();Playback.unregister(session);
+   try{Playback.start(preview);}finally{if(alive())Playback.register(session);}
+  },
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}
  });
  this._workspace=workspace;
@@ -719,9 +777,9 @@ Musical.prototype.render=function(parent,next){
  }
  // Scene animation and recorded takes are usable before notation finishes.
  // A pending ABC library must never disable their shared Play gesture.
- Playback.register(session);ready=true;play.disabled=false;state.textContent=L.ready;
- // A long production can contain many muted guide scores. Only draw the
- // visible guide; drawing all of them at once blocks the editor's main thread.
+ Playback.register(session);ready=true;play.disabled=false;setPlaying(false);state.textContent=L.ready;
+ // A long production can contain many muted guide scores. Draw its visible
+ // guides after the stage frame, and release them when they leave the view.
  // Audible scores are still prepared up front so their performed lengths are
  // known, while muted guides keep the film's authored timing.
  function ensureNotation(song){
@@ -764,15 +822,15 @@ Musical.prototype.render=function(parent,next){
   if(!alive())return;
   var canAudio=!!(ABC.synth&&ABC.synth.supportsAudio&&ABC.synth.supportsAudio());
   ABCObject=ABC;soundReady=canAudio;
-  songs.forEach(function(song){if(!song.clip.muted||!song.page.hidden)ensureNotation(song);});
+  songs.forEach(function(song){if(!song.clip.muted)ensureNotation(song);});
   clips=Playlist.reflow(songs.map(function(song){return song.clip;}),self.scoreTitle);
   beatClock=Motion.beatClock(clips,function(title){var tid=self.wiki.getTiddler(title);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
   songs.forEach(function(song,i){song.clip=clips[i];});
   duration=fullDuration();timeline.duration=duration;
   // The editor may already have sought past an opening fade while ABC loaded.
   // Preserve that cursor instead of repainting an unrelated first frame.
-  var position=timeline.value();
-  time.max=String(duration);showSong(position);paint(position);
+  var position=Math.max(0,Math.min(duration,timeline.value()));
+  time.max=String(duration);timeline.seek(position);
   // The notes and visual master clock are ready before samples finish loading.
   // Audio remains optional; no missing SoundFont can block the theatre.
   state.textContent=canAudio||!clips.some(audibleClip)?L.ready:L.noAudio;
@@ -788,6 +846,13 @@ Musical.prototype.render=function(parent,next){
 Musical.prototype.removeChildDomNodes=function(){
  if(this._shutdown)this._shutdown();
  Widget.prototype.removeChildDomNodes.call(this);
+};
+Musical.prototype.refreshSelf=function(){
+ // Saving music can trigger both the workshop reload and a wiki refresh.
+ // Retain this editor's cursor across either rebuild, without restarting sound.
+ var sceneTitle=this.sceneTitle,scoreTitle=this.scoreTitle,position=this._timeline?this._timeline.value():null;
+ Widget.prototype.refreshSelf.call(this);
+ if(Number.isFinite(position)&&this._timeline&&this.sceneTitle===sceneTitle&&this.scoreTitle===scoreTitle)this._timeline.seek(position);
 };
 Musical.prototype.refresh=function(changed){
  var attributes=this.computeAttributes();

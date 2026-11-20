@@ -100,23 +100,26 @@
  --musical-preview-height:clamp(256px,calc(40vh + 16px),516px)
 }
 .huw-musical--workspace .huw-musical-appbar{
- flex:0 0 42px;min-height:42px;display:flex;
- justify-content:space-between;align-items:center;gap:12px;
+ /* A sidebar changes the tiddler width without changing the viewport. Let
+    controls wrap inside the space they actually have instead of clipping
+    the first buttons against the workspace's hidden overflow. */
+ flex:0 0 auto;min-height:42px;display:flex;flex-wrap:wrap;
+ justify-content:space-between;align-items:center;gap:6px 12px;
  background:#192638;border-bottom:1px solid var(--musical-line);
  padding:3px 9px 3px 14px
 }
 .huw-musical--workspace .huw-musical-brand{
- display:flex;align-items:center;gap:12px;min-width:0;font-size:12px
+ display:flex;align-items:center;gap:12px;min-width:0;max-width:100%;font-size:12px
 }
 .huw-musical--workspace .huw-musical-brand strong{white-space:nowrap;font-size:14px;letter-spacing:.01em;color:#f7fbff}
 .huw-musical--workspace .huw-musical-project{
  display:block;max-width:265px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--musical-dim);font-size:11px
 }
-.huw-musical--workspace .huw-musical-app-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:0}
+.huw-musical--workspace .huw-musical-app-actions{display:flex;flex:1 1 640px;flex-wrap:wrap;align-items:center;justify-content:flex-start;gap:6px;min-width:0;max-width:100%}
 .huw-musical--workspace .huw-musical-app-actions button,
 .huw-musical--workspace .huw-musical-view-mode{
  padding:6px 8px;height:29px;border:1px solid #485e73;border-radius:6px;
- background:#25354b;color:#e9f3fa;font:inherit;white-space:nowrap;cursor:pointer
+ background:#25354b;color:#e9f3fa;font:inherit;white-space:nowrap;cursor:pointer;flex:0 0 auto
 }
 .huw-musical--workspace .huw-musical-app-actions button[aria-pressed="true"]{background:#28637d;border-color:#63b6d8}
 .huw-musical--workspace .huw-musical-links{
@@ -176,12 +179,12 @@
  border-radius:4px;background:#7289a0
 }
 .huw-musical--workspace .huw-musical-transport{
- flex:0 0 43px;display:flex;flex-wrap:nowrap;align-items:center;gap:7px;
- height:43px;min-height:43px;margin:0;padding:4px 10px;background:#172638;
+ flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;gap:7px;
+ height:auto;min-height:43px;margin:0;padding:4px 10px;background:#172638;
  border-bottom:1px solid #405269
 }
 .huw-musical--workspace .huw-musical-transport button{
- height:30px;min-width:0;border:1px solid #49677d;
+ height:30px;min-width:0;flex-shrink:0;border:1px solid #49677d;
  border-radius:6px;padding:4px 10px;background:#2b465d;color:#f3f9fc;
  font:inherit;cursor:pointer
 }

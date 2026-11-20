@@ -57,7 +57,7 @@ function harness(t,{audio=false,deferDecode=false}={}){
     }
     return exports;
   }
-  const exports={};runInNewContext(packed,{exports,require:load,window:win,document:doc,console});
+  const exports={};runInNewContext(source,{exports,require:load,window:win,document:doc,console});
   const widget=new exports['plato-player']({}, {wiki,document:doc});widget.render(doc.body);
   const host=widget.host,player=host._platoPlayer;
   t.after(()=>player.destroy());
@@ -109,6 +109,50 @@ test('navigation pauses the audience player and returning from AniMus shows the 
   link.setAttribute('href','#Turn%20Around');link.click();
   assert.equal(h.counts.builds,before+2);assert.equal(h.player.time(),3);assert.equal(h.frames.size,0);
   assert.match(h.player.getView().nodes.actor.el.getAttribute('transform'),/translate\(444 50\)/);
+});
+
+test('leaving a preparing audience player cancels queued takes and drops decoded and late buffers',async t=>{
+  const h=harness(t,{audio:true,deferDecode:true});
+  h.edit('Film',film=>{
+    film.musical.audioClips=Array.from({length:8},(_,index)=>{
+      const asset='Take '+index;h.rows[asset]={title:asset,type:'audio/wav',text:Buffer.from([index+10,0]).toString('base64')};
+      return {id:asset,asset,start:index,duration:1,volume:1};
+    });
+  });
+  await h.player.seek(3);
+  const nav=h.doc.createElement('nav'),link=h.doc.createElement('a');nav.className='plato-nav';link.nodeType=1;nav.appendChild(link);h.doc.body.appendChild(nav);
+  const oldPlay=h.player.play();await h.flush();assert.equal(h.decodes.length,2);
+  h.decodes[0].finish();await h.flush();
+  assert.equal(h.decodes.length,3);assert.equal(h.player.getAudioState().bufferedAssets.length,1);
+  const builds=h.counts.builds;
+  link.setAttribute('href','#Turn%20Around%20%C2%B7%20AniMus');link.click();
+  assert.equal(h.player.time(),3);assert.equal(h.frames.size,0);assert.equal(h.player.getAudioState().bufferedAssets.length,0);
+  h.decodes.slice(1).forEach(decode=>decode.finish());await oldPlay;await h.flush();
+  assert.equal(h.decodes.length,3,'leaving must not start the five queued decodes');
+  assert.equal(h.player.getAudioState().bufferedAssets.length,0,'in-flight decodes cannot restore the discarded cache');
+  assert.equal(h.started.length,0);assert.equal(h.counts.builds,builds);assert.equal(h.widget.host,h.host);
+
+  link.setAttribute('href','#Turn%20Around');link.click();
+  assert.equal(h.player.time(),3);assert.equal(h.decodes.length,3,'returning alone performs no audio work');
+  const nextPlay=h.player.play();await h.flush();assert.equal(h.decodes.length,5);
+  let completed=3;
+  while(completed<h.decodes.length){const pending=h.decodes.slice(completed);completed=h.decodes.length;pending.forEach(decode=>decode.finish());await h.flush();}
+  await nextPlay;await h.flush();
+  assert.equal(h.player.time(),3);assert.equal(h.frames.size,1);assert.ok(h.started.length>0);
+  assert.equal(h.player.getAudioState().bufferedAssets.length,8);assert.equal(h.counts.builds,builds);
+});
+
+test('ordinary Pause keeps quick-resume buffers but navigating from that paused player releases them',async t=>{
+  const h=harness(t,{audio:true});await h.player.seek(3);await h.player.play();await h.flush();
+  h.player.pause();assert.equal(h.player.getAudioState().bufferedAssets.length,1);assert.equal(h.frames.size,0);
+  const builds=h.counts.builds,nav=h.doc.createElement('nav'),link=h.doc.createElement('a');nav.className='plato-nav';link.nodeType=1;nav.appendChild(link);h.doc.body.appendChild(nav);
+  link.setAttribute('href','#Turn%20Around%20%C2%B7%20AniMus');link.click();
+  assert.equal(h.player.getAudioState().bufferedAssets.length,0);assert.equal(h.player.getAudioState().scheduledTracks,0);
+  assert.equal(h.player.time(),3);assert.equal(h.counts.builds,builds);assert.equal(h.contexts.length,1);
+  h.rows.Voice.text=Buffer.from([9,0]).toString('base64');
+  link.setAttribute('href','#Turn%20Around');link.click();await h.player.play();await h.flush();
+  assert.equal(h.player.time(),3);assert.equal(h.frames.size,1);
+  assert.equal(h.started.at(-1).buffer.id,9,'resuming reads the current recording instead of the evicted buffer');
 });
 
 test('the stable export API sees fresh film, audio and scene data and tracks newly added dependencies',async t=>{

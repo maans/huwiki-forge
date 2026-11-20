@@ -83,7 +83,7 @@ function workspaceHarness(options={}){
  const film={width:800,height:450,camera:{keys:[{t:0,x:400,y:225,zoom:1}]},parts:[{id:'actor',name:'Actor'},{id:'arm',parent:'actor',name:'Arm'}]};
  if(options.face)film.parts.push({id:'head',parent:'actor',name:'Head',type:'group'},{id:'mouth',parent:'head',name:'Mouth',type:'image',variants:[{id:'o',name:'Round'},{id:'e',name:'Smile'}]},{id:'eyes',parent:'head',name:'Eyes'});
  const scene=film;let selected={id:'song:music',kind:'song'},workspace,change=null,committed=0,paused=0,scriptOpened=0,puppetOpened=0,puppetPart='',position=2,seeks=0,figureOptions,figureSelected='',figureOpened=false,figureSuspended=0,figureContext=null;
- const faceCommands=[],figureCalls=[];
+ const faceCommands=[],figureCalls=[],previewModes=[];
  function repaint(){svg.setAttribute('viewBox','0 0 800 450');workspace?.paintPreview();workspace?.refreshHandles();}
  const editor={getSelection:()=>selected,setFilter(){},setZoom(){},getZoom:()=>1,addKeyframe(){},removeKeyframe(){},setCameraEdit(){repaint();},inClipDetail:()=>false,
   resolvePartScene:()=>scene,ensureFigureTrack(){},getPartPivot:()=>({x:0,y:0}),isJointMove:()=>false,
@@ -114,11 +114,20 @@ function workspaceHarness(options={}){
  };
  const api={};runInNewContext(workspaceCode,{exports:api,require:name=>{if(!modules[name])throw Error(name);return modules[name];},$tw:{}});
  const view={svg,nodes:{actor:{el:actor},arm:{el:arm}},clips:[]};
- workspace=api.mount({doc,host,editor,film,view,layout,transport,play,project:'Show',sceneTitle:'Film',wiki:{getTiddlerText:()=>'$:/languages/en-GB'},scoreTitle:()=>'',position:()=>position,pause(){paused++;},seek(time){position=time;seeks++;},repaint});
- return {...h,host,stage,canvas,film,view,workspace,editor,repaint,faceCommands,figureCalls,openFigureFace(id){figureOptions.onFace({partId:id,actorId:'actor',headId:'head',tab:id==='mouth'?'mouth':'eyes'});},
+ workspace=api.mount({doc,host,editor,film,view,layout,transport,play,project:'Show',sceneTitle:'Film',wiki:{getTiddlerText:()=>'$:/languages/en-GB'},scoreTitle:()=>'',position:()=>position,pause(){paused++;},seek(time){position=time;seeks++;},onPreviewModeChange(mode){previewModes.push({mode,position});},repaint});
+ return {...h,host,stage,canvas,film,view,workspace,editor,repaint,faceCommands,figureCalls,previewModes,openFigureFace(id){figureOptions.onFace({partId:id,actorId:'actor',headId:'head',tab:id==='mouth'?'mouth':'eyes'});},
   deselectFigure(){figureOptions.onDeselect();},editAppearance(id){return figureOptions.onEditAppearance(id);},showProperties(id){return figureOptions.onProperties(id);},get figureSelected(){return figureSelected;},
   get selected(){return selected;},get change(){return change;},get committed(){return committed;},get paused(){return paused;},get scriptOpened(){return scriptOpened;},get puppetOpened(){return puppetOpened;},get puppetPart(){return puppetPart;},get position(){return position;},get seeks(){return seeks;},get figureOpen(){return figureOpened&&!figureSuspended;}};
 }
+test('paused workspace reports both native and programmatic score visibility changes without seeking',()=>{
+ const h=workspaceHarness(),chooser=h.host.querySelector('.huw-musical-view-mode');
+ chooser.value='score';chooser.dispatch('change');
+ h.host.querySelector('.huw-musical-parts-button').click();
+ chooser.value='split';chooser.dispatch('change');
+ assert.deepEqual(h.previewModes.map(row=>row.mode),['score','stage','split']);
+ assert.ok(h.previewModes.every(row=>row.position===2));assert.equal(h.seeks,0);
+ assert.equal(h.host.dataset.previewMode,'split');h.workspace.dispose();
+});
 test('workspace actions zoom selected figure and arm, retain pointer coordinates and leave camera data unchanged',()=>{
  const h=workspaceHarness(),before=JSON.stringify(h.film),zoomButton=h.host.querySelector('.huw-musical-zoom-selection');
  assert.equal(zoomButton.disabled,true);h.editor.selectFigure('actor');assert.equal(zoomButton.disabled,false);zoomButton.click();

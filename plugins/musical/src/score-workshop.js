@@ -6,16 +6,18 @@ module-type: library
 (function(){
 "use strict";
 var Loader=require('$:/plugins/huwiki/abc/loader.js');
+var ScorePlayback=require('$:/plugins/huwiki/musical/score-playback.js');
 function el(doc,tag,cls,text,parent){var e=doc.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;if(parent)parent.appendChild(e);return e;}
 function mount(o){
  var doc=o.doc,wiki=o.wiki,da=!/\/en(?:-|$)/i.test(wiki.getTiddlerText('$:/language',''));
- var popup=null,editor=null,draft='',title='',original='',origin=null,newScore=false,onSaved=null;
+ var popup=null,editor=null,playback=null,draft='',title='',original='',origin=null,newScore=false,onSaved=null;
  function button(host,text,action,cls){var b=el(doc,'button',cls||'',text,host);b.type='button';b.onclick=action;return b;}
  function destroyWidget(w){if(!w)return;(w.children||[]).forEach(destroyWidget);if(typeof w.onDestroy==='function')w.onDestroy();}
  function changed(){var t=draft&&wiki.getTiddler(draft);if(!t)return false;var f=Object.assign({},t.fields);delete f.title;delete f['draft.of'];delete f['draft.title'];return JSON.stringify(f)!==original;}
  function close(force){
   if(!popup)return true;
   if(!force&&changed()&&!doc.defaultView.confirm(da?'Luk uden at gemme ændringer i musikken?':'Close without saving the music changes?'))return false;
+  if(playback){playback.destroy();playback=null;}
   destroyWidget(editor);if(editor&&editor.removeChildDomNodes)editor.removeChildDomNodes();editor=null;
   popup.remove();popup=null;if(draft)wiki.deleteTiddler(draft);draft='';o.host.classList.remove('huw-musical--score-open');return true;
  }
@@ -48,6 +50,19 @@ function mount(o){
   wiki.addTiddler(new $tw.Tiddler(fields));var clean=Object.assign({},wiki.getTiddler(draft).fields);delete clean.title;delete clean['draft.of'];delete clean['draft.title'];original=JSON.stringify(clean);
   popup=el(doc,'section','huw-score-workshop',undefined,o.host);popup.setAttribute('role','dialog');popup.setAttribute('aria-modal','true');popup.setAttribute('aria-label',da?'ABC-musikværksted':'ABC music workshop');popup.tabIndex=-1;
   var bar=el(doc,'header','huw-score-workshop-header',undefined,popup);el(doc,'strong','',da?'ABC-musikværksted':'ABC music workshop',bar);el(doc,'span','huw-score-workshop-title',title,bar);
+  var play=button(bar,da?'▶ Afspil':'▶ Play',function(){if(playback)playback.toggle();},'huw-score-play');
+  var stop=button(bar,'■ Stop',function(){if(playback)playback.stop();},'huw-score-stop');
+  var audioStatus=el(doc,'output','huw-score-playback-status','',bar);audioStatus.setAttribute('role','status');audioStatus.setAttribute('aria-live','polite');
+  playback=ScorePlayback.mount({doc:doc,wiki:wiki,host:popup,da:da,pause:o.pause,startExclusive:o.startScorePreview,
+   getDraft:function(){var t=wiki.getTiddler(draft);return t?{fields:t.fields,source:Object.prototype.hasOwnProperty.call(t.fields,'abc-source')?String(t.fields['abc-source']):Loader.getSource(wiki,draft)}:null;},
+   onState:function(state){
+    popup.setAttribute('data-score-playback',state.phase);
+    var busy=state.phase==='library'||state.phase==='loading',playing=state.phase==='playing';
+    play.textContent=playing?'Ⅱ Pause':da?'▶ Afspil':'▶ Play';play.disabled=busy;
+    play.setAttribute('aria-label',playing?'Pause':da?'Afspil':'Play');play.setAttribute('aria-pressed',String(playing));play.setAttribute('aria-busy',String(busy));
+    stop.disabled=['idle','library','error'].indexOf(state.phase)>=0;audioStatus.textContent=state.message;
+   }
+  });
   button(bar,da?'Annuller':'Cancel',function(){close(false);});
   button(bar,da?'Gem kopi':'Save a copy',function(){title=wiki.generateNewTitle(title+(da?' – kopi':' – copy'));newScore=true;save();});
   button(bar,da?'Gem og tilbage':'Save and return',save,'huw-score-save');

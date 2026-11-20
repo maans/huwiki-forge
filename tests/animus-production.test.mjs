@@ -89,7 +89,7 @@ test('scene workshop cancel does not write drafts; save commits scene order',()=
 });
 function scoreWorkshop(type='text/vnd.tiddlywiki'){
  const initial={title:'Score',type,text:type==='text/vnd.tiddlywiki'?'score widget':'X:1\nK:C\nC D|','abc-source':'X:1\nK:C\nC D|'},w=wiki({Score:initial,'$:/language':{title:'$:/language',text:'$:/languages/da-DK'}}),d=doc(),host=new Node('main'),loader={getSource(w,title){const fields=w.getTiddler(title)?.fields||{};return fields['abc-source']||(['text/plain','text/vnd.abc'].includes(fields.type)?fields.text:'');}};let reloads=0;
- const s=api('score-workshop',{'$:/plugins/huwiki/abc/loader.js':loader}),ui=s.mount({doc:d,wiki:w,host,pause(){},reload(){reloads++;}});
+ const s=api('score-workshop',{'$:/plugins/huwiki/abc/loader.js':loader,'$:/plugins/huwiki/musical/score-playback.js':{mount(){return {toggle(){},stop(){},destroy(){}};}}}),ui=s.mount({doc:d,wiki:w,host,pause(){},reload(){reloads++;}});
  return {ui,w,d,host,get draft(){return Object.keys(w.records).find(x=>x.startsWith('$:/temp/animus-score/'));},get reloads(){return reloads;}};
 }
 test('ABC workshop isolates edits in a temporary draft, cancels cleanly and saves source fields',()=>{
