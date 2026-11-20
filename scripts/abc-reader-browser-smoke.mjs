@@ -49,24 +49,23 @@ try{
  console.log("ABC READER LAYERS",JSON.stringify(debugLayers));
  await score.locator(".huwabc-page-shell").first().waitFor({state:"visible",timeout:14000});
  await page.waitForFunction(()=>document.querySelector(".huwabc-reader-menu")?.offsetParent!==null);
- const base=await page.evaluate(()=>document.querySelector(".huwabc-score .huwabc-paper svg"));
- await score.getByRole("button",{name:"Vis eller skjul nodemenu"}).click();
- await score.getByRole("button",{name:"Øv",exact:true}).click();
+ await score.locator(".huwabc-paper svg").first().waitFor({state:"attached",timeout:10000});
+ await score.evaluate(el=>{window.__abcReaderOriginalSvg=el.querySelector(".huwabc-paper svg");});
+ await score.locator(".huwabc-reader-menu").click();
+ await score.locator(".huwabc-reader-modes button").nth(1).click();
  assert.ok(await score.evaluate(el=>el.classList.contains("huwabc-reader-practice")),"Practice should keep the same score open");
- await score.getByRole("button",{name:"Vis",exact:true}).click();
+ await score.locator(".huwabc-reader-modes button").nth(0).click();
  assert.ok(!await score.evaluate(el=>el.classList.contains("huwabc-reader-practice")),"Vis should restore notation-first reading");
- const unchanged=await page.evaluate(svg=>svg===document.querySelector(".huwabc-score .huwabc-paper svg"),base);
- // Cross-context Node handles cannot compare directly; if the initial SVG is
- // present, a mode switch must still have at least one notation SVG mounted.
- assert.ok(!!unchanged || await score.locator(".huwabc-paper svg").count()>0,"Notation persists across reading modes");
+ const unchanged=await score.evaluate(el=>window.__abcReaderOriginalSvg===el.querySelector(".huwabc-paper svg"));
+ assert.ok(unchanged,"Switching Vis/Øv must not rerender or replace the notation SVG");
  const option=score.locator(".huwabc-reader-page-choice");
  await option.selectOption("single");
  await page.waitForFunction(()=>document.querySelector(".huwabc-page-select")?.value==="single");
  await option.selectOption("spread");
  await page.waitForFunction(()=>document.querySelector(".huwabc-page-select")?.value==="spread");
- await score.getByRole("button",{name:"Fyld bredden"}).click();
+ await score.locator(".huwabc-reader-fit").click();
  assert.ok(await score.evaluate(el=>el.classList.contains("huwabc-reader-fill")),"Width-fit is reader only");
- await score.getByRole("button",{name:"Luk visning"}).click();
+ await score.locator(".huwabc-reader-close").click();
  assert.ok(!await score.evaluate(el=>el.classList.contains("huwabc-reader-active")),"Normal ABC controls return on exit");
  assert.notEqual(await score.locator(".huwabc-head").evaluate(el=>getComputedStyle(el).display),"none");
  assert.ok(!runtimeErrors.some(e=>/reader-mode|ReaderMode|Cannot read properties of undefined/.test(e)),runtimeErrors.join("; "));
