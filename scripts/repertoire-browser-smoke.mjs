@@ -93,6 +93,30 @@ try{
  await cdp.send("Input.dispatchTouchEvent",{type:"touchEnd",touchPoints:[]});
  await page.waitForFunction(text=>document.querySelector(".huwrep-order-title")?.textContent!==text,beforeTouch);
  await cdp.detach();
+ // Live setlist notation and sound share the transformed ABC, without rewriting the source.
+ await page.getByRole("button",{name:"Åbn nodebogen"}).click();
+ const arrangementBook=page.locator(".huwrep-book").first();
+ await arrangementBook.waitFor();
+ const scoreDrawerButton=arrangementBook.locator(".huwabc-reader-list");
+ await scoreDrawerButton.waitFor({state:"visible"});
+ await scoreDrawerButton.click();
+ await arrangementBook.locator(".huwrep-book-list-items button")
+  .filter({hasText:"Brudmarch från Jämtland"}).click();
+ await page.waitForFunction(()=>document.querySelector(".huwrep-book-heading h2")?.textContent
+  .includes("Brudmarch från Jämtland"));
+ await page.waitForFunction(()=>{
+  const score=document.querySelector(".huwrep-book-score textarea.huwabc-readable-abc")?.value||"";
+  return /^K:Dm$/m.test(score)&&/^Q:1\/4=118$/m.test(score);
+ },undefined,{timeout:90000});
+ const liveABC=await arrangementBook.locator("textarea.huwabc-readable-abc").inputValue();
+ assert.notEqual(liveABC,uneditedScore,"Setlist renders the changed in-memory score");
+ assert.match(liveABC,/^K:Dm$/m);
+ assert.match(liveABC,/^Q:1\/4=118$/m);
+ assert.equal(await page.evaluate(title=>$tw.wiki.getTiddler(title).fields["abc-source"],brudmarchTitle),
+  uneditedScore,"Setlist transformation does not rewrite the original ABC");
+ assert.equal(await arrangementBook.locator(".huwrep-book-stage").getByText(
+  "Bemærk: Den aftalte toneart vises ovenfor; selve ABC-noderne transponeres endnu ikke automatisk."
+ ).count(),0,"The obsolete message beside the nodes must be gone");
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.locator(".silba-home").waitFor();
  const homeLink=page.getByRole("link",{name:"Åbn nodebogen"});

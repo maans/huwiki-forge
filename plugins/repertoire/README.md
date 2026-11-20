@@ -43,15 +43,15 @@ Repertoireværkstedet viser en responsiv oversigt og et kompakt redigeringsområ
 - Listen kan sorteres ved at trække i grebet på Mac, iPad og touchskærme. På tastatur markeres grebet med Tab og flyttes med pil op/ned. Design og statusklasser følger de kendte TiddlyWiki-sorteringsmønstre, men selve input bruger Pointer Events for at undgå TiddlyWikis HTML5-drag-and-drop-begrænsning på iPad.
 - Klik på titlen i rækkefølgelisten for at ændre sangens aftaler. Fjern-knappen (×) fjerner kun sangen fra sætlisten, ikke fra musikbiblioteket.
 
-**Vigtigt:** Tonearts- og tempoaftaler er endnu metadata for det enkelte nummer. Automatisk transponering af ABC-partituret og ændring af afspilningstempoet ud fra sætlisteaftalen er ikke implementeret i denne version. Særligt ved indførte flerstemmige partiturer kan den notationsmæssige `K:` være en relativ dur-toneart, selv om nummerets titel angiver en mol-toneart.
+**Nodebog:** Tonearts- og tempoaftaler anvendes nu på en midlertidig ABC-version under visning og afspilning. Det transponerer melodistemmer og becifringer samt ændrer Q-tempo uden at skrive til de originale tiddlers. Relative dur/mol-signaturer respekteres: `K:F` og `K:Dm` deler fortegn. Ved ikke-understøttede ABC-tonearter vises en kort fejl.
 
 ## Bevidste afgrænsninger i denne version
 
-- Forhandling af toneart i værkstedet opdaterer aftalefelterne. Automatisk transponering af det viste ABC-partitur implementeres senere og må ikke forveksles med den lagrede aftale.
+- Nodebogen bruger sætlisteaftalen ved visning og afspilning. Åbning af originaltiddleren viser stadig dens oprindelige ABC-kode.
 - Nodebogen er bygget, men finger-preview af nummer-dots, bogmærker og automatiske skift efter afspilning er endnu ikke implementeret.
 - Nodebogen bruger nu PDF Publisher og SitePublisher direkte. PDF Publisher kan dele en rigtig PDF via iPad/Quines delingsmenu, uden at åbne `blob:` som en URL. C, B♭, E♭ sopranino og E♭ altsaxofon er separate notationsvalg. Form og instrumentering står på repertoireoversigten foran nodearkene.
-- Aftalte tonearter i repertoireværkstedet er endnu en metadataaftale; udgivelsestransponeringen tager udgangspunkt i de originale ABC-noder. Scannede nodebilleder transponeres ikke automatisk.
-- Automatisk sortering og egentlig drag-and-drop mellem repertoireposter afventer næste iteration; op/ned-knapper virker også ved touch. Nummerpanelet er allerede søgbart.
+- PDF- og SitePublisher-eksport bruger stadig de originale node-tiddlers; sætliste-transponering af eksporterede noder kommer separat. Scannede nodebilleder kan ikke transponeres automatisk.
+- Rækkefølgen kan ændres med trækgreb på touch/mus eller pil op/ned fra tastatur. Nummerpanelet er fortsat søgbart.
 - SilbaÄtno-demoen er en prøve på pluginet, ikke en færdig Repertoire Edition. Originale 17 konverterede partiturer skal fortsat kontrolleres mod MuseScore-kilder.
 
 Test: `node --test tests/repertoire-edition.test.mjs`. Browser-accept: `node scripts/repertoire-browser-smoke.mjs` efter opbygning af den redigerbare wiki. Hele Forge-testpakken: `npm test`.

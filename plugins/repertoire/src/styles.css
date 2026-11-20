@@ -113,6 +113,7 @@
 .huwrep-book-list-items{display:flex;flex-wrap:wrap;max-height:28vh;overflow:auto;gap:5px;padding:9px 0}
 .huwrep-book-agreement{display:flex;flex-wrap:wrap;gap:8px;padding:6px 12px;font-size:0.9em;background:#e9f2e9}
 .huwrep-book-agreement>span{border-left:2px solid #437a60;padding-left:7px}
+.huwrep-book-transform-error{color:#963a2f!important;border-left-color:#963a2f!important}
 .huwrep-book-form{max-width:100%;white-space:pre-wrap}
 .huwrep-book-stage{display:flex;align-items:flex-start;justify-content:center;min-height:45vh;overflow:auto;background:#e7ece8;position:relative}
 .huwrep-book-score{width:100%;min-width:0}

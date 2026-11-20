@@ -3,12 +3,12 @@
   "name": "ABC Musik",
   "title": "$:/plugins/huwiki/abc",
   "stability": "experimental",
-  "description": "ABC Musik Edition – Vis/Øv/Redigér med fuldskærmsnoder, sidevending og bevaret lydmotor",
+  "description": "ABC Musik Edition – nodebogsvisning af sætliste-transponering uden at ændre original ABC",
   "plugin-type": "plugin",
   "license": "MIT",
   "type": "application/json",
-  "version": "0.3.39-test.4",
+  "version": "0.3.39-test.5",
   "author": "HUWiki",
   "revision": "8",
-  "modified": "20261120205000000"
+  "modified": "20261121003200000"
 }

@@ -10,6 +10,7 @@ var model=require("$:/plugins/huwiki/repertoire/model.js");
 var Layout=require("$:/plugins/huwiki/repertoire/book-layout.js");
 var Practice=require("$:/plugins/huwiki/repertoire/practice.js");
 var Printing=require("$:/plugins/huwiki/repertoire/print.js");
+var LiveScore=require("$:/plugins/huwiki/repertoire/live-score.js");
 var TEMP="$:/temp/huwiki/repertoire/active-setlist";
 var MODE="$:/temp/huwiki/repertoire/book-mode";
 function el(doc,tag,cls,label){
@@ -393,7 +394,7 @@ Book.prototype.draw=function(){
   Array.from(list.children).forEach(function(b){b.hidden=!b.textContent.toLocaleLowerCase().includes(q);});
  });
  var row=el(doc,"div","huwrep-book-agreement"),agreement=model.effective(wiki,this.setlistTitle,this.activeItem);
- if(agreement.key)row.appendChild(el(doc,"span","","Aftalt toneart: "+agreement.key));
+ if(agreement.key)row.appendChild(el(doc,"span","","Toneart: "+agreement.key));
  if(agreement.tempo)row.appendChild(el(doc,"span","","Tempo: "+agreement.tempo));
  if(agreement.form)row.appendChild(el(doc,"span","huwrep-book-form","Form: "+agreement.form));
  if(agreement.instrumentation)row.appendChild(el(doc,"span","huwrep-book-form","Instrumentering: "+agreement.instrumentation));
@@ -416,6 +417,23 @@ Book.prototype.draw=function(){
     audio:{type:"string",value:"all"},
     "show-title":{type:"string",value:"no"}}};
    this._score=new Score(tree,{wiki:wiki,parentWidget:this,document:doc});
+   // The current setlist owns a temporary performance layer, never the source tiddler.
+   this._score._repertoireScore=function(ABC,abcSource){
+    try{
+     var prepared=LiveScore.apply(ABC,abcSource,agreement);
+     if(self._scoreError){self._scoreError.remove();self._scoreError=null;}
+     return prepared.source;
+    }catch(error){
+     if(!self._scoreError){
+      self._scoreError=el(doc,"span","huwrep-book-transform-error");
+      self._scoreError.setAttribute("role","alert");
+      row.appendChild(self._scoreError);
+      if(!row.isConnected)host.insertBefore(row,stage);
+     }
+     self._scoreError.textContent="Spilleaftalen kunne ikke anvendes: "+error.message;
+     return abcSource;
+    }
+   };
    this.children=[this._score];
    this._score.render(scoreHost,null);
    // Keep the same reader state as we cross a tune boundary.
@@ -438,9 +456,6 @@ Book.prototype.draw=function(){
    this.disposeScore();
    scoreHost.appendChild(el(doc,"p","huwrep-muted","Noderne kunne ikke vises: "+error.message));
    stage.appendChild(btn(doc,"Åbn originalen",function(){self.navigate(source.fields.title);}));
-  }
-  if(agreement.key){
-   stage.appendChild(el(doc,"p","huwrep-muted","Bemærk: Den aftalte toneart vises ovenfor; selve ABC-noderne transponeres endnu ikke automatisk."));
   }
  }else{
   var imageTitle=f&&f["repertoire-image"]||"";

@@ -262,7 +262,6 @@ Repertoire.prototype.draw=function(){
  actions.appendChild(button(doc,"Åbn originalnode / billede",function(){
   self.navigate(sheetName(wiki,self.activeItem));
  }));
- editorPanel.appendChild(el(doc,"p","huwrep-muted huwrep-editor-note","Toneart og tempo gemmes som spilleaftaler. De originale ABC-noder og afspilningshastigheden ændres ikke endnu."));
  var order=el(doc,"ol","huwrep-order-list tc-links-draggable-list");orderPanel.appendChild(order);
  list.forEach(function(id,index){
   var selected=id===self.activeItem,title=shortSheetName(wiki,id);

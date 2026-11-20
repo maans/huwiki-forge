@@ -29,11 +29,45 @@ function makeWiki(){
 
 test("Repertoire package is independent of the ABC plugin",()=>{
  assert.equal(pkg.title,"$:/plugins/huwiki/repertoire");
- assert.equal(pkg.version,"0.1.4-beta.4");
+ assert.equal(pkg.version,"0.1.4-beta.5");
  assert.equal(pkg["plugin-type"],"plugin");
  assert.equal(pkg.dependents,undefined);
  assert.equal(tiddlers["$:/plugins/huwiki/repertoire/widget.js"]["module-type"],"widget");
  assert.match(tiddlers["HUWiki Repertoire – Start"].text,/<\$huwiki-repertoire\/>/);
+});
+
+test("Setlist score changes notes, chords, key and tempo without changing original score",async()=>{
+ const module={};let shifts=[];
+ runInNewContext(tiddlers["$:/plugins/huwiki/repertoire/live-score.js"].text,{
+  exports:module,require(name){
+   assert.ok(name.endsWith("/transpose.js"));
+   return {apply(_ABC,abc,steps){shifts.push(steps);return abc.replace("K:Gm","K:Dm").replace("G2 A2","D2 E2");}};
+  }
+ });
+ const abc="X:1\nT:Test\nM:2/4\nL:1/8\nQ:1/4=100\nK:Gm\nG2 A2 |";
+ const effective=module.apply({},abc,{key:"Dm",tempo:"1/4=118"});
+ assert.equal(shifts[0],-5,"Gm -> Dm is five semitones down");
+ assert.match(effective.source,/^K:Dm$/m);
+ assert.match(effective.source,/^Q:1\/4=118$/m);
+ assert.match(effective.source,/D2 E2/);
+ assert.match(abc,/^K:Gm$/m);
+ assert.match(abc,/^Q:1\/4=100$/m);
+ assert.equal(module.stepsBetween("F","Dm"),0,"relative major and minor share a key signature");
+ assert.equal(module.stepsBetween("Ab","Fm"),0,"Ab and Fm share the same signature");
+ assert.equal(module.stepsBetween("F","Gm"),5);
+ const modal=module.apply({},abc.replace("K:Gm","K:F"),{key:"Dm",tempo:"1/4=100"});
+ assert.equal(modal.transposed,false);
+ assert.match(modal.source,/^K:Dm$/m);
+ const unaltered=module.apply({},abc,{key:"Gm",tempo:"1/4=100"});
+ assert.equal(unaltered.source,abc);
+ const book=tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"].text;
+ assert.ok(book.includes("_repertoireScore=function"));
+ assert.ok(book.includes("LiveScore.apply(ABC,abcSource,agreement)"));
+ assert.doesNotMatch(book,/Bemærk: Den aftalte toneart/);
+ const score=await readFile(path.join(root,"plugins/abc/src/score-widget.js"),"utf8");
+ assert.ok(score.includes("self._repertoireScore(ABC,current)"));
+ assert.ok(score.includes("self._repertoireScore(ABC,raw)"));
+ assert.ok(score.includes("visual=drawScore(working,score)"));
 });
 
 test("Repertoire uses a responsive three-column, tap-to-toggle selection grid",()=>{

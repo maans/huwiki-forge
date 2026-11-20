@@ -460,9 +460,11 @@ ABCWidget.prototype.draw=function(){
     });
     syncSwing(t.fields);
   }
-  self._updateMixer=function(fields){accompControls.update(fields);if(fullMiniMixer)fullMiniMixer.update(accompControls.config(),tools.getSource(self.wiki,self.title));if(controller&&controller.midiBuffer)controller.midiBuffer.setVolumes();};
+  self._updateMixer=function(fields){accompControls.update(fields);if(fullMiniMixer)fullMiniMixer.update(accompControls.config(),working);if(controller&&controller.midiBuffer)controller.midiBuffer.setVolumes();};
   self._refreshMusic=function(current,plan){
-    t=current;working=tools.getSource(self.wiki,self.title);if(pianoFollow&&ABC)pianoFollow.setSource(ABC,working);if(abcText.value!==working)abcText.value=working;
+    t=current;var raw=tools.getSource(self.wiki,self.title);
+    working=ABC&&!self.editing&&self._repertoireScore?self._repertoireScore(ABC,raw):raw;
+    if(pianoFollow&&ABC)pianoFollow.setSource(ABC,working);if(abcText.value!==working)abcText.value=working;
     // These setters keep the actual inputs and their focus in the DOM.
     if(plan.source||plan.audio||plan.live)accompControls.update(t.fields);
     if(fullMiniMixer)fullMiniMixer.update(accompControls.config(),working);
@@ -568,9 +570,13 @@ ABCWidget.prototype.draw=function(){
   showStatus("Indlæser nodebibliotek …");
   tools.load().then(function(lib){return jazzFont.ready(document).then(function(){return lib;});}).then(function(lib){
     if(!host.isConnected || renderToken!==self._renderToken)return;
-    ABC=lib;if(pianoFollow)pianoFollow.setSource(ABC,working);transposeControls.sync();
+    ABC=lib;
     var current=self.editing ? self.draft : tools.getSource(self.wiki,self.title);
-    visual=drawScore(current,score);
+    working=!self.editing&&self._repertoireScore?self._repertoireScore(ABC,current):current;
+    abcText.value=working;
+    if(pianoFollow)pianoFollow.setSource(ABC,working);
+    transposeControls.sync();
+    visual=drawScore(working,score);
     if(!ABC.synth || !ABC.synth.supportsAudio || !ABC.synth.supportsAudio()){
       audioControls.textContent="Lydafspilning er ikke tilgængelig i denne browser.";
       audio.classList.add("huwabc-player-unavailable");return;
