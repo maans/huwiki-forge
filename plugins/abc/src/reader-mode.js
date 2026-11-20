@@ -30,7 +30,7 @@ function Reader(options){
  this.getPager=options.pager;this.title=options.title||"Nodeark";
  this.doc=this.host.ownerDocument;this.win=this.doc.defaultView;
  this.book=this.host.closest(".huwrep-book");
- this.mode="vis";this.controlsOpen=false;this.fill=false;this.active=false;
+ this.mode="vis";this.controlsOpen=false;this.fitMode="fit";this.active=false;
  this.cleanup=[];this._touch=null;
  this.create();
  // Repertoire already owns a reading preference. Show the same selected mode
@@ -46,7 +46,7 @@ Reader.prototype.listen=function(target,type,handler,opts){
  this.cleanup.push(function(){target.removeEventListener(type,handler,opts);});
 };
 Reader.prototype.snapshot=function(){
- return {active:this.active,mode:this.mode,controlsOpen:this.controlsOpen,fill:this.fill};
+ return {active:this.active,mode:this.mode,controlsOpen:this.controlsOpen,fitMode:this.fitMode};
 };
 Reader.prototype.create=function(){
  var self=this,doc=this.doc;
@@ -96,9 +96,13 @@ Reader.prototype.create=function(){
  this.pageChoice.value="auto";
  this.listen(this.pageChoice,"change",function(){self.applyPages();});
  pages.appendChild(this.pageChoice);options.appendChild(pages);
- this.fit=action(doc,"Fyld bredden","huwabc-reader-fit",function(){self.fill=!self.fill;self.sync();});
- this.fit.setAttribute("aria-pressed","false");
- options.appendChild(this.fit);
+ var fitField=node(doc,"label","huwabc-reader-field");
+ fitField.appendChild(node(doc,"span","","Størrelse"));
+ this.fitChoice=node(doc,"select","huwabc-reader-fit-choice");
+ [["fit","Tilpas skærm"],["width","Fyld bredden"],["original","Original størrelse"]].forEach(function(pair){var o=node(doc,"option","",pair[1]);o.value=pair[0];self.fitChoice.appendChild(o);});
+ this.fitChoice.value="fit";
+ this.listen(this.fitChoice,"change",function(){self.fitMode=self.fitChoice.value;self.updateScale();});
+ fitField.appendChild(this.fitChoice);options.appendChild(fitField);
  options.appendChild(action(doc,"Luk visning","huwabc-reader-close",function(){self.exit();}));
  this.panel.appendChild(options);
  this.status=node(doc,"span","huwabc-reader-counter");
@@ -111,7 +115,7 @@ Reader.prototype.create=function(){
  this.next.setAttribute("aria-label","Næste nodeside");
  edges.append(this.prev,this.next);this.host.appendChild(edges);
  this.edges=edges;
- this.listen(this.win,"resize",function(){if(self.active)self.update();});
+ this.listen(this.win,"resize",function(){if(self.active){self.update();self.updateScale();}});
  this.listen(this.host,"keydown",function(e){
   if(!self.active||e.altKey||e.metaKey||e.ctrlKey||e.shiftKey)return;
   if(e.target&&e.target.closest&&e.target.closest("input,select,textarea,[contenteditable=true]"))return;
@@ -136,9 +140,9 @@ Reader.prototype.create=function(){
  });
 };
 Reader.prototype.enter=function(state){
- if(state){this.mode=state.mode==="practice"?"practice":"vis";this.fill=!!state.fill;this.controlsOpen=!!state.controlsOpen;}
+ if(state){this.mode=state.mode==="practice"?"practice":"vis";this.fitMode=["fit","width","original"].includes(state.fitMode)?state.fitMode:(state.fill?"width":"fit");this.controlsOpen=!!state.controlsOpen;}
  else {this.mode="vis";this.controlsOpen=false;}
- this.active=true;this.sync();this.applyPages();this.update();
+ this.active=true;this.fitChoice.value=this.fitMode;this.sync();this.applyPages();this.update();this.updateScale();
  if(this.win)this.win.dispatchEvent(new this.win.Event("resize"));
 };
 Reader.prototype.exit=function(){
@@ -149,6 +153,7 @@ Reader.prototype.exit=function(){
   var toggle=this.book.querySelector(".huwrep-book-header button[aria-expanded]");
   if(toggle)toggle.setAttribute("aria-expanded","false");
  }
+ this.clearScale();
  this.host.classList.remove("huwabc-reader-active","huwabc-reader-practice","huwabc-reader-controls-open","huwabc-reader-fill");
  this.sync();if(this.win)this.win.dispatchEvent(new this.win.Event("resize"));
 };
@@ -168,7 +173,7 @@ Reader.prototype.applyPages=function(){
   select.value=choice;
   select.dispatchEvent(new this.win.Event("change",{bubbles:true}));
  }
- this.update();
+ this.update();this.updateScale();
 };
 Reader.prototype.turn=function(delta){
  var pager=this.getPager(),info=pager&&pager.info&&pager.info();
@@ -194,6 +199,7 @@ Reader.prototype.update=function(){
   this.prev.disabled=true;this.next.disabled=true;
  }
  if(this.pageChoice.value==="auto"&&this.active)this.applyAutoChoice();
+ if(this.active)this.updateScale();
 };
 Reader.prototype.applyAutoChoice=function(){
  var pager=this.getPager(),select=pager&&pager.element&&pager.element.querySelector(".huwabc-page-select");
@@ -205,7 +211,7 @@ Reader.prototype.sync=function(){
  this.host.classList.toggle("huwabc-reader-active",this.active);
  this.host.classList.toggle("huwabc-reader-practice",this.active&&this.mode==="practice");
  this.host.classList.toggle("huwabc-reader-controls-open",this.active&&this.controlsOpen);
- this.host.classList.toggle("huwabc-reader-fill",this.active&&this.fill);
+
  if(this.book){
   this.book.classList.toggle("huwrep-reader-active",this.active);
   this.book.classList.toggle("huwrep-reader-practice",this.active&&this.mode==="practice");
@@ -215,8 +221,37 @@ Reader.prototype.sync=function(){
  this.menu.setAttribute("aria-expanded",String(!!this.controlsOpen));
  this.vis.setAttribute("aria-pressed",String(this.mode==="vis"));
  this.practice.setAttribute("aria-pressed",String(this.mode==="practice"));
- this.fit.setAttribute("aria-pressed",String(this.fill));
+
  if(this.active)this.update();
+};
+// Layout-only zoom. Never rerender ABC notation or restart audio.
+Reader.prototype.clearScale=function(){
+ if(this._scaledViewport){this._scaledViewport.style.removeProperty("zoom");this._scaledViewport=null;}
+};
+Reader.prototype.updateScale=function(){
+ if(!this.active||!this.host)return;
+ var viewport=this.host.querySelector(".huwabc-page-viewport");
+ var shell=this.host.querySelector(".huwabc-page-shell");
+ if(!viewport||!shell)return;
+ if(this._scaling)return;
+ this._scaling=true;
+ try{
+  if(this._scaledViewport&&this._scaledViewport!==viewport)this.clearScale();
+  viewport.style.zoom="1";
+  // The page viewport contains the existing rendered notation, with its
+  // intrinsic width; its parent is the scrollable screen-sized shell.
+  var bounds=viewport.getBoundingClientRect();
+  var width=Math.max(viewport.scrollWidth,bounds.width,1);
+  var height=Math.max(viewport.scrollHeight,bounds.height,1);
+  var availableWidth=Math.max(1,shell.clientWidth-16);
+  var availableHeight=Math.max(1,shell.clientHeight-16);
+  var choice=this.fitMode||"fit";
+  var ratio=choice==="original"?1:choice==="width"?availableWidth/width:Math.min(availableWidth/width,availableHeight/height);
+  // Avoid pathological magnification of tiny or not-yet-rendered scores.
+  ratio=Math.max(.3,Math.min(2.5,Number.isFinite(ratio)?ratio:1));
+  viewport.style.zoom=String(Math.round(ratio*1000)/1000);
+  this._scaledViewport=viewport;
+ }finally{this._scaling=false;}
 };
 Reader.prototype.destroy=function(){
  this.exit();
