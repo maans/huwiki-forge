@@ -250,7 +250,7 @@ test("PDF Publisher fills free space beneath scores and creates an overflow page
  helpers.attachScoreAgreements(short.pages,{width:210,height:297,margin:14},agreements);
  assert.equal(short.pages.length,1,"The existing page should be reused when there is space");
  assert.equal(short.body.children.length,1);
- assert.match(short.body.children[0].children[0].children.map(n=>n.textContent).join(" "),"AFTALER");
+ assert.match(short.body.children[0].children[0].children.map(n=>n.textContent).join(" "),/AFTALER/);
  const long=fixture(1000);
  helpers.attachScoreAgreements(long.pages,{width:210,height:297,margin:14},agreements);
  assert.equal(long.pages.length,2,"Do not overlap music when there is no space below the last system");
