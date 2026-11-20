@@ -50,7 +50,11 @@ async function installProbe(page){
    const render=proto.render,destroy=proto.onDestroy;
    proto.render=function(...args){
     const result=render.apply(this,args);
-    probe[setName].add(this);probe.counts[mountName]++;
+    // TiddlyWiki can render one widget instance repeatedly after a refresh.
+     // Only distinct live instances count as mounts; redraws are not leaks.
+     const firstMount=!probe[setName].has(this);
+     probe[setName].add(this);
+     if(firstMount)probe.counts[mountName]++;
     if(setName==="scores")probe.counts.maxScores=Math.max(probe.counts.maxScores,probe.scores.size);
     return result;
    };
