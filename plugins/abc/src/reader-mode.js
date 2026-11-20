@@ -33,6 +33,7 @@ function Reader(options){
  this.cleanup=[];this._touch=null;
  this.create();
  if(options.state&&options.state.active)this.enter(options.state);
+ else this.sync(); // The dormant overlay must not intercept repertoire controls.
 }
 Reader.prototype.listen=function(target,type,handler,opts){
  if(!target)return;
