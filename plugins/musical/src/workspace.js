@@ -262,6 +262,7 @@ function mount(o){
  viewButton.value="split";
  viewButton.onchange=function(){
   mode=viewButton.value;host.dataset.previewMode=mode;
+  if(o.onPreviewModeChange)o.onPreviewModeChange(mode);
   reframeAfterLayout();
  };
  var previewTools=el(doc,'div','huw-musical-preview-tools',undefined,stagePanel||actions);

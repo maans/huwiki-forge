@@ -380,6 +380,14 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
   }
   function requestFrame() {if(!raf&&!dead)raf=win.requestAnimationFrame(tick);}
 
+  function releasePreparedAudio() {
+    // Decodes already in progress cannot be cancelled. Removing their cache
+    // identity makes their eventual results disposable, while queued takes
+    // must not continue consuming resources after the user leaves the player.
+    wanted=Object.create(null);cache=Object.create(null);
+    decodeQueue.forEach(function(job){job.resolve(null);});decodeQueue=[];
+  }
+
   // Editing can commit dozens of wiki changes while this tiddler remains open.
   // Keep the idle player and its controls mounted; refresh its project only
   // when it is used again. The stable host/API also keeps export adapters and
@@ -391,8 +399,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
     stopSources();
     // Do not continue preparing the old chapter in the background while the
     // editor is active. Already running decodes settle without retaining data.
-    wanted=Object.create(null);cache=Object.create(null);
-    decodeQueue.forEach(function(job){job.resolve(null);});decodeQueue=[];
+    releasePreparedAudio();
     updateTransport();
     self._pendingRefresh=true;host.setAttribute("data-plato-stale","true");
   }
@@ -678,6 +685,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
       var target=link.getAttribute("data-tiddler-title"),href=link.getAttribute("href")||"";
       if(!target&&href.charAt(0)==="#")try{target=decodeURIComponent(href.slice(1));}catch(_){}
       if(target===(self.getVariable?self.getVariable("currentTiddler"):"Turn Around"))ensureFresh();
+      else releasePreparedAudio();
     }
   },true);
   on(host,"keydown",function(event) {

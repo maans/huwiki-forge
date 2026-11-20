@@ -39,6 +39,17 @@ const hash=value=>createHash('sha256').update(typeof value==='string'?value:JSON
 function passed(name){checks.push(name);console.log('PASS '+name);}
 async function seek(time){await editor.locator('.huw-musical-range').evaluate((input,t)=>{input.value=String(t);input.dispatchEvent(new Event('input',{bubbles:true}));},time);}
 async function position(){return Number(await editor.locator('.huw-musical-range').inputValue());}
+async function touchTimeline(time){
+ const ruler=editor.locator('.huw-musical-ruler-lane').first();await ruler.scrollIntoViewIfNeeded();
+ const duration=Number(await editor.locator('.huw-musical-range').getAttribute('max'));
+ const point=await ruler.evaluate((node,{time,duration})=>{
+  const rect=node.getBoundingClientRect(),x=rect.left+rect.width*time/duration,y=rect.top+rect.height/2;
+  return {x,y,tolerance:Math.max(.8,duration/rect.width),hit:node.contains(node.ownerDocument.elementFromPoint(x,y))};
+ },{time,duration});
+ assert.ok(point.hit,'the visible timeline ruler receives the native touch');
+ await touchPoint(point);
+ assert.ok(Math.abs(await position()-time)<=point.tolerance,'a native timeline touch moves the playhead to '+time+'s');
+}
 async function sources(){return wiki.evaluate(titles=>Object.fromEntries(titles.map(title=>[title,$tw.wiki.getTiddlerText(title)])),[timeline.filmTitle,...timeline.scenes.map(scene=>scene.source)]);}
 function sourceHashes(values){return Object.fromEntries(Object.entries(values).map(([title,text])=>[title,hash(text)]));}
 async function assertSources(expected,message){assert.deepEqual(sourceHashes(await sources()),sourceHashes(expected),message);}
@@ -47,6 +58,75 @@ async function openEditor(){
  editor=wiki.locator('.plato-native-studio.huw-musical');
  if(!await editor.count())await wiki.locator('.plato-home .plato-native-link a').click();
  await editor.locator('.huw-musical-play:enabled').waitFor();await editor.locator('.huw-musical-view-mode').selectOption('stage');
+}
+async function assertResponsiveControls(){
+ const originalViewport=page.viewportSize(),sidebar=await wiki.evaluate(()=>$tw.wiki.getTiddlerText('$:/state/sidebar','yes'));
+ try{
+  // The sidebar narrows the tiddler while the browser remains wide. This is
+  // the iPad failure that viewport-only media queries did not catch.
+  await wiki.evaluate(()=>$tw.wiki.setText('$:/state/sidebar','text',undefined,'yes'));
+  for(const viewport of [{width:1366,height:1024},{width:1024,height:768}]){
+   await page.setViewportSize(viewport);
+   await editor.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+   const layout=await editor.evaluate(host=>{
+    const bounds=host.getBoundingClientRect(),clipped=[];
+    for(const selector of ['.huw-musical-appbar','.huw-musical-transport']){
+     const row=host.querySelector(selector),box=row.getBoundingClientRect();
+     for(const control of row.querySelectorAll('button,select,input,a')){
+      const r=control.getBoundingClientRect();if(!r.width||!r.height)continue;
+      if(r.left<Math.max(bounds.left,box.left)-1||r.right>Math.min(bounds.right,box.right)+1||r.top<box.top-1||r.bottom>box.bottom+1)
+       clipped.push({row:selector,label:control.textContent||control.getAttribute('aria-label'),left:r.left,right:r.right,top:r.top,bottom:r.bottom,rowBounds:{left:box.left,right:box.right,top:box.top,bottom:box.bottom}});
+     }
+    }
+    return {width:bounds.width,clipped,stageHeight:host.querySelector('.huw-musical-canvas').getBoundingClientRect().height,timelineHeight:host.querySelector('.huw-musical-workbench').getBoundingClientRect().height};
+   });
+   assert.deepEqual(layout.clipped,[],'every editor and transport control fits with the sidebar open at '+viewport.width+'px: '+JSON.stringify(layout));
+   assert.ok(layout.stageHeight>=120&&layout.timelineHeight>=60,'wrapping retains a usable stage and timeline: '+JSON.stringify(layout));
+  }
+ }finally{
+  await page.setViewportSize(originalViewport);
+  await wiki.evaluate(value=>$tw.wiki.setText('$:/state/sidebar','text',undefined,value),sidebar);
+  await editor.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ }
+ passed('iPad landscape widths keep all toolbar and transport controls inside the editor with the sidebar open');
+}
+async function observeAudioCreations(){
+ await wiki.evaluate(()=>{
+  const original=document.createElement,created=[];
+  document.createElement=function(name,...args){const element=original.call(this,name,...args);if(String(name).toLowerCase()==='audio')created.push(element);return element;};
+  window.__animusMediaProbe={created,restore(){document.createElement=original;}};
+ });
+}
+async function assertBoundedRecordedAudio(){
+ // Use the real embedded recordings and a native Play gesture. This checks
+ // media loading/source reuse which the unit test's FakeAudio cannot cover.
+ const state=()=>wiki.evaluate(()=>{const list=window.__animusMediaProbe.created;return {created:list.length,loaded:list.filter(a=>a.getAttribute('src')).length,playing:list.filter(a=>!a.paused).length,errors:list.filter(a=>a.error).map(a=>a.error.message)};});
+ try{
+  assert.equal((await state()).created,0,'opening the editor creates no recording decoders');
+  for(const time of [38,110,290,186])await touchTimeline(time);
+  assert.equal((await state()).created,0,'repeated native paused timeline touches do not allocate media');
+  assert.equal(await editor.locator('.huw-musical-score-page svg').count(),0,'scene-only navigation does not retain hidden scores');
+  await editor.locator('.huw-musical-play').tap();
+  const ready=()=>window.__animusMediaProbe.created.filter(a=>!a.paused&&a.readyState>=2&&a.currentSrc).length===3;
+  await wiki.waitForFunction(ready,null,{timeout:15000});
+  let result=await state();assert.equal(result.created,4,'the three overlapping real recordings share four gesture-primed elements');assert.equal(result.playing,3);assert.deepEqual(result.errors,[]);
+  await touchTimeline(450);
+  await wiki.waitForFunction(ready,null,{timeout:15000});
+  result=await state();assert.equal(result.created,4,'a distant running seek reuses the primed elements');assert.equal(result.playing,3);assert.ok(result.loaded<=4);assert.deepEqual(result.errors,[]);
+  await editor.locator('.huw-musical-play').tap();
+  result=await state();assert.equal(result.playing,0,'native Pause stops all voices');
+  assert.equal(await editor.getAttribute('data-playing'),'false');
+  const paused=await position();
+  await editor.locator('.huw-musical-play').tap();await wiki.waitForFunction(ready,null,{timeout:15000});
+  assert.ok(await position()>=paused,'native Play resumes the current position');
+  await editor.locator('.huw-musical-stop').tap();
+  result=await state();assert.equal(result.playing,0);assert.equal(result.loaded,0,'Stop releases every encoded recording source');
+  assert.equal(await position(),0,'native Stop returns to the beginning');
+  passed('native timeline, Play, Pause and Stop remain responsive with real overlaps and four reusable media elements');
+ }finally{
+  await editor.locator('.huw-musical-stop').click();
+  await wiki.evaluate(()=>{window.__animusMediaProbe.restore();delete window.__animusMediaProbe;});
+ }
 }
 async function pageOffset(){
  if(wiki===page)return {x:0,y:0};
@@ -179,7 +259,7 @@ try{
  await wiki.waitForFunction(()=>window.$tw?.wiki&&document.querySelector('.plato-player')?._platoPlayer);
  timeline=await wiki.locator('.plato-player').first().evaluate(host=>host._platoPlayer.getTimeline());
  for(const path of ['/demo/demo.mjs','/assembler/compose.mjs','/library/plugins/registry.json','/editions/turn-around/manifest.json'])assert.ok(requestedPaths.has(path),'normal demo loaded '+path);
- await openEditor();selectedScene=timeline.scenes[1];assert.ok(selectedScene&&selectedScene.start>0,'the test edits a later scene with repeated actor IDs');
+ await observeAudioCreations();await openEditor();await assertResponsiveControls();await assertBoundedRecordedAudio();selectedScene=timeline.scenes[1];assert.ok(selectedScene&&selectedScene.start>0,'the test edits a later scene with repeated actor IDs');
  const originalSources=await sources(),originalScene=JSON.parse(originalSources[selectedScene.source]),originalPart=originalScene.parts.find(part=>part.id===joint);
  const originalFilm=JSON.parse(originalSources[timeline.filmTitle]);
  assert.equal(originalFilm.musical.animationClips.length,0,'the ordinary demo uses scene keys rather than a synthetic motion clip');

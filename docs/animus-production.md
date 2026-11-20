@@ -1,6 +1,18 @@
 # AniMus production tools
 
-AniMus 0.13.0-beta.4 includes large figure and object workshops beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
+AniMus 0.13.0-beta.5 includes large figure and object workshops beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
+
+## Resource use and tablet layout
+
+Opening the editor and seeking while paused do not allocate recording players or resolve their media sources. Pressing **Play** uses a reusable pool sized for the maximum overlapping clips plus one nearby preload. Turn Around has 112 recordings and at most three simultaneous clips, so it uses four media elements. **Pause** stops them; **Stop** and paused seeking release their recording sources. This bounds media resources without changing the recordings, timing or exported soundtrack.
+
+Muted guide scores render only when their notation is visible, after the scene frame has updated. Rapid seeking coalesces pending notation work, and old guide SVG and timing references are released. Audible ABC retains the timing and synthesis data required to play it. The toolbar and transport wrap to the editor's actual available width, including when the TiddlyWiki sidebar is open.
+
+Navigating from the Turn Around audience player to the editor also releases the player's decoded audio and cancels queued decoding. Its current position and mounted view remain available when you return; ordinary Pause keeps quick-resume audio.
+
+The ordinary demo keeps its editable iframe URL valid when the browser caches the page for navigation back and forward. Returning does not rebuild the wiki or discard unsaved edits. Turn Around's instrumental scores now put each voice on its own staff, with clefs and line breaks that preserve the original notes, instruments and timing.
+
+These changes remove demonstrated avoidable allocations and synchronous work. They are not a measurement of iPad RAM or proof of the cause of every unresponsive or blank page. Native browser acceptance covers repeated touch seeks, playback controls, real overlapping recordings and source reuse; physical iPad behavior still needs device verification.
 
 ## Create and edit a show
 
