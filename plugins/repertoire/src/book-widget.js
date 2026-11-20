@@ -38,9 +38,12 @@ Book.prototype.disposeScore=function(){
 };
 Book.prototype.onDestroy=function(){
  this.disposeScore();
+ if(this.host&&this._boundKeys)this.host.removeEventListener("keydown",this._boundKeys);
+ this._boundKeys=null;
  if(this._win&&this._resize)this._win.removeEventListener("resize",this._resize);
  if(this._win&&this._orientation)this._win.removeEventListener("orientationchange",this._orientation);
  this._win=null;this._resize=null;this._orientation=null;
+ if(this.host)this.host.classList.remove("huwrep-book-fullscreen");
 };
 Book.prototype.render=function(parent,nextSibling){
  this.parentDomNode=parent;this.computeAttributes();
@@ -58,6 +61,8 @@ Book.prototype.render=function(parent,nextSibling){
  this.activeItem="";
  this._resize=this.updateMode.bind(this);
  this._orientation=this.updateMode.bind(this);
+ this._boundKeys=this._onKeyDown.bind(this);
+ host.addEventListener("keydown",this._boundKeys);
  if(this._win){
   this._win.addEventListener("resize",this._resize);
   this._win.addEventListener("orientationchange",this._orientation);
@@ -132,8 +137,11 @@ Book.prototype.draw=function(){
  var index=all.indexOf(this.activeItem);
  var toolbar=el(doc,"header","huwrep-book-header");host.appendChild(toolbar);
  toolbar.appendChild(btn(doc,"← Repertoireværksted",function(){
-  self.disposeScore();host.hidden=true;self.navigate("HUWiki Repertoire – Start");
+  self.disposeScore();host.classList.remove("huwrep-book-fullscreen");host.hidden=true;self.navigate("HUWiki Repertoire – Start");
  }));
+ toolbar.appendChild(btn(doc,"⛶ Fuldskærm",function(){
+  host.classList.toggle("huwrep-book-fullscreen");self.updateMode();
+ },"huwrep-book-fullscreen-button"));
  var selector=el(doc,"select","huwrep-input huwrep-book-select");
  selector.setAttribute("aria-label","Vælg sætliste");
  sets.forEach(function(s){
@@ -246,6 +254,11 @@ Book.prototype.refresh=function(changed){
   try{return !!this._score.refresh(changed);}catch(_ignored){return false;}
  }
  return false;
+};
+Book.prototype._onKeyDown=function(event){
+ if(event.key==="Escape"&&this.host&&this.host.classList.contains("huwrep-book-fullscreen")){
+  this.host.classList.remove("huwrep-book-fullscreen");this.updateMode();return;
+ }
 };
 exports["huwiki-repertoire-book"]=Book;
 })();
