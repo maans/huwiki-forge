@@ -32,6 +32,7 @@ var Audition=require("$:/plugins/huwiki/abc/audition.js");
 var AudioController=require("$:/plugins/huwiki/abc/audio-controller.js");
 var SoundHelp=require("$:/plugins/huwiki/abc/sound-help.js");
 var ScoreView=require("$:/plugins/huwiki/abc/score-view.js");
+var ReaderMode=require("$:/plugins/huwiki/abc/reader-mode.js");
 var MinimalPlayer=require("$:/plugins/huwiki/abc/minimal-player.js");
 var FloatingPiano=require("$:/plugins/huwiki/abc/floating-piano.js");
 var FloatingMixer=require("$:/plugins/huwiki/abc/floating-mixer.js");
@@ -114,7 +115,7 @@ ABCWidget.prototype.execute=function(){
   if(!this._viewAttributes['show-title'])this._scoreView.showTitle=true;
  }
 };
-ABCWidget.prototype.onDestroy=function(){if(this._floatingMixer){this._floatingMixer.destroy();this._floatingMixer=null;}if(this._instrumentViewControls){this._instrumentViewControls.destroy();this._instrumentViewControls=null;}if(this._pianoFollow){this._pianoFollow.destroy();this._pianoFollow=null;}if(this._pager){this._pager.destroy();this._pager=null;}this._refreshMusic=null;this._syncTempo=null;if(this._viewState){this._viewState.destroy();this._viewState=null;}if(this._minimalPlayer){this._minimalPlayer.destroy();this._minimalPlayer=null;}if(this._localeObserver){this._localeObserver.destroy();this._localeObserver=null;}if(this._accompControls){this._accompControls.destroy();this._accompControls=null;}if(this._unbindShortcut){this._unbindShortcut();this._unbindShortcut=null;}if(this._floatingPiano){this._floatingPiano.destroy();this._floatingPiano=null;}this._renderToken++;if(this._audioController){this._audioController._disposed=true;playback.unregister(this._audioController);this._audioController.destroy();this._audioController=null;}};
+ABCWidget.prototype.onDestroy=function(){if(this._reader){this._reader.destroy();this._reader=null;}if(this._floatingMixer){this._floatingMixer.destroy();this._floatingMixer=null;}if(this._instrumentViewControls){this._instrumentViewControls.destroy();this._instrumentViewControls=null;}if(this._pianoFollow){this._pianoFollow.destroy();this._pianoFollow=null;}if(this._pager){this._pager.destroy();this._pager=null;}this._refreshMusic=null;this._syncTempo=null;if(this._viewState){this._viewState.destroy();this._viewState=null;}if(this._minimalPlayer){this._minimalPlayer.destroy();this._minimalPlayer=null;}if(this._localeObserver){this._localeObserver.destroy();this._localeObserver=null;}if(this._accompControls){this._accompControls.destroy();this._accompControls=null;}if(this._unbindShortcut){this._unbindShortcut();this._unbindShortcut=null;}if(this._floatingPiano){this._floatingPiano.destroy();this._floatingPiano=null;}this._renderToken++;if(this._audioController){this._audioController._disposed=true;playback.unregister(this._audioController);this._audioController.destroy();this._audioController=null;}};
 ABCWidget.prototype.render=function(parent,nextSibling){
   if(this._audioController||this._minimalPlayer)this.onDestroy();
   this.parentDomNode=parent;this.computeAttributes();this.execute();
@@ -135,7 +136,9 @@ ABCWidget.prototype.render=function(parent,nextSibling){
   this._localeObserver=I18n.observe(host,this.wiki);
 };
 ABCWidget.prototype.draw=function(){
-  var self=this,host=this.host;if(!host)return;if(this._pianoFollow){this._pianoFollow.destroy();this._pianoFollow=null;}if(this._pager){this._pager.destroy();this._pager=null;}
+  var self=this,host=this.host;if(!host)return;
+  if(this._reader){this._readerState=this._reader.snapshot();this._reader.destroy();this._reader=null;}
+  if(this._pianoFollow){this._pianoFollow.destroy();this._pianoFollow=null;}if(this._pager){this._pager.destroy();this._pager=null;}
   var renderToken=++this._renderToken,tuneRevision=0;
   if(this._minimalPlayer){this._minimalPlayer.destroy();this._minimalPlayer=null;}
   if(this._instrumentViewControls){this._instrumentViewControls.destroy();this._instrumentViewControls=null;}
@@ -365,7 +368,7 @@ ABCWidget.prototype.draw=function(){
       if(!result || !result.length){showStatus("Kunne ikke danne noder. Kontrollér ABC-teksten.",true);return null;}
       var tabWarning=tabOptions.options.length?tabs.finish(result[0],tabControls.config()):'';
       if(tabOptions.options.length&&!tabControls.showNotes())tabs.only(into,result[0]);if(tabOptions.options.length)tabs.rhythm(into,result[0],tabControls.config());
-      if(into===score&&self._pager)self._pager.layout(result[0],self.wiki.getTiddler(self.title).fields);
+      if(into===score&&self._pager){self._pager.layout(result[0],self.wiki.getTiddler(self.title).fields);if(self._reader)self._reader.update();}
       var warnings=result[0]&&result[0].warnings;
       if(warnings&&warnings.length)showStatus("ABCJS: "+warnings.slice(0,2).join(" · "),true);
       else showStatus(tabOptions.message||tabWarning);
@@ -417,6 +420,10 @@ ABCWidget.prototype.draw=function(){
   host.appendChild(score);host.appendChild(audio);host.appendChild(quickSettings);host.appendChild(settingsPanel);host.appendChild(learn);
   self._pager=PageView.mount(score,{wiki:self.wiki,state:self._viewState,title:self.title,audio:true,transport:function(){return audioControls;},onDesk:function(){floatingPiano.hide();},
     onMixer:function(anchor){var mini=ensureFullMiniMixer();if(mini)mini.show({anchor:anchor,floating:true});}});
+  // One shared musician view for stand-alone ABC scores and embedded notation.
+  // Switching it changes only CSS/controls; it never recreates the score or player.
+  self._reader=ReaderMode.mount({host:host,paper:score,actions:actions,title:self.title,
+   pager:function(){return self._pager;},state:self._readerState});
   self._instrumentViewControls=InstrumentView.mount(instrumentBar,{wiki:self.wiki,onChange:function(){
    if(!ABC)return;
    var restore=ViewportAnchor.capture(score,visual,host);
