@@ -31,6 +31,7 @@ function Reader(options){
  this.doc=this.host.ownerDocument;this.win=this.doc.defaultView;
  this.book=this.host.closest(".huwrep-book");
  this.mode="vis";this.controlsOpen=false;this.fitMode="fit";this.active=false;
+ try{var remembered=this.win.localStorage.getItem("huwabc-reader-fit-mode");if(["fit","width","original"].includes(remembered))this.fitMode=remembered;}catch(_ignored){}
  this.cleanup=[];this._touch=null;
  this.create();
  // Repertoire already owns a reading preference. Show the same selected mode
@@ -56,7 +57,7 @@ Reader.prototype.create=function(){
  var toolbar=node(doc,"div","huwabc-reader-toolbar");
  toolbar.setAttribute("role","toolbar");toolbar.setAttribute("aria-label","Nodevisning");
  this.toolbar=toolbar;
- this.menu=action(doc,"☰","huwabc-reader-menu",function(){self.controlsOpen=!self.controlsOpen;self.sync();});
+ this.menu=action(doc,"☰","huwabc-reader-menu",function(){self.controlsOpen=!self.controlsOpen;if(self.controlsOpen&&self.book){var list=self.book.querySelector(".huwrep-book-list");if(list)list.hidden=true;}self.sync();});
  this.menu.setAttribute("aria-label","Vis eller skjul nodemenu");
  toolbar.appendChild(this.menu);
  // In a setlist, keep the familiar searchable number drawer accessible
@@ -66,6 +67,7 @@ Reader.prototype.create=function(){
    var list=self.book.querySelector(".huwrep-book-list");
    if(!list)return;
    list.hidden=!list.hidden;
+   if(!list.hidden){self.controlsOpen=false;self.sync();}
    var existing=self.book.querySelector(".huwrep-book-header button[aria-expanded]");
    if(existing)existing.setAttribute("aria-expanded",String(!list.hidden));
   });
@@ -100,8 +102,8 @@ Reader.prototype.create=function(){
  fitField.appendChild(node(doc,"span","","Størrelse"));
  this.fitChoice=node(doc,"select","huwabc-reader-fit-choice");
  [["fit","Tilpas skærm"],["width","Fyld bredden"],["original","Original størrelse"]].forEach(function(pair){var o=node(doc,"option","",pair[1]);o.value=pair[0];self.fitChoice.appendChild(o);});
- this.fitChoice.value="fit";
- this.listen(this.fitChoice,"change",function(){self.fitMode=self.fitChoice.value;self.updateScale();});
+ this.fitChoice.value=this.fitMode;
+ this.listen(this.fitChoice,"change",function(){self.fitMode=self.fitChoice.value;try{self.win.localStorage.setItem("huwabc-reader-fit-mode",self.fitMode);}catch(_ignored){}self.updateScale();});
  fitField.appendChild(this.fitChoice);options.appendChild(fitField);
  options.appendChild(action(doc,"Luk visning","huwabc-reader-close",function(){self.exit();}));
  this.panel.appendChild(options);
@@ -142,7 +144,7 @@ Reader.prototype.create=function(){
 Reader.prototype.enter=function(state){
  if(state){this.mode=state.mode==="practice"?"practice":"vis";this.fitMode=["fit","width","original"].includes(state.fitMode)?state.fitMode:(state.fill?"width":"fit");this.controlsOpen=!!state.controlsOpen;}
  else {this.mode="vis";this.controlsOpen=false;}
- this.active=true;this.fitChoice.value=this.fitMode;this.sync();this.applyPages();this.update();this.updateScale();
+ this.active=true;this.fitChoice.value=this.fitMode;if(this.book){var list=this.book.querySelector(".huwrep-book-list");if(list)list.hidden=true;}this.sync();this.applyPages();this.update();this.updateScale();
  if(this.win)this.win.dispatchEvent(new this.win.Event("resize"));
 };
 Reader.prototype.exit=function(){
