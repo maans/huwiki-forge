@@ -10,7 +10,9 @@
     "build:forgeshare": "node scripts/build-forgeshare.mjs",
     "check:forgeshare": "node scripts/build-forgeshare.mjs --check",
     "build:video": "node scripts/build-animus-video-export.mjs",
-    "check:video": "node scripts/build-animus-video-export.mjs --check"
+    "check:video": "node scripts/build-animus-video-export.mjs --check",
+    "build:repertoire": "node scripts/build-repertoire.mjs",
+    "check:repertoire": "node scripts/build-repertoire.mjs --check"
   },
   "engines": {
     "node": ">=20"

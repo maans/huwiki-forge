@@ -5,7 +5,22 @@ on:
     paths:
       - 'plugins/repertoire/dist/plugin.json'
       - 'plugins/repertoire/src/**'
-      - 'tests/repertoire-edition.test.mjs'
+      - 'tests/repertoire*.test.mjs'
+      - 'scripts/build-repertoire.mjs'
+      - 'package.json'
+      - 'scripts/repertoire-browser-smoke.mjs'
+      - 'editions/silva-ethno-repertoire/manifest.json'
+      - 'editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json'
+      - 'editions/silva-ethno-repertoire/tiddlers/config.json'
+      - 'scripts/assemble-silba-etno-repertoire.mjs'
+      - '.github/workflows/build-repertoire-demo.yml'
+  pull_request:
+    paths:
+      - 'plugins/repertoire/dist/plugin.json'
+      - 'plugins/repertoire/src/**'
+      - 'tests/repertoire*.test.mjs'
+      - 'scripts/build-repertoire.mjs'
+      - 'package.json'
       - 'scripts/repertoire-browser-smoke.mjs'
       - 'editions/silva-ethno-repertoire/manifest.json'
       - 'editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json'
@@ -16,23 +31,25 @@ on:
 permissions:
   contents: write
 concurrency:
-  group: repertoire-editable-demo-main
+  group: repertoire-editable-demo-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: false
 jobs:
   build:
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'pull_request' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: main
+          ref: ${{ github.event_name == 'pull_request' && github.sha || 'main' }}
           persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Verify orchestra, setlist and iPad book navigation
-        run: node --test tests/repertoire-edition.test.mjs
+      - name: Verify packaged Repertoire source and stylesheet
+        run: node scripts/build-repertoire.mjs --check
+      - name: Verify library, orchestra, setlist and iPad book navigation
+        run: node --test tests/repertoire*.test.mjs
       - name: Assemble interactive Repertoire demo with original ABC scores
         run: node scripts/assemble-silba-etno-repertoire.mjs
       - name: Install browser controller for iPad reader acceptance
@@ -41,6 +58,13 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/repertoire-browser-smoke.mjs
+      - name: Save responsive Repertoire screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: repertoire-browser-screenshots-${{ github.run_id }}
+          path: test-results/repertoire/
+          if-no-files-found: ignore
       - name: Verify actual published HTML includes Nodebog and 17 scores
         run: |
           node --input-type=module -e "
@@ -64,6 +88,7 @@ jobs:
           "
           git diff --check
       - name: Commit editable demo HTML to the existing Forge Pages directory
+        if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/main'
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'

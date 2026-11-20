@@ -1,0 +1,100 @@
+.huwrep{max-width:1040px;margin:0 auto;line-height:1.5}
+.huwrep h2{margin:0 0 .4rem}.huwrep h3{margin:.1rem 0 .5rem}
+.huwrep-muted{color:#607078;font-size:.9em}.huwrep-status{padding:.6rem .75rem;border-left:3px solid #13745f;background:#edf8f2}
+.huwrep-controls,.huwrep-inline,.huwrep-form{display:flex;gap:.6rem;flex-wrap:wrap;align-items:end;margin:.6rem 0}
+.huwrep-controls{padding:.75rem;border:1px solid #c9d7d1;border-radius:.6rem}
+.huwrep-panel{padding:1rem;margin:1rem 0;border:1px solid #cfddd8;border-radius:.7rem}
+.huwrep-stand{border-color:#8cac9d;background:rgba(134,181,151,.08)}
+.huwrep-field{display:flex;flex:1 1 170px;flex-direction:column;gap:.3rem;min-width:0;font-size:.92em;font-weight:600}
+.huwrep-input{width:100%;min-width:0;padding:.5rem .6rem;border:1px solid #9baea8;border-radius:.4rem;font:inherit;color:inherit;background:var(--tc-background-color,#fff)}
+.huwrep-button{padding:.4rem .6rem;border:1px solid #a9bcb5;background:transparent;color:inherit;border-radius:.4rem;cursor:pointer;font:inherit}
+.huwrep-button:hover,.huwrep-button:focus-visible{border-color:#167356;outline-offset:2px}
+.huwrep-button:disabled{opacity:.4;cursor:not-allowed}
+.huwrep-primary{background:#175f4d;color:white;border-color:#175f4d}
+.huwrep-link{text-align:left;border:0;text-decoration:underline;background:transparent}
+.huwrep-item{display:flex;align-items:center;gap:.45rem;flex-wrap:wrap;padding:.35rem .2rem;border-bottom:1px solid #d8e4de}
+.huwrep-list{padding-left:1.7rem;max-height:20rem;overflow:auto}
+.huwrep-selected{background:rgba(26,134,95,.12)}
+.huwrep-form textarea{min-height:5rem;resize:vertical}
+.huwrep .huwrep-controls{align-items:end;background:#f2f7f4;margin:.75rem 0}
+.huwrep-open-book{min-height:42px;white-space:nowrap}
+.huwrep-manage,.huwrep-arrangement{border:1px solid #cfddd8;border-radius:.55rem;padding:.6rem .8rem;margin:.65rem 0}
+.huwrep-manage>summary,.huwrep-arrangement>summary,.huwrep-set-sort>summary{cursor:pointer;min-height:30px;line-height:30px;font-weight:600}
+.huwrep-tabs{display:flex;gap:.35rem;flex-wrap:wrap;margin:1rem 0 .6rem}
+.huwrep-tabs>.huwrep-button{min-height:42px;flex:1 1 160px}
+.huwrep-catalog-controls{display:flex;flex-wrap:wrap;gap:.75rem;align-items:end;margin:.5rem 0}
+.huwrep-catalog-controls>.huwrep-field:first-child{flex:2 1 240px}
+.huwrep-catalog-controls>.huwrep-field{flex:1 1 170px}
+.huwrep-set-sort{position:relative;padding:.25rem .6rem;border:1px solid #b9ccc3;border-radius:.4rem}
+.huwrep-set-sort[open]{flex-basis:100%;display:flex;background:#f4f8f5}
+.huwrep-set-sort .huwrep-field{display:inline-flex;max-width:280px;margin-right:.6rem}
+.huwrep-count{margin:.55rem 0;font-size:.85em}
+.huwrep-table-scroll{overflow:auto;max-height:54vh;overscroll-behavior:contain;border:1px solid #cfddd8;border-radius:.55rem}
+.huwrep .huwrep-table{width:100%;border-collapse:collapse;margin:0;border:0;font-size:.94em;background:var(--tc-background-color,#fff)}
+.huwrep-table th{position:sticky;top:0;z-index:1;background:#eaf2ed;font-size:.83em;text-align:left;white-space:nowrap}
+.huwrep-table td,.huwrep-table th{border:0;border-bottom:1px solid #dae5df;padding:.4rem .55rem;vertical-align:middle}
+.huwrep-table tr:last-child td{border-bottom:0}
+.huwrep-table .huwrep-title-cell{width:100%;min-width:180px}
+.huwrep-title-button{display:inline;padding:.35rem 0;line-height:1.35;font-weight:600;text-decoration:none}
+.huwrep-title-button:hover{text-decoration:underline}
+.huwrep-track-number{display:inline-block;min-width:1.7rem;color:#667b70;font-variant-numeric:tabular-nums}
+.huwrep-key-cell,.huwrep-tempo-cell,.huwrep-type-cell{white-space:nowrap;font-variant-numeric:tabular-nums}
+.huwrep-row-actions{white-space:nowrap;text-align:right}
+.huwrep-row-actions>.huwrep-button{min-width:36px;min-height:38px;margin-left:.2rem}
+.huwrep-added{font-size:.85em;color:#27654b}
+.huwrep-drop-target td{box-shadow:inset 0 3px #247d5a}
+.huwrep-order-hint{font-size:.84em;margin:.55rem 0}
+.huwrep-form-notes{flex-basis:100%}
+.huwrep-empty[hidden]{display:none!important}
+.huwrep-sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+@media(max-width:680px){.huwrep .huwrep-controls>.huwrep-field{flex:1 1 140px}.huwrep-open-book{width:100%}.huwrep-tabs>.huwrep-button{flex-basis:100px;font-size:.87em;padding:.45rem}.huwrep-table td,.huwrep-table th{padding:.3rem .4rem}.huwrep-table .huwrep-title-cell{min-width:145px}.huwrep-row-actions>.huwrep-button{min-width:38px;min-height:42px;padding:.3rem}.huwrep-table-scroll{max-height:55vh}}
+@media(max-width:680px){.huwrep-panel{padding:.65rem}.huwrep-controls{padding:.6rem}.huwrep-field{flex-basis:100%}.huwrep-stand .huwrep-inline>select{flex:1 1 100%}.huwrep-button{min-height:42px}}
+/* Repertoire Nodebog – responsive reader, one ABC score loaded at a time. */
+.huwrep-book{position:relative;display:flex;flex-direction:column;gap:0;min-height:70vh;border:1px solid #c6d9d0;border-radius:10px;overflow:hidden;background:#f6faf7;color:#183c31;font:inherit}
+.huwrep-book-header{position:relative;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #d6e5dc;background:#edf5f0}
+.huwrep-book-header>.huwrep-input{width:auto;flex:1 1 170px;max-width:100%}
+.huwrep-book-heading{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:8px 12px}
+.huwrep-book-heading h2{margin:0;font-size:1.2em;line-height:1.3}
+.huwrep-book-list{margin:0 8px 6px;padding:6px 8px;border:1px solid #d2e3d9;border-radius:7px;background:white}
+.huwrep-book-list>summary{cursor:pointer;min-height:24px}
+.huwrep-book-list-items{display:flex;flex-wrap:wrap;max-height:28vh;overflow:auto;gap:5px;padding:9px 0}
+.huwrep-book-agreement{display:flex;flex-wrap:wrap;gap:8px;padding:6px 12px;font-size:0.9em;background:#e9f2e9}
+.huwrep-book-agreement>span{border-left:2px solid #437a60;padding-left:7px}
+.huwrep-book-form{max-width:100%;white-space:pre-wrap}
+.huwrep-book-stage{display:flex;align-items:flex-start;justify-content:center;min-height:45vh;overflow:auto;background:#e7ece8;position:relative}
+.huwrep-book-score{width:100%;min-width:0}
+.huwrep-book-score .huwabc-page-shell{margin:6px!important;max-width:none}
+.huwrep-book-image{display:block;max-width:100%;max-height:80vh;margin:auto;object-fit:contain}
+.huwrep-book-footer{display:flex;gap:6px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:8px;background:#e9f3ec;border-top:1px solid #cfddd3}
+.huwrep-book-footer>.huwrep-muted{margin:auto}
+.huwrep-book-fullscreen{position:fixed!important;inset:0!important;width:100vw!important;max-width:none!important;height:100dvh!important;min-height:0!important;z-index:10040!important;margin:0!important;border:0!important;border-radius:0!important;overflow:hidden!important}
+.huwrep-book-fullscreen .huwrep-book-stage{flex:1;min-height:0}
+.huwrep-book-fullscreen .huwrep-book-image{max-height:100%}
+.huwrep-book-fullscreen .huwabc-page-shell{margin:0!important}
+@media(max-width:780px){.huwrep-book-header{gap:5px;padding:6px}.huwrep-book-header>.huwrep-input{flex-basis:calc(50% - 8px);min-height:40px}.huwrep-book-heading{padding:6px}.huwrep-book-footer{gap:4px;padding:5px}.huwrep-book-footer>.huwrep-button{flex:1 1 35%;min-height:42px}}
+@media print{.huwrep-book-header,.huwrep-book-list,.huwrep-book-footer{display:none!important}.huwrep-book{overflow:visible;border:0}.huwrep-book-stage{overflow:visible}}
+
+/* Nodebog: discreet floating number drawer rather than a second score view. */
+.huwrep-book-list[hidden]{display:none!important}
+.huwrep-book-list{position:absolute;z-index:60;top:55px;right:8px;width:min(360px,calc(100% - 16px));max-height:min(78vh,740px);overflow:auto;box-sizing:border-box;box-shadow:0 12px 36px #122d2670;background:#fff;border:1px solid #a5c1b5;border-radius:9px;margin:0;padding:10px}
+.huwrep-book-list-heading{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.huwrep-book-list-search{margin-bottom:8px}
+.huwrep-book-list-items{display:flex;flex-direction:column;flex-wrap:nowrap;gap:4px;max-height:min(60vh,600px);overflow:auto;padding:0}
+.huwrep-book-list-items>.huwrep-button{flex:none;min-height:42px;width:100%;white-space:normal;text-align:left}
+.huwrep-book-list-items>.huwrep-button[hidden]{display:none!important}
+.huwrep-book-practice{padding:6px 12px;border-bottom:1px solid #c9dace;background:#f4f8ee}
+.huwrep-book-practice>summary{cursor:pointer;font-weight:650;list-style:revert;min-height:32px}
+.huwrep-book-practice-controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;padding:8px 0}
+.huwrep-book-practice-check{display:flex;align-items:center;gap:5px;min-height:40px}
+.huwrep-book-practice-check input{width:20px;height:20px}
+.huwrep-book-practice-voice{flex:1 1 250px;display:flex;flex-direction:column;gap:4px;font-size:.9em;font-weight:600}
+.huwrep-book-practice-voice .huwrep-input{width:100%}
+.huwrep-book-practice-controls>.huwrep-muted{flex:1 1 100%;margin:2px 0;font-size:.86em}
+@media(max-width:760px){
+ .huwrep-book-list{top:70px;max-height:72vh}
+ .huwrep-book-practice-controls{gap:7px}
+ .huwrep-book-header .huwrep-book-select{max-width:100%}
+}
+
+/* No double music stand: the repertoire book itself owns the immersive stage. */
+.huwrep-book .huwabc-page-desk{display:none!important}

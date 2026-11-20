@@ -97,8 +97,8 @@
     {
       "id": "silva-ethno-repertoire",
       "name": "SilbaÄtno Repertoire",
-      "description": "17 editable ABC scores, interactive setlist Nodebog, metronome and Music Minus One; optional standalone SitePublisher audience view.",
-      "version": "0.1.2-beta.1",
+      "description": "17 editable ABC scores, searchable repertoire and setlists, interactive Nodebog, metronome and Music Minus One.",
+      "version": "0.1.3-beta.1",
       "status": "test",
       "manifest": "../editions/silva-ethno-repertoire/manifest.json",
       "bundledPlugins": [
@@ -108,8 +108,8 @@
       "home": {
         "headingDa": "SilbaÄtno Repertoire",
         "headingEn": "SilbaÄtno Repertoire",
-        "descriptionDa": "Orkestrets 17 ABC-nodeark i en sætliste-nodebog med ensidet/tosidet iPad-visning, nummerpanel, øvetilstand og Music Minus One.",
-        "descriptionEn": "17 editable ABC scores in a setlist music book with iPad one/two-page view, a song drawer, practice mode and Music Minus One.",
+        "descriptionDa": "Søgbart repertoire med 17 ABC-nodeark, sortering og sætlister. Nodebog med ensidet/tosidet iPad-visning, metronom og Music Minus One.",
+        "descriptionEn": "Searchable repertoire with 17 ABC scores, sorting and setlists. A one/two-page iPad music book with metronome and Music Minus One.",
         "noteDa": "Beta · kontrollér notation og gentagelser mod originalpartiturerne.",
         "noteEn": "Beta · check notation and repeats against the source scores.",
         "order": "02.2"
