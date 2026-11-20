@@ -391,6 +391,21 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/repertoire",
+        "type": "application/json",
+        "name": "Repertoire",
+        "description": "Musikbibliotek, orkesterrepertoirer og sætlister — virker også uden ABC",
+        "author": "HUWiki",
+        "version": "0.1.0-beta.1",
+        "plugin-type": "plugin",
+        "stability": "experimental",
+        "license": "MIT",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/repertoire/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/lessons-rhythm",
         "type": "application/json",
         "name": "Rhythm / Rytmik",
