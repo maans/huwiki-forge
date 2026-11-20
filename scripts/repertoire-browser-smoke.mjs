@@ -71,7 +71,7 @@ try{
   "Keyboard reordering keeps the grab handle focused");
  // Pointer dragging is shared by mouse and iPad touch rather than HTML5 drag events.
  const beforeMouse=await order.locator(".huwrep-order-title").first().innerText();
- await order.locator(".huwrep-order-handle").first().scrollIntoViewIfNeeded();
+ await page.evaluate(()=>document.querySelector(".huwrep-order-handle")?.scrollIntoView({block:"center",behavior:"instant"}));
  const grip=await order.locator(".huwrep-order-handle").first().boundingBox();
  const destination=await order.locator(".huwrep-order-row").nth(2).boundingBox();
  await page.mouse.move(grip.x+grip.width/2,grip.y+grip.height/2);
@@ -81,7 +81,7 @@ try{
  await page.waitForFunction(text=>document.querySelector(".huwrep-order-title")?.textContent!==text,beforeMouse);
  // A Chrome touch stream exercises the iPad pathway and the same order persistence.
  const beforeTouch=await order.locator(".huwrep-order-title").first().innerText();
- await order.locator(".huwrep-order-handle").first().scrollIntoViewIfNeeded();
+ await page.evaluate(()=>document.querySelector(".huwrep-order-handle")?.scrollIntoView({block:"center",behavior:"instant"}));
  const tg=await order.locator(".huwrep-order-handle").first().boundingBox();
  const dest=await order.locator(".huwrep-order-row").nth(2).boundingBox();
  const cdp=await context.newCDPSession(page);
