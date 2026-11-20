@@ -31,9 +31,9 @@ try{
  await book.waitFor();
  await page.waitForFunction(()=>!!document.querySelector(".huwrep-book .huwabc-page-select"),
   undefined,{timeout:90000});
- const dormantReader=book.locator(".huwabc-reader-toolbar").first();
- await dormantReader.waitFor({state:"hidden"});
- assert.equal(await dormantReader.isVisible(),false,"The ABC reader must not cover repertoire navigation before activation");
+ const musicianReader=book.locator(".huwabc-reader-toolbar").first();
+ await musicianReader.waitFor({state:"visible",timeout:20000});
+ assert.equal(await musicianReader.isVisible(),true,"The book must open directly on the notation-first reader");
  assert.ok(await book.evaluate(el=>el.classList.contains("huwrep-book-fullscreen")),
   "The dedicated nodebook should start in full width, without the ordinary StoryList chrome.");
  await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-page-select")?.value==="spread");
@@ -53,6 +53,7 @@ try{
  // The practice panel is a floating overlay only when the musician chooses Øv.
  await book.locator(".huwabc-reader-menu").click();
  await book.locator(".huwabc-reader-modes button").nth(1).click();
+ await book.locator(".huwabc-reader-menu").click();
  const practice=book.locator(".huwrep-book-practice");
  await practice.locator("summary").click();
  await practice.locator("input[type=checkbox]").first().check();
