@@ -113,11 +113,11 @@
     "graph": {
       "da": {
         "name": "Graph Edition (beta)",
-        "description": "Videnskort med to originale grafknapper og små redigeringspaneler, som kun vises ved behov."
+        "description": "Videnskort med enkle nodeværktøjer og valgfrie egne billeder eller SVG-tegninger."
       },
       "en": {
         "name": "Graph Edition (beta)",
-        "description": "Knowledge maps with two original graph buttons and small contextual editors, hidden by default."
+        "description": "Knowledge maps with simple node tools and optional uploaded pictures or SVG drawings."
       }
     }
   },
@@ -505,11 +505,11 @@
     "$:/plugins/huwiki/graph-studio": {
       "da": {
         "name": "Graph Studio (Forge)",
-        "description": "Små, touch-venlige paneler via de originale Add Node/Add Edge-knapper og klik på noder. Fuld grafplads."
+        "description": "Små kontekstpaneler, upload af egne billeder, valg af eksisterende billedtiddlere og enkel SVG-tegning. Virker offline."
       },
       "en": {
         "name": "Graph Studio (Forge)",
-        "description": "Contextual touch-friendly node, edge and appearance panels triggered by native Graph buttons and node selection."
+        "description": "Small context panels with local image upload, existing TiddlyWiki images and simple SVG sketching; offline."
       }
     },
     "$:/plugins/huwiki/animus-video-export": {

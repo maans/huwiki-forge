@@ -39,3 +39,9 @@ The first direct-edit Graph Studio controls are tested in offline Chromium on Da
 ## Version 0.2.1-beta.1: contextual editing
 
 The original Vis-Network **Add Node** and **Add Edge** toolbar buttons are visible within each graph. Graph Studio listens in the Vis-Network `vis-property` lifecycle and opens the relevant **single, compact editor panel within the graph stage**. Clicking a node opens only its appearance editor. Closing or submitting hides the panel, preserving the full graph height. The original graph/Vis-Network packages are unchanged.
+
+## Version 0.2.2-beta.1: optional node pictures
+
+In the compact contextual Appearance editor, users can **select any ordinary image tiddler** in the wiki (including SVG drawings exported from other drawing tools), **upload a new image** or choose **Draw / Tegn selv** for a small built-in pointer/touch SVG sketchpad. The upload accepts PNG, JPEG, GIF, WebP and simple SVG files, with a 5 MB input limit. Uploaded bitmap data is stored as base64 in an ordinary image tiddler; SVG files and simple line drawings are stored as editable SVG image tiddlers. Every imported or drawn image is locally embedded in the single-file wiki, never linked to an external URL, and may be reused by other nodes. The drawing interface is hidden until requested, with Clear and Use drawing actions; the graph itself is not resized.
+
+Imported image tiddlers are reusable in other Forge Editions as TiddlyWiki assets. For complex drawings created in Tegne/Excalidraw, first export the drawing as SVG or PNG, then import it into Graph Studio; raw Excalidraw JSON scenes are not native graph images. Saving the wiki with TiddlyWiki's Save button retains the media; the public Forge demo does not store private uploads server-side.
