@@ -36,6 +36,18 @@ function publicationLabel(title){var t=$tw.wiki.getTiddler(title),fields=t&&t.fi
  return title;
 }
 function isRepertoireOverview(title){return title.indexOf("$:/temp/huwiki/repertoire/publication/")===0&&/\/summary$/.test(title);}
+function repertoirePublication(entries){
+ var overview=entries.find(function(e){return isRepertoireOverview(e.title);});
+ if(!overview)return null;
+ var t=$tw.wiki.getTiddler(overview.title),f=t&&t.fields||{},agreements={};
+ try{agreements=JSON.parse(f["repertoire-publication-agreements"]||"{}");}catch(_){agreements={};}
+ if(!agreements||typeof agreements!=="object"||Array.isArray(agreements))agreements={};
+ return {index:entries.indexOf(overview),orchestra:f["repertoire-publication-orchestra"]||"",agreements:agreements};
+}
+function repertoireLabel(title,orchestra){
+ var prefix=String(orchestra||"").trim()+" · ";
+ return orchestra&&title.indexOf(prefix)===0?title.slice(prefix.length):publicationLabel(title);
+}
 function listField(title){var t=$tw.wiki.getTiddler(title);return t?(typeof t.getFieldList==="function"?t.getFieldList("list"):namesOf(t.fields.list)):[];}
 function sourceList(title){
  var t=$tw.wiki.getTiddler(title),names=listField(title);if(!t)return unique(names);
@@ -742,6 +754,18 @@ function siteRuntime(){
   toggleControls();
  });
  function name(entry){return entry.label||entry.title;}
+ function renderRepertoireAgreement(item){
+  var notes=$("husp-repertoire-agreements"),main=frame.parentElement,fields=item.kind==="score"?item.agreement:null;
+  var present=fields&&["key","tempo","form","instrumentation","cues"].some(function(k){return String(fields[k]||"").trim();});
+  notes.hidden=!present;main.classList.toggle("husp-has-agreements",!!present);
+  if(!present){notes.textContent="";return;}
+  function line(label,value){return value?'<p><strong>'+escapeHtml(label)+':</strong> '+escapeHtml(value)+'</p>':"";}
+  notes.innerHTML='<h2>'+wl("Aftaler","Agreements")+'</h2>'+
+   line(wl("Klingende toneart","Concert key"),fields.key)+line("Tempo",fields.tempo)+
+   line(wl("Form","Form"),fields.form)+line(wl("Instrumentering","Instrumentation"),fields.instrumentation)+
+   line(wl("Indsatser og tegn","Cues"),fields.cues);
+  main.scrollTop=0;
+ }
  function show(i){
   if(i<0||i>=DATA.entries.length||i===currentIndex)return;
   if(window.HUWikiAniMusSite)window.HUWikiAniMusSite.dispose(article);
@@ -750,6 +774,7 @@ function siteRuntime(){
   document.querySelectorAll(".chapter").forEach(function(n,j){n.classList.toggle("selected",j===i);n.setAttribute("aria-current",j===i?"page":"false");});
   if(!pinned||focused)setMenu(false);
   $("current-title").textContent=name(item);
+  renderRepertoireAgreement(item);
   if(frame.contentWindow)try{frame.contentWindow.postMessage({type:"huwiki-sitepublisher-stop"},"*");}catch(_){}
   if(item.kind==="score"&&DATA.playerTemplate){
    article.hidden=true;frame.hidden=false;
@@ -865,7 +890,10 @@ function makeSite(entries,opts){
  }
  var publicationContext={rows:{},used:false,drawings:false,animus:false};
  var awaitingDrawings=[];
- var items=entries.map(function(e){var title=e.title;if(hasAbc(title)){var score=scoreMod.data($tw.wiki,title,{siteHeading:opts.title,showSiteHeading:false,startDesk:opts.startDesk});score.instrumentId=opts.instrumentId||"c";return {title:title,label:title,kind:"score",data:score};}
+ var repertoire=repertoirePublication(entries);
+ var items=entries.map(function(e){var title=e.title;if(hasAbc(title)){var score=scoreMod.data($tw.wiki,title,{siteHeading:opts.title,showSiteHeading:false,startDesk:opts.startDesk});score.instrumentId=opts.instrumentId||"c";
+  return {title:title,label:repertoire?repertoireLabel(title,repertoire.orchestra):title,kind:"score",data:score,
+   agreement:repertoire&&repertoire.agreements[title]||null};}
   try{var presentation=animusPresentation(title,opts.lang||wikiLanguage());return {title:title,label:presentation?presentation.title:((($tw.wiki.getTiddler(title)||{}).fields||{}).caption||title),kind:presentation?"animus":"article",presentation:presentation,programHtml:presentation?animusProgramHtml(presentation,opts.lang||wikiLanguage()):"",html:embeddedArticle(title,opts.lang||wikiLanguage(),publicationContext)};}
   catch(error){if(error.siteDrawingPending){awaitingDrawings.push(error);return {title:title,label:title,kind:"article",html:""};}throw error;}
  });
@@ -875,7 +903,7 @@ function makeSite(entries,opts){
  var unit=productionsOnly?word("forestillinger"):navLabel===word("Repertoire")?word("numre"):navLabel===word("Artikler")?word("artikler"):word("elementer");
  var animus=animusBundle(publicationContext);
  var startView=productionsOnly?(opts.startView==="program"?"program":opts.startView==="performance"?"performance":items.length===1?"performance":"program"):"entry";
- var payload={presentation:productionsOnly?"animus":"standard",startView:startView,animusConfig:animus.config,layout:layout,lang:opts.lang||wikiLanguage(),siteTitle:opts.title||(productionsOnly&&items.length===1?items[0].label:$tw.wiki.getTiddlerText("$:/SiteTitle"))||word("Mit TiddlyWiki-site"),showTitle:opts.showTitle!==false,startDesk:opts.startDesk!==false,entries:items,playerTemplate:template,cutoutRows:publicationContext.used?publicationContext.rows:null};
+ var payload={presentation:productionsOnly?"animus":"standard",startView:startView,animusConfig:animus.config,layout:layout,lang:opts.lang||wikiLanguage(),siteTitle:opts.title||(productionsOnly&&items.length===1?items[0].label:$tw.wiki.getTiddlerText("$:/SiteTitle"))||word("Mit TiddlyWiki-site"),showTitle:opts.showTitle!==false,startDesk:opts.startDesk!==false,entries:items,repertoire:repertoire?{index:repertoire.index}:null,playerTemplate:template,cutoutRows:publicationContext.used?publicationContext.rows:null};
  var json=JSON.stringify(payload).replace(/</g,"\\u003c").replace(/\u2028/g,"\\u2028").replace(/\u2029/g,"\\u2029");
  var css=':root{--ink:#173f32;--line:#d9e8df;--sea:#146e5b;--background:#f0f7f2;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:var(--ink);background:var(--background)}*{box-sizing:border-box}body{margin:0}.top{position:sticky;top:0;z-index:60;display:flex;align-items:center;gap:12px;min-height:64px;padding:10px 18px;border-bottom:1px solid var(--line);background:#fff}.hamb{border:1px solid var(--line);border-radius:9px;background:#f8fcf9;padding:8px 12px;font-weight:700;color:var(--sea);cursor:pointer;display:inline-flex;align-items:center;gap:6px}.booktitle{font-size:17px;font-weight:750}.now{color:#6a8276;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.layout{display:block;position:relative}nav{position:fixed;top:calc(64px + 8px);left:12px;z-index:90;width:min(350px,calc(100vw - 24px));height:max-content;max-height:min(72dvh,650px);overflow-y:auto;background:#f9fcf9;border:1px solid var(--line);border-radius:13px;padding:12px 10px;box-shadow:0 15px 34px #0a30202b;transform:translateX(calc(-100% - 30px));opacity:0;visibility:hidden;pointer-events:none;transition:transform .2s ease,opacity .2s ease,visibility .2s}nav.open{transform:translateX(0);opacity:1;visibility:visible;pointer-events:auto}nav h2{font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#648074;padding:0 12px;margin:10px 0 14px}nav button.chapter{width:100%;display:block;text-align:left;border:0;background:transparent;border-radius:9px;padding:11px 12px;font-size:14px;line-height:1.4;color:var(--ink);cursor:pointer}nav button.chapter:hover{background:#e6f3ea}nav button.chapter.selected{background:#d7f0e3;font-weight:750;color:#145946}main{height:calc(100dvh - 64px);min-width:0;overflow:hidden;background:var(--background)}#score-frame{height:100%;width:100%;border:0;background:#fff}#article-view{height:100%;overflow:auto;max-width:1050px;margin:auto;padding:clamp(18px,4vw,42px);background:white}#article-view h1{margin:0 0 22px;font-size:clamp(25px,3vw,36px)}.prose{font-size:16px;line-height:1.7}.prose p{margin:0 0 16px}.prose img,.prose svg{max-width:100%;height:auto}.husp-excerpt{border:1px solid #dce9df;background:#f9fcfa;border-radius:12px;padding:12px;margin:18px 0;overflow:auto}.husp-excerpt figcaption{font-size:12px;color:#4a7162;font-weight:650;margin-bottom:10px}.husp-excerpt svg{display:block;width:100%;max-width:900px!important;height:auto}.husp-excerpt-missing{font-size:13px;color:#9d5b26}.prose table{border-collapse:collapse;max-width:100%}.prose td,.prose th{border:1px solid #dce7df;padding:7px}.prose a{color:#08785e}.empty{margin:30px;color:#61766b}body.single nav,body.single #nav-toggle{display:none!important}@media(max-width:850px){nav{left:8px;top:calc(64px + 6px);width:min(320px,calc(100vw - 16px));max-height:min(72dvh,600px)}.booktitle{font-size:15px}.now{font-size:12px}}body.husp-index-pinned:not(.husp-focus) .layout{padding-left:min(270px,38vw)}body.husp-index-pinned:not(.husp-focus) nav{left:8px;top:calc(64px + 8px);width:calc(min(270px,38vw) - 16px);transform:none;opacity:1;visibility:visible;pointer-events:auto;box-shadow:none}nav .nav-head{display:flex;align-items:center;justify-content:space-between;gap:5px;padding:0 8px}nav .nav-head h2{margin:8px 0}#nav-pin{border:1px solid var(--line);background:#fff;border-radius:8px;padding:6px 8px;color:var(--sea);font-size:11px;cursor:pointer;white-space:nowrap}#nav-pin[aria-pressed=true]{background:#d7f0e3;border-color:#9bcab3}.top #focus-toggle{margin-left:auto;border:1px solid var(--line);background:#fff;border-radius:8px;padding:7px 10px;font-size:12px;color:var(--sea);font-weight:700;cursor:pointer;white-space:nowrap}body.husp-focus main{height:100dvh}body.husp-focus .layout{padding-left:0!important}body.husp-focus .top{position:fixed;z-index:100;top:0;left:0;right:0;background:#fffffff0;min-height:52px;opacity:0;visibility:hidden;pointer-events:none;transform:translateY(-6px);transition:opacity .18s ease,transform .18s ease,visibility .18s}body.husp-focus.husp-controls-visible .top,body.husp-focus .top:focus-within{opacity:1;visibility:visible;pointer-events:auto;transform:none}body.husp-focus nav{top:58px!important;left:8px!important;width:min(350px,calc(100vw - 16px))!important;transform:translateX(calc(-100% - 30px))!important;opacity:0!important;visibility:hidden!important;pointer-events:none!important;box-shadow:0 15px 34px #0a30202b}body.husp-focus nav.open{transform:translateX(0)!important;opacity:1!important;visibility:visible!important;pointer-events:auto!important}body.husp-focus #article-view{max-width:none;min-height:100dvh}body.single #nav-pin{display:none}body.single #nav-toggle{display:none!important}.husp-focus-exit{display:none;position:fixed;right:max(12px,env(safe-area-inset-right));top:max(12px,env(safe-area-inset-top));z-index:120;min-height:46px;min-width:46px;padding:9px 14px;border:1px solid #abcbbd;border-radius:999px;background:#ffffffed;color:#175b47;box-shadow:0 3px 14px #102e2440;font:700 14px/1.3 system-ui,sans-serif;cursor:pointer;touch-action:manipulation;opacity:.88}body.husp-focus .husp-focus-exit{display:inline-flex;align-items:center;justify-content:center}body.husp-focus.husp-controls-visible .husp-focus-exit{display:none}.husp-focus-exit:focus-visible{outline:3px solid #1e9371;outline-offset:3px}@media(pointer:coarse){.husp-focus-exit{min-height:48px;padding:12px 16px}}@media(prefers-reduced-motion:reduce){nav,.top{transition:none!important}}';
  css+="\n"+animus.css+"\n";
@@ -886,6 +914,7 @@ function makeSite(entries,opts){
   css+="\n"+drawingCss+"\n";
  }
  css+=publicationLayoutCss(layout);
+ css+='\nmain.husp-has-agreements{overflow-y:auto!important}main.husp-has-agreements #score-frame{display:block;height:calc(100dvh - 64px);min-height:360px}#husp-repertoire-agreements{display:block;margin:8px auto 28px;padding:16px 20px;width:min(850px,calc(100% - 24px));border:1px solid #d6e7df;border-radius:10px;background:white;color:#204638;font:14px/1.45 system-ui;white-space:pre-wrap}#husp-repertoire-agreements[hidden]{display:none!important}#husp-repertoire-agreements h2{margin:0 0 8px;font-size:17px}#husp-repertoire-agreements p{margin:4px 0}body.husp-focus #husp-repertoire-agreements{display:none!important}body.husp-focus main.husp-has-agreements{overflow:hidden!important}';
  css+="\n"+programStyles()+"\n";
  var cutoutScript="";
  if(publicationContext.used){
@@ -894,7 +923,7 @@ function makeSite(entries,opts){
   if(!cutoutCss||!cutoutScript)throw publicationMediaError("CutOut","den selvstændige læser mangler / read-only viewer bundle is missing.");
   css+="\n"+cutoutCss+"\n";
  }
- var html='<!doctype html><html lang="'+payload.lang+'"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>'+safe(payload.siteTitle)+'</title><style>'+css+'</style></head><body class="husp-layout-'+safe(layout)+(productionsOnly?' husp-is-animus':'')+'"><header class="top"><button id="nav-toggle" class="hamb" type="button" aria-expanded="false" aria-controls="chapters">☰ '+safe(navLabel)+'</button><strong class="booktitle" '+(payload.showTitle?'':'hidden')+'>'+safe(payload.siteTitle)+'</strong><span class="now" id="current-title"></span><button id="program-toggle" class="hamb" type="button" aria-pressed="false" aria-controls="animus-program" '+(productionsOnly?'':'hidden')+'>'+safe(word("Program"))+'</button><button type="button" id="focus-toggle" aria-pressed="false" title="'+safe(word(productionsOnly?"Fokus: Tryk på et tomt område omkring scenen for at vise/skjule betjeningen":"Fokus: Tryk på et tomt område af nodearket for at vise/skjule betjeningen"))+'">'+safe(word("⛶ Fokus"))+'</button></header><button id="focus-exit" class="husp-focus-exit" type="button" title="'+safe(word("✕ Afslut fokus"))+'" aria-label="'+safe(word("✕ Afslut fokus"))+'">'+safe(word("✕ Afslut fokus"))+'</button><div class="layout"><nav id="chapters" aria-label="'+safe(navLabel)+'" aria-hidden="true"><div class="nav-head"><h2>'+safe(word("Indhold"))+' · '+items.length+' '+safe(unit)+'</h2><button id="nav-pin" type="button" aria-pressed="false" title="'+safe(word("Lad indholdslisten forblive synlig"))+'">'+safe(word("📌 Fastgør"))+'</button></div></nav><main><iframe id="score-frame" title="'+safe(word("Interaktiv nodevisning"))+'" allow="autoplay" sandbox="allow-scripts" hidden></iframe><section id="animus-program" class="husp-program" hidden></section><section id="article-view" hidden></section></main></div><script id="publisher-data" type="application/json">'+json+'</script>'+(cutoutScript?'<script data-huwiki-cutout-reader="1">'+cutoutScript.replace(/<\/script/gi,'<\\/script')+'</script>':'')+(animus.script?'<script type="text/plain" data-huwiki-animus-license="1">'+String(animus.license||'').replace(/<\/script/gi,'<\\/script')+'</script><script data-huwiki-animus-reader="1">'+animus.script.replace(/<\/script/gi,'<\\/script')+'</script>':'')+'<script>('+siteRuntime.toString()+')();</script></body></html>';
+ var html='<!doctype html><html lang="'+payload.lang+'"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><title>'+safe(payload.siteTitle)+'</title><style>'+css+'</style></head><body class="husp-layout-'+safe(layout)+(productionsOnly?' husp-is-animus':'')+'"><header class="top"><button id="nav-toggle" class="hamb" type="button" aria-expanded="false" aria-controls="chapters">☰ '+safe(navLabel)+'</button><strong class="booktitle" '+(payload.showTitle?'':'hidden')+'>'+safe(payload.siteTitle)+'</strong><span class="now" id="current-title"></span><button id="program-toggle" class="hamb" type="button" aria-pressed="false" aria-controls="animus-program" '+(productionsOnly?'':'hidden')+'>'+safe(word("Program"))+'</button><button type="button" id="focus-toggle" aria-pressed="false" title="'+safe(word(productionsOnly?"Fokus: Tryk på et tomt område omkring scenen for at vise/skjule betjeningen":"Fokus: Tryk på et tomt område af nodearket for at vise/skjule betjeningen"))+'">'+safe(word("⛶ Fokus"))+'</button></header><button id="focus-exit" class="husp-focus-exit" type="button" title="'+safe(word("✕ Afslut fokus"))+'" aria-label="'+safe(word("✕ Afslut fokus"))+'">'+safe(word("✕ Afslut fokus"))+'</button><div class="layout"><nav id="chapters" aria-label="'+safe(navLabel)+'" aria-hidden="true"><div class="nav-head"><h2>'+safe(word("Indhold"))+' · '+items.length+' '+safe(unit)+'</h2><button id="nav-pin" type="button" aria-pressed="false" title="'+safe(word("Lad indholdslisten forblive synlig"))+'">'+safe(word("📌 Fastgør"))+'</button></div></nav><main><iframe id="score-frame" title="'+safe(word("Interaktiv nodevisning"))+'" allow="autoplay" sandbox="allow-scripts" hidden></iframe><section id="husp-repertoire-agreements" class="husp-repertoire-agreements" hidden></section><section id="animus-program" class="husp-program" hidden></section><section id="article-view" hidden></section></main></div><script id="publisher-data" type="application/json">'+json+'</script>'+(cutoutScript?'<script data-huwiki-cutout-reader="1">'+cutoutScript.replace(/<\/script/gi,'<\\/script')+'</script>':'')+(animus.script?'<script type="text/plain" data-huwiki-animus-license="1">'+String(animus.license||'').replace(/<\/script/gi,'<\\/script')+'</script><script data-huwiki-animus-reader="1">'+animus.script.replace(/<\/script/gi,'<\\/script')+'</script>':'')+'<script>('+siteRuntime.toString()+')();</script></body></html>';
  return html;
 }
 function siteFileName(name) {
@@ -969,12 +998,13 @@ function openPublisher(title,preset){
   if(!jump())preview.addEventListener("load",jump,{once:true});
  }
  function renderOverview(selected){overview.replaceChildren();overview.classList.toggle("husp-program-overview",animusMode);
+  var repInfo=repertoirePublication(selected);
   selected.forEach(function(e,i){var presentation=animusPresentation(e.title,lang);
    if(presentation){var card=el("article","husp-program-card"),content=el("div");content.innerHTML=animusProgramHtml(presentation,lang);card.appendChild(content);
     var open=el("button","husp-program-open",word("Åbn forestillingen"));open.type="button";open.onclick=function(){openPreviewEntry(i);};card.appendChild(open);overview.appendChild(card);return;
    }
    var repertoireOverview=isRepertoireOverview(e.title),card=el("button","husp-overview-card"),
-     heading=el("strong",null,repertoireOverview?(lang==="da"?"Repertoireoversigt":"Repertoire overview"):publicationLabel(e.title)),
+     heading=el("strong",null,repertoireOverview?(lang==="da"?"Repertoireoversigt":"Repertoire overview"):repInfo?repertoireLabel(e.title,repInfo.orchestra):publicationLabel(e.title)),
      kind=repertoireOverview?word("Repertoire"):hasAbc(e.title)?word("♫ Nodeark"):word("Artikel"),
      hint=el("small",null,repertoireOverview?publicationLabel(e.title):kind+" · "+(i+1)+" / "+selected.length),info=el("p");var text=articleSource(e.title,lang);
    if(repertoireOverview){var count=selected.filter(function(entry){return hasAbc(entry.title);}).length;
@@ -1001,7 +1031,7 @@ function openPublisher(title,preset){
  }
  function invalid(){revision++;exported=null;exportBtn.disabled=true;shareBtn.disabled=true;tell(word("Ændringerne opdateres automatisk …"));if(initialized){clearTimeout(refreshTimer);refreshTimer=setTimeout(prepare,450);}}
  function rowRender(){row.textContent="";updatePresentation();if(!entries.length){row.appendChild(el("p",null,word("Ingen tiddlere fundet. Vælg et andet tag eller en liste.")));return;}
-  entries.forEach(function(item,i){var presentation=animusPresentation(item.title,lang),r=el("div","husp-item"),chk=el("input"),name=el("span","title",presentation?presentation.title:publicationLabel(item.title)),type=el("small",null,presentation?word("Forestilling"):hasAbc(item.title)?word("♫ Noder"):word("Artikel")),up=el("button",null,"↑"),dn=el("button",null,"↓");
+  entries.forEach(function(item,i){var presentation=animusPresentation(item.title,lang),rep=repertoirePublication(entries),r=el("div","husp-item"),chk=el("input"),name=el("span","title",presentation?presentation.title:rep?repertoireLabel(item.title,rep.orchestra):publicationLabel(item.title)),type=el("small",null,presentation?word("Forestilling"):hasAbc(item.title)?word("♫ Noder"):word("Artikel")),up=el("button",null,"↑"),dn=el("button",null,"↓");
    chk.type="checkbox";chk.checked=item.checked;chk.onchange=function(){item.checked=chk.checked;updatePresentation();invalid();};r.append(chk,name,type,up,dn);
    up.disabled=i===0;dn.disabled=i===entries.length-1;up.onclick=function(){if(i>0){var a=entries.splice(i,1)[0];entries.splice(i-1,0,a);rowRender();invalid();}};dn.onclick=function(){if(i<entries.length-1){var a=entries.splice(i,1)[0];entries.splice(i+1,0,a);rowRender();invalid();}};
    r.draggable=true;r.ondragstart=function(e){e.dataTransfer.setData("text/plain",String(i));};r.ondragover=function(e){e.preventDefault();};r.ondrop=function(e){e.preventDefault();var j=Number(e.dataTransfer.getData("text/plain"));if(Number.isInteger(j)&&j!==i&&j>=0&&j<entries.length){var a=entries.splice(j,1)[0];entries.splice(i,0,a);rowRender();invalid();}};row.appendChild(r);

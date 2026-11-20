@@ -169,3 +169,21 @@ test('Repertoire overview cards show readable headings, not internal publication
  const site=audience(h.html);
  assert.equal(site.doc.getElementById('current-title').textContent,'SilbaÄtno · Øverepertoire');
 });
+
+test('repertoire export uses short source labels and shows arrangement below the notation',async()=>{
+ const rows=records(),prefix='$:/temp/huwiki/repertoire/publication/encoded/site/c/',summary=prefix+'summary',list=prefix+'order';
+ rows[summary]={title:summary,caption:'SilbaÄtno · Øverepertoire',
+   'repertoire-publication-orchestra':'SilbaÄtno',
+   'repertoire-publication-agreements':JSON.stringify({Score:{form:'AABB',instrumentation:'Fløjte',cues:'Afslut på tegn'}}),
+   text:'<h1>SilbaÄtno · Øverepertoire</h1>'};
+ rows[list]={title:list,list:[summary,'Score'],text:''};
+ const h=await harness({title:summary,rows,preset:{listTitle:list,siteTitle:'SilbaÄtno · Øverepertoire · C'}});
+ assert.equal(h.data.repertoire.index,0);
+ assert.equal(h.data.entries[1].agreement.form,'AABB');
+ const site=audience(h.html);
+ assert.equal(site.doc.getElementById('husp-repertoire-agreements').hidden,true);
+ site.doc.getElementById('chapters').querySelectorAll('.chapter')[1].click();
+ assert.equal(site.doc.getElementById('husp-repertoire-agreements').hidden,false);
+ assert.match(visibleText(site.doc.getElementById('husp-repertoire-agreements')),/AABB/);
+ assert.match(visibleText(site.doc.getElementById('husp-repertoire-agreements')),/Fløjte/);
+});
