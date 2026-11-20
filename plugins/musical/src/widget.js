@@ -771,7 +771,9 @@ Musical.prototype.render=function(parent,next){
   if(!alive())return;
   var canAudio=!!(ABC.synth&&ABC.synth.supportsAudio&&ABC.synth.supportsAudio());
   ABCObject=ABC;soundReady=canAudio;
-  songs.forEach(function(song){if(!song.clip.muted||(!song.page.hidden&&host.dataset.previewMode!=='stage'))ensureNotation(song);});
+  // Prepare the initially visible guide once for score and export workflows.
+   // Later stage-only seeks skip rendering new guides until a score is opened.
+   songs.forEach(function(song){if(!song.clip.muted||!song.page.hidden)ensureNotation(song);});
   clips=Playlist.reflow(songs.map(function(song){return song.clip;}),self.scoreTitle);
   beatClock=Motion.beatClock(clips,function(title){var tid=self.wiki.getTiddler(title);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
   songs.forEach(function(song,i){song.clip=clips[i];});
