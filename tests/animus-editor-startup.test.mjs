@@ -15,7 +15,7 @@ function deferred(){let resolve;const promise=new Promise(done=>{resolve=done;})
 // renderer makes the user's seek-before-load race deterministic; audio and SVG
 // presentation are controlled here, with browser integration tested separately.
 function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false,recordings=[],viewMode='split',compactViewport=false,repaintOnDispose=false}={}){
- const doc=svgDocument(),load=deferred(),pendingAudio=deferred(),painted=[],frames=new Map(),audios=[];
+ const doc=svgDocument(),load=deferred(),pendingAudio=deferred(),painted=[],frames=new Map(),audios=[],players=[];
  const mediaListeners=new Set(),mediaQuery={matches:compactViewport,addEventListener:(_type,listener)=>mediaListeners.add(listener),removeEventListener:(_type,listener)=>mediaListeners.delete(listener)};
  doc.defaultView.matchMedia=()=>mediaQuery;
  let now=0,nextFrame=0,editorOptions=null,workspaceOptions=null,exportOptions=null,audioPreparations=0,contextRequests=0,registrations=0,notationRenders=0,notationGeometryReads=0;
@@ -40,6 +40,8 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
  Widget.prototype.initialise=function(_tree,options){Object.assign(this,options);this.domNodes=[];};
  Widget.prototype.computeAttributes=()=>({});
  Widget.prototype.getAttribute=(name,fallback)=>name==='scene'?'Film':name==='score'?songs[0].score:fallback;
+ Widget.prototype.removeChildDomNodes=function(){for(const node of this.domNodes)node.remove();this.domNodes=[];};
+ Widget.prototype.refreshSelf=function(){const next=this.domNodes[0]?.nextSibling;this.removeChildDomNodes();this.render(this.parentDomNode,next);};
  function Sound(){ }
  for(const name of ['unlock','sync','seek','pause','quiet','dispose','setClips'])Sound.prototype[name]=function(){};
  Sound.prototype.sync=function(){effectsSynced++;};Sound.prototype.quiet=function(){effectsQuieted++;};
@@ -62,7 +64,7 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
   },
   '$:/plugins/huwiki/abc/loader.js':{load:()=>load.promise},
   '$:/plugins/huwiki/abc/audio-controller.js':{install:()=>controller},
-  '$:/plugins/huwiki/abc/playback.js':{register(){registrations++;},unregister(){},start(){},stopOne(){}},
+  '$:/plugins/huwiki/abc/playback.js':{register(player){registrations++;players.push(player);},unregister(player){for(let i=players.length-1;i>=0;i--)if(players[i]===player)players.splice(i,1);},start(current){for(const player of [...players])if(player!==current&&player.huwikiStop)player.huwikiStop();},stopOne(){}},
   '$:/plugins/huwiki/abc/accompaniment.js':{read:()=>({enabled:false}),prepare(){}},
   '$:/plugins/huwiki/abc/start-position.js':{seek(){}},
   '$:/plugins/huwiki/animus-video-export/runtime.js':{attach(options){exportOptions=options;return {dispose(){}};}},
@@ -87,7 +89,9 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
  const range=widget.host.querySelector('.huw-musical-range'),play=widget.host.querySelector('.huw-musical-play');
  function runFrame(){const queued=[...frames.entries()];frames.clear();for(const [,callback] of queued)callback(now);}
  function flushNotation(){runFrame();runFrame();}
- return {widget,range,play,painted,scene,audios,exportOptions,preview,
+ return {widget,get range(){return widget.host.querySelector('.huw-musical-range');},get play(){return widget.host.querySelector('.huw-musical-play');},painted,scene,audios,exportOptions,preview,players,
+  saveAndReturn(){workspaceOptions.reload();},
+  startScorePreview(player){workspaceOptions.startScorePreview(player);},
   previewChange(changes){Object.assign(preview,changes);editorOptions.onPreviewChange();editorOptions.repaint();},
   seek(time){range.value=String(time);range.dispatch('input');},
   viewMode(mode){widget.host.dataset.previewMode=mode;workspaceOptions.onPreviewModeChange(mode);},
@@ -123,6 +127,62 @@ test('asynchronous notation completion keeps a user seek and the selected score 
  assert.equal(f.widget.host.dataset.cameraTime,'60.00');
  assert.equal(f.widget.host.dataset.activeSong,activeScore);
  assert.match(f.widget.host.querySelector('.huw-musical-time').textContent,/^1:00 \/ 8:01$/);
+});
+
+test('workshop music pauses the parent at its editing position while other players stay exclusive',async()=>{
+ const f=fixture();await f.load();f.seek(60);f.play.click();await f.flush();
+ const parent=f.players[0],preview={};let otherStops=0;
+ f.players.push({huwikiStop(){otherStops++;}},preview);
+ for(let i=0;i<2;i++){
+  f.startScorePreview(preview);
+  assert.equal(Number(f.range.value),60,'both initial Play and the later onStart preserve the show position');
+  assert.equal(f.widget.host.dataset.playing,'false');
+  assert.equal(f.players.filter(player=>player===parent).length,1,'the parent registration is restored exactly once');
+ }
+ assert.equal(otherStops,2);parent.huwikiStop();assert.equal(Number(f.range.value),0,'the restored parent still responds to an ordinary global Stop');f.widget._shutdown();
+});
+
+test('an exclusive-playback failure cannot lose the parent session registration',async()=>{
+ const f=fixture();await f.load();f.seek(60);const parent=f.players[0];
+ f.players.push({huwikiStop(){throw Error('another player failed');}});
+ assert.throws(()=>f.startScorePreview({}),/another player failed/);
+ assert.equal(Number(f.range.value),60);assert.equal(f.players.filter(player=>player===parent).length,1);
+ f.widget._shutdown();assert.equal(f.players.includes(parent),false);
+});
+
+test('saving a score and its queued wiki refresh keep the paused editing position and replace old players',async()=>{
+ const f=fixture({recordings:[recording]});await f.load();f.seek(12);f.play.click();await f.flush();f.advance(1000);
+ const position=Number(f.range.value),oldHost=f.widget.host;
+ assert.equal(f.audios[0].paused,false);
+ f.saveAndReturn();await f.flush();
+ assert.equal(oldHost.isConnected,false,'the normal workshop reload rebuilds the editor');
+ assert.equal(Number(f.range.value),position);assert.equal(f.widget.host.dataset.cameraTime,position.toFixed(2));
+ assert.equal(f.widget.host.dataset.playing,'false');assert.ok(f.audios.every(audio=>audio.paused));
+ assert.equal(f.players.length,1,'rebuilding releases the former playback session');
+ const restoredHost=f.widget.host;
+ assert.equal(f.widget.refresh({[film.musical.songs[0].score]:{modified:true}}),true);
+ await f.flush();
+ assert.equal(restoredHost.isConnected,false,'the saved tiddler may also trigger a later wiki refresh');
+ assert.equal(Number(f.range.value),position);assert.equal(f.widget.host.dataset.cameraTime,position.toFixed(2));
+ assert.equal(f.widget.host.dataset.playing,'false');assert.equal(f.players.length,1);
+ f.advance(1000);assert.equal(Number(f.range.value),position,'saving does not restart the picture clock');f.widget._shutdown();
+});
+
+test('a saved shorter timeline clamps the retained editing position to its new end',async()=>{
+ const f=fixture({songs:[{id:'guide',score:'Score',start:0,duration:80,muted:true}]});await f.load();f.seek(60);
+ f.scene.duration=20;f.scene.musical.songs[0].duration=20;
+ f.saveAndReturn();await f.flush();
+ assert.equal(f.duration,20);assert.equal(Number(f.range.max),20);assert.equal(Number(f.range.value),20);
+ assert.equal(f.widget.host.dataset.cameraTime,'20.00');assert.equal(f.widget.host.dataset.playing,'false');f.widget._shutdown();
+});
+
+test('late score timing after a save clamps a paused position when the performed music is shorter',async()=>{
+ const f=fixture({songs:[{id:'audible',score:'Score',start:0,duration:80,muted:false}],notatedSeconds:12});
+ f.scene.duration=5;f.seek(60);f.saveAndReturn();await f.flush();
+ assert.equal(Number(f.range.value),60,'the authored duration is used until notation arrives');
+ await f.load();
+ assert.equal(f.duration,12);assert.equal(Number(f.range.value),12);assert.equal(f.widget._timeline.value(),12);
+ assert.equal(f.widget.host.dataset.playing,'false');f.widget._shutdown();
 });
 
 test('ordinary audible ABC still sets its performed duration and pending audio preparation does not stop the picture clock',async()=>{

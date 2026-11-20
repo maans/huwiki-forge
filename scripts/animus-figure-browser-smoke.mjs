@@ -63,7 +63,7 @@ async function assertResponsiveControls(){
  const originalViewport=page.viewportSize(),sidebar=await wiki.evaluate(()=>$tw.wiki.getTiddlerText('$:/state/sidebar','yes'));
  try{
   // The sidebar narrows the tiddler while the browser remains wide. This is
-  // the iPad failure that viewport-only media queries did not catch.
+  // the narrow-tiddler clipping that viewport-only media queries did not catch.
   await wiki.evaluate(()=>$tw.wiki.setText('$:/state/sidebar','text',undefined,'yes'));
   for(const viewport of [{width:1366,height:1024},{width:1024,height:768}]){
    await page.setViewportSize(viewport);

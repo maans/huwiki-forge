@@ -1,0 +1,60 @@
+title: Turn Around · AniMus
+type: text/vnd.tiddlywiki
+
+<$list filter="[{$:/language}prefix[$:/languages/da]]" variable="platoLanguage">
+
+<nav class="plato-nav">[[Se forestillingen|Turn Around]][[Åbn i AniMus|Turn Around · AniMus]][[Manuskript|Turn Around · Script]][[Musik|Turn Around · Music]]</nav>
+<p class="plato-page-intro">Denne AI-skabte demonstration er også et redigerbart AniMus-projekt. Vælg en figur, ændr kameraets udsnit, ret en replik, prøv andre noder eller udskift en optagelse. Gem hele wikien, når du vil beholde din version.</p>
+
+</$list>
+<$list filter="[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]" variable="platoLanguage">
+
+<nav class="plato-nav">[[Watch the performance|Turn Around]][[Open in AniMus|Turn Around · AniMus]][[Script|Turn Around · Script]][[Music|Turn Around · Music]]</nav>
+<p class="plato-page-intro">This AI-generated demonstration is also an AniMus project. Select a character, change a shot, edit a line, try a different score, or replace a recording. Save the complete wiki when you want to keep your version.</p>
+
+</$list>
+
+<$plato-studio scene={{!!animus-scene}} score={{!!animus-score}} workshop="animation"/>
+
+<$list filter="[{$:/language}prefix[$:/languages/da]]" variable="platoLanguage">
+
+!! Animér en kropsdel
+
+''Dele og led'' er valgt fra starten. Vælg en synlig arm, et ben eller et hoved for at vise markeringen og åbne figurværkstedet under scenen. Armens og benets dele hænger sammen, så en drejning af den øverste del tager de tilknyttede dele med. Hænder og ansigtets dele kan også vælges hver for sig.
+
+Flyt tidsmarkøren, og flyt eller drej derefter den valgte del. Ændringen vises som et nøglebillede på tidslinjen. Brug ''＋ Nyt nøglebillede'' til at tilføje en pose ved tidsmarkøren, og vælg et punkt for at se dets tidspunkt og værdier. Vælg ''Se forestillingen'' for at se din ændrede scene i filmen.
+
+Når du slipper efter en bevægelse, gemmes ændringen i den åbne wiki. Brug wikiens ''Gem/download'' for at beholde hele det redigerede projekt som en HTML-fil.
+
+!! Prøv en lille ændring
+
+* ''Manuskript'': vælg en replik, ret underteksten, og se den figur, der taler.
+* ''Lydspor'': vælg den tilhørende optagelse, beskær den, flyt den, ændr lydstyrken, eller indtal en erstatning. Hver replik er en selvstændig optagelse.
+* ''Figur'' og ''Dele og led'': sæt forestillingen på pause, og flyt en hånd eller drej et hoved.
+* ''Scener'' og ''Kameraramme'': ændr sceneforløbet eller kameraets udsnit, og se resultatet.
+* ''Musik'': åbn ABC-noderne. Brug værkstedets ''Afspil/Pause'' og ''Stop'' til at høre dine aktuelle nodeændringer, også før du gemmer. Aflytningen virker uafhængigt af forestillingens musikspor. Den eksisterende instrumentaloptagelse findes under ''Lydspor''.
+
+En ændring i manuskriptet eller noderne indspiller ikke automatisk en ny stemme eller erstatter en eksisterende lydoptagelse. Brug optagelse eller import, når du vil udskifte en indspilning.
+
+</$list>
+<$list filter="[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]" variable="platoLanguage">
+
+!! Animate a joint
+
+''Parts and joints'' opens by default. Select a visible arm, leg or head to show its dashed selection frame and open the character workshop below the stage. The arm and leg segments are joined, so rotating an upper segment carries the lower segments with it. Hands and facial features can also be selected separately.
+
+Move the playhead, then move or rotate the selected part. Its pose changes appear as keyframes on the native timeline. Use ''+ Keyframe'' to add a pose at the playhead, and select a point to inspect its time and values. Return to ''Watch the performance'' to see your changed scene in the film.
+
+Committed gestures and keyframes are saved immediately inside the working wiki. Use the wiki’s overall ''Save/download'' control to keep your edited HTML file.
+
+!! Try a small change
+
+* ''Script'': choose a line, change the subtitle and inspect its speaking character.
+* ''Audio tracks'': choose the corresponding recording, trim it, move it, change its volume, or record a replacement. Each spoken line is a separate take.
+* ''Figure'' and ''Parts and joints'': pause on a frame and move a hand or turn a head.
+* ''Scenes'' and ''Camera'': change the pace or framing and watch the result.
+* ''Music'': open the ABC score. Use the workshop’s ''Play/Pause'' and ''Stop'' to hear your current notation changes, even before saving. This preview works independently of the performance’s music track. The existing instrumental recording is available in ''Audio tracks''.
+
+Changing a script or score does not re-record a voice or replace an existing audio take. Use the recording/import controls to supply a new performance.
+
+</$list>

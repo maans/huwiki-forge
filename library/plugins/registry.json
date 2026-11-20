@@ -9,7 +9,7 @@
         "name": "ABC Musik",
         "description": "ABC Musik Edition – tre-fane minimixer med justerbar akkordstørrelse, triolkorrekt markering og TinySynth offline-fallback",
         "author": "HUWiki",
-        "version": "0.3.38-test.6",
+        "version": "0.3.38-test.7",
         "plugin-type": "plugin",
         "stability": "experimental",
         "license": "MIT",
@@ -388,6 +388,21 @@
         "core-version": ">=5.3.0"
       },
       "path": "../../plugins/tegne-react/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/repertoire",
+        "type": "application/json",
+        "name": "Repertoire",
+        "description": "Musikbibliotek, orkesterrepertoirer og sætlister — virker også uden ABC",
+        "author": "HUWiki",
+        "version": "0.1.0-beta.1",
+        "plugin-type": "plugin",
+        "stability": "experimental",
+        "license": "MIT",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/repertoire/dist/plugin.json"
     },
     {
       "fields": {

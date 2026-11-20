@@ -66,7 +66,7 @@ function makeHarness(){
 
 test("the maintained ABC collection search widget is bundled verbatim",()=>{
  assert.equal(modules[moduleTitle].text,source);
- assert.equal(plugin.version,"0.3.38-test.6");
+ assert.equal(plugin.version,"0.3.38-test.7");
 });
 
 test("opening a searched tune gives the score reader TiddlyWiki's document and shows notes",()=>{

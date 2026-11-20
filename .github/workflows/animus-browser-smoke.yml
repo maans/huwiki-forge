@@ -20,6 +20,7 @@ on:
       - scripts/build-site-publisher.mjs
       - scripts/build-turn-around-player.mjs
       - scripts/animus-browser-smoke.mjs
+      - scripts/animus-score-browser-smoke.mjs
       - scripts/animus-face-browser-smoke.mjs
       - scripts/animus-figure-browser-smoke.mjs
       - scripts/animus-object-browser-smoke.mjs
@@ -57,6 +58,7 @@ on:
       - scripts/build-site-publisher.mjs
       - scripts/build-turn-around-player.mjs
       - scripts/animus-browser-smoke.mjs
+      - scripts/animus-score-browser-smoke.mjs
       - scripts/animus-face-browser-smoke.mjs
       - scripts/animus-figure-browser-smoke.mjs
       - scripts/animus-object-browser-smoke.mjs
@@ -114,6 +116,11 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/animus-browser-smoke.mjs
+      - name: Test unsaved music workshop playback and audio cleanup
+        if: ${{ !cancelled() }}
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/animus-score-browser-smoke.mjs
       - name: Test face correction through the ordinary Turn Around demo
         if: ${{ !cancelled() }}
         env:

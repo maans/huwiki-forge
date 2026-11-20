@@ -33,6 +33,8 @@ Open a show and use its toolbar:
 
 Double-click a stage figure to edit its parts, parent joints and pivots. Double-click an animation clip to edit movement. Camera, lighting, curtains and effects remain editable tracks.
 
+The music workshop has its own **Play/Pause** and **Stop** controls. Playback uses the existing ABC sound engine and the current unsaved score draft, independently of the film's music-track mute setting. Editing the draft does not replace the original score or its recording. Closing the workshop stops its preview; **Cancel** discards the draft, while **Save and return** applies it. Previewing, cancelling and saving preserve the paused animation position; if editing shortens the film, the position is clamped to its new duration. Turn Around's navigation and help text above and below the editor follow the wiki's Danish or English language setting.
+
 The SVG editor preserves the part's identity, parent, pivot and existing motion. It stores editable vector data and publishes ordinary CutOut image variants with step keys. It does not add a second copy of the original figure.
 
 Recorded audio is stored as an audio tiddler. The project references the recording with start, source offset, duration, level and mute fields. Temporary blob URLs are not stored in the project. Removing a clip does not delete its source recording.

@@ -54,7 +54,7 @@ Musical.prototype.render=function(parent,next){
  this.parentDomNode=parent;this.computeAttributes();this.execute();
  var self=this,doc=this.document,L=labels(this.wiki);
  var host=node(doc,"section","huw-musical");
- this.host=host;this._dead=false;this._frame=0;this._audio=null;this._pendingSeek=null;this._ownWritten={};this._editor=null;
+ this.host=host;this._dead=false;this._frame=0;this._audio=null;this._pendingSeek=null;this._ownWritten={};this._editor=null;this._timeline=null;
  parent.insertBefore(host,next);this.domNodes.push(host);
  var scene=Engine.readScene(this.wiki,this.sceneTitle);
  if(!scene){node(doc,"p","huw-musical-error",L.missing,host);return;}
@@ -493,7 +493,7 @@ Musical.prototype.render=function(parent,next){
   if(clock.textContent!==clockLabel)clock.textContent=clockLabel;
   host.dataset.cameraTime=visualTime.toFixed(2);
  }
- timeline=new Timeline(duration,paint);
+ this._timeline=timeline=new Timeline(duration,paint);
  function frame(){
   self._frame=0;if(!alive()||!timeline.running)return;
   paint(timeline.value());
@@ -670,6 +670,13 @@ Musical.prototype.render=function(parent,next){
   onPreviewModeChange:function(){if(timeline)showSong(timeline.value());},
   seek:seek,position:function(){return timeline.value();},
   pause:function(){if(timeline.running)pauseAll();},
+  startScorePreview:function(preview){
+   // Preview an unsaved score without resetting this show's editing position.
+   // Keep all other ABC players exclusive; borrow our registration only for
+   // the synchronous stop broadcast, and always restore a still-live session.
+   pauseAll();Playback.unregister(session);
+   try{Playback.start(preview);}finally{if(alive())Playback.register(session);}
+  },
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}
  });
  this._workspace=workspace;
@@ -770,7 +777,7 @@ Musical.prototype.render=function(parent,next){
  }
  // Scene animation and recorded takes are usable before notation finishes.
  // A pending ABC library must never disable their shared Play gesture.
- Playback.register(session);ready=true;play.disabled=false;state.textContent=L.ready;
+ Playback.register(session);ready=true;play.disabled=false;setPlaying(false);state.textContent=L.ready;
  // A long production can contain many muted guide scores. Draw its visible
  // guides after the stage frame, and release them when they leave the view.
  // Audible scores are still prepared up front so their performed lengths are
@@ -822,8 +829,8 @@ Musical.prototype.render=function(parent,next){
   duration=fullDuration();timeline.duration=duration;
   // The editor may already have sought past an opening fade while ABC loaded.
   // Preserve that cursor instead of repainting an unrelated first frame.
-  var position=timeline.value();
-  time.max=String(duration);showSong(position);paint(position);
+  var position=Math.max(0,Math.min(duration,timeline.value()));
+  time.max=String(duration);timeline.seek(position);
   // The notes and visual master clock are ready before samples finish loading.
   // Audio remains optional; no missing SoundFont can block the theatre.
   state.textContent=canAudio||!clips.some(audibleClip)?L.ready:L.noAudio;
@@ -839,6 +846,13 @@ Musical.prototype.render=function(parent,next){
 Musical.prototype.removeChildDomNodes=function(){
  if(this._shutdown)this._shutdown();
  Widget.prototype.removeChildDomNodes.call(this);
+};
+Musical.prototype.refreshSelf=function(){
+ // Saving music can trigger both the workshop reload and a wiki refresh.
+ // Retain this editor's cursor across either rebuild, without restarting sound.
+ var sceneTitle=this.sceneTitle,scoreTitle=this.scoreTitle,position=this._timeline?this._timeline.value():null;
+ Widget.prototype.refreshSelf.call(this);
+ if(Number.isFinite(position)&&this._timeline&&this.sceneTitle===sceneTitle&&this.scoreTitle===scoreTitle)this._timeline.seek(position);
 };
 Musical.prototype.refresh=function(changed){
  var attributes=this.computeAttributes();
