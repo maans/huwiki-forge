@@ -88,6 +88,25 @@ function attach(o){
  tracks.push({id:"camera-A",kind:"camera",name:L.cameraA},{id:"camera-B",kind:"camera",name:L.cameraB},{id:"cuts",kind:"cut",name:L.cuts});
  tracks=tracks.filter(function(t){return t.kind!=='part'||!!sceneForPart(t.part,o.view,0);});
  var map={};tracks.forEach(function(t){map[t.id]=t;});
+ // Facial choices belong to the performance clock so the same character
+ // keeps learned speech shapes when it reappears in another source scene.
+ var faceApi=null,faceUndo=[];
+ function facial(){
+  if(faceApi&&typeof faceApi.sync.faceContext==='function')return faceApi;
+  try{faceApi={model:require('$:/plugins/huwiki/musical/face.js'),sync:require('$:/plugins/huwiki/musical/lipsync.js')};}
+  catch(_unavailable){return null;}
+  return faceApi&&typeof faceApi.sync.faceContext==='function'?faceApi:null;
+ }
+ function ensureFaceTrack(context){
+  var id='face:'+context.actorId,t=map[id];
+  if(!t){t={id:id,kind:'face',actorId:context.actorId,part:context.headId||context.actorId,name:(L===translations.da?'Ansigt · ':'Face · ')+(context.label||context.actorId)};map[id]=t;tracks.splice(Math.max(0,tracks.length-3),0,t);}
+  if(context.headId)t.part=context.headId;
+  return t;
+ }
+ (m.faceKeys||[]).forEach(function(k){if(!k||!k.actor||map['face:'+k.actor])return;
+  var scene=sceneForPart(k.actor,o.view,0),api=facial(),context=api&&scene&&api.model.resolve(scene,k.actor);
+  ensureFaceTrack(context||{actorId:k.actor,label:k.actor});
+ });
  m.animationClips.forEach(function(c){map["accent:"+c.id]={id:"accent:"+c.id,kind:"accent",clipId:c.id,name:(c.name||c.id)+" · solo"};});
  function audioTrack(t){return ["song","song-lane","audio","audio-lane","sfx"].indexOf(t.kind)>=0;}
  function setPreviewEnabled(id,enabled){
@@ -198,7 +217,7 @@ function attach(o){
   if(t.kind==="motion"||t.kind==="accent")return animation(t);
   if(t.id==="camera-A")return film.camera;if(t.id==="camera-B")return m.cameraB;
   if(t.kind==="light")return m.lighting;if(t.kind==="cut"||t.kind==="sfx")return m;return null;}
- function keys(t){var v=target(t);if(!v)return [];
+ function keys(t){if(t.kind==='face')return (m.faceKeys||[]).filter(function(k){return k.actor===t.actorId;}).sort(function(a,b){return a.t-b.t;});var v=target(t);if(!v)return [];
   if(t.kind==="motion")return (v.motion||{})[t.part]||[];
   if(t.kind==="accent")return v.accents||(v.accents=[]);
   if(t.kind==="animation")return [];
@@ -302,6 +321,7 @@ function attach(o){
   });
  }
  function save(t){var isPart=t.kind==="part",partScene=isPart&&(sceneForPart(t.part,o.view,0)||source),name=isPart?(partScene&&partScene._title||o.stageTitle):o.sceneTitle,value=isPart?partScene:film,old=o.wiki.getTiddler(name);if(!old||!value)return;
+  if(t.kind==='face'&&Array.isArray(m.faceKeys))m.faceKeys.sort(function(a,b){return a.t-b.t;});
   var json=JSON.stringify(value);o.markOwnWrite(name,json);o.wiki.addTiddler(new $tw.Tiddler(old,{title:name,text:json}));status.textContent=L.saved;
   if(t.kind==='audio'&&o.onAudioChange)o.onAudioChange(m.audioClips);
  }
@@ -310,7 +330,77 @@ function attach(o){
   if(t.kind==="motion"||t.kind==="accent")expandedClipId="animation:"+t.clipId;
   draw();if(o.onSelect)o.onSelect(track());}
  function selected(){return track().kind==="captions"?captionCues[choice.key]:track().kind==="song"?m.songs[track().index]:track().kind==='audio'?m.audioClips[track().index]:track().kind==="animation"?animation(track()):keys(track())[choice.key];}
+ function faceContext(id){
+  var api=facial(),located=id&&partContext(id,o.view,playhead,[],true,0);
+  if(!api||!located||!located.active)return null;
+  var scene=located.view.scene,context=api.sync.faceContext(located.view,id,located.time,playhead,{film:film,sceneTitle:scene._title||o.stageTitle,audioClips:m.audioClips});
+  if(!context)return null;
+  context.view=located.view;context.scene=scene;context.localTime=located.time;context.time=playhead;
+  var matching=captionCues.filter(function(cue){return cue.sceneTitle===scene._title&&(!context.cueId||cue.partId===context.cueId)&&cue.part&&cue.part.lipSync&&cue.part.lipSync.target===context.actorId;});
+  matching.sort(function(a,b){
+   function distance(cue){return playhead>=cue.start&&playhead<cue.end?0:Math.min(Math.abs(cue.start-playhead),Math.abs(cue.end-playhead));}
+   return distance(a)-distance(b);
+  });
+  var cue=matching[0];if(cue)context.cue={text:String(cue.part.text||cue.text||''),partId:cue.partId,sceneTitle:cue.sceneTitle,time:cue.start,start:cue.start,end:cue.end,active:playhead>=cue.start&&playhead<cue.end};
+  return context;
+ }
+ function rememberFace(){faceUndo.push(Model.clone(m.faceKeys||[]));if(faceUndo.length>30)faceUndo.shift();}
+ function writeFace(actorId,time,patch,t){
+  var api=facial();if(!api)return false;
+  var prior=m.faceKeys||[],next=api.model.withKey(prior,actorId,lim(time,0,axisDuration()),patch);
+  if(JSON.stringify(next)===JSON.stringify(prior))return true;
+  rememberFace();m.faceKeys=next;
+  t=t||ensureFaceTrack(faceContext(actorId)||{actorId:actorId});
+  var list=keys(t),index=0;list.forEach(function(k,i){if(Math.abs(k.t-time)<.025)index=i;});
+  choice={id:t.id,key:index};save(t);draw();o.repaint();if(o.onSelect)o.onSelect(t);return true;
+ }
+ function chooseFace(id,selection){
+  selection=selection||{};if(o.pause)o.pause();
+  var context=faceContext(id),api=facial();if(!context||!api)return false;
+  var patch={},value=String(selection.value||''),channel=selection.channel;
+  if(channel==='expression'){
+   if(!api.model.PRESETS.some(function(p){return p.id===value;}))return false;
+   patch=api.model.preset(value);
+  }else if(channel==='eyes'){
+   if(!api.model.EYES.some(function(p){return p.id===value;}))return false;patch.eyes=value;
+  }else if(channel==='mouth'){
+   var sound=String(selection.viseme||context.viseme||'rest');
+   if(!api.model.SOUNDS.some(function(s){return s.id===sound;}))return false;
+   if(value==='auto'){patch.mouth={mode:'auto'};patch.mouthMap={};patch.mouthMap[sound]=null;}
+   else{
+    if(!(context.variants||[]).some(function(v){return v.id===value;}))return false;
+    if(selection.mode==='fixed')patch.mouth={mode:'fixed',variant:value};
+    else{patch.mouth={mode:'auto'};patch.mouthMap={};patch.mouthMap[sound]=value;}
+   }
+  }else return false;
+  return writeFace(context.actorId,playhead,patch,ensureFaceTrack(context));
+ }
+ function faceHistory(actorId){return Model.clone((m.faceKeys||[]).filter(function(k){return !actorId||k.actor===actorId;}).sort(function(a,b){return a.t-b.t;}));}
+ function selectFaceKey(actorId,time){
+  if(o.pause)o.pause();o.seek(lim(time,0,axisDuration()));
+  var t=ensureFaceTrack(faceContext(actorId)||{actorId:actorId}),list=keys(t),index=0,best=Infinity;
+  list.forEach(function(k,i){var distance=Math.abs(k.t-time);if(distance<best){best=distance;index=i;}});choose(t.id,index);return true;
+ }
+ function undoFace(){
+  if(!faceUndo.length)return false;
+  m.faceKeys=faceUndo.pop();var t=track();if(t.kind!=='face')t={kind:'face'};
+  save(t);draw();o.repaint();if(o.onSelect)o.onSelect(track());return true;
+ }
+ function faceKeyLabel(k){
+  var da=L===translations.da,api=facial(),pieces=[];
+  if(k.mood&&api){var preset=api.model.PRESETS.find(function(p){return p.id===k.mood;});pieces.push(preset?(da?preset.label:preset.en):k.mood);}
+  if(k.eyes&&api){var eye=api.model.EYES.find(function(p){return p.id===k.eyes;});pieces.push((da?'Øjne: ':'Eyes: ')+(eye?(da?eye.label:eye.en):k.eyes));}
+  if(k.mouth&&k.mouth.mode==='fixed')pieces.push((da?'Fast mund: ':'Fixed mouth: ')+k.mouth.variant);
+  if(k.mouthMap)Object.keys(k.mouthMap).forEach(function(sound){pieces.push((sound==='rest'?(da?'Pause':'Rest'):sound)+' → '+(k.mouthMap[sound]===null?(da?'Automatisk':'Automatic'):k.mouthMap[sound]));});
+  else if(k.mouthMap===null)pieces.push(da?'Automatiske mundformer':'Automatic mouth shapes');
+  if(!pieces.length&&k.mouth)pieces.push(da?'Følg manuskript':'Follow script');return pieces.join(' · ');
+ }
  function newPoint(t,time){if(t.kind==="song"||((t.kind==='part'||t.kind==='film-part')&&!part(t)))return;
+  if(t.kind==='face'){
+   var api=facial();if(!api)return;
+   var snapshot=api.model.state(m.faceKeys||[],time,t.actorId);
+   writeFace(t.actorId,time,{eyes:snapshot.eyes,mood:snapshot.mood,mouth:snapshot.mouth,mouthMap:snapshot.mouthMap||{}},t);return;
+  }
   if(t.kind==="animation"){
    var c=animation(t);if(!c)return;
    var accents=c.accents||(c.accents=[]),key={t:round(time),x:0,y:0,r:0};
@@ -333,10 +423,12 @@ function attach(o){
   list.push(k);list.sort(function(a,b){return a.t-b.t;});choice={id:t.id,key:list.indexOf(k)};save(t);draw();o.repaint();
  }
  function removePoint(t){var list=keys(t);if(!list[choice.key])return;
+  if(t.kind==='face'){rememberFace();var removed=list[choice.key];m.faceKeys=(m.faceKeys||[]).filter(function(k){return k!==removed;});choice.key=Math.max(0,choice.key-1);save(t);draw();o.repaint();if(o.onSelect)o.onSelect(t);return;}
   if(t.kind==="motion"&&(choice.key===0||choice.key===list.length-1))return;list.splice(choice.key,1);choice.key=Math.max(0,Math.min(choice.key,list.length-1));save(t);draw();o.repaint();}
  function formNumber(k,label,field,step,min,max){var p=el(doc,"label","huw-musical-property",undefined,inspector);el(doc,"span","",label,p);
   var input=el(doc,"input","",undefined,p);input.type="number";input.step=step;if(min!==undefined)input.min=min;if(max!==undefined)input.max=max;
   input.value=round(num(k[field],0));input.onchange=function(){var value=Number(input.value);if(!Number.isFinite(value))return;
+   if(track().kind==='face')rememberFace();
    if(min!==undefined)value=Math.max(min,value);if(max!==undefined)value=Math.min(max,value);k[field]=field==="t"?round(value):value;
    var t=track();if(field==="t"){var list=keys(t);list.sort(function(a,b){return a.t-b.t;});choice.key=list.indexOf(k);}
    if(t.kind==="motion"&&field!=="t"){
@@ -455,7 +547,7 @@ function attach(o){
   var kindNames={"figure":da?"Hele objekt":"Whole object","animation":da?"Animationsklip":"Animation clip",
    "song":da?"Musikklip":"Music clip","part":da?"Kulisse / del":"Scenery / part",
    "film-part":da?"Sceneobjekt / rekvisit":"Stage object / prop","camera":da?"Kamera":"Camera",
-   "motion":da?"Ledbevægelse":"Limb motion","accent":da?"Bevægelsesaccent":"Motion accent",
+   "motion":da?"Ledbevægelse":"Limb motion","accent":da?"Bevægelsesaccent":"Motion accent","face":da?"Ansigtsudtryk og autosync":"Face expressions and autosync",
    "light":da?"Lys":"Lighting","sfx":da?"Lydeffekt":"Sound effect","cut":da?"Kameraklip":"Camera cut",
    "captions":da?"Undertekster":"Captions","scene-range":da?"Scene":"Scene","object-browser":da?"Objektvælger":"Object picker"};
   el(doc,"span","huw-musical-inspector-type",kindNames[t.kind]||(da?"Egenskaber":"Properties"),inspector);
@@ -468,6 +560,14 @@ function attach(o){
    t.kind==="motion"?(da?"Dette punkt ændrer én del af figurens bevægelsesløkke.":"This point changes one part of the figure's motion loop."):
    t.kind==="sfx"?(da?"Redigér én lydeffekt og dens tidspunkt i forestillingen.":"Edit one sound effect cue and its timing in the show."):"";
   if(explanation)el(doc,"p","huw-musical-inspector-help",explanation,inspector);
+  if(t.kind==='face'){
+   el(doc,'p','huw-musical-inspector-help',da?'Valgene gælder fra nøglebilledet og frem for denne figur, også i senere scener. Mundvalg forbedrer autosync for den valgte bogstavgruppe.':'Choices apply from this keyframe onwards for this character, including later scenes. Mouth choices update autosync for the selected letter group.',inspector);
+   if(k){el(doc,'p','huw-musical-face-key-description',faceKeyLabel(k),inspector);formNumber(k,L.time,'t',.05,0,axisDuration());}
+   var faceActions=el(doc,'div','huw-musical-key-actions',undefined,inspector);
+   var faceOpen=el(doc,'button','huw-musical-open-face',da?'Ansigtsværksted':'Face workshop',faceActions);faceOpen.type='button';faceOpen.onclick=function(){if(o.onEditFace)o.onEditFace({actorId:t.actorId,time:playhead});};
+   var faceDelete=el(doc,'button','',L.remove,faceActions);faceDelete.type='button';faceDelete.disabled=!k;faceDelete.onclick=function(){removePoint(t);};
+   var faceUndoButton=el(doc,'button','huw-musical-undo-face',da?'Fortryd ansigtsvalg':'Undo face choice',faceActions);faceUndoButton.type='button';faceUndoButton.disabled=!faceUndo.length;faceUndoButton.onclick=undoFace;return;
+  }
   if(t.kind==="captions"){
    el(doc,"p","huw-musical-preview-note",da?"Øjet skjuler kun undertekster i editoren. Videoens undertekster vælges ved eksport.":"The eye hides captions only in the editor. Choose the video's captions when exporting.",inspector);
    if(k){el(doc,"p","huw-musical-caption-text",String(k.part.text||k.text),inspector);el(doc,"p","huw-musical-song-info",round(k.start)+"–"+round(k.end)+" s · "+k.sceneTitle,inspector);}
@@ -665,7 +765,7 @@ function attach(o){
    row.dataset.group=group(t);row.dataset.trackId=t.id;
    if(t.id===choice.id||(t.kind==="song-lane"&&m.songs.some(function(s){return s.lane===t.lane&&choice.id==="song:"+s.id;})))row.classList.add("is-selected");
    var title=el(doc,"div","huw-musical-lane-title",t.name,row);
-   var selectableObject=!!(t.kind==="figure"||t.kind==="animation"||t.kind==="part"||t.kind==="film-part"||t.kind==="camera");
+   var selectableObject=!!(t.kind==="figure"||t.kind==="animation"||t.kind==="part"||t.kind==="film-part"||t.kind==="camera"||t.kind==='face');
    if(selectableObject){title.setAttribute('role','button');title.setAttribute('tabindex','0');
     title.setAttribute('aria-label',(L===translations.da?'Markér på scenen: ':'Select on stage: ')+t.name);
     title.title=L===translations.da?'Klik eller dobbeltklik for at markere objektet på scenen':'Click or double-click to select the object on stage';
@@ -890,6 +990,7 @@ function attach(o){
      var point=el(doc,"button","huw-musical-key",undefined,lane);point.type="button";
      point.style.left=(100*toFilm(k.t,t)/axis)+"%";
      point.title=(k.label?k.label+" · ":"")+t.name+" · "+round(k.t)+"s";point.setAttribute("aria-label",point.title);
+     if(t.kind==='face'){point.classList.add('huw-musical-face-key');point.dataset.faceActor=t.actorId;point.title=t.name+' · '+round(k.t)+'s · '+faceKeyLabel(k);point.setAttribute('aria-label',point.title);}
      if(t.kind==="cut"){point.classList.add("huw-musical-cut-point");point.textContent=k.camera||"A";}
      if(t.kind==="sfx"){point.classList.add("huw-musical-sfx-key");point.textContent="✦";point.title=(k.label||Sfx.TYPES[k.type]||"FX")+" · "+round(k.t)+"s";}
      if(t.id===choice.id&&index===choice.key)point.classList.add("is-selected");
@@ -901,14 +1002,14 @@ function attach(o){
       function move(e){
        var u=lim((e.clientX-rect.left)/Math.max(1,rect.width),0,1),
         value=round(fromFilm(u*axis,t));
-       if(Math.abs(value-start)<.02&&!moved)return;moved=true;k.t=value;
+       if(Math.abs(value-start)<.02&&!moved)return;if(!moved&&t.kind==='face')rememberFace();moved=true;k.t=value;
        point.style.left=(100*toFilm(k.t,t)/axis)+"%";o.seek(toAudio(toFilm(k.t,t)));
       }
       function finish(cancelled){
        point.removeEventListener("pointermove",move);
        point.removeEventListener("pointerup",done);
        point.removeEventListener("pointercancel",abort);
-       if(cancelled)k.t=start;
+       if(cancelled){k.t=start;if(moved&&t.kind==='face')faceUndo.pop();}
        else if(moved){var values=keys(t);values.sort(function(a,b){return a.t-b.t;});choice={id:t.id,key:values.indexOf(k)};save(t);}
        if(moved)draw();o.repaint();
       }
@@ -1134,6 +1235,7 @@ function attach(o){
   openAnimation:openAnimation,closeAnimation:closeAnimation,inClipDetail:function(){return !!detailClipId;},getDetailClip:activeDetail,
   addKeyframe:addKeyframe,removeKeyframe:removeKeyframe,setFilter:setFilter,setZoom:setZoom,
   getZoom:function(){return zoom;},getSelection:track,
+  faceContext:faceContext,chooseFace:chooseFace,faceHistory:faceHistory,selectFaceKey:selectFaceKey,undoFace:undoFace,canUndoFace:function(){return faceUndo.length>0;},
   selectFigure:selectFigure,ensureFigureTrack:ensureFigureTrack,beginFigureTransform:beginFigureTransform,figureStateFor:figureState,
   beginCameraTransform:beginCameraTransform,selectCamera:chooseCamera,activeCamera:activeCam,
   setCameraEdit:function(v){cameraEditActive=!!v;o.repaint();},cameraStateFor:cameraStateFor,

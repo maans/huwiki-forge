@@ -28,7 +28,7 @@ function mount(host,rows,config){
  if(!scene)throw Error(label("Forestillingen mangler: ","Production is missing: ")+title);
  var clips=Playlist.reflow(scene.musical&&scene.musical.songs,host.getAttribute("data-animus-score"));
  var recordings=scene.musical&&scene.musical.audioClips||[],fxCues=scene.musical&&scene.musical.sfx||[];
- var lipOptions={sceneTitle:title,audioClips:recordings};
+ var lipOptions={sceneTitle:title,audioClips:recordings,film:scene};
  var duration=Math.max(.1,scene.duration,Playlist.total(clips));
  recordings.forEach(function(c){duration=Math.max(duration,num(c.start,0)+num(c.duration,0));});
  fxCues.forEach(function(c){duration=Math.max(duration,num(c.t,0)+num(c.duration,0));});

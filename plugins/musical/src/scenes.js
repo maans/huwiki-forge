@@ -44,7 +44,7 @@ function retime(film,before,after){
   return Math.round((next.start+Math.min(Math.max(0,time-old.start),next.duration))*1000)/1000;
  }
  var m=film.musical||{};
- [film.camera&&film.camera.keys,m.cameraB&&m.cameraB.keys,m.cuts,m.lighting&&m.lighting.keys,m.sfx]
+ [film.camera&&film.camera.keys,m.cameraB&&m.cameraB.keys,m.cuts,m.lighting&&m.lighting.keys,m.sfx,m.faceKeys]
  .concat((film.parts||[]).map(function(p){return p.keys;}))
  .concat(Object.keys(m.figureTransforms||{}).map(function(k){return m.figureTransforms[k].keys;}))
  .forEach(function(keys){(keys||[]).forEach(function(k){k.t=at(k.t);});if(keys)keys.sort(function(a,b){return a.t-b.t;});});

@@ -55,7 +55,7 @@ function animusBundle(ctx){
  if(!ctx.animus)return {script:"",css:"",config:null};
  function source(title){var text=$tw.wiki.getTiddlerText(title,"");if(!text)throw publicationMediaError("AniMus","afspillermodulet mangler / playback module is missing: "+title);return text;}
  function json(value){return JSON.stringify(value).replace(/</g,"\\u003c").replace(/\u2028/g,"\\u2028").replace(/\u2029/g,"\\u2029");}
- var names=["musical/playlist","musical/motion","musical/sync","musical/sfx","musical/lipsync","musical/narration-player","abc/audio-controller","abc/accompaniment","abc/start-position"];
+ var names=["musical/playlist","musical/motion","musical/sync","musical/sfx","musical/face","musical/lipsync","musical/narration-player","abc/audio-controller","abc/accompaniment","abc/start-position"];
  // Video Export is an optional, independently installable plugin.
  if($tw.wiki.getTiddlerText("$:/plugins/huwiki/animus-video-export/runtime.js",""))names.push("animus-video-export/runtime");
  var queue=names.map(function(n){return "$:/plugins/huwiki/"+n+".js";}),sources=Object.create(null),seen=Object.create(null);

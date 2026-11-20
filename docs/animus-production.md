@@ -1,6 +1,6 @@
 # AniMus production tools
 
-AniMus 0.12.0-beta.1 includes production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.17-test.1 provides audience programme and performance starting views with the shared exporter. The example productions remain separate plugins.
+AniMus 0.13.0-beta.1 includes facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
 
 ## Create and edit a show
 
@@ -42,6 +42,8 @@ Use the **eye** beside a visual track to hide or show its contribution in the ed
 
 Select a figure or body part with the dashed frame, then choose **Zoom to selection** above the stage. **Parts and joints** lets you select an individual arm, hand, head or other part before zooming. **Full screen** enlarges the editing stage, and **Reset zoom** returns to the normal preview. Press **Z** to zoom to the selection or **0** to reset. **Esc** cancels an active drag first; otherwise it exits stage fullscreen or resets selection zoom.
 
+Selection zoom also reveals the selected part when the scene's camera has moved it outside the shot. Choose an off-camera character in the object selector, then zoom to it. Resetting the zoom or exporting restores the authored scene framing.
+
 These track buttons and selection zoom affect the editor preview only. They do not change the saved scene, film camera or export choices. Choose the video soundtrack and burned captions in **Export video**. After export, the editor returns to its previous preview settings and zoom.
 
 ## Mouth animation from the script
@@ -59,6 +61,8 @@ Speaker prefixes can help match lines to figures. The **Assign speaking roles** 
 
 The movement is an approximation derived from the written line: vowels, consonants and punctuation provide the opening rhythm and pauses. A linked recording can supply timing, but the engine does not analyse the voice or recognise spoken phonemes. Use the timing controls to align it with a performance. The same saved binding runs in the editor and Site view, including seeking and paused previews.
 
+A production can also contain prepared mouth frames with precise timing and an opening envelope, as Turn Around does. Those frames keep their existing timing when you teach the workshop a different mouth drawing. When prepared frames are bound to a particular text or recording, changing that source falls back to the text approximation until suitable timing is supplied.
+
 Bindings are stored on the caption part as `lipSync`, separately from its geometry and animation keys. Playback changes the rendered mouth state and preserves the original drawing. For example:
 
 ```json
@@ -74,6 +78,28 @@ Bindings are stored on the caption part as `lipSync`, separately from its geomet
 ```
 
 `target`, `open` and `closed` refer to part IDs in the same scene. `timing` is `script` or `auto`; `auto` uses linked narration when available and otherwise follows the script. `offset` is in seconds, with a positive value delaying the movement; `strength` ranges from 0 to 1. Lip sync is opt-in per line.
+
+## Face choices and the face workshop
+
+Pause the show, choose **Parts and joints**, and click the face, eyes or mouth. Large previews appear beneath the stage. Opening the choices changes no saved data; selecting a card creates or updates a face key at the playhead.
+
+**Face** offers combined expressions, **Eyes** offers eye and gaze choices, and **Mouth** shows the character's own drawings. Combined expressions keep automatic speech and previously learned mouth choices. **Blink** produces one brief blink; the other eye choices remain until the next eye key. Head rotation still uses the existing neck pivot and direct manipulation.
+
+By default, a mouth choice teaches autosync a replacement for the current letter group. For example, choose an E drawing while O is active: later O-group moments use that drawing for this character, including later scenes. Earlier frames, other groups and other characters keep their choices. **Follow script** restores the selected group's original mapping from the playhead. **More choices → Hold this mouth** explicitly holds one drawing for every sound until automatic movement is restored.
+
+Open **Face workshop** for a larger preview, the seven letter groups and their current mouth choices, and a visual history of saved face keys. Click a group before choosing its mouth; click a history entry to seek to that key. **Script** opens the associated line. The script's **Save and open face workshop** button saves the draft and returns to the speaking character. **Undo choice** reverts the last facial edit; face keys can also be moved or deleted on their own timeline track.
+
+| Group | Letters or situation |
+| --- | --- |
+| Rest | Spaces, punctuation and pauses |
+| A | a |
+| E | e, i, y, æ |
+| O | o, u, å, ø |
+| F | f, v |
+| Lips together | m, b, p |
+| Other consonants | Remaining consonants |
+
+The groups follow the existing text approximation or prepared mouth frames; they are not recognised audio phonemes. The artwork and layer names determine the available facial controls. Choices are stored in `film.musical.faceKeys` using global performance seconds and a stable actor ID. Each channel is held independently, and learned mappings accumulate per group. The editor, ordinary audience player, Site view and video renderer all use the same rules. Scene rearrangement moves face keys when **Move music, audio and stage cues with scenes** is enabled.
 
 ## Site view
 
@@ -116,11 +142,12 @@ The editor's export lifecycle temporarily restores the performance view before r
 node scripts/build-animus.mjs
 node scripts/build-animus-video-export.mjs
 node scripts/build-site-publisher.mjs
+node scripts/build-turn-around-player.mjs
 node scripts/build-forge-plugin-library.mjs
 node --test tests/animus-*.test.mjs tests/site-cutout-media.test.mjs tests/site-drawing-svg.test.mjs
 ```
 
-The two build scripts support `--check`. AniMus module sources live in `plugins/musical/src`. SitePublisher sources and the publication viewer live in `plugins/site-publisher/src`.
+The plugin and Turn Around runtime build scripts support `--check`. AniMus module sources live in `plugins/musical/src`. SitePublisher sources and the publication viewer live in `plugins/site-publisher/src`. Turn Around's normal lip-sync tiddler is kept byte-identical to the shared source, so it cannot override new editor features with an older runtime.
 
 Tests exercise editable SVG round trips, generated frame playback in CutOut, recording lifecycle, audio seek/pause/overlap, scene retiming, score draft isolation, export dependencies and the shared audience clock. Mouth tests verify explicit character bindings, the real lipsync module in Site view, seek/play/pause behaviour, unchanged source shapes and a silent second character.
 
@@ -160,7 +187,17 @@ Brug **øjet** ved et visuelt spor til at skjule eller vise dets indhold i edito
 
 Markér en figur eller kropsdel med den stiplede ramme, og vælg **Zoom til markering** over scenen. Med **Dele og led** kan du vælge eksempelvis arm, hånd eller hoved, før du zoomer. **Fuld skærm** forstørrer redigeringsscenen, og **Nulstil zoom** går tilbage til den normale forhåndsvisning. Tryk **Z** for at zoome til markeringen eller **0** for at nulstille. **Esc** annullerer først et igangværende træk; ellers forlader den scenens fuldskærmsvisning eller nulstiller zoom.
 
+Zoom til markering viser også den valgte kropsdel, når scenens kamera har flyttet den uden for billedet. Vælg en figur uden for billedet i objektvælgeren, og zoom til den. Nulstilling af zoom og eksport gendanner scenens oprindelige billedudsnit.
+
 Sporknapperne og zoom gælder kun editorens forhåndsvisning. De ændrer ikke den gemte scene, filmens kamera eller eksportvalgene. Vælg videoens lyd og indbrændte undertekster i **Eksportér video**. Efter eksport vender editoren tilbage til de tidligere visningsvalg og zoom.
+
+### Ansigtsudtryk og ansigtsværksted
+
+Sæt filmen på pause, vælg **Dele og led**, og klik på ansigtet, øjnene eller munden. Under scenen vises store billeder af valgene. Klik på et billede for at gemme et nøglebillede ved tidsmarkøren. **Ansigt** vælger samlede udtryk, **Øjne** vælger blik eller øjenstilling, og **Mund** viser figurens mundtegninger. Et ansigtsudtryk bevarer automatisk tale og dine tilpassede mundvalg.
+
+Et mundvalg lærer som udgangspunkt autosync, hvilken tegning du ønsker til den aktuelle bogstavgruppe. Valget gælder fra tidsmarkøren for samme figur, også i senere scener. Tidligere billeder og andre bogstavgrupper bevares. **Følg manuskript** gendanner den valgte gruppes oprindelige mundvalg. **Flere valg → Hold denne mund** fastholder én mund, indtil du slår automatisk mundbevægelse til igen.
+
+**Ansigtsværksted** viser ansigtet større, alle bogstavgrupper med deres mundvalg og en billedoversigt over gemte ansigtsvalg. Klik på en gruppe for at vælge dens mund, eller klik på et tidligere valg for at gå til dets tidspunkt. **Manuskript** åbner replikken; **Gem og åbn ansigtsværksted** fører tilbage til den talende figur. **Fortryd valget** fortryder ansigtsændringen. Nøglebillederne har deres eget spor, hvor de kan flyttes og slettes.
 
 ### Læbesynkronisering
 

@@ -33,6 +33,7 @@ function mount(o){
  var ScoreWorkshop=require("$:/plugins/huwiki/musical/score-workshop.js");
  var SceneWorkshop=require("$:/plugins/huwiki/musical/scenes.js");
  var SelectionZoom=require("$:/plugins/huwiki/musical/selection-zoom.js");
+ var FacePanel=require("$:/plugins/huwiki/musical/face-panel.js");
  var doc=o.doc,host=o.host,L=label(o.wiki),editor=o.editor,root=host.querySelector(".huw-musical-editor");
  if(!root)return {dispose:function(){}};
  host.classList.add("huw-musical--workspace");
@@ -48,10 +49,19 @@ function mount(o){
  }
  var inspectorOpen=false,mode="split",focus=false,puppet=Puppet.mount(o),lastTap=null;
  var narration=Narration.mount(o),scoreWorkshop=ScoreWorkshop.mount(o),sceneWorkshop=SceneWorkshop.mount(o);
- var manuscript=Manuscript.mount(Object.assign({},o,{openNarration:function(details){narration.open(details);}}));
+ var manuscript=Manuscript.mount(Object.assign({},o,{openNarration:function(details){narration.open(details);},openFace:o.openFace||openFace}));
  var transformMode='',figureRoot='',cameraName='A',latestPart='',cancelGesture=null;
- var previewZoom=SelectionZoom.create(o.view.svg,function(){return editor.isExporting&&editor.isExporting();}),zoomTarget='',selectingOnStage=false;
+ var previewZoom=SelectionZoom.create(o.view.svg,function(){return editor.isExporting&&editor.isExporting();}),zoomTarget='',zoomElement=null,selectingOnStage=false;
  var stagePanel=host.querySelector('.huw-musical-stage'),fullscreenFallback=false,fullscreenPending=false,exportSuspended=0,disposed=false;
+ var facePanel=FacePanel.mount({doc:doc,wiki:o.wiki,host:host,film:o.film,parent:host,before:o.layout.nextSibling,stage:stagePanel,
+  context:function(id){return editor.faceContext&&editor.faceContext(id);},
+  choose:function(id,command){o.pause();return editor.chooseFace&&editor.chooseFace(id,command);},
+  history:function(id){return editor.faceHistory?editor.faceHistory(id):[];},
+  goToKey:function(id,time){if(editor.selectFaceKey)editor.selectFaceKey(id,time);else o.seek(time);},
+  undo:function(){if(editor.undoFace)editor.undoFace();},canUndo:function(){return editor.canUndoFace&&editor.canUndoFace();},
+  position:o.position,seek:o.seek,pause:o.pause,onScript:function(details){manuscript.open(details);},
+  onClose:function(){host.focus({preventScroll:true});},onLayout:reframeAfterLayout
+ });
  function toggleFocus(){
   focus=!focus;host.classList.toggle("huw-musical--focus",focus);
   focusButton.textContent=focus?L.exit:L.focus;focusButton.setAttribute("aria-pressed",String(focus));
@@ -116,6 +126,7 @@ function mount(o){
   updateToolButtons();refreshHandles();
  }
  function toggleCamera(){if(transformMode==='camera'){stopTool();return;}
+  facePanel.hide();
   if(o.editor.inClipDetail&&o.editor.inClipDetail())o.editor.closeAnimation();
   cameraName=o.editor.activeCamera(o.position());transformMode='camera';useStageMode();o.pause();o.editor.selectCamera(cameraName);o.editor.setCameraEdit(true);
   var chooser=o.host.querySelector('.huw-musical-view-mode');if(chooser&&chooser.value==='score'){chooser.value='stage';chooser.onchange();}
@@ -146,6 +157,7 @@ function mount(o){
   if(!stagePanel||disposed)return;
   stagePanel.classList.toggle('huw-musical-stage--expanded',fullscreenFallback);
   var active=stageIsFullscreen();stageFullscreenButton.textContent=active?L.exitFullscreen:L.fullscreen;
+  facePanel.relocate(active);
   stageFullscreenButton.title=stageFullscreenButton.textContent;stageFullscreenButton.setAttribute('aria-pressed',String(active));
   reframeAfterLayout();
  }
@@ -245,6 +257,13 @@ function mount(o){
   // the corresponding dashed frame without aiming at a tiny stage shape.
   t=t||editor.getSelection();
   updateEditButtons();
+  if(t&&t.kind==='face'){
+   figureRoot=t.part;latestPart=t.part;transformMode='parts';useStageMode();o.pause();editor.setCameraEdit(false);
+   facePanel.select(t.part,undefined,true);updateToolButtons();setInspector(false);refreshHandles();return;
+  }
+  // A stage gesture opens the strip only after pointer-up. Changing layout
+  // during pointer-down would move the SVG under a finger while dragging.
+  if(!selectingOnStage){var faceId=t&&['part','film-part','motion'].indexOf(t.kind)>=0?t.part:null;if(faceId)facePanel.select(faceId);else facePanel.hide();}
   if(transformMode==='parts'||(editor.inClipDetail&&editor.inClipDetail()&&t&&t.kind==='motion')){
    if(t&&['part','film-part','motion'].indexOf(t.kind)>=0){figureRoot=t.part;latestPart=t.part;transformMode='parts';o.pause();editor.setCameraEdit(false);}
    if(t&&['part','film-part','motion','animation'].indexOf(t.kind)>=0){updateToolButtons();setInspector(true);refreshHandles();return;}
@@ -300,7 +319,7 @@ function mount(o){
   }
  };
  function editingField(target){
-  return target&&(target.closest&&target.closest("input,select,textarea,[contenteditable=true]"));
+  return target&&(target.closest&&target.closest("input,select,textarea,[contenteditable=true],.huw-musical-face-panel,.huw-face-workshop"));
  }
  function keyboard(e){
   if(narration.isOpen()||scoreWorkshop.isOpen())return;
@@ -374,15 +393,15 @@ function mount(o){
   if(disposed||exportSuspended||editor.isExporting&&editor.isExporting()||!transformMode||transformMode==='camera')return false;
   if(pause!==false)o.pause();
   var geometry=figureGeometry();if(!geometry){updatePreviewButtons(null);return false;}
-  if(!previewZoom.fit(geometry.corners,previewAspect()))return false;
-  zoomTarget=transformMode+':'+figureRoot;updatePreviewButtons(geometry);refreshHandles();return true;
+  if(!previewZoom.fit(geometry.corners,previewAspect(),geometry.figureElement))return false;
+  zoomTarget=transformMode+':'+figureRoot;zoomElement=geometry.figureElement;updatePreviewButtons(geometry);refreshHandles();return true;
  }
  function resetPreviewZoom(){
-  previewZoom.reset();zoomTarget='';
+  previewZoom.reset();zoomTarget='';zoomElement=null;
   if(!disposed&&o.repaint)o.repaint();
   if(!disposed)refreshHandles();
  }
- function paintPreview(){if(!disposed)previewZoom.apply();}
+ function paintPreview(){if(!disposed){previewZoom.apply();if(facePanel&&!selectingOnStage&&!cancelGesture)facePanel.refresh();}}
  function screenUnit(){
   var matrix=svg.getScreenCTM&&svg.getScreenCTM(),scale=matrix&&Math.sqrt(Math.abs(matrix.a*matrix.d-matrix.b*matrix.c));
   return Number.isFinite(scale)&&scale>1e-7?1/scale:1;
@@ -397,13 +416,13 @@ function mount(o){
    handles.style.display='none';activeGeometry=null;return;
   }
   if(transformMode==='camera'&&o.host.querySelector('.huw-musical-play[aria-pressed="true"]')){handles.style.display='none';activeGeometry=null;return;}
-  if(transformMode==='camera'&&previewZoom.active()){previewZoom.reset();zoomTarget='';}
+  if(transformMode==='camera'&&previewZoom.active()){previewZoom.reset();zoomTarget='';zoomElement=null;}
   var geom=transformMode==='camera'?cameraGeometry():figureGeometry();if(!geom){
-   if(previewZoom.active()&&figureRoot){previewZoom.reset();zoomTarget='';}
+   if(previewZoom.active()&&figureRoot){previewZoom.reset();zoomTarget='';zoomElement=null;}
    updatePreviewButtons(null);handles.style.display='none';activeGeometry=null;return;
   }
-  if(previewZoom.active()&&zoomTarget!==transformMode+':'+figureRoot&&!cancelGesture&&!selectingOnStage){
-   previewZoom.fit(geom.corners,previewAspect());zoomTarget=transformMode+':'+figureRoot;
+  if(previewZoom.active()&&(zoomTarget!==transformMode+':'+figureRoot||zoomElement!==geom.figureElement)&&!cancelGesture&&!selectingOnStage){
+   previewZoom.fit(geom.corners,previewAspect(),geom.figureElement);zoomTarget=transformMode+':'+figureRoot;zoomElement=geom.figureElement;
   }
   updatePreviewButtons(geom);
   activeGeometry=geom;handles.dataset.mode=transformMode;handles.style.display='';var p=geom.corners;
@@ -477,7 +496,7 @@ function mount(o){
   try{
   if(e.button!==0)return;
   var partEl=e.target.closest&&e.target.closest("[data-cutout-id]");
-  if(!partEl||!svg.contains(partEl))return;
+  if(!partEl||!svg.contains(partEl)){facePanel.hide();return;}
   host.focus({preventScroll:true});
   var id=partEl.getAttribute("data-cutout-id");latestPart=id;
   if(transformMode==='camera')return;
@@ -506,6 +525,7 @@ function mount(o){
     partEl.removeEventListener('pointermove',move);partEl.removeEventListener('pointerup',up);partEl.removeEventListener('pointercancel',cancel);
     if(drag){if(save)drag.commit();else drag.cancel();}
     if(moved)lastTap=null;
+    if(save)facePanel.select(id);
     refreshHandles();
    }
    function up(){finish(true);}function cancel(){finish(false);}
@@ -564,6 +584,7 @@ function mount(o){
    partEl.removeEventListener("pointerup",up);
    partEl.removeEventListener("pointercancel",cancel);
    if(drag){if(commit)drag.commit();else drag.cancel();}
+   if(commit)facePanel.select(id);
    refreshHandles();
   }
   function up(){finish(true);}function cancel(){finish(false);}
@@ -586,12 +607,19 @@ function mount(o){
  }
  svg.addEventListener("pointerup",touchOpen);
  svg.addEventListener("pointerdown",pointerDown);
+ function openFace(details){
+  details=details||{};if(cancelGesture)cancelGesture();o.pause();
+  if(Number.isFinite(Number(details.time))&&Math.abs(o.position()-Number(details.time))>.001)o.seek(Number(details.time));
+  var context=editor.faceContext&&editor.faceContext(details.actorId||details.partId||latestPart);if(!context)return false;
+  figureRoot=context.headId;latestPart=context.headId;transformMode='parts';useStageMode();editor.setCameraEdit(false);
+  editor.selectPart(context.headId,true);facePanel.select(context.headId,'expression',true);facePanel.openWorkshop();updateToolButtons();setInspector(false);refreshHandles();return true;
+ }
  return {showInspector:selection,selectTrack:selection,setInspector:setInspector,refreshHandles:refreshHandles,
   zoomToSelection:zoomToSelection,resetPreviewZoom:resetPreviewZoom,paintPreview:paintPreview,
-  beginExport:function(){exportSuspended++;var restore=previewZoom.suspend(),restored=false;refreshHandles();return function(){if(restored)return;restored=true;exportSuspended=Math.max(0,exportSuspended-1);restore();if(!disposed)refreshHandles();};},
-  openScore:function(title){scoreWorkshop.open(title);},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},openManuscript:function(details){manuscript.open(details);},
+  beginExport:function(){exportSuspended++;var restore=previewZoom.suspend(),restoreFace=facePanel.suspend(),restored=false;refreshHandles();return function(){if(restored)return;restored=true;exportSuspended=Math.max(0,exportSuspended-1);restoreFace();restore();if(!disposed)refreshHandles();};},
+  openFace:openFace,openScore:function(title){scoreWorkshop.open(title);},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},openManuscript:function(details){manuscript.open(details);},
   dispose:function(){disposed=true;if(cancelGesture)cancelGesture();previewZoom.dispose();fullscreenFallback=false;if(stagePanel)stagePanel.classList.remove('huw-musical-stage--expanded');doc.removeEventListener('fullscreenchange',syncStageFullscreen);if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen)try{Promise.resolve(doc.exitFullscreen()).catch(function(){});}catch(_closed){}
-  narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);
+  facePanel.dispose();narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);
   host.removeEventListener("keydown",keyboard);
   svg.removeEventListener("pointerdown",pointerDown);
   svg.removeEventListener("dblclick",openPuppet);svg.removeEventListener("pointerup",touchOpen);puppet.close();

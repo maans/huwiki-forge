@@ -68,7 +68,7 @@ function records(){
  // Playback itself has separate acceptance coverage. The full publication
  // builder still resolves its runtime dependencies; lightweight bundles keep
  // these UI tests focused on navigation and exported configuration.
- for(const name of ['musical/playlist','musical/motion','musical/sync','musical/sfx','musical/lipsync','musical/narration-player','abc/audio-controller','abc/accompaniment','abc/start-position','abc/vendor/abcjs'])rows['$:/plugins/huwiki/'+name+'.js']={text:'/* Runtime fixture: '+name+' */'};
+ for(const name of ['musical/playlist','musical/motion','musical/sync','musical/sfx','musical/face','musical/lipsync','musical/narration-player','abc/audio-controller','abc/accompaniment','abc/start-position','abc/vendor/abcjs'])rows['$:/plugins/huwiki/'+name+'.js']={text:'/* Runtime fixture: '+name+' */'};
  for(const name of ['animus','cutout'])for(const suffix of ['js','css'])rows['$:/plugins/huwiki/site-publisher/'+name+'/viewer.'+suffix]={text:'/* Reader fixture */'};
  return rows;
 }
