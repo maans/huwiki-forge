@@ -15,7 +15,16 @@ function channelFor(context,id){var parts=context.parts||{};
  if([].concat(parts.eyes||[],parts.pupils||[],parts.brows||[],parts.lids||[]).indexOf(id)>=0||/(?:^|[-_ ])(?:eyes?|pupils?|brows?|lids?|oejne|ojen|øjne)(?:[-_ ]|$)/i.test(id))return "eyes";
  return "expression";
 }
-function isFace(context,id){return !!context&&(id===context.headId||containsPart(context.scene||context.view&&context.view.scene,id,context.headId)||channelFor(context,id)!=="expression");}
+function isFace(context,id){
+ if(!context||!id)return false;
+ if(channelFor(context,id)!=="expression")return true;
+ var scene=context.scene||context.view&&context.view.scene,root=context.actorPartId||context.actorId;
+ // A flat custom figure may use its actor root as the facial fallback.
+ // Its arms and legs must not inherit the meaning of a separate head.
+ if(context.headId&&context.headId!==root&&context.headId!==context.actorId)return containsPart(scene,id,context.headId);
+ var part=(scene&&scene.parts||[]).find(function(p){return p.id===id;});
+ return !!(id===context.headId&&part&&/(?:^|[-_ ])(?:head|hoved|face|ansigt)(?:[-_ ]|$)/i.test((part.name||"")+" "+part.id));
+}
 function mount(o){
  var doc=o.doc,host=o.host,da=!/\/en(?:-|$)/i.test(o.wiki.getTiddlerText("$:/language","")),uid="huw-face-"+(++serial);
  var L=da?{title:"Ansigt og tale",face:"Ansigt",eyes:"Øjne",mouth:"Mund",auto:"Auto",custom:"Auto · tilpasset",fixed:"Fast mund",script:"Manuskript",follow:"Følg manuskript",hold:"Hold denne mund",more:"Flere valg",close:"Luk ansigtsvalg",workshop:"Ansigtsværksted",back:"Tilbage til animationen",sounds:"Bogstavgrupper og mundvalg",history:"Anvendte ansigtsvalg",noHistory:"Der er endnu ingen ansigtsvalg på tidslinjen.",noLine:"Ingen replik ved tidsmarkøren",line:"Replik",from:"Fra",future:"dit valg bruges fremover",expressionHint:"Vælg et udtryk. Munden følger stadig talen.",eyesHint:"Vælg øjne eller blik ved tidsmarkøren.",soundHint:"Vælg en bogstavgruppe og derefter en mund. Valget gælder fra tidsmarkøren for denne figur, også i senere scener.",saved:"Valget er gemt ved tidsmarkøren.",empty:"Der er ingen mundtegninger til denne figur.",original:"Original",pause:"Pause",go:"Gå til",resetHint:"Brug manuskriptets automatiske mundvalg fra tidsmarkøren.",holdHint:"Hold den valgte mund fast fra tidsmarkøren. Følg manuskript slår automatisk mund til igen.",chooseHint:"Vælg en mund til denne bogstavgruppe"}:

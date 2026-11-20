@@ -56,6 +56,17 @@ async function assertMouth(scope,talking){
  assert.equal(await opacity('ci-alma-mouth-closed'),talking?0:1);assert.equal(await opacity('ci-bo-mouth-open'),0,'the other actor stays silent');assert.equal(await opacity('ci-bo-mouth-closed'),1);
 }
 async function stagePoint(part,x,y){return part.evaluate((node,p)=>{const point=node.ownerSVGElement.createSVGPoint();point.x=p.x;point.y=p.y;const screen=point.matrixTransform(node.getScreenCTM());return {x:screen.x,y:screen.y};},{x,y});}
+async function clickExposedArm(scope){
+ const arm=scope.locator('[data-cutout-id="ci-alma-arm"]').first();await arm.scrollIntoViewIfNeeded();
+ // The preceding freehand image has transparent margins that overlap the
+ // distal arm. Use painted arm pixels that the browser actually hits.
+ const candidates=await arm.evaluate(node=>[20,12,6,34].map(x=>{
+  const point=node.ownerSVGElement.createSVGPoint();point.x=x;point.y=0;const screen=point.matrixTransform(node.getScreenCTM());
+  const hit=node.ownerDocument.elementFromPoint(screen.x,screen.y);return {x:screen.x,y:screen.y,localX:x,part:hit?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id'),tag:hit?.tagName,className:hit?.getAttribute('class')};
+ }));
+ const point=candidates.find(p=>p.part==='ci-alma-arm');assert.ok(point,'an exposed painted arm receives the click: '+JSON.stringify(candidates));
+ await page.mouse.click(point.x,point.y);
+}
 async function rotatePart(scope,id,handle,degrees){
  const part=scope.locator('[data-cutout-id="'+id+'"]').first();await handle.scrollIntoViewIfNeeded();
  const hand=scope.locator('[data-cutout-id="ci-alma-hand"]').first(),handBefore=await stagePoint(hand,0,0);
@@ -175,9 +186,12 @@ try{
  const workingScene=()=>page.evaluate(title=>JSON.parse($tw.wiki.getTiddlerText('$:/CutOut/Drafts/'+title)||$tw.wiki.getTiddlerText(title)),production.stageTitle);
  async function selectCutoutArm(){
   await cutout.locator('.co-timeline input[type="range"]').evaluate(input=>{input.value='2';input.dispatchEvent(new Event('input',{bubbles:true}));});
-  const arm=cutout.locator('[data-cutout-id="ci-alma-arm"]').first();await arm.scrollIntoViewIfNeeded();const point=await stagePoint(arm,34,0);await page.mouse.click(point.x,point.y);
+  await clickExposedArm(cutout);
   await cutout.locator('.co-direct-figure-box').waitFor();assert.notEqual(await cutout.locator('.co-direct-figure-box').evaluate(node=>getComputedStyle(node).strokeDasharray),'none','the selected figure has a dashed frame');
-  await cutout.locator('.co-direct-toolbar [data-direct-scope="part"]').click();await cutout.locator('.co-direct-part-select').selectOption('ci-alma-arm');await cutout.locator('.co-direct-part-box').waitFor();await cutout.locator('.co-direct-pivot').waitFor();
+  await cutout.locator('.co-direct-toolbar [data-direct-scope="part"]').click();
+  const partPicker=cutout.locator('.co-direct-part-select'),options=await partPicker.locator('option').evaluateAll(nodes=>nodes.map(n=>n.value));
+  assert.ok(options.includes('ci-alma-arm'),'the clicked figure offers its arm for joint editing: '+JSON.stringify({options,selection:await cutout.locator('.co-stage').getAttribute('data-direct-selection')}));
+  await partPicker.selectOption('ci-alma-arm');await cutout.locator('.co-direct-part-box').waitFor();await cutout.locator('.co-direct-pivot').waitFor();
  }
  await selectCutoutArm();await rotatePart(cutout,'ci-alma-arm',cutout.locator('[data-direct-action="rotate"]'),35);
  let editedScene=await workingScene(),editedArm=editedScene.parts.find(p=>p.id==='ci-alma-arm'),atTwo=editedArm.keys.find(k=>Math.abs(k.t-2)<.001);assert.ok(atTwo,'a gesture inserts a key at the cursor');assert.ok(Math.abs(atTwo.r-47)<1,'rotation is measured in the parent coordinate system');assert.deepEqual(editedScene.parts.find(p=>p.id==='ci-alma').keys,originalAlma.keys);assert.deepEqual(editedArm.pivot,originalArm.pivot);assert.deepEqual(editedArm.geo,originalArm.geo);
@@ -193,7 +207,7 @@ try{
  // Continue directly on the AniMus stage: the same hand gesture now writes
  // the arm's beat-loop key, using the soundtrack's 120 BPM clock.
  await show.locator('.huw-musical-range').evaluate(input=>{input.value='1.75';input.dispatchEvent(new Event('input',{bubbles:true}));});
- const stageArm=show.locator('[data-cutout-id="ci-alma-arm"]').first();await stageArm.scrollIntoViewIfNeeded();const armPoint=await stagePoint(stageArm,34,0);await page.mouse.click(armPoint.x,armPoint.y);
+ await clickExposedArm(show);
  await show.locator('.huw-musical-transform-overlay[data-mode="figure"]').waitFor();await show.locator('.huw-musical-parts-button').click();await show.locator('.huw-musical-transform-overlay[data-mode="parts"]').waitFor();await show.locator('.huw-musical-part-pivot').waitFor();
  assert.equal(await show.locator('.huw-musical-transform-label').textContent(),'Almas arm','Parts and joints keeps the clicked arm selected after selecting its containing figure');
  await rotatePart(show,'ci-alma-arm',show.locator('.huw-musical-transform-overlay[data-mode="parts"] [data-transform-action="rotate"]'),25);
@@ -304,10 +318,10 @@ try{
  await writeFile(new URL('result.json',out),JSON.stringify({ok:true,manifest:manifest.version,checks,sampleRequests:sampleRequests.length,errors},null,2)+'\n');
  console.log(JSON.stringify({ok:true,manifest:manifest.version,checks,errors}));
 }catch(error){
- let publisher=null;if(page)try{publisher=await page.evaluate(()=>({status:document.querySelector('.husp-status')?.textContent||'',text:document.querySelector('.husp-overlay')?.innerText||''}));}catch(_){}
- console.error('BROWSER FAILURE '+JSON.stringify({failure:String(error.message||error),publisher,errors}));
+ let publisher=null,selection=null;if(page)try{const details=await page.evaluate(()=>({publisher:{status:document.querySelector('.husp-status')?.textContent||'',text:document.querySelector('.husp-overlay')?.innerText||''},selection:{cutoutRoot:document.querySelector('.co-stage')?.getAttribute('data-direct-selection'),cutoutLabel:document.querySelector('.co-direct-selection')?.textContent,cutoutParts:[...document.querySelectorAll('.co-direct-part-select option')].map(n=>n.value),animusLabel:document.querySelector('.huw-musical-transform-label')?.textContent}}));publisher=details.publisher;selection=details.selection;}catch(_){}
+ console.error('BROWSER FAILURE '+JSON.stringify({failure:String(error.message||error),publisher,selection,errors}));
  if(page)try{await screenshot('failure');await writeFile(new URL('failure.html',out),await page.content());}catch(_){}
- await writeFile(new URL('result.json',out),JSON.stringify({ok:false,checks,errors,publisher,failure:String(error.stack||error)},null,2)+'\n');throw error;
+ await writeFile(new URL('result.json',out),JSON.stringify({ok:false,checks,errors,publisher,selection,failure:String(error.stack||error)},null,2)+'\n');throw error;
 }finally{
  if(context)try{await context.tracing.stop({path:fileURLToPath(new URL('trace.zip',out))});}catch(_){}
  if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));

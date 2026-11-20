@@ -129,9 +129,7 @@ try{
  probes={current,before,later,cross,other,crossOther,elder};
 
  await seek(current.time);const untouched=await sourceSnapshot();
- let panel=await tapPart('prisoner-head-drawing',true);
- await editor.locator('.huw-musical-zoom-selection:enabled').tap();
- panel=await tapPart('prisoner-mouth-open');
+ let panel=await tapPart('prisoner-mouth-open');
  assert.equal(await panel.locator('.huw-musical-face-context').getAttribute('data-face-viseme'),'O','the controls explain the current automatic speech shape');
  assert.ok((await panel.locator('.huw-musical-face-line').textContent()).trim(),'the current manuscript line is visible beside mouth choices');
  await panel.locator('[data-face-tab="mouth"]').tap();
@@ -164,7 +162,7 @@ try{
  await seek(gazeTime);assert.deepEqual((await face()).pupils,gazeAfter.pupils,'gaze rendering is deterministic on rewind');
  passed('eyes, blink, gaze and expression have independent saved keys and deterministic rewind');
 
- await seek(moodTime);panel=await tapPart('prisoner-head-drawing',true);
+ await seek(moodTime);
  const beforeWorkshop=await sourceSnapshot();await editor.locator('.huw-musical-face-workshop-open:visible').first().tap();
  const workshop=wiki.locator('.huw-face-workshop:visible');await workshop.waitFor();
  assert.equal(await workshop.locator('[data-face-sound]').count(),7,'the face workshop presents the seven speech groups');
