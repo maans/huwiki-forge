@@ -69,9 +69,26 @@ async function tapPart(id,head=false){
  const part=editor.locator('.huw-musical-canvas > svg [data-cutout-id="'+id+'"]:visible').first();await part.scrollIntoViewIfNeeded();
  const painted=part.locator('image,path,ellipse,circle').first();
  if(head){
-  const point=await painted.evaluate(node=>{const box=node.getBBox(),p=node.ownerSVGElement.createSVGPoint();p.x=box.x+box.width*.5;p.y=box.y+box.height*.17;
+  const measure=()=>painted.evaluate(node=>{const box=node.getBBox(),p=node.ownerSVGElement.createSVGPoint();p.x=box.x+box.width*.5;p.y=box.y+box.height*.17;
    const screen=p.matrixTransform(node.getScreenCTM()),bounds=node.getBoundingClientRect();return {x:screen.x-bounds.x,y:screen.y-bounds.y,
     hit:node.ownerDocument.elementFromPoint(screen.x,screen.y)?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id')};});
+  let point=await measure();
+  if(point.hit!==id){
+   // During the elder's line the authored camera cuts away from the prisoner.
+   // A face key keeps his head selected. After reopening, use the ordinary
+   // object picker first; both routes focus the character before direct touch.
+   const originalTime=await position(),originalSource=await sourceSnapshot();
+   const selectedHead=await editor.locator('.huw-musical-transform-label').textContent()==='Head'&&await editor.locator('[data-face-panel]').getAttribute('data-face-target')==='prisoner';
+   if(!selectedHead){
+    const picker=editor.locator('.huw-musical-object-picker');await picker.focus();
+    const options=await picker.locator('option').evaluateAll(nodes=>nodes.map(node=>node.value));
+    const target=options.includes('prisoner-head')?'prisoner-head':'prisoner';assert.ok(options.includes(target),'the object picker offers the off-camera prisoner');
+    await picker.selectOption(target);const parts=editor.locator('.huw-musical-parts-button');if(await parts.getAttribute('aria-pressed')!=='true')await parts.tap();
+   }
+   await editor.locator('.huw-musical-zoom-selection:enabled').tap();await painted.scrollIntoViewIfNeeded();point=await measure();
+   assert.ok(Math.abs(await position()-originalTime)<.001,'focusing an off-camera character retains the global playhead');
+   assert.deepEqual(await sourceSnapshot(),originalSource,'selecting and focusing an off-camera character does not write source data');
+  }
   assert.equal(point.hit,id,'an exposed face region receives the touch');await painted.tap({position:{x:point.x,y:point.y}});
  }else await painted.tap();
  const panel=editor.locator('[data-face-panel]:visible').first();await panel.waitFor();
