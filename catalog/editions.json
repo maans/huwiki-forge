@@ -274,7 +274,7 @@
     {
       "id": "pdf-publisher",
       "name": "PDF Publisher",
-      "version": "0.2.9-test.1",
+      "version": "0.2.9-test.2",
       "description": "Create PDF publications and page overview, localized with TiddlyWiki / PDF-udgivelse og sideoversigt",
       "file": "../plugins/print-article/dist/plugin.json",
       "status": "test"

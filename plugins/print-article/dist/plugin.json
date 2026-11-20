@@ -2,7 +2,7 @@
   "title": "$:/plugins/huwiki/print-article",
   "name": "Publisher",
   "description": "Publish tiddlers and collections to PDF / Udgiv tiddlere og samlinger som PDF",
-  "version": "0.2.9-test.1",
+  "version": "0.2.9-test.2",
   "author": "HUWiki",
   "license": "MIT",
   "plugin-type": "plugin",

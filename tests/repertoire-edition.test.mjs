@@ -204,7 +204,7 @@ test("Publisher setlist handoff prints the selected list, shareable PDF and corr
  const pdfJs=JSON.parse(pdf.text).tiddlers[pdf.title+"/startup.js"].text;
  assert.match(pdfJs,/listInput\.value=preset\.listTitle/,"PDF must select the actual setlist, not the summary tiddler");
  assert.match(pdfJs,/navigator\.share\(\{files:\[file\]/,"iPad must share a File, never navigate to blob");
- assert.match(pdfJs,/display\.caption\|\|title/,"Summary must have a readable chapter name");
+ assert.match(pdfJs,/publicationPdfTitle\(title,orchestra\)/,"TOC labels omit orchestra prefixes");
  const site=JSON.parse(await readFile(path.join(root,"plugins/site-publisher/dist/plugin.json"),"utf8"));
  const siteJs=JSON.parse(site.text).tiddlers[site.title+"/startup.js"].text;
  assert.match(siteJs,/listInput\.value=preset\.listTitle/);
@@ -227,4 +227,33 @@ test("Repertoire site generates clickable, uncluttered titles and retains arrang
  assert.equal(JSON.parse(summary["repertoire-publication-agreements"])[source.fields.title].cues,"Afslut på tegn");
  assert.equal(events[0].paramObject.repertoireOrchestra,"SilbaÄtno");
  assert.equal(wiki.getTiddler(source.fields.title),source);
+});
+
+test("PDF Publisher fills free space beneath scores and creates an overflow page when needed",async()=>{
+ const pdf=JSON.parse(await readFile(path.join(root,"plugins/print-article/dist/plugin.json"),"utf8"));
+ const js=JSON.parse(pdf.text).tiddlers[pdf.title+"/startup.js"].text;
+ const start=js.indexOf("function wrapAgreement("),end=js.indexOf("async function renderAbcChapter(",start);
+ assert.ok(start>0&&end>start,"An isolated score agreement renderer must be available");
+ function element(tag){return {tag,children:[],className:"",style:{},attributes:{},
+  appendChild(x){this.children.push(x);return x;},
+  setAttribute(k,v){this.attributes[k]=String(v);},
+  get textContent(){return this._text||"";},set textContent(v){this._text=String(v);}
+ };}
+ const document={createElement:element,createElementNS:(_ns,tag)=>element(tag)};
+ const helpers=new Function("document",js.slice(start,end)+"\nreturn {wrapAgreement,scoreAgreementRows,attachScoreAgreements};")(document);
+ function fixture(height){const added=[],staff={viewBox:{baseVal:{width:720,height}}};
+  const body={style:{width:"84%"},children:added,querySelectorAll(){return [staff];},appendChild(x){added.push(x);return x;}};
+  return {body,pages:[{querySelector(){return body;}}]};
+ }
+ const agreements={form:"AABB",instrumentation:"Violin og bas",cues:"Afslutning på tegn"};
+ const short=fixture(200);
+ helpers.attachScoreAgreements(short.pages,{width:210,height:297,margin:14},agreements);
+ assert.equal(short.pages.length,1,"The existing page should be reused when there is space");
+ assert.equal(short.body.children.length,1);
+ assert.match(short.body.children[0].children[0].children.map(n=>n.textContent).join(" "),"AFTALER");
+ const long=fixture(1000);
+ helpers.attachScoreAgreements(long.pages,{width:210,height:297,margin:14},agreements);
+ assert.equal(long.pages.length,2,"Do not overlap music when there is no space below the last system");
+ assert.equal(long.pages[1].children[0].children.length,1);
+ assert.match(js,/navigator\.share\(\{files:\[file\]/,"Quine-compatible file sharing remains intact");
 });

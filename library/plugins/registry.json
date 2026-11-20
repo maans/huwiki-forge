@@ -368,7 +368,7 @@
         "name": "Publisher",
         "description": "Publish tiddlers and collections to PDF / Udgiv tiddlere og samlinger som PDF",
         "author": "HUWiki",
-        "version": "0.2.9-test.1",
+        "version": "0.2.9-test.2",
         "plugin-type": "plugin",
         "license": "MIT",
         "core-version": ">=5.2.0"
