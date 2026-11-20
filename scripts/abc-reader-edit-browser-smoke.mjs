@@ -131,6 +131,17 @@ try{
   page.on("crash",()=>errors.push("BROWSER PAGE CRASH"));
   page.on("dialog",async dialog=>{dialogs.push(dialog.message());await dialog.accept();});
   const activate=locator=>scenario.touch?locator.tap():locator.click();
+  // A TiddlyWiki save/cancel destroys its own button during the event.
+  // In iPad WebKit locator.tap() can wait for the disappearing element even
+  // after Safari has accepted the native confirmation. Send a real touch to
+  // its visible coordinates and verify the resulting draft teardown instead.
+  const activateDraftControl=async locator=>{
+   if(!scenario.touch)return locator.click();
+   await locator.scrollIntoViewIfNeeded();
+   const box=await locator.boundingBox();
+   assert.ok(box&&box.width>0&&box.height>0,"The draft action must be visible on iPad");
+   await page.touchscreen.tap(box.x+box.width/2,box.y+box.height/2);
+  };
   const step=message=>{steps.push(message);console.log(`[${engineName}/${scenario.name}] ${message}`);};
   try{
    await page.goto(url,{waitUntil:"domcontentloaded",timeout:90000});
@@ -202,7 +213,7 @@ try{
 
     const hint=await page.evaluate(action=>$tw.wiki.getTiddlerText(
      action==="save"?"$:/language/Buttons/Save/Hint":"$:/language/Buttons/Cancel/Hint"),operation);
-    await activate(frame.getByRole("button",{name:hint,exact:true}));
+    await activateDraftControl(frame.getByRole("button",{name:hint,exact:true}));
     await frame.waitFor({state:"detached"});
     await book.locator(".huwabc-reader-toolbar").waitFor({state:"visible"});
     await page.waitForFunction(({title,pageNumber})=>{
@@ -222,8 +233,14 @@ try{
     assert.equal(expected.drafts.includes(draftTitle),false,"The completed draft is removed");
     step(`Cycle ${cycle+1}: native ${operation}, one restored reader, no retained draft/player`);
    }
-   assert.ok(expected.counts.maxScores<=1,"Source readers never accumulate across edit cycles");
-   assert.ok(expected.counts.maxPlayers<=1,"Playback controllers never accumulate across edit cycles");
+   // The initial TiddlyWiki navigation can briefly mount both a standalone
+   // source tiddler and the embedded book. Peak counters therefore cannot
+   // prove a leak. Check balanced live resources after three real edit cycles.
+   assert.equal(expected.counts.scoreMounts-expected.counts.scoreDisposals,1,
+    "Exactly one source score remains after all edit cycles");
+   assert.equal(expected.counts.registrations-expected.counts.unregistrations,1,
+    "Exactly one playback registration remains after all edit cycles");
+   step("Settled resource counts: "+JSON.stringify(expected.counts));
    assert.equal(expected.counts.editorMounts,3,"Each native edit action creates exactly one draft editor");
    assert.equal(expected.counts.editorDisposals,3,"Every draft editor is disposed after save or cancel");
    assert.deepEqual(errors,[],"No browser/runtime errors occurred");
