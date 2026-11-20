@@ -119,8 +119,11 @@ Repertoire.prototype.draw=function(){
  },"huwrep-primary"));
  setPanel.appendChild(row);
  if(this.setlistTitle){
+  var publishInstrument=el(doc,"select","huwrep-input");publishInstrument.setAttribute("aria-label","Instrument til udgivelse");
+  [["c","C"],["bb","B♭"],["eb","E♭ sopranino"],["ebalto","E♭ altsaxofon"]].forEach(function(x){option(doc,publishInstrument,x[0],x[1]);});
+  setPanel.appendChild(publishInstrument);
   if(wiki.getTiddler("$:/plugins/huwiki/site-publisher"))setPanel.appendChild(button(doc,"Udgiv repertoire-site",function(){
-   var result=Printing.open(wiki,self.setlistTitle,self,{scores:true,site:true});
+   var result=Printing.open(wiki,self.setlistTitle,self,{scores:true,site:true,instrumentId:publishInstrument.value});
    if(result&&result.error)self.alert(result.error);
   }));
   setPanel.appendChild(button(doc,"Udskriv sætliste / PDF",function(){

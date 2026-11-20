@@ -17,6 +17,7 @@ function open(wiki,setlistTitle,widget,options){
  var site=!!options.site,scores=!!options.scores,publisher=site?"$:/plugins/huwiki/site-publisher":"$:/plugins/huwiki/print-article";
  if(!wiki.getTiddler(publisher))return {error:(site?"SitePublisher":"PDF Publisher")+" er ikke installeret i wikien."};
  var instrumentId=/^(c|bb|eb|ebalto)$/.test(options.instrumentId)?options.instrumentId:"c";
+ var instrumentName={c:"C · klingende noder",bb:"B♭ · transponeret",eb:"E♭ · sopranino",ebalto:"E♭ · altsaxofon"}[instrumentId];
  var orch=wiki.getTiddler(set.fields["orchestra-title"]),orchName=orch&&(orch.fields.name||orch.fields.title)||"Repertoire",setName=set.fields.name||set.fields.title;
  var entries=model.entries(wiki,setlistTitle).map(function(id,index){
   var item=wiki.getTiddler(id),title=item&&item.fields["music-title"]||id;
@@ -24,11 +25,11 @@ function open(wiki,setlistTitle,widget,options){
  });
  var prefix=ROOT+encodeURIComponent(setlistTitle)+"/"+(site?"site":scores?"nodebog":"saetliste")+"/"+instrumentId+"/";
  var summaryTitle=prefix+"summary",orderTitle=prefix+"order";
- var lines=["! "+clean(orchName)+" · "+clean(setName)+"\n","''"+entries.length+" numre''\n"];
+ var lines=["! "+clean(orchName)+" · "+clean(setName)+"\n",(scores?"''Nodebog til "+instrumentName+"''\n":""),"''"+entries.length+" numre''\n"];
  entries.forEach(function(e){
   lines.push("\n!! "+e.number+". "+clean(e.title)+"\n");
   var a=e.agreement;
-  if(a.key||a.tempo)lines.push("''"+[a.key?"Toneart: "+clean(a.key):"",a.tempo?"Tempo: "+clean(a.tempo):""].filter(Boolean).join(" · ")+"''\n");
+  if(a.key||a.tempo)lines.push("''"+[a.key?"Klingende toneart: "+clean(a.key):"",a.tempo?"Tempo: "+clean(a.tempo):""].filter(Boolean).join(" · ")+"''\n");
   add(lines,"Form",a.form);add(lines,"Instrumentering",a.instrumentation);add(lines,"Indsatser og tegn",a.cues);
  });
  var titles=[summaryTitle];
@@ -37,7 +38,7 @@ function open(wiki,setlistTitle,widget,options){
   wiki.addTiddler(new $tw.Tiddler({title:summaryTitle,type:"text/vnd.tiddlywiki",text:lines.join("\n"),caption:orchName+" · "+setName}));
   wiki.addTiddler(new $tw.Tiddler({title:orderTitle,type:"text/vnd.tiddlywiki",list:$tw.utils.stringifyList(titles),text:""}));
   widget.dispatchEvent({type:site?"tm-huwiki-sitepublisher":"tm-huwiki-print-article",param:summaryTitle,
-    paramObject:{title:summaryTitle,listTitle:orderTitle,siteTitle:orchName+" · "+setName,instrumentId:instrumentId}});
+    paramObject:{title:summaryTitle,listTitle:orderTitle,siteTitle:orchName+" · "+setName+(scores?" · "+instrumentName:""),instrumentId:instrumentId}});
   return {titles:titles,summary:summaryTitle,order:orderTitle,instrumentId:instrumentId};
  }catch(error){return {error:"Udgivelse kunne ikke åbnes: "+(error&&error.message||error)};}
 }

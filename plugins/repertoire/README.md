@@ -38,7 +38,8 @@ I værkstedet kan du:
 
 - Forhandling af toneart i værkstedet opdaterer aftalefelterne. Automatisk transponering af det viste ABC-partitur implementeres senere og må ikke forveksles med den lagrede aftale.
 - Nodebogen er bygget, men finger-preview af nummer-dots, bogmærker og automatiske skift efter afspilning er endnu ikke implementeret.
-- PDF med klikbart indeks og blandede scannede sider er ikke bygget endnu; enkelte scannede nodebilleder kan vises, når de er knyttet til en melodi.
+- Nodebogen bruger nu PDF Publisher og SitePublisher direkte. PDF Publisher kan dele en rigtig PDF via iPad/Quines delingsmenu, uden at åbne `blob:` som en URL. C, B♭, E♭ sopranino og E♭ altsaxofon er separate notationsvalg. Form og instrumentering står på repertoireoversigten foran nodearkene.
+- Aftalte tonearter i repertoireværkstedet er endnu en metadataaftale; udgivelsestransponeringen tager udgangspunkt i de originale ABC-noder. Scannede nodebilleder transponeres ikke automatisk.
 - Automatisk sortering og egentlig drag-and-drop mellem repertoireposter afventer næste iteration; op/ned-knapper virker også ved touch. Nummerpanelet er allerede søgbart.
 - SilbaÄtno-demoen er en prøve på pluginet, ikke en færdig Repertoire Edition. Originale 17 konverterede partiturer skal fortsat kontrolleres mod MuseScore-kilder.
 

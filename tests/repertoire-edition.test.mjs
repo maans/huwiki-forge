@@ -176,3 +176,24 @@ test("Nodebog prints PDF scores and cues with hidden-safe editor state",()=>{
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Instrumentering: hvem spiller hvad/);
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text,/\.huwrep-book\[hidden\]\{display:none!important\}/);
 });
+
+test("Repertoire Publisher prepares instrument-specific collections without replacing concert scores",()=>{
+ const {model,wiki,Tiddler}=makeWiki(),source=new Tiddler({title:"Melodi","abc-source":"X:1\nT:Melodi\nK:Gm\nG A|",text:"Original"});
+ wiki.addTiddler(source);wiki.addTiddler(new Tiddler({title:"$:/plugins/huwiki/print-article"}));wiki.addTiddler(new Tiddler({title:"$:/plugins/huwiki/site-publisher"}));
+ const orchestra=model.orchestra(wiki,"Silba"),item=model.addItem(wiki,orchestra,"Melodi").title,set=model.createSetlist(wiki,orchestra,"Aftener");model.addEntry(wiki,set,item);
+ model.saveArrangement(wiki,item,set,{key:"Gm",form:"AABB",instrumentation:"Fløjte og guitar",cues:"Tegn ved coda"},"setlist");
+ const printing=tiddlers["$:/plugins/huwiki/repertoire/print.js"],out={};
+ runInNewContext(printing.text,{exports:out,$tw:{Tiddler,utils:{$dummy:null,stringifyList(titles){return titles.map(t=>"[[ "+t+" ]]").join(" ");}}},require(name){if(name.endsWith("/model.js"))return model;throw Error(name);}});
+ const events=[],widget={dispatchEvent(e){events.push(e);}};
+ const pdf=out.open(wiki,set,widget,{scores:true,instrumentId:"bb"});
+ assert.equal(pdf.instrumentId,"bb");assert.equal(pdf.titles.length,2);
+ assert.match(wiki.getTiddler(pdf.summary).fields.text,/Klingende toneart: Gm/);
+ assert.match(wiki.getTiddler(pdf.summary).fields.text,/B♭/);
+ assert.match(wiki.getTiddler(pdf.summary).fields.text,/Fløjte og guitar/);
+ assert.equal(events[0].type,"tm-huwiki-print-article");
+ assert.equal(events[0].paramObject.instrumentId,"bb");
+ const site=out.open(wiki,set,widget,{scores:true,site:true,instrumentId:"ebalto"});
+ assert.equal(site.instrumentId,"ebalto");assert.equal(events[1].type,"tm-huwiki-sitepublisher");
+ assert.match(wiki.getTiddler(site.summary).fields.text,/altsaxofon/);
+ assert.equal(wiki.getTiddler("Melodi"),source);
+});
