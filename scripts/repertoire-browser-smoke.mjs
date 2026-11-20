@@ -31,6 +31,9 @@ try{
  await book.waitFor();
  await page.waitForFunction(()=>!!document.querySelector(".huwrep-book .huwabc-page-select"),
   undefined,{timeout:90000});
+ const dormantReader=book.locator(".huwabc-reader-toolbar").first();
+ await dormantReader.waitFor({state:"hidden"});
+ assert.equal(await dormantReader.isVisible(),false,"The ABC reader must not cover repertoire navigation before activation");
  assert.ok(await book.evaluate(el=>el.classList.contains("huwrep-book-fullscreen")),
   "The dedicated nodebook should start in full width, without the ordinary StoryList chrome.");
  await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-page-select")?.value==="spread");
