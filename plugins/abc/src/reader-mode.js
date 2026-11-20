@@ -243,8 +243,19 @@ Reader.prototype.updateScale=function(){
   // The page viewport contains the existing rendered notation, with its
   // intrinsic width; its parent is the scrollable screen-sized shell.
   var bounds=viewport.getBoundingClientRect();
-  var width=Math.max(viewport.scrollWidth,bounds.width,1);
-  var height=Math.max(viewport.scrollHeight,bounds.height,1);
+  // A percentage-wide page viewport can include empty space. Prefer the
+  // intrinsic paper bounds, but keep the surrounding viewport as fallback.
+  var pages=Array.from(viewport.querySelectorAll(".huwabc-page"));
+  var visible=pages.filter(function(page){return page.getClientRects().length>0;});
+  var left=Infinity,top=Infinity,right=-Infinity,bottom=-Infinity;
+  visible.forEach(function(page){
+   var b=page.getBoundingClientRect();
+   if(b.width>0&&b.height>0){left=Math.min(left,b.left);top=Math.min(top,b.top);right=Math.max(right,b.right);bottom=Math.max(bottom,b.bottom);}
+  });
+  var paperWidth=right>left?right-left:0;
+  var paperHeight=bottom>top?bottom-top:0;
+  var width=Math.max(paperWidth||viewport.scrollWidth,bounds.width>shell.clientWidth?bounds.width:0,1);
+  var height=Math.max(paperHeight||viewport.scrollHeight,1);
   var availableWidth=Math.max(1,shell.clientWidth-16);
   var availableHeight=Math.max(1,shell.clientHeight-16);
   var choice=this.fitMode||"fit";
