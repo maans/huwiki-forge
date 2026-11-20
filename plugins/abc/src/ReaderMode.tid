@@ -28,12 +28,15 @@ tags: $:/tags/Stylesheet
 }
 /* The original toolbars and secondary panels remain mounted so audio, mixer
    and the page renderer keep their existing state. They are just not visible. */
-.huwabc-reader-active > :not(.huwabc-paper):not(.huwabc-audio):not(.huwabc-reader-toolbar):not(.huwabc-reader-edges){
+.huwabc-reader-active > :not(.huwabc-page-shell):not(.huwabc-audio):not(.huwabc-reader-toolbar):not(.huwabc-reader-edges){
  display:none!important
 }
-.huwabc-reader-active > .huwabc-paper{
- display:block!important;
+/* PageView rehomes the SVG inside a top-level page-shell. The original
+   .huwabc-paper is NOT a top-level child, so keep the actual page-shell. */
+.huwabc-reader-active > .huwabc-page-shell{
+ display:flex!important;
  flex:1 1 auto!important;
+ flex-direction:column!important;
  position:relative!important;
  margin:0!important;
  padding:0!important;
@@ -42,17 +45,19 @@ tags: $:/tags/Stylesheet
  min-height:0!important;
  min-width:0!important;
  max-height:none!important;
+ max-width:none!important;
  width:100%!important;
  overflow:auto!important;
  overscroll-behavior:contain;
  -webkit-overflow-scrolling:touch;
  background:#ebeeea!important
 }
+.huwabc-reader-active .huwabc-page-toolbar{display:none!important}
 .huwabc-reader-active .huwabc-page-shell{
  margin:4px auto!important;
  box-shadow:0 1px 8px rgba(0,0,0,.08)!important
 }
-.huwabc-reader-active.huwabc-reader-fill .huwabc-page-shell{
+.huwabc-reader-active.huwabc-reader-fill .huwabc-page-viewport{
  zoom:1.22
 }
 .huwabc-reader-active .huwabc-audio{display:none!important}
