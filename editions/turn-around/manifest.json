@@ -2,10 +2,10 @@
   "schemaVersion": 1,
   "id": "turn-around",
   "name": "Turn Around — Beyond the Cave",
-  "version": "0.1.0-demo.6",
+  "version": "0.1.0-demo.7",
   "coreVersion": "5.4.1",
   "tiddlers": [
-    "tiddlers/production.json?v=0.1.0-demo.6",
+    "tiddlers/production.json?v=0.1.0-demo.7",
     "tiddlers/recordings-01.json",
     "tiddlers/recordings-02.json",
     "tiddlers/recordings-03.json",

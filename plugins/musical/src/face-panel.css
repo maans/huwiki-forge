@@ -20,6 +20,7 @@
 .huw-musical-face-panel .huw-musical-face-choice[aria-pressed=true]{border-color:#18788e;background:#d9f0f4;box-shadow:0 0 0 1px #18788e}
 .huw-musical-face-thumbnail{display:block;width:88px;height:76px;background:#e0e7e9;border-radius:5px;overflow:hidden}
 .huw-musical-face-thumbnail svg,.huw-face-workshop-preview svg,.huw-face-sound-thumbnail svg,.huw-face-history-thumbnail svg{display:block;width:100%;height:100%;pointer-events:none;max-width:none;max-height:none}
+.huw-face-workshop-preview svg{pointer-events:auto}
 .huw-musical-face-choice-name{display:block;text-align:center;font-size:12px;font-weight:650;max-width:100%;overflow-wrap:anywhere}
 .huw-musical-face-preview-missing{display:flex;align-items:center;justify-content:center;height:100%;color:#56717e}
 .huw-musical-face-footer{display:flex;gap:10px;align-items:center;min-width:0;padding-top:3px}

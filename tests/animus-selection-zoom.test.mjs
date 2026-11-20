@@ -82,13 +82,14 @@ function workspaceHarness(options={}){
  create('header','huw-musical-editor-header',root);create('p','',root);create('div','huw-musical-inspector',root);
  const film={width:800,height:450,camera:{keys:[{t:0,x:400,y:225,zoom:1}]},parts:[{id:'actor',name:'Actor'},{id:'arm',parent:'actor',name:'Arm'}]};
  if(options.face)film.parts.push({id:'head',parent:'actor',name:'Head',type:'group'},{id:'mouth',parent:'head',name:'Mouth',type:'image',variants:[{id:'o',name:'Round'},{id:'e',name:'Smile'}]},{id:'eyes',parent:'head',name:'Eyes'});
- const scene=film;let selected={id:'song:music',kind:'song'},workspace,change=null,committed=0,paused=0,scriptOpened=0,position=2,seeks=0,figureOptions,figureSelected='',figureOpened=false,figureSuspended=0;
+ const scene=film;let selected={id:'song:music',kind:'song'},workspace,change=null,committed=0,paused=0,scriptOpened=0,puppetOpened=0,position=2,seeks=0,figureOptions,figureSelected='',figureOpened=false,figureSuspended=0;
  const faceCommands=[],figureCalls=[];
  function repaint(){svg.setAttribute('viewBox','0 0 800 450');workspace?.paintPreview();workspace?.refreshHandles();}
  const editor={getSelection:()=>selected,setFilter(){},setZoom(){},getZoom:()=>1,addKeyframe(){},removeKeyframe(){},setCameraEdit(){repaint();},inClipDetail:()=>false,
   resolvePartScene:()=>scene,ensureFigureTrack(){},getPartPivot:()=>({x:0,y:0}),isJointMove:()=>false,
   selectPart(id){selected={id:'part:'+id,kind:'part',part:id};workspace?.selectTrack(selected);return true;},
   selectFigure(id,quiet){selected={id:'figure:'+id,kind:'figure',part:id};if(!quiet)workspace?.selectTrack(selected);return true;},
+  clearSelection(){selected=null;workspace?.selectTrack(null);},
   beginPartMove(id){return {update(dx,dy,dr){change={id,dx,dy,dr};repaint();},commit(){committed++;},cancel(){change=null;}};},
   figureStateFor:()=>({x:0,y:0,r:0,sx:1,sy:1}),isExporting:()=>false};
  if(options.face){
@@ -103,9 +104,9 @@ function workspaceHarness(options={}){
  const modules={
   '$:/plugins/huwiki/musical/selection-zoom.js':zoom,
   '$:/plugins/huwiki/musical/face-panel.js':options.face?facePanel:{mount:()=>({...inactive(),select:()=>false,refresh(){},hide(){},isWorkshopOpen:()=>false,relocate(){},suspend:()=>()=>{}})},
-  '$:/plugins/huwiki/musical/figure-panel.js':{mount:config=>{figureOptions=config;return {select(id){figureCalls.push(id);figureSelected=id.replace(/-drawing$/,'');figureOpened=true;return true;},selectedPart:()=>figureSelected,refresh(){},hide(){figureOpened=false;},isOpen:()=>figureOpened&&!figureSuspended,isDragging:()=>false,cancelGesture(){},
+  '$:/plugins/huwiki/musical/figure-panel.js':{mount:config=>{figureOptions=config;return {select(id){figureCalls.push(id);figureSelected=id.replace(/-drawing$/,'');figureOpened=true;return true;},selectedPart:()=>figureSelected,clearSelection(){figureSelected='';},refresh(){},hide(){figureOpened=false;},isOpen:()=>figureOpened&&!figureSuspended,isDragging:()=>false,cancelGesture(){},
    suspend(){figureSuspended++;let restored=false;return ()=>{if(!restored){restored=true;figureSuspended--;}};},dispose(){figureOpened=false;}};}},
-  '$:/plugins/huwiki/musical/puppet.js':{mount:inactive,rootFor:id=>id==='arm'?'actor':id},
+  '$:/plugins/huwiki/musical/puppet.js':{mount:()=>({...inactive(),open(){puppetOpened++;}}),rootFor:id=>id==='arm'?'actor':id},
   '$:/plugins/huwiki/musical/manuscript.js':{mount:()=>({...inactive(),open(){scriptOpened++;}})},
   '$:/plugins/huwiki/musical/narration.js':{mount:inactive},
   '$:/plugins/huwiki/musical/score-workshop.js':{mount:inactive},
@@ -114,8 +115,9 @@ function workspaceHarness(options={}){
  const api={};runInNewContext(workspaceCode,{exports:api,require:name=>{if(!modules[name])throw Error(name);return modules[name];},$tw:{}});
  const view={svg,nodes:{actor:{el:actor},arm:{el:arm}},clips:[]};
  workspace=api.mount({doc,host,editor,film,view,layout,transport,play,project:'Show',sceneTitle:'Film',wiki:{getTiddlerText:()=>'$:/languages/en-GB'},scoreTitle:()=>'',position:()=>position,pause(){paused++;},seek(time){position=time;seeks++;},repaint});
- return {...h,host,stage,film,view,workspace,editor,repaint,faceCommands,figureCalls,openFigureFace(id){figureOptions.onFace({partId:id,actorId:'actor',headId:'head',tab:id==='mouth'?'mouth':'eyes'});},
-  get selected(){return selected;},get change(){return change;},get committed(){return committed;},get paused(){return paused;},get scriptOpened(){return scriptOpened;},get position(){return position;},get seeks(){return seeks;},get figureOpen(){return figureOpened&&!figureSuspended;}};
+ return {...h,host,stage,canvas,film,view,workspace,editor,repaint,faceCommands,figureCalls,openFigureFace(id){figureOptions.onFace({partId:id,actorId:'actor',headId:'head',tab:id==='mouth'?'mouth':'eyes'});},
+  deselectFigure(){figureOptions.onDeselect();},get figureSelected(){return figureSelected;},
+  get selected(){return selected;},get change(){return change;},get committed(){return committed;},get paused(){return paused;},get scriptOpened(){return scriptOpened;},get puppetOpened(){return puppetOpened;},get position(){return position;},get seeks(){return seeks;},get figureOpen(){return figureOpened&&!figureSuspended;}};
 }
 test('workspace actions zoom selected figure and arm, retain pointer coordinates and leave camera data unchanged',()=>{
  const h=workspaceHarness(),before=JSON.stringify(h.film),zoomButton=h.host.querySelector('.huw-musical-zoom-selection');
@@ -150,7 +152,8 @@ test('workspace export, fullscreen fallback, hidden selection and disposal resto
  const restore=h.workspace.beginExport();assert.equal(h.svg.getAttribute('viewBox'),'0 0 800 450');assert.equal(h.svg.querySelector('.huw-musical-transform-overlay').style.display,'none');
  h.repaint();assert.equal(h.svg.getAttribute('viewBox'),'0 0 800 450');restore();restore();assert.equal(h.svg.getAttribute('viewBox'),focused);
  const fullscreen=h.host.querySelector('.huw-musical-stage-fullscreen');fullscreen.click();assert.equal(fullscreen.getAttribute('aria-pressed'),'true');assert.equal(h.stage.classList.contains('huw-musical-stage--expanded'),true);
- h.host.dispatch('keydown',{key:'Escape'});assert.equal(fullscreen.getAttribute('aria-pressed'),'false');assert.equal(h.stage.classList.contains('huw-musical-stage--expanded'),false);
+ h.host.dispatch('keydown',{key:'Escape'});assert.equal(h.selected,null);assert.equal(fullscreen.getAttribute('aria-pressed'),'true','Escape releases selection without leaving the view');assert.equal(h.svg.getAttribute('viewBox'),focused);
+ fullscreen.click();assert.equal(h.stage.classList.contains('huw-musical-stage--expanded'),false);h.editor.selectFigure('actor');
  h.actor.style.display='none';h.repaint();assert.equal(h.svg.getAttribute('viewBox'),'0 0 800 450');assert.equal(h.host.querySelector('.huw-musical-zoom-selection').disabled,true);
  h.actor.style.display='';h.repaint();h.workspace.zoomToSelection();h.workspace.dispose();assert.equal(h.svg.getAttribute('viewBox'),'0 0 800 450');assert.equal(h.svg.querySelector('.huw-musical-transform-overlay'),null);
 });
@@ -227,5 +230,69 @@ test('Manuscript waits for native fullscreen exit and keeps the same inline face
  finishExit();await opening;
  assert.equal(h.scriptOpened,1);assert.equal(dock.parentNode,h.host);assert.equal(dock.querySelector('.huw-face-workshop'),expanded);
  assert.equal(expanded.querySelector('.huw-musical-face-context').dataset.faceViseme,'E');assert.equal(h.seeks,0);assert.deepEqual(plain(h.film.musical.faceKeys),[]);
+ h.workspace.dispose();
+});
+
+test('Escape clears the shared selection while preserving zoom, actor, face context and time',()=>{
+ const h=workspaceHarness({face:true}),dock=h.host.querySelector('[data-animus-workshop]');
+ h.host.querySelector('.huw-musical-parts-button').click();h.editor.selectPart('arm');h.workspace.zoomToSelection();
+ const before=JSON.stringify(h.film),time=h.position,box=h.svg.getAttribute('viewBox');
+ h.host.dispatch('keydown',{key:'Escape'});
+ assert.equal(h.selected,null);assert.equal(h.figureSelected,'');assert.equal(h.figureOpen,true);
+ assert.equal(dock.dataset.animusWorkshop,'figure');assert.equal(dock.hidden,false);
+ assert.equal(h.svg.querySelector('.huw-musical-transform-overlay').style.display,'none');
+ assert.equal(h.host.querySelector('.huw-musical-add-key').disabled,true);assert.equal(h.host.querySelector('.huw-musical-delete-key').disabled,true);
+ for(const b of h.host.querySelectorAll('.huw-musical-clear-selection'))assert.equal(b.disabled,true);
+ h.repaint();assert.equal(h.selected,null);assert.equal(h.svg.getAttribute('viewBox'),box);
+ dock.querySelector('[data-workshop-mode="face"]').click();assert.equal(dock.dataset.animusWorkshop,'face');
+ const faceWorkshop=dock.querySelector('.huw-face-workshop');faceWorkshop.dispatch('keydown',{key:'Escape'});
+ assert.equal(dock.querySelector('.huw-face-workshop'),faceWorkshop);assert.equal(h.selected,null);
+ faceWorkshop.querySelector('[data-face-back="figure"]').click();assert.equal(dock.dataset.animusWorkshop,'figure');assert.equal(h.figureSelected,'');assert.equal(h.selected,null,'changing workshops does not restore a released selection');
+ assert.equal(h.position,time);assert.equal(JSON.stringify(h.film),before);
+ const at=h.arm.getScreenCTM().point({x:30,y:0});h.shape.dispatch('pointerdown',{clientX:at.x,clientY:at.y});h.arm.dispatch('pointerup',{clientX:at.x,clientY:at.y});
+ assert.equal(h.selected.part,'arm','one fresh tap selects the part directly');assert.equal(h.figureSelected,'arm');assert.equal(h.committed,0);
+ h.workspace.dispose();
+});
+
+test('only completed blank stage taps clear selection, including the letterbox around the SVG',()=>{
+ const h=workspaceHarness();h.host.querySelector('.huw-musical-parts-button').click();h.editor.selectPart('arm');
+ const tap={clientX:4,clientY:4,pointerType:'touch'};
+ h.canvas.dispatch('pointerdown',tap);assert.equal(h.selected.part,'arm');h.canvas.dispatch('pointermove',{...tap,clientY:30});h.canvas.dispatch('pointerup',{...tap,clientY:30});assert.equal(h.selected.part,'arm','scrolling is not a blank tap');
+ h.canvas.dispatch('pointerdown',tap);h.canvas.dispatch('pointercancel',tap);h.canvas.dispatch('pointerup',tap);assert.equal(h.selected.part,'arm');
+ h.canvas.dispatch('pointerdown',tap);h.canvas.dispatch('pointerdown',{...tap,pointerId:2,isPrimary:false});h.canvas.dispatch('pointerup',tap);assert.equal(h.selected.part,'arm','a second finger cancels a pending blank tap');
+ h.canvas.dispatch('pointerdown',tap);h.canvas.dispatch('pointerup',tap);assert.equal(h.selected,null);assert.equal(h.figureOpen,true);
+ const at=h.arm.getScreenCTM().point({x:30,y:0});h.shape.dispatch('pointerdown',{clientX:at.x,clientY:at.y});h.arm.dispatch('pointerup',{clientX:at.x,clientY:at.y});assert.equal(h.selected.part,'arm');
+ h.svg.dispatch('pointerdown',tap);h.svg.dispatch('pointerup',tap);assert.equal(h.selected,null);assert.equal(h.figureOpen,true);assert.equal(h.committed,0);
+ h.workspace.dispose();
+});
+
+test('Escape from fields and the touch button cancel the unfinished stage gesture without saving',()=>{
+ const h=workspaceHarness();h.host.querySelector('.huw-musical-parts-button').click();h.editor.selectPart('arm');
+ const handle=h.svg.querySelector('[data-transform-action="rotate"]'),start=h.svg.getScreenCTM().point({x:Number(handle.getAttribute('cx')),y:Number(handle.getAttribute('cy'))});
+ handle.dispatch('pointerdown',{clientX:start.x,clientY:start.y});handle.dispatch('pointermove',{clientX:start.x+25,clientY:start.y+15});assert.ok(h.change);
+ const field=h.doc.createElement('input');h.host.appendChild(field);field.dispatch('keydown',{key:'Escape'});
+ assert.equal(h.change,null);assert.equal(h.committed,0);assert.equal(h.selected,null);
+ handle.dispatch('pointerup',{clientX:start.x+25,clientY:start.y+15});assert.equal(h.committed,0,'a later pointer-up cannot commit an escaped drag');
+ h.editor.selectPart('arm');const picker=h.doc.createElement('select');h.host.appendChild(picker);picker.dispatch('keydown',{key:'Escape'});assert.equal(h.selected,null,'a closed object dropdown does not trap Escape');
+ h.editor.selectPart('arm');h.host.querySelector('.huw-musical-clear-selection').click();assert.equal(h.selected,null);assert.equal(h.figureOpen,true);
+ h.editor.selectPart('arm');h.deselectFigure();assert.equal(h.selected,null);assert.equal(h.svg.querySelector('.huw-musical-transform-overlay').style.display,'none');
+ h.workspace.dispose();
+});
+
+test('an escaped stage touch does not become the first half of a double tap',()=>{
+ const h=workspaceHarness();h.host.querySelector('.huw-musical-parts-button').click();
+ const at=h.arm.getScreenCTM().point({x:30,y:0}),tap={clientX:at.x,clientY:at.y,pointerType:'touch',pointerId:7};
+ h.shape.dispatch('pointerdown',tap);h.arm.dispatch('pointermove',{...tap,clientX:at.x+18});assert.ok(h.change);
+ h.host.dispatch('keydown',{key:'Escape'});assert.equal(h.selected,null);assert.equal(h.arm.hasPointerCapture(7),false);
+ h.arm.dispatch('pointerup',tap);h.shape.dispatch('pointerdown',tap);h.arm.dispatch('pointerup',tap);
+ assert.equal(h.selected.part,'arm');assert.equal(h.puppetOpened,0,'the next deliberate tap simply selects again');assert.equal(h.committed,0);
+ h.workspace.dispose();
+});
+
+test('timeline control replacement restores keyboard focus without stealing it from surviving controls',()=>{
+ const h=workspaceHarness(),oldPicker=h.doc.createElement('select');h.host.appendChild(oldPicker);oldPicker.focus();oldPicker.remove();
+ h.editor.selectPart('arm');assert.equal(h.doc.activeElement,h.host,'the rebuilt picker leaves keyboard focus in the editor');
+ h.doc.activeElement.dispatch('keydown',{key:'Escape'});assert.equal(h.selected,null);
+ const kept=h.host.querySelector('[data-workshop-mode="figure"]');kept.focus();h.editor.selectPart('arm');assert.equal(h.doc.activeElement,kept,'surviving controls retain their focus');
  h.workspace.dispose();
 });

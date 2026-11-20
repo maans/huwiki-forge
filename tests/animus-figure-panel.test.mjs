@@ -59,7 +59,7 @@ function scene(mirror = false) {
 function harness({initial, motion = false, reentry = true, globals = {}, faceWork} = {}) {
   const row = (title, data) => ({title, type: 'application/json', text: JSON.stringify(data)});
   const film = {version: 1, width: 800, height: 450, duration: 20, parts: [], camera: {keys: [{t: 0, x: 400, y: 225, zoom: 1.7, r: 13, skewX: 4}]}, scenes: [{source: 'First', duration: 10}, {source: 'Second', duration: 10, speed: 2, offset: 1, loop: true}], musical: {songs: [{id: 'music', score: 'Score', start: 0, duration: 20}], animationClips: motion ? [{id: 'arm-loop', name: 'Arm loop', target: 'prisoner', start: 10, duration: 10, beatsPerLoop: 8, loop: true, motion: {'prisoner-forearm-right': [pose(0, {y: 76, r: 10}), pose(8, {y: 76, r: 50})]}}] : [], faceKeys: [{actor: 'prisoner', t: 0, eyes: 'squint', mouthMap: {O: 'E'}}]}};
-  const records = plain(initial || {Film: row('Film', film), First: row('First', scene()), Second: row('Second', scene(true)), Score: {title: 'Score', type: 'text/vnd.abc', text: 'X:1\nK:C\nC D E F|'}}), writes = [], selections = [], faces = [];
+  const records = plain(initial || {Film: row('Film', film), First: row('First', scene()), Second: row('Second', scene(true)), Score: {title: 'Score', type: 'text/vnd.abc', text: 'X:1\nK:C\nC D E F|'}}), writes = [], selections = [], faces = [], deselections = [];
   const wiki = {getTiddler: title => records[title] ? new Tiddler(records[title]) : null, getTiddlerText: (title, fallback = '') => records[title]?.text ?? fallback, getTiddlers: () => Object.keys(records), each(fn) {for(const [title, fields] of Object.entries(records)) fn(new Tiddler(fields), title);}, addTiddler(t) {records[t.fields.title] = plain(t.fields);writes.push(t.fields.title);}, getModificationFields: () => ({}), generateNewTitle: title => title};
   const api = modules(globals), doc = svgDocument(), data = api.engine.readScene(wiki, 'Film'), view = api.engine.build(doc, wiki, data, false), host = doc.createElement('main'), dock = doc.createElement('section');doc.body.appendChild(host);host.appendChild(view.svg);host.appendChild(dock);
   const native = nativeEvents(doc);
@@ -68,9 +68,9 @@ function harness({initial, motion = false, reentry = true, globals = {}, faceWor
   function repaint() {api.engine.paint(view, time);api.motion.paint(view, data, time, clock);api.lips.apply(view, time, time);if(editor) editor.paint(time);if(panel) panel.refresh();}
   const options = {doc, host, wiki, film: data, view, sceneTitle: 'Film', stageTitle: 'First', scoreTitle: 'Score', duration: () => data.duration, beatClock: () => clock, pause() {}, isPlaying: () => false, position: () => time, seek(t) {time = t;repaint();}, repaint, markOwnWrite() {}, onSelect(track) {if(reentry && panel && track.part) panel.select(track.part);}};
   editor = api.editor.attach(options);repaint();
-  panel = api.panel.mount({doc, wiki, host, parent: dock, view, film: data, editor, position: () => time, pause() {}, onSelect(id) {selections.push(id);if(reentry) panel.select(id);}, onFace(value) {faces.push(plain(value));if(faceWork) faceWork(value);}, onLayout() {layouts++;if(panel) panel.refresh(true);}});
+  panel = api.panel.mount({doc, wiki, host, parent: dock, view, film: data, editor, position: () => time, pause() {}, onSelect(id) {selections.push(id);if(reentry) panel.select(id);}, onDeselect() {deselections.push({actorId: panel.context()?.actorId, partId: panel.selectedPart()});}, onFace(value) {faces.push(plain(value));if(faceWork) faceWork(value);}, onLayout() {layouts++;if(panel) panel.refresh(true);}});
   const preview = dock.querySelector('[data-figure-preview]');preview.screenMatrix = new Matrix(.85, 0, 0, .85, 900, 260);
-  return {api, doc, host, dock, data, view, editor, options, records, writes, selections, faces, panel, preview, native, get time() {return time;}, get layouts() {return layouts;}, get leaf() {return panel.context()?.view || view.clips[1].view;}};
+  return {api, doc, host, dock, data, view, editor, options, records, writes, selections, faces, deselections, panel, preview, native, get time() {return time;}, get layouts() {return layouts;}, get leaf() {return panel.context()?.view || view.clips[1].view;}};
 }
 const close = (a, b, label) => assert.ok(Math.abs(a - b) < 1e-7, label || `${a} should equal ${b}`);
 function pointClose(a, b) {close(a.x, b.x);close(a.y, b.y);}
@@ -145,6 +145,39 @@ test('click, cancellation, hiding and export suspension never persist an unfinis
   drag(h, 'prisoner-forearm-right', 20, null);h.panel.hide();assert.equal(JSON.stringify(h.leaf.scene.parts), before);assert.equal(h.panel.isOpen(), false);
   h.panel.show();drag(h, 'prisoner-forearm-right', 20, null);const restore = h.panel.suspend();assert.equal(JSON.stringify(h.leaf.scene.parts), before);assert.equal(h.panel.isOpen(), false);restore();restore();assert.equal(h.panel.isOpen(), true);
   drag(h, 'prisoner-forearm-right', 20, null);h.panel.dispose();assert.equal(JSON.stringify(h.view.clips[1].view.scene.parts), before);assert.deepEqual(h.writes, []);assert.equal(h.dock.querySelector('[data-figure-panel]'), null);
+});
+
+test('Escape clears the part without closing or freezing the current actor preview', () => {
+  const h = harness();h.panel.select('prisoner-forearm-right');const actor = clonePart(h, 'prisoner'), before = JSON.stringify(h.records), frame = h.preview.getAttribute('viewBox'), panel = h.dock.querySelector('[data-figure-panel]'), handle = h.preview.querySelector('[data-figure-action="rotate"]');
+  handle.focus();const event = handle.dispatch('keydown', {key: 'Escape'});
+  assert.equal(event.defaultPrevented, true);assert.equal(h.panel.selectedPart(), '');assert.equal(h.panel.context().partId, '');assert.equal(h.panel.context().actorId, 'prisoner');assert.equal(h.panel.isOpen(), true);
+  assert.equal(clonePart(h, 'prisoner'), actor);assert.equal(h.preview.getAttribute('viewBox'), frame);assert.equal(h.time, 13);assert.equal(panel.getAttribute('data-figure-selected'), '');assert.equal(h.doc.activeElement, panel);
+  assert.equal(h.preview.querySelector('.huw-musical-figure-overlay').getAttribute('display'), 'none');assert.equal(handle.getAttribute('tabindex'), '-1');assert.equal(h.dock.querySelector('[data-figure-part][aria-pressed="true"]'), null);
+  assert.deepEqual(h.deselections, [{actorId: 'prisoner', partId: ''}]);
+  h.panel.refresh(true);const restore = h.panel.suspend();restore();h.panel.hide();h.panel.show();assert.equal(h.panel.isOpen(), true);assert.equal(h.panel.selectedPart(), '', 'refresh/show/export must not silently reselect the actor or old part');
+  h.options.seek(2);assert.equal(h.panel.context().scene._title, 'First');assert.equal(h.panel.selectedPart(), '');assert.notEqual(clonePart(h, 'prisoner'), actor);assert.equal(clonePart(h, 'prisoner-head').getAttribute('transform'), h.view.clips[0].view.nodes['prisoner-head'].el.getAttribute('transform'));
+  assert.equal(JSON.stringify(h.records), before);assert.deepEqual(h.writes, []);
+  h.panel.select('prisoner-head');assert.equal(h.panel.clearSelection(), true);assert.equal(h.panel.clearSelection(), false);assert.equal(h.deselections.length, 1, 'programmatic clearing does not call back into workspace selection');
+});
+
+test('a blank tap clears selection and a single tap directly selects any other body part', () => {
+  const h = harness();h.panel.select('prisoner-forearm-right');const before = JSON.stringify(h.records), canvas = h.dock.querySelector('.huw-musical-figure-canvas');
+  h.native(h.preview, 'pointerdown');assert.equal(h.panel.selectedPart(), 'prisoner-forearm-right', 'wait for a completed blank tap');h.native(canvas, 'pointerup');
+  assert.equal(h.panel.selectedPart(), '');assert.equal(h.panel.isOpen(), true);assert.equal(h.deselections.length, 1);
+  h.native(clonePart(h, 'prisoner-hand-right').firstChild, 'pointerdown');h.native(canvas, 'pointerup');assert.equal(h.panel.selectedPart(), 'prisoner-hand-right');
+  h.native(clonePart(h, 'prisoner-forearm-right-drawing').firstChild, 'pointerdown');h.native(canvas, 'pointerup');assert.equal(h.panel.selectedPart(), 'prisoner-forearm-right', 'switching from an existing selection is also one tap');
+  assert.equal(h.deselections.length, 1);assert.equal(h.preview.querySelector('[data-figure-action="rotate"]').getAttribute('tabindex'), '0');assert.deepEqual(h.writes, []);assert.equal(JSON.stringify(h.records), before);
+  h.native(h.preview, 'pointerdown');h.native(canvas, 'pointermove', {clientX: 1020});h.native(canvas, 'pointerup', {clientX: 1020});assert.equal(h.panel.selectedPart(), 'prisoner-forearm-right', 'scroll-like movement is not a blank tap');
+  h.native(h.preview, 'pointerdown');h.native(canvas, 'pointercancel');h.native(canvas, 'pointerup');assert.equal(h.panel.selectedPart(), 'prisoner-forearm-right');
+  h.native(h.preview, 'pointerdown');h.native(h.preview, 'pointerdown', {pointerId: 8, isPrimary: false});h.native(canvas, 'pointerup', {pointerId: 8, isPrimary: false});h.native(canvas, 'pointerup');assert.equal(h.panel.selectedPart(), 'prisoner-forearm-right');assert.equal(h.deselections.length, 1);
+});
+
+test('Escape during a joint gesture rolls back the pose and clears selection before release can commit', () => {
+  const h = harness();h.panel.select('prisoner-forearm-right');const before = JSON.stringify(h.leaf.scene.parts), saved = JSON.stringify(h.records), poseBefore = clonePart(h, 'prisoner-forearm-right').getAttribute('transform');
+  const editing = drag(h, 'prisoner-forearm-right', 28, null);assert.notEqual(JSON.stringify(h.leaf.scene.parts), before);assert.equal(h.panel.isDragging(), true);
+  editing.canvas.dispatch('keydown', {key: 'Escape'});
+  assert.equal(h.panel.isDragging(), false);assert.equal(editing.canvas.hasPointerCapture(7), false);assert.equal(h.panel.selectedPart(), '');assert.equal(h.panel.isOpen(), true);assert.equal(JSON.stringify(h.leaf.scene.parts), before);assert.equal(clonePart(h, 'prisoner-forearm-right').getAttribute('transform'), poseBefore);
+  editing.canvas.dispatch('pointerup', {pointerId: 7, clientX: editing.end.x, clientY: editing.end.y});assert.deepEqual(h.writes, []);assert.equal(JSON.stringify(h.records), saved);assert.equal(h.deselections.length, 1);
 });
 
 test('eyes and mouth route to the shared facial area, while head artwork remains a rotatable head', () => {

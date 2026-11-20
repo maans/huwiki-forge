@@ -16,14 +16,14 @@ function label(wiki){
   addKey:"Add keyframe",delKey:"Delete keyframe",zoomIn:"Zoom in",zoomOut:"Zoom out",
   sceneHint:"Click a stage element to edit it",timeline:"Timeline",preview:"Preview",
   zoomSelection:"Zoom to selection",resetPreviewZoom:"Reset zoom",zoomHint:"Enlarge the selected object or body part for editing (Z). The film camera stays unchanged.",
-  fullscreen:"Full screen",exitFullscreen:"Exit full screen"
+  fullscreen:"Full screen",exitFullscreen:"Exit full screen",clearSelection:"Clear selection"
  }:{
   title:"Musical Studio",focus:"Fokusvisning",exit:"Forlad fokus",fit:"Delt visning",scene:"Scene",score:"Noder",
   properties:"Egenskaber",close:"Luk egenskaber",all:"Alle spor",music:"Musik",camera:"Kameraer",animation:"Animation",sceneTracks:"Scene & lys",
   addKey:"Nyt nøglebillede",delKey:"Slet nøglebillede",zoomIn:"Zoom ind",zoomOut:"Zoom ud",
   sceneHint:"Klik på et element på scenen for at redigere det",timeline:"Tidslinje",preview:"Forhåndsvisning",
   zoomSelection:"Zoom til markering",resetPreviewZoom:"Nulstil zoom",zoomHint:"Forstør det markerede objekt eller den markerede kropsdel under redigering (Z). Filmens kamera ændres ikke.",
-  fullscreen:"Fuld skærm",exitFullscreen:"Forlad fuld skærm"
+  fullscreen:"Fuld skærm",exitFullscreen:"Forlad fuld skærm",clearSelection:"Slip markering"
  };
 }
 function mount(o){
@@ -48,13 +48,15 @@ function mount(o){
  function button(parent,cls,title,action){
   var b=el(doc,"button",cls,title,parent);b.type="button";b.title=title;b.addEventListener("click",action);return b;
  }
- var inspectorOpen=false,mode="split",focus=false,puppet=Puppet.mount(o),lastTap=null;
+ var inspectorOpen=false,mode="split",focus=false,puppet=Puppet.mount(o),lastTap=null,suppressedStageTap=null;
  var narration=Narration.mount(o),scoreWorkshop=ScoreWorkshop.mount(o),sceneWorkshop=SceneWorkshop.mount(o);
  var manuscript=Manuscript.mount(Object.assign({},o,{openNarration:function(details){narration.open(details);},openFace:o.openFace||openFace}));
  var transformMode='',figureRoot='',cameraName='A',latestPart='',cancelGesture=null;
  var previewZoom=SelectionZoom.create(o.view.svg,function(){return editor.isExporting&&editor.isExporting();}),zoomTarget='',zoomElement=null,selectingOnStage=false;
  var stagePanel=host.querySelector('.huw-musical-stage'),fullscreenFallback=false,fullscreenPending=false,exportSuspended=0,disposed=false;
- var workshopMode='',workshopPart='',workshopActor='',lastBodyPart='',routingWorkshop=false;
+ var workshopMode='',workshopPart='',workshopActor='',lastBodyPart='',routingWorkshop=false,selectionCleared=false,clearingSelection=false;
+ var clearButtons=[];
+ function clearButton(parent){var b=button(parent,'huw-musical-clear-selection',L.clearSelection,function(){clearSelection();});b.dataset.action='clear-selection';b.title=L.clearSelection+' (Esc)';clearButtons.push(b);return b;}
  var workshop=el(doc,'section','huw-musical-workshop-dock'),workshopAnchor=doc.createComment('figure and face workshop');
  workshop.hidden=true;workshop.setAttribute('data-animus-workshop','');workshop.setAttribute('aria-label',L.scene==='Scene'?'Figur- og ansigtsværksted':'Character and face workshop');
  host.insertBefore(workshopAnchor,o.layout.nextSibling);host.insertBefore(workshop,workshopAnchor);
@@ -64,12 +66,14 @@ function mount(o){
  workshopTabs.setAttribute('role','group');workshopTabs.setAttribute('aria-label',L.scene==='Scene'?'Vælg værksted':'Choose workshop');
  var bodyTab=button(workshopTabs,'',L.scene==='Scene'?'Figur':'Character',function(){returnToFigure();});bodyTab.dataset.workshopMode='figure';
  var faceTab=button(workshopTabs,'',L.scene==='Scene'?'Ansigt':'Face',function(){showFaceWorkshop(workshopPart,'expression');});faceTab.dataset.workshopMode='face';
+ clearButton(workshopTop);
  var workshopClose=button(workshopTop,'huw-musical-workshop-close','×',function(){hideWorkshop();host.focus({preventScroll:true});});
  workshopClose.setAttribute('aria-label',L.scene==='Scene'?'Luk værksted':'Close workshop');
  var workshopBody=el(doc,'div','huw-musical-workshop-content',undefined,workshop);
  var figurePanel=FigurePanel.mount({doc:doc,wiki:o.wiki,host:host,parent:workshopBody,view:o.view,film:o.film,editor:editor,
   position:o.position,pause:o.pause,onLayout:reframeAfterLayout,
-  onSelect:function(id){lastBodyPart=id;latestPart=id;figureRoot=id;workshopPart=id;transformMode='parts';useStageMode();editor.setCameraEdit(false);updateToolButtons();setInspector(false);refreshHandles();},
+  onSelect:function(id){selectionCleared=false;lastBodyPart=id;latestPart=id;figureRoot=id;workshopPart=id;transformMode='parts';useStageMode();editor.setCameraEdit(false);updateToolButtons();setInspector(false);refreshHandles();},
+  onDeselect:function(){clearSelection();},
   onFace:function(details){showFaceWorkshop(details.partId,details.tab);}
  });
  var facePanel=FacePanel.mount({doc:doc,wiki:o.wiki,host:host,film:o.film,parent:workshopBody,dock:workshopBody,stage:stagePanel,
@@ -79,7 +83,7 @@ function mount(o){
   goToKey:function(id,time){if(editor.selectFaceKey)editor.selectFaceKey(id,time);else o.seek(time);},
   undo:function(){if(editor.undoFace)editor.undoFace();},canUndo:function(){return editor.canUndoFace&&editor.canUndoFace();},
   position:o.position,seek:o.seek,pause:o.pause,onScript:openManuscript,
-  onBack:returnToFigure,onClose:function(){hideWorkshop();host.focus({preventScroll:true});},onLayout:reframeAfterLayout
+  onBack:returnToFigure,onDeselect:function(){clearSelection();},onClose:function(){hideWorkshop();host.focus({preventScroll:true});},onLayout:reframeAfterLayout
  });
  function faceContextFor(id){
   if(!id||!editor.faceContext)return null;
@@ -101,6 +105,7 @@ function mount(o){
   if(!figurePanel.select(id)){workshopMode='';syncWorkshop();return false;}
   lastBodyPart=figurePanel.selectedPart?figurePanel.selectedPart():id;workshopPart=lastBodyPart;
   var context=faceContextFor(lastBodyPart);workshopActor=context&&context.actorId||'';
+  if(selectionCleared&&figurePanel.clearSelection)figurePanel.clearSelection();
   syncWorkshop();setInspector(false);reframeAfterLayout();return true;
  }
  function showFaceWorkshop(id,tab){
@@ -113,7 +118,7 @@ function mount(o){
  function returnToFigure(details){
   var id=lastBodyPart||details&&details.headId||workshopPart;if(!id)return;
   if(cancelGesture)cancelGesture();o.pause();routingWorkshop=true;
-  try{transformMode='parts';useStageMode();editor.setCameraEdit(false);if(editor.selectPart(id,true)){figureRoot=id;latestPart=id;}}
+  try{transformMode='parts';useStageMode();editor.setCameraEdit(false);if(!selectionCleared&&editor.selectPart(id,true)){figureRoot=id;latestPart=id;}}
   finally{routingWorkshop=false;}
   showFigureWorkshop(id);updateToolButtons();setInspector(false);refreshHandles();bodyTab.focus({preventScroll:true});
  }
@@ -125,6 +130,22 @@ function mount(o){
  }
  function hideWorkshop(){
   if(figurePanel)figurePanel.hide();if(facePanel)facePanel.hide();workshopMode='';syncWorkshop();reframeAfterLayout();
+ }
+ function clearSelection(fromEditor){
+  if(disposed||clearingSelection||exportSuspended)return false;
+  var hadSelection=!!(editor.getSelection&&editor.getSelection())||!!cancelGesture||!!(figurePanel&&figurePanel.selectedPart&&figurePanel.selectedPart());
+  clearingSelection=true;
+  try{
+   cancelBlankTap();
+   if(cancelGesture)cancelGesture();
+   if(figurePanel&&figurePanel.clearSelection)figurePanel.clearSelection();
+   selectionCleared=true;figureRoot='';latestPart='';lastTap=null;
+   if(!fromEditor&&editor.clearSelection)editor.clearSelection();
+   if(transformMode==='camera'){transformMode='';editor.setCameraEdit(false);updateToolButtons();}
+   Array.prototype.forEach.call(o.view.svg.querySelectorAll('.huw-musical-selected-element'),function(node){node.classList.remove('huw-musical-selected-element');});
+   updateEditButtons();setInspector(false);refreshHandles();
+  }finally{clearingSelection=false;}
+  return hadSelection;
  }
  function openManuscript(details){
   // Native fullscreen only displays descendants of the stage. Return the
@@ -172,7 +193,7 @@ function mount(o){
   var scene=id&&o.editor.resolvePartScene&&o.editor.resolvePartScene(id);
   var root=id&&((scene&&Puppet.rootFor(id,scene,o.film))||id);
   if(!root)return false;
-  figureRoot=root;transformMode='figure';
+  selectionCleared=false;figureRoot=root;transformMode='figure';
   o.editor.setCameraEdit(false);
   o.editor.selectFigure(root,!!quiet);
   // Selecting the root synchronously updates the timeline selection. Keep
@@ -225,7 +246,8 @@ function mount(o){
  var zoomSelectionButton=button(previewTools,'huw-musical-zoom-selection',L.zoomSelection,function(){zoomToSelection();});
  zoomSelectionButton.title=L.zoomHint;zoomSelectionButton.setAttribute('aria-label',L.zoomSelection);zoomSelectionButton.setAttribute('aria-pressed','false');zoomSelectionButton.disabled=true;
  var resetPreviewButton=button(previewTools,'huw-musical-reset-preview-zoom',L.resetPreviewZoom,function(){resetPreviewZoom();});
- resetPreviewButton.title=L.resetPreviewZoom+' (0 / Esc)';resetPreviewButton.disabled=true;
+ resetPreviewButton.title=L.resetPreviewZoom+' (0)';resetPreviewButton.disabled=true;
+ clearButton(previewTools);
  var stageFullscreenButton=button(previewTools,'huw-musical-stage-fullscreen',L.fullscreen,toggleStageFullscreen);
  stageFullscreenButton.setAttribute('aria-pressed','false');
  function stageIsFullscreen(){return !!stagePanel&&(fullscreenFallback||doc.fullscreenElement===stagePanel);}
@@ -293,6 +315,7 @@ function mount(o){
  function updateEditButtons(){
   var selected=editor.getSelection(),editable=selected&&['song','audio','audio-lane','scene-range','object-browser','captions','caption'].indexOf(selected.kind)<0;
   addKeyButton.disabled=deleteKeyButton.disabled=!editable;
+  clearButtons.forEach(function(b){b.disabled=!selected;});
   addKeyButton.title=editable?L.addKey:L.sceneHint;
   deleteKeyButton.title=editable?L.delKey:L.sceneHint;
  }
@@ -332,7 +355,14 @@ function mount(o){
   // The timeline and stage are two views of the *same* selected object.
   // Selecting a row title, its keyframe or its animation clip must display
   // the corresponding dashed frame without aiming at a tiny stage shape.
-  t=t||editor.getSelection();
+  t=t===undefined?editor.getSelection():t;
+  if(clearingSelection)return;
+  if(!t){clearSelection(true);return;}
+  selectionCleared=false;
+  // Choosing a timeline key or object rebuilds its controls. Restore lost
+  // keyboard focus so Escape still reaches this editor after that click.
+  var focused=doc.activeElement;if(!focused||focused===doc.body||!focused.isConnected)host.focus({preventScroll:true});
+  Array.prototype.forEach.call(o.view.svg.querySelectorAll('.huw-musical-selected-element'),function(node){node.classList.remove('huw-musical-selected-element');});
   updateEditButtons();
   if(t&&t.kind==='face'){
    figureRoot=t.part;latestPart=t.part;transformMode='parts';useStageMode();o.pause();editor.setCameraEdit(false);
@@ -398,19 +428,22 @@ function mount(o){
  function editingField(target){
   return target&&(target.closest&&target.closest("input,select,textarea,[contenteditable=true],.huw-musical-workshop-dock,.huw-musical-face-panel,.huw-face-workshop"));
  }
+ function escapeSelection(e){
+  if(e.key!=='Escape'||e.defaultPrevented||e.altKey||e.ctrlKey||e.metaKey)return;
+  // Nested editors own Escape while they have focus.
+  // The inline figure/face dock shares the stage selection, including when
+  // a toolbar button or text field has keyboard focus.
+  if(narration.isOpen()||scoreWorkshop.isOpen()||manuscript.isOpen()||puppet.isOpen())return;
+  if(e.target.closest&&e.target.closest('.huw-svg-workshop,[role="dialog"]'))return;
+  e.preventDefault();e.stopPropagation();clearSelection();
+ }
  function keyboard(e){
+  if(e.defaultPrevented)return;
   if(narration.isOpen()||scoreWorkshop.isOpen())return;
   if(manuscript.isOpen()){if(e.key==="Escape"){e.preventDefault();manuscript.close();}return;}
   if(puppet.isOpen())return;
   if(e.altKey||e.ctrlKey||e.metaKey||editingField(e.target))return;
-  if(e.key==="Escape"){
-   if(cancelGesture){e.preventDefault();cancelGesture();return;}
-   if(stageIsFullscreen()){e.preventDefault();toggleStageFullscreen();return;}
-   if(previewZoom.active()){e.preventDefault();resetPreviewZoom();return;}
-   if(editor.inClipDetail&&editor.inClipDetail()){e.preventDefault();editor.closeAnimation();return;}
-   if(focus){e.preventDefault();toggleFocus();}
-   else if(inspectorOpen){e.preventDefault();setInspector(false);}
-  }else if(e.code==="Space"&&e.target.tagName!=="BUTTON"){
+  if(e.code==="Space"&&e.target.tagName!=="BUTTON"){
    e.preventDefault();o.play.click();
   }else if(e.key==="ArrowRight"||e.key==="ArrowLeft"){
    e.preventDefault();o.seek(o.position()+(e.key==="ArrowRight"?1:-1)*(e.shiftKey?1:.1));
@@ -424,6 +457,7 @@ function mount(o){
    e.preventDefault();resetPreviewZoom();
   }
  }
+ host.addEventListener('keydown',escapeSelection,true);
  host.addEventListener("keydown",keyboard);
  // Lightweight shared transform overlay: the only handles shown on stage.
  // Figure motion is globally keyed and independent from beat-loop limb animation.
@@ -491,7 +525,7 @@ function mount(o){
   if(selectedTrack&&transformMode==='camera'&&selectedTrack.kind==='camera')cameraName=selectedTrack.id==='camera-B'?'B':'A';
   if(selectedTrack&&transformMode==='figure'&&selectedTrack.kind==='figure')figureRoot=selectedTrack.part;
   if(selectedTrack&&transformMode==='parts'&&['part','film-part','motion'].indexOf(selectedTrack.kind)>=0)figureRoot=selectedTrack.part;
-  if(!handles||!svg.isConnected||puppet.isOpen()||!transformMode||exportSuspended>0||editor.isExporting&&editor.isExporting()||(o.editor.inClipDetail&&o.editor.inClipDetail()&&transformMode==='camera')||o.host.dataset.playing==='true'){
+  if(!handles||!svg.isConnected||puppet.isOpen()||selectionCleared||!transformMode||exportSuspended>0||editor.isExporting&&editor.isExporting()||(o.editor.inClipDetail&&o.editor.inClipDetail()&&transformMode==='camera')||o.host.dataset.playing==='true'){
    updatePreviewButtons(null);
    handles.style.display='none';activeGeometry=null;return;
   }
@@ -528,6 +562,8 @@ function mount(o){
  function angle(p,c){return Math.atan2(p.y-c.y,p.x-c.x)*180/Math.PI;}
  function deltaAngle(now,start){var v=now-start;while(v>180)v-=360;while(v< -180)v+=360;return v;}
  function limit(n,a,b){return Math.min(b,Math.max(a,n));}
+ function suppressStageTap(pointerId){suppressedStageTap=pointerId;lastTap=null;}
+ function releasePointer(node,id){if(node.releasePointerCapture)try{if(!node.hasPointerCapture||node.hasPointerCapture(id))node.releasePointerCapture(id);}catch(_released){}}
  handles.addEventListener('pointerdown',function(e){
   if(e.button!==0)return;var action=e.target.getAttribute('data-transform-action');if(!action||!activeGeometry)return;
   var editingPart=transformMode==='parts',partId=figureRoot;
@@ -564,19 +600,41 @@ function mount(o){
    else if(action==='skewY')changes.skewY=limit((base.skewY||0)+dy/height*70,-35,35);
    change.update(changes);refreshHandles();
   }
-  function finish(commit){if(closed)return;closed=true;if(cancelGesture===cancel)cancelGesture=null;e.target.removeEventListener('pointermove',move);e.target.removeEventListener('pointerup',up);e.target.removeEventListener('pointercancel',cancel);if(change){if(commit)change.commit();else change.cancel();}refreshHandles();}
+  function finish(commit){if(closed)return;closed=true;if(cancelGesture===cancel)cancelGesture=null;e.target.removeEventListener('pointermove',move);e.target.removeEventListener('pointerup',up);e.target.removeEventListener('pointercancel',cancel);e.target.removeEventListener('lostpointercapture',cancel);if(!commit||change)suppressStageTap(e.pointerId);releasePointer(e.target,e.pointerId);if(change){if(commit)change.commit();else change.cancel();}refreshHandles();}
   function up(){finish(true);}function cancel(){finish(false);}
   cancelGesture=cancel;
-  e.target.addEventListener('pointermove',move);e.target.addEventListener('pointerup',up);e.target.addEventListener('pointercancel',cancel);
+  e.target.addEventListener('pointermove',move);e.target.addEventListener('pointerup',up);e.target.addEventListener('pointercancel',cancel);e.target.addEventListener('lostpointercapture',cancel);
  });
  // Click a CutOut part on the stage to select its original scene object.
  // Dragging uses parent-local SVG coordinates, preserving nested transforms.
+ var stageCanvas=svg.closest&&svg.closest('.huw-musical-canvas')||svg,blankTap=null;
+ function cancelBlankTap(){
+  blankTap=null;doc.removeEventListener('pointermove',moveBlankTap);doc.removeEventListener('pointerup',finishBlankTap);doc.removeEventListener('pointercancel',cancelBlankTap);doc.removeEventListener('pointerdown',otherBlankPointer);
+ }
+ function otherBlankPointer(e){if(blankTap&&e.pointerId!==blankTap.pointerId)cancelBlankTap();}
+ function moveBlankTap(e){if(blankTap&&e.pointerId===blankTap.pointerId&&Math.hypot(e.clientX-blankTap.x,e.clientY-blankTap.y)>8)cancelBlankTap();}
+ function finishBlankTap(e){
+  var tap=blankTap;if(!tap||e.pointerId!==tap.pointerId)return;
+  var valid=Math.hypot(e.clientX-tap.x,e.clientY-tap.y)<=8;cancelBlankTap();
+  if(valid){e.preventDefault();clearSelection();host.focus({preventScroll:true});}
+ }
+ function startBlankTap(e){
+  cancelBlankTap();if(e.button!==0||e.isPrimary===false||disposed||exportSuspended||cancelGesture)return;
+  var target=e.target,part=target.closest&&target.closest('[data-cutout-id],[data-transform-action]');
+  if(part||target!==stageCanvas&&!svg.contains(target))return;
+  // The black letterbox belongs to the stage too. Wait for a completed tap
+  // so scrolling or cancelling a touch never clears the current selection.
+  blankTap={pointerId:e.pointerId,x:e.clientX,y:e.clientY};
+  doc.addEventListener('pointermove',moveBlankTap);doc.addEventListener('pointerup',finishBlankTap);doc.addEventListener('pointercancel',cancelBlankTap);doc.addEventListener('pointerdown',otherBlankPointer);
+ }
+ stageCanvas.addEventListener('pointerdown',startBlankTap);
  function pointerDown(e){
   selectingOnStage=true;
   try{
-  if(e.button!==0)return;
+  if(e.button!==0||e.isPrimary===false)return;
+  if(suppressedStageTap===e.pointerId)suppressedStageTap=null;
   var partEl=e.target.closest&&e.target.closest("[data-cutout-id]");
-  if(!partEl||!svg.contains(partEl)){hideWorkshop();return;}
+  if(!partEl||!svg.contains(partEl))return;
   host.focus({preventScroll:true});
   var id=partEl.getAttribute("data-cutout-id");
   // A generated drawing belongs to its anatomical joint. Selecting the
@@ -610,7 +668,8 @@ function mount(o){
     refreshHandles();
    }
    function finish(save){if(done)return;done=true;if(cancelGesture===cancel)cancelGesture=null;
-    partEl.removeEventListener('pointermove',move);partEl.removeEventListener('pointerup',up);partEl.removeEventListener('pointercancel',cancel);
+    partEl.removeEventListener('pointermove',move);partEl.removeEventListener('pointerup',up);partEl.removeEventListener('pointercancel',cancel);partEl.removeEventListener('lostpointercapture',cancel);
+    if(!save||moved)suppressStageTap(e.pointerId);releasePointer(partEl,e.pointerId);
     if(drag){if(save)drag.commit();else drag.cancel();}
     if(moved)lastTap=null;
     if(save)showPartWorkshop(id);
@@ -618,7 +677,7 @@ function mount(o){
    }
    function up(){finish(true);}function cancel(){finish(false);}
    cancelGesture=cancel;
-   partEl.addEventListener('pointermove',move);partEl.addEventListener('pointerup',up);partEl.addEventListener('pointercancel',cancel);
+   partEl.addEventListener('pointermove',move);partEl.addEventListener('pointerup',up);partEl.addEventListener('pointercancel',cancel);partEl.addEventListener('lostpointercapture',cancel);
    return;
   }
   o.pause();
@@ -671,6 +730,8 @@ function mount(o){
    partEl.removeEventListener("pointermove",move);
    partEl.removeEventListener("pointerup",up);
    partEl.removeEventListener("pointercancel",cancel);
+   partEl.removeEventListener('lostpointercapture',cancel);
+   if(!commit||drag)suppressStageTap(e.pointerId);releasePointer(partEl,e.pointerId);
    if(drag){if(commit)drag.commit();else drag.cancel();}
    if(commit)showPartWorkshop(id);
    refreshHandles();
@@ -680,6 +741,7 @@ function mount(o){
   partEl.addEventListener("pointermove",move);
   partEl.addEventListener("pointerup",up);
   partEl.addEventListener("pointercancel",cancel);
+  partEl.addEventListener('lostpointercapture',cancel);
   }finally{selectingOnStage=false;}
  }
  function sourceId(e){var node=e.target.closest&&e.target.closest("[data-cutout-id]");return node&&svg.contains(node)?node.getAttribute("data-cutout-id"):"";}
@@ -687,6 +749,7 @@ function mount(o){
  svg.addEventListener("dblclick",openPuppet);
  // iPad does not reliably generate dblclick after the timeline/inspector re-render.
  function touchOpen(e){if(e.pointerType!=="touch"&&e.pointerType!=="pen")return;
+  if(suppressedStageTap===e.pointerId){suppressedStageTap=null;lastTap=null;return;}
   var id=sourceId(e);if(!id)return;
   var now=Date.now(),tap=lastTap;lastTap={id:id,time:now,x:e.clientX,y:e.clientY};
   if(tap&&tap.id===id&&now-tap.time<450&&Math.hypot(tap.x-e.clientX,tap.y-e.clientY)<25){
@@ -703,13 +766,14 @@ function mount(o){
   routingWorkshop=true;try{editor.selectPart(context.headId,true);}finally{routingWorkshop=false;}
   showFaceWorkshop(context.headId,'expression');updateToolButtons();setInspector(false);refreshHandles();return true;
  }
- return {showInspector:selection,selectTrack:selection,setInspector:setInspector,refreshHandles:refreshHandles,
+ return {showInspector:selection,selectTrack:selection,setInspector:setInspector,refreshHandles:refreshHandles,clearSelection:clearSelection,
   zoomToSelection:zoomToSelection,resetPreviewZoom:resetPreviewZoom,paintPreview:paintPreview,
   beginExport:function(){exportSuspended++;var restore=previewZoom.suspend(),restoreFace=facePanel.suspend(),restoreFigure=figurePanel.suspend(),restored=false;syncWorkshop();refreshHandles();return function(){if(restored)return;restored=true;exportSuspended=Math.max(0,exportSuspended-1);syncWorkshop();restoreFace();restoreFigure();restore();if(!disposed){refreshHandles();reframeAfterLayout();}};},
   openFace:openFace,openScore:function(title){scoreWorkshop.open(title);},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},openManuscript:openManuscript,
-  dispose:function(){disposed=true;if(cancelGesture)cancelGesture();previewZoom.dispose();fullscreenFallback=false;if(stagePanel)stagePanel.classList.remove('huw-musical-stage--expanded');doc.removeEventListener('fullscreenchange',syncStageFullscreen);if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen)try{Promise.resolve(doc.exitFullscreen()).catch(function(){});}catch(_closed){}
+  dispose:function(){disposed=true;cancelBlankTap();stageCanvas.removeEventListener('pointerdown',startBlankTap);if(cancelGesture)cancelGesture();previewZoom.dispose();fullscreenFallback=false;if(stagePanel)stagePanel.classList.remove('huw-musical-stage--expanded');doc.removeEventListener('fullscreenchange',syncStageFullscreen);if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen)try{Promise.resolve(doc.exitFullscreen()).catch(function(){});}catch(_closed){}
   facePanel.dispose();figurePanel.dispose();workshop.remove();workshopAnchor.remove();host.classList.remove('huw-musical--workshop-open');narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);
   host.removeEventListener("keydown",keyboard);
+  host.removeEventListener('keydown',escapeSelection,true);
   svg.removeEventListener("pointerdown",pointerDown);
   svg.removeEventListener("dblclick",openPuppet);svg.removeEventListener("pointerup",touchOpen);puppet.close();
  }};
