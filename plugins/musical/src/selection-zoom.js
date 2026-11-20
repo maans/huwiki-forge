@@ -44,9 +44,19 @@ function fitPoints(points,aspect,padding,minSize){
 }
 function format(box){return [box.x,box.y,box.width,box.height].map(function(n){return Math.round(n*10000)/10000;}).join(' ');}
 function create(svg,blocked){
- var box=null,base='',applied='',suspended=0;
+ var box=null,base='',applied='',suspended=0,viewports=[],unclipClass='huw-musical-selection-unclipped';
  function enabled(){return suspended===0&&!(blocked&&blocked());}
+ function restoreClipping(){viewports.forEach(function(entry){entry.node.classList.toggle(unclipClass,entry.original);});}
+ function selectionViewports(target){
+  var nodes=[],node=target;
+  while(node&&node!==svg){if(String(node.localName||node.nodeName).toLowerCase()==='svg'&&node.classList)nodes.push(node);node=node.parentNode;}
+  if(node!==svg)nodes=[];
+  if(nodes.length===viewports.length&&nodes.every(function(item,index){return item===viewports[index].node;}))return;
+  restoreClipping();viewports=nodes.map(function(item){return {node:item,original:item.classList.contains(unclipClass)};});
+ }
+ function applyClipping(){var active=!!box&&enabled();viewports.forEach(function(entry){entry.node.classList.toggle(unclipClass,entry.original||active);});}
  function apply(){
+  applyClipping();
   if(!box)return false;
   var current=svg.getAttribute('viewBox')||'';
   if(current&&current!==applied)base=current;
@@ -60,10 +70,11 @@ function create(svg,blocked){
  }
  function reset(){
   if(box&&base&&svg.getAttribute('viewBox')===applied)svg.setAttribute('viewBox',base);
-  box=null;applied='';base='';
+  restoreClipping();viewports=[];box=null;applied='';base='';
  }
  return {
-  fit:function(points,aspect){var next=fitPoints(points,aspect);if(!next)return false;
+  fit:function(points,aspect,target){var next=fitPoints(points,aspect);if(!next)return false;
+   selectionViewports(target);
    if(!box)base=svg.getAttribute('viewBox')||'';box=next;apply();return true;},
   active:function(){return !!box;},apply:apply,reset:reset,
   box:function(){return box&&{x:box.x,y:box.y,width:box.width,height:box.height};},

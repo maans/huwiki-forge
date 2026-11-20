@@ -51,7 +51,7 @@ function mount(o){
  var narration=Narration.mount(o),scoreWorkshop=ScoreWorkshop.mount(o),sceneWorkshop=SceneWorkshop.mount(o);
  var manuscript=Manuscript.mount(Object.assign({},o,{openNarration:function(details){narration.open(details);},openFace:o.openFace||openFace}));
  var transformMode='',figureRoot='',cameraName='A',latestPart='',cancelGesture=null;
- var previewZoom=SelectionZoom.create(o.view.svg,function(){return editor.isExporting&&editor.isExporting();}),zoomTarget='',selectingOnStage=false;
+ var previewZoom=SelectionZoom.create(o.view.svg,function(){return editor.isExporting&&editor.isExporting();}),zoomTarget='',zoomElement=null,selectingOnStage=false;
  var stagePanel=host.querySelector('.huw-musical-stage'),fullscreenFallback=false,fullscreenPending=false,exportSuspended=0,disposed=false;
  var facePanel=FacePanel.mount({doc:doc,wiki:o.wiki,host:host,film:o.film,parent:host,before:o.layout.nextSibling,stage:stagePanel,
   context:function(id){return editor.faceContext&&editor.faceContext(id);},
@@ -393,11 +393,11 @@ function mount(o){
   if(disposed||exportSuspended||editor.isExporting&&editor.isExporting()||!transformMode||transformMode==='camera')return false;
   if(pause!==false)o.pause();
   var geometry=figureGeometry();if(!geometry){updatePreviewButtons(null);return false;}
-  if(!previewZoom.fit(geometry.corners,previewAspect()))return false;
-  zoomTarget=transformMode+':'+figureRoot;updatePreviewButtons(geometry);refreshHandles();return true;
+  if(!previewZoom.fit(geometry.corners,previewAspect(),geometry.figureElement))return false;
+  zoomTarget=transformMode+':'+figureRoot;zoomElement=geometry.figureElement;updatePreviewButtons(geometry);refreshHandles();return true;
  }
  function resetPreviewZoom(){
-  previewZoom.reset();zoomTarget='';
+  previewZoom.reset();zoomTarget='';zoomElement=null;
   if(!disposed&&o.repaint)o.repaint();
   if(!disposed)refreshHandles();
  }
@@ -416,13 +416,13 @@ function mount(o){
    handles.style.display='none';activeGeometry=null;return;
   }
   if(transformMode==='camera'&&o.host.querySelector('.huw-musical-play[aria-pressed="true"]')){handles.style.display='none';activeGeometry=null;return;}
-  if(transformMode==='camera'&&previewZoom.active()){previewZoom.reset();zoomTarget='';}
+  if(transformMode==='camera'&&previewZoom.active()){previewZoom.reset();zoomTarget='';zoomElement=null;}
   var geom=transformMode==='camera'?cameraGeometry():figureGeometry();if(!geom){
-   if(previewZoom.active()&&figureRoot){previewZoom.reset();zoomTarget='';}
+   if(previewZoom.active()&&figureRoot){previewZoom.reset();zoomTarget='';zoomElement=null;}
    updatePreviewButtons(null);handles.style.display='none';activeGeometry=null;return;
   }
-  if(previewZoom.active()&&zoomTarget!==transformMode+':'+figureRoot&&!cancelGesture&&!selectingOnStage){
-   previewZoom.fit(geom.corners,previewAspect());zoomTarget=transformMode+':'+figureRoot;
+  if(previewZoom.active()&&(zoomTarget!==transformMode+':'+figureRoot||zoomElement!==geom.figureElement)&&!cancelGesture&&!selectingOnStage){
+   previewZoom.fit(geom.corners,previewAspect(),geom.figureElement);zoomTarget=transformMode+':'+figureRoot;zoomElement=geom.figureElement;
   }
   updatePreviewButtons(geom);
   activeGeometry=geom;handles.dataset.mode=transformMode;handles.style.display='';var p=geom.corners;

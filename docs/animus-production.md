@@ -42,6 +42,8 @@ Use the **eye** beside a visual track to hide or show its contribution in the ed
 
 Select a figure or body part with the dashed frame, then choose **Zoom to selection** above the stage. **Parts and joints** lets you select an individual arm, hand, head or other part before zooming. **Full screen** enlarges the editing stage, and **Reset zoom** returns to the normal preview. Press **Z** to zoom to the selection or **0** to reset. **Esc** cancels an active drag first; otherwise it exits stage fullscreen or resets selection zoom.
 
+Selection zoom also reveals the selected part when the scene's camera has moved it outside the shot. Choose an off-camera character in the object selector, then zoom to it. Resetting the zoom or exporting restores the authored scene framing.
+
 These track buttons and selection zoom affect the editor preview only. They do not change the saved scene, film camera or export choices. Choose the video soundtrack and burned captions in **Export video**. After export, the editor returns to its previous preview settings and zoom.
 
 ## Mouth animation from the script
@@ -184,6 +186,8 @@ I CutOut-studiet kan du også vælge delen i listen og bruge **Flyt**, **Drej** 
 Brug **øjet** ved et visuelt spor til at skjule eller vise dets indhold i editoren. Brug **højttaleren** ved musik, indtaling eller lydeffekter til at slå lyden fra eller til i forhåndsvisningen. Sporet **Undertekster** har sit eget øje, så teksten kan skjules, mens du arbejder med et ansigt eller en arm. Klik på en undertekstblok for at gå til den replik; **Åbn manuskript og undertekster** åbner tekstværkstedet.
 
 Markér en figur eller kropsdel med den stiplede ramme, og vælg **Zoom til markering** over scenen. Med **Dele og led** kan du vælge eksempelvis arm, hånd eller hoved, før du zoomer. **Fuld skærm** forstørrer redigeringsscenen, og **Nulstil zoom** går tilbage til den normale forhåndsvisning. Tryk **Z** for at zoome til markeringen eller **0** for at nulstille. **Esc** annullerer først et igangværende træk; ellers forlader den scenens fuldskærmsvisning eller nulstiller zoom.
+
+Zoom til markering viser også den valgte kropsdel, når scenens kamera har flyttet den uden for billedet. Vælg en figur uden for billedet i objektvælgeren, og zoom til den. Nulstilling af zoom og eksport gendanner scenens oprindelige billedudsnit.
 
 Sporknapperne og zoom gælder kun editorens forhåndsvisning. De ændrer ikke den gemte scene, filmens kamera eller eksportvalgene. Vælg videoens lyd og indbrændte undertekster i **Eksportér video**. Efter eksport vender editoren tilbage til de tidligere visningsvalg og zoom.
 

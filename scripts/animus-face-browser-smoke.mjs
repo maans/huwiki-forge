@@ -61,6 +61,12 @@ function renderedFace(host,actor){
   pupils:attrs(shape(part('-pupils'))),brows:attrs(shape(part('-brows')))};
 }
 async function face(actor='prisoner',scope=editor.locator('.huw-musical-canvas > svg')){return scope.evaluate(renderedFace,actor);}
+function selectedHeadClipping(svg){
+ function shown(node){for(let n=node;n&&n!==svg;n=n.parentElement)if(n.hidden||getComputedStyle(n).display==='none')return false;return true;}
+ const head=[...svg.querySelectorAll('[data-cutout-id="prisoner-head"]')].find(shown),overflow=[];
+ for(let node=head?.parentElement;node&&node!==svg;node=node.parentElement)if(node.tagName.toLowerCase()==='svg')overflow.push(getComputedStyle(node).overflow);
+ return overflow;
+}
 async function tapPart(id,head=false){
  // Start each direct selection with the full scene, then enlarge the actual
  // head before touching a small eye or mouth. Palette thumbnails are excluded.
@@ -230,8 +236,12 @@ try{
  // editor. It must receive global face keys as well as its scene-local model.
  await wiki.locator('.plato-player').first().evaluate((host,t)=>host._platoPlayer.seek(t),cross.time);
  const audience=await face('prisoner',wiki.locator('.plato-scene').first());assert.equal(audience.href,cross.variants.E,'audience playback uses the same global learned mapping');
- await assertMapped(cross,'E');panel=await tapPart('prisoner-mouth-open');await editor.locator('.huw-musical-zoom-selection:enabled').tap();
- const stage=editor.locator('.huw-musical-canvas > svg'),zoom=await stage.getAttribute('viewBox'),captions=editor.locator('[data-preview-track="captions"]');
+ await assertMapped(cross,'E');
+ const stage=editor.locator('.huw-musical-canvas > svg'),resetPreview=editor.locator('.huw-musical-reset-preview-zoom');if(await resetPreview.isEnabled())await resetPreview.tap();
+ const authoredClipping=await stage.evaluate(selectedHeadClipping);assert.ok(authoredClipping.length,'the active head belongs to a nested scene viewport');
+ panel=await tapPart('prisoner-mouth-open');await editor.locator('.huw-musical-zoom-selection:enabled').tap();
+ const zoom=await stage.getAttribute('viewBox'),previewClipping=await stage.evaluate(selectedHeadClipping),captions=editor.locator('[data-preview-track="captions"]');
+ assert.ok(previewClipping.length&&previewClipping.every(overflow=>overflow==='visible'),'selection zoom releases the active head\'s nested viewport clipping');
  if(await captions.getAttribute('aria-pressed')==='true')await captions.tap();
  await editor.evaluate(host=>{
   window.__faceExportFrames=[];const svg=host.querySelector('.huw-musical-canvas > svg');
@@ -239,7 +249,8 @@ try{
    if(!/Undertekster \/ Captions/.test(document.querySelector('.huw-video-status')?.textContent||''))return;
    function shown(node){for(let n=node;n&&n!==svg;n=n.parentElement)if(n.hidden||getComputedStyle(n).display==='none')return false;return true;}
    const mouth=[...svg.querySelectorAll('[data-cutout-id="prisoner-mouth-open"]')].find(shown);
-   window.__faceExportFrames.push({time:Number(host.dataset.cameraTime),href:mouth?.querySelector('image')?.getAttribute('href'),viseme:mouth?.getAttribute('data-lipsync-viseme'),viewBox:svg.getAttribute('viewBox'),hiddenNodes:svg.querySelectorAll('.huw-musical-preview-hidden').length,captionsHidden:host.querySelector('.huw-musical-caption-overlay').hidden});
+   const nestedClipping=[];for(let node=mouth?.parentElement;node&&node!==svg;node=node.parentElement)if(node.tagName.toLowerCase()==='svg')nestedClipping.push(getComputedStyle(node).overflow);
+   window.__faceExportFrames.push({time:Number(host.dataset.cameraTime),href:mouth?.querySelector('image')?.getAttribute('href'),viseme:mouth?.getAttribute('data-lipsync-viseme'),viewBox:svg.getAttribute('viewBox'),hiddenNodes:svg.querySelectorAll('.huw-musical-preview-hidden').length,captionsHidden:host.querySelector('.huw-musical-caption-overlay').hidden,nestedClipping});
   });window.__faceExportObserver.observe(svg,{attributes:true,attributeFilter:['viewBox']});
  });
  await editor.locator('.huw-video-export-button').tap();const dialog=wiki.locator('.huw-video-modal');await dialog.waitFor();
@@ -252,8 +263,10 @@ try{
  const mappedFrames=frames.filter(frame=>frame.viseme==='O');assert.ok(mappedFrames.length,'the real export renderer visits an O frame');
  assert.ok(mappedFrames.every(frame=>frame.href===cross.variants.E),'export keeps the learned mouth artwork');
  assert.ok(frames.every(frame=>!frame.hiddenNodes&&!frame.captionsHidden),'temporary editing visibility does not hide export content');
+ for(const frame of frames)assert.deepEqual(frame.nestedClipping,authoredClipping,'export restores the authored nested camera clipping');
  await dialog.locator('.huw-video-close').tap();await dialog.waitFor({state:'detached'});
  assert.equal(await stage.getAttribute('viewBox'),zoom);assert.ok(Math.abs(await position()-cross.time)<.001);assert.equal(await captions.getAttribute('aria-pressed'),'false');
+ assert.deepEqual(await stage.evaluate(selectedHeadClipping),previewClipping,'returning from export restores the focused nested viewport');
  assert.deepEqual(await keys(),finalKeys,'audience playback and export do not add facial keys');
  await editor.locator('.huw-musical-canvas').screenshot({path:fileURLToPath(new URL('face-correction-reloaded.png',out))});
  passed('audience and actual export rendering retain facial corrections and restore the hidden, zoomed editor');

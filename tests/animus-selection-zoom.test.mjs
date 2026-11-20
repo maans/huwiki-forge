@@ -44,6 +44,26 @@ test('export restores authored camera frames and restores the same preview after
  outer();assert.equal(h.svg.getAttribute('viewBox'),focused);outer();controller.reset();assert.equal(h.svg.getAttribute('viewBox'),'70 40 300 168.75');
  assert.equal(controller.active(),false);
 });
+test('selection focus releases only ancestor SVG clipping and restores it for export, reset and disposal',()=>{
+ const h=geometry(),act=h.doc.createElementNS('svg','svg'),scene=h.doc.createElementNS('svg','svg'),other=h.doc.createElementNS('svg','svg'),otherPart=h.doc.createElementNS('svg','g');
+ act.setAttribute('viewBox','100 60 400 225');scene.setAttribute('viewBox','900 150 500 281.25');other.setAttribute('viewBox','0 0 80 60');
+ act.classList.add('co-nested-svg');scene.classList.add('co-nested-svg');other.classList.add('co-nested-svg');
+ scene.style.overflow='hidden';h.svg.appendChild(act);act.appendChild(scene);scene.appendChild(h.camera);h.svg.appendChild(other);other.appendChild(otherPart);
+ const source=[act,scene,other].map(node=>({viewBox:node.getAttribute('viewBox'),overflow:node.style.overflow}));
+ const flag='huw-musical-selection-unclipped',points=[{x:-180,y:150},{x:-120,y:220}];let blocked=false;
+ const controller=zoom.create(h.svg,()=>blocked);
+ controller.fit(points,16/9,h.arm);
+ assert.equal(act.classList.contains(flag),true);assert.equal(scene.classList.contains(flag),true,'the child camera no longer clips the focused off-camera part');
+ assert.equal(h.svg.classList.contains(flag),false,'the stage itself remains cropped');assert.equal(other.classList.contains(flag),false,'unrelated animation viewports retain their clipping');
+ const outer=controller.suspend(),inner=controller.suspend();
+ assert.equal(act.classList.contains(flag),false);assert.equal(scene.classList.contains(flag),false,'export uses authored nested viewport clipping');
+ inner();assert.equal(scene.classList.contains(flag),false);outer();assert.equal(scene.classList.contains(flag),true);outer();
+ blocked=true;controller.apply();assert.equal(scene.classList.contains(flag),false);blocked=false;controller.apply();assert.equal(scene.classList.contains(flag),true);
+ controller.fit(points,16/9,otherPart);assert.equal(scene.classList.contains(flag),false);assert.equal(act.classList.contains(flag),false);assert.equal(other.classList.contains(flag),true);
+ controller.reset();assert.equal(other.classList.contains(flag),false);
+ controller.fit(points,16/9,h.arm);controller.dispose();assert.equal(scene.classList.contains(flag),false);assert.equal(act.classList.contains(flag),false);
+ assert.deepEqual([act,scene,other].map(node=>({viewBox:node.getAttribute('viewBox'),overflow:node.style.overflow})),source,'focusing never rewrites child cameras or authored overflow styles');
+});
 function workspaceHarness(){
  const h=geometry(),{doc,svg,actor,arm,shape}=h;
  h.camera.removeAttribute('transform');actor.setAttribute('data-cutout-id','actor');arm.setAttribute('data-cutout-id','arm');
@@ -76,8 +96,9 @@ function workspaceHarness(){
   '$:/plugins/huwiki/musical/scenes.js':{mount:inactive}
  };
  const api={};runInNewContext(workspaceCode,{exports:api,require:name=>{if(!modules[name])throw Error(name);return modules[name];},$tw:{}});
- workspace=api.mount({doc,host,editor,film,view:{svg,nodes:{actor:{el:actor},arm:{el:arm}},clips:[]},layout,transport,play,project:'Show',sceneTitle:'Film',wiki:{getTiddlerText:()=>'$:/languages/en-GB'},scoreTitle:()=>'',position:()=>2,pause(){paused++;},seek(){},repaint});
- return {...h,host,stage,film,workspace,editor,repaint,get selected(){return selected;},get change(){return change;},get committed(){return committed;},get paused(){return paused;},get scriptOpened(){return scriptOpened;}};
+ const view={svg,nodes:{actor:{el:actor},arm:{el:arm}},clips:[]};
+ workspace=api.mount({doc,host,editor,film,view,layout,transport,play,project:'Show',sceneTitle:'Film',wiki:{getTiddlerText:()=>'$:/languages/en-GB'},scoreTitle:()=>'',position:()=>2,pause(){paused++;},seek(){},repaint});
+ return {...h,host,stage,film,view,workspace,editor,repaint,get selected(){return selected;},get change(){return change;},get committed(){return committed;},get paused(){return paused;},get scriptOpened(){return scriptOpened;}};
 }
 test('workspace actions zoom selected figure and arm, retain pointer coordinates and leave camera data unchanged',()=>{
  const h=workspaceHarness(),before=JSON.stringify(h.film),zoomButton=h.host.querySelector('.huw-musical-zoom-selection');
@@ -115,4 +136,26 @@ test('workspace export, fullscreen fallback, hidden selection and disposal resto
  h.host.dispatch('keydown',{key:'Escape'});assert.equal(fullscreen.getAttribute('aria-pressed'),'false');assert.equal(h.stage.classList.contains('huw-musical-stage--expanded'),false);
  h.actor.style.display='none';h.repaint();assert.equal(h.svg.getAttribute('viewBox'),'0 0 800 450');assert.equal(h.host.querySelector('.huw-musical-zoom-selection').disabled,true);
  h.actor.style.display='';h.repaint();h.workspace.zoomToSelection();h.workspace.dispose();assert.equal(h.svg.getAttribute('viewBox'),'0 0 800 450');assert.equal(h.svg.querySelector('.huw-musical-transform-overlay'),null);
+});
+test('workspace passes the selected part to the nested clipping lifecycle',()=>{
+ const h=workspaceHarness(),nested=h.doc.createElementNS('svg','svg');nested.classList.add('co-nested-svg');nested.setAttribute('viewBox','600 0 200 150');h.svg.insertBefore(nested,h.camera);nested.appendChild(h.camera);
+ h.editor.selectFigure('actor');h.workspace.zoomToSelection();assert.equal(nested.classList.contains('huw-musical-selection-unclipped'),true);
+ const restore=h.workspace.beginExport();assert.equal(nested.classList.contains('huw-musical-selection-unclipped'),false);restore();assert.equal(nested.classList.contains('huw-musical-selection-unclipped'),true);
+ h.workspace.resetPreviewZoom();assert.equal(nested.classList.contains('huw-musical-selection-unclipped'),false);assert.equal(nested.getAttribute('viewBox'),'600 0 200 150');
+ h.workspace.zoomToSelection();h.workspace.dispose();assert.equal(nested.classList.contains('huw-musical-selection-unclipped'),false);
+});
+test('a new active scene retargets focus when it contains the same logical actor ID',()=>{
+ const h=workspaceHarness(),first=h.doc.createElementNS('svg','svg'),second=h.doc.createElementNS('svg','svg'),actor=h.doc.createElementNS('svg','g'),art=h.doc.createElementNS('svg','rect');
+ first.setAttribute('viewBox','600 0 200 150');second.setAttribute('viewBox','0 0 800 450');second.setAttribute('display','none');
+ h.svg.insertBefore(first,h.camera);first.appendChild(h.camera);h.svg.insertBefore(second,first);
+ actor.setAttribute('data-cutout-id','actor');actor.setAttribute('transform','translate(590 300)');art.setAttribute('x','-30');art.setAttribute('y','-70');art.setAttribute('width','60');art.setAttribute('height','140');second.appendChild(actor);actor.appendChild(art);
+ h.view.nodes={};h.view.clips=[{el:first,view:{nodes:{actor:{el:h.actor},arm:{el:h.arm}},clips:[]}},{el:second,view:{nodes:{actor:{el:actor}},clips:[]}}];
+ const source=JSON.stringify(h.film),flag='huw-musical-selection-unclipped';h.editor.selectFigure('actor');h.workspace.zoomToSelection();const firstFocus=h.svg.getAttribute('viewBox');
+ assert.equal(first.classList.contains(flag),true);assert.equal(second.classList.contains(flag),false);
+ first.setAttribute('display','none');second.removeAttribute('display');h.repaint();
+ assert.equal(h.selected.part,'actor','the logical selection remains unchanged across the scene cut');
+ assert.equal(first.classList.contains(flag),false,'the old scene regains its authored clipping');assert.equal(second.classList.contains(flag),true,'the new instance of the selected actor is focusable');
+ assert.notEqual(h.svg.getAttribute('viewBox'),firstFocus,'focus follows the new rendered element rather than its old coordinates');
+ const nextFocus=h.svg.getAttribute('viewBox');h.repaint();assert.equal(h.svg.getAttribute('viewBox'),nextFocus,'repainting the same instance does not compound the zoom');
+ assert.equal(JSON.stringify(h.film),source);h.workspace.dispose();assert.equal(second.classList.contains(flag),false);
 });
