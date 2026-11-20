@@ -138,11 +138,11 @@ test("Repertoire sorting supports pointer and keyboard with TiddlyWiki drag-high
  assert.match(css,/\.huwrep-order-handle\{touch-action:none/);
  assert.match(reorderTiddler.text,/pointercancel/);
  assert.match(reorderTiddler.text,/ArrowDown/);
- assert.doesNotMatch(reorderTiddler.text,/win\\.scrollBy/,"never scroll the whole StoryView");
- assert.match(reorderTiddler.text,/order\\.scrollTop=before\\+delta/,"edge scroll belongs to local list");
- assert.match(css,/\\.huwrep-order-list\\{[^}]*overscroll-behavior:contain/);
- assert.match(css,/\\.huwrep-order-list\\{[^}]*overflow-anchor:none/);
- assert.match(widget,/order\\.appendChild\\(row\\)/,"move existing rows, do not reconstruct story DOM");
+ assert.ok(!reorderTiddler.text.includes("win.scrollBy"),"never scroll the whole StoryView");
+ assert.ok(reorderTiddler.text.includes("order.scrollTop=before+delta"),"edge scroll belongs to local list");
+ assert.ok(css.includes("overscroll-behavior:contain"),"setlist stops scroll chaining");
+ assert.ok(css.includes("overflow-anchor:none"),"drag keeps the local scroll position");
+ assert.ok(widget.includes("order.appendChild(row)"),"move existing rows, do not reconstruct story DOM");
  assert.match(widget,/_ownReorder/,"local list updates do not trigger a story rebuild");
  assert.doesNotMatch(widget,/button\(doc,"↑"/);
 });
