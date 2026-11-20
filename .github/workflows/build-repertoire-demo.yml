@@ -1,0 +1,67 @@
+name: Build clickable Repertoire Nodebog demo
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/repertoire/dist/plugin.json'
+      - 'editions/silva-ethno-repertoire/manifest.json'
+      - 'editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json'
+      - 'editions/silva-ethno-repertoire/tiddlers/config.json'
+      - 'scripts/assemble-silba-etno-repertoire.mjs'
+      - '.github/workflows/build-repertoire-demo.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: repertoire-editable-demo-main
+  cancel-in-progress: false
+jobs:
+  build:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          persist-credentials: true
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Verify orchestra, setlist and iPad book navigation
+        run: node --test tests/repertoire-edition.test.mjs
+      - name: Assemble interactive Repertoire demo with original ABC scores
+        run: node scripts/assemble-silba-etno-repertoire.mjs
+      - name: Verify actual published HTML includes Nodebog and 17 scores
+        run: |
+          node --input-type=module -e "
+          import fs from 'node:fs';
+          import assert from 'node:assert/strict';
+          const name='editions/silva-ethno-repertoire/index.html';
+          const html=fs.readFileSync(name,'utf8');
+          for(const token of [
+            'Repertoire – Nodebog',
+            'huwiki-repertoire-book',
+            'Åbn repertoireværksted',
+            'Åbn nodebogen',
+            'Brudmarch från Jämtland',
+            'Cupria Express (Fm)',
+            'Repertoire/Saetlister/'
+          ])assert.ok(html.includes(token),token+' missing from public HTML');
+          assert.ok(Buffer.byteLength(html)>3_000_000,'wiki HTML unexpectedly small');
+          const m=JSON.parse(fs.readFileSync('editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json','utf8'));
+          assert.equal(m.filter(t=>t['repertoire-kind']==='orchestra-item').length,17);
+          console.log('Repertoire demo has 17 original scores and a book linked from the workshop');
+          "
+          git diff --check
+      - name: Commit editable demo HTML to the existing Forge Pages directory
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- editions/silva-ethno-repertoire/index.html
+          if ! git diff --cached --quiet; then
+            git commit -m "build(repertoire): publish interactive 17-score Nodebog demo"
+            git fetch origin main
+            git rebase origin/main
+            git push origin HEAD:main
+          fi
