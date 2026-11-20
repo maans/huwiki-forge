@@ -104,9 +104,9 @@ try{
  const timeline=await player.evaluate(host=>host._platoPlayer.getTimeline());
  assert.ok(timeline.duration>480&&timeline.duration<482,'the complete 8-minute performance is loaded');
  assert.ok(timeline.audioClips.some(clip=>clip.kind==='music')&&timeline.audioClips.some(clip=>clip.kind==='speech')&&timeline.audioClips.some(clip=>clip.kind==='sfx'));
- await player.getByRole('button',{name:'Play the performance',exact:true}).click();
+ await player.getByRole('button',{name:'Afspil forestillingen',exact:true}).click();
  await wiki.waitForFunction(()=>Number(document.querySelector('.plato-player')?.getAttribute('data-plato-time'))>1);
- await player.getByRole('button',{name:'Pause the performance',exact:true}).click();
+ await player.getByRole('button',{name:'Sæt forestillingen på pause',exact:true}).click();
  assert.equal(await player.getAttribute('data-plato-playing'),'false');
  await assertPaintedStage(player.locator('.plato-scene'),'canonical-audience-playback.png');
  passed('canonical audience playback advances beyond the authored opening fade and paints visible artwork');
@@ -412,7 +412,7 @@ try{
   };
   loader.load=()=>pending;
  });
- await player.getByRole('button',{name:'Play the performance',exact:true}).click();
+ await player.getByRole('button',{name:'Afspil forestillingen',exact:true}).click();
  await wiki.waitForFunction(start=>Number(document.querySelector('.plato-player')?.getAttribute('data-plato-time'))>start+.2,savedTime);
  assert.equal(await player.getAttribute('data-plato-playing'),'true');
  await wiki.locator('.plato-home .plato-native-link a').click();
