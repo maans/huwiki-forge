@@ -1,0 +1,27 @@
+/* A live, isolated view of one current figure inside the shared workshop. */
+.huw-musical-figure-panel{display:flex;flex:1 1 auto;flex-direction:column;min-width:0;min-height:0;height:100%;padding:10px 12px;box-sizing:border-box;background:#eef3f6;color:#183345;font:13px/1.35 system-ui,-apple-system,sans-serif}
+.huw-musical-figure-panel[hidden],.huw-musical-figure-panel [hidden]{display:none!important}
+.huw-musical-figure-header{display:flex;align-items:center;gap:9px;flex-wrap:wrap;flex:0 0 auto;margin-bottom:8px;min-width:0}
+.huw-musical-figure-title{font-size:16px}
+.huw-musical-figure-selected-label{color:#36546a}
+.huw-musical-figure-time{font-variant-numeric:tabular-nums;color:#526575;white-space:nowrap}
+.huw-musical-figure-fit{margin-left:auto;flex:0 0 auto}
+.huw-musical-figure-panel button{font:inherit;line-height:1.25;cursor:pointer;touch-action:manipulation;min-height:44px;border:1px solid #91a7b6;border-radius:7px;padding:8px 10px;background:#fff;color:#1a3d54;box-sizing:border-box}
+.huw-musical-figure-panel button:focus-visible{outline:3px solid #c06c12;outline-offset:2px}
+.huw-musical-figure-body{display:flex;flex:1 1 auto;gap:10px;min-height:0;min-width:0;overflow:hidden}
+.huw-musical-figure-canvas{display:flex;position:relative;flex:1 1 auto;min-height:220px;min-width:0;border:1px solid #9aaeba;border-radius:10px;overflow:hidden;touch-action:none;user-select:none;-webkit-user-select:none;background:radial-gradient(ellipse at 50% 42%,#fff 0,#e4edf3 76%)}
+.huw-musical-figure-preview{display:block!important;width:100%!important;height:100%!important;min-height:220px;max-height:none!important;overflow:visible;touch-action:none;background:transparent!important}
+.huw-musical-figure-preview .huw-cutout-part{cursor:grab}
+.huw-musical-figure-preview [opacity="0"],.huw-musical-figure-preview [opacity="0"] *{pointer-events:none!important}
+.huw-musical-figure-parts{display:flex;flex-direction:column;gap:5px;flex:0 0 clamp(140px,21%,220px);min-height:0;overflow:auto;overscroll-behavior:contain;padding:2px 5px 4px 2px;scrollbar-width:thin}
+.huw-musical-figure-part{text-align:left;flex:0 0 auto;overflow-wrap:anywhere}
+.huw-musical-figure-part[aria-pressed="true"]{border-color:#bd751e!important;background:#fff0d8!important;box-shadow:inset 3px 0 #bd751e}
+.huw-musical-figure-overlay{pointer-events:none}
+.huw-musical-figure-outline{fill:none;stroke:#b46b13;stroke-width:2;stroke-dasharray:6 4;vector-effect:non-scaling-stroke;pointer-events:none}
+.huw-musical-figure-guide{stroke:#4384aa;stroke-width:1.5;stroke-dasharray:4 3;vector-effect:non-scaling-stroke;pointer-events:none}
+.huw-musical-figure-pivot{fill:#fff;stroke:#b46b13;stroke-width:2;vector-effect:non-scaling-stroke;pointer-events:none}
+.huw-musical-figure-rotate{fill:#207aa8;stroke:#fff;stroke-width:2;vector-effect:non-scaling-stroke;pointer-events:all;cursor:grab;touch-action:none}
+.huw-musical-figure-hint{flex:0 0 auto;margin:7px 0 0;font-size:12px;color:#415b6b}
+.huw-musical-figure-status{flex:0 0 auto;font-size:12px;color:#326145;min-height:0}
+.huw-musical-figure-status:empty{display:none}
+@media(max-width:640px){.huw-musical-figure-panel{padding:8px}.huw-musical-figure-body{gap:6px}.huw-musical-figure-parts{flex-basis:122px}.huw-musical-figure-selected-label{flex:1 1 auto}.huw-musical-figure-time{font-size:12px}.huw-musical-figure-fit{padding:7px!important}.huw-musical-figure-hint{font-size:11px}}

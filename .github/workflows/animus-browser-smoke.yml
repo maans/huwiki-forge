@@ -21,9 +21,11 @@ on:
       - scripts/build-turn-around-player.mjs
       - scripts/animus-browser-smoke.mjs
       - scripts/animus-face-browser-smoke.mjs
+      - scripts/animus-figure-browser-smoke.mjs
       - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
       - tests/animus-face*.test.mjs
+      - tests/animus-figure*.test.mjs
       - tests/turn-around-player-refresh.test.mjs
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
@@ -55,9 +57,11 @@ on:
       - scripts/build-turn-around-player.mjs
       - scripts/animus-browser-smoke.mjs
       - scripts/animus-face-browser-smoke.mjs
+      - scripts/animus-figure-browser-smoke.mjs
       - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
       - tests/animus-face*.test.mjs
+      - tests/animus-figure*.test.mjs
       - tests/turn-around-player-refresh.test.mjs
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
@@ -113,6 +117,11 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/animus-face-browser-smoke.mjs
+      - name: Test the figure workshop through the ordinary Turn Around demo
+        if: ${{ !cancelled() }}
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/animus-figure-browser-smoke.mjs
       - name: Report complete source suite with bounded diagnostics
         if: always()
         run: |

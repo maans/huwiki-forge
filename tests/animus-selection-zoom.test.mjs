@@ -6,6 +6,9 @@ import {Matrix,matrixFor,svgDocument} from './helpers/svg-test-dom.mjs';
 const zoomCode=await readFile(new URL('../plugins/musical/src/selection-zoom.js',import.meta.url),'utf8');
 const workspaceCode=await readFile(new URL('../plugins/musical/src/workspace.js',import.meta.url),'utf8');
 const zoom={};runInNewContext(zoomCode,{exports:zoom});
+const face={},facePanel={};
+runInNewContext(await readFile(new URL('../plugins/musical/src/face.js',import.meta.url),'utf8'),{exports:face,require:()=>({})});
+runInNewContext(await readFile(new URL('../plugins/musical/src/face-panel.js',import.meta.url),'utf8'),{exports:facePanel,require:()=>face});
 const near=(actual,expected,message)=>assert.ok(Math.abs(actual-expected)<1e-6,message||`${actual} should equal ${expected}`);
 const plain=value=>JSON.parse(JSON.stringify(value));
 function geometry(){
@@ -64,8 +67,9 @@ test('selection focus releases only ancestor SVG clipping and restores it for ex
  controller.fit(points,16/9,h.arm);controller.dispose();assert.equal(scene.classList.contains(flag),false);assert.equal(act.classList.contains(flag),false);
  assert.deepEqual([act,scene,other].map(node=>({viewBox:node.getAttribute('viewBox'),overflow:node.style.overflow})),source,'focusing never rewrites child cameras or authored overflow styles');
 });
-function workspaceHarness(){
+function workspaceHarness(options={}){
  const h=geometry(),{doc,svg,actor,arm,shape}=h;
+ doc.createComment=text=>doc.createTextNode(text);
  h.camera.removeAttribute('transform');actor.setAttribute('data-cutout-id','actor');arm.setAttribute('data-cutout-id','arm');
  const body=doc.createElementNS('svg','rect');body.setAttribute('x','-25');body.setAttribute('y','-60');body.setAttribute('width','50');body.setAttribute('height','120');actor.insertBefore(body,arm);
  svg.getBoundingClientRect=()=>({width:640,height:360,left:0,top:0});
@@ -77,7 +81,9 @@ function workspaceHarness(){
  const transport=create('div','huw-musical-transport'),play=create('button','huw-musical-play',transport),root=create('section','huw-musical-editor');
  create('header','huw-musical-editor-header',root);create('p','',root);create('div','huw-musical-inspector',root);
  const film={width:800,height:450,camera:{keys:[{t:0,x:400,y:225,zoom:1}]},parts:[{id:'actor',name:'Actor'},{id:'arm',parent:'actor',name:'Arm'}]};
- const scene=film;let selected={id:'song:music',kind:'song'},workspace,change=null,committed=0,paused=0,scriptOpened=0;
+ if(options.face)film.parts.push({id:'head',parent:'actor',name:'Head'},{id:'mouth',parent:'head',name:'Mouth'},{id:'eyes',parent:'head',name:'Eyes'});
+ const scene=film;let selected={id:'song:music',kind:'song'},workspace,change=null,committed=0,paused=0,scriptOpened=0,position=2,seeks=0,figureOptions,figureSelected='',figureOpened=false,figureSuspended=0;
+ const faceCommands=[],figureCalls=[];
  function repaint(){svg.setAttribute('viewBox','0 0 800 450');workspace?.paintPreview();workspace?.refreshHandles();}
  const editor={getSelection:()=>selected,setFilter(){},setZoom(){},getZoom:()=>1,addKeyframe(){},removeKeyframe(){},setCameraEdit(){repaint();},inClipDetail:()=>false,
   resolvePartScene:()=>scene,ensureFigureTrack(){},getPartPivot:()=>({x:0,y:0}),isJointMove:()=>false,
@@ -85,10 +91,20 @@ function workspaceHarness(){
   selectFigure(id,quiet){selected={id:'figure:'+id,kind:'figure',part:id};if(!quiet)workspace?.selectTrack(selected);return true;},
   beginPartMove(id){return {update(dx,dy,dr){change={id,dx,dy,dr};repaint();},commit(){committed++;},cancel(){change=null;}};},
   figureStateFor:()=>({x:0,y:0,r:0,sx:1,sy:1}),isExporting:()=>false};
+ if(options.face){
+  film.musical={faceKeys:[]};const faceView={scene:film,nodes:{}};
+  editor.faceContext=id=>film.parts.some(p=>p.id===id)?{actorId:'actor',actorPartId:'actor',headId:'head',label:'Actor',scene:film,view:faceView,time:position,localTime:position,
+   state:face.state(film.musical.faceKeys,position,'actor'),parts:{open:'mouth',eyes:['eyes']},variants:[{id:'o',name:'Round'},{id:'e',name:'Smile'}],viseme:'O',variantMap:{O:'o',E:'e'},defaultVariantMap:{O:'o',E:'e'},cue:{partId:'cue',text:'Hello',time:position}}:null;
+  editor.faceHistory=()=>film.musical.faceKeys;
+  editor.chooseFace=(id,command)=>{faceCommands.push({id,...plain(command)});const patch=command.channel==='mouth'?{mouth:{mode:'auto'},mouthMap:{[command.viseme]:command.value==='auto'?null:command.value}}:command.channel==='eyes'?{eyes:command.value}:face.preset(command.value);
+   film.musical.faceKeys=face.withKey(film.musical.faceKeys,'actor',position,patch);selected={id:'face:actor',kind:'face',part:'head',actorId:'actor'};repaint();workspace.selectTrack(selected);return true;};
+ }
  const inactive=()=>({isOpen:()=>false,open(){},close(){},dispose(){},draw(){}});
  const modules={
   '$:/plugins/huwiki/musical/selection-zoom.js':zoom,
-  '$:/plugins/huwiki/musical/face-panel.js':{mount:()=>({...inactive(),select:()=>false,refresh(){},hide(){},isWorkshopOpen:()=>false,relocate(){},suspend:()=>()=>{}})},
+  '$:/plugins/huwiki/musical/face-panel.js':options.face?facePanel:{mount:()=>({...inactive(),select:()=>false,refresh(){},hide(){},isWorkshopOpen:()=>false,relocate(){},suspend:()=>()=>{}})},
+  '$:/plugins/huwiki/musical/figure-panel.js':{mount:config=>{figureOptions=config;return {select(id){figureCalls.push(id);figureSelected=id.replace(/-drawing$/,'');figureOpened=true;return true;},selectedPart:()=>figureSelected,refresh(){},hide(){figureOpened=false;},isOpen:()=>figureOpened&&!figureSuspended,isDragging:()=>false,cancelGesture(){},
+   suspend(){figureSuspended++;let restored=false;return ()=>{if(!restored){restored=true;figureSuspended--;}};},dispose(){figureOpened=false;}};}},
   '$:/plugins/huwiki/musical/puppet.js':{mount:inactive,rootFor:id=>id==='arm'?'actor':id},
   '$:/plugins/huwiki/musical/manuscript.js':{mount:()=>({...inactive(),open(){scriptOpened++;}})},
   '$:/plugins/huwiki/musical/narration.js':{mount:inactive},
@@ -97,8 +113,9 @@ function workspaceHarness(){
  };
  const api={};runInNewContext(workspaceCode,{exports:api,require:name=>{if(!modules[name])throw Error(name);return modules[name];},$tw:{}});
  const view={svg,nodes:{actor:{el:actor},arm:{el:arm}},clips:[]};
- workspace=api.mount({doc,host,editor,film,view,layout,transport,play,project:'Show',sceneTitle:'Film',wiki:{getTiddlerText:()=>'$:/languages/en-GB'},scoreTitle:()=>'',position:()=>2,pause(){paused++;},seek(){},repaint});
- return {...h,host,stage,film,view,workspace,editor,repaint,get selected(){return selected;},get change(){return change;},get committed(){return committed;},get paused(){return paused;},get scriptOpened(){return scriptOpened;}};
+ workspace=api.mount({doc,host,editor,film,view,layout,transport,play,project:'Show',sceneTitle:'Film',wiki:{getTiddlerText:()=>'$:/languages/en-GB'},scoreTitle:()=>'',position:()=>position,pause(){paused++;},seek(time){position=time;seeks++;},repaint});
+ return {...h,host,stage,film,view,workspace,editor,repaint,faceCommands,figureCalls,openFigureFace(id){figureOptions.onFace({partId:id,actorId:'actor',headId:'head',tab:id==='mouth'?'mouth':'eyes'});},
+  get selected(){return selected;},get change(){return change;},get committed(){return committed;},get paused(){return paused;},get scriptOpened(){return scriptOpened;},get position(){return position;},get seeks(){return seeks;},get figureOpen(){return figureOpened&&!figureSuspended;}};
 }
 test('workspace actions zoom selected figure and arm, retain pointer coordinates and leave camera data unchanged',()=>{
  const h=workspaceHarness(),before=JSON.stringify(h.film),zoomButton=h.host.querySelector('.huw-musical-zoom-selection');
@@ -158,4 +175,53 @@ test('a new active scene retargets focus when it contains the same logical actor
  assert.notEqual(h.svg.getAttribute('viewBox'),firstFocus,'focus follows the new rendered element rather than its old coordinates');
  const nextFocus=h.svg.getAttribute('viewBox');h.repaint();assert.equal(h.svg.getAttribute('viewBox'),nextFocus,'repainting the same instance does not compound the zoom');
  assert.equal(JSON.stringify(h.film),source);h.workspace.dispose();assert.equal(second.classList.contains(flag),false);
+});
+
+test('shared workshop keeps head posing separate from facial choices and returns to the last body part without writing',()=>{
+ const h=workspaceHarness({face:true}),dock=h.host.querySelector('[data-animus-workshop]'),source=JSON.stringify(h.film),time=h.position;
+ assert.equal(dock.hidden,true);assert.equal(h.figureCalls.length,0,'mounting does not select or open a figure');
+ h.editor.selectPart('head');assert.equal(dock.dataset.animusWorkshop,'figure');assert.equal(h.figureCalls.at(-1),'head','a head is still a rotatable joint');
+ h.editor.selectPart('arm');assert.equal(h.figureOpen,true);
+ h.openFigureFace('eyes');assert.equal(dock.dataset.animusWorkshop,'face');assert.equal(h.figureOpen,false);
+ assert.equal(dock.querySelector('[data-face-tab="eyes"]').getAttribute('aria-selected'),'true');
+ dock.querySelector('[data-face-back="figure"]').click();
+ assert.equal(dock.dataset.animusWorkshop,'figure');assert.equal(h.selected.part,'arm');assert.equal(h.figureCalls.at(-1),'arm');
+ h.editor.selectPart('mouth');assert.equal(dock.dataset.animusWorkshop,'face','a mouth selected from the timeline opens facial choices');
+ assert.equal(dock.querySelector('[data-face-tab="mouth"]').getAttribute('aria-selected'),'true');
+ dock.querySelector('[data-workshop-mode="figure"]').click();assert.equal(h.selected.part,'arm');
+ assert.equal(h.position,time);assert.equal(h.seeks,0);assert.equal(JSON.stringify(h.film),source);assert.equal(h.committed,0);assert.deepEqual(h.faceCommands,[]);
+ h.workspace.dispose();
+});
+
+test('face-key selection reentry preserves the chosen mouth tab and sound group through script and export',()=>{
+ const h=workspaceHarness({face:true}),dock=h.host.querySelector('[data-animus-workshop]');
+ h.editor.selectPart('arm');h.openFigureFace('mouth');
+ const expanded=dock.querySelector('.huw-face-workshop');expanded.querySelector('[data-face-sound="E"]').click();
+ expanded.querySelector('.huw-musical-face-choice[data-face-value="o"]').click();
+ assert.equal(h.selected.kind,'face');assert.equal(dock.dataset.animusWorkshop,'face');
+ assert.equal(expanded.querySelector('[data-face-tab="mouth"]').getAttribute('aria-selected'),'true');
+ assert.equal(expanded.querySelector('.huw-musical-face-context').dataset.faceViseme,'E','the editor callback selects the head without changing the inspected sound');
+ assert.deepEqual(h.faceCommands,[{id:'mouth',channel:'mouth',value:'o',viseme:'E',mode:'auto'}]);
+ const saved=JSON.stringify(h.film);expanded.querySelector('.huw-musical-face-script').click();assert.equal(h.scriptOpened,1);
+ assert.equal(dock.querySelector('.huw-face-workshop'),expanded,'opening Manuscript keeps the inline workshop and its context');
+ const fullscreen=h.host.querySelector('.huw-musical-stage-fullscreen');fullscreen.click();assert.equal(dock.parentNode,h.stage);
+ const outer=h.workspace.beginExport(),inner=h.workspace.beginExport();assert.equal(dock.hidden,true);assert.equal(expanded.hidden,true);
+ inner();assert.equal(dock.hidden,true);assert.equal(expanded.hidden,true);
+ outer();outer();assert.equal(dock.hidden,false);assert.equal(expanded.hidden,false);assert.equal(dock.dataset.animusWorkshop,'face');
+ assert.equal(expanded.querySelector('.huw-musical-face-context').dataset.faceViseme,'E');assert.equal(dock.parentNode,h.stage);
+ fullscreen.click();assert.equal(dock.parentNode,h.host);
+ expanded.querySelector('[data-face-back="figure"]').click();assert.equal(h.selected.part,'arm');assert.equal(h.seeks,0);assert.equal(JSON.stringify(h.film),saved);
+ h.workspace.dispose();assert.equal(h.host.querySelector('[data-animus-workshop]'),null);
+});
+
+test('Manuscript waits for native fullscreen exit and keeps the same inline face context',async()=>{
+ const h=workspaceHarness({face:true}),dock=h.host.querySelector('[data-animus-workshop]');h.editor.selectPart('arm');h.openFigureFace('mouth');
+ const expanded=dock.querySelector('.huw-face-workshop');expanded.querySelector('[data-face-sound="E"]').click();
+ h.doc.fullscreenElement=h.stage;h.doc.dispatch('fullscreenchange',{});assert.equal(dock.parentNode,h.stage);
+ let finishExit;h.doc.exitFullscreen=()=>new Promise(resolve=>{finishExit=()=>{h.doc.fullscreenElement=null;h.doc.dispatch('fullscreenchange',{});resolve();};});
+ const opening=h.workspace.openManuscript({partId:'cue',time:h.position});assert.equal(h.scriptOpened,0,'the dialog is not appended outside an active fullscreen stage');
+ finishExit();await opening;
+ assert.equal(h.scriptOpened,1);assert.equal(dock.parentNode,h.host);assert.equal(dock.querySelector('.huw-face-workshop'),expanded);
+ assert.equal(expanded.querySelector('.huw-musical-face-context').dataset.faceViseme,'E');assert.equal(h.seeks,0);assert.deepEqual(plain(h.film.musical.faceKeys),[]);
+ h.workspace.dispose();
 });

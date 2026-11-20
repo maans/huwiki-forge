@@ -1,6 +1,6 @@
 # AniMus production tools
 
-AniMus 0.13.0-beta.1 includes facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
+AniMus 0.13.0-beta.2 includes a large figure workshop beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
 
 ## Create and edit a show
 
@@ -33,6 +33,8 @@ Use TiddlyWiki's Save button to save the complete wiki file. Recording asks for 
 2. Choose **Figure** and click a visible part of the character. The dashed frame selects the entire figure. Drag the figure to move it, or use its handles to resize or rotate it.
 3. Choose **Parts and joints** and click an arm, leg or other body part. The smaller dashed frame and marked pivot show the selected part and its attachment. Drag a mounted limb around that point, or use the round rotation handle. Its attached children follow the movement.
 4. Release the pointer to keep the change. AniMus saves a key at the current position in the relevant scene or motion loop. A loop edit applies to that beat position in each repetition. Press **Escape** during a drag to cancel it.
+
+Selecting a body part also opens the **Character** workshop beneath the stage. It shows the whole selected character, enlarged in its current animated pose. Select and drag a limb there, or use its rotation handle; the stage updates at the same time. The preview retains the character's current mirroring, joint transforms and facial choices. Opening or switching workshops creates no keys and does not change the film camera. Click an eye or mouth to switch the same area to the face workshop. **← Whole character** or the **Character** tab returns to the body and the last selected joint. Clicking the head itself keeps it available for rotation around its neck joint.
 
 The CutOut studio has the same **Figure** and **Parts and joints** choices, plus a part selector and **Move**, **Rotate** and **Size** tools. Use **Undo** and **Redo** for its completed direct edits, and **Save project** to apply the draft. AniMus applies a stage drag when you release it; saving the complete wiki file remains a separate TiddlyWiki action. Site view provides audience playback without editing frames or handles.
 
@@ -81,13 +83,13 @@ Bindings are stored on the caption part as `lipSync`, separately from its geomet
 
 ## Face choices and the face workshop
 
-Pause the show, choose **Parts and joints**, and click the face, eyes or mouth. Large previews appear beneath the stage. Opening the choices changes no saved data; selecting a card creates or updates a face key at the playhead.
+Pause the show, choose **Parts and joints**, and click an eye or mouth on the stage or in the enlarged character workshop. The face workshop opens in the same area beneath the stage. You can also use its **Face** tab. Opening the choices changes no saved data; selecting a card creates or updates a face key at the playhead.
 
 **Face** offers combined expressions, **Eyes** offers eye and gaze choices, and **Mouth** shows the character's own drawings. Combined expressions keep automatic speech and previously learned mouth choices. **Blink** produces one brief blink; the other eye choices remain until the next eye key. Head rotation still uses the existing neck pivot and direct manipulation.
 
 By default, a mouth choice teaches autosync a replacement for the current letter group. For example, choose an E drawing while O is active: later O-group moments use that drawing for this character, including later scenes. Earlier frames, other groups and other characters keep their choices. **Follow script** restores the selected group's original mapping from the playhead. **More choices → Hold this mouth** explicitly holds one drawing for every sound until automatic movement is restored.
 
-Open **Face workshop** for a larger preview, the seven letter groups and their current mouth choices, and a visual history of saved face keys. Click a group before choosing its mouth; click a history entry to seek to that key. **Script** opens the associated line. The script's **Save and open face workshop** button saves the draft and returns to the speaking character. **Undo choice** reverts the last facial edit; face keys can also be moved or deleted on their own timeline track.
+The **Face workshop** contains a large preview, the seven letter groups and their current mouth choices, and a visual history of saved face keys. Click a group before choosing its mouth; click a history entry to seek to that key. **Script** opens the associated line. The script's **Save and open face workshop** button saves the draft and returns to the speaking character. **Undo choice** reverts the last facial edit; face keys can also be moved or deleted on their own timeline track. **← Whole character** returns to the figure workshop without changing the playhead or pose.
 
 | Group | Letters or situation |
 | --- | --- |
@@ -179,6 +181,8 @@ Sæt forestillingen på pause, og vælg tidspunktet på tidslinjen. Vælg **Figu
 
 Vælg **Dele og led**, og klik på den arm, det ben eller den del, du vil ændre. Rammen og det markerede drejepunkt viser den valgte del og dens montering. Træk en monteret kropsdel omkring leddet, eller brug det runde drejehåndtag. Dele monteret på den følger med. AniMus gemmer ændringen som en nøgle ved tidsmarkøren, når du slipper. I en gentaget bevægelse ændres det tilsvarende tidspunkt i bevægelsens løkke. **Escape** under trækket annullerer ændringen.
 
+Når du vælger en kropsdel, åbner **Figurværkstedet** under scenen. Her vises hele den valgte figur stort i dens aktuelle pose, inklusive spejling, led og ansigtsudtryk. Vælg og træk kropsdelene direkte i værkstedet, eller brug drejehåndtaget; ændringen vises samtidig i scenen. Tryk på et øje eller munden for at skifte samme område til ansigtsværkstedet. **← Hele figuren** eller fanen **Figur** fører tilbage til figuren og det senest valgte led. Tryk på selve hovedet for at vippe det omkring halsleddet. Åbning og skift mellem værkstederne ændrer hverken nøglebilleder, tidsmarkør eller filmens kamera.
+
 I CutOut-studiet kan du også vælge delen i listen og bruge **Flyt**, **Drej** eller **Størrelse**. **Fortryd** og **Gentag** gælder de afsluttede direkte ændringer; tryk **Gem projekt** for at anvende kladden. AniMus gemmer scenetrækket ved slip. Gem hele wikien med TiddlyWikis Gem-knap for at beholde arbejdet som fil. **Sitevisning** viser forestillingen uden redigeringsrammer og håndtag.
 
 ### Vælg, hvad du ser og hører under redigering
@@ -193,11 +197,11 @@ Sporknapperne og zoom gælder kun editorens forhåndsvisning. De ændrer ikke de
 
 ### Ansigtsudtryk og ansigtsværksted
 
-Sæt filmen på pause, vælg **Dele og led**, og klik på ansigtet, øjnene eller munden. Under scenen vises store billeder af valgene. Klik på et billede for at gemme et nøglebillede ved tidsmarkøren. **Ansigt** vælger samlede udtryk, **Øjne** vælger blik eller øjenstilling, og **Mund** viser figurens mundtegninger. Et ansigtsudtryk bevarer automatisk tale og dine tilpassede mundvalg.
+Sæt filmen på pause, vælg **Dele og led**, og klik på et øje eller munden i scenen eller figurværkstedet. Ansigtsværkstedet åbner i samme område under scenen; du kan også vælge fanen **Ansigt**. Klik på et billede for at gemme et nøglebillede ved tidsmarkøren. **Ansigt** vælger samlede udtryk, **Øjne** vælger blik eller øjenstilling, og **Mund** viser figurens mundtegninger. Et ansigtsudtryk bevarer automatisk tale og dine tilpassede mundvalg.
 
 Et mundvalg lærer som udgangspunkt autosync, hvilken tegning du ønsker til den aktuelle bogstavgruppe. Valget gælder fra tidsmarkøren for samme figur, også i senere scener. Tidligere billeder og andre bogstavgrupper bevares. **Følg manuskript** gendanner den valgte gruppes oprindelige mundvalg. **Flere valg → Hold denne mund** fastholder én mund, indtil du slår automatisk mundbevægelse til igen.
 
-**Ansigtsværksted** viser ansigtet større, alle bogstavgrupper med deres mundvalg og en billedoversigt over gemte ansigtsvalg. Klik på en gruppe for at vælge dens mund, eller klik på et tidligere valg for at gå til dets tidspunkt. **Manuskript** åbner replikken; **Gem og åbn ansigtsværksted** fører tilbage til den talende figur. **Fortryd valget** fortryder ansigtsændringen. Nøglebillederne har deres eget spor, hvor de kan flyttes og slettes.
+**Ansigtsværksted** viser ansigtet større, alle bogstavgrupper med deres mundvalg og en billedoversigt over gemte ansigtsvalg. Klik på en gruppe for at vælge dens mund, eller klik på et tidligere valg for at gå til dets tidspunkt. **Manuskript** åbner replikken; **Gem og åbn ansigtsværksted** fører tilbage til den talende figur. **Fortryd valget** fortryder ansigtsændringen. Nøglebillederne har deres eget spor, hvor de kan flyttes og slettes. **← Hele figuren** fører tilbage til figurværkstedet med samme tidspunkt og pose.
 
 ### Læbesynkronisering
 
