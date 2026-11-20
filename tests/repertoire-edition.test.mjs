@@ -29,6 +29,7 @@ function makeWiki(){
 
 test("Repertoire package is independent of the ABC plugin",()=>{
  assert.equal(pkg.title,"$:/plugins/huwiki/repertoire");
+ assert.equal(pkg.version,"0.1.4-beta.3");
  assert.equal(pkg["plugin-type"],"plugin");
  assert.equal(pkg.dependents,undefined);
  assert.equal(tiddlers["$:/plugins/huwiki/repertoire/widget.js"]["module-type"],"widget");

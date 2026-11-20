@@ -44,3 +44,9 @@ I værkstedet kan du:
 - SilbaÄtno-demoen er en prøve på pluginet, ikke en færdig Repertoire Edition. Originale 17 konverterede partiturer skal fortsat kontrolleres mod MuseScore-kilder.
 
 Test: `node --test tests/repertoire-edition.test.mjs`. Browser-accept: `node scripts/repertoire-browser-smoke.mjs` efter opbygning af den redigerbare wiki. Hele Forge-testpakken: `npm test`.
+
+## Udgivelse 0.1.4-beta.3
+
+- SitePublisher viser musiknumrenes korte titler og et klikbart repertoireindeks. Musikerne kan bruge Tilbage til repertoire, forrige/næste nummer, tastatur, iPad-swipe og den eksisterende ABC-nodepults bladvending. Aftalerne følger nummeret uden at ændre originalnoderne.
+- PDF Publisher placerer aftalerne under sidste nodesystem, når der er plads. Hvis pladsen ikke rækker, får aftalerne deres egen side. Indholdsfortegnelsen bruger korte titler, og det valgte C/B♭/E♭-instrument er stadig angivet på PDF-forsiden.
+- iPad/Quine anvender fortsat Del / udskriv PDF som native fildeling, aldrig navigation til `blob:`.

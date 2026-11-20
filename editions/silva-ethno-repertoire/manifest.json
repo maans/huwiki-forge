@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "silva-ethno-repertoire",
   "name": "SilbaÄtno Repertoire",
-  "version": "0.1.3-beta.3",
+  "version": "0.1.4-beta.3",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",
