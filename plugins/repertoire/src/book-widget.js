@@ -8,6 +8,7 @@ module-type: widget
 var Widget=require("$:/core/modules/widgets/widget.js").widget;
 var model=require("$:/plugins/huwiki/repertoire/model.js");
 var Layout=require("$:/plugins/huwiki/repertoire/book-layout.js");
+var Practice=require("$:/plugins/huwiki/repertoire/practice.js");
 var TEMP="$:/temp/huwiki/repertoire/active-setlist";
 var MODE="$:/temp/huwiki/repertoire/book-mode";
 function el(doc,tag,cls,label){
@@ -29,6 +30,8 @@ function name(wiki,item){
 function Book(parseTreeNode,options){this.initialise(parseTreeNode,options);}
 Book.prototype=new Widget();
 Book.prototype.disposeScore=function(){
+ this._practiceBaseline=null;this._practiceAppliedKey=null;
+ this._practiceScoreHost=null;this._practiceControls=null;
  if(this._observer){this._observer.disconnect();this._observer=null;}
  if(this._score){
   try{this._score.onDestroy();}catch(_ignored){}
@@ -59,6 +62,8 @@ Book.prototype.render=function(parent,nextSibling){
  if(["auto","single","spread"].indexOf(this.preference)<0)this.preference="auto";
  this.setlistTitle=this.getAttribute("setlist","")||this.wiki.getTiddlerText(TEMP)||"";
  this.activeItem="";
+ this.practiceEnabled=false;this.practiceMetronome=false;
+ this.practiceMuteByItem=Object.create(null);this.practiceOpen=false;
  this._resize=this.updateMode.bind(this);
  this._orientation=this.updateMode.bind(this);
  this._boundKeys=this._onKeyDown.bind(this);
@@ -125,6 +130,89 @@ Book.prototype.turn=function(delta){
   if(this._pageStatus)this._pageStatus.textContent="Noderne indlæses …";
  }
 };
+Book.prototype.applyPractice=function(){
+ var score=this._score,control=score&&score._accompControls;
+ if(!control||!control.config||!control.setConfig)return;
+ if(!this._practiceBaseline){
+  // Preserve the original mix, without modifying its tiddler.
+  this._practiceBaseline=JSON.parse(JSON.stringify(control.config()));
+ }
+ var chosen=this.practiceMuteByItem[this.activeItem]||"";
+ var token=JSON.stringify({enabled:this.practiceEnabled,metro:this.practiceMetronome,
+  mute:chosen,item:this.activeItem});
+ if(this._practiceAppliedKey===token)return;
+ var next=Practice.overlay(this._practiceBaseline,{
+  enabled:this.practiceEnabled,metronome:this.practiceMetronome,voice:chosen
+ });
+ this._practiceAppliedKey=token;
+ // The existing ABC mixer updates independent GainNodes during playback,
+ // including the metronome channel. The score's visual clock is untouched.
+ control.setConfig(next,false);
+ if(this._practiceControls&&this._practiceControls.status){
+  this._practiceControls.status.textContent=this.practiceEnabled?
+   (chosen?"Den valgte stemme er lydløs. ":"Alle noterede stemmer kan høres. ")+
+   (this.practiceMetronome?"Metronom til. ":"Metronom fra. ")+
+   "Nodefølget fortsætter under afspilning.":
+   "Øvetilstand er slået fra. Den almindelige lydblanding er gendannet.";
+ }
+};
+Book.prototype.syncPracticeVoices=function(){
+ if(!this._practiceControls||!this._practiceScoreHost)return;
+ var voices=Array.from(this._practiceScoreHost.querySelectorAll(".huwabc-voice-row[data-voice-index]"))
+  .map(function(row){return {id:row.getAttribute("data-voice-index"),
+   name:(row.querySelector(".huwabc-voice-name")||row).textContent.trim()};})
+  .filter(function(v){return /^(?:0|[1-9]\d*)$/.test(v.id);});
+ if(!voices.length)return;
+ var signature=voices.map(function(v){return v.id+":"+v.name;}).join("|");
+ if(this._practiceVoiceSignature===signature)return;
+ this._practiceVoiceSignature=signature;
+ var select=this._practiceControls.voice,doc=this.document,selected=this.practiceMuteByItem[this.activeItem]||"";
+ select.textContent="";
+ select.appendChild(choice(doc,"","Ingen – alle stemmer høres"));
+ voices.forEach(function(v){select.appendChild(choice(doc,v.id,v.name));});
+ if(selected&&!voices.some(function(v){return v.id===selected;})){
+  this.practiceMuteByItem[this.activeItem]="";selected="";
+ }
+ select.value=selected;
+ this.applyPractice();
+};
+Book.prototype.practicePanel=function(doc){
+ var self=this,box=el(doc,"details","huwrep-book-practice");
+ box.open=!!this.practiceOpen;
+ box.appendChild(el(doc,"summary","","Øvetilstand · Music Minus One"));
+ box.addEventListener("toggle",function(){self.practiceOpen=box.open;});
+ var controls=el(doc,"div","huwrep-book-practice-controls");
+ var enabledLabel=el(doc,"label","huwrep-book-practice-check");
+ var enabled=el(doc,"input");enabled.type="checkbox";enabled.checked=!!this.practiceEnabled;
+ enabledLabel.append(enabled,doc.createTextNode(" Øvetilstand aktiv"));controls.appendChild(enabledLabel);
+ var metronomeLabel=el(doc,"label","huwrep-book-practice-check");
+ var metronome=el(doc,"input");metronome.type="checkbox";
+ metronome.checked=!!this.practiceMetronome;metronome.disabled=!this.practiceEnabled;
+ metronomeLabel.append(metronome,doc.createTextNode(" Metronom"));controls.appendChild(metronomeLabel);
+ var muteLabel=el(doc,"label","huwrep-book-practice-voice");
+ muteLabel.appendChild(el(doc,"span","","Spil selv – dæmp denne stemme"));
+ var voice=el(doc,"select","huwrep-input");
+ voice.setAttribute("aria-label","Music Minus One: vælge stemme der skal være lydløs");
+ voice.appendChild(choice(doc,"","Ingen – alle stemmer høres"));
+ voice.value=this.practiceMuteByItem[this.activeItem]||"";
+ voice.disabled=!this.practiceEnabled;muteLabel.appendChild(voice);controls.appendChild(muteLabel);
+ var status=el(doc,"p","huwrep-muted","Vælg metronom og en stemme. Nodefølget fortsætter, selv om stemmen er lydløs.");
+ status.setAttribute("role","status");controls.appendChild(status);
+ box.appendChild(controls);
+ this._practiceControls={enabled:enabled,metronome:metronome,voice:voice,status:status};
+ enabled.addEventListener("change",function(){
+  self.practiceEnabled=enabled.checked;metronome.disabled=voice.disabled=!self.practiceEnabled;
+  self._practiceAppliedKey=null;self.applyPractice();
+ });
+ metronome.addEventListener("change",function(){
+  self.practiceMetronome=metronome.checked;self._practiceAppliedKey=null;self.applyPractice();
+ });
+ voice.addEventListener("change",function(){
+  self.practiceMuteByItem[self.activeItem]=voice.value;
+  self._practiceAppliedKey=null;self.applyPractice();
+ });
+ return box;
+};
 Book.prototype.draw=function(){
  var self=this,doc=this.document,wiki=this.wiki,host=this.host;
  if(!host)return;
@@ -170,14 +258,35 @@ Book.prototype.draw=function(){
  }
  header.appendChild(el(doc,"h2","",name(wiki,this.activeItem)));
  header.appendChild(el(doc,"span","huwrep-muted",(index+1)+" / "+all.length+" numre"));
- var listBox=el(doc,"details","huwrep-book-list");host.appendChild(listBox);
- listBox.appendChild(el(doc,"summary","","Vælg nummer fra sætlisten"));
- var list=el(doc,"div","huwrep-book-list-items");listBox.appendChild(list);
+ var listBox=el(doc,"aside","huwrep-book-list");listBox.hidden=true;
+ listBox.setAttribute("aria-label","Numre i den aktuelle sætliste");host.appendChild(listBox);
+ var listToggle=btn(doc,"☷ Nummerliste",function(){
+  listBox.hidden=!listBox.hidden;
+  listToggle.setAttribute("aria-expanded",String(!listBox.hidden));
+  if(!listBox.hidden)search.focus();
+ });
+ listToggle.setAttribute("aria-expanded","false");toolbar.appendChild(listToggle);
+ var title=el(doc,"div","huwrep-book-list-heading");
+ title.appendChild(el(doc,"strong","","Numre i sætlisten"));
+ title.appendChild(btn(doc,"Luk ×",function(){
+  listBox.hidden=true;listToggle.setAttribute("aria-expanded","false");
+ }));
+ listBox.appendChild(title);
+ var search=el(doc,"input","huwrep-input huwrep-book-list-search");
+ search.type="search";search.placeholder="Find et nummer…";
+ search.setAttribute("aria-label","Søg i sætlisten");
+ listBox.appendChild(search);
+ var list=el(doc,"nav","huwrep-book-list-items");listBox.appendChild(list);
  all.forEach(function(id,i){
-  var b=btn(doc,(i+1)+". "+name(wiki,id),function(){listBox.open=false;self.selectItem(id,false);},
-   id===self.activeItem?"huwrep-primary":"");
+  var b=btn(doc,(i+1)+". "+name(wiki,id),function(){
+   listBox.hidden=true;self.selectItem(id,false);
+  },id===self.activeItem?"huwrep-primary":"");
   b.setAttribute("aria-current",id===self.activeItem?"true":"false");
   list.appendChild(b);
+ });
+ search.addEventListener("input",function(){
+  var q=search.value.trim().toLocaleLowerCase();
+  Array.from(list.children).forEach(function(b){b.hidden=!b.textContent.toLocaleLowerCase().includes(q);});
  });
  var row=el(doc,"div","huwrep-book-agreement"),agreement=model.effective(wiki,this.setlistTitle,this.activeItem);
  if(agreement.key)row.appendChild(el(doc,"span","","Aftalt toneart: "+agreement.key));
@@ -187,7 +296,9 @@ Book.prototype.draw=function(){
  var stage=el(doc,"main","huwrep-book-stage");host.appendChild(stage);
  var source=wiki.getTiddler(name(wiki,this.activeItem)),f=source&&source.fields;
  if(f&&typeof f["abc-source"]==="string"){
+  host.insertBefore(this.practicePanel(doc),stage);
   var scoreHost=el(doc,"div","huwrep-book-score");stage.appendChild(scoreHost);
+  this._practiceScoreHost=scoreHost;this._practiceVoiceSignature="";
   try {
    // The full notation engine (pagination, audio and page dots) is reused;
    // only the active score widget exists. No orchestral ABC is duplicated.
@@ -203,10 +314,12 @@ Book.prototype.draw=function(){
    this._score.render(scoreHost,null);
    var win=this._win;
    if(win&&win.MutationObserver){
-    this._observer=new win.MutationObserver(function(){self.updateMode();});
+    this._observer=new win.MutationObserver(function(){
+     self.updateMode();self.syncPracticeVoices();self.applyPractice();
+    });
     this._observer.observe(scoreHost,{childList:true,subtree:true});
    }
-   this.updateMode();
+   this.updateMode();this.syncPracticeVoices();this.applyPractice();
   }catch(error){
    this.disposeScore();
    scoreHost.appendChild(el(doc,"p","huwrep-muted","Noderne kunne ikke vises: "+error.message));
