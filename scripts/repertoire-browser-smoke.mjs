@@ -36,6 +36,8 @@ try{
  await page.waitForFunction(()=>document.querySelector(".huwrep-song-card")?.getAttribute("aria-pressed")==="false");
  await grid.locator(".huwrep-song-card").first().click();
  await page.waitForFunction(()=>document.querySelector(".huwrep-song-card")?.getAttribute("aria-pressed")==="true");
+ // Select a known score: the grid toggle above intentionally selected a different first item.
+ await page.locator(".huwrep-order-title").filter({hasText:"Brudmarch från Jämtland"}).click();
  // The editor derives both values from the actual ABC header, including the beat unit.
  const keyInput=page.locator(".huwrep-editor-panel .huwrep-key-field select");
  const tempoInput=page.locator(".huwrep-editor-panel .huwrep-tempo-field input");
