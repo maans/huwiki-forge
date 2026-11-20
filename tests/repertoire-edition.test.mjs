@@ -145,7 +145,7 @@ test("Music Minus One uses the ABC mixer as a temporary overlay without rewritin
  assert.equal(module.isAudible(base,{enabled:true,metronome:true,voice:"1"},0),true);
  assert.equal(one.voiceSettings["0"].mode,"solo");
  assert.equal(JSON.stringify(base),original,"base orchestral arrangement must remain untouched");
- assert.deepEqual({...module.overlay(base,{enabled:false,metronome:true,voice:"1"})},base,
+ assert.equal(JSON.stringify(module.overlay(base,{enabled:false,metronome:true,voice:"1"})),original,
   "exiting practice must restore the original mixer");
  const book=tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"].text;
  assert.match(book,/control\.setConfig\(next,false\)/,"practice settings may not persist into ABC score");
