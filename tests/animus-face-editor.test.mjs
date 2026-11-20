@@ -104,3 +104,25 @@ test('real editor reset of one letter preserves learned other letters and explic
   context = h.editor.faceContext('alma-head'); assert.equal(context.state.mouth.mode, 'auto'); assert.equal(context.variantMap.M, 'F');
   h.options.seek(1); assert.equal(h.editor.faceContext('alma-head').custom, false);
 });
+
+test('clearing a real editor selection never falls back to another track or writes keys', () => {
+  const h=harness();h.editor.chooseFace('alma-mouth-open',{channel:'mouth',value:'E'});
+  h.editor.selectPart('alma-head',true);const before=plain(h.records),keys=plain(h.data),writes=h.writes.length,time=h.time,events=[];
+  h.options.onSelect=selection=>events.push(selection);
+  assert.equal(h.editor.clearSelection(),true);assert.equal(h.editor.getSelection(),null);assert.equal(events.at(-1),null);
+  assert.equal(h.host.querySelector('.huw-musical-track.is-selected'),null);assert.equal(h.host.querySelector('.huw-musical-key.is-selected'),null);
+  h.editor.addKeyframe();h.editor.removeKeyframe();h.editor.redraw();h.editor.paint(h.time);
+  assert.equal(h.editor.clearSelection(),false);assert.equal(h.editor.getSelection(),null);assert.equal(h.writes.length,writes);
+  assert.deepEqual(plain(h.records),before);assert.deepEqual(plain(h.data),keys);assert.equal(h.time,time);
+  assert.equal(h.editor.faceContext('alma-head').effectiveVariant,'E','deselection preserves the applied face');
+  assert.equal(h.editor.undoFace(),true,'face undo also works with no selected timeline track');assert.equal(h.editor.getSelection(),null);
+  assert.equal(h.editor.selectPart('alma-head',true),true);assert.equal(h.editor.getSelection().part,'alma-head');
+});
+
+test('leaving animation detail does not resurrect a selection cleared inside it', () => {
+  const records=harness().records,film=JSON.parse(records.Film.text);film.musical.animationClips.push({id:'loop',target:'alma',name:'Loop',start:0,duration:10,beatsPerLoop:4,motion:{'alma-head':[{t:0,r:0},{t:2,r:15}]}});records.Film.text=JSON.stringify(film);
+  const h=harness(records);h.editor.selectPart('alma-head',true);assert.equal(h.editor.getSelection().kind,'motion');
+  assert.equal(h.editor.openAnimation('loop'),true);h.editor.clearSelection();assert.equal(h.editor.getSelection(),null);
+  assert.equal(h.editor.inClipDetail(),true,'deselecting does not leave the working view');
+  h.editor.closeAnimation();assert.equal(h.editor.getSelection(),null);assert.equal(h.host.querySelector('.huw-musical-track.is-selected'),null);assert.equal(h.writes.length,0);
+});

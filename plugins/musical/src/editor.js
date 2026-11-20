@@ -175,7 +175,7 @@ function attach(o){
  function musicLanes(){return [{id:"music:A",kind:"song-lane",lane:"A",name:L===translations.da?"♫ Musik A":"♫ Music A"},
   {id:"music:B",kind:"song-lane",lane:"B",name:L===translations.da?"♫ Musik B":"♫ Music B"}];}
  function group(t){return (t.kind==="song"||t.kind==="song-lane"||t.kind==="sfx"||t.kind==='audio'||t.kind==='audio-lane')?"music":(t.kind==="camera"||t.kind==="cut")?"camera":(t.id==="lights"||t.kind==="captions"||["backdrop","stage","foreground"].indexOf(t.id)>=0)?"scene":"animation";}
- function track(){return songTracks().concat(audioTracks()).find(function(s){return s.id===choice.id;})||map[choice.id]||songTracks()[0]||tracks[0];}
+ function track(){if(!choice.id)return null;return songTracks().concat(audioTracks()).find(function(s){return s.id===choice.id;})||map[choice.id]||songTracks()[0]||tracks[0];}
  function axisDuration(){return Math.max(1,o.duration(),film.duration,Playlist.total(m.songs));}
  function part(t){var scene=t.kind==='film-part'?film:sceneForPart(t.part,o.view,0)||source;return scene&&(scene.parts||[]).find(function(p){return p.id===t.part;});}
  function animation(t){return m.animationClips.find(function(c){return c.id===t.clipId;});}
@@ -329,7 +329,8 @@ function attach(o){
   if(t.kind==="animation")expandedClipId=t.id;
   if(t.kind==="motion"||t.kind==="accent")expandedClipId="animation:"+t.clipId;
   draw();if(o.onSelect)o.onSelect(track());}
- function selected(){return track().kind==="captions"?captionCues[choice.key]:track().kind==="song"?m.songs[track().index]:track().kind==='audio'?m.audioClips[track().index]:track().kind==="animation"?animation(track()):keys(track())[choice.key];}
+ function clearSelection(){var hadSelection=!!choice.id;choice={id:"",key:-1};if(detailReturn){detailReturn.id="";detailReturn.key=-1;}draw();if(o.onSelect)o.onSelect(null);return hadSelection;}
+ function selected(){var t=track();return !t?null:t.kind==="captions"?captionCues[choice.key]:t.kind==="song"?m.songs[t.index]:t.kind==='audio'?m.audioClips[t.index]:t.kind==="animation"?animation(t):keys(t)[choice.key];}
  function faceContext(id){
   var api=facial(),located=id&&partContext(id,o.view,playhead,[],true,0);
   if(!api||!located||!located.active)return null;
@@ -383,7 +384,7 @@ function attach(o){
  }
  function undoFace(){
   if(!faceUndo.length)return false;
-  m.faceKeys=faceUndo.pop();var t=track();if(t.kind!=='face')t={kind:'face'};
+  m.faceKeys=faceUndo.pop();var t=track();if(!t||t.kind!=='face')t={kind:'face'};
   save(t);draw();o.repaint();if(o.onSelect)o.onSelect(track());return true;
  }
  function faceKeyLabel(k){
@@ -544,6 +545,7 @@ function attach(o){
  }
  function drawForm(){inspector.textContent="";var t=track(),k=selected();
   var da=L===translations.da;
+  if(!t){el(doc,'p','huw-musical-inspector-help',da?'Ingen markering. Vælg en figur, kropsdel eller et spor.':'Nothing selected. Choose a character, body part or track.',inspector);return;}
   var kindNames={"figure":da?"Hele objekt":"Whole object","animation":da?"Animationsklip":"Animation clip",
    "song":da?"Musikklip":"Music clip","part":da?"Kulisse / del":"Scenery / part",
    "film-part":da?"Sceneobjekt / rekvisit":"Stage object / prop","camera":da?"Kamera":"Camera",
@@ -1231,7 +1233,7 @@ function attach(o){
  function setZoom(value){zoom=lim(value,1,5);rows.style.setProperty("--musical-zoom",String(zoom));draw();}
  function addKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)newPoint(t,playhead);}
  function removeKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)removePoint(t);}
- draw();return {paint:paint,redraw:draw,selectPart:selectPart,selectSong:selectSong,beginPartMove:beginPartMove,
+ draw();return {paint:paint,redraw:draw,selectPart:selectPart,selectSong:selectSong,clearSelection:clearSelection,beginPartMove:beginPartMove,
   openAnimation:openAnimation,closeAnimation:closeAnimation,inClipDetail:function(){return !!detailClipId;},getDetailClip:activeDetail,
   addKeyframe:addKeyframe,removeKeyframe:removeKeyframe,setFilter:setFilter,setZoom:setZoom,
   getZoom:function(){return zoom;},getSelection:track,

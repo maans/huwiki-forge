@@ -73,22 +73,65 @@ async function actorPose(scope){
 function stage(){return editor.locator('.huw-musical-canvas > svg');}
 function figurePanel(){return editor.locator('[data-figure-panel]:visible');}
 function figurePreview(){return figurePanel().locator('[data-figure-preview]');}
-async function nativePoint(locator,allowed,localPoints){
+async function nativePoint(locator,allowed,localPoints,{avoidControls=false,minClearance=12}={}){
  await locator.scrollIntoViewIfNeeded();let previous=null,point=null,last=[];
  for(let attempt=0;attempt<60;attempt++){
-  last=await locator.evaluate((node,points)=>{
+  last=await locator.evaluate((node,{points,avoidControls})=>{
    const bb=node.getBBox(),matrix=node.getScreenCTM();
-   const candidates=points||[.25,.5,.75].flatMap(y=>[.35,.5,.65].map(x=>({x:bb.x+bb.width*x,y:bb.y+bb.height*y})));
+   const candidates=points||(avoidControls?[.1,.2,.3,.4,.5,.6,.7,.8,.9]:[.25,.5,.75]).flatMap(y=>[.35,.5,.65].map(x=>({x:bb.x+bb.width*x,y:bb.y+bb.height*y})));
+   const scope=node.closest('[data-figure-preview],.huw-musical-canvas'),controls=avoidControls&&scope?[...scope.querySelectorAll('[data-figure-action],[data-transform-action],.huw-musical-figure-overlay [role="button"],.huw-musical-transform-overlay [role="button"]')].map(control=>control.getBoundingClientRect()).filter(rect=>rect.width>0&&rect.height>0):[];
    return candidates.map(local=>{const p=node.ownerSVGElement.createSVGPoint();p.x=local.x;p.y=local.y;const screen=p.matrixTransform(matrix),hit=node.ownerDocument.elementFromPoint(screen.x,screen.y);
-    return {x:screen.x,y:screen.y,hit:hit?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id'),tag:hit?.tagName,className:hit?.getAttribute('class')};});
-  },localPoints);
-  const current=last.find(point=>allowed.includes(point.hit));
+    const clearance=controls.length?Math.min(...controls.map(rect=>Math.hypot(Math.max(rect.left-screen.x,0,screen.x-rect.right),Math.max(rect.top-screen.y,0,screen.y-rect.bottom)))):1e9;
+    return {x:screen.x,y:screen.y,hit:hit?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id'),tag:hit?.tagName,className:hit?.getAttribute('class'),clearance};});
+  },{points:localPoints,avoidControls});
+  const exposed=last.filter(point=>allowed.includes(point.hit)&&(!avoidControls||point.clearance>=minClearance));if(avoidControls)exposed.sort((a,b)=>b.clearance-a.clearance);
+  const current=exposed[0];
   if(current&&previous&&Math.hypot(current.x-previous.x,current.y-previous.y)<.5){point=current;break;}
   previous=current;await page.waitForTimeout(50);
  }
- assert.ok(point,'a stable exposed painted region receives native input: '+JSON.stringify(last));return point;
+ assert.ok(point,'a stable exposed painted region'+(avoidControls?' at least '+minClearance+'px away from editing controls':'')+' receives native input: '+JSON.stringify(last));return point;
 }
 async function touchPoint(point){const offset=await pageOffset();await page.touchscreen.tap(point.x+offset.x,point.y+offset.y);}
+async function blankPoint(locator){
+ await locator.scrollIntoViewIfNeeded();
+ const point=await locator.evaluate(node=>{
+  const rect=node.getBoundingClientRect(),left=Math.max(rect.left+12,12),right=Math.min(rect.right-12,innerWidth-12),top=Math.max(rect.top+12,12),bottom=Math.min(rect.bottom-12,innerHeight-12);
+  for(const y of [top,bottom,(top+bottom)/2])for(const x of [left,right,left+(right-left)*.2,left+(right-left)*.8]){
+   const hit=node.ownerDocument.elementFromPoint(x,y);
+   if(hit&&node.contains(hit)&&!hit.closest('[data-cutout-id],[data-figure-action],[data-transform-action],button,input,select,textarea'))return {x,y,tag:hit.tagName,className:hit.getAttribute('class')};
+  }return null;
+ });
+ assert.ok(point,'a visible empty canvas region receives a native tap, without selecting the painted backdrop');return point;
+}
+async function tapFigurePart(id){
+ await wiki.evaluate(()=>{
+  if(window.__figureInputEvents)return;window.__figureInputEvents=[];window.__figureTapTargets=[];
+  for(const type of ['pointerdown','pointerup','pointercancel','gotpointercapture','lostpointercapture'])document.addEventListener(type,event=>{
+   const target=event.target,canvas=document.querySelector('.huw-musical-figure-canvas');if(!canvas?.contains(target))return;
+   window.__figureInputEvents.push({type,time:performance.now(),pointerId:event.pointerId,pointerType:event.pointerType,primary:event.isPrimary,x:event.clientX,y:event.clientY,tag:target.tagName,part:target.closest('[data-cutout-id]')?.getAttribute('data-cutout-id'),action:target.closest('[data-figure-action]')?.getAttribute('data-figure-action'),captured:canvas.hasPointerCapture(event.pointerId),selected:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-selected')});
+   if(window.__figureInputEvents.length>80)window.__figureInputEvents.shift();
+  },true);
+ });
+ const painting=figurePreview().locator('[data-cutout-id="'+(id===joint?drawing:id)+'"] image').first();
+ // A touch near a blue handle can be adjusted to that interactive control
+ // by the browser. Aim at visibly exposed artwork with a measured margin.
+ const point=await nativePoint(painting,[id===joint?drawing:id],undefined,{avoidControls:true});
+ await wiki.evaluate(target=>window.__figureTapTargets.push(target),{id,...point});await touchPoint(point);
+ assert.equal(await figurePanel().getAttribute('data-figure-selected'),id,'one native tap selects '+id);
+}
+async function assertFigureCleared(pose,time,zoom,message){
+ const panel=figurePanel();await panel.waitFor();
+ assert.equal(await panel.getAttribute('data-figure-actor'),actor,message+': the same actor remains open');
+ assert.equal(await panel.getAttribute('data-figure-selected'),'',message+': no body part remains selected');
+ assert.equal(await panel.locator('.huw-musical-figure-overlay').isVisible(),false,message+': workshop handles are hidden');
+ assert.equal(await panel.locator('[data-figure-action="rotate"]').getAttribute('tabindex'),'-1',message+': hidden rotation is not keyboard focusable');
+ assert.equal(await stage().locator('.huw-musical-transform-overlay').isVisible(),false,message+': stage handles are hidden');
+ assert.equal(await stage().locator('.huw-musical-selected-element').count(),0,message+': stage selection styling is cleared');
+ assert.deepEqual(await actorPose(stage()),pose,message+': stage pose stays unchanged');
+ assert.deepEqual(await actorPose(figurePreview()),pose,message+': workshop pose stays unchanged');
+ assert.ok(Math.abs(await position()-time)<.001,message+': playhead stays unchanged');
+ assert.equal(await stage().getAttribute('viewBox'),zoom,message+': selection zoom stays unchanged');
+}
 async function openForearm(){
  // Use the ordinary object picker and selection zoom to expose the entire
  // actor when the authored camera currently frames only the face.
@@ -108,8 +151,9 @@ async function actorPoint(scope,id,pivot){return scope.evaluate((host,arg)=>{
  if(!node)return null;const p=node.ownerSVGElement.createSVGPoint();p.x=arg.pivot.x;p.y=arg.pivot.y;
  const at=p.matrixTransform(root.getScreenCTM().inverse().multiply(node.getScreenCTM()));return {x:at.x,y:at.y};
  },{actor,id,pivot});}
-async function rotateForearm(degrees,pivot){
+async function rotateForearm(degrees,pivot,{cancel=false}={}){
  const preview=figurePreview(),part=preview.locator('[data-cutout-id="'+joint+'"]'),handle=figurePanel().locator('[data-figure-action="rotate"]');
+ const before=await part.getAttribute('transform');
  await handle.scrollIntoViewIfNeeded();
  const start=await handle.evaluate(node=>{const box=node.getBoundingClientRect(),x=box.x+box.width/2,y=box.y+box.height/2;return {x,y,hit:node.ownerDocument.elementFromPoint(x,y)?.closest('[data-figure-action]')?.getAttribute('data-figure-action')};});
  assert.equal(start.hit,'rotate','the visible rotation handle receives ordinary input');
@@ -120,6 +164,7 @@ async function rotateForearm(degrees,pivot){
  },{start,pivot,degrees});
  const offset=await pageOffset();await page.mouse.move(start.x+offset.x,start.y+offset.y);await page.mouse.down();
  for(const point of geometry)await page.mouse.move(point.x+offset.x,point.y+offset.y);
+ if(cancel){assert.notEqual(await part.getAttribute('transform'),before,'the native gesture changed the live pose before cancellation');await page.keyboard.press('Escape');}
  await page.mouse.up();
 }
 
@@ -176,6 +221,54 @@ try{
  assert.deepEqual(await actorPose(figurePreview()),initialPose,'the shared Face tab preserves the complete current pose');
  passed('a native forearm selection opens the whole current actor below the stage, without creating a key');
 
+ let selectionZoom=await stage().getAttribute('viewBox');
+ await editor.focus();await page.keyboard.press('Escape');
+ await assertFigureCleared(initialPose,currentTime,selectionZoom,'Escape from the scene');
+ await tapFigurePart(hand);await tapFigurePart(joint);
+ selectionZoom=await stage().getAttribute('viewBox');
+ await touchPoint(await blankPoint(figurePanel().locator('.huw-musical-figure-canvas')));
+ await assertFigureCleared(initialPose,currentTime,selectionZoom,'a blank touch in the figure workshop');
+ await tapFigurePart(joint);selectionZoom=await stage().getAttribute('viewBox');
+ await figurePanel().focus();await page.keyboard.press('Escape');
+ await assertFigureCleared(initialPose,currentTime,selectionZoom,'Escape from the figure workshop');
+ await tapFigurePart(joint);
+ // The zoomed cave backdrop is real selectable artwork. Return to the
+ // authored framing before tapping the genuinely empty stage letterbox.
+ const resetZoom=editor.locator('.huw-musical-reset-preview-zoom');if(await resetZoom.isEnabled())await resetZoom.tap();selectionZoom=await stage().getAttribute('viewBox');
+ await touchPoint(await blankPoint(editor.locator('.huw-musical-canvas')));
+ await assertFigureCleared(initialPose,currentTime,selectionZoom,'a blank touch in the scene letterbox');
+ // The object dropdown is rebuilt by its change handler. Use the native
+ // popup and send Escape immediately afterwards, without repairing focus.
+ const objectPicker=editor.locator('.huw-musical-object-picker');await objectPicker.tap();
+ const actorOption=await objectPicker.locator('option').evaluateAll((options,id)=>options.findIndex(option=>option.value===id),actor);assert.ok(actorOption>0);
+ await page.keyboard.press('Home');for(let i=0;i<actorOption;i++)await page.keyboard.press('ArrowDown');await page.keyboard.press('Enter');
+ assert.equal(await figurePanel().getAttribute('data-figure-selected'),actor,'the object dropdown selected the character before Escape');
+ selectionZoom=await stage().getAttribute('viewBox');await page.keyboard.press('Escape');
+ await assertFigureCleared(initialPose,currentTime,selectionZoom,'Escape immediately after choosing an object in the rebuilt dropdown');
+ await assertSources(originalSources,'dropdown selection and immediate Escape leave every saved source unchanged');
+ await tapFigurePart(joint);selectionZoom=await stage().getAttribute('viewBox');
+ await dock.locator('[data-action="clear-selection"]').tap();
+ await assertFigureCleared(initialPose,currentTime,selectionZoom,'the shared Clear selection button');
+ await tapFigurePart(joint);const fullscreenButton=editor.locator('.huw-musical-stage-fullscreen');await fullscreenButton.tap();
+ await wiki.waitForFunction(()=>document.querySelector('.huw-musical-stage-fullscreen')?.getAttribute('aria-pressed')==='true');
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ const fullscreenState=await editor.locator('.huw-musical-stage').evaluate(node=>({native:node.ownerDocument.fullscreenElement===node,fallback:node.classList.contains('huw-musical-stage--expanded')}));
+ assert.ok(fullscreenState.native||fullscreenState.fallback,'the stage entered its supported fullscreen mode');selectionZoom=await stage().getAttribute('viewBox');
+ await dock.locator('[data-action="clear-selection"]').tap();
+ await assertFigureCleared(initialPose,currentTime,selectionZoom,'Clear selection in fullscreen');
+ assert.deepEqual(await editor.locator('.huw-musical-stage').evaluate(node=>({native:node.ownerDocument.fullscreenElement===node,fallback:node.classList.contains('huw-musical-stage--expanded')})),fullscreenState,'clearing selection leaves the active fullscreen mode intact');
+ await fullscreenButton.tap();await wiki.waitForFunction(()=>document.querySelector('.huw-musical-stage-fullscreen')?.getAttribute('aria-pressed')==='false');
+ await assertSources(originalSources,'deselection and one-tap reselection never save a key');
+ await dock.screenshot({path:fileURLToPath(new URL('figure-workshop-deselected.png',out))});
+ passed('Escape, empty scene/figure taps and Clear selection preserve pose and zoom; fullscreen stays open and another part takes one tap');
+
+ await tapFigurePart(joint);selectionZoom=await stage().getAttribute('viewBox');
+ await figurePanel().focus();await rotateForearm(19,pivot,{cancel:true});
+ await assertFigureCleared(initialPose,currentTime,selectionZoom,'Escape during native forearm rotation');
+ await assertSources(originalSources,'Escape rolls back the live rotation before pointer release can save a key');
+ await tapFigurePart(joint);
+ passed('Escape during native rotation cancels the pending pose, clears both selections and saves no key');
+
  const degrees=23,initialRotation=Number(/rotate\(([-+\d.eE]+)/.exec(initialPose[joint].transform)?.[1]);assert.ok(Number.isFinite(initialRotation));
  await rotateForearm(degrees,pivot);
  const movedSources=await sources(),changedScene=JSON.parse(movedSources[selectedScene.source]),changedPart=changedScene.parts.find(part=>part.id===joint);
@@ -227,6 +320,22 @@ try{
  const finalPose=await actorPose(stage());assert.deepEqual(finalPose[joint],movedPose[joint]);assert.deepEqual(await actorPose(figurePreview()),finalPose);
  finalSources=await sources();assert.equal(hash(finalSources[selectedScene.source]),hash(movedSources[selectedScene.source]),'face choices retain the committed body animation');
  passed('native eye and mouth touches share the workshop; Whole figure restores actor, selected joint, playhead and edited pose');
+
+ await sharedFaceTab.tap();await faceWorkshop.waitFor();await faceWorkshop.locator('[data-face-tab="mouth"]').tap();
+ const selectedFaceCards=await faceWorkshop.locator('[data-face-value][aria-pressed="true"]').evaluateAll(nodes=>nodes.map(node=>({channel:node.dataset.faceChannel,value:node.dataset.faceValue}))),selectedSound=await faceWorkshop.locator('[data-face-sound][aria-pressed="true"]').getAttribute('data-face-sound');
+ assert.ok(selectedFaceCards.some(card=>card.channel==='mouth'&&card.value==='E'),'the saved learned mouth is visibly selected before Escape');
+ selectionZoom=await stage().getAttribute('viewBox');await faceWorkshop.focus();await page.keyboard.press('Escape');
+ assert.equal(await faceWorkshop.isVisible(),true,'Escape keeps the inline face workshop open');assert.equal(await dock.getAttribute('data-animus-workshop'),'face');
+ assert.equal(await faceWorkshop.locator('[data-face-tab="mouth"]').getAttribute('aria-selected'),'true');
+ assert.deepEqual(await faceWorkshop.locator('[data-face-value][aria-pressed="true"]').evaluateAll(nodes=>nodes.map(node=>({channel:node.dataset.faceChannel,value:node.dataset.faceValue}))),selectedFaceCards,'clearing selection preserves the saved expression/mouth indication');
+ assert.equal(await faceWorkshop.locator('[data-face-sound][aria-pressed="true"]').getAttribute('data-face-sound'),selectedSound,'Escape preserves the letter group being edited');
+ await assertSources(finalSources,'Escape in the face workshop changes no saved face or body key');
+ await faceWorkshop.locator('[data-face-back="figure"]').tap();await figurePanel().waitFor();
+ await assertFigureCleared(finalPose,currentTime,selectionZoom,'returning from the deselected face workshop');
+ await sharedFaceTab.tap();await faceWorkshop.locator('[data-face-back="figure"]').tap();
+ await assertFigureCleared(finalPose,currentTime,selectionZoom,'switching the two workshop tabs after clearing');
+ await tapFigurePart(joint);await assertSources(finalSources,'returning and choosing a body part again adds no key');
+ passed('Escape in the face workshop retains saved cards and sound group; returning to the figure keeps selection cleared');
 
  savedHtml=await wiki.evaluate(()=>$tw.wiki.renderTiddler('text/plain','$:/core/save/all'));
  assert.ok(savedHtml.includes('<html')&&savedHtml.length>1000000,'native save contains a complete reusable wiki');
@@ -284,7 +393,7 @@ try{
  await writeFile(new URL('result.json',out),JSON.stringify({ok:true,route:'/demo/?edition=turn-around&lang=da',checks,errors,actor,joint,scene:selectedScene.source,currentTime,localTime,key,faceKey,sourceHashes:sourceHashes(finalSources),exportFrames:frames},null,2)+'\n');
  console.log('FIGURE ACCEPTANCE '+JSON.stringify({ok:true,checks:checks.length}));
 }catch(error){
- let details=null;try{details=await (wiki||page)?.evaluate(()=>({workshop:document.querySelector('[data-animus-workshop]')?.getAttribute('data-animus-workshop'),figure:document.querySelector('[data-figure-panel]')?.textContent,actor:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-actor'),part:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-selected'),status:document.querySelector('.huw-musical-status')?.textContent}));if(page)await page.screenshot({path:fileURLToPath(new URL('failure.png',out)),fullPage:false});}catch(_){}
+ let details=null;try{details=await (wiki||page)?.evaluate(()=>({workshop:document.querySelector('[data-animus-workshop]')?.getAttribute('data-animus-workshop'),figure:document.querySelector('[data-figure-panel]')?.textContent,actor:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-actor'),part:document.querySelector('[data-figure-panel]')?.getAttribute('data-figure-selected'),status:document.querySelector('.huw-musical-status')?.textContent,inputEvents:window.__figureInputEvents||[],tapTargets:window.__figureTapTargets||[]}));if(page)await page.screenshot({path:fileURLToPath(new URL('failure.png',out)),fullPage:false});}catch(_){}
  await writeFile(new URL('result.json',out),JSON.stringify({ok:false,checks,errors,details,failure:String(error.stack||error)},null,2)+'\n');throw error;
 }finally{
  if(context)try{await context.tracing.stop({path:fileURLToPath(new URL('trace.zip',out))});}catch(_){}

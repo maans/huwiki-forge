@@ -428,8 +428,10 @@ Musical.prototype.render=function(parent,next){
   Engine.paint(view,visualTime,undefined,ACTIVE_PAINT);
   Motion.paint(view,scene,t,beatClock);
   if(editor)editor.paint(t);
-  if(workspace&&workspace.paintPreview)workspace.paintPreview();
   LipSync.apply(view,visualTime,t,lipOptions);
+  // The workshop clones the rendered character. Copy after speech and face
+  // overrides, including same-time repaints such as resetting preview zoom.
+  if(workspace&&workspace.paintPreview)workspace.paintPreview();
   updateCaptions(visualTime);
   // Seeking also updates the selection frame; playing never spends time
   // recalculating its SVG bounds when the frame is hidden.

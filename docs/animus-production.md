@@ -32,9 +32,13 @@ Use TiddlyWiki's Save button to save the complete wiki file. Recording asks for 
 1. Pause the performance and place the playhead at the moment you want to change.
 2. Choose **Figure** and click a visible part of the character. The dashed frame selects the entire figure. Drag the figure to move it, or use its handles to resize or rotate it.
 3. Choose **Parts and joints** and click an arm, leg or other body part. The smaller dashed frame and marked pivot show the selected part and its attachment. Drag a mounted limb around that point, or use the round rotation handle. Its attached children follow the movement.
-4. Release the pointer to keep the change. AniMus saves a key at the current position in the relevant scene or motion loop. A loop edit applies to that beat position in each repetition. Press **Escape** during a drag to cancel it.
+4. Release the pointer to keep the change. AniMus saves a key at the current position in the relevant scene or motion loop. A loop edit applies to that beat position in each repetition. Press **Escape** during a drag to cancel it and clear the selection.
 
-Selecting a body part also opens the **Character** workshop beneath the stage. It shows the whole selected character, enlarged in its current animated pose. Select and drag a limb there, or use its rotation handle; the stage updates at the same time. The preview retains the character's current mirroring, joint transforms and facial choices. Opening or switching workshops creates no keys and does not change the film camera. Click an eye or mouth to switch the same area to the face workshop. **← Whole character** or the **Character** tab returns to the body and the last selected joint. Clicking the head itself keeps it available for rotation around its neck joint.
+Selecting a body part also opens the **Character** workshop beneath the stage. It shows the whole selected character, enlarged in its current animated pose. Select and drag a limb there, or use its rotation handle; the stage updates at the same time. The preview retains the character's current mirroring, joint transforms and facial choices. Opening or switching workshops creates no keys and does not change the film camera. Click an eye or mouth to switch the same area to the face workshop. **← Whole character** or the **Character** tab returns to the body and the last selected joint, unless you have cleared the selection. Clicking the head itself keeps it available for rotation around its neck joint.
+
+Press **Escape**, tap empty space in the scene or a workshop, or use **Clear selection** to remove the editing frame and handles. The workshop stays open with the same character, pose and playhead, and keeps following the animation when you seek. Selecting another part takes one click or tap directly; you do not need to clear the old selection first. A painted backdrop is an editable object, so use empty canvas space or **Clear selection** when you want no object selected.
+
+Clearing selection creates no key and does not erase a saved pose, facial choice or mouth mapping. In the face workshop, the cards continue to show the current choices. Switching between **Face** and **Character** keeps the editing selection empty until you choose a part again.
 
 The CutOut studio has the same **Figure** and **Parts and joints** choices, plus a part selector and **Move**, **Rotate** and **Size** tools. Use **Undo** and **Redo** for its completed direct edits, and **Save project** to apply the draft. AniMus applies a stage drag when you release it; saving the complete wiki file remains a separate TiddlyWiki action. Site view provides audience playback without editing frames or handles.
 
@@ -42,7 +46,7 @@ The CutOut studio has the same **Figure** and **Parts and joints** choices, plus
 
 Use the **eye** beside a visual track to hide or show its contribution in the editor. Use the **speaker** beside a music, voice or effects track to mute or hear it during preview. The **Captions** track has its own eye button, so subtitles can be hidden while you work on a face or an arm. Its timed caption blocks let you jump to a line; **Open manuscript and captions** opens the text workshop.
 
-Select a figure or body part with the dashed frame, then choose **Zoom to selection** above the stage. **Parts and joints** lets you select an individual arm, hand, head or other part before zooming. **Full screen** enlarges the editing stage, and **Reset zoom** returns to the normal preview. Press **Z** to zoom to the selection or **0** to reset. **Esc** cancels an active drag first; otherwise it exits stage fullscreen or resets selection zoom.
+Select a figure or body part with the dashed frame, then choose **Zoom to selection** above the stage. **Parts and joints** lets you select an individual arm, hand, head or other part before zooming. **Full screen** enlarges the editing stage, and **Reset zoom** returns to the normal preview. Press **Z** to zoom to the selection or **0** to reset. Clearing selection keeps the current preview zoom. Use **Exit full screen** to leave the enlarged stage; **Clear selection** remains available inside it.
 
 Selection zoom also reveals the selected part when the scene's camera has moved it outside the shot. Choose an off-camera character in the object selector, then zoom to it. Resetting the zoom or exporting restores the authored scene framing.
 
@@ -153,7 +157,7 @@ The plugin and Turn Around runtime build scripts support `--check`. AniMus modul
 
 Tests exercise editable SVG round trips, generated frame playback in CutOut, recording lifecycle, audio seek/pause/overlap, scene retiming, score draft isolation, export dependencies and the shared audience clock. Mouth tests verify explicit character bindings, the real lipsync module in Site view, seek/play/pause behaviour, unchanged source shapes and a silent second character.
 
-Direct-edit tests dispatch pointer gestures through the CutOut editor and use the real AniMus editor and renderers. They check figure versus limb selection, rotation under a rotated and scaled parent, a fixed joint pivot, child movement, playhead keys, nested-scene timing, cancellation, undo/redo and source save/reopen. Browser acceptance also checks the rendered selection and gestures in Chrome. Pointer support does not substitute for a native iPad/Safari device test.
+Direct-edit tests dispatch pointer gestures through the CutOut editor and use the real AniMus editor and renderers. They check figure versus limb selection, rotation under a rotated and scaled parent, a fixed joint pivot, child movement, playhead keys, nested-scene timing, cancellation, undo/redo and source save/reopen. Browser acceptance also checks native Escape, empty-space touches, direct reselection, cancellation during rotation, retained face choices and unchanged sources in Chrome. Pointer support does not substitute for a native iPad/Safari device test.
 
 Publication UI tests run the publisher's actual event handlers and HTML builder, then execute the exported navigation runtime. They cover readable programme content, both audience starting views, programme-to-performance navigation, multiple productions and the existing ABC music-stand setting.
 
@@ -163,6 +167,7 @@ The browser acceptance script assembles the complete edition, creates a show thr
 npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
 CHROME_BIN=/usr/bin/google-chrome ANIMUS_BROWSER_TESTS=1 node --test tests/animus-site-view.test.mjs
 CHROME_BIN=/usr/bin/google-chrome node scripts/animus-browser-smoke.mjs
+CHROME_BIN=/usr/bin/google-chrome node scripts/animus-figure-browser-smoke.mjs
 ```
 
 The CI browser job runs these checks and keeps screenshots and traces. Enabled browser checks fail on browser or playback errors. Real microphone quality and iPad/Safari listening still need device testing.
@@ -179,9 +184,13 @@ SVG-værkstedet bevarer lag, tegninger, animationsbilleder og figurens eksistere
 
 Sæt forestillingen på pause, og vælg tidspunktet på tidslinjen. Vælg **Figur**, og klik på figuren i scenen. Den stiplede ramme markerer hele figuren; træk for at flytte den, eller brug håndtagene til størrelse og rotation.
 
-Vælg **Dele og led**, og klik på den arm, det ben eller den del, du vil ændre. Rammen og det markerede drejepunkt viser den valgte del og dens montering. Træk en monteret kropsdel omkring leddet, eller brug det runde drejehåndtag. Dele monteret på den følger med. AniMus gemmer ændringen som en nøgle ved tidsmarkøren, når du slipper. I en gentaget bevægelse ændres det tilsvarende tidspunkt i bevægelsens løkke. **Escape** under trækket annullerer ændringen.
+Vælg **Dele og led**, og klik på den arm, det ben eller den del, du vil ændre. Rammen og det markerede drejepunkt viser den valgte del og dens montering. Træk en monteret kropsdel omkring leddet, eller brug det runde drejehåndtag. Dele monteret på den følger med. AniMus gemmer ændringen som en nøgle ved tidsmarkøren, når du slipper. I en gentaget bevægelse ændres det tilsvarende tidspunkt i bevægelsens løkke. **Escape** under trækket annullerer ændringen og slipper markeringen.
 
-Når du vælger en kropsdel, åbner **Figurværkstedet** under scenen. Her vises hele den valgte figur stort i dens aktuelle pose, inklusive spejling, led og ansigtsudtryk. Vælg og træk kropsdelene direkte i værkstedet, eller brug drejehåndtaget; ændringen vises samtidig i scenen. Tryk på et øje eller munden for at skifte samme område til ansigtsværkstedet. **← Hele figuren** eller fanen **Figur** fører tilbage til figuren og det senest valgte led. Tryk på selve hovedet for at vippe det omkring halsleddet. Åbning og skift mellem værkstederne ændrer hverken nøglebilleder, tidsmarkør eller filmens kamera.
+Når du vælger en kropsdel, åbner **Figurværkstedet** under scenen. Her vises hele den valgte figur stort i dens aktuelle pose, inklusive spejling, led og ansigtsudtryk. Vælg og træk kropsdelene direkte i værkstedet, eller brug drejehåndtaget; ændringen vises samtidig i scenen. Tryk på et øje eller munden for at skifte samme område til ansigtsværkstedet. **← Hele figuren** eller fanen **Figur** fører tilbage til figuren og det senest valgte led, medmindre du har sluppet markeringen. Tryk på selve hovedet for at vippe det omkring halsleddet. Åbning og skift mellem værkstederne ændrer hverken nøglebilleder, tidsmarkør eller filmens kamera.
+
+Brug **Escape**, tryk på tom plads i scenen eller værkstedet, eller vælg **Slip markering** for at fjerne rammen og håndtagene. Værkstedet bliver åbent med samme figur, pose og tidspunkt. Du kan vælge en anden kropsdel direkte med ét tryk; du behøver ikke slippe den gamle markering først. En tegnet kulisse er selv et objekt, så brug tom plads omkring billedet eller **Slip markering**, når intet skal være valgt.
+
+At slippe markeringen opretter ingen nøglebilleder og sletter hverken gemte positurer, ansigtsudtryk eller mundvalg. Kortene i ansigtsværkstedet viser fortsat de gældende valg. Skift mellem **Ansigt** og **Figur** bevarer den tomme markering, indtil du vælger en del igen.
 
 I CutOut-studiet kan du også vælge delen i listen og bruge **Flyt**, **Drej** eller **Størrelse**. **Fortryd** og **Gentag** gælder de afsluttede direkte ændringer; tryk **Gem projekt** for at anvende kladden. AniMus gemmer scenetrækket ved slip. Gem hele wikien med TiddlyWikis Gem-knap for at beholde arbejdet som fil. **Sitevisning** viser forestillingen uden redigeringsrammer og håndtag.
 
@@ -189,7 +198,7 @@ I CutOut-studiet kan du også vælge delen i listen og bruge **Flyt**, **Drej** 
 
 Brug **øjet** ved et visuelt spor til at skjule eller vise dets indhold i editoren. Brug **højttaleren** ved musik, indtaling eller lydeffekter til at slå lyden fra eller til i forhåndsvisningen. Sporet **Undertekster** har sit eget øje, så teksten kan skjules, mens du arbejder med et ansigt eller en arm. Klik på en undertekstblok for at gå til den replik; **Åbn manuskript og undertekster** åbner tekstværkstedet.
 
-Markér en figur eller kropsdel med den stiplede ramme, og vælg **Zoom til markering** over scenen. Med **Dele og led** kan du vælge eksempelvis arm, hånd eller hoved, før du zoomer. **Fuld skærm** forstørrer redigeringsscenen, og **Nulstil zoom** går tilbage til den normale forhåndsvisning. Tryk **Z** for at zoome til markeringen eller **0** for at nulstille. **Esc** annullerer først et igangværende træk; ellers forlader den scenens fuldskærmsvisning eller nulstiller zoom.
+Markér en figur eller kropsdel med den stiplede ramme, og vælg **Zoom til markering** over scenen. Med **Dele og led** kan du vælge eksempelvis arm, hånd eller hoved, før du zoomer. **Fuld skærm** forstørrer redigeringsscenen, og **Nulstil zoom** går tilbage til den normale forhåndsvisning. Tryk **Z** for at zoome til markeringen eller **0** for at nulstille. Når du slipper markeringen, bevares zoom. Brug **Forlad fuld skærm** til at forlade den store visning; **Slip markering** kan også bruges inde i den.
 
 Zoom til markering viser også den valgte kropsdel, når scenens kamera har flyttet den uden for billedet. Vælg en figur uden for billedet i objektvælgeren, og zoom til den. Nulstilling af zoom og eksport gendanner scenens oprindelige billedudsnit.
 

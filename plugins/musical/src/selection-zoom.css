@@ -9,6 +9,7 @@
 .huw-musical--workspace .huw-musical-preview-tools button:disabled{opacity:.45;cursor:default}
 .huw-musical--workspace .huw-musical-preview-tools button[aria-pressed="true"]{border-color:#7bd1ed;background:#245c74}
 .huw-musical--workspace .huw-musical-preview-tools button:focus-visible{outline:2px solid #f6ca70;outline-offset:2px}
+.huw-musical--workspace .huw-musical-preview-tools .huw-musical-clear-selection{min-height:44px}
 .huw-musical--workspace .huw-musical-stage.huw-musical-stage--expanded,
 .huw-musical--workspace .huw-musical-stage:fullscreen{position:fixed;inset:0;z-index:2147482000;display:flex!important;flex-direction:column;height:100dvh!important;width:100dvw!important;max-width:none;max-height:none;border:0;margin:0;padding:10px;background:#0b1422}
 .huw-musical-stage.huw-musical-stage--expanded .huw-musical-canvas,

@@ -53,7 +53,7 @@ function mount(o){
  var da=yes(o.wiki),L=da?{
   title:"Dukkeværksted",back:"← Tilbage til animationen",save:"Gem og tilbage",cancel:"Annuller",tree:"Dukkens dele",settings:"Valgt del",choose:"Vælg en del på dukken eller i listen",name:"Navn",parent:"Forbundet med",none:"Dukkens rod",rot:"Drejning",pivot:"Drejepunkt",replace:"Udskift delens udseende",import:"Importér SVG/PNG/billede",copy:"Kopiér udseende fra",circle:"Cirkel",ellipse:"Ellipse",rect:"Firkant",stroke:"Streg",color:"Farve",elbow:"Del op med led",library:"Gem kopi som CutOut-dukke",svgLayers:"✎ Tegn i SVG-lag",hint:"Træk en del på dukken. Led og børn følger automatisk med. Ændringer gemmes først med Gem.",bad:"Dukkehierarkiet er ugyldigt",saved:"Ændringerne er gemt i CutOut-scenen.",removed:"Gemte ændringer kan fortrydes ved at annullere, før du gemmer."}:{
   title:"Puppet workshop",back:"← Back to animation",save:"Save and back",cancel:"Cancel",tree:"Puppet parts",settings:"Selected part",choose:"Select a part on the puppet or in the list",name:"Name",parent:"Connected to",none:"Puppet root",rot:"Rotation",pivot:"Pivot",replace:"Replace part appearance",import:"Import SVG/PNG/image",copy:"Copy appearance from",circle:"Circle",ellipse:"Ellipse",rect:"Rectangle",stroke:"Line",color:"Color",elbow:"Split at joint",library:"Save copy to CutOut library",svgLayers:"✎ Draw SVG layers",hint:"Drag parts directly on the puppet. Children follow their joints. Changes are saved only when you press Save.",bad:"Invalid puppet hierarchy",saved:"Changes saved to the CutOut scene.",removed:"You can cancel unsaved changes."};
- var overlay=null,drawing=null,activeRoot="",activeStageTitle="",previewFrame=null,workshopTitle="",parts=[],selected="",clip=null,canvas=null,tree=null,inspector=null,msg=null,preview=null,dirty=false,libraryRequested=false,originalIds={};
+ var overlay=null,drawing=null,activeRoot="",activeStageTitle="",previewFrame=null,workshopTitle="",parts=[],selected="",clip=null,canvas=null,tree=null,inspector=null,msg=null,preview=null,dirty=false,libraryRequested=false,originalIds={},cancelInteraction=null;
  // The Fyrtøjet performance contains acts -> scenes -> figures. Locate the
  // actual nested source instead of assuming all puppets live in scene one.
  function findView(v,id,depth){if(!v||depth>14)return null;
@@ -61,7 +61,7 @@ function mount(o){
   var found=null;(v.clips||[]).some(function(c){found=findView(c.view,id,depth+1);return !!found;});return found;
  }
  function lookup(id){return parts.find(function(p){return p.id===id;});}
- function close(){if(drawing){drawing.close(true);drawing=null;}if(!overlay)return;overlay.remove();overlay=null;o.host.classList.remove("huw-musical--puppet-open");activeRoot="";}
+ function close(){if(cancelInteraction)cancelInteraction();if(drawing){drawing.close(true);drawing=null;}if(!overlay)return;overlay.remove();overlay=null;o.host.classList.remove("huw-musical--puppet-open");activeRoot="";}
  function exit(){if(dirty&&doc.defaultView&&!doc.defaultView.confirm(da?"Luk uden at gemme ændringerne i figuren?":"Close without saving changes to the figure?"))return;close();o.host.focus({preventScroll:true});}
  function writable(){dirty=true;if(msg)msg.textContent=da?"Ikke gemt endnu":"Not saved yet";}
  function selectedNode(){return lookup(selected);}
@@ -102,7 +102,8 @@ function mount(o){
   var cx=bounds.x+bounds.w/2,cy=bounds.y+bounds.h/2;
   previewFrame=[r(cx-w/2),r(cy-h/2),r(w),r(h)];setPreviewFrame();
  }
- function choose(id){if(!lookup(id))return;selected=id;renderTree();renderInspector();
+ function clearSelection(){if(cancelInteraction)cancelInteraction();selected="";renderTree();renderInspector();if(preview){Engine.paint(preview,0,selected);setPreviewFrame();}if(overlay)overlay.focus({preventScroll:true});}
+ function choose(id){if(!lookup(id))return;if(cancelInteraction)cancelInteraction();selected=id;renderTree();renderInspector();
   if(preview){Engine.paint(preview,0,selected);setPreviewFrame();}
  }
  function renderPreview(){
@@ -197,7 +198,7 @@ function mount(o){
    }else walk(current);
   });}walk(o.view);o.repaint();
  }
- function save(){var before=source.parts||[],rootIndex=before.findIndex(function(p){return p.id===activeRoot;}),combined=before.filter(function(p){return !originalIds[p.id];});
+ function save(){if(cancelInteraction)cancelInteraction();var before=source.parts||[],rootIndex=before.findIndex(function(p){return p.id===activeRoot;}),combined=before.filter(function(p){return !originalIds[p.id];});
   // Keep the edited subtree's painter order, including SVG layers moved forward
   // or backward. Inserting every new child after its parent reverses the stack.
   var insertion=before.slice(0,Math.max(0,rootIndex)).filter(function(p){return !originalIds[p.id];}).length;
@@ -239,29 +240,50 @@ function mount(o){
   var footer=el(doc,"footer","huw-puppet-footer",undefined,overlay);msg=el(doc,"output","",L.removed,footer);
   var choice=el(doc,"label","huw-puppet-library-toggle",undefined,footer),box=el(doc,"input","",undefined,choice);box.type="checkbox";
   el(doc,"span","",L.library,choice);box.onchange=function(){libraryRequested=box.checked;};
-  renderAll();overlay.addEventListener("keydown",function(e){if(e.target.closest&&e.target.closest('.huw-svg-workshop'))return;if(e.key==="Escape"){e.preventDefault();e.stopPropagation();exit();}},true);
+  renderAll();overlay.addEventListener("keydown",function(e){if(e.target.closest&&e.target.closest('.huw-svg-workshop'))return;if(e.key==="Escape"){e.preventDefault();e.stopPropagation();clearSelection();}},true);
   // Parent-local coordinate system makes a wrist move with its elbow, not with the scene.
-  canvas.addEventListener("pointerdown",function(e){if(e.button!==0||!preview)return;
-   var target=e.target.closest&&e.target.closest("[data-cutout-id]");if(!target||!canvas.contains(target))return;
+  canvas.addEventListener("pointerdown",function(e){if((e.button!==undefined&&e.button!==0)||e.isPrimary===false||!preview)return;
+   if(cancelInteraction)cancelInteraction();
+   var target=e.target.closest&&e.target.closest("[data-cutout-id]");
+   // A tap in the preview's empty space releases the part without closing
+   // this draft. Moving, cancelling or lifting a different finger is not a tap.
+   if(!target||!canvas.contains(target)){
+    var blankX=e.clientX,blankY=e.clientY,blankMoved=false,blankDone=false;
+    if(canvas.setPointerCapture)canvas.setPointerCapture(e.pointerId);
+    function blankMove(ev){if(ev.pointerId!==e.pointerId)return;if(Math.hypot(ev.clientX-blankX,ev.clientY-blankY)>8)blankMoved=true;}
+    function blankFinish(clear){if(blankDone)return;blankDone=true;if(cancelInteraction===blankCancel)cancelInteraction=null;
+     canvas.removeEventListener('pointermove',blankMove);canvas.removeEventListener('pointerup',blankUp);canvas.removeEventListener('pointercancel',blankCancel);canvas.removeEventListener('lostpointercapture',blankCancel);
+     if(canvas.hasPointerCapture&&canvas.hasPointerCapture(e.pointerId))canvas.releasePointerCapture(e.pointerId);
+     if(clear)clearSelection();
+    }
+    function blankUp(ev){if(ev.pointerId!==e.pointerId)return;blankMove(ev);var hit=doc.elementFromPoint&&doc.elementFromPoint(ev.clientX,ev.clientY),part=hit&&hit.closest&&hit.closest('[data-cutout-id]');blankFinish(!blankMoved&&(!hit||canvas.contains(hit))&&(!part||!canvas.contains(part)));}
+    function blankCancel(ev){if(ev&&ev.pointerId!==e.pointerId)return;blankFinish(false);}
+    cancelInteraction=blankCancel;canvas.addEventListener('pointermove',blankMove);canvas.addEventListener('pointerup',blankUp);canvas.addEventListener('pointercancel',blankCancel);canvas.addEventListener('lostpointercapture',blankCancel);return;
+   }
    var id=target.getAttribute("data-cutout-id"),p=lookup(id);if(!p)return;
    selected=id;renderTree();renderInspector();Engine.paint(preview,0,selected);
    setPreviewFrame();
    var parent=target.parentNode,ctm=parent&&parent.getScreenCTM&&parent.getScreenCTM();if(!ctm)return;
    var point=preview.svg.createSVGPoint();function coords(ev){point.x=ev.clientX;point.y=ev.clientY;return point.matrixTransform(ctm.inverse());}
-   var start=coords(e),old=partBase(p),startX=n(old.x,0),startY=n(old.y,0),startPX=n((p.pivot||{}).x,0),startPY=n((p.pivot||{}).y,0),isJoint=e.target.hasAttribute&&e.target.hasAttribute("data-cutout-joint"),moved=false;
+   var start=coords(e),before=clone(p),old=partBase(p),startX=n(old.x,0),startY=n(old.y,0),startPX=n((p.pivot||{}).x,0),startPY=n((p.pivot||{}).y,0),isJoint=e.target.hasAttribute&&e.target.hasAttribute("data-cutout-joint"),moved=false,finished=false;
    if(target.setPointerCapture)target.setPointerCapture(e.pointerId);
-   function move(ev){var at=coords(ev),dx=at.x-start.x,dy=at.y-start.y;if(!moved&&Math.hypot(dx,dy)<2)return;moved=true;
+   function move(ev){if(ev.pointerId!==e.pointerId)return;var at=coords(ev),dx=at.x-start.x,dy=at.y-start.y;if(!moved&&Math.hypot(dx,dy)<2)return;moved=true;
     if(isJoint){p.pivot=p.pivot||{};p.pivot.x=r(startPX+dx);p.pivot.y=r(startPY+dy);}
     else{applyKeys(p,"x",startX+dx);applyKeys(p,"y",startY+dy);}
     Engine.paint(preview,0,selected);setPreviewFrame();
    }
-   function done(){target.removeEventListener("pointermove",move);target.removeEventListener("pointerup",done);target.removeEventListener("pointercancel",cancel);if(moved){writable();renderAll();}}
-   function cancel(){done();}
-   target.addEventListener("pointermove",move);target.addEventListener("pointerup",done);target.addEventListener("pointercancel",cancel);
+   function finish(commit){if(finished)return;finished=true;if(cancelInteraction===cancel)cancelInteraction=null;
+    target.removeEventListener("pointermove",move);target.removeEventListener("pointerup",done);target.removeEventListener("pointercancel",cancel);target.removeEventListener("lostpointercapture",cancel);
+    if(target.hasPointerCapture&&target.hasPointerCapture(e.pointerId))target.releasePointerCapture(e.pointerId);
+    if(moved){if(commit)writable();else{Object.keys(p).forEach(function(key){delete p[key];});Object.assign(p,before);}renderAll();}
+   }
+   function done(ev){if(ev.pointerId!==e.pointerId)return;finish(true);}
+   function cancel(ev){if(ev&&ev.pointerId!==e.pointerId)return;finish(false);}
+   cancelInteraction=cancel;target.addEventListener("pointermove",move);target.addEventListener("pointerup",done);target.addEventListener("pointercancel",cancel);target.addEventListener("lostpointercapture",cancel);
   });
   overlay.focus({preventScroll:true});return true;
  }
- return {open:open,close:close,isOpen:function(){return !!overlay;}};
+ return {open:open,close:close,clearSelection:clearSelection,isOpen:function(){return !!overlay;}};
 }
 exports.mount=mount;exports.rootFor=rootFor;exports.descendants=descendants;exports.validateSvg=validateSvg;
 })();

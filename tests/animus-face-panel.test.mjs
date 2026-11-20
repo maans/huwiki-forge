@@ -46,7 +46,7 @@ function workshop({inline = true} = {}) {
   const host = create('section', doc.body), stage = create('div', host), opener = create('button', stage), existing = create('aside', host), dock = create('section', host);
   stage.inert = false;existing.inert = true;dock.inert = false;opener.focus();
   const film = {parts:[{id:'prisoner'},{id:'prisoner-head',parent:'prisoner'},{id:'prisoner-mouth-open',parent:'prisoner-head'}],musical:{faceKeys:[]}};
-  const original = JSON.stringify(film), time = 28.25, commands = [], back = [], script = [];
+  const original = JSON.stringify(film), time = 28.25, commands = [], back = [], script = [], deselections = [];
   let pauses = 0, undos = 0;
   const view = {scene:film,nodes:{}};
   const context = () => {
@@ -58,8 +58,9 @@ function workshop({inline = true} = {}) {
   const api = panel.mount({doc,host,stage,parent:host,dock:inline?dock:null,film,wiki:{getTiddlerText:()=>'$:/languages/da-DK'},
     context,position:()=>time,pause(){pauses++;},seek(){throw Error('Opening or switching must not seek');},history:()=>film.musical.faceKeys,
     choose(id,command){commands.push({id,...plain(command)});const patch=command.channel==='mouth'?{mouth:{mode:command.mode},mouthMap:{[command.viseme]:command.value==='auto'?null:command.value}}:face.preset(command.value);film.musical.faceKeys=face.withKey(film.musical.faceKeys,'prisoner',time,patch);},
-    undo(){undos++;film.musical.faceKeys=[];},canUndo:()=>film.musical.faceKeys.length>0,onScript:cue=>script.push(plain(cue)),onBack:details=>back.push(plain(details))});
-  return {doc,host,stage,opener,existing,dock,film,original,time,commands,back,script,api,get pauses(){return pauses;},get undos(){return undos;}};
+    undo(){undos++;film.musical.faceKeys=[];},canUndo:()=>film.musical.faceKeys.length>0,onScript:cue=>script.push(plain(cue)),onBack:details=>back.push(plain(details)),
+    onDeselect:inline?details=>deselections.push(plain(details)):undefined});
+  return {doc,host,stage,opener,existing,dock,film,original,time,commands,back,script,deselections,api,get pauses(){return pauses;},get undos(){return undos;}};
 }
 
 test('embedded face workshop shares the dock without blocking the stage and survives export/fullscreen relocation', () => {
@@ -111,7 +112,43 @@ test('inline workshop retains sound teaching, undo and manuscript actions in the
   assert.equal(expanded.querySelector('.huw-musical-face-context').dataset.faceViseme,'E','opening Manuscript retains the inspected sound group');
   h.api.select('prisoner-mouth-open');h.api.openWorkshop();
   h.dock.querySelector('[data-face-panel]').dispatch('keydown',{key:'Escape'});
-  assert.equal(h.back.length,1);assert.equal(h.api.isOpen(),false,'Escape returns to the figure in embedded mode');
+  assert.equal(h.back.length,0);assert.equal(h.deselections.length,1);assert.equal(h.api.isOpen(),true,'Escape releases selection without leaving the face workshop');
+  h.api.dispose();
+});
+
+test('inline Escape and blank preview taps retain the chosen face and sound group without writing keys', () => {
+  const h=workshop();h.api.select('prisoner-mouth-open');h.api.openWorkshop();
+  const expanded=h.dock.querySelector('.huw-face-workshop'),choices=expanded.querySelector('[data-face-panel]');
+  expanded.querySelector('[data-face-sound="E"]').click();
+  expanded.querySelector('[data-face-value="mouth-e"]').click();
+  const saved=JSON.stringify(h.film);
+  const escape=choices.dispatch('keydown',{key:'Escape'});
+  assert.equal(escape.defaultPrevented,true);assert.equal(escape.stopped,true);
+  assert.deepEqual(h.deselections,[{actorId:'prisoner',headId:'prisoner-head',partId:'prisoner-mouth-open'}]);
+  assert.equal(h.api.isWorkshopOpen(),true);assert.equal(h.api.isOpen(),true);assert.equal(h.back.length,0);
+  assert.equal(choices.dataset.faceViseme,'E','deselecting preserves the inspected sound group');
+  assert.equal(expanded.querySelector('[data-face-value="mouth-e"]').getAttribute('aria-pressed'),'true','applied mouth choices are not transient selection');
+  assert.equal(JSON.stringify(h.film),saved);assert.equal(h.commands.length,1);
+
+  choices.dispatch('keydown',{key:'Escape',defaultPrevented:true});
+  assert.equal(h.deselections.length,1,'an Escape handled by the workspace is not handled twice');
+  expanded.dispatch('keydown',{key:'Escape'});
+  assert.equal(h.deselections.length,2,'Escape works when focus is on the workshop itself');
+  const preview=expanded.querySelector('.huw-face-workshop-preview');
+  preview.click();
+  assert.equal(h.deselections.length,3,'a blank preview tap releases selection');
+  const svg=h.doc.createElementNS('http://www.w3.org/2000/svg','svg');preview.appendChild(svg);
+  const head=h.doc.createElementNS('http://www.w3.org/2000/svg','g');head.setAttribute('data-cutout-id','prisoner-head');svg.appendChild(head);
+  const drawing=h.doc.createElementNS('http://www.w3.org/2000/svg','path');head.appendChild(drawing);
+  drawing.click();
+  assert.equal(h.deselections.length,3,'a tap on the face geometry is not a background tap');
+  svg.click();
+  assert.equal(h.deselections.length,4,'blank space inside the SVG also releases selection');
+  assert.equal(JSON.stringify(h.film),saved);assert.equal(h.commands.length,1);
+
+  expanded.querySelector('[data-face-value="mouth-o"]').click();
+  assert.equal(h.commands.length,2);assert.equal(h.deselections.length,4,'a deliberate card choice remains one tap');
+  assert.deepEqual(h.commands[1],{id:'prisoner-mouth-open',channel:'mouth',value:'mouth-o',viseme:'E',mode:'auto'});
   h.api.dispose();
 });
 
@@ -123,5 +160,15 @@ test('legacy face workshop still restores its modal background and opener', () =
   expanded.querySelector('.huw-face-workshop-close').click();
   assert.equal(h.stage.inert,false);assert.equal(h.existing.inert,true);assert.equal(h.doc.activeElement,h.opener);
   assert.equal(h.api.isOpen(),true);assert.equal(h.back.length,0);assert.equal(JSON.stringify(h.film),h.original);
+  h.api.dispose();
+});
+
+test('a standalone face workshop without a deselection owner keeps its modal Escape behavior', () => {
+  const h=workshop({inline:false});h.api.select('prisoner-mouth-open');h.api.openWorkshop();
+  h.host.querySelector('.huw-face-workshop').dispatch('keydown',{key:'Escape'});
+  assert.equal(h.api.isWorkshopOpen(),false);assert.equal(h.api.isOpen(),true);
+  assert.equal(h.stage.inert,false);assert.equal(h.doc.activeElement,h.opener);
+  h.host.querySelector('[data-face-panel]').dispatch('keydown',{key:'Escape'});
+  assert.equal(h.api.isOpen(),false);assert.equal(JSON.stringify(h.film),h.original);
   h.api.dispose();
 });
