@@ -129,3 +129,34 @@ test("The built SilbaÄtno manifest retains all 17 scores and Repertoire Nodebog
  assert.ok(file.plugins.includes("../../plugins/repertoire/dist/plugin.json"));
  assert.equal(file.tiddlers.filter(x=>x==="tiddlers/repertoire-workspace.json").length,1);
 });
+
+test("Music Minus One uses the ABC mixer as a temporary overlay without rewriting score data",()=>{
+ const key="$:/plugins/huwiki/repertoire/practice.js";
+ assert.ok(tiddlers[key],"Music Minus One library must be packaged");
+ const module={};runInNewContext(tiddlers[key].text,{exports:module});
+ const base={metronome:false,backingModes:{metronome:"mute",bass:"normal"},
+  voiceSettings:{"0":{mode:"solo",volume:75},"1":{mode:"normal",volume:90}}};
+ const original=JSON.stringify(base);
+ const one=module.overlay(base,{enabled:true,metronome:true,voice:"1"});
+ assert.equal(one.metronome,true);
+ assert.equal(one.backingModes.metronome,"normal");
+ assert.equal(one.voiceSettings["1"].mode,"mute");
+ assert.equal(module.isAudible(base,{enabled:true,metronome:true,voice:"1"},1),false);
+ assert.equal(module.isAudible(base,{enabled:true,metronome:true,voice:"1"},0),true);
+ assert.equal(one.voiceSettings["0"].mode,"solo");
+ assert.equal(JSON.stringify(base),original,"base orchestral arrangement must remain untouched");
+ assert.deepEqual({...module.overlay(base,{enabled:false,metronome:true,voice:"1"})},base,
+  "exiting practice must restore the original mixer");
+ const book=tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"].text;
+ assert.match(book,/control\.setConfig\(next,false\)/,"practice settings may not persist into ABC score");
+ assert.match(book,/\.huwabc-voice-row\[data-voice-index\]/,"reuse actual ABC written voice labels");
+ assert.match(book,/Music Minus One/);
+ assert.match(book,/huwrep-book-list-search/,"song picker must be searchable");
+ assert.doesNotMatch(book,/listBox\.open=false/,"no long unfolding button grid");
+});
+test("SilbaÄtno homepage links straight to the setlist book",async()=>{
+ const config=JSON.parse(await readFile(path.join(root,"editions/silva-ethno-repertoire/tiddlers/config.json"),"utf8"));
+ const home=config.find(x=>x.title==="SilbaÄtno Repertoire – Oversigt");
+ assert.ok(home);
+ assert.match(home.text,/<\$link to="Repertoire – Nodebog" class="silba-primary">Åbn nodebogen<\/\$link>/);
+});
