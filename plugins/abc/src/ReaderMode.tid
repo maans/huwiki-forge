@@ -1,0 +1,188 @@
+title: $:/plugins/huwiki/abc/ReaderMode
+type: text/css
+tags: $:/tags/Stylesheet
+
+/* Musicians' reading view: the score owns the screen, without altering ABC
+   notation, audio or TiddlyWiki's normal editor. Only the active score changes. */
+.huwabc-reader-toolbar[hidden],
+.huwabc-reader-edges[hidden],
+.huwabc-reader-menu-panel[hidden]{display:none!important}
+.huwabc-score.huwabc-reader-active{
+ position:fixed!important;
+ inset:0!important;
+ box-sizing:border-box!important;
+ width:100vw!important;
+ max-width:none!important;
+ height:100dvh!important;
+ min-height:0!important;
+ margin:0!important;
+ padding:0!important;
+ border:0!important;
+ border-radius:0!important;
+ display:flex!important;
+ flex-direction:column!important;
+ overflow:hidden!important;
+ z-index:30100!important;
+ color:#202521!important;
+ background:#ebeeea!important
+}
+/* The original toolbars and secondary panels remain mounted so audio, mixer
+   and the page renderer keep their existing state. They are just not visible. */
+.huwabc-reader-active > :not(.huwabc-paper):not(.huwabc-audio):not(.huwabc-reader-toolbar):not(.huwabc-reader-edges){
+ display:none!important
+}
+.huwabc-reader-active > .huwabc-paper{
+ display:block!important;
+ flex:1 1 auto!important;
+ position:relative!important;
+ margin:0!important;
+ padding:0!important;
+ border:0!important;
+ border-radius:0!important;
+ min-height:0!important;
+ min-width:0!important;
+ max-height:none!important;
+ width:100%!important;
+ overflow:auto!important;
+ overscroll-behavior:contain;
+ -webkit-overflow-scrolling:touch;
+ background:#ebeeea!important
+}
+.huwabc-reader-active .huwabc-page-shell{
+ margin:4px auto!important;
+ box-shadow:0 1px 8px rgba(0,0,0,.08)!important
+}
+.huwabc-reader-active.huwabc-reader-fill .huwabc-page-shell{
+ zoom:1.22
+}
+.huwabc-reader-active .huwabc-audio{display:none!important}
+.huwabc-reader-active.huwabc-reader-practice .huwabc-audio{
+ display:block!important;
+ position:relative!important;
+ order:2;
+ box-sizing:border-box!important;
+ width:100%!important;
+ flex:0 0 auto!important;
+ max-height:min(34dvh,290px)!important;
+ min-height:0!important;
+ overflow:auto!important;
+ padding:7px 10px!important;
+ border:0!important;
+ border-top:1px solid #ccd3cb!important;
+ background:#f1f4ef!important
+}
+/* Prefer a floating, compact menu over permanently stacked page widgets. */
+.huwabc-reader-toolbar{
+ position:absolute;
+ z-index:210;
+ top:env(safe-area-inset-top,0px);
+ right:env(safe-area-inset-right,0px);
+ display:flex;
+ align-items:flex-start;
+ flex-direction:row-reverse;
+ gap:7px;
+ padding:9px;
+ pointer-events:none
+}
+.huwabc-reader-toolbar button,
+.huwabc-reader-toolbar select,
+.huwabc-reader-edges button{font:inherit;touch-action:manipulation}
+.huwabc-reader-menu{
+ pointer-events:auto;
+ cursor:pointer;
+ border:1px solid #9aa8a0;
+ box-shadow:0 1px 8px #0002;
+ background:#f8faf7ef;
+ color:#172d27;
+ border-radius:9px;
+ min-width:44px;
+ min-height:44px;
+ padding:7px 12px;
+ font-size:21px!important;
+ line-height:1.1
+}
+.huwabc-reader-menu-panel{
+ pointer-events:auto;
+ color:#e9f0eb;
+ width:min(360px,calc(100vw - 85px));
+ max-height:65dvh;
+ overflow:auto;
+ padding:13px;
+ background:#1a2924f2;
+ box-shadow:0 12px 32px #0005;
+ border-radius:11px
+}
+.huwabc-reader-title{
+ display:block;
+ font-size:14px;
+ line-height:1.25;
+ margin-bottom:12px;
+ max-height:2.5em;
+ overflow:hidden
+}
+.huwabc-reader-modes{display:flex;gap:5px;margin-bottom:10px}
+.huwabc-reader-modes .huwabc-reader-mode-button{
+ flex:1;
+ padding:9px 6px;
+ border-radius:8px;
+ border:1px solid #889990;
+ background:transparent;
+ color:inherit
+}
+.huwabc-reader-modes button[aria-pressed="true"]{
+ background:#e2e9e1;
+ color:#182b22;
+ font-weight:700
+}
+.huwabc-reader-options{display:flex;flex-wrap:wrap;align-items:end;gap:7px}
+.huwabc-reader-options>*{flex:1 1 130px}
+.huwabc-reader-options>button{
+ padding:9px 6px;
+ min-height:40px;
+ background:#34483f;
+ border:1px solid #82958b;
+ border-radius:7px;
+ color:inherit
+}
+.huwabc-reader-options>button[aria-pressed="true"]{
+ background:#dae8db;
+ color:#1d3629
+}
+.huwabc-reader-field{display:flex;flex-direction:column;gap:4px;font-size:12px}
+.huwabc-reader-page-choice{min-height:40px;max-width:100%;border-radius:7px;border:1px solid #82958b;background:#e5ebe6;color:#162923;padding:4px}
+.huwabc-reader-counter{display:block;font-size:12px;opacity:.85;margin-top:7px}
+.huwabc-reader-edges{
+ position:absolute;
+ z-index:190;
+ pointer-events:none;
+ inset:auto 0 calc(8px + env(safe-area-inset-bottom,0px)) 0;
+ display:flex;
+ justify-content:space-between;
+ align-items:center;
+ padding:0 8px
+}
+.huwabc-reader-edges button{
+ pointer-events:auto;
+ border:1px solid #77878066;
+ border-radius:10px;
+ background:#f7faf0b0;
+ color:#2b4135;
+ font-size:26px;
+ line-height:1;
+ min-height:49px;
+ min-width:43px;
+ opacity:.52;
+ cursor:pointer
+}
+.huwabc-reader-edges button:focus-visible,
+.huwabc-reader-edges button:hover{opacity:1;outline:2px solid #386e57}
+.huwabc-reader-edges button:disabled{opacity:.18;cursor:default}
+.huwabc-reader-active.huwabc-reader-practice .huwabc-reader-edges{
+ bottom:calc(min(34dvh,290px) + 8px)
+}
+@media(max-width:730px){
+ .huwabc-reader-menu-panel{width:min(310px,calc(100vw - 72px))}
+ .huwabc-reader-toolbar{padding:5px}
+ .huwabc-reader-edges{padding:0 3px}
+ .huwabc-reader-edges button{min-width:39px;min-height:44px}
+}
