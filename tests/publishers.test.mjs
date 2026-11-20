@@ -311,3 +311,10 @@ test("SitePublisher's source, bundle and metadata agree for repertoire publishin
  assert.equal(pkg.version,info.version);
  assert.equal(JSON.parse(pkg.text).tiddlers[pkg.title+"/startup.js"].text,source);
 });
+
+test("SitePublisher leaves ordinary ABC exports working without a Repertoire instrument hook",async()=>{
+ const pkg=await json("plugins/site-publisher/dist/plugin.json");
+ const js=JSON.parse(pkg.text).tiddlers[pkg.title+"/startup.js"].text;
+ assert.match(js,/if\(opts\.instrumentId&&opts\.instrumentId!=="c"\)throw/);
+ assert.match(js,/template=template\.replace\(launch/);
+});

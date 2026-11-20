@@ -848,8 +848,13 @@ function makeSite(entries,opts){
   if(!match)throw new Error("Kunne ikke finde ABC-afspillerens data i site-skabelonen.");
   template=decoratePlayerTemplate(full.replace(match[0],"const DATA=__HUW_SITE_DATA__;"));
   var launch="InstrumentView.mount($('instrumentBar'),{onChange:function(){stopAllSound();render();}});";
-  if(template.indexOf(launch)<0)throw new Error("Siteafspillerens instrumentkontrol mangler.");
-  template=template.replace(launch,"if(DATA.instrumentId && InstrumentView.profiles[DATA.instrumentId])InstrumentView.change(DATA.instrumentId);"+launch);
+  if(template.indexOf(launch)<0){
+   // Older/non-Repertoire score templates must keep publishing as before.
+   // Never silently publish an untransposed part when a transposition is requested.
+   if(opts.instrumentId&&opts.instrumentId!=="c")throw new Error("Siteafspillerens instrumentkontrol mangler – kan ikke transponere til "+opts.instrumentId);
+  }else{
+   template=template.replace(launch,"if(DATA.instrumentId && InstrumentView.profiles[DATA.instrumentId])InstrumentView.change(DATA.instrumentId);"+launch);
+  }
  }
  var publicationContext={rows:{},used:false,drawings:false,animus:false};
  var awaitingDrawings=[];
