@@ -57,8 +57,18 @@ tags: $:/tags/Stylesheet
  margin:4px auto!important;
  box-shadow:0 1px 8px rgba(0,0,0,.08)!important
 }
-.huwabc-reader-active.huwabc-reader-fill .huwabc-page-viewport{
- zoom:1.22
+.huwabc-reader-active .huwabc-page-viewport{
+ transform:none!important;
+ transform-origin:top center!important;
+}
+.huwabc-reader-fit-choice{
+ min-height:40px;
+ max-width:100%;
+ border-radius:7px;
+ border:1px solid #82958b;
+ background:#e5ebe6;
+ color:#162923;
+ padding:4px
 }
 .huwabc-reader-active .huwabc-audio{display:none!important}
 .huwabc-reader-active.huwabc-reader-practice .huwabc-audio{
