@@ -766,7 +766,8 @@ function siteRuntime(){
   if(enabled){prev.disabled=nearbyTune(currentIndex,-1)<0;next.disabled=nearbyTune(currentIndex,1)<0;}
  }
  function renderRepertoireAgreement(item){
-  var notes=$("husp-repertoire-agreements"),main=frame.parentElement,fields=item.kind==="score"?item.agreement:null;
+  var notes=$("husp-repertoire-agreements"),main=frame.parentElement||frame.parentNode,fields=item.kind==="score"?item.agreement:null;
+  if(!notes||!main||!main.classList)return; // Ordinary SitePublisher and isolated reader harnesses.
   var present=fields&&["key","tempo","form","instrumentation","cues"].some(function(k){return String(fields[k]||"").trim();});
   notes.hidden=!present;main.classList.toggle("husp-has-agreements",!!present);
   if(!present){notes.textContent="";return;}
