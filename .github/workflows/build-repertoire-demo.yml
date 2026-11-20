@@ -6,6 +6,7 @@ on:
       - 'plugins/repertoire/dist/plugin.json'
       - 'plugins/repertoire/src/**'
       - 'tests/repertoire-edition.test.mjs'
+      - 'scripts/repertoire-browser-smoke.mjs'
       - 'editions/silva-ethno-repertoire/manifest.json'
       - 'editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json'
       - 'editions/silva-ethno-repertoire/tiddlers/config.json'
@@ -34,6 +35,12 @@ jobs:
         run: node --test tests/repertoire-edition.test.mjs
       - name: Assemble interactive Repertoire demo with original ABC scores
         run: node scripts/assemble-silba-etno-repertoire.mjs
+      - name: Install browser controller for iPad reader acceptance
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Check real Nodebog page turning and Music Minus One in Chrome
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/repertoire-browser-smoke.mjs
       - name: Verify actual published HTML includes Nodebog and 17 scores
         run: |
           node --input-type=module -e "
