@@ -436,7 +436,7 @@
         "name": "SitePublisher",
         "description": "HTML publishing for AniMus musicals, ABC music, CutOut, SVG drawings and embedded media.",
         "author": "HUWiki",
-        "version": "0.1.19-test.1",
+        "version": "0.1.19-test.2",
         "plugin-type": "plugin",
         "license": "MIT",
         "core-version": ">=5.2.0"

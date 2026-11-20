@@ -266,7 +266,7 @@
     {
       "id": "site-publisher",
       "name": "SitePublisher",
-      "version": "0.1.19-test.1",
+      "version": "0.1.19-test.2",
       "description": "HTML publishing for AniMus musicals, ABC music, CutOut, SVG drawings and embedded media.",
       "file": "../plugins/site-publisher/dist/plugin.json",
       "status": "test"
