@@ -117,6 +117,12 @@ Repertoire.prototype.draw=function(){
   catch(e){self.alert(e.message);}
  },"huwrep-primary"));
  setPanel.appendChild(row);
+ if(this.setlistTitle){
+  setPanel.appendChild(button(doc,"Åbn nodebogen",function(){
+   wiki.addTiddler(new $tw.Tiddler({title:"$:/temp/huwiki/repertoire/active-setlist",type:"text/plain",text:self.setlistTitle}));
+   self.navigate("Repertoire – Nodebog");
+  },"huwrep-primary"));
+ }
  var setTitle=this.setlistTitle,list=setTitle?model.entries(wiki,setTitle):[];
  var repertoire=el(doc,"div","huwrep-panel");host.appendChild(repertoire);
  repertoire.appendChild(el(doc,"h3","","Orkestrets repertoire ("+known.length+")"));
