@@ -106,6 +106,10 @@ async function tapPart(id,head=false){
   let offset={x:0,y:0};if(wiki!==page){const frame=await wiki.frameElement(),bounds=await frame.boundingBox(),border=await frame.evaluate(node=>({x:node.clientLeft,y:node.clientTop}));assert.ok(bounds);offset={x:bounds.x+border.x,y:bounds.y+border.y};}
   await page.touchscreen.tap(point.x+offset.x,point.y+offset.y);
  }else await painted.tap();
+ // A head is also an articulated body part. Its direct hit opens the whole
+ // figure; the shared Face tab opens expressions in the same editing area.
+ const dock=editor.locator('[data-animus-workshop]');
+ if(head&&await dock.getAttribute('data-animus-workshop')==='figure')await dock.locator('[data-workshop-mode="face"]').tap();
  const panel=editor.locator('[data-face-panel]:visible').first();await panel.waitFor();
  assert.equal(await panel.getAttribute('data-face-target'),'prisoner','the face controls belong to the touched actor');
  if(eyeSource){const tab=panel.locator('[data-face-tab="eyes"]');assert.equal(await tab.getAttribute('aria-selected'),'true','the eye palette is selected for the touched face');assert.ok(Math.abs(await position()-eyeTime)<.001);assert.deepEqual(await sourceSnapshot(),eyeSource,'touching the visible eye and opening its palette do not write source data');}
@@ -197,8 +201,9 @@ try{
  passed('eyes, blink, gaze and expression have independent saved keys and deterministic rewind');
 
  await seek(moodTime);
- const beforeWorkshop=await sourceSnapshot();await editor.locator('.huw-musical-face-workshop-open:visible').first().tap();
- const workshop=wiki.locator('.huw-face-workshop:visible');await workshop.waitFor();
+ const beforeWorkshop=await sourceSnapshot(),workshop=wiki.locator('.huw-face-workshop:visible');
+ if(!await workshop.count())await editor.locator('.huw-musical-face-workshop-open:visible').first().tap();
+ await workshop.waitFor();
  assert.equal(await workshop.locator('[data-face-sound]').count(),7,'the face workshop presents the seven speech groups');
  await workshop.locator('[data-face-sound="C"]').tap();
  assert.deepEqual(await sourceSnapshot(),beforeWorkshop,'opening the face workshop and inspecting a sound do not save a correction');

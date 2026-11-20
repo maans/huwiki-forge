@@ -1,0 +1,26 @@
+/* The selected character and face share one large, inline editing area. */
+.huw-musical-workshop-dock{display:flex;flex-direction:column;flex:0 0 auto;min-width:0;height:clamp(480px,58vh,640px);box-sizing:border-box;background:#eaf1f5;color:#183345;border-top:1px solid #7890a1;border-bottom:1px solid #7890a1;font:13px/1.35 system-ui,-apple-system,sans-serif;overflow:hidden}
+.huw-musical-workshop-dock[hidden]{display:none!important}
+.huw-musical-workshop-top{display:flex;align-items:center;gap:12px;flex:0 0 auto;padding:6px 12px;background:#dbe7ee;border-bottom:1px solid #a4b9c6;min-width:0}
+.huw-musical-workshop-top>strong{font-size:14px}
+.huw-musical-workshop-tabs{display:flex;gap:4px}
+.huw-musical-workshop-top button{font:inherit;font-weight:650;line-height:1.2;min-width:76px;min-height:44px;padding:8px 13px;background:#f8fcff;color:#173648;border:1px solid #92aab9;border-radius:7px;cursor:pointer;touch-action:manipulation}
+.huw-musical-workshop-top button[aria-pressed="true"]{background:#245b70;border-color:#245b70;color:#fff}
+.huw-musical-workshop-top button:disabled{opacity:.45;cursor:default}
+.huw-musical-workshop-top button:focus-visible{outline:3px solid #bb6612;outline-offset:2px}
+.huw-musical-workshop-top .huw-musical-workshop-close{margin-left:auto;min-width:44px;font-size:20px;font-weight:400}
+.huw-musical-workshop-content{display:flex;flex-direction:column;flex:1 1 auto;min-height:0;min-width:0;overflow:hidden}
+/* Opening the dock grows the editor so neither the figure nor the timeline is squeezed away. */
+.huw-musical.huw-musical--workspace.huw-musical--workshop-open{height:auto;min-height:0}
+.huw-musical--workspace.huw-musical--workshop-open .huw-musical-workbench{flex:0 0 280px;min-height:240px}
+.huw-musical--workspace.huw-musical--focus.huw-musical--workshop-open{height:100dvh;min-height:0;overflow-y:auto;overscroll-behavior:contain}
+.huw-musical-stage.huw-musical-stage--expanded .huw-musical-workshop-dock,
+.huw-musical-stage:fullscreen .huw-musical-workshop-dock{height:clamp(340px,60dvh,640px);flex:0 0 auto;margin-top:8px}
+.huw-musical-stage.huw-musical-stage--expanded:has(.huw-musical-workshop-dock:not([hidden])) .huw-musical-canvas,
+.huw-musical-stage:fullscreen:has(.huw-musical-workshop-dock:not([hidden])) .huw-musical-canvas{min-height:100px}
+@media(max-width:600px){
+ .huw-musical-workshop-dock{height:clamp(500px,70vh,680px)}
+ .huw-musical-workshop-top{gap:7px;padding:6px 8px}
+ .huw-musical-workshop-top>strong{font-size:12px}
+ .huw-musical-workshop-top button{min-width:64px;padding:8px 10px}
+}

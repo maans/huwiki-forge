@@ -70,3 +70,12 @@
  .huw-musical.huw-musical--workspace.huw-musical--face-open{min-height:840px}.huw-musical.huw-musical--workspace.huw-musical--focus.huw-musical--face-open{min-height:0}
  .huw-face-workshop{inset:0;border-radius:0}.huw-face-workshop-header{padding:8px 10px}.huw-face-workshop-header h2{font-size:18px}.huw-face-workshop-body{grid-template-columns:1fr}.huw-face-workshop-overview{border-right:0;border-bottom:1px solid #b4c8d4;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;padding:10px}.huw-face-workshop-overview>h3,.huw-face-workshop-overview>.huw-face-workshop-hint{grid-column:1/-1}.huw-face-workshop-overview>.huw-face-workshop-preview{grid-column:1/-1;width:190px;height:150px;margin:0 auto 8px}.huw-face-workshop .huw-face-sound{margin:0}.huw-face-workshop .huw-musical-face-panel{padding:10px}.huw-face-workshop .huw-musical-face-choice{flex-basis:106px}.huw-face-workshop .huw-musical-face-thumbnail{width:88px;height:80px}
 }
+/* The shared character dock owns placement, height, fullscreen and export. */
+.huw-face-workshop--inline{position:relative;inset:auto;z-index:auto;flex:1 1 auto;width:100%;height:100%;min-width:0;min-height:0;box-sizing:border-box;border:0;border-radius:0;box-shadow:none}
+.huw-face-workshop--inline .huw-face-workshop-header{padding:10px 14px}
+.huw-face-workshop--inline .huw-face-workshop-close{min-height:48px;font-weight:650}
+.huw-face-workshop.huw-face-workshop--inline .huw-musical-face-panel{max-height:none;overflow:visible;margin:0;border-radius:0}
+@media(max-width:760px){
+ .huw-face-workshop--inline .huw-face-workshop-editing{grid-row:1}
+ .huw-face-workshop--inline .huw-face-workshop-overview{border-top:1px solid #b4c8d4;border-bottom:0}
+}
