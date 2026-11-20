@@ -29,6 +29,7 @@ function Reader(options){
  this.host=options.host;this.paper=options.paper;this.actions=options.actions;
  this.getPager=options.pager;this.title=options.title||"Nodeark";
  this.doc=this.host.ownerDocument;this.win=this.doc.defaultView;
+ this.book=this.host.closest(".huwrep-book");
  this.mode="vis";this.controlsOpen=false;this.fill=false;this.active=false;
  this.cleanup=[];this._touch=null;
  this.create();
@@ -58,6 +59,18 @@ Reader.prototype.create=function(){
  this.menu=action(doc,"☰","huwabc-reader-menu",function(){self.controlsOpen=!self.controlsOpen;self.sync();});
  this.menu.setAttribute("aria-label","Vis eller skjul nodemenu");
  toolbar.appendChild(this.menu);
+ // In a setlist, keep the familiar searchable number drawer accessible
+ // without exposing Repertoire's outer six rows of editing controls.
+ if(this.book){
+  this.listButton=action(doc,"☷ Nummerliste","huwabc-reader-list",function(){
+   var list=self.book.querySelector(".huwrep-book-list");
+   if(!list)return;
+   list.hidden=!list.hidden;
+   var existing=self.book.querySelector(".huwrep-book-header button[aria-expanded]");
+   if(existing)existing.setAttribute("aria-expanded",String(!list.hidden));
+  });
+  toolbar.appendChild(this.listButton);
+ }
  this.panel=node(doc,"div","huwabc-reader-menu-panel");
  toolbar.appendChild(this.panel);
  this.panel.appendChild(node(doc,"strong","huwabc-reader-title",this.title));
@@ -130,6 +143,12 @@ Reader.prototype.enter=function(state){
 };
 Reader.prototype.exit=function(){
  this.active=false;this._touch=null;this.controlsOpen=false;
+ if(this.book){
+  var list=this.book.querySelector(".huwrep-book-list");
+  if(list)list.hidden=true;
+  var toggle=this.book.querySelector(".huwrep-book-header button[aria-expanded]");
+  if(toggle)toggle.setAttribute("aria-expanded","false");
+ }
  this.host.classList.remove("huwabc-reader-active","huwabc-reader-practice","huwabc-reader-controls-open","huwabc-reader-fill");
  this.sync();if(this.win)this.win.dispatchEvent(new this.win.Event("resize"));
 };
@@ -187,6 +206,10 @@ Reader.prototype.sync=function(){
  this.host.classList.toggle("huwabc-reader-practice",this.active&&this.mode==="practice");
  this.host.classList.toggle("huwabc-reader-controls-open",this.active&&this.controlsOpen);
  this.host.classList.toggle("huwabc-reader-fill",this.active&&this.fill);
+ if(this.book){
+  this.book.classList.toggle("huwrep-reader-active",this.active);
+  this.book.classList.toggle("huwrep-reader-practice",this.active&&this.mode==="practice");
+ }
  this.toolbar.hidden=!this.active;this.edges.hidden=!this.active;
  this.panel.hidden=!this.controlsOpen;
  this.menu.setAttribute("aria-expanded",String(!!this.controlsOpen));
