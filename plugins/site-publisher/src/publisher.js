@@ -29,6 +29,13 @@ function el(tag,cls,txt){var x=document.createElement(tag);if(cls)x.className=cl
 function safe(s){return String(s||"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function namesOf(value){if(Array.isArray(value))return value.slice();if(!value)return [];return $tw.utils.parseStringArray(String(value));}
 function unique(values){var used=Object.create(null);return values.filter(function(t){if(!t||(t.indexOf("$:/")===0&&t.indexOf("$:/temp/huwiki/repertoire/publication/")!==0)||used[t]||!$tw.wiki.getTiddler(t))return false;used[t]=true;return true;});}
+function publicationLabel(title){var t=$tw.wiki.getTiddler(title),fields=t&&t.fields||{};
+ var caption=typeof fields.caption==="string"?fields.caption.trim():"";
+ if(caption)return caption;
+ if(title.indexOf("$:/temp/huwiki/repertoire/publication/")===0)return wikiLanguage()==="da"?"Repertoireoversigt":"Repertoire overview";
+ return title;
+}
+function isRepertoireOverview(title){return title.indexOf("$:/temp/huwiki/repertoire/publication/")===0&&/\/summary$/.test(title);}
 function listField(title){var t=$tw.wiki.getTiddler(title);return t?(typeof t.getFieldList==="function"?t.getFieldList("list"):namesOf(t.fields.list)):[];}
 function sourceList(title){
  var t=$tw.wiki.getTiddler(title),names=listField(title);if(!t)return unique(names);
@@ -966,8 +973,13 @@ function openPublisher(title,preset){
    if(presentation){var card=el("article","husp-program-card"),content=el("div");content.innerHTML=animusProgramHtml(presentation,lang);card.appendChild(content);
     var open=el("button","husp-program-open",word("Åbn forestillingen"));open.type="button";open.onclick=function(){openPreviewEntry(i);};card.appendChild(open);overview.appendChild(card);return;
    }
-   var card=el("button","husp-overview-card"),heading=el("strong",null,e.title),kind=hasAbc(e.title)?word("♫ Nodeark"):word("Artikel"),hint=el("small",null,kind+" · "+(i+1)+" / "+selected.length),info=el("p");var text=articleSource(e.title,lang);
-   info.textContent=kind===word("Artikel")?text.replace(/\[\[|\]\]|''|!!+|<[^>]*>|\$:[^\s]+/g," ").replace(/\s+/g," ").trim().slice(0,190):word("Åbn nodearket i sitevisning for at teste noder og lyd.");
+   var repertoireOverview=isRepertoireOverview(e.title),card=el("button","husp-overview-card"),
+     heading=el("strong",null,repertoireOverview?(lang==="da"?"Repertoireoversigt":"Repertoire overview"):publicationLabel(e.title)),
+     kind=repertoireOverview?word("Repertoire"):hasAbc(e.title)?word("♫ Nodeark"):word("Artikel"),
+     hint=el("small",null,repertoireOverview?publicationLabel(e.title):kind+" · "+(i+1)+" / "+selected.length),info=el("p");var text=articleSource(e.title,lang);
+   if(repertoireOverview){var count=selected.filter(function(entry){return hasAbc(entry.title);}).length;
+     info.textContent=count+" "+(lang==="da"?(count===1?"nummer":"numre"):(count===1?"tune":"tunes"))+" · "+(lang==="da"?"Rækkefølge, form, instrumentering og indsatser":"Order, form, instrumentation and cues");
+    }else info.textContent=kind===word("Artikel")?text.replace(/\[\[|\]\]|''|!!+|<[^>]*>|\$:[^\s]+/g," ").replace(/\s+/g," ").trim().slice(0,190):word("Åbn nodearket i sitevisning for at teste noder og lyd.");
    card.type="button";card.append(heading,hint,info);card.onclick=function(){openPreviewEntry(i);};overview.appendChild(card);
   });
  }
@@ -989,7 +1001,7 @@ function openPublisher(title,preset){
  }
  function invalid(){revision++;exported=null;exportBtn.disabled=true;shareBtn.disabled=true;tell(word("Ændringerne opdateres automatisk …"));if(initialized){clearTimeout(refreshTimer);refreshTimer=setTimeout(prepare,450);}}
  function rowRender(){row.textContent="";updatePresentation();if(!entries.length){row.appendChild(el("p",null,word("Ingen tiddlere fundet. Vælg et andet tag eller en liste.")));return;}
-  entries.forEach(function(item,i){var presentation=animusPresentation(item.title,lang),r=el("div","husp-item"),chk=el("input"),name=el("span","title",presentation?presentation.title:item.title),type=el("small",null,presentation?word("Forestilling"):hasAbc(item.title)?word("♫ Noder"):word("Artikel")),up=el("button",null,"↑"),dn=el("button",null,"↓");
+  entries.forEach(function(item,i){var presentation=animusPresentation(item.title,lang),r=el("div","husp-item"),chk=el("input"),name=el("span","title",presentation?presentation.title:publicationLabel(item.title)),type=el("small",null,presentation?word("Forestilling"):hasAbc(item.title)?word("♫ Noder"):word("Artikel")),up=el("button",null,"↑"),dn=el("button",null,"↓");
    chk.type="checkbox";chk.checked=item.checked;chk.onchange=function(){item.checked=chk.checked;updatePresentation();invalid();};r.append(chk,name,type,up,dn);
    up.disabled=i===0;dn.disabled=i===entries.length-1;up.onclick=function(){if(i>0){var a=entries.splice(i,1)[0];entries.splice(i-1,0,a);rowRender();invalid();}};dn.onclick=function(){if(i<entries.length-1){var a=entries.splice(i,1)[0];entries.splice(i+1,0,a);rowRender();invalid();}};
    r.draggable=true;r.ondragstart=function(e){e.dataTransfer.setData("text/plain",String(i));};r.ondragover=function(e){e.preventDefault();};r.ondrop=function(e){e.preventDefault();var j=Number(e.dataTransfer.getData("text/plain"));if(Number.isInteger(j)&&j!==i&&j>=0&&j<entries.length){var a=entries.splice(j,1)[0];entries.splice(i,0,a);rowRender();invalid();}};row.appendChild(r);

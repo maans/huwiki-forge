@@ -72,12 +72,12 @@ function records(){
  for(const name of ['animus','cutout'])for(const suffix of ['js','css'])rows['$:/plugins/huwiki/site-publisher/'+name+'/viewer.'+suffix]={text:'/* Reader fixture */'};
  return rows;
 }
-async function harness({title='Film',lang='da',rows=records()}={}){
+async function harness({title='Film',lang='da',rows=records(),preset=null}={}){
  rows['$:/language'].text='$:/languages/'+(lang==='da'?'da-DK':'en-GB');const doc=document(lang),exports={},events={},timers=new Map(),scoreCalls=[];let nextTimer=0;
  const wiki={getTiddler:title=>rows[title]?{fields:rows[title]}:null,getTiddlerText:(title,fallback='')=>rows[title]?.text??fallback,getTiddlers:()=>Object.keys(rows).filter(t=>!t.startsWith('$:/')),each(fn){for(const [title,fields] of Object.entries(rows))fn({fields},title);},getTagMap:()=>({Collection:['Film','Score']}),getTiddlersWithTag:tag=>tag==='Collection'?['Film','Score']:[],renderText:(_type,_source,text)=>String(text),addTiddler(){throw Error('These publication actions should not change the wiki');}};
  const score={hasScore:(_wiki,title)=>title==='Score',build(_wiki,_source,_fields,title,opts){scoreCalls.push({method:'build',title,opts});return '<html><head></head><body><script>const DATA={"title":"Score"};<\/script></body></html>';},data(_wiki,title,opts){scoreCalls.push({method:'data',title,opts});return {title,startDesk:opts.startDesk};}};
  const context=createContext({exports,$tw:{wiki,rootWidget:{addEventListener(type,fn){events[type]=fn;}},utils:{parseStringArray:value=>value.split(/\s+/)},modules:{execute(id){if(id==='$:/plugins/huwiki/abc/site-publisher.js')return score;if(id==='$:/plugins/huwiki/abc/loader.js')return {getSource:(_wiki,title)=>rows[title].text};throw Error('No module '+id);}}},document:doc,navigator:{language:lang},window:{},console,URL,Blob,Promise,confirm:()=>true,alert:message=>{throw Error(message);},setTimeout(fn){timers.set(++nextTimer,fn);return nextTimer;},clearTimeout(id){timers.delete(id);}});
- new Script(publisher,{filename:'publisher.js'}).runInContext(context);exports.startup();events['tm-huwiki-sitepublisher']({param:title});
+ new Script(publisher,{filename:'publisher.js'}).runInContext(context);exports.startup();events['tm-huwiki-sitepublisher']({param:title,paramObject:preset||{}});
  async function flush(){for(let i=0;i<100&&timers.size;i++){const pending=[...timers];timers.clear();for(const [,fn] of pending)fn();await Promise.resolve();}assert.equal(timers.size,0,'Publisher should reach a settled preview');}
  await flush();const root=doc.body.querySelector('.husp-overlay');assert.ok(root,'Publisher dialog should open');
  return {root,doc,rows,scoreCalls,flush,get frame(){return root.querySelector('.husp-preview');},get html(){return this.frame.srcdoc||'';},get data(){assert.ok(this.html,root.querySelector('.husp-status')?.textContent);return payload(this.html);}};
@@ -148,4 +148,24 @@ test('multiple productions default to the programme and a wrapper never duplicat
 test('the contextual AniMus controls follow the wiki language',async()=>{
  const h=await harness({lang:'en'});assert.equal(h.root.querySelector('.husp-settings-button').textContent,'⚙ Audience view');h.root.querySelector('.husp-settings-button').click();
  assert.deepEqual(h.root.querySelector('.husp-program-start').options.map(o=>o.textContent),['Performance','Programme']);assert.equal(h.root.querySelector('.husp-program-card .huw-animus-program').getAttribute('aria-label'),'Programme');assert.equal(h.data.lang,'en');
+});
+
+test('Repertoire overview cards show readable headings, not internal publication paths',async()=>{
+ const rows=records(),root='$:/temp/huwiki/repertoire/publication/encoded-id/site/c/',summary=root+'summary',list=root+'order';
+ rows[summary]={title:summary,type:'text/vnd.tiddlywiki',caption:'SilbaÄtno · Øverepertoire',
+  text:'! SilbaÄtno · Øverepertoire\n\n!! 1. Brudmarch\nForm: AABB'};
+ rows[list]={title:list,type:'text/vnd.tiddlywiki',list:[summary,'Score'],text:''};
+ const h=await harness({title:summary,rows,preset:{listTitle:list,siteTitle:'SilbaÄtno · Øverepertoire'}});
+ const cards=h.root.querySelectorAll('.husp-overview-card');
+ assert.equal(cards.length,2);
+ const first=visibleText(cards[0]);
+ assert.match(first,/Repertoireoversigt/);
+ assert.match(first,/SilbaÄtno · Øverepertoire/);
+ assert.match(first,/1 nummer/);
+ assert.doesNotMatch(first,/\$:\//,'No internal temporary path in the preview');
+ h.root.querySelector('.husp-settings-button').click();
+ assert.doesNotMatch(visibleText(h.root.querySelector('.husp-arrange')),/\$:\//,'No internal temporary path in the arrangement selector');
+ assert.equal(h.data.entries[0].label,'SilbaÄtno · Øverepertoire');
+ const site=audience(h.html);
+ assert.equal(site.doc.getElementById('current-title').textContent,'SilbaÄtno · Øverepertoire');
 });
