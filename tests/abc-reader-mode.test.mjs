@@ -38,3 +38,14 @@ test("Reader supports page and tune boundaries, preserving playing score",()=>{
  assert.ok(code.includes("huwabc-reader-boundary"),"Repertoire can listen for cross-song turns");
  assert.ok(code.includes("outerChoice.dispatchEvent"),"manual ABC page modes must not conflict with a parent Repertoire book");
 });
+
+test("Reader sizing uses measured viewport with default fit and no fixed zoom",()=>{
+ assert.match(code,/this\.fitMode="fit"/);
+ assert.match(code,/\["fit","Tilpas skærm"\]/);
+ assert.match(code,/\["width","Fyld bredden"\]/);
+ assert.match(code,/\["original","Original størrelse"\]/);
+ assert.match(code,/shell\.clientWidth/);
+ assert.match(code,/shell\.clientHeight/);
+ assert.match(code,/viewport\.style\.zoom/);
+ assert.doesNotMatch(css,/zoom:1\.22/);
+});
