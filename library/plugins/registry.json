@@ -396,7 +396,7 @@
         "name": "Repertoire",
         "description": "Musikbibliotek, orkesterrepertoirer og sætlister — virker også uden ABC",
         "author": "HUWiki",
-        "version": "0.1.1-beta.1",
+        "version": "0.1.2-beta.1",
         "plugin-type": "plugin",
         "stability": "experimental",
         "license": "MIT",
