@@ -103,6 +103,8 @@ test("Repertoire Nodebog ships its live reader and link in the workshop",()=>{
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Åbn nodebogen/);
  assert.ok(book.text.includes(".huwabc-page-select"));
  assert.match(book.text,/huwrep-book-fullscreen/);
+ assert.match(book.text,/huwabc-reader-boundary/,"the reader arrows must cross song boundaries");
+ assert.match(book.text,/this\._readerCarry/,"the immersive view must remain open across tunes");
  assert.match(book.text,/this\.disposeScore\(\);host\.textContent="";/,"destroy the previous score before loading another");
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text,/huwrep-book-fullscreen/);
 });
