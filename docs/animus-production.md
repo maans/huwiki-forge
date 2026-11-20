@@ -59,6 +59,8 @@ Speaker prefixes can help match lines to figures. The **Assign speaking roles** 
 
 The movement is an approximation derived from the written line: vowels, consonants and punctuation provide the opening rhythm and pauses. A linked recording can supply timing, but the engine does not analyse the voice or recognise spoken phonemes. Use the timing controls to align it with a performance. The same saved binding runs in the editor and Site view, including seeking and paused previews.
 
+A production can also contain prepared mouth frames with precise timing and an opening envelope, as Turn Around does. Those frames keep their existing timing when you teach the workshop a different mouth drawing. When prepared frames are bound to a particular text or recording, changing that source falls back to the text approximation until suitable timing is supplied.
+
 Bindings are stored on the caption part as `lipSync`, separately from its geometry and animation keys. Playback changes the rendered mouth state and preserves the original drawing. For example:
 
 ```json
@@ -95,7 +97,7 @@ Open **Face workshop** for a larger preview, the seven letter groups and their c
 | Lips together | m, b, p |
 | Other consonants | Remaining consonants |
 
-This mapping uses the existing text approximation, not recognised audio phonemes. The artwork and layer names determine the available facial controls. Choices are stored in `film.musical.faceKeys` using global performance seconds and a stable actor ID. Each channel is held independently, and learned mappings accumulate per group. The editor, ordinary audience player, Site view and video renderer all use the same rules. Scene rearrangement moves face keys when **Move music, audio and stage cues with scenes** is enabled.
+The groups follow the existing text approximation or prepared mouth frames; they are not recognised audio phonemes. The artwork and layer names determine the available facial controls. Choices are stored in `film.musical.faceKeys` using global performance seconds and a stable actor ID. Each channel is held independently, and learned mappings accumulate per group. The editor, ordinary audience player, Site view and video renderer all use the same rules. Scene rearrangement moves face keys when **Move music, audio and stage cues with scenes** is enabled.
 
 ## Site view
 
@@ -138,11 +140,12 @@ The editor's export lifecycle temporarily restores the performance view before r
 node scripts/build-animus.mjs
 node scripts/build-animus-video-export.mjs
 node scripts/build-site-publisher.mjs
+node scripts/build-turn-around-player.mjs
 node scripts/build-forge-plugin-library.mjs
 node --test tests/animus-*.test.mjs tests/site-cutout-media.test.mjs tests/site-drawing-svg.test.mjs
 ```
 
-The two build scripts support `--check`. AniMus module sources live in `plugins/musical/src`. SitePublisher sources and the publication viewer live in `plugins/site-publisher/src`.
+The plugin and Turn Around runtime build scripts support `--check`. AniMus module sources live in `plugins/musical/src`. SitePublisher sources and the publication viewer live in `plugins/site-publisher/src`. Turn Around's normal lip-sync tiddler is kept byte-identical to the shared source, so it cannot override new editor features with an older runtime.
 
 Tests exercise editable SVG round trips, generated frame playback in CutOut, recording lifecycle, audio seek/pause/overlap, scene retiming, score draft isolation, export dependencies and the shared audience clock. Mouth tests verify explicit character bindings, the real lipsync module in Site view, seek/play/pause behaviour, unchanged source shapes and a silent second character.
 

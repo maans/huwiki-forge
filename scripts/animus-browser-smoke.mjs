@@ -57,14 +57,21 @@ async function assertMouth(scope,talking){
 }
 async function stagePoint(part,x,y){return part.evaluate((node,p)=>{const point=node.ownerSVGElement.createSVGPoint();point.x=p.x;point.y=p.y;const screen=point.matrixTransform(node.getScreenCTM());return {x:screen.x,y:screen.y};},{x,y});}
 async function clickExposedArm(scope){
- const arm=scope.locator('[data-cutout-id="ci-alma-arm"]').first();await arm.scrollIntoViewIfNeeded();
+ const arm=scope.locator('[data-cutout-id="ci-alma-arm"]').first();let point=null,previous=null,candidates=[];
  // The preceding freehand image has transparent margins that overlap the
- // distal arm. Use painted arm pixels that the browser actually hits.
- const candidates=await arm.evaluate(node=>[20,12,6,34].map(x=>{
-  const point=node.ownerSVGElement.createSVGPoint();point.x=x;point.y=0;const screen=point.matrixTransform(node.getScreenCTM());
-  const hit=node.ownerDocument.elementFromPoint(screen.x,screen.y);return {x:screen.x,y:screen.y,localX:x,part:hit?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id'),tag:hit?.tagName,className:hit?.getAttribute('class')};
- }));
- const point=candidates.find(p=>p.part==='ci-alma-arm');assert.ok(point,'an exposed painted arm receives the click: '+JSON.stringify(candidates));
+ // distal arm. Reopening also animates the TiddlyWiki story cards, so wait
+ // for an exposed arm point to settle before sending ordinary pointer input.
+ for(let attempt=0;attempt<80;attempt++){
+  await arm.scrollIntoViewIfNeeded();
+  candidates=await arm.evaluate(node=>[20,12,6,34].map(x=>{
+   const point=node.ownerSVGElement.createSVGPoint();point.x=x;point.y=0;const screen=point.matrixTransform(node.getScreenCTM());
+   const hit=node.ownerDocument.elementFromPoint(screen.x,screen.y);return {x:screen.x,y:screen.y,localX:x,part:hit?.closest('[data-cutout-id]')?.getAttribute('data-cutout-id'),tag:hit?.tagName,className:hit?.getAttribute('class')};
+  }));
+  const current=candidates.find(p=>p.part==='ci-alma-arm');
+  if(current&&previous&&Math.hypot(current.x-previous.x,current.y-previous.y)<.5){point=current;break;}
+  previous=current;await page.waitForTimeout(50);
+ }
+ assert.ok(point,'a stable exposed painted arm receives the click: '+JSON.stringify(candidates));
  await page.mouse.click(point.x,point.y);
 }
 async function rotatePart(scope,id,handle,degrees){

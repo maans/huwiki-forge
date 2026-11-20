@@ -41,7 +41,7 @@ function scene(name = 'First', id = 'alma') {
 function viewFor(scene) {
   const view = {scene, duration: scene.duration, nodes: {}, clips: [], svg: new Node(), wiki: {getTiddler() {return null;}, getTiddlerText(_title, fallback) {return fallback;}}};
   for (const part of scene.parts) {
-    const geo = part.geo || {}, attrs = part.type === 'image' ? {x: geo.x, y: geo.y, width: geo.w, height: geo.h, href: part.variants[0].imageData} : part.type === 'path' ? {d: geo.d} : {};
+    const geo = part.geo || {}, attrs = part.type === 'image' ? {x: geo.x, y: geo.y, width: geo.w, height: geo.h, href: part.variants?.[0]?.imageData || part.imageData || ''} : part.type === 'path' ? {d: geo.d} : {};
     view.nodes[part.id] = {part, el: new Node(), shape: new Node(attrs), variant: null};
   }
   return view;
@@ -220,5 +220,112 @@ test('the shipped Turn Around head resolves all facial layers and its actual six
   assert.equal(description.actorId, 'prisoner'); assert.equal(description.headId, 'prisoner-head');
   assert.deepEqual(plain(description.parts), {eyes: ['prisoner-eyes'], pupils: ['prisoner-pupils'], brows: ['prisoner-brows'], lids: ['prisoner-eye-lids'], open: 'prisoner-mouth-open', closed: 'prisoner-mouth-closed'});
   assert.deepEqual(plain(description.variants).map(variant => variant.id), ['rest', 'A', 'E', 'O', 'F', 'C']);
+  assert.equal(JSON.stringify(source), before);
+});
+
+function timedScene(frames, overrides = {}) {
+  const source = scene('Timed dialogue');
+  source.parts = source.parts.filter(part => part.type !== 'text');
+  const line = cue('timed', 'alma', 'OOOOOOOO', 0, 10, overrides.timing || 'script');
+  Object.assign(line.lipSync, {visemes: frames, visemeText: line.text, ...overrides});
+  source.parts.push(line); return {source, line, view: viewFor(source)};
+}
+const near = (actual, expected, message) => assert.ok(Math.abs(actual - expected) < 1e-8, message || `${actual} should equal ${expected}`);
+
+test('authored viseme seconds, exact consonant closures and terminal rest survive longer captions', () => {
+  const frames = [{t: 0, viseme: 'rest'}, {t: 1, viseme: 'A', open: .8}, {t: 2, viseme: 'M', open: 1}, {t: 2.5, viseme: 'O', open: .6}, {t: 4, viseme: 'rest'}];
+  const {source, line, view} = timedScene(frames), before = JSON.stringify(source);
+  assert.equal(paint(view, .5)[0].viseme, 'rest');
+  let value = paint(view, 1.5)[0]; assert.equal(value.viseme, 'A'); near(value.open, .8);
+  value = paint(view, 2)[0]; assert.equal(value.viseme, 'M'); assert.equal(value.open, 0); assert.equal(shown(view, 'alma-mouth-open'), 0);
+  value = paint(view, 2.75)[0]; assert.equal(value.viseme, 'O'); near(value.open, .6);
+  value = paint(view, 4.01)[0]; assert.equal(value.viseme, 'rest'); assert.equal(value.open, 0); assert.equal(shown(view, 'alma-mouth-open'), 0);
+  assert.equal(JSON.stringify(source), before);
+  source.duration = 20; line.keys[line.keys.length - 1].t = 20;
+  value = paint(view, 1.5)[0]; assert.equal(value.viseme, 'A'); near(value.open, .8);
+  value = paint(view, 10)[0]; assert.equal(value.viseme, 'rest');
+  paint(view, 2.75); const forward = snapshot(view); paint(view, 10); paint(view, 2.75); assert.deepEqual(snapshot(view), forward);
+});
+
+test('authored energy uses the original continuous 60 ms triangular envelope without softening M/rest', () => {
+  const {view} = timedScene([{t: 0, viseme: 'A', open: .2}, {t: 2, viseme: 'A', open: 1}, {t: 3, viseme: 'M'}, {t: 3.5, viseme: 'A', open: 1}, {t: 4, viseme: 'rest'}]);
+  near(paint(view, 1.9)[0].open, .2);
+  near(paint(view, 2)[0].open, .6);
+  near(paint(view, 2.015)[0].open, .9);
+  near(paint(view, 2.1)[0].open, 1);
+  const before = paint(view, 1.999)[0].open, after = paint(view, 2.001)[0].open;
+  assert.ok(after > before && after - before < .053, 'subframe seeks remain continuous across an energy boundary');
+  assert.equal(paint(view, 3)[0].open, 0); assert.equal(paint(view, 4)[0].open, 0);
+});
+
+test('timed frame normalization copies, sorts, validates and uses the later duplicate frame', () => {
+  const frames = [{t: 2, viseme: 'A', open: .9}, {t: -1, viseme: 'E'}, {t: 1, viseme: 'o', open: 5}, null, {t: 1, viseme: 'f', open: .3}, {t: 3, viseme: 'REST', open: 1}, {t: 'bad', viseme: 'A'}, {t: 4, viseme: 'unknown'}];
+  const {source, view} = timedScene(frames), before = JSON.stringify(frames), compiled = lips.compile(source).cues[0].visemes;
+  assert.deepEqual(plain(compiled).map(({t, viseme, open}) => ({t, viseme, open})), [{t: 1, viseme: 'F', open: .3}, {t: 2, viseme: 'A', open: .9}, {t: 3, viseme: 'rest', open: 0}]);
+  assert.equal(paint(view, 1.5)[0].viseme, 'F'); assert.equal(JSON.stringify(frames), before);
+});
+
+test('timed take trimming and global offsets retain the authored point and invalidate on text or audio replacement', () => {
+  const {source, line, view} = timedScene([{t: 0, viseme: 'rest'}, {t: 1, viseme: 'A', open: .8}, {t: 2, viseme: 'E', open: .5}, {t: 3, viseme: 'rest'}], {timing: 'auto', visemeAudioAsset: 'Original take'});
+  const clip = {id: 'take', cueId: 'timed', sceneTitle: source._title, text: line.text, asset: 'Original take', start: 100, offset: 2, duration: 2, sourceDuration: 4};
+  const options = {sceneTitle: source._title, audioClips: [clip], duration: 120};
+  let value = paint(view, 1, options, 100.2)[0]; assert.equal(value.viseme, 'E'); near(value.open, .5);
+  line.lipSync.offset = .5;
+  assert.equal(paint(view, 1, options, 100.2).length, 0);
+  value = paint(view, 1, options, 100.7)[0]; assert.equal(value.viseme, 'E');
+  clip.asset = 'Replacement take';
+  value = paint(view, 1, options, 100.7)[0]; assert.equal(value.viseme, 'O', 'a replaced recording uses the letter approximation, not stale take timing');
+  clip.asset = 'Original take'; line.text = 'AAAAAAAA';
+  assert.equal(lips.compile(source).cues[0].visemes, null, 'editing the caption invalidates its authored frame text');
+  line.lipSync.timing = 'script'; line.lipSync.offset = 0;
+  value = paint(view, 1.5)[0]; assert.equal(value.viseme, 'A'); near(value.open, .94);
+  line.lipSync.visemeText = line.text;
+  value = paint(view, 1.5)[0]; assert.equal(value.viseme, 'A'); near(value.open, .8);
+});
+
+test('in-place authored viseme edits refresh cached timing, shape and energy without a reload', () => {
+  const {line, view} = timedScene([{t: 0, viseme: 'A', open: .8}, {t: 4, viseme: 'rest'}]);
+  assert.equal(paint(view, 1)[0].viseme, 'A');
+  line.lipSync.visemes[0].viseme = 'E'; line.lipSync.visemes[0].open = .4;
+  let value = paint(view, 1)[0]; assert.equal(value.viseme, 'E'); near(value.open, .4);
+  line.lipSync.visemes[0].t = 2;
+  assert.equal(paint(view, 1)[0].viseme, 'rest');
+  value = paint(view, 3)[0]; assert.equal(value.viseme, 'E'); near(value.open, .4);
+});
+
+test('learned choices overlay timed speech while retaining its original energy, jaw motion and parent anchors', () => {
+  const {source, view} = timedScene([{t: 0, viseme: 'O', open: .6}, {t: 2, viseme: 'M'}, {t: 3, viseme: 'rest'}], {strength: .8});
+  source.musical = {faceKeys: [{actor: 'alma', t: 1, mouthMap: {O: 'E', M: 'A', rest: 'F'}}]};
+  paint(view, .5); assert.match(href(view), /id="O"/);
+  engine.paint(view, 1.5);
+  const rootPose = view.nodes.alma.el.getAttribute('transform'), headPose = view.nodes['alma-head'].el.getAttribute('transform');
+  lips.apply(view, 1.5, 1.5);
+  assert.match(href(view), /id="E"/);
+  let context = lips.faceContext(view, 'alma-head', 1.5, 1.5);
+  assert.equal(context.viseme, 'O'); assert.equal(context.effectiveVariant, 'E'); near(context.open, .48);
+  assert.equal(view.nodes.alma.el.getAttribute('transform'), rootPose); assert.equal(view.nodes['alma-head'].el.getAttribute('transform'), headPose);
+  const jaw = view.nodes['alma-jaw'].el.getAttribute('transform');
+  near(Number(/^translate\(1 ([^)]+)\)/.exec(jaw)[1]), 2 + .48 * 1.5);
+  assert.match(jaw, /rotate\(4\) scale\(1 1\)/);
+  const scale = /scale\(([^ ]+) ([^)]+)\)/.exec(view.nodes['alma-mouth-open'].shape.getAttribute('transform'));
+  near(Number(scale[1]), .95 + .1 * .48); near(Number(scale[2]), .85 + .3 * .48);
+  paint(view, 2.5); context = lips.faceContext(view, 'alma-head', 2.5, 2.5);
+  assert.equal(context.viseme, 'M'); assert.match(href(view), /id="A"/); assert.equal(shown(view, 'alma-mouth-open'), 1); assert.equal(shown(view, 'alma-mouth-closed'), 0);
+  assert.equal(view.nodes['alma-jaw'].el.getAttribute('transform'), 'translate(1 2) rotate(4) scale(1 1) translate(0 0)');
+  paint(view, 3.5); assert.match(href(view), /id="F"/);
+  paint(view, .5); assert.match(href(view), /id="O"/);
+});
+
+test('the first shipped Turn Around take keeps its authored O frame and measured envelope', () => {
+  const rows = JSON.parse(fs.readFileSync(new URL('editions/turn-around/tiddlers/production.json', root), 'utf8'));
+  const title = 'Turn Around · 01 · The Whole World', source = {...JSON.parse(rows.find(row => row.title === title).text), _title: title};
+  const film = JSON.parse(rows.find(row => row.title === 'Turn Around · Complete performance (film)').text);
+  const clip = film.musical.audioClips.find(item => item.sceneTitle === title && item.cueId === 'spoken-3');
+  const line = source.parts.find(part => part.id === 'spoken-3'), at = clip.start + .219, view = viewFor(source), before = JSON.stringify(source);
+  const result = paint(view, at, {film, audioClips: film.musical.audioClips, duration: film.duration}, at).find(value => value.target === 'prisoner');
+  assert.equal(result.cueId, 'spoken-3'); assert.equal(result.viseme, 'O');
+  near(result.open, (.446 + .999) / 2 * line.lipSync.strength);
+  const context = lips.faceContext(view, 'prisoner-head', at, at, {film, audioClips: film.musical.audioClips});
+  assert.equal(context.viseme, 'O'); assert.equal(context.effectiveVariant, 'O');
   assert.equal(JSON.stringify(source), before);
 });

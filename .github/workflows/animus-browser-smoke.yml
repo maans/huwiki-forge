@@ -18,10 +18,13 @@ on:
       - scripts/build-cutout-ui.mjs
       - scripts/build-abc-ui.mjs
       - scripts/build-site-publisher.mjs
+      - scripts/build-turn-around-player.mjs
       - scripts/animus-browser-smoke.mjs
       - scripts/animus-face-browser-smoke.mjs
       - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
+      - tests/animus-face*.test.mjs
+      - tests/turn-around-player-refresh.test.mjs
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
       - tests/animus-lipsync-editor.test.mjs
@@ -49,10 +52,13 @@ on:
       - scripts/build-cutout-ui.mjs
       - scripts/build-abc-ui.mjs
       - scripts/build-site-publisher.mjs
+      - scripts/build-turn-around-player.mjs
       - scripts/animus-browser-smoke.mjs
       - scripts/animus-face-browser-smoke.mjs
       - tests/animus-video-export*.test.mjs
       - tests/animus-site-view.test.mjs
+      - tests/animus-face*.test.mjs
+      - tests/turn-around-player-refresh.test.mjs
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
       - tests/animus-lipsync-editor.test.mjs
@@ -78,6 +84,7 @@ jobs:
       - name: Verify reproducible plugin packages
         run: |
           node scripts/build-animus.mjs --check
+          node scripts/build-turn-around-player.mjs --check
           node scripts/build-animus-video-export.mjs --check
           node --check plugins/animus-video-export/src/audio.js
           node --check plugins/animus-video-export/src/runtime.js
