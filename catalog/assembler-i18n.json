@@ -521,6 +521,16 @@
         "name": "AniMus · Video Export (MP4)",
         "description": "Export MP4 or an editing package with video and synchronized WAV tracks for music, speech and effects."
       }
+    },
+    "$:/plugins/huwiki/repertoire": {
+      "da": {
+        "name": "Repertoire",
+        "description": "Byg et fælles musikbibliotek med orkestre, sætlister og egne tonearter og formaftaler. Åbn eksisterende ABC-noder eller billeder."
+      },
+      "en": {
+        "name": "Repertoire",
+        "description": "Organize a shared music library with orchestras, setlists, and separate keys and arrangements. Open existing ABC scores or images."
+      }
     }
   }
 }
