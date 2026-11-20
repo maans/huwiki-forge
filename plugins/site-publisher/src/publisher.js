@@ -741,6 +741,11 @@ function siteRuntime(){
   if(e.data.type==="husp-toggle-controls")toggleControls();
   else if(e.data.type==="husp-exit-focus")focus(false);
   else if(e.data.type==="husp-player-ready")syncFocus();
+  else if(e.data.type==="husp-reader-boundary"&&DATA.repertoire&&currentIndex>=0&&DATA.entries[currentIndex].kind==="score"){
+   var direction=Number(e.data.direction)>0?1:-1,target=nearbyTune(currentIndex,direction);
+   if(target>=0)show(target);
+   else if(direction<0)show(DATA.repertoire.index);
+  }
  });
  focusBtn.onclick=function(){focus(!focused);};exitBtn.onclick=function(){focus(false);};pin.onclick=function(){setPinned(!pinned);};
  // Tapping blank article area acts like tapping a blank area of the score.
@@ -813,6 +818,14 @@ function siteRuntime(){
  if(DATA.entries.length===1)document.body.classList.add("single");
  DATA.entries.forEach(function(t,i){var n=document.createElement("button");n.type="button";n.className="chapter";n.textContent=name(t);n.setAttribute("title",(t.kind==="score"?wl("Nodeark: ","Score: "):t.kind==="animus"?wl("Forestilling: ","Performance: "):wl("Artikel: ","Article: "))+name(t));n.onclick=function(){show(i);};nav.appendChild(n);});
  var backButton=$("husp-back-to-index"),prevButton=$("husp-prev-tune"),nextButton=$("husp-next-tune");
+ document.addEventListener("keydown",function(event){
+  if(!DATA.repertoire||currentIndex<0||DATA.entries[currentIndex].kind!=="score"||event.defaultPrevented||event.ctrlKey||event.metaKey||event.altKey)return;
+  if(event.target&&event.target.closest&&event.target.closest("input,textarea,select,[contenteditable]"))return;
+  if(event.key==="PageDown"||event.key==="PageUp"){
+   event.preventDefault();
+   if(frame.contentWindow)frame.contentWindow.postMessage({type:"husp-turn-page",direction:event.key==="PageDown"?1:-1},"*");
+  }
+ });
  backButton.onclick=function(){if(DATA.repertoire)show(DATA.repertoire.index);};
  prevButton.onclick=function(){var i=nearbyTune(currentIndex,-1);if(i>=0)show(i);};
  nextButton.onclick=function(){var i=nearbyTune(currentIndex,1);if(i>=0)show(i);};
@@ -898,6 +911,12 @@ function makeSite(entries,opts){
   }else{
    template=template.replace(launch,"if(DATA.instrumentId && InstrumentView.profiles[DATA.instrumentId])InstrumentView.change(DATA.instrumentId);"+launch);
   }
+ }
+ if(repertoirePublication(entries)){
+  var pageBridgeAnchor="window.addEventListener('pagehide',stopAllSound);";
+  if(template.indexOf(pageBridgeAnchor)<0)throw new Error("ABC-siteafspilleren mangler sidevendingsbroen.");
+  var pageBridge="window.addEventListener('message',function(event){\n if(event.source!==window.parent||!event.data||event.data.type!=='husp-turn-page')return;\n var direction=Number(event.data.direction)>0?1:-1,info=pager.info();\n if(!info||!info.count)return;\n if(direction>0?info.page+info.shown-1>=info.count:info.page<=1)\n  window.parent.postMessage({type:'husp-reader-boundary',direction:direction},'*');\n else if(direction>0)pager.next();else pager.previous();\n});\ndocument.addEventListener('keydown',function(event){\n if(event.key!=='PageDown'&&event.key!=='PageUp')return;\n if(event.ctrlKey||event.altKey||event.metaKey||event.isComposing)return;\n if(event.target&&event.target.closest&&event.target.closest('input,textarea,select,[contenteditable]'))return;\n var direction=event.key==='PageDown'?1:-1,info=pager.info();\n if(!info||!info.count)return;\n if(direction>0?info.page+info.shown-1>=info.count:info.page<=1){\n  event.preventDefault();event.stopImmediatePropagation();\n  window.parent.postMessage({type:'husp-reader-boundary',direction:direction},'*');\n }\n},true);\n(function(){\n var paper=$('paper'),gesture=null;if(!paper)return;\n paper.addEventListener('pointerdown',function(e){\n  if(e.pointerType!=='touch'||!e.isPrimary){gesture=null;return;}\n  var info=pager.info();if(!info||!info.count)return;\n  gesture={id:e.pointerId,x:e.clientX,y:e.clientY,first:info.page<=1,last:info.page+info.shown-1>=info.count};\n },{passive:true});\n paper.addEventListener('pointerup',function(e){\n  if(!gesture||gesture.id!==e.pointerId)return;\n  var dx=e.clientX-gesture.x,dy=e.clientY-gesture.y;\n  var direction=dx<0?1:-1,edge=direction>0?gesture.last:gesture.first;\n  gesture=null;\n  if(edge&&Math.abs(dx)>=90&&Math.abs(dx)>Math.abs(dy)*1.8)\n   window.parent.postMessage({type:'husp-reader-boundary',direction:direction},'*');\n },{passive:true});\n paper.addEventListener('pointercancel',function(){gesture=null;},{passive:true});\n})();\n";
+  template=template.replace(pageBridgeAnchor,pageBridgeAnchor+pageBridge);
  }
  var publicationContext={rows:{},used:false,drawings:false,animus:false};
  var awaitingDrawings=[];
