@@ -211,3 +211,19 @@ test("Publisher setlist handoff prints the selected list, shareable PDF and corr
  const source=await readFile(path.join(root,"plugins/site-publisher/src/publisher.js"),"utf8");
  assert.equal(source,siteJs,"SitePublisher source and bundled startup must remain identical");
 });
+
+test("Repertoire site generates clickable, uncluttered titles and retains arrangements without repeating instrument",()=>{
+ const {model,wiki,Tiddler}=makeWiki(),source=new Tiddler({title:"SilbaÄtno · Brudmarch från Jämtland","abc-source":"X:1\nT:Brudmarch\nK:Gm\nG A|"});
+ wiki.addTiddler(source);wiki.addTiddler(new Tiddler({title:"$:/plugins/huwiki/site-publisher"}));
+ const orchestra=model.orchestra(wiki,"SilbaÄtno"),item=model.addItem(wiki,orchestra,source.fields.title).title,set=model.createSetlist(wiki,orchestra,"Øverepertoire");
+ model.addEntry(wiki,set,item);model.saveArrangement(wiki,item,set,{key:"Gm",form:"AABB",instrumentation:"Første violin",cues:"Afslut på tegn"},"setlist");
+ const module={};runInNewContext(tiddlers["$:/plugins/huwiki/repertoire/print.js"].text,{exports:module,$tw:{Tiddler,utils:{stringifyList:n=>n.map(x=>"\[\["+x+"\]\]").join(" ")}},require:()=>model});
+ const events=[],result=module.open(wiki,set,{dispatchEvent(e){events.push(e);}},{site:true,scores:true,instrumentId:"c"});
+ const summary=wiki.getTiddler(result.summary).fields;
+ assert.match(summary.text,/\[\[1\. Brudmarch från Jämtland\|SilbaÄtno · Brudmarch från Jämtland\]\]/);
+ assert.doesNotMatch(summary.text,/Nodebog til C/);
+ assert.equal(summary["repertoire-publication-orchestra"],"SilbaÄtno");
+ assert.equal(JSON.parse(summary["repertoire-publication-agreements"])[source.fields.title].cues,"Afslut på tegn");
+ assert.equal(events[0].paramObject.repertoireOrchestra,"SilbaÄtno");
+ assert.equal(wiki.getTiddler(source.fields.title),source);
+});
