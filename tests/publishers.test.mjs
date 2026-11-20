@@ -303,3 +303,11 @@ test("publisher add-on tiddlers can be embedded before TiddlyWiki bootstrap", as
   assert.ok(html.indexOf('"title":"$:/plugins/huwiki/print-article"') < html.indexOf("<!--~~ Library modules ~~-->"));
 });
 
+
+test("SitePublisher's source, bundle and metadata agree for repertoire publishing",async()=>{
+ const pkg=await json("plugins/site-publisher/dist/plugin.json");
+ const info=await json("plugins/site-publisher/plugin-info.json");
+ const source=await readFile(new URL("../plugins/site-publisher/src/publisher.js",import.meta.url),"utf8");
+ assert.equal(pkg.version,info.version);
+ assert.equal(JSON.parse(pkg.text).tiddlers[pkg.title+"/startup.js"].text,source);
+});

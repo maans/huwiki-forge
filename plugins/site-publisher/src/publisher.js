@@ -28,7 +28,7 @@ Object.assign(englishSite,{
 function el(tag,cls,txt){var x=document.createElement(tag);if(cls)x.className=cls;if(txt!==undefined)x.textContent=txt;return x;}
 function safe(s){return String(s||"").replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function namesOf(value){if(Array.isArray(value))return value.slice();if(!value)return [];return $tw.utils.parseStringArray(String(value));}
-function unique(values){var used=Object.create(null);return values.filter(function(t){if(!t||t.indexOf("$:/")===0||used[t]||!$tw.wiki.getTiddler(t))return false;used[t]=true;return true;});}
+function unique(values){var used=Object.create(null);return values.filter(function(t){if(!t||(t.indexOf("$:/")===0&&t.indexOf("$:/temp/huwiki/repertoire/publication/")!==0)||used[t]||!$tw.wiki.getTiddler(t))return false;used[t]=true;return true;});}
 function listField(title){var t=$tw.wiki.getTiddler(title);return t?(typeof t.getFieldList==="function"?t.getFieldList("list"):namesOf(t.fields.list)):[];}
 function sourceList(title){
  var t=$tw.wiki.getTiddler(title),names=listField(title);if(!t)return unique(names);
@@ -847,11 +847,14 @@ function makeSite(entries,opts){
   var match=full.match(/const DATA=\{[^\n]*?\};/);
   if(!match)throw new Error("Kunne ikke finde ABC-afspillerens data i site-skabelonen.");
   template=decoratePlayerTemplate(full.replace(match[0],"const DATA=__HUW_SITE_DATA__;"));
+  var launch="InstrumentView.mount($('instrumentBar'),{onChange:function(){stopAllSound();render();}});";
+  if(template.indexOf(launch)<0)throw new Error("Siteafspillerens instrumentkontrol mangler.");
+  template=template.replace(launch,"if(DATA.instrumentId && InstrumentView.profiles[DATA.instrumentId])InstrumentView.change(DATA.instrumentId);"+launch);
  }
  var publicationContext={rows:{},used:false,drawings:false,animus:false};
  var awaitingDrawings=[];
- var items=entries.map(function(e){var title=e.title;if(hasAbc(title))return {title:title,label:title,kind:"score",data:scoreMod.data($tw.wiki,title,{siteHeading:opts.title,showSiteHeading:false,startDesk:opts.startDesk})};
-  try{var presentation=animusPresentation(title,opts.lang||wikiLanguage());return {title:title,label:presentation?presentation.title:title,kind:presentation?"animus":"article",presentation:presentation,programHtml:presentation?animusProgramHtml(presentation,opts.lang||wikiLanguage()):"",html:embeddedArticle(title,opts.lang||wikiLanguage(),publicationContext)};}
+ var items=entries.map(function(e){var title=e.title;if(hasAbc(title)){var score=scoreMod.data($tw.wiki,title,{siteHeading:opts.title,showSiteHeading:false,startDesk:opts.startDesk});score.instrumentId=opts.instrumentId||"c";return {title:title,label:title,kind:"score",data:score};}
+  try{var presentation=animusPresentation(title,opts.lang||wikiLanguage());return {title:title,label:presentation?presentation.title:((($tw.wiki.getTiddler(title)||{}).fields||{}).caption||title),kind:presentation?"animus":"article",presentation:presentation,programHtml:presentation?animusProgramHtml(presentation,opts.lang||wikiLanguage()):"",html:embeddedArticle(title,opts.lang||wikiLanguage(),publicationContext)};}
   catch(error){if(error.siteDrawingPending){awaitingDrawings.push(error);return {title:title,label:title,kind:"article",html:""};}throw error;}
  });
  if(awaitingDrawings.length)throw publicationDrawingPending(awaitingDrawings[0].drawingTitle,Promise.all(awaitingDrawings.map(function(item){return item.promise;})));
@@ -911,7 +914,7 @@ function shareHtml(html,name) {
  try { return Promise.resolve(navigator.share({files:[file],title:file.name})); }
  catch(err){return Promise.reject(err);}
 }
-function openPublisher(title){
+function openPublisher(title,preset){
  if(current){current.close();}
  var lang=wikiLanguage(),chosenTitle=title&&$tw.wiki.getTiddler(title)?title:"",overlay=el("div","husp-overlay"),panel=el("div","husp-panel"),head=el("header","husp-head"),body=el("div","husp-body"),top=el("div","husp-fields"),row=el("div","husp-arrange"),toolbar=el("div","husp-tools"),preview=el("iframe","husp-preview"),status=el("p","husp-status"),config=el("div","husp-config"),overview=el("div","husp-overview"),previewSwitch=el("div","husp-preview-switch"),settingsBtn=el("button","husp-settings-button",word("⚙ Indstillinger")),overviewBtn=el("button",null,word("Overblik")),siteBtn=el("button",null,word("Sitevisning")),entries=[],exported=null,source="single",active=false,initialized=false,revision=0,pending=false,refreshTimer=null,previewMode="overview";
  var chosenPresentation=chosenTitle&&animusPresentation(chosenTitle,lang),productionContext=!!chosenPresentation,animusMode=productionContext,titleEdited=false,startChosen=false;
@@ -992,7 +995,7 @@ function openPublisher(title){
   var names=source==="single"?(chosenTitle?[chosenTitle]:[]):source==="productions"?productionTitles():source==="tag"?tagList(tagSelect.value):source==="list"?sourceList(listInput.value.trim()):storyList();
   entries=names.map(function(name){return {title:name,checked:true};});rowRender();invalid();
  }
- function prepare(){updatePresentation();var selected=entries.filter(function(e){return e.checked;});if(!selected.length){tell(animusMode?word("Vælg mindst én forestilling."):word("Vælg mindst én tiddler."),true);return;}if(active){pending=true;return;}active=true;renderBtn.disabled=true;var builtRevision=revision;tell(word("Bygger site og kontrollerer indhold …"));setTimeout(function(){try{var candidate=makeSite(selected,{title:pubTitle.value.trim()||$tw.wiki.getTiddlerText("$:/SiteTitle")||word("Mit TiddlyWiki-site"),showTitle:showTitle.checked,startDesk:deskSelect.value==="desk",startView:animusMode?programSelect.value:undefined,lang:lang,layout:layoutSelect.value});if(builtRevision===revision){exported=candidate;preview.srcdoc=exported;renderOverview(selected);if(!previewModeChosen)setPreviewMode(selected.length===1?"site":"overview");exportBtn.disabled=false;shareBtn.hidden=!canShareHtml(exported,pubTitle.value.trim()||"HUWiki-Site");shareBtn.disabled=shareBtn.hidden;tell(word("Forhåndsvisning klar")+" · "+selected.length+" "+(animusMode?word("forestillinger"):word("tiddlere"))+" · "+Math.round(exported.length/1024)+" KB. "+word("Eksportér som én HTML-fil."));}else pending=true;}catch(err){exported=null;exportBtn.disabled=true;shareBtn.disabled=true;
+ function prepare(){updatePresentation();var selected=entries.filter(function(e){return e.checked;});if(!selected.length){tell(animusMode?word("Vælg mindst én forestilling."):word("Vælg mindst én tiddler."),true);return;}if(active){pending=true;return;}active=true;renderBtn.disabled=true;var builtRevision=revision;tell(word("Bygger site og kontrollerer indhold …"));setTimeout(function(){try{var candidate=makeSite(selected,{title:pubTitle.value.trim()||$tw.wiki.getTiddlerText("$:/SiteTitle")||word("Mit TiddlyWiki-site"),showTitle:showTitle.checked,startDesk:deskSelect.value==="desk",startView:animusMode?programSelect.value:undefined,lang:lang,layout:layoutSelect.value,instrumentId:preset&&preset.instrumentId||"c"});if(builtRevision===revision){exported=candidate;preview.srcdoc=exported;renderOverview(selected);if(!previewModeChosen)setPreviewMode(selected.length===1?"site":"overview");exportBtn.disabled=false;shareBtn.hidden=!canShareHtml(exported,pubTitle.value.trim()||"HUWiki-Site");shareBtn.disabled=shareBtn.hidden;tell(word("Forhåndsvisning klar")+" · "+selected.length+" "+(animusMode?word("forestillinger"):word("tiddlere"))+" · "+Math.round(exported.length/1024)+" KB. "+word("Eksportér som én HTML-fil."));}else pending=true;}catch(err){exported=null;exportBtn.disabled=true;shareBtn.disabled=true;
   if(err.siteDrawingPending&&err.promise){
    tell(err.message);
    err.promise.then(function(){if(builtRevision!==revision||!overlay.isConnected)return;clearTimeout(refreshTimer);refreshTimer=setTimeout(prepare,60);},
@@ -1025,11 +1028,14 @@ function openPublisher(title){
  sourceSelect.onchange=function(){setSource(sourceSelect.value);};tagSelect.onchange=function(){setSource(source);};listInput.onchange=function(){setSource(source);};pubTitle.oninput=function(){titleEdited=true;invalid();};showTitle.onchange=invalid;deskSelect.onchange=invalid;layoutSelect.onchange=invalid;programSelect.onchange=function(){startChosen=true;previewModeChosen=true;setPreviewMode("site");invalid();};
  saveOrder.onclick=function(){var target=source==="tag"?tagSelect.value:listInput.value.trim();if(!target){tell(word("Vælg et tag eller en tiddler med liste."),true);return;}if(!confirm(word("Gem tiddlernes rækkefølge i list-feltet for «") +target+word("»?\nDette ændrer ikke selve tiddlernes indhold.")))return;try{var old=$tw.wiki.getTiddler(target),values=entries.map(function(e){return e.title;});$tw.wiki.addTiddler(new $tw.Tiddler(old||{title:target},{title:target,list:values,modified:$tw.utils.stringifyDate(new Date())}));tell(word("Rækkefølgen er gemt i list-feltet for «")+target+word("». Eksporten har fortsat sit eget udvalg."));}catch(err){tell(word("Kunne ikke gemme list-feltet: ")+err.message,true);}};
  document.addEventListener("keydown",keydown,true);current={close:close};
- if(chosenTitle){sourceSelect.value="single";setSource("single");}else{sourceSelect.value="tag";setSource("tag");}
+ if(preset&&preset.siteTitle){pubTitle.value=preset.siteTitle;titleEdited=true;}
+ if(preset&&preset.listTitle&&$tw.wiki.getTiddler(preset.listTitle)){
+  listInput.value=preset.listTitle;sourceSelect.value="list";setSource("list");
+ }else if(chosenTitle){sourceSelect.value="single";setSource("single");}else{sourceSelect.value="tag";setSource("tag");}
  initialized=true;if(entries.length)prepare();
 }
 exports.startup=function(){
- $tw.rootWidget.addEventListener("tm-huwiki-sitepublisher",function(event){try{openPublisher(event.param||event.paramObject&&event.paramObject.title||event.tiddlerTitle);}catch(error){console.error("SitePublisher:",error);alert("SitePublisher: "+(error.message||error));}return false;});
+ $tw.rootWidget.addEventListener("tm-huwiki-sitepublisher",function(event){try{openPublisher(event.param||event.paramObject&&event.paramObject.title||event.tiddlerTitle,event.paramObject||{});}catch(error){console.error("SitePublisher:",error);alert("SitePublisher: "+(error.message||error));}return false;});
 };
 })();
 

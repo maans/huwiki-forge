@@ -197,3 +197,17 @@ test("Repertoire Publisher prepares instrument-specific collections without repl
  assert.match(wiki.getTiddler(site.summary).fields.text,/altsaxofon/);
  assert.equal(wiki.getTiddler("Melodi"),source);
 });
+
+test("Publisher setlist handoff prints the selected list, shareable PDF and correctly titled site",async()=>{
+ const pdf=JSON.parse(await readFile(path.join(root,"plugins/print-article/dist/plugin.json"),"utf8"));
+ const pdfJs=JSON.parse(pdf.text).tiddlers[pdf.title+"/startup.js"].text;
+ assert.match(pdfJs,/listInput\.value=preset\.listTitle/,"PDF must select the actual setlist, not the summary tiddler");
+ assert.match(pdfJs,/navigator\.share\(\{files:\[file\]/,"iPad must share a File, never navigate to blob");
+ assert.match(pdfJs,/display\.caption\|\|title/,"Summary must have a readable chapter name");
+ const site=JSON.parse(await readFile(path.join(root,"plugins/site-publisher/dist/plugin.json"),"utf8"));
+ const siteJs=JSON.parse(site.text).tiddlers[site.title+"/startup.js"].text;
+ assert.match(siteJs,/listInput\.value=preset\.listTitle/);
+ assert.match(siteJs,/score\.instrumentId=opts\.instrumentId/,"Site should publish the requested transposed instrument");
+ const source=await readFile(path.join(root,"plugins/site-publisher/src/publisher.js"),"utf8");
+ assert.equal(source,siteJs,"SitePublisher source and bundled startup must remain identical");
+});
