@@ -98,7 +98,7 @@
       "id": "silva-ethno-repertoire",
       "name": "SilbaÄtno Repertoire",
       "description": "17 ABC-noder, Repertoire-nodebog med fælles fuldskærmsvisning, sætlistenavigation og Music Minus One",
-      "version": "0.1.3-beta.1",
+      "version": "0.1.3-beta.2",
       "status": "test",
       "manifest": "../editions/silva-ethno-repertoire/manifest.json",
       "bundledPlugins": [
@@ -108,8 +108,8 @@
       "home": {
         "headingDa": "SilbaÄtno Repertoire",
         "headingEn": "SilbaÄtno Repertoire",
-        "descriptionDa": "Orkestrets 17 ABC-nodeark i en sætliste-nodebog med ensidet/tosidet iPad-visning, nummerpanel, øvetilstand og Music Minus One.",
-        "descriptionEn": "17 editable ABC scores in a setlist music book with iPad one/two-page view, a song drawer, practice mode and Music Minus One.",
+        "descriptionDa": "Åbn direkte i en fuldskærmsnodebog med én/to sider, søgbar nummerliste, øvetilstand og gennemgående bladring mellem melodier.",
+        "descriptionEn": "Open a full-screen music book with one/two pages, searchable setlist, practice mode and seamless turning between tunes.",
         "noteDa": "Beta · ny fuldskærmsvisning – fysisk iPad-test mangler; kontrollér notation og gentagelser.",
         "noteEn": "Beta · new fullscreen reader; physical iPad testing pending. Check notation and repeats.",
         "order": "02.2"
