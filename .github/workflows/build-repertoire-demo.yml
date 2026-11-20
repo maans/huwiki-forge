@@ -8,6 +8,7 @@ on:
       - 'plugins/repertoire/src/**'
       - 'tests/repertoire-edition.test.mjs'
       - 'scripts/repertoire-browser-smoke.mjs'
+      - 'scripts/abc-reader-browser-smoke.mjs'
       - 'editions/silva-ethno-repertoire/manifest.json'
       - 'editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json'
       - 'editions/silva-ethno-repertoire/tiddlers/config.json'
@@ -42,6 +43,10 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/repertoire-browser-smoke.mjs
+      - name: Check ABC Vis/Øv fullscreen reading against the same live score
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/abc-reader-browser-smoke.mjs
       - name: Verify actual published HTML includes Nodebog and 17 scores
         run: |
           node --input-type=module -e "
