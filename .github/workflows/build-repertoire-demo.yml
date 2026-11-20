@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - 'plugins/repertoire/dist/plugin.json'
+      - 'plugins/abc/dist/plugin.json'
       - 'plugins/repertoire/src/**'
       - 'tests/repertoire-edition.test.mjs'
       - 'scripts/repertoire-browser-smoke.mjs'
