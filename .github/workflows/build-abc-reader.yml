@@ -6,6 +6,8 @@ on:
       - 'plugins/abc/src/**'
       - 'plugins/abc/plugin-info.json'
       - 'tests/abc-reader-mode.test.mjs'
+      - 'tests/abc-reader-fallback.test.mjs'
+      - 'tests/music-edition.test.mjs'
       - 'scripts/build-abc-ui.mjs'
       - '.github/workflows/build-abc-reader.yml'
   workflow_dispatch:
