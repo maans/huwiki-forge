@@ -260,7 +260,18 @@ try{
  assert.match(await dialog.locator('.huw-video-status').textContent(),/Filer klar:|Files ready:/);
  const frames=await wiki.evaluate(()=>{window.__figureExportObserver.disconnect();return window.__figureExportFrames;});
  assert.ok(frames.length,'the actual shared export renderer visits the edited pose');
- assert.ok(frames.every(frame=>frame.transform===finalPose[joint].transform),'export renders the saved forearm pose');
+ // Each export frame has its own clock. The editor rounds a new scene key
+ // to .01 s, so the initial cursor can still lie just before that key while
+ // subsequent export frames have reached it. Check the saved source at each
+ // observed frame time, retaining exact restoration checks below.
+ const expectedFrames=await wiki.evaluate(({title,id,start,times})=>{
+  const Engine=$tw.modules.execute('$:/plugins/huwiki/cutout/engine.js'),scene=JSON.parse($tw.wiki.getTiddlerText(title)),part=scene.parts.find(part=>part.id===id),pivot=part.pivot||{x:0,y:0};
+  return times.map(time=>{const state=Engine.state(part,time-start);return [state.x,state.y,state.r,state.sx,state.sy,-(pivot.x||0),-(pivot.y||0)];});
+ },{title:selectedScene.source,id:joint,start:selectedScene.start,times:frames.map(frame=>frame.time)});
+ frames.forEach((frame,index)=>{const values=(frame.transform?.match(/[-+]?(?:\d*\.)?\d+(?:e[-+]?\d+)?/gi)||[]).map(Number),expected=expectedFrames[index];
+  assert.equal(values.length,expected.length,'the export frame has a complete joint transform');
+  assert.ok(values.every((value,i)=>Math.abs(value-expected[i])<1e-8),'export renders the saved forearm pose at frame time '+frame.time+': '+JSON.stringify({actual:values,expected}));
+ });
  assert.ok(frames.every(frame=>frame.workshopHidden&&!frame.hiddenNodes&&!frame.captionsHidden&&!frame.previewNodes),'export suspends the workshop and temporary preview hiding');
  await dialog.locator('.huw-video-close').tap();await dialog.waitFor({state:'detached'});await figurePanel().waitFor();
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));

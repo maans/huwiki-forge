@@ -23,13 +23,13 @@ function nativeEvents(doc) {
   };
 }
 class Tiddler {constructor(...items) {this.fields = Object.assign({}, ...items.filter(Boolean).map(item => item.fields || item));}}
-function modules() {
+function modules(globals = {}) {
   const cache = {};
   function load(name) {
     if(cache[name]) return cache[name];const exported = {};cache[name] = exported;
     if(name.endsWith('/i18n.js')) return Object.assign(exported, {t: value => value, contentName: (_title, value) => value, language: () => 'en'});
     const musical = /\$:\/plugins\/huwiki\/musical\/([^/]+)\.js$/.exec(name), code = musical ? sources[musical[1]] : cutout[name]?.text;
-    if(!code) throw Error('Test module missing: ' + name);vm.runInNewContext(code, {exports: exported, require: load, $tw: {Tiddler}, console});return exported;
+    if(!code) throw Error('Test module missing: ' + name);vm.runInNewContext(code, {exports: exported, require: load, $tw: {Tiddler}, console, ...globals});return exported;
   }
   return {engine: load('$:/plugins/huwiki/cutout/engine.js'), editor: load('$:/plugins/huwiki/musical/editor.js'), motion: load('$:/plugins/huwiki/musical/motion.js'), lips: load('$:/plugins/huwiki/musical/lipsync.js'), panel: load('$:/plugins/huwiki/musical/figure-panel.js')};
 }
@@ -56,19 +56,19 @@ function scene(mirror = false) {
     {id: 'caption', type: 'text', text: 'OOOO', keys: [pose(0), pose(10, {opacity: 0})], lipSync: {enabled: true, target: 'prisoner', open: 'prisoner-mouth-open', closed: 'prisoner-mouth-closed', timing: 'script', strength: .9, visemeText: 'OOOO', visemes: [{t: 0, viseme: 'O', open: .7}, {t: 9, viseme: 'rest'}]}}
   ]};
 }
-function harness({initial, motion = false, reentry = true} = {}) {
+function harness({initial, motion = false, reentry = true, globals = {}, faceWork} = {}) {
   const row = (title, data) => ({title, type: 'application/json', text: JSON.stringify(data)});
   const film = {version: 1, width: 800, height: 450, duration: 20, parts: [], camera: {keys: [{t: 0, x: 400, y: 225, zoom: 1.7, r: 13, skewX: 4}]}, scenes: [{source: 'First', duration: 10}, {source: 'Second', duration: 10, speed: 2, offset: 1, loop: true}], musical: {songs: [{id: 'music', score: 'Score', start: 0, duration: 20}], animationClips: motion ? [{id: 'arm-loop', name: 'Arm loop', target: 'prisoner', start: 10, duration: 10, beatsPerLoop: 8, loop: true, motion: {'prisoner-forearm-right': [pose(0, {y: 76, r: 10}), pose(8, {y: 76, r: 50})]}}] : [], faceKeys: [{actor: 'prisoner', t: 0, eyes: 'squint', mouthMap: {O: 'E'}}]}};
   const records = plain(initial || {Film: row('Film', film), First: row('First', scene()), Second: row('Second', scene(true)), Score: {title: 'Score', type: 'text/vnd.abc', text: 'X:1\nK:C\nC D E F|'}}), writes = [], selections = [], faces = [];
   const wiki = {getTiddler: title => records[title] ? new Tiddler(records[title]) : null, getTiddlerText: (title, fallback = '') => records[title]?.text ?? fallback, getTiddlers: () => Object.keys(records), each(fn) {for(const [title, fields] of Object.entries(records)) fn(new Tiddler(fields), title);}, addTiddler(t) {records[t.fields.title] = plain(t.fields);writes.push(t.fields.title);}, getModificationFields: () => ({}), generateNewTitle: title => title};
-  const api = modules(), doc = svgDocument(), data = api.engine.readScene(wiki, 'Film'), view = api.engine.build(doc, wiki, data, false), host = doc.createElement('main'), dock = doc.createElement('section');doc.body.appendChild(host);host.appendChild(view.svg);host.appendChild(dock);
+  const api = modules(globals), doc = svgDocument(), data = api.engine.readScene(wiki, 'Film'), view = api.engine.build(doc, wiki, data, false), host = doc.createElement('main'), dock = doc.createElement('section');doc.body.appendChild(host);host.appendChild(view.svg);host.appendChild(dock);
   const native = nativeEvents(doc);
   view.svg.screenMatrix = new Matrix(.55, 0, 0, .55, 35, 20);
   let time = 13, editor = null, panel = null, layouts = 0;const clock = {at: t => t * 2};
   function repaint() {api.engine.paint(view, time);api.motion.paint(view, data, time, clock);api.lips.apply(view, time, time);if(editor) editor.paint(time);if(panel) panel.refresh();}
   const options = {doc, host, wiki, film: data, view, sceneTitle: 'Film', stageTitle: 'First', scoreTitle: 'Score', duration: () => data.duration, beatClock: () => clock, pause() {}, isPlaying: () => false, position: () => time, seek(t) {time = t;repaint();}, repaint, markOwnWrite() {}, onSelect(track) {if(reentry && panel && track.part) panel.select(track.part);}};
   editor = api.editor.attach(options);repaint();
-  panel = api.panel.mount({doc, wiki, host, parent: dock, view, film: data, editor, position: () => time, pause() {}, onSelect(id) {selections.push(id);if(reentry) panel.select(id);}, onFace(value) {faces.push(plain(value));}, onLayout() {layouts++;if(panel) panel.refresh(true);}});
+  panel = api.panel.mount({doc, wiki, host, parent: dock, view, film: data, editor, position: () => time, pause() {}, onSelect(id) {selections.push(id);if(reentry) panel.select(id);}, onFace(value) {faces.push(plain(value));if(faceWork) faceWork(value);}, onLayout() {layouts++;if(panel) panel.refresh(true);}});
   const preview = dock.querySelector('[data-figure-preview]');preview.screenMatrix = new Matrix(.85, 0, 0, .85, 900, 260);
   return {api, doc, host, dock, data, view, editor, options, records, writes, selections, faces, panel, preview, native, get time() {return time;}, get layouts() {return layouts;}, get leaf() {return panel.context()?.view || view.clips[1].view;}};
 }
@@ -169,6 +169,22 @@ test('a completed facial tap cannot click through to a replacement choice, while
   h.panel.hide();const card = h.doc.createElement('button');card.textContent = 'Open eyes';h.dock.appendChild(card);card.onclick = () => h.editor.chooseFace('prisoner-eyes', {channel: 'eyes', value: 'open'});
   const compatibility = h.native(card, 'click');assert.equal(compatibility.defaultPrevented, true);assert.deepEqual(h.writes, []);assert.equal(JSON.stringify(h.data), before);assert.equal(JSON.stringify(h.leaf.scene), sceneBefore);
   h.native(card, 'pointerdown', {pointerId: 8});h.native(card, 'pointerup', {pointerId: 8});h.native(card, 'click', {pointerId: 8});
+  assert.deepEqual(h.writes, ['Film']);assert.equal(h.editor.faceContext('prisoner-eyes').state.eyes, 'open');
+});
+
+test('slow facial construction keeps the compatibility-click guard and allows the next intentional tap', () => {
+  let now = 10000;class Clock extends Date {static now() {return now;}}
+  const h = harness({globals: {Date: Clock}, faceWork() {now += 5000;}});h.panel.select('prisoner-forearm-right');
+  const before = JSON.stringify(h.data), canvas = h.dock.querySelector('.huw-musical-figure-canvas');
+  h.native(clonePart(h, 'prisoner-eyes').firstChild, 'pointerdown');h.native(canvas, 'pointerup');assert.equal(now, 15000);
+  h.panel.hide();const card = h.doc.createElement('button');h.dock.appendChild(card);card.onclick = () => h.editor.chooseFace('prisoner-eyes', {channel: 'eyes', value: 'open'});
+  now += 100;
+  assert.equal(h.native(card, 'click').defaultPrevented, true, 'five seconds spent constructing facial previews must not expire the original touch guard');
+  assert.deepEqual(h.writes, []);assert.equal(JSON.stringify(h.data), before);
+  // Some browsers omit the compatibility click. A new deliberate pointerdown
+  // still ends that old sequence immediately, even within its guard interval.
+  h.panel.show();h.native(clonePart(h, 'prisoner-eyes').firstChild, 'pointerdown', {pointerId: 8});h.native(canvas, 'pointerup', {pointerId: 8});h.panel.hide();
+  now += 100;h.native(card, 'pointerdown', {pointerId: 9});h.native(card, 'pointerup', {pointerId: 9});h.native(card, 'click', {pointerId: 9});
   assert.deepEqual(h.writes, ['Film']);assert.equal(h.editor.faceContext('prisoner-eyes').state.eyes, 'open');
 });
 

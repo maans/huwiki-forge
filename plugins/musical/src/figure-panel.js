@@ -101,7 +101,12 @@ function mount(o){var doc=o.doc,editor=o.editor,parent=o.parent||o.host,da=!/\/e
   // was prevented. It must not activate a card that replaces the figure.
   if(active.face)clickGuard={pointerId:active.pointerId,x:num(event&&event.clientX,active.screen.x),y:num(event&&event.clientY,active.screen.y),until:Date.now()+1000};
   try{if(canvas.hasPointerCapture&&canvas.hasPointerCapture(active.pointerId))canvas.releasePointerCapture(active.pointerId);}catch(_released){}
-  if(active.face){if(commit&&!disposed&&!suspended&&opened&&Math.abs(num(o.position(),0)-active.time)<1e-7&&sourceRoot===active.source)o.onFace(active.face);else refresh(false);return;}
+  if(active.face){var endingGuard=clickGuard;try{if(commit&&!disposed&&!suspended&&opened&&Math.abs(num(o.position(),0)-active.time)<1e-7&&sourceRoot===active.source)o.onFace(active.face);else refresh(false);}
+   finally{
+    // Thumbnail construction can block for seconds on a slow device. Start
+    // the compatibility-click window after that synchronous work finishes.
+    if(clickGuard===endingGuard)endingGuard.until=Date.now()+1000;
+   }return;}
   if(active.change){if(commit)active.change.commit();else active.change.cancel();status.textContent=commit?L.saved:L.cancelled;}
   // A newly extended limb may lie beyond the old frame. Refit once after
   // committing, while keeping the frame frozen throughout the gesture.
