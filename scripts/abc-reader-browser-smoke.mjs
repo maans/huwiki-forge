@@ -42,8 +42,12 @@ try{
  await page.waitForFunction(()=>document.querySelector(".huwabc-score.huwabc-reader-active"));
  assert.ok(await score.evaluate(el=>Math.abs(el.getBoundingClientRect().width-innerWidth)<5),"Reader must own the viewport");
  assert.equal(await score.locator(".huwabc-head").evaluate(el=>getComputedStyle(el).display),"none","Editor tools should disappear during performance");
- const visibleScore=score.locator(".huwabc-paper");
- await visibleScore.waitFor();
+ const debugLayers=await score.evaluate(el=>({
+  children:Array.from(el.children).map(c=>({className:c.className,tag:c.tagName,display:getComputedStyle(c).display,rect:[c.offsetWidth,c.offsetHeight],outer:c.outerHTML.slice(0,230)})),
+  sheets:Array.from(el.querySelectorAll(".huwabc-page-shell,.huwabc-page-select,.huwabc-paper")).slice(0,12).map(c=>({className:c.className,parent:c.parentElement?.className,display:getComputedStyle(c).display,rect:[c.offsetWidth,c.offsetHeight]}))
+ }));
+ console.log("ABC READER LAYERS",JSON.stringify(debugLayers));
+ await score.locator(".huwabc-page-shell").first().waitFor({state:"visible",timeout:14000});
  await page.waitForFunction(()=>document.querySelector(".huwabc-reader-menu")?.offsetParent!==null);
  const base=await page.evaluate(()=>document.querySelector(".huwabc-score .huwabc-paper svg"));
  await score.getByRole("button",{name:"Vis eller skjul nodemenu"}).click();
