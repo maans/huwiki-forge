@@ -1,3 +1,4 @@
+import {chooseToolbarItem} from '../tests/helpers/animus-toolbar.mjs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {createServer} from 'node:http';
@@ -44,8 +45,8 @@ async function openEditor(){
  editor=wiki.locator('.plato-native-studio.huw-musical');
  if(!await editor.count())await wiki.locator('.plato-home .plato-native-link a').click();
  await editor.locator('.huw-musical-play:enabled').waitFor();
- await editor.locator('.huw-musical-view-mode').selectOption('stage');
- const parts=editor.locator('.huw-musical-parts-button');if(await parts.getAttribute('aria-pressed')!=='true')await parts.click();
+ await chooseToolbarItem(editor,'view','[data-preview="stage"]');
+ const parts=editor.locator('.huw-musical-parts-button');if(await parts.getAttribute('aria-pressed')!=='true')await chooseToolbarItem(editor,'tools','.huw-musical-parts-button');
 }
 // Read only the active scene. Opacity-zero mouths still carry useful phoneme
 // metadata; a hidden scene with identical actor IDs must never be mistaken for
@@ -90,7 +91,7 @@ async function tapPart(id,head=false){
     const picker=editor.locator('.huw-musical-object-picker');await picker.focus();
     const options=await picker.locator('option').evaluateAll(nodes=>nodes.map(node=>node.value));
     const target=options.includes('prisoner-head')?'prisoner-head':'prisoner';assert.ok(options.includes(target),'the object picker offers the off-camera prisoner');
-    await picker.selectOption(target);const parts=editor.locator('.huw-musical-parts-button');if(await parts.getAttribute('aria-pressed')!=='true')await parts.tap();
+    await picker.selectOption(target);const parts=editor.locator('.huw-musical-parts-button');if(await parts.getAttribute('aria-pressed')!=='true')await chooseToolbarItem(editor,'tools','.huw-musical-parts-button','tap');
    }
    await editor.locator('.huw-musical-zoom-selection:enabled').tap();await painted.scrollIntoViewIfNeeded();point=await measure();
    assert.ok(Math.abs(await position()-originalTime)<.001,'focusing an off-camera character retains the global playhead');

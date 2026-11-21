@@ -9,16 +9,17 @@ function el(doc,tag,cls,text,parent){
  var e=doc.createElement(tag);if(cls)e.className=cls;if(text!==undefined&&text!==null)e.textContent=text;
  if(parent)parent.appendChild(e);return e;
 }
+var toolbarId=0;
 function label(wiki){
  return /\/en(?:-|$)/i.test(wiki.getTiddlerText("$:/language",""))?{
-  title:"Musical Studio",focus:"Focus workspace",exit:"Exit focus",fit:"Split",scene:"Stage",score:"Score",
+  title:"AniMus",tools:"Tool",workshops:"Workshops",view:"View",focus:"Focus workspace",exit:"Exit focus",fit:"Split",scene:"Stage",score:"Score",
   properties:"Properties",close:"Close properties",all:"All tracks",music:"Music",camera:"Cameras",animation:"Animation",sceneTracks:"Stage & light",
   addKey:"Add keyframe",delKey:"Delete keyframe",zoomIn:"Zoom in",zoomOut:"Zoom out",
   sceneHint:"Click a stage element to edit it",timeline:"Timeline",preview:"Preview",
   zoomSelection:"Zoom to selection",resetPreviewZoom:"Reset zoom",zoomHint:"Enlarge the selected object or body part for editing (Z). The film camera stays unchanged.",
   fullscreen:"Full screen",exitFullscreen:"Exit full screen",clearSelection:"Clear selection"
  }:{
-  title:"Musical Studio",focus:"Fokusvisning",exit:"Forlad fokus",fit:"Delt visning",scene:"Scene",score:"Noder",
+  title:"AniMus",tools:"Værktøj",workshops:"Værksteder",view:"Visning",focus:"Fokusvisning",exit:"Forlad fokus",fit:"Delt visning",scene:"Scene",score:"Noder",
   properties:"Egenskaber",close:"Luk egenskaber",all:"Alle spor",music:"Musik",camera:"Kameraer",animation:"Animation",sceneTracks:"Scene & lys",
   addKey:"Nyt nøglebillede",delKey:"Slet nøglebillede",zoomIn:"Zoom ind",zoomOut:"Zoom ud",
   sceneHint:"Klik på et element på scenen for at redigere det",timeline:"Tidslinje",preview:"Forhåndsvisning",
@@ -48,6 +49,41 @@ function mount(o){
  function button(parent,cls,title,action){
   var b=el(doc,"button",cls,title,parent);b.type="button";b.title=title;b.addEventListener("click",action);return b;
  }
+ var openMenu=null,idPrefix='huw-animus-menu-'+(++toolbarId)+'-';
+ function dismissOutside(event){
+  if(openMenu&&!openMenu.group.contains(event.target))closeMenu(false);
+ }
+ function closeMenu(restoreFocus){
+  if(!openMenu)return;
+  var menu=openMenu;openMenu=null;
+  doc.removeEventListener('pointerdown',dismissOutside,true);
+  doc.removeEventListener('focusin',dismissOutside,true);
+  menu.trigger.setAttribute('aria-expanded','false');menu.panel.hidden=true;
+  if(restoreFocus)menu.trigger.focus({preventScroll:true});
+ }
+ function toolbarMenu(id,title){
+  var group=el(doc,'div','huw-musical-menu',undefined,actions);
+  var trigger=button(group,'huw-musical-menu-trigger',title,function(){
+   var wasOpen=openMenu===menu;
+   closeMenu(false);if(wasOpen)return;
+   openMenu=menu;panel.hidden=false;trigger.setAttribute('aria-expanded','true');
+   trigger.focus({preventScroll:true});
+   doc.addEventListener('pointerdown',dismissOutside,true);
+   doc.addEventListener('focusin',dismissOutside,true);
+  });
+  var panel=el(doc,'div','huw-musical-menu-panel',undefined,group),menu={group:group,trigger:trigger,panel:panel};
+  trigger.dataset.menu=id;trigger.setAttribute('aria-controls',idPrefix+id);
+  trigger.setAttribute('aria-expanded','false');panel.id=idPrefix+id;panel.hidden=true;
+  // Return focus before the command runs so a workshop can take focus itself.
+  panel.addEventListener('click',function(event){
+   if(openMenu===menu&&event.target.closest('button,a'))closeMenu(true);
+  },true);
+  return menu;
+ }
+ var toolsMenu=toolbarMenu('tools',L.tools),workshopsMenu=toolbarMenu('workshops',L.workshops),viewMenu=toolbarMenu('view',L.view);
+ var viewModes=el(doc,'div','huw-musical-menu-section',undefined,viewMenu.panel);
+ var viewActions=el(doc,'div','huw-musical-menu-section',undefined,viewMenu.panel);
+ var workshopActions=el(doc,'div','huw-musical-menu-section',undefined,workshopsMenu.panel);
  var inspectorOpen=false,mode="split",focus=false,puppet=Puppet.mount(o),lastTap=null,suppressedStageTap=null;
  var narration=Narration.mount(o),scoreWorkshop=ScoreWorkshop.mount(o),sceneWorkshop=SceneWorkshop.mount(o);
  var manuscript=Manuscript.mount(Object.assign({},o,{openNarration:function(details){narration.open(details);},openFace:o.openFace||openFace}));
@@ -189,27 +225,31 @@ function mount(o){
   host.focus({preventScroll:true});
   reframeAfterLayout();
  }
- var focusButton=button(actions,"huw-musical-focus-button",L.focus,toggleFocus);
+ var focusButton=button(viewActions,"huw-musical-focus-button",L.focus,toggleFocus);
  focusButton.setAttribute("aria-pressed","false");
- var figureButton=button(actions,'huw-musical-transform-button huw-musical-figure-button',L.scene==='Scene'?'Figur':'Figure',function(){toggleFigure();});
+ var figureButton=button(toolsMenu.panel,'huw-musical-transform-button huw-musical-figure-button',L.scene==='Scene'?'Figur':'Figure',function(){toggleFigure();});
  figureButton.title=L.scene==='Scene'?'Flyt, skalér, drej og skævvrid hele figuren, rekvisitten eller kulissen':'Move, scale, rotate and skew entire object';
- var partsButton=button(actions,'huw-musical-transform-button huw-musical-parts-button',L.scene==='Scene'?'Dele og led':'Parts and joints',function(){toggleParts();});
+ var partsButton=button(toolsMenu.panel,'huw-musical-transform-button huw-musical-parts-button',L.scene==='Scene'?'Dele og led':'Parts and joints',function(){toggleParts();});
  partsButton.title=L.scene==='Scene'?'Klik på en kropsdel. Træk den omkring sit led, eller brug drejehåndtaget. Ændringen gemmes ved tidsmarkøren.':'Select a body part. Drag it around its joint or use the rotation handle. Changes are keyed at the playhead.';
- var cameraButton=button(actions,'huw-musical-transform-button',L.scene==='Scene'?'Kameraramme':'Camera frame',function(){toggleCamera();});
+ var cameraButton=button(toolsMenu.panel,'huw-musical-transform-button',L.scene==='Scene'?'Kameraramme':'Camera frame',function(){toggleCamera();});
  cameraButton.title=L.scene==='Scene'?'Vis og redigér kameraets udsnit på scenen':'Edit camera viewport directly on the stage';
- var manuscriptButton=button(actions,"huw-musical-manuscript-button",L.scene==='Scene'?"Manuskript":"Script",function(){openManuscript();});
+ var manuscriptButton=button(workshopActions,"huw-musical-manuscript-button",L.scene==='Scene'?"Manuskript":"Script",function(){openManuscript();});
  manuscriptButton.title=L.scene==='Scene'?"Manuskriptværksted: Replikker, undertekster, scenenoter":"Script workshop: dialogue, subtitles, scene notes";
- button(actions,'huw-musical-scenes-button',L.scene==='Scene'?'Scener':'Scenes',function(){sceneWorkshop.open();});
- button(actions,'huw-musical-draw-button',L.scene==='Scene'?'Tegn SVG':'Draw SVG',function(){sceneWorkshop.draw();});
- button(actions,'huw-musical-score-button',L.scene==='Scene'?'Musik':'Music',function(){scoreWorkshop.open(o.scoreTitle());});
- button(actions,'huw-musical-audio-button',L.scene==='Scene'?'Lydspor':'Audio tracks',function(){narration.open();});
- button(actions,'huw-musical-site-button',L.scene==='Scene'?'Sitevisning':'Site view',function(){
+ button(workshopActions,'huw-musical-scenes-button',L.scene==='Scene'?'Scener':'Scenes',function(){sceneWorkshop.open();});
+ button(workshopActions,'huw-musical-draw-button',L.scene==='Scene'?'Tegn SVG':'Draw SVG',function(){sceneWorkshop.draw();});
+ button(workshopActions,'huw-musical-score-button',L.scene==='Scene'?'Musik':'Music',function(){scoreWorkshop.open(o.scoreTitle());});
+ button(workshopActions,'huw-musical-audio-button',L.scene==='Scene'?'Lydspor':'Audio tracks',function(){narration.open();});
+ button(viewMenu.panel,'huw-musical-site-button',L.scene==='Scene'?'Sitevisning':'Site view',function(){
   o.pause();if(focus)toggleFocus();if($tw.rootWidget)$tw.rootWidget.dispatchEvent({type:'tm-huwiki-sitepublisher',param:o.sceneTitle});
  });
- function updateToolButtons(){figureButton.setAttribute('aria-pressed',String(transformMode==='figure'));partsButton.setAttribute('aria-pressed',String(transformMode==='parts'));cameraButton.setAttribute('aria-pressed',String(transformMode==='camera'));}
+ function updateToolButtons(){figureButton.setAttribute('aria-pressed',String(transformMode==='figure'));partsButton.setAttribute('aria-pressed',String(transformMode==='parts'));cameraButton.setAttribute('aria-pressed',String(transformMode==='camera'));
+  var active={figure:figureButton,parts:partsButton,camera:cameraButton}[transformMode];
+  toolsMenu.trigger.textContent=active?active.textContent:L.tools;
+  toolsMenu.trigger.setAttribute('aria-label',active?L.tools+', '+active.textContent:L.tools);
+ }
  var previousPreviewMode=null;
- function useStageMode(){if(previousPreviewMode===null)previousPreviewMode=viewButton.value;viewButton.value='stage';viewButton.onchange();}
- function restorePreviewMode(){if(previousPreviewMode!==null){if(viewButton.value==='stage'){viewButton.value=previousPreviewMode;viewButton.onchange();}previousPreviewMode=null;}}
+ function useStageMode(){if(previousPreviewMode===null)previousPreviewMode=mode;setPreviewMode('stage');}
+ function restorePreviewMode(){if(previousPreviewMode!==null){if(mode==='stage')setPreviewMode(previousPreviewMode);previousPreviewMode=null;}}
  function stopTool(){if(cancelGesture)cancelGesture();transformMode='';o.editor.setCameraEdit(false);updateToolButtons();restorePreviewMode();refreshHandles();}
  function chooseStageObject(id,quiet){
   // A figure, prop, background or other scene object is always selected by
@@ -250,23 +290,23 @@ function mount(o){
   hideWorkshop();
   if(o.editor.inClipDetail&&o.editor.inClipDetail())o.editor.closeAnimation();
   cameraName=o.editor.activeCamera(o.position());transformMode='camera';useStageMode();o.pause();o.editor.selectCamera(cameraName);o.editor.setCameraEdit(true);
-  var chooser=o.host.querySelector('.huw-musical-view-mode');if(chooser&&chooser.value==='score'){chooser.value='stage';chooser.onchange();}
   setInspector(true);updateToolButtons();refreshHandles();
  }
  updateToolButtons();
 
- var viewButton=el(doc,"select","huw-musical-view-mode",undefined,actions);
- viewButton.setAttribute("aria-label",L.preview);
- [["split",L.fit],["stage",L.scene],["score",L.score]].forEach(function(v){
-  var op=el(doc,"option","",v[1],viewButton);op.value=v[0];
+ var modeButtons={};
+ [["split",L.fit],["stage",L.scene],["score",L.score]].forEach(function(item){
+  var key=item[0],b=button(viewModes,'',item[1],function(){setPreviewMode(key);});
+  b.dataset.preview=key;b.setAttribute('aria-pressed',String(key===mode));modeButtons[key]=b;
  });
- viewButton.value="split";
- viewButton.onchange=function(){
-  mode=viewButton.value;host.dataset.previewMode=mode;
-  // Render the current score only when the score view becomes visible.
+ host.dataset.previewMode=mode;
+ function setPreviewMode(next){
+  if(mode===next)return;
+  mode=next;host.dataset.previewMode=mode;
+  Object.keys(modeButtons).forEach(function(key){modeButtons[key].setAttribute('aria-pressed',String(key===mode));});
   if(mode!=='stage'&&o.refreshScore)o.refreshScore();
   reframeAfterLayout();
- };
+ }
  var previewTools=el(doc,'div','huw-musical-preview-tools',undefined,stagePanel||actions);
  if(stagePanel){var stageHeading=stagePanel.querySelector('.huw-musical-subtitle');stagePanel.insertBefore(previewTools,stagePanel.firstChild);if(stageHeading)previewTools.appendChild(stageHeading);}
  var zoomSelectionButton=button(previewTools,'huw-musical-zoom-selection',L.zoomSelection,function(){zoomToSelection();});
@@ -304,16 +344,16 @@ function mount(o){
   function settled(){if(disposed)return;if(previewZoom.active()&&!cancelGesture)zoomToSelection(false);else refreshHandles();if(figurePanel&&workshopMode==='figure'&&!exportSuspended)figurePanel.refresh(true);}
   if(doc.defaultView&&doc.defaultView.requestAnimationFrame)doc.defaultView.requestAnimationFrame(settled);else settled();
  }
- var inspectorButton=button(actions,"huw-musical-inspector-button",L.properties,function(){setInspector(!inspectorOpen);});
+ var inspectorButton=button(viewActions,"huw-musical-inspector-button",L.properties,function(){setInspector(!inspectorOpen);});
  inspectorButton.setAttribute("aria-pressed","false");
  // Keep existing native CutOut/ABC links available without giving them an
  // entire row between the viewer and editing timeline.
  var links=host.querySelector(".huw-musical-links");
  if(links){
-  actions.appendChild(links);
+  workshopsMenu.panel.appendChild(links);
   var shortcuts=links.querySelectorAll("a");
-  if(shortcuts[0]){shortcuts[0].title=shortcuts[0].textContent;shortcuts[0].textContent="CutOut";}
-  if(shortcuts[1]){shortcuts[1].title=shortcuts[1].textContent;shortcuts[1].textContent="ABC";}
+  if(shortcuts[0]){shortcuts[0].title=shortcuts[0].textContent;shortcuts[0].textContent=L.scene==='Scene'?'Åbn CutOut':'Open CutOut';}
+  if(shortcuts[1]){shortcuts[1].title=shortcuts[1].textContent;shortcuts[1].textContent=L.scene==='Scene'?'Åbn ABC':'Open ABC';}
  }
  // Remove the old full-size camera-shot toolbar entirely. Each shot is now
  // edited as a keyframe on Camera A/B and Cuts tracks.
@@ -417,10 +457,10 @@ function mount(o){
     figureRoot=root;latestPart=id;transformMode='figure';
     editor.setCameraEdit(false);
     // Preserve split mode and score unless it was score-only.
-    if(viewButton.value==='score'){viewButton.value='split';viewButton.onchange();}
+    if(mode==='score')setPreviewMode('split');
    }else if(t&&t.kind==='camera'){
     transformMode='camera';cameraName=t.id==='camera-B'?'B':'A';figureRoot='';
-    if(viewButton.value==='score'){viewButton.value='split';viewButton.onchange();}
+    if(mode==='score')setPreviewMode('split');
     editor.setCameraEdit(true);
    }else if(t&&t.kind!=='motion'&&t.kind!=='accent'){
     transformMode='';figureRoot='';editor.setCameraEdit(false);
@@ -459,6 +499,7 @@ function mount(o){
  }
  function escapeSelection(e){
   if(e.key!=='Escape'||e.defaultPrevented||e.altKey||e.ctrlKey||e.metaKey)return;
+  if(openMenu){e.preventDefault();e.stopPropagation();closeMenu(true);return;}
   // Nested editors own Escape while they have focus.
   // The inline figure/face dock shares the stage selection, including when
   // a toolbar button or text field has keyboard focus.
@@ -467,7 +508,7 @@ function mount(o){
   e.preventDefault();e.stopPropagation();clearSelection();
  }
  function keyboard(e){
-  if(e.defaultPrevented)return;
+  if(e.defaultPrevented||(openMenu&&actions.contains(e.target)))return;
   if(narration.isOpen()||scoreWorkshop.isOpen())return;
   if(manuscript.isOpen()){if(e.key==="Escape"){e.preventDefault();manuscript.close();}return;}
   if(puppet.isOpen())return;
@@ -825,7 +866,7 @@ function mount(o){
   zoomToSelection:zoomToSelection,resetPreviewZoom:resetPreviewZoom,paintPreview:paintPreview,
   beginExport:function(){exportSuspended++;var restore=previewZoom.suspend(),restoreFace=facePanel.suspend(),restoreFigure=figurePanel.suspend(),restored=false;syncWorkshop();refreshHandles();return function(){if(restored)return;restored=true;exportSuspended=Math.max(0,exportSuspended-1);syncWorkshop();restoreFace();restoreFigure();restore();if(!disposed){refreshHandles();reframeAfterLayout();}};},
   openFace:openFace,openObject:openAppearance,openScore:function(title){scoreWorkshop.open(title);},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},openManuscript:openManuscript,
-  dispose:function(){disposed=true;var cancelFrame=doc.defaultView&&doc.defaultView.cancelAnimationFrame;
+  dispose:function(){disposed=true;closeMenu(false);var cancelFrame=doc.defaultView&&doc.defaultView.cancelAnimationFrame;
    if(cancelFrame){if(previewRefreshFrame)cancelFrame.call(doc.defaultView,previewRefreshFrame);if(handlesRefreshFrame)cancelFrame.call(doc.defaultView,handlesRefreshFrame);}previewRefreshFrame=handlesRefreshFrame=0;
    cancelBlankTap();stageCanvas.removeEventListener('pointerdown',startBlankTap);if(cancelGesture)cancelGesture();previewZoom.dispose();fullscreenFallback=false;if(stagePanel)stagePanel.classList.remove('huw-musical-stage--expanded');doc.removeEventListener('fullscreenchange',syncStageFullscreen);if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen)try{Promise.resolve(doc.exitFullscreen()).catch(function(){});}catch(_closed){}
   facePanel.dispose();figurePanel.dispose();workshop.remove();workshopAnchor.remove();host.classList.remove('huw-musical--workshop-open');narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);

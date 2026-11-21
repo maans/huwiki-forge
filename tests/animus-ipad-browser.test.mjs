@@ -66,7 +66,24 @@ test('Turn Around stays editable after touch, mouse, backward seeks and playback
   assert.equal(Number(await range.inputValue()),0);
   assert.equal(await editor.getAttribute('data-playing'),'false');
  }
- await editor.locator('.huw-musical-parts-button').click({timeout:5000});
+ const header=editor.locator('.huw-musical-appbar'),tools=header.locator('[data-menu="tools"]');
+ const workshops=header.getByRole('button',{name:'Værksteder',exact:true}),view=header.getByRole('button',{name:'Visning',exact:true});
+ assert.equal(await header.getByRole('button').count(),3);
+ assert.equal(await tools.textContent(),'Dele og led');
+ await workshops.tap();assert.equal(await header.locator('.huw-musical-manuscript-button').isVisible(),true);
+ await view.tap();assert.equal(await workshops.getAttribute('aria-expanded'),'false');
+ await header.locator('[data-preview="split"]').click();assert.equal(await editor.getAttribute('data-preview-mode'),'split');
+ assert.equal(await view.getAttribute('aria-expanded'),'false');
+ await workshops.focus();await page.keyboard.press('Space');await page.keyboard.press('Tab');
+ assert.equal(await header.locator('.huw-musical-manuscript-button').evaluate(b=>b===b.ownerDocument.activeElement),true);
+ await page.keyboard.press('Escape');assert.equal(await workshops.getAttribute('aria-expanded'),'false');
+ assert.equal(await workshops.evaluate(b=>b===b.ownerDocument.activeElement),true);
+ assert.equal(await tools.textContent(),'Dele og led','Escape in a menu preserves the editing tool');
+ await tools.tap();await page.keyboard.press('Escape');
+ assert.equal(await tools.getAttribute('aria-expanded'),'false','a hardware keyboard can dismiss a menu opened by touch');
+ await workshops.tap();await lane.tap({position:{x:Math.round(width*.2),y:4}});
+ assert.equal(await workshops.getAttribute('aria-expanded'),'false');
+ await tools.tap();await editor.locator('.huw-musical-parts-button').tap({timeout:5000});
  await lane.tap({position:{x:Math.round(width*.25),y:4},timeout:5000});
  assert.ok(Number(await range.inputValue())>100);
  await editor.locator('[data-track-id="lights"] .huw-musical-lane-title').click({timeout:5000});

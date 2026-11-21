@@ -1,3 +1,4 @@
+import {chooseToolbarItem} from '../tests/helpers/animus-toolbar.mjs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
@@ -46,7 +47,7 @@ async function openEditor(){
  const player=wiki.locator('.plato-player').first();await player.waitFor();
  editor=wiki.locator('.plato-native-studio.huw-musical');
  if(!await editor.count())await wiki.locator('.plato-home .plato-native-link a').click();
- await editor.locator('.huw-musical-play:enabled').waitFor();await editor.locator('.huw-musical-view-mode').selectOption('stage');
+ await editor.locator('.huw-musical-play:enabled').waitFor();await chooseToolbarItem(editor,'view','[data-preview="stage"]');
 }
 async function pageOffset(){
  if(wiki===page)return {x:0,y:0};
@@ -137,7 +138,7 @@ async function openForearm(){
  // actor when the authored camera currently frames only the face.
  const picker=editor.locator('.huw-musical-object-picker');await picker.focus();await picker.selectOption(actor);
  await editor.locator('.huw-musical-zoom-selection:enabled').tap();
- const parts=editor.locator('.huw-musical-parts-button');if(await parts.getAttribute('aria-pressed')!=='true')await parts.tap();
+ const parts=editor.locator('.huw-musical-parts-button');if(await parts.getAttribute('aria-pressed')!=='true')await chooseToolbarItem(editor,'tools','.huw-musical-parts-button','tap');
  const image=stage().locator('[data-cutout-id="'+drawing+'"]:visible image').first();
  await touchPoint(await nativePoint(image,[drawing],[-2,4,9].flatMap(x=>[25,42,58].map(y=>({x,y})))));
  const panel=figurePanel();await panel.waitFor();

@@ -1,3 +1,4 @@
+import {chooseToolbarItem} from '../tests/helpers/animus-toolbar.mjs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {createServer} from 'node:http';
@@ -455,7 +456,7 @@ try{
 
  await wiki.evaluate(()=>window.__animusReleaseNotation());
  assert.equal(await editor.locator('.huw-musical-score-page svg').count(),0,'the stage-only editor leaves hidden guide notation unrendered');
- await editor.locator('.huw-musical-view-mode').selectOption('split');
+ await chooseToolbarItem(editor,'view','[data-preview="split"]');
  await wiki.waitForFunction(()=>{
   const visible=document.querySelector('.plato-native-studio .huw-musical-score-page:not([hidden])');
   return !!visible?.querySelector('svg');
@@ -477,7 +478,7 @@ try{
 
  // Exercise the editing controls through the normal demo. Preview choices
  // must remain local to the workbench and must not erase export content.
- await editor.locator('.huw-musical-view-mode').selectOption('stage');
+ await chooseToolbarItem(editor,'view','[data-preview="stage"]');
  await editor.locator('.huw-musical-range').evaluate(input=>{input.value='5.5';input.dispatchEvent(new Event('input',{bubbles:true}));});
  await editor.locator('[data-huw-animus-captions="language"]').selectOption('da');
  const stageSvg=editor.locator('.huw-musical-canvas > svg'),authoredViewBox=await stageSvg.getAttribute('viewBox');
@@ -519,7 +520,7 @@ try{
  // The native Turn Around studio may already open in Parts mode. Clicking
  // its toggle unconditionally would turn it off before the selection check.
  const partsMode=editor.locator('.huw-musical-parts-button');
- if(await partsMode.getAttribute('aria-pressed')!=='true')await partsMode.click();
+ if(await partsMode.getAttribute('aria-pressed')!=='true')await chooseToolbarItem(editor,'tools','.huw-musical-parts-button');
  assert.equal(await partsMode.getAttribute('aria-pressed'),'true','body-part editing is active before selecting the face');
  assert.equal(await editor.getAttribute('data-preview-mode'),'stage','the editing stage stays expanded for face selection');
  const face=editor.locator('[data-cutout-id="prisoner-head-drawing"]:visible image').first();

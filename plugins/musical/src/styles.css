@@ -100,7 +100,7 @@
  --musical-preview-height:clamp(256px,calc(40vh + 16px),516px)
 }
 .huw-musical--workspace .huw-musical-appbar{
- flex:0 0 42px;min-height:42px;display:flex;
+ flex:0 0 auto;min-height:44px;display:flex;flex-wrap:wrap;
  justify-content:space-between;align-items:center;gap:12px;
  background:#192638;border-bottom:1px solid var(--musical-line);
  padding:3px 9px 3px 14px
@@ -112,23 +112,35 @@
 .huw-musical--workspace .huw-musical-project{
  display:block;max-width:265px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--musical-dim);font-size:11px
 }
-.huw-musical--workspace .huw-musical-app-actions{display:flex;align-items:center;justify-content:flex-end;gap:6px;min-width:0}
-.huw-musical--workspace .huw-musical-app-actions button,
-.huw-musical--workspace .huw-musical-view-mode{
- padding:6px 8px;height:29px;border:1px solid #485e73;border-radius:6px;
- background:#25354b;color:#e9f3fa;font:inherit;white-space:nowrap;cursor:pointer
+.huw-musical--workspace .huw-musical-app-actions{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-left:auto}
+.huw-musical-menu{position:relative}
+.huw-musical--workspace .huw-musical-menu-trigger{
+ display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;
+ padding:4px 9px;border:1px solid transparent;border-radius:5px;background:transparent;color:#e9f3fa;
+ font:inherit;font-weight:600;white-space:nowrap;cursor:pointer
 }
-.huw-musical--workspace .huw-musical-app-actions button[aria-pressed="true"]{background:#28637d;border-color:#63b6d8}
-.huw-musical--workspace .huw-musical-links{
- display:flex;align-items:center;flex-wrap:nowrap;gap:6px;margin:0;padding:0;
- max-width:min(28vw,350px);overflow:hidden
+.huw-musical-menu-trigger::after{content:"";width:6px;height:6px;border:solid currentColor;border-width:0 1.5px 1.5px 0;transform:translateY(-2px) rotate(45deg)}
+.huw-musical-menu-trigger[aria-expanded="true"]::after{transform:translateY(2px) rotate(225deg)}
+.huw-musical--workspace .huw-musical-menu-trigger:hover,.huw-musical--workspace .huw-musical-menu-trigger[aria-expanded="true"]{background:#2a4057;border-color:#455c72}
+.huw-musical-menu-panel{
+ position:absolute;z-index:20;top:calc(100% + 2px);right:0;
+ width:max-content;min-width:10.5rem;max-height:min(62vh,25rem);overflow:auto;overscroll-behavior:contain;
+ padding:4px;border:1px solid #476079;border-radius:7px;background:#1c2b3b;box-shadow:0 8px 18px #07122466
 }
-.huw-musical--workspace .huw-musical-links a{
- display:inline-flex;align-items:center;height:29px;min-width:0;white-space:nowrap;
- text-decoration:none;padding:5px 7px;border-radius:6px;
- border:1px solid #485e73;background:#25354b;color:#c6e8f8;font:inherit
+.huw-musical-menu:first-child .huw-musical-menu-panel{right:auto;left:0}
+.huw-musical-menu-panel[hidden]{display:none}
+.huw-musical-menu-panel .huw-musical-menu-section+.huw-musical-menu-section,
+.huw-musical-menu-panel .huw-musical-links{border-top:1px solid #40546a;padding-top:4px;margin:4px 0 0}
+.huw-musical--workspace .huw-musical-menu-panel .huw-musical-links{display:block}
+.huw-musical--workspace .huw-musical-menu-panel button,.huw-musical--workspace .huw-musical-menu-panel a{
+ display:flex;align-items:center;justify-content:space-between;gap:12px;box-sizing:border-box;
+ width:100%;min-height:36px;padding:5px 10px;border:0;border-radius:3px;
+ text-align:left;text-decoration:none;white-space:nowrap;background:transparent;color:#eef5fa;font:inherit;cursor:pointer
 }
-.huw-musical--workspace .huw-musical-links a:hover{background:#2a546f}
+.huw-musical-menu-panel button[aria-pressed="true"]::after{content:"✓";color:#9de6eb}
+.huw-musical--workspace .huw-musical-menu-panel :is(button,a):hover{background:#2c465c}
+.huw-musical--workspace .huw-musical-app-actions :is(button,a):focus-visible{outline:2px solid #90d7ed;outline-offset:-2px}
+@media(pointer:coarse){.huw-musical--workspace .huw-musical-menu-trigger,.huw-musical--workspace .huw-musical-menu-panel :is(button,a){min-height:44px}}
 .huw-musical--workspace .huw-musical-layout{
  flex:0 0 var(--musical-preview-height);height:var(--musical-preview-height);
  min-height:0;max-height:none;display:grid;
@@ -353,8 +365,6 @@
 }
 @media(max-width:900px){
  .huw-musical--workspace .huw-musical-project{display:none}
- .huw-musical--workspace .huw-musical-links{max-width:180px}
- .huw-musical--workspace .huw-musical-links a{font-size:10px;padding:4px}
  .huw-musical--workspace .huw-musical-timeline-title{display:none}
  .huw-musical--workspace .huw-musical-track-filters{gap:0}
  .huw-musical--workspace .huw-musical-timeline-toolbar{gap:4px;padding:3px 5px}
@@ -369,8 +379,7 @@
  .huw-musical--workspace .huw-musical-brand strong{font-size:12px}
  .huw-musical--workspace .huw-musical-appbar{gap:3px;padding:3px 5px}
  .huw-musical--workspace .huw-musical-app-actions{gap:3px}
- .huw-musical--workspace .huw-musical-links{display:none}
- .huw-musical--workspace .huw-musical-app-actions button,.huw-musical--workspace .huw-musical-view-mode{font-size:10px;padding:3px}
+ .huw-musical--workspace .huw-musical-menu-trigger{gap:5px;padding:4px 6px}
  .huw-musical--workspace .huw-musical-transport{padding:3px 5px;gap:4px}
  .huw-musical--workspace .huw-musical-transport button{padding:3px 5px}
  .huw-musical--workspace .huw-musical-transport .huw-musical-play{min-width:56px}
@@ -380,11 +389,7 @@
  .huw-musical--workspace .huw-musical-timeline-ruler,.huw-musical--workspace .huw-musical-track{min-width:540px}
 }
 
-/* Distinct track families and compact top-level editor shortcuts. */
-.huw-musical--workspace .huw-musical-app-actions .huw-musical-links{max-width:none}
-.huw-musical--workspace .huw-musical-app-actions .huw-musical-links a{
- min-width:52px;max-width:65px;justify-content:center;font-weight:600
-}
+/* Distinct track families. */
 .huw-musical--workspace .huw-musical-track[data-group="animation"] .huw-musical-key{
  background:#d49e52;border-color:#f1c778
 }

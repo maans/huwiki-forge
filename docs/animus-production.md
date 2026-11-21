@@ -1,12 +1,12 @@
 # AniMus production tools
 
-AniMus 0.13.0-beta.4 includes large figure and object workshops beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
+AniMus 0.13.0-beta.6 includes large figure and object workshops beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
 
 ## Create and edit a show
 
 Open **AniMus Forge I · Start** or the show gallery. Enter a title and choose **New show**. A new show contains an empty scene and a silent ABC score. The scene, score and film are ordinary editable tiddlers.
 
-Open a show and use its toolbar:
+In a show’s top bar, the first menu displays the active editing tool. **Workshops** opens the production editors. **View** switches between stage, score and split preview and includes focus, properties and Site view.
 
 | Control | Work it supports |
 | --- | --- |
@@ -188,7 +188,7 @@ Automatic cue movement during scene rearrangement supports ordinary sequential s
 
 ## Dansk
 
-Åbn AniMus-startsiden eller galleriet, skriv et navn, og vælg **Ny forestilling**. Brug **Scener**, **Tegn SVG**, **Musik**, **Manuskript**, **Lydspor** og **Sitevisning** i forestillingens værktøjslinje.
+Åbn AniMus-startsiden eller galleriet, skriv et navn, og vælg **Ny forestilling**. Den første menu viser det aktive værktøj. Under **Værksteder** finder du **Manuskript**, **Scener**, **Tegn SVG**, **Musik** og **Lydspor**. Under **Visning** vælger du scene, noder eller delt visning. Her finder du også fokusvisning, egenskaber og sitevisning.
 
 SVG-værkstedet bevarer lag, tegninger, animationsbilleder og figurens eksisterende led. Musikværkstedet bruger den eksisterende ABC-editor med en særskilt kladde, så **Annuller** bevarer det oprindelige nodeark. Lydværkstedet gemmer optagelser i wikien og placerer klippene på den fælles tidslinje.
 

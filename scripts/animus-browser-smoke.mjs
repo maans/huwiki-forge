@@ -1,3 +1,4 @@
+import {chooseToolbarItem} from '../tests/helpers/animus-toolbar.mjs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {createServer} from 'node:http';
@@ -150,16 +151,16 @@ try{
 
  // Exercise the actual ABC editing widget mounted inside the AniMus draft.
  const music='X:1\nT:AniMus CI melody\nM:4/4\nL:1/4\nQ:1/4=120\nK:C\nC D E F | G A B c |';
- await show.locator('.huw-musical-score-button').click();let score=show.locator('.huw-score-workshop');await score.locator('.huwabc-edit-workshop').waitFor();
+ await chooseToolbarItem(show,'workshops','.huw-musical-score-button');let score=show.locator('.huw-score-workshop');await score.locator('.huwabc-edit-workshop').waitFor();
  await score.locator('.huwabc-code').fill(music);await score.locator('.huwabc-code').blur();
  await page.waitForFunction(text=>$tw.wiki.filterTiddlers('[prefix[$:/temp/animus-score/]]').some(title=>$tw.wiki.getTiddler(title)?.fields['abc-source']===text),music);
  assert.notEqual((await savedProduction()).score,music,'draft must not overwrite the saved score');await score.locator('.huw-score-save').click();await score.waitFor({state:'detached'});
  await page.waitForFunction(({title,text})=>$tw.wiki.getTiddler(title)?.fields['abc-source']===text,{title:production.scoreTitle,text:music});
- await show.locator('.huw-musical-score-button').click();score=show.locator('.huw-score-workshop');assert.equal(await score.locator('.huwabc-code').inputValue(),music);
+ await chooseToolbarItem(show,'workshops','.huw-musical-score-button');score=show.locator('.huw-score-workshop');assert.equal(await score.locator('.huwabc-code').inputValue(),music);
  await score.locator('.huwabc-code').fill(music.replace('K:C','K:G'));expectedConfirm=true;await score.getByRole('button',{name:'Annuller',exact:true}).click();await score.waitFor({state:'detached'});assert.equal(expectedConfirm,false,'cancel asks before discarding edited music');assert.equal((await savedProduction()).score,music);
  passed('native ABC editor saves and reopens, while Cancel preserves the score');
 
- await show.locator('.huw-musical-draw-button').click();let drawing=show.locator('.huw-svg-workshop');await drawing.waitFor();
+ await chooseToolbarItem(show,'workshops','.huw-musical-draw-button');let drawing=show.locator('.huw-svg-workshop');await drawing.waitFor();
  await drawing.locator('button[title="Nyt lag"]').click();assert.equal(await drawing.locator('.huw-svg-layer-row').count(),2);
  async function stroke(x1,y1,x2,y2){const r=await drawing.locator('.huw-svg-canvas').boundingBox();assert.ok(r&&r.width>50&&r.height>50,'SVG canvas must be usable');await page.mouse.move(r.x+r.width*x1,r.y+r.height*y1);await page.mouse.down();await page.mouse.move(r.x+r.width*x2,r.y+r.height*y2,{steps:14});await page.mouse.up();}
  await stroke(.28,.3,.7,.65);assert.ok(await drawing.locator('.huw-svg-art path').count()>0);
@@ -170,7 +171,7 @@ try{
  await drawing.getByRole('button',{name:'Gem tegning',exact:true}).click();await drawing.waitFor({state:'detached'});
  production=await savedProduction();const rootPart=production.stage.parts.find(p=>p.svgDrawing);assert.ok(rootPart,'editable SVG model must be persisted');assert.equal(rootPart.svgDrawing.layers.length,2);assert.equal(rootPart.svgDrawing.frames.length,2);
  const layerPart=production.stage.parts.find(p=>p.parent===rootPart.id&&p.type==='image'&&p.variants?.length>1);assert.ok(layerPart,'drawn frames must be playable image variants');assert.ok(layerPart.keys.some(k=>k.variantId!==layerPart.keys[0].variantId));
- await show.locator(`[data-cutout-id="${rootPart.id}"] image`).last().click();await show.locator('.huw-musical-draw-button').click();drawing=show.locator('.huw-svg-workshop');assert.equal(await drawing.locator('.huw-svg-layer-row').count(),2);assert.equal(await drawing.locator('.huw-svg-frame').count(),2);
+ await show.locator(`[data-cutout-id="${rootPart.id}"] image`).last().click();await chooseToolbarItem(show,'workshops','.huw-musical-draw-button');drawing=show.locator('.huw-svg-workshop');assert.equal(await drawing.locator('.huw-svg-layer-row').count(),2);assert.equal(await drawing.locator('.huw-svg-frame').count(),2);
  await drawing.getByRole('button',{name:'Annuller',exact:true}).click();await drawing.waitFor({state:'detached'});passed('SVG freehand, layers, animation frames, undo, save and reopen');
 
  // A named, prepared CutOut cast is test input. All speech bindings below
@@ -215,20 +216,20 @@ try{
  // the arm's beat-loop key, using the soundtrack's 120 BPM clock.
  await show.locator('.huw-musical-range').evaluate(input=>{input.value='1.75';input.dispatchEvent(new Event('input',{bubbles:true}));});
  await clickExposedArm(show);
- await show.locator('.huw-musical-transform-overlay[data-mode="figure"]').waitFor();await show.locator('.huw-musical-parts-button').click();await show.locator('.huw-musical-transform-overlay[data-mode="parts"]').waitFor();await show.locator('.huw-musical-part-pivot').waitFor();
+ await show.locator('.huw-musical-transform-overlay[data-mode="figure"]').waitFor();await chooseToolbarItem(show,'tools','.huw-musical-parts-button');await show.locator('.huw-musical-transform-overlay[data-mode="parts"]').waitFor();await show.locator('.huw-musical-part-pivot').waitFor();
  assert.equal(await show.locator('.huw-musical-transform-label').textContent(),'Almas arm','Parts and joints keeps the clicked arm selected after selecting its containing figure');
  await rotatePart(show,'ci-alma-arm',show.locator('.huw-musical-transform-overlay[data-mode="parts"] [data-transform-action="rotate"]'),25);
  production=await savedProduction();const motionKey=production.film.musical.animationClips.find(c=>c.id==='ci-arm-loop').motion['ci-alma-arm'].find(k=>Math.abs(k.t-3.5)<.01);assert.ok(motionKey,'1.75 seconds at 120 BPM inserts the arm key at beat 3.5');assert.ok(Math.abs(motionKey.r-25)<1);assert.equal(motionKey.x,0);assert.equal(motionKey.y,0);assert.deepEqual(production.stage.parts.find(p=>p.id==='ci-alma-arm').keys,savedArm.keys,'editing a motion clip preserves the scene keys');assert.deepEqual(production.stage.parts.find(p=>p.id==='ci-alma').keys,originalAlma.keys);await screenshot('direct-animus-rotation');
  const actorSource=JSON.stringify(production.stage.parts.filter(p=>/^ci-(alma|bo)(?:-|$)/.test(p.id)));await show.locator('.huw-musical-stop').click();
  passed('direct figure/part rotation preserves the joint, inserts cursor keys, supports Undo and saves/reopens in CutOut and AniMus');
 
- await show.locator('.huw-musical-audio-button').click();let audio=show.locator('.huw-narration-workshop');await audio.locator('input[type=file]').setInputFiles({name:'dialogue.wav',mimeType:'audio/wav',buffer:voiceWav});
+ await chooseToolbarItem(show,'workshops','.huw-musical-audio-button');let audio=show.locator('.huw-narration-workshop');await audio.locator('input[type=file]').setInputFiles({name:'dialogue.wav',mimeType:'audio/wav',buffer:voiceWav});
  await audio.locator('.huw-narration-clip').waitFor();await page.waitForFunction(()=>{const b=document.querySelector('.huw-narration-primary');return b&&!b.disabled;});
  for(const [label,value] of [['Placering i forestillingen (s)','1'],['Klip begyndelsen fra (s)','0.25'],['Slut i lydfil (s)','1.5']]){await audio.getByLabel(label,{exact:true}).fill(value);await audio.getByLabel(label,{exact:true}).blur();}
  await screenshot('narration-trim');await audio.locator('.huw-narration-primary').click();await audio.waitFor({state:'detached'});
  production=await savedProduction();assert.equal(production.film.musical.audioClips.length,1);let voice=production.film.musical.audioClips[0];assert.equal(voice.start,1);assert.equal(voice.offset,.25);assert.equal(voice.duration,1.25);assert.equal(voice.sourceDuration,2);
  const stored=await page.evaluate(asset=>$tw.wiki.getTiddler(asset).fields,voice.asset);assert.equal(stored.type,'audio/wav');assert.equal(stored.text,voiceWav.toString('base64'));
- await show.locator('.huw-musical-audio-button').click();audio=show.locator('.huw-narration-workshop');await audio.locator('.huw-narration-clip').click();assert.equal(await audio.getByLabel('Klip begyndelsen fra (s)',{exact:true}).inputValue(),'0.25');assert.equal(await audio.getByLabel('Slut i lydfil (s)',{exact:true}).inputValue(),'1.5');
+ await chooseToolbarItem(show,'workshops','.huw-musical-audio-button');audio=show.locator('.huw-narration-workshop');await audio.locator('.huw-narration-clip').click();assert.equal(await audio.getByLabel('Klip begyndelsen fra (s)',{exact:true}).inputValue(),'0.25');assert.equal(await audio.getByLabel('Slut i lydfil (s)',{exact:true}).inputValue(),'1.5');
  await audio.getByRole('button',{name:'Annuller',exact:true}).click();await audio.waitFor({state:'detached'});
  const laneClip=show.locator('.huw-musical-recorded-clip');await laneClip.click();assert.equal(await laneClip.getAttribute('aria-pressed'),'true','a single click selects the recorded clip');
  // The first selection redraws the timeline. Real double-click events must
@@ -238,7 +239,7 @@ try{
  passed('WAV import, trim, save, embedded media, reopen and timeline double-click');
 
  const line='ALMA: Aaaaaa.';
- await show.locator('.huw-musical-manuscript-button').click();const manuscript=show.locator('.huw-script-workshop');await manuscript.getByRole('button',{name:'+ Ny replik',exact:true}).click();
+ await chooseToolbarItem(show,'workshops','.huw-musical-manuscript-button');const manuscript=show.locator('.huw-script-workshop');await manuscript.getByRole('button',{name:'+ Ny replik',exact:true}).click();
  await manuscript.getByLabel('Tekst, som publikum ser',{exact:true}).fill(line);
  for(const [label,value] of [['Start (s)','1'],['Slut (s)','5']]){await manuscript.getByLabel(label,{exact:true}).fill(value);await manuscript.getByLabel(label,{exact:true}).blur();}
  await manuscript.locator('.huw-script-lipsync-enable').check();await manuscript.locator('.huw-script-lipsync-actor').selectOption('ci-alma');await manuscript.locator('.huw-script-lipsync-open').selectOption('ci-alma-mouth-open');await manuscript.locator('.huw-script-lipsync-closed').selectOption('ci-alma-mouth-closed');await manuscript.locator('.huw-script-lipsync-timing').selectOption('script');
@@ -249,7 +250,7 @@ try{
  await audio.getByRole('button',{name:'Annuller',exact:true}).click();await audio.waitFor({state:'detached'});assert.equal(await manuscript.getByLabel('Tekst, som publikum ser',{exact:true}).inputValue(),line);
  await manuscript.locator('.huw-script-header-actions').getByRole('button',{name:'Gem og tilbage',exact:true}).click();await manuscript.waitFor({state:'detached'});
  production=await savedProduction();const savedCue=production.stage.parts.find(p=>p.id==='spoken-0');assert.equal(savedCue.text,line);assert.deepEqual(savedCue.lipSync,{enabled:true,target:'ci-alma',open:'ci-alma-mouth-open',closed:'ci-alma-mouth-closed',timing:'script',offset:0,strength:1});
- await show.locator('.huw-musical-manuscript-button').click();await manuscript.locator('.huw-script-cue').filter({hasText:line}).click();assert.equal(await manuscript.locator('.huw-script-lipsync-enable').isChecked(),true);assert.equal(await manuscript.locator('.huw-script-lipsync-actor').inputValue(),'ci-alma');assert.equal(await manuscript.locator('.huw-script-lipsync-open').inputValue(),'ci-alma-mouth-open');assert.equal(await manuscript.locator('.huw-script-lipsync-closed').inputValue(),'ci-alma-mouth-closed');assert.equal(await manuscript.locator('.huw-script-lipsync-timing').inputValue(),'script');await screenshot('manuscript-lipsync');
+ await chooseToolbarItem(show,'workshops','.huw-musical-manuscript-button');await manuscript.locator('.huw-script-cue').filter({hasText:line}).click();assert.equal(await manuscript.locator('.huw-script-lipsync-enable').isChecked(),true);assert.equal(await manuscript.locator('.huw-script-lipsync-actor').inputValue(),'ci-alma');assert.equal(await manuscript.locator('.huw-script-lipsync-open').inputValue(),'ci-alma-mouth-open');assert.equal(await manuscript.locator('.huw-script-lipsync-closed').inputValue(),'ci-alma-mouth-closed');assert.equal(await manuscript.locator('.huw-script-lipsync-timing').inputValue(),'script');await screenshot('manuscript-lipsync');
  await manuscript.locator('.huw-script-header-actions').getByRole('button',{name:'Annuller',exact:true}).click();await manuscript.waitFor({state:'detached'});
  passed('manuscript dialogue opens recording above the script and saves/reopens the actor mouth binding');
 
@@ -260,7 +261,7 @@ try{
  await seekEditor(4.8);await assertMouth(show,false);await screenshot('editor-lipsync-rest');await seekEditor(5.5);await assertMouth(show,false);await show.locator('.huw-musical-stop').click();await assertMouth(show,false);
  assert.equal(JSON.stringify((await savedProduction()).stage.parts.filter(p=>/^ci-(alma|bo)(?:-|$)/.test(p.id))),actorSource,'mouth playback must preserve source geometry and animation keys');passed('editor lipsync follows play/seek/pause, leaves the other actor silent and preserves the source shapes');
 
- await show.locator('.huw-musical-site-button').click();const publisher=page.locator('.husp-overlay');await publisher.waitFor();
+ await chooseToolbarItem(show,'view','.huw-musical-site-button');const publisher=page.locator('.husp-overlay');await publisher.waitFor();
  assert.equal(await publisher.locator('.husp-preview-switch').getByRole('button',{name:'Program',exact:true}).count(),1);assert.match(await publisher.locator('.husp-settings-button').innerText(),/Publikumsvisning/);
  await page.waitForFunction(()=>{const status=document.querySelector('.husp-status')?.textContent||'',frame=document.querySelector('iframe.husp-preview');return status.startsWith('SitePublisher:')||!!frame?.srcdoc;},null,{timeout:30000});
  const publicationStatus=await publisher.locator('.husp-status').innerText();assert.doesNotMatch(publicationStatus,/^SitePublisher:/,'publication failed: '+publicationStatus);

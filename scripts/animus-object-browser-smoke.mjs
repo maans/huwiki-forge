@@ -1,3 +1,4 @@
+import {chooseToolbarItem} from '../tests/helpers/animus-toolbar.mjs';
 import assert from 'node:assert/strict';
 import {createRequire} from 'node:module';
 import {createHash} from 'node:crypto';
@@ -44,7 +45,7 @@ function appearance(){return editor.locator('.huw-puppet-workshop');}
 async function openEditor(){
  await wiki.locator('.plato-player').first().waitFor();editor=wiki.locator('.plato-native-studio.huw-musical');
  if(!await editor.count())await wiki.locator('.plato-home .plato-native-link a').click();
- await editor.locator('.huw-musical-play:enabled').waitFor();await editor.locator('.huw-musical-view-mode').selectOption('stage');
+ await editor.locator('.huw-musical-play:enabled').waitFor();await chooseToolbarItem(editor,'view','[data-preview="stage"]');
 }
 async function chooseObject(){const picker=editor.locator('.huw-musical-object-picker');await picker.focus();await picker.selectOption(objectId);await panel().waitFor();assert.equal(await panel().getAttribute('data-figure-actor'),objectId);assert.equal(await panel().getAttribute('data-figure-kind'),'object');}
 async function offset(){if(wiki===page)return {x:0,y:0};const frame=await wiki.frameElement(),box=await frame.boundingBox(),border=await frame.evaluate(node=>({x:node.clientLeft,y:node.clientTop}));assert.ok(box);return {x:box.x+border.x,y:box.y+border.y};}
