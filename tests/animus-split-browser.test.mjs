@@ -54,6 +54,7 @@ test('Split keeps visible notation and animated artwork while editing in wide an
   const note=activeScore.locator('.abcjs-note.abcjs-v0.abcjs-l'+system+'.abcjs-m'+bar).first();
   await note.locator('path').first().click();
   assert.ok(Math.abs(Number(await playhead.inputValue())-expected)<.02,'a note click seeks the master clock to '+expected);
+  await checkPictureAndRuler(editor,expected);
  }
  await clickNote(1,0,8*60/90); // Bar 3, across the opening clef change.
  await clickNote(2,2,32*60/90); // Bar 9, directly on a ledger line.
@@ -63,4 +64,74 @@ test('Split keeps visible notation and animated artwork while editing in wide an
  });
  await activeScore.locator('.huw-musical-score-label').filter({hasText:'Voices on the Wall'}).waitFor();
  await clickNote(0,1,25.854+4*60/104); // Scene 2, after a tempo change.
+});
+
+async function checkPictureAndRuler(editor,expected){
+ const picture=Number(await editor.getAttribute('data-camera-time'));
+ assert.ok(Math.abs(picture-expected)<.02,'the animation paints the selected time');
+ const position=await editor.locator('.huw-musical-ruler-cursor[data-cursor-mode="seconds"]').evaluate(cursor=>{
+  const ruler=cursor.parentElement.getBoundingClientRect(),head=cursor.getBoundingClientRect();
+  const duration=Number(cursor.closest('.huw-musical').querySelector('.huw-musical-range').max);
+  return {time:(head.left-ruler.left)*duration/ruler.width,visible:head.width>0&&head.height>0};
+ });
+ assert.ok(position.visible&&Math.abs(position.time-expected)<.03,'the visible ruler marker is at the same time');
+}
+
+test('score taps, written chords and workshop selections seek the picture and ruler in the current clip',
+ {skip:process.env.ANIMUS_SPLIT_TESTS!=='1',timeout:120000},async t=>{
+ const {chromium}=await import('playwright-core'),base=await serveDemo(t);
+ const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||undefined});
+ t.after(()=>browser.close());
+ const page=await browser.newPage({viewport:{width:1280,height:900},hasTouch:true});
+ await page.route('**/turn-around/tiddlers/scores.json*',async route=>{
+  const response=await route.fetch(),scores=await response.json();
+  scores.find(row=>row.title.includes(' · Score · 02 · '))['abc-source']=
+   'X:1\nT:Repeat and chord selection\nM:4/4\nL:1/4\nQ:1/4=120\nK:C\n|: "Am"[CE]2 D2 | "G7"[GBd]2 E2 :| "F"F4 |]';
+  await route.fulfill({response,json:scores});
+ });
+ await page.goto(base+'/demo/?edition=turn-around&lang=da');
+ const wiki=page.frameLocator('#wiki');
+ await wiki.locator('.plato-native-link a').first().click();
+ const editor=wiki.locator('.plato-native-studio.huw-musical');
+ const active=editor.locator('.huw-musical-score-page:not([hidden])');
+ const head=active.locator('.abcjs-note.abcjs-v0.abcjs-l0.abcjs-m1.abcjs-n0 .abcjs-notehead').first();
+ // A score seek must reveal an offscreen playhead without scrolling the wiki.
+ await editor.locator('.huw-musical-zoom-in').click();
+ const tracks=editor.locator('.huw-musical-tracks');
+ await tracks.evaluate(el=>{el.scrollLeft=el.scrollWidth;});
+ assert.ok(await tracks.evaluate(el=>el.scrollLeft>0));
+ const captions=editor.locator('.huw-musical-caption-line');
+ const before=await captions.textContent();
+ await head.scrollIntoViewIfNeeded();
+ const b=await head.boundingBox();
+ // Hit the paper just beside a notehead, as happens on a small split screen.
+ await page.touchscreen.tap(b.x-4,b.y+b.height/2);
+ await checkPictureAndRuler(editor,4*60/90);
+ assert.notEqual(await captions.textContent(),before,'the selected frame displays the opening speech');
+ const visible=await tracks.evaluate(el=>{
+  const marker=el.querySelector('.huw-musical-ruler-cursor').getBoundingClientRect();
+  const rail=el.querySelector('.huw-musical-ruler-label').getBoundingClientRect();
+  return marker.left>=rail.right-1&&marker.left<el.getBoundingClientRect().right;
+ });
+ assert.ok(visible,'the selected time is visible even when the timeline was scrolled away');
+ const clipStart=25.854;
+ const playhead=editor.locator('.huw-musical-range');
+ async function scrub(time){
+  await playhead.evaluate((input,time)=>{input.value=time;input.dispatchEvent(new Event('input',{bubbles:true}));input.dispatchEvent(new Event('change',{bubbles:true}));},time);
+ }
+ await scrub(clipStart+.1);
+ const chord=active.locator('.abcjs-chord').filter({hasText:'G7'});
+ // Some ABC layouts put a chord label in the system, outside its note group.
+ await chord.evaluate(label=>label.closest('.abcjs-staff-wrapper').appendChild(label));
+ await chord.tap();await checkPictureAndRuler(editor,clipStart+2);
+ await scrub(clipStart+5.5);
+ await active.locator('.abcjs-m1.abcjs-n0 .abcjs-notehead').last().click();
+ await checkPictureAndRuler(editor,clipStart+6); // same chord notes on the second pass
+ await chooseToolbarItem(editor,'workshops','.huw-musical-score-button');
+ const workshop=editor.locator('.huw-score-workshop');
+ await workshop.locator('.huwabc-edit-preview .abcjs-notehead[data-huwabc-item]').first().waitFor();
+ await workshop.locator('.abcjs-chord[data-huwabc-item]').filter({hasText:/^F$/}).click();
+ await checkPictureAndRuler(editor,clipStart+8);
+ await workshop.getByRole('button',{name:'Annuller',exact:true}).click();
+ await checkPictureAndRuler(editor,clipStart+8);
 });

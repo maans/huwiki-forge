@@ -270,7 +270,7 @@ function mount(o){
  manuscriptButton.title=L.scene==='Scene'?"Manuskriptværksted: Replikker, undertekster, scenenoter":"Script workshop: dialogue, subtitles, scene notes";
  button(workshopActions,'huw-musical-scenes-button',L.scene==='Scene'?'Scener':'Scenes',function(){sceneWorkshop.open();});
  button(workshopActions,'huw-musical-draw-button',L.scene==='Scene'?'Tegn SVG':'Draw SVG',function(){sceneWorkshop.draw();});
- button(workshopActions,'huw-musical-score-button',L.scene==='Scene'?'Musik':'Music',function(){scoreWorkshop.open(o.scoreTitle());});
+ button(workshopActions,'huw-musical-score-button',L.scene==='Scene'?'Musik':'Music',function(){scoreWorkshop.open(o.scoreTitle(),{clip:o.activeScoreClip()});});
  button(workshopActions,'huw-musical-audio-button',L.scene==='Scene'?'Lydspor':'Audio tracks',function(){narration.open();});
  button(viewMenu.panel,'huw-musical-site-button',L.scene==='Scene'?'Sitevisning':'Site view',function(){
   o.pause();if(focus)toggleFocus();if($tw.rootWidget)$tw.rootWidget.dispatchEvent({type:'tm-huwiki-sitepublisher',param:o.sceneTitle});
@@ -915,7 +915,7 @@ function mount(o){
  return {showInspector:selection,selectTrack:selection,setInspector:setInspector,refreshHandles:refreshHandles,requestHandleRefresh:requestHandleRefresh,clearSelection:clearSelection,
   zoomToSelection:zoomToSelection,resetPreviewZoom:resetPreviewZoom,paintPreview:paintPreview,
   beginExport:function(){exportSuspended++;var restore=previewZoom.suspend(),restoreFace=facePanel.suspend(),restoreFigure=figurePanel.suspend(),restored=false;syncWorkshop();refreshHandles();return function(){if(restored)return;restored=true;exportSuspended=Math.max(0,exportSuspended-1);syncWorkshop();restoreFace();restoreFigure();restore();if(!disposed){refreshHandles();reframeAfterLayout();}};},
-  openFace:openFace,openObject:openAppearance,openScore:function(title){scoreWorkshop.open(title);},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},openManuscript:openManuscript,
+  openFace:openFace,openObject:openAppearance,openScore:function(title,clip){scoreWorkshop.open(title,{clip:clip});},openNarration:function(details){narration.open(details);},openScenes:function(){sceneWorkshop.open();},openManuscript:openManuscript,
   dispose:function(){disposed=true;closeMenu(false);var cancelFrame=doc.defaultView&&doc.defaultView.cancelAnimationFrame;
    if(cancelFrame){if(previewRefreshFrame)cancelFrame.call(doc.defaultView,previewRefreshFrame);if(handlesRefreshFrame)cancelFrame.call(doc.defaultView,handlesRefreshFrame);}previewRefreshFrame=handlesRefreshFrame=0;
    cancelBlankTap();stageCanvas.removeEventListener('pointerdown',startBlankTap);if(cancelGesture)cancelGesture();previewZoom.dispose();fullscreenFallback=false;if(stagePanel)stagePanel.classList.remove('huw-musical-stage--expanded');doc.removeEventListener('fullscreenchange',syncStageFullscreen);if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen)try{Promise.resolve(doc.exitFullscreen()).catch(function(){});}catch(_closed){}

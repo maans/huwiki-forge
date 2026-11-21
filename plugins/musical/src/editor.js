@@ -521,7 +521,7 @@ function attach(o){
   function button(cls,title,fn,disabled){
    var b=el(doc,"button",cls,title,actions);b.type="button";b.disabled=!!disabled;b.onclick=fn;return b;
   }
-  var editScore=button('huw-musical-edit-score',L===translations.da?'Redigér noder':'Edit notation',function(){if(o.onEditScore)o.onEditScore(k.score);});
+  var editScore=button('huw-musical-edit-score',L===translations.da?'Redigér noder':'Edit notation',function(){if(o.onEditScore)o.onEditScore(k.score,k);});
   inspector.insertBefore(editScore,clipOptions);
   button("huw-musical-add-song",L.addSong,function(){
    var id="song-"+(m.songs.length+1);while(m.songs.some(function(s){return s.id===id;}))id+="-x";
@@ -693,6 +693,22 @@ function attach(o){
    formNumber(k,L===translations.da?"Varighed (sek.)":"Duration (sec)","duration",.1,.1,8);
   }else if(t.kind==="cut")formSelect(k,L.camera,"camera",[["A",L.cameraA],["B",L.cameraB]]);
  }
+ function rulerCursor(lane,mode){
+  var cursor=el(doc,"span","huw-musical-lane-cursor huw-musical-ruler-cursor",undefined,lane);
+  cursor.dataset.cursorMode=mode;cursor.setAttribute("aria-hidden","true");
+  var clip=activeDetail(),phase=mode==="beat"&&clip?Motion.phase(clip,playhead,o.beatClock&&o.beatClock()):0;
+  cursor.style.display=phase===null?"none":"";
+  cursor.style.left=(mode==="beat"&&clip?100*phase/Math.max(.125,num(clip.beatsPerLoop,8)):100*playhead/axisDuration())+"%";
+  playheads.push(cursor);
+ }
+ function revealPlayhead(){
+  var cursor=rows.querySelector('.huw-musical-ruler-cursor[data-cursor-mode="seconds"]');
+  if(!cursor||rows.scrollWidth<=rows.clientWidth)return;
+  var left=cursor.parentNode.previousElementSibling.getBoundingClientRect().right;
+  var right=rows.getBoundingClientRect().right,x=cursor.getBoundingClientRect().left;
+  if(x<left+5)rows.scrollLeft+=x-left-12;
+  else if(x>right-5)rows.scrollLeft+=x-right+12;
+ }
  function drawDetail(){
   var clip=activeDetail();if(!clip)return;
   clipTitle.textContent=clip.name||clip.id;
@@ -706,6 +722,7 @@ function attach(o){
    var tick=el(doc,"span","huw-musical-ruler-tick",i===span?"↻":String(i+1),ruleLane);
    tick.style.left=(100*i/span)+"%";
   }
+  rulerCursor(ruleLane,"beat");
   ruleLane.onclick=function(ev){var box=ruleLane.getBoundingClientRect();
    var fraction=lim((ev.clientX-box.left)/Math.max(1,box.width),0,1);
    o.seek(animationTime(clip,round(fraction*span)));
@@ -745,6 +762,7 @@ function attach(o){
    var tick=el(doc,"span","huw-musical-ruler-tick",second+"s",soloRuleLane);
    tick.style.left=(100*second/duration)+"%";
   }
+  rulerCursor(soloRuleLane,"seconds");
   soloRuleLane.onclick=function(ev){var box=soloRuleLane.getBoundingClientRect();
    o.seek((ev.clientX-box.left)/Math.max(1,box.width)*duration);
   };
@@ -776,6 +794,7 @@ function attach(o){
    var tick=el(doc,"span","huw-musical-ruler-tick",round(seconds)+"s",ruleLane);
    tick.style.left=(100*seconds/axis)+"%";
   }
+  rulerCursor(ruleLane,"seconds");
   ruleLane.onclick=function(ev){
    var rect=ruleLane.getBoundingClientRect(),fraction=lim((ev.clientX-rect.left)/Math.max(1,rect.width),0,1);
    o.seek(toAudio(fraction*axis));
@@ -1256,7 +1275,7 @@ function attach(o){
  function setZoom(value){zoom=lim(value,1,5);rows.style.setProperty("--musical-zoom",String(zoom));draw();}
  function addKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)newPoint(t,playhead);}
  function removeKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)removePoint(t);}
- draw();return {paint:paint,redraw:draw,selectPart:selectPart,selectSong:selectSong,clearSelection:clearSelection,beginPartMove:beginPartMove,
+ draw();return {paint:paint,redraw:draw,revealPlayhead:revealPlayhead,selectPart:selectPart,selectSong:selectSong,clearSelection:clearSelection,beginPartMove:beginPartMove,
   openAnimation:openAnimation,closeAnimation:closeAnimation,inClipDetail:function(){return !!detailClipId;},getDetailClip:activeDetail,
   addKeyframe:addKeyframe,removeKeyframe:removeKeyframe,setFilter:setFilter,getFilter:function(){return filter;},setZoom:setZoom,
   getZoom:function(){return zoom;},getSelection:track,

@@ -31,6 +31,14 @@ test('Turn Around stays editable after touch, mouse, backward seeks and playback
  await play.waitFor();
  assert.equal(await editor.getAttribute('data-preview-mode'),'split');
  await editor.locator('.huw-musical-score-page:not([hidden]) .abcjs-note').first().waitFor();
+ const noteHead=editor.locator('.huw-musical-score-page:not([hidden]) .abcjs-l0.abcjs-v0.abcjs-m1.abcjs-n0 .abcjs-notehead').first();
+ await noteHead.scrollIntoViewIfNeeded();
+ const noteBox=await noteHead.boundingBox();
+ await page.touchscreen.tap(noteBox.x-4,noteBox.y+noteBox.height/2);
+ assert.equal(await editor.getAttribute('data-camera-time'),'2.67');
+ const marker=editor.locator('.huw-musical-ruler-cursor');
+ assert.ok(await marker.isVisible());
+ assert.ok(Math.abs(await marker.evaluate(node=>parseFloat(node.style.left))*Number(await range.getAttribute('max'))/100-8/3)<.01);
  const lane=editor.locator('[data-track-id="lights"] .huw-musical-lane');
  const width=await lane.evaluate(node=>node.getBoundingClientRect().width);
  for(const [action,ratio] of [['tap',.18],['click',.76],['tap',.10]]){

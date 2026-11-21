@@ -110,6 +110,7 @@ Editor.prototype.start=function(){
   (browser.platform==='MacIntel'&&browser.maxTouchPoints>1)));
  this._cancelPreview=function(){if(timer){clearTimeout(timer);timer=null;}};
 
+ var selectionMessage=this.getAttribute('selectionMessage',''),renderedTune=null;
  var host=this.host;host.textContent='';this._viewState=ViewState.mount(this,host);
  function saveDraft(fields){var old=self.wiki.getTiddler(self.title);if(!old)return;self.wiki.addTiddler(new $tw.Tiddler(old,Object.assign({'abc-before-transpose':old.fields['abc-source']===source?old.fields['abc-before-transpose']:undefined,'abc-source':source,'abc-key':tools.header(source,'K'),'abc-meter':tools.header(source,'M'),'abc-rhythm':tools.header(source,'R')},fields||{})));}
  function anchorFor(item){return item?{kind:item.kind,start:item.start,virtual:!!item.virtual,eventStart:item.event&&item.event.start,verse:item.verse||0}:null;}
@@ -252,7 +253,11 @@ Editor.prototype.start=function(){
   if(!entryMode&&musical){var d=selected.event.el.duration;if(Array.from(durationChoice.options).some(function(o){return Math.abs(Number(o.value)-d)<1e-8;}))entryLength=d;}
   syncEntry();
  }
- function choose(item,focus,skipSource){if(item!==selected&&!allowSelection()){if(selected)mode.value=selected.kind==='rest'?'note':selected.kind;return false;}metadata=null;metaKey=null;localError.textContent='';selected=item||null;if(selected&&selected.kind==='lyric')entryVerse=selected.verse||0;if(selected&&selected.nodes&&selected.nodes[0])pager.revealNode(selected.nodes[0],true);updateSelection(skipSource);if(focus)preview.focus({preventScroll:true});if(selected&&selected.nodes&&selected.nodes[0])contextPopup.show(selected.nodes[0]);rememberReadingPlace();return true;}
+ function choose(item,focus,skipSource){if(item!==selected&&!allowSelection()){if(selected)mode.value=selected.kind==='rest'?'note':selected.kind;return false;}metadata=null;metaKey=null;localError.textContent='';selected=item||null;if(selected&&selected.kind==='lyric')entryVerse=selected.verse||0;if(selected&&selected.nodes&&selected.nodes[0])pager.revealNode(selected.nodes[0],true);updateSelection(skipSource);if(focus)preview.focus({preventScroll:true});if(selected&&selected.nodes&&selected.nodes[0])contextPopup.show(selected.nodes[0]);rememberReadingPlace();
+  if(selectionMessage&&selected&&renderedTune){
+   self.dispatchEvent({type:selectionMessage,tune:renderedTune,startChar:selected.event.el.startChar});
+  }
+  return true;}
  function navigate(delta){if(!map||!allowSelection())return;var voice=selected?selected.voice:voiceChoice.value,list=map.events.filter(function(e){return e.voice===voice;}),at=selected?list.indexOf(selected.event):-1,index=at<0?0:at+delta;if(index>=list.length&&entryMode){appendBar();return;}index=Math.max(0,Math.min(list.length-1,index));if(list[index])choose(atEvent(list[index],mode.value),true);}
  function replaceItem(item,value,target){try{target=target||anchorFor(item);if(item.kind==='note'){var r=model.editPitch(source,map,item,value,function(s){return abc.parseOnly(s);});target.start=r.offset(target.start);if(target.eventStart!==undefined)target.eventStart=r.offset(target.eventStart);commit(r.source,target);}else{commit(model.replace(source,item,value),target);}}catch(e){localError.textContent=e.message;}}
  function movePitch(delta,chromatic){if(!selected||selected.kind!=='note')return;try{var token;if(chromatic){var sig=Object.values(selected.key||{}).reduce(function(n,v){return n+v;},0);token=model.sourceMidi(selected.midi-(selected.transpose||0)+delta,sig?sig<0:delta<0);}else token=model.step(selected,delta);replaceItem(selected,token);preview.focus({preventScroll:true});}catch(e){localError.textContent=e.message;}}
@@ -416,7 +421,7 @@ Editor.prototype.start=function(){
    var tabWarning=tabOptions.options.length?tabs.finish(result[0],tabControls.config()):'';
    if(tabOptions.options.length&&!tabControls.showNotes())tabs.only(stage,result[0]);if(tabOptions.options.length)tabs.rhythm(stage,result[0],tabControls.config());
    var nextMap=tabs.notation.link(model.build(source,parsedSource),result[0]);
-   preview.textContent='';while(stage.firstChild)preview.appendChild(stage.firstChild);map=nextMap;
+   preview.textContent='';while(stage.firstChild)preview.appendChild(stage.firstChild);map=nextMap;renderedTune=result[0];
    pager.layout(result[0],current.fields);bindScore();bindTabNumbers();metaItems=ScoreText.bind(preview,source,map);metadata=metaKey?metaItems.find(function(m){return m.key===metaKey;})||null:null;
    metaItems.forEach(function(m){m.node.setAttribute('aria-label',tr('Redigér ','Edit ')+(m.kind==='voice'?('V:'+m.id):m.kind==='title'?tr('titel','title'):tr('komponist','composer')));});
    if(metaKey&&!metadata){metaKey=null;if(contextPopup)contextPopup.hide();}

@@ -9,7 +9,7 @@ var Loader=require('$:/plugins/huwiki/abc/loader.js');
 function el(doc,tag,cls,text,parent){var e=doc.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;if(parent)parent.appendChild(e);return e;}
 function mount(o){
  var doc=o.doc,wiki=o.wiki,da=!/\/en(?:-|$)/i.test(wiki.getTiddlerText('$:/language',''));
- var popup=null,editor=null,draft='',title='',original='',origin=null,newScore=false,onSaved=null;
+ var popup=null,editor=null,draft='',title='',original='',origin=null,newScore=false,onSaved=null,clip=null;
  function button(host,text,action,cls){var b=el(doc,'button',cls||'',text,host);b.type='button';b.onclick=action;return b;}
  function destroyWidget(w){if(!w)return;(w.children||[]).forEach(destroyWidget);if(typeof w.onDestroy==='function')w.onDestroy();}
  function changed(){var t=draft&&wiki.getTiddler(draft);if(!t)return false;var f=Object.assign({},t.fields);delete f.title;delete f['draft.of'];delete f['draft.title'];return JSON.stringify(f)!==original;}
@@ -17,7 +17,7 @@ function mount(o){
   if(!popup)return true;
   if(!force&&changed()&&!doc.defaultView.confirm(da?'Luk uden at gemme ændringer i musikken?':'Close without saving the music changes?'))return false;
   destroyWidget(editor);if(editor&&editor.removeChildDomNodes)editor.removeChildDomNodes();editor=null;
-  popup.remove();popup=null;if(draft)wiki.deleteTiddler(draft);draft='';o.host.classList.remove('huw-musical--score-open');return true;
+  popup.remove();popup=null;clip=null;if(draft)wiki.deleteTiddler(draft);draft='';o.host.classList.remove('huw-musical--score-open');return true;
  }
  function save(){
   if(!popup)return;var t=wiki.getTiddler(draft);if(!t)return;
@@ -36,11 +36,23 @@ function mount(o){
  }
  function renderEditor(){
   var body=popup.querySelector('.huw-score-workshop-body');destroyWidget(editor);if(editor&&editor.removeChildDomNodes)editor.removeChildDomNodes();body.textContent='';
-  editor=wiki.makeWidget({tree:[{type:'huwiki-abc-edit',attributes:{tiddler:{type:'string',value:draft}},children:[]}]},{document:doc,parentWidget:o.parentWidget||$tw.rootWidget});
+  var attributes={tiddler:{type:'string',value:draft}};
+  if(clip&&o.seekScore)attributes.selectionMessage={type:'string',value:'tm-animus-score-selection'};
+  editor=wiki.makeWidget({tree:[{type:'huwiki-abc-edit',attributes:attributes,children:[]}]},{document:doc,parentWidget:o.parentWidget||$tw.rootWidget});
+  if(attributes.selectionMessage)editor.addEventListener('tm-animus-score-selection',function(event){
+   var tune=event.tune;
+   if(!tune.noteTimings)tune.setTiming();
+   var times=(tune.noteTimings||[]).filter(function(row){
+    return row.type==='event'&&(row.startChar===event.startChar||(row.startCharArray||[]).indexOf(event.startChar)>=0);
+   }).map(function(row){return row.milliseconds;});
+   if(times.length)o.seekScore(clip.id,times);
+   return false;
+  });
   editor.render(body,null);
  }
  function open(score,options){
   options=options||{};if(popup&&!close(false))return false;o.pause();
+  clip=options.clip||null;
   newScore=!score;title=score||wiki.generateNewTitle(da?'Ny musik':'New music');onSaved=options.onSave||null;
   var t=wiki.getTiddler(title),fields=t?Object.assign({},t.fields):{type:'text/vnd.tiddlywiki',text:'<$huwiki-abc-score tiddler=<<currentTiddler>>/>','abc-source':'X:1\nT:'+title+'\nM:4/4\nL:1/4\nQ:1/4=100\nK:C\nC D E F | G2 G2 | A G F E | D2 C2 |','abc-accompaniment':'{"enabled":false}'};
   origin=t?JSON.stringify(t.fields):null;

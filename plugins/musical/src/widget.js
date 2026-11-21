@@ -171,7 +171,11 @@ Musical.prototype.render=function(parent,next){
   });
  });
  function alive(){return !self._dead&&host.isConnected!==false;}
- function timeLabel(n){var s=Math.floor(Math.max(0,n));return Math.floor(s/60)+":"+String(s%60).padStart(2,"0");}
+ function timeLabel(n,precise){
+  var hundredths=Math.round(Math.max(0,n)*100),s=precise?Math.floor(hundredths/100):Math.floor(Math.max(0,n));
+  var label=Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
+  return precise&&hundredths%100?label+(L.score==="Noder"?",":".")+String(hundredths%100).padStart(2,"0"):label;
+ }
  var duration=fullDuration(),timeline=null,ready=false,controller=null,activeIndex=0,stopping=false,changingSpeed=false;
  var editor=null,workspace=null,session=null,preparing=false,generation=0,lastGainUpdate=0,visibleKey="",ABCObject=null,soundReady=false,soundfont="";
  // Resolve export inputs before ABC arrives; loading notation must not make
@@ -249,6 +253,17 @@ Musical.prototype.render=function(parent,next){
     });
    });
   });
+  // ABCJS can draw chord text outside its note group. Associate the label
+  // with its written note so another staff or repeat cannot steal the click.
+  (song.tune.engraver&&song.tune.engraver.staffgroups||[]).forEach(function(system){
+   system.voices.forEach(function(voice){voice.children.forEach(function(note){
+    if(!note.abcelem||!note.abcelem.chord)return;
+    var owner=(note.elemset||[]).find(function(n){return map.has(n);});
+    if(owner)(note.children||[]).forEach(function(child){
+     if(child.type==="chord"&&child.graphelem)map.set(child.graphelem,map.get(owner));
+    });
+   });});
+  });
  }
  function clickScore(index,event){
   var song=songs[index],page=song&&song.page;
@@ -260,35 +275,39 @@ Musical.prototype.render=function(parent,next){
    if(map&&(times=map.get(hit))&&times.length)break;
    hit=hit.parentNode;
   }
-  // Chord symbols often live above the staff, outside noteTimings.elements.
-  // Map the selected chord to the closest timed note on its staff.
-  if(!times||!times.length){
-   var chord=target.closest(".abcjs-chord,.abcjs-chord-symbol,.abcjs-chord-text");
-   if(!chord)return;
-   var box=chord.getBoundingClientRect(),cx=(box.left+box.right)*.5,cy=(box.top+box.bottom)*.5,
-    distance=Infinity,nearest=null;
-   song.events.forEach(function(ev){
-    (ev.elements||[]).forEach(function(group){
-     (Array.isArray(group)?group:[group]).forEach(function(n){
-      if(!n||!n.getBoundingClientRect)return;
-      var r=n.getBoundingClientRect();if(!r.width||!r.height)return;
-      var d=Math.abs((r.left+r.right)*.5-cx)+Math.abs((r.top+r.bottom)*.5-cy)*1.4;
-      if(d<distance){distance=d;nearest=n;}
-     });
+  if(!times){
+   // At split-view scale a notehead can be only a few pixels across.
+   // A tap between the head and stem, or inside a chord letter, can hit
+   // the SVG background. Limit the search to the nearby printed system.
+   var x=event.clientX,y=event.clientY,radius=event.pointerType==='touch'?12:8;
+   var best=Infinity;
+   svg.querySelectorAll('.abcjs-staff-wrapper').forEach(function(system){
+    var bounds=system.getBoundingClientRect();
+    if(y<bounds.top-radius||y>bounds.bottom+radius||x<bounds.left-radius||x>bounds.right+radius)return;
+    system.querySelectorAll('.abcjs-notehead,.abcjs-stem,.abcjs-chord,.abcjs-chord-symbol,.abcjs-chord-text').forEach(function(glyph){
+     var owner=glyph.closest('.huw-musical-score-note-target'),candidate=map.get(glyph)||(owner&&map.get(owner));
+     if(!candidate)return;
+     var r=glyph.getBoundingClientRect();
+     var dx=Math.max(r.left-x,0,x-r.right),dy=Math.max(r.top-y,0,y-r.bottom);
+     var distance=dx*dx+dy*dy;
+     if(distance<=radius*radius&&distance<best){best=distance;times=candidate;}
     });
    });
-   times=nearest&&map&&map.get(nearest);
   }
   if(!times||!times.length)return;
-  var clip=clips[index],localNow=Math.max(0,(timeline.value()-clip.start)*1000);
-  // One written note may be heard twice via repeats and voltas.
-  var ms=times.slice().sort(function(a,b){
-   return Math.abs(a-localNow)-Math.abs(b-localNow)||(a>=localNow?-1:1);
-  })[0];
-  if(!Number.isFinite(Number(ms)))return;
-  if(editor&&editor.selectSong)editor.selectSong(clip.id);
-  seek(Playlist.at(clips,index,Number(ms)/1000));
-  event.preventDefault();
+  seekScore(index,times);event.preventDefault();
+ }
+ function seekScore(index,times){
+  var clip=clips[index],localNow=(timeline.value()-clip.start)*1000;
+  // For a repeat, seek to the performance nearest the current playhead.
+  var ms=times.reduce(function(best,t){
+   var delta=Math.abs(t-localNow),previous=Math.abs(best-localNow);
+   return delta<previous||(delta===previous&&t>best)?t:best;
+  });
+  var selected=editor&&editor.getSelection();
+  if(selected&&selected.kind==="song")editor.selectSong(clip.id);
+  seek(Playlist.at(clips,index,ms/1000));
+  if(editor)editor.revealPlayhead();
  }
  function trackConfig(song){
   // ABCJS' original synth and FluidSynth fallback both expose mixer
@@ -452,7 +471,7 @@ Musical.prototype.render=function(parent,next){
    voice.sync(t,timeline.rate);syncAudio(t);
   }
   if(scrubTime==null&&Number(time.value)!==t)time.value=String(t);
-  var clockLabel=timeLabel(t)+" / "+timeLabel(duration);
+  var clockLabel=timeLabel(t,!timeline||!timeline.running)+" / "+timeLabel(duration);
   if(clock.textContent!==clockLabel)clock.textContent=clockLabel;
   host.dataset.cameraTime=visualTime.toFixed(2);
  }
@@ -620,7 +639,7 @@ Musical.prototype.render=function(parent,next){
   },
   seek:seek,repaint:function(){paint(timeline.value());},
   pause:function(){if(timeline.running)pauseAll();},isPlaying:function(){return timeline.running;},
-  onEditScore:function(title){if(workspace)workspace.openScore(title);},
+  onEditScore:function(title,clip){if(workspace)workspace.openScore(title,clip);},
   onEditAudio:function(details){if(workspace)workspace.openNarration(details);},
   onEditScenes:function(){if(workspace)workspace.openScenes();},
   onEditCaptions:function(details){if(workspace&&workspace.openManuscript)workspace.openManuscript(details);},
@@ -648,6 +667,11 @@ Musical.prototype.render=function(parent,next){
   previewPreference:this._previewPreference,rememberPreview:function(mode){self._previewPreference=mode;},
   doc:doc,host:host,wiki:this.wiki,parentWidget:this,project:scene.name||"Musical",film:scene,sceneTitle:this.sceneTitle,stageTitle:this._stageTitle,
   scoreTitle:function(){return songs[activeIndex]&&songs[activeIndex].title||self.scoreTitle;},
+  activeScoreClip:function(){return clips[activeIndex];},
+  seekScore:function(id,times){
+   var index=clips.findIndex(function(clip){return clip.id===id;});
+   if(index>=0&&times.length)seekScore(index,times);
+  },
   onAudioChange:function(updated){voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);if(editor)editor.redraw();paint(timeline.value());},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},repaint:function(){paint(timeline.value());},
   openFace:openFace,
