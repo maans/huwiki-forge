@@ -99,5 +99,6 @@ test("Bundler picks up the compact editor and its CSS without modifying source t
  assert.match(build,/\\.\\(\\?:js\\|tid\\)/);
  const widget=await readFile(path.join(root,"plugins/abc/src/score-widget.js"),"utf8");
  assert.match(widget,/fromNodebog:!!\\(self\.host&&self\.host\.closest/);
- assert.doesNotMatch(code,/wiki\.addTiddler\(new \$tw\.Tiddler\(.*\bdraft\.of\b/s);
+ assert.match(code,/self\.wiki\.addTiddler\(new \$tw\.Tiddler\(old,\{/);
+ assert.ok(code.includes('useCompactNodebogEditor'),"compact draft gate is compiled into the editor module");
 });
