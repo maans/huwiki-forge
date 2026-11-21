@@ -96,9 +96,9 @@ test("Compact editor mounts no SVG/piano/audio and writes only the native draft"
 test("Bundler picks up the compact editor and its CSS without modifying source tiddlers",async()=>{
  const build=await readFile(path.join(root,"scripts/build-abc-ui.mjs"),"utf8");
  assert.match(build,/readdir\(path\.join\(directory,'src'\)\)/);
- assert.match(build,/\\.\\(\\?:js\\|tid\\)/);
+ assert.ok(build.includes("if(!/\\.(?:js|tid)$/.test(name))continue;"),"builder reads js and tid source modules");
  const widget=await readFile(path.join(root,"plugins/abc/src/score-widget.js"),"utf8");
- assert.match(widget,/fromNodebog:!!\\(self\.host&&self\.host\.closest/);
+ assert.ok(widget.includes("fromNodebog:!!(self.host&&self.host.closest"),"Nodebog handoff is explicitly identified");
  assert.match(code,/self\.wiki\.addTiddler\(new \$tw\.Tiddler\(old,\{/);
  assert.ok(code.includes('useCompactNodebogEditor'),"compact draft gate is compiled into the editor module");
 });
