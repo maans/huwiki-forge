@@ -66,6 +66,15 @@ for(const song of ready){
  }
  const heading=song.title.replace(/^SilbaÄtno · /,"");
  const rendered=converter.renderABC(model,selected,1,last,{title:heading,barsPerLine:4});
+ // The one-bar second ending of Dalarne A must read beside its first ending.
+ // Keep the following B repeat on its own line. This changes engraving only:
+ // repeated playback is corrected in the shared ABC repeat-plan module.
+ if(name==='laat-fraan-dalarna-cbb.mscz'){
+  const before='[1 z4 :|\\n[2 z2"A" A2 |: [P:B]';
+  const after='[1 z4 :| [2 z2"A" A2 |:\\n[P:B]';
+  if(!rendered.abc.includes(before))throw Error('Dalarne endings changed in source; review volta layout before publishing');
+  rendered.abc=rendered.abc.replace(before,after);
+ }
  if(rendered.notes<1||rendered.voices!==selected.length){
   console.error("ABC conversion error",JSON.stringify({name,notes:rendered.notes,voices:rendered.voices,expectedVoices:selected.length,
    staffSummary:model.staves.map(st=>({id:st.id,measures:st.measures.length,voices:st.voices.map(v=>({id:v.id,count:v.count}))})),
