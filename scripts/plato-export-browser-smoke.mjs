@@ -390,7 +390,7 @@ try{
   await exportMovie(false);mp4Verification.video=true;
   passed('native H.264 export from the actual Plato scene downloads and decodes at 720p with exact clip duration');
   if(mp4Verification.codecs.aac){
-   await level('Speech',1);await level('Singing',1);await level('Music',1);
+   await level('speech',1);await level('song',1);await level('music',1);
    await exportMovie(true);mp4Verification.mixedAudio=true;
    passed('native H.264/AAC MP4 retains playback audio with WAV boxes off; adding music.wav and VTT after close/reopen reuses the exact finished movie');
   }else console.log('UNVERIFIED native AAC export: this browser has no supported AAC encoder.');
