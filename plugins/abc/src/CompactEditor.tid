@@ -1,0 +1,19 @@
+title: $:/plugins/huwiki/abc/CompactEditor
+type: text/css
+tags: $:/tags/Stylesheet
+
+/* Low-memory native draft editor for iPad Nodebog handoff. All source data is
+   edited in the real TiddlyWiki draft; the full graphical editor is opt-in. */
+.huwabc-edit-lite{display:flex;flex-direction:column;gap:9px;min-width:0;max-width:100%;padding:8px 0 14px}
+.huwabc-edit-lite-title{margin:0;font:700 17px/1.3 system-ui;color:#234d40}
+.huwabc-edit-lite-note{margin:0;font:13px/1.5 system-ui;color:#4b6e62}
+.huwabc-edit-lite-field{display:flex;flex-direction:column;gap:5px;min-width:0;font:600 12px/1.4 system-ui;color:#30594c}
+.huwabc-full-edit .huwabc-edit-lite textarea.huwabc-edit-lite-code{display:block;box-sizing:border-box;width:100%;min-height:min(44dvh,320px);height:min(60dvh,630px);max-height:75dvh;padding:12px 14px;border:1px solid #a8c7b9;border-radius:8px;background:#fff;color:#172b25!important;-webkit-text-fill-color:#172b25!important;caret-color:#172b25;font:14px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;white-space:pre;overflow:auto;resize:vertical;tab-size:2}
+.huwabc-edit-lite-status{margin:0;color:#476e61;font:12px/1.4 system-ui}
+.huwabc-edit-lite-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.huwabc-edit-lite-actions .huwabc-btn{min-height:40px;border-radius:7px;border:1px solid #abc8bc;background:#f4faf7;color:#265847;font:600 12px/1.3 system-ui}
+@media(max-width:700px){
+ .huwabc-edit-lite{padding:4px 0 9px}
+ .huwabc-full-edit .huwabc-edit-lite textarea.huwabc-edit-lite-code{min-height:46dvh;height:53dvh;padding:10px;font-size:13px}
+}
+@media print{.huwabc-edit-lite{display:none!important}}
