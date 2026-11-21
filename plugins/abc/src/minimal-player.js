@@ -39,8 +39,7 @@ exports.mount=function(host,options){
  function alive(){return !closed&&host.isConnected!==false&&(!options.isCurrent||options.isCurrent());}
  function text(value){return I18n.translate(value,I18n.language(options.wiki));}
  var box=make('section','huwabc-minimal-player');
- var instrumentBar=make('div','huwabc-instrument-bar huwabc-instrument-bar-compact');
- box.appendChild(instrumentBar);
+ // Normal mode is a compact notation/player view; Advanced owns instrument/print controls.
  var paper=make('div','huwabc-paper huwabc-minimal-paper');
  if(options.follow){box.classList.add('huwabc-follow-player');if(options.showTitle)box.classList.add('huwabc-follow-with-title');viewport=FollowViewport.mount(paper,{voice:options.followVoice||1,measures:options.followMeasures||3,zoom:1.2,chords:options.followChords||'below',chordVoice:options.followChordVoice||0,chordsOnly:!!options.followChordsOnly,showTitle:options.showTitle});if(options.followChordsOnly)box.classList.add('huwabc-follow-chords-only');}
  var controls=options.audio===false?null:make('div','huwabc-minimal-controls');
@@ -300,17 +299,10 @@ exports.mount=function(host,options){
   else if(plan.pages&&pager&&visual){pager.layout(visual,fields);}
   else if(plan.live){if(controller&&controller.midiBuffer)controller.midiBuffer.setVolumes();if(drone)drone.configure();}
  }
- var instrumentControls=InstrumentView.mount(instrumentBar,{wiki:options.wiki,onChange:function(){
-  if(!alive())return;
-  update(fields,source,{score:true});
- }});
- if(pager){var printButton=make('button','huwabc-btn huwabc-instrument-print',text('PDF / Udskriv'));
-  printButton.type='button';printButton.addEventListener('click',function(){
-   if(!pager||!visual){show('Der er endnu ingen noder at udskrive.',true);return;}
-   if(!pager.openPrintPreview(JazzFont.css(),InstrumentView.printLabel(options.wiki)))
-     show('Der er endnu ingen noder at udskrive.',true);
-  });instrumentBar.appendChild(printButton);
- }
+ // Respect concert/written instrument changes made elsewhere without a toolbar.
+ var stopInstrumentObserver=InstrumentView.observe(function(){
+  if(alive())update(fields,source,{score:true});
+ });
  var api={element:box,pager:pager,controller:null,visual:null,destroy:destroy,update:update,updateConfig:function(next){
   var fresh=Accompaniment.clean(next),live=Accompaniment.liveConfigChange(config,fresh);config=fresh;
   fields=Object.assign({},fields,{'abc-accompaniment':JSON.stringify(config)});
@@ -319,7 +311,7 @@ exports.mount=function(host,options){
   }};
  function destroy(){
   if(closed)return;if(pager)pager.destroy();closed=true;
-  if(instrumentControls)instrumentControls.destroy();
+  if(stopInstrumentObserver)stopInstrumentObserver();
   if(miniMixer){miniMixer.destroy();miniMixer=null;}
   if(detachObserver)detachObserver.disconnect();if(locale)locale.destroy();if(controlsLocale)controlsLocale.destroy();
   if(unbindShortcuts)unbindShortcuts();shortcutHost.removeEventListener('pointerdown',activateByPointer,true);paper.removeEventListener('click',paperClicked);

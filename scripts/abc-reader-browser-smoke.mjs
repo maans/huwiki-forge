@@ -20,6 +20,27 @@ try{
  const runtimeErrors=[];page.on("pageerror",e=>runtimeErrors.push(e.message));
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.waitForFunction(()=>window.$tw&&$tw.rootWidget&&$tw.wiki);
+ // Normal is the default article view; Advanced exposes the former extras.
+ await page.locator(".silba-home").getByRole("link",{name:"Låt från Dalarne"}).click();
+ let article=page.locator(".huw-music-media-abc>.huwabc-score.huwabc-standalone").first();
+ await article.waitFor();
+ assert.equal(await article.evaluate(el=>el.classList.contains("huwabc-minimal")),true);
+ await article.locator(".huwabc-page-shell").waitFor();
+ assert.equal(await article.locator(".huwabc-instrument-bar").count(),0,"No instrument toolbar in Normal");
+ assert.equal(await article.locator(".huwabc-instrument-print").count(),0,"No PDF in Normal");
+ assert.equal(await article.locator(".huwabc-page-toolbar").evaluate(el=>getComputedStyle(el).display),"none",
+  "Zoom, pages configuration and stand toolbar should be hidden");
+ assert.equal(await page.locator(".huw-music-media-abc>.huw-music-section-label")
+  .evaluate(el=>getComputedStyle(el).display),"none","No redundant ABC heading");
+ await article.getByRole("button",{name:"Avanceret visning"}).click();
+ await page.waitForFunction(()=>!!document.querySelector(".huwabc-score.huwabc-standalone:not(.huwabc-minimal)"));
+ article=page.locator(".huwabc-score.huwabc-standalone:not(.huwabc-minimal)").first();
+ assert.equal(await article.locator(".huwabc-instrument-group").isVisible(),true);
+ await article.getByRole("button",{name:"PDF / Udskriv"}).waitFor({state:"visible"});
+ await article.getByRole("button",{name:"Normal visning"}).click();
+ await page.waitForFunction(()=>!!document.querySelector(".huwabc-score.huwabc-standalone.huwabc-minimal"));
+ await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
+ await page.locator(".silba-home").waitFor();
  await page.getByRole("link",{name:"Åbn nodebogen"}).click();
  const score=page.locator(".huwrep-book .huwabc-score").first();
  await score.waitFor();

@@ -89,9 +89,10 @@ test("Advanced mode only lasts in the current reader and does not write original
  control.click();
  assert.equal(reader._manualMode,"full");
  assert.equal(reader._scoreView.view,"full");
- assert.equal(reader.host.children.at(-1).children.at(-1).textContent,"Minimal visning");
+ assert.equal(reader.host.children.at(-1).children.at(-1).textContent,"Normal visning");
  reader.host.children.at(-1).children.at(-1).click();
  assert.equal(reader._scoreView.view,"minimal");
+ assert.equal(reader.host.children.at(-1).children.at(-1).attributes["aria-label"],"Skift til avanceret visning");
  assert.equal(writes.length,0,"changing the view must not create or edit a tiddler");
  assert.equal(tiddlers["A · Old import"].fields["abc-view"],"full");
 });
