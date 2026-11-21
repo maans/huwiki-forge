@@ -39,9 +39,10 @@ try{
    const links=Array.from(hero.querySelectorAll(".silba-actions .silba-action"));
    const rects=links.map(n=>n.getBoundingClientRect());
    const box=heading.getBoundingClientRect();
-   const style=getComputedStyle(heading);
+   const style=getComputedStyle(heading),photoStyle=getComputedStyle(hero.querySelector(".silba-photo-visual"));
    return {width:hero.getBoundingClientRect().width,headlineWidth:heading.scrollWidth,availableWidth:heading.clientWidth,
     lineHeight:parseFloat(style.lineHeight),headingHeight:box.height,
+    photoPositionY:photoStyle.backgroundPositionY.split(",")[0].trim(),
     links:rects.map(r=>({x:r.x,y:r.y,width:r.width,height:r.height}))};
   });
   assert.ok(geometry.headlineWidth<=geometry.availableWidth+2,
@@ -52,6 +53,8 @@ try{
    "Icon buttons must keep iPad-friendly touch targets");
   assert.ok(geometry.links.every(link=>Math.abs(link.y-geometry.links[0].y)<2),
    "All four actions must remain on the same row at "+width+"px");
+  assert.equal(geometry.photoPositionY,width<=690?"0%":"50%",
+   "At "+width+"px the photo should "+(width<=690?"show the faces at the top":"remain centered"));
  }
  await page.locator(".silba-home").evaluate(node=>node.style.removeProperty("width"));
  // Use the real ABCJS parser, not a mocked score, to confirm both A/B repeats

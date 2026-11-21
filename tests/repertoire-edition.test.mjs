@@ -296,6 +296,10 @@ test("SilbaÄtno heading and icon actions respond to the actual wiki article wid
  assert.match(sheet.text,/white-space:nowrap/);
  assert.match(sheet.text,/@container silba-home \(max-width:690px\)/,
   "hero should stack when the wiki story gets narrow, regardless of viewport");
+ assert.match(sheet.text,/\.silba-photo-visual \{width:100%;height:100%;[^\n]*background-position:center;background-size:cover;/,
+  "The wide hero keeps the photo centered");
+ assert.equal((sheet.text.match(/\.silba-photo-visual \{min-height:190px;max-height:(?:300|260)px;background-position:center top;\}/g)||[]).length,2,
+  "Both a narrow article and a narrow browser prioritize the faces at the top");
  assert.equal((home.text.match(/class="silba-(?:primary|secondary) silba-action"/g)||[]).length,4);
  assert.equal((home.text.match(/class="silba-action-label"/g)||[]).length,4);
  assert.equal((home.text.match(/<svg viewBox=/g)||[]).length,4);
