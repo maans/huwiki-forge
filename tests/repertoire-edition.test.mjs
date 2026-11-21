@@ -449,7 +449,7 @@ test("SitePublisher uses a generated 17-title list, independently of the gross-l
  assert.ok(manifest.tiddlers.includes("tiddlers/site-export-list.json"));
  assert.equal(listFile.length,1);
  assert.equal(listFile[0].title,"SilbaÄtno – Site-eksport (nodeark)");
- const listed=[...listFile[0].list.matchAll(/\\[\\[([^\\]]+)\\]\\]/g)].map(match=>match[1]);
+ const listed=listFile[0].list.slice(2,-2).split("]] [[");
  assert.deepEqual(listed,scores.map(score=>score.title));
  assert.ok(publisher.includes('box.value='+JSON.stringify("SilbaÄtno – Site-eksport (nodeark)")+';'));
  assert.ok(publisher.includes('if(rows!==21)'));
