@@ -114,6 +114,7 @@
 }
 .huw-musical--workspace .huw-musical-app-actions{display:flex;align-items:center;flex-wrap:wrap;gap:4px;margin-left:auto}
 .huw-musical-menu{position:relative}
+.huw-musical-menu :is(button,a,select){touch-action:manipulation}
 .huw-musical--workspace .huw-musical-menu-trigger{
  display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:38px;
  padding:4px 9px;border:1px solid transparent;border-radius:5px;background:transparent;color:#e9f3fa;

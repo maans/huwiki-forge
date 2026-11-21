@@ -316,6 +316,9 @@ try{
   await openTiddler(readerTitle);
   await readerFrame.locator('.huwabc-score').waitFor();
   assert.equal(await readerFrame.locator('.huwabc-score').count(),1,'the score must mount one actual reader, not hide a duplicate');
+  const mixerToggle=readerFrame.locator('.huwabc-mini-open:visible').first();
+  await mixerToggle.waitFor();
+  if(await mixerToggle.getAttribute('aria-expanded')!=='true')await mixerToggle.click();
   await mixers.locator('.huwabc-mini-mixer-row').first().waitFor();
   assert.equal(await mixers.count(),1,'there must be only one mixer in the DOM, including hidden panels');assert.equal(await mixers.locator('.huwabc-mini-mixer-row').count(),3);
   if(attempt===1)await screenshot('abc-single-mixer');

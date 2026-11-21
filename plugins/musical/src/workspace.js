@@ -51,7 +51,11 @@ function mount(o){
  }
  var openMenu=null,idPrefix='huw-animus-menu-'+(++toolbarId)+'-';
  function dismissOutside(event){
-  if(openMenu&&!openMenu.group.contains(event.target))closeMenu(false);
+  if(!openMenu||openMenu.group.contains(event.target))return;
+  // WebKit can shift focus to the enclosing workspace during a tap on a
+  // picker or its trigger. An actual tap outside is handled by pointerdown.
+  if(event.type==='focusin'&&event.target.contains(openMenu.group))return;
+  closeMenu(false);
  }
  function closeMenu(restoreFocus){
   if(!openMenu)return;
@@ -98,7 +102,7 @@ function mount(o){
   });
   // Safari can focus the enclosing editor on mouse-down instead of the
   // button. Keep the item in place until the matching click is delivered.
-  panel.addEventListener('mousedown',function(event){
+  group.addEventListener('mousedown',function(event){
    var item=event.target.closest('button,a');
    if(event.button===0&&item&&!item.disabled){
     event.preventDefault();item.focus({preventScroll:true});

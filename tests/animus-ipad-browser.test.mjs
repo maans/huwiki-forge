@@ -100,10 +100,13 @@ test('Turn Around stays editable after touch, mouse, backward seeks and playback
  const playback=editor.locator('[data-menu="playback"]');
  await playback.tap();
  const options=editor.locator('.huw-musical-playback-options');
+ await options.waitFor({state:'visible'});
+ await playback.tap();await options.waitFor({state:'hidden',timeout:3000});
+ await playback.tap();
  await options.locator('.huw-musical-speed').selectOption('125');
  await options.locator('[data-huw-animus-captions="language"]').selectOption('en');
  assert.equal(await options.locator('.huw-musical-speed').inputValue(),'125');
- await playback.tap();assert.equal(await options.isVisible(),false);
+ await header.locator('.huw-musical-brand').tap();await options.waitFor({state:'hidden',timeout:3000});
  await editor.locator('.huw-musical-filter').selectOption('camera');
  const groups=await editor.locator('.huw-musical-track[data-group]').evaluateAll(rows=>rows.map(row=>row.dataset.group));
  assert.ok(groups.length>0&&groups.every(group=>group==='camera'));
