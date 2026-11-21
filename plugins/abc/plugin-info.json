@@ -3,12 +3,12 @@
   "name": "ABC Musik",
   "title": "$:/plugins/huwiki/abc",
   "stability": "experimental",
-  "description": "ABC Musik – Minimal visning som standard; Avanceret er et midlertidigt tilvalg; minimixer åbnes først ved behov",
+  "description": "ABC Musik – Normal er den tidligere Minimal-visning med kun noder og afspilning; Avanceret er frivillig; mixer åbnes ved behov",
   "plugin-type": "plugin",
   "license": "MIT",
   "type": "application/json",
-  "version": "0.3.39-test.8",
+  "version": "0.3.39-test.9",
   "author": "HUWiki",
   "revision": "8",
-  "modified": "20261121025000000"
+  "modified": "20261121031000000"
 }

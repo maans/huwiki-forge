@@ -25,6 +25,8 @@ test("ABC starts in Minimal view; the mixer stays closed until needed",async()=>
  const score=await readFile(path.join(root,"plugins/abc/src/score-widget.js"),"utf8");
  assert.ok(score.includes("this._manualMode||'minimal'"),"existing advanced scores open minimal");
  assert.ok(score.includes("Avanceret visning"),"Danish advanced label");
+ assert.ok(score.includes("Normal visning"),"quiet default is named Normal");
+ assert.ok(score.includes("Normal view"),"English quiet view label");
  assert.ok(score.includes("Advanced view"),"English advanced label");
  assert.ok(!score.includes("new $tw.Tiddler(current,{'abc-view':next})"),
   "mode changes never rewrite a source tiddler");

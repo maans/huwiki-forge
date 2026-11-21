@@ -617,7 +617,7 @@ ABCWidget.prototype.drawViewToggle=function(){
  var self=this,minimal=this._scoreView.minimal,row=el('div','huwabc-view-toggle-row');
  if(minimal){this._minimalControlsHost=el('div','huwabc-minimal-toolbar');row.appendChild(this._minimalControlsHost);}
  var danish=I18n.language(this.wiki)==='da';
- var control=button(minimal?(danish?'Avanceret visning':'Advanced view'):(danish?'Minimal visning':'Minimal view'),function(){
+ var control=button(minimal?(danish?'Avanceret visning':'Advanced view'):(danish?'Normal visning':'Normal view'),function(){
   if(!self.wiki.getTiddler(self.title))return;
   var next=self._scoreView.minimal?'full':'minimal';
   if(self._audioController)playback.stopOne(self._audioController);
@@ -627,7 +627,7 @@ ABCWidget.prototype.drawViewToggle=function(){
   self.refreshSelf();
  },'huwabc-view-toggle');
  control.setAttribute('title',minimal?(danish?'Vis avancerede værktøjer':'Show advanced tools'):(danish?'Vis kun noder og afspilning':'Show only score and player'));
- control.setAttribute('aria-label',minimal?(danish?'Skift til avanceret visning':'Switch to advanced view'):(danish?'Skift til minimal visning':'Switch to minimal view'));
+ control.setAttribute('aria-label',minimal?(danish?'Skift til avanceret visning':'Switch to advanced view'):(danish?'Skift til normal visning':'Switch to normal view'));
  row.appendChild(control);this.host.appendChild(row);
  if(this._toggleFocusPending){this._toggleFocusPending=false;try{control.focus({preventScroll:true});}catch(ignore){control.focus();}}
 };

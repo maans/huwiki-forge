@@ -46,7 +46,7 @@ try{
   [...document.querySelectorAll(".huwabc-standalone")].some(node=>
    node.getAttribute("data-huwabc-title")==="SilbaÄtno · Låt från Dalarne"&&!node.classList.contains("huwabc-minimal")));
  assert.equal((await standalone.locator(".huwabc-view-toggle").innerText()).trim(),
-  advancedLabel==="Advanced view"?"Minimal view":"Minimal visning");
+  advancedLabel==="Advanced view"?"Normal view":"Normal visning");
  assert.equal(await page.evaluate(id=>$tw.wiki.getTiddler(id).fields["abc-view"],oldScoreTitle),
   previouslySaved,"The display-only toggle must not rewrite the music");
  await page.locator(".silba-home").getByRole("link",{name:"Brudmarch från Jämtland"}).click();
