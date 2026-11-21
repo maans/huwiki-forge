@@ -18,6 +18,7 @@ on:
       - 'tests/repertoire-edition.test.mjs'
       - 'scripts/repertoire-browser-smoke.mjs'
       - 'scripts/abc-reader-browser-smoke.mjs'
+      - 'scripts/abc-reader-browser-smoke.mjs'
       - 'editions/silva-ethno-repertoire/manifest.json'
       - 'editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json'
       - 'editions/silva-ethno-repertoire/tiddlers/config.json'
