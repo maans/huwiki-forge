@@ -403,3 +403,38 @@ test("PDF Publisher fills free space beneath scores and creates an overflow page
  assert.equal(long.pages[1].children[0].children.length,1);
  assert.match(js,/navigator\.share\(\{files:\[file\]/,"Quine-compatible file sharing remains intact");
 });
+
+
+test("SilbaÄtno statistic cards open auto-generated native TiddlyWiki lists",async()=>{
+ const base=path.join(root,"editions/silva-ethno-repertoire");
+ const config=JSON.parse(await readFile(path.join(base,"tiddlers/config.json"),"utf8"));
+ const manifest=JSON.parse(await readFile(path.join(base,"manifest.json"),"utf8"));
+ const scores=JSON.parse(await readFile(path.join(base,"tiddlers/repertoire.json"),"utf8"));
+ const pending=JSON.parse(await readFile(path.join(base,"tiddlers/pending.json"),"utf8"));
+ const home=config.find(t=>t.title==="SilbaÄtno Repertoire – Oversigt");
+ const template=config.find(t=>t.title==="$:/silbaatno/repertoire/list-row");
+ assert.ok(home&&template);
+ assert.ok(manifest.tiddlers.includes("tiddlers/pending.json"));
+ assert.equal(scores.length,17);
+ assert.equal(pending.length,4);
+ const titles=[...scores,...pending].map(t=>t.title);
+ assert.equal(new Set(titles).size,21,"No duplicate tiddlers in assembled edition");
+ assert.equal(scores.filter(t=>t["silba-section"]==="hovedliste").length,13);
+ assert.equal(pending.filter(t=>t["silba-section"]==="hovedliste").length,1);
+ assert.equal(pending.filter(t=>t["silba-section"]==="usikre").length,1);
+ assert.equal(pending.filter(t=>t["silba-section"]==="ude").length,2);
+ assert.ok(pending.every(t=>t.tags.includes("SilbaÄtnoTrack")&&!t["abc-source"]));
+ for(const title of ["SilbaÄtno – Nodeark","SilbaÄtno – Hovedliste","SilbaÄtno – Bruttoliste"]){
+  assert.match(home.text,new RegExp('to="'+title+'".*class="silba-metric"'));
+  const page=config.find(t=>t.title===title);
+  assert.ok(page,"Missing clickable destination: "+title);
+  assert.match(page.text,/\\<\\$list filter=/);
+  assert.match(page.text,/template="\\$:\/silbaatno\/repertoire\/list-row"/);
+ }
+ assert.equal((home.text.match(/class="silba-metric"/g)||[]).length,3);
+ assert.match(home.text,/\\<\\$count filter=/);
+ assert.equal((home.text.match(/class="silba-track-list"/g)||[]).length,3);
+ assert.doesNotMatch(home.text,/<li>/,"Homepage lists must be data-driven rather than hardcoded");
+ assert.match(template.text,/removeprefix\\[SilbaÄtno · /);
+ assert.match(template.text,/Afventer nodeark/);
+});

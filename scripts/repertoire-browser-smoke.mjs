@@ -57,6 +57,20 @@ try{
    "At "+width+"px the photo should "+(width<=690?"show the faces at the top":"remain centered"));
  }
  await page.locator(".silba-home").evaluate(node=>node.style.removeProperty("width"));
+
+ // The three statistic cards must navigate to real, filtered TiddlyWiki lists.
+ for(const [i,title,expected] of [[0,"SilbaÄtno – Nodeark",17],[1,"SilbaÄtno – Hovedliste",14],[2,"SilbaÄtno – Bruttoliste",21]]){
+  await page.locator(".silba-metrics .silba-metric").nth(i).click();
+  const list=page.locator('.tc-tiddler-frame[data-tiddler-title="'+title+'"] .silba-generated-list .silba-track-list li');
+  await list.first().waitFor();
+  assert.equal(await list.count(),expected,title+" should contain "+expected+" linked songs");
+  assert.equal(await list.locator("a.silba-track-link").count(),expected,title+" should link every song");
+ }
+ const pendingEntry=page.locator('.tc-tiddler-frame[data-tiddler-title="SilbaÄtno – Bruttoliste"] .silba-track-list li').filter({hasText:"Oh verden"});
+ assert.equal(await pendingEntry.count(),1,"The full gross list must include an editable placeholder for Oh verden");
+ await pendingEntry.locator("a.silba-track-link").click();
+ await page.locator('.tc-tiddler-frame[data-tiddler-title="SilbaÄtno · Oh verden"]').waitFor();
+
  // Use the real ABCJS parser, not a mocked score, to confirm both A/B repeats
  // unfold independently. This also validates the exact first/second-volta
  // line break after the MuseScore import.

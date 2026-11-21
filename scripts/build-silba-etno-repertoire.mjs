@@ -127,6 +127,13 @@ for(const song of ready){
 if(unconverted.length)throw Error("Could not convert "+unconverted.length+" original files: "+unconverted.join(", "));
 const out=path.join(base,"tiddlers/repertoire.json");
 await writeFile(out,JSON.stringify(output,null,2)+"\n");
+// Publish only the titles without a playable score; the 17 converted titles
+// already live in repertoire.json and must not be duplicated in the Edition.
+const pending=sources.filter(s=>!s["silba-musescore-file"]).map(s=>({
+ ...s,tags:"SilbaÄtno SilbaÄtnoTrack",type:"text/vnd.tiddlywiki"
+}));
+if(pending.length+output.length!==sources.length)throw Error("Bruttolisten er ikke komplet");
+await writeFile(path.join(base,"tiddlers/pending.json"),JSON.stringify(pending,null,2)+"\n");
 // Keep the original report creation timestamp to make repeated builds deterministic.
 const reportFile=path.join(base,"conversion-report.json");
 let firstCreated="2026-11-18";
