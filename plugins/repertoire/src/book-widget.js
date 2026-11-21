@@ -483,6 +483,13 @@ Book.prototype.draw=function(){
    scoreHost.appendChild(el(doc,"p","huwrep-muted","Noderne kunne ikke vises: "+error.message));
    stage.appendChild(btn(doc,"Åbn originalen",function(){self.navigate(source.fields.title);}));
   }
+ }else if(f&&f["repertoire-sheet-format"]==="chords"){
+  // An editable WikiText chord chart belongs in Nodebog without fake melody notes.
+  var chordSheet=el(doc,"article","huwrep-chord-sheet");
+  chordSheet.setAttribute("aria-label","Becifringsark");
+  chordSheet.innerHTML=wiki.renderText("text/html","text/vnd.tiddlywiki",f.text||"");
+  stage.appendChild(chordSheet);
+  stage.appendChild(btn(doc,"Åbn / rediger becifringsark",function(){self.navigate(source.fields.title);}));
  }else{
   var imageTitle=f&&f["repertoire-image"]||"";
   var image=wiki.getTiddler(imageTitle)||source;

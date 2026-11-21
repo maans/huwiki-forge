@@ -164,3 +164,11 @@
 .huwrep-book-print-actions{position:absolute;z-index:75;top:calc(100% + 4px);left:0;display:flex;flex-direction:column;gap:5px;min-width:min(290px,85vw);padding:8px;background:#fff;border:1px solid #b3cbbd;border-radius:9px;box-shadow:0 12px 30px #132b2440}
 .huwrep-book-print-actions button{text-align:left;white-space:normal}
 @media(max-width:680px){.huwrep-book-print-actions{left:auto;right:0}}
+
+/* Lightweight chord charts in the music stand (no invented pitches or audio). */
+.huwrep-chord-sheet{width:min(100%,780px);margin:clamp(8px,3vw,24px) auto;padding:clamp(18px,4vw,36px);border-radius:7px;background:#fff;color:#203139;box-shadow:0 4px 18px #17282018;line-height:1.5}
+.huwrep-chord-sheet h1{font-size:clamp(1.6rem,4vw,2.2rem);margin:0 0 10px}
+.huwrep-chord-sheet h2{font-size:1.2rem;margin:22px 0 8px}
+.huwrep-chord-line{display:block;max-width:100%;margin:7px 0 18px;padding:12px 14px;background:#f4f7f5;border-radius:7px;white-space:pre-wrap;overflow-wrap:normal;overflow-x:auto;font:600 clamp(.96rem,2.2vw,1.22rem)/1.9 ui-monospace,Menlo,Consolas,monospace}
+@media(max-width:640px){.huwrep-chord-sheet{padding:16px}.huwrep-chord-line{font-size:.89rem;padding:9px}}
+@media print{.huwrep-chord-sheet{box-shadow:none;border:0;width:100%}.huwrep-chord-line{break-inside:avoid}}

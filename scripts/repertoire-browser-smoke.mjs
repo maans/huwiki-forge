@@ -70,6 +70,10 @@ try{
  assert.equal(await pendingEntry.count(),1,"The full gross list must include an editable placeholder for Oh verden");
  await pendingEntry.locator("a.silba-track-link").click();
  await page.locator('.tc-tiddler-frame[data-tiddler-title="SilbaÄtno · Oh verden"]').waitFor();
+ const visibleChords=page.locator('.tc-tiddler-frame[data-tiddler-title="SilbaÄtno · Oh verden"] .huwrep-chord-line');
+ assert.equal(await visibleChords.count(),2,"Oh verden should render A and B chord sections");
+ assert.ok((await visibleChords.nth(1).innerText()).includes("2. | E7 | Am | E7 | Am"));
+
 
  // Use the real ABCJS parser, not a mocked score, to confirm both A/B repeats
  // unfold independently. This also validates the exact first/second-volta
@@ -124,7 +128,7 @@ try{
  const grid=page.locator(".huwrep-repertoire .huwrep-song-grid");
  await grid.waitFor();
  const cards=grid.locator(".huwrep-song-card");
- assert.equal(await cards.count(),17,"Each score is a full-card tap target");
+ assert.equal(await cards.count(),18,"17 scores and Oh verden chord sheet are full-card tap targets");
  assert.equal(await cards.first().getAttribute("aria-pressed"),"true");
  assert.ok(!(await cards.first().innerText()).includes("SilbaÄtno ·"),"No repeated orchestra prefix");
  await cards.first().click();

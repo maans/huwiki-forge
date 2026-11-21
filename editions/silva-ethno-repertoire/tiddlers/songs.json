@@ -41,13 +41,14 @@
   },
   {
     "title": "SilbaÄtno · Oh verden",
-    "text": "! Oh verden\n\nDer er endnu ikke identificeret en sikker MuseScore-fil i e-mails.\n\nImportstatus: ''Afventer originalfil eller verificeret alternativ.''",
+    "text": "! Oh verden\n\n''Becifringsark · 4/4 · foreløbig arbejdsudgave''\n\n!! A\n<pre class=\"huwrep-chord-line\">||: E7 | A7 | Dm | E7 :||</pre>\n\n!! B\n<pre class=\"huwrep-chord-line\">||: E7  Am | E7  Dm | E7  Dm |\n  1. | E7 | Am | E7 | Am :||\n  2. | E7 | Am | E7 | Am  ||</pre>\n\n''OBS:'' Begge volter er foreløbigt sat til E7–Am–E7–Am. Ret akkorderne, når de to afslutninger er kontrolleret. Der mangler fortsat en verificeret melodikilde.\n",
     "tags": "SilbaÄtnoTrack",
     "silba-order": "05",
     "silba-section": "hovedliste",
     "silba-musescore-file": "",
     "silba-musescore-date": "",
-    "silba-import-state": "mangler-kilde"
+    "silba-import-state": "mangler-kilde",
+    "repertoire-sheet-format": "chords"
   },
   {
     "title": "SilbaÄtno · Cupria Express (Fm)",

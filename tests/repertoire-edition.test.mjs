@@ -214,13 +214,15 @@ test("SilbaÄtno Edition links all 17 scores and leaves their ABC bodies untouch
  assert.ok(manifest.tiddlers.includes("tiddlers/repertoire-workspace.json"));
  assert.equal(sources.length,17);
  const records=workspace.filter(t=>t["repertoire-kind"]==="orchestra-item");
- assert.equal(records.length,17);
- assert.deepEqual(records.map(t=>t["music-title"]),sources.map(t=>t.title));
+ assert.equal(records.length,18);
+ const expectedTitles=sources.map(t=>t.title);
+ expectedTitles.splice(4,0,"SilbaÄtno · Oh verden");
+ assert.deepEqual(records.map(t=>t["music-title"]),expectedTitles);
  assert.ok(workspace.every(t=>!Object.hasOwn(t,"abc-source")));
  const set=workspace.find(t=>t["repertoire-kind"]==="setlist");
  const orch=workspace.find(t=>t["repertoire-kind"]==="orchestra");
  assert.ok(orch&&set);
- assert.equal((set.list.match(/\[\[/g)||[]).length,17);
+ assert.equal((set.list.match(/\[\[/g)||[]).length,18);
  for(const r of records)assert.ok(set.list.includes("[["+r.title+"]]"));
 });
 
@@ -453,4 +455,30 @@ test("SitePublisher uses a generated 17-title list, independently of the gross-l
  assert.deepEqual(listed,scores.map(score=>score.title));
  assert.ok(publisher.includes('box.value='+JSON.stringify("SilbaÄtno – Site-eksport (nodeark)")+';'));
  assert.ok(publisher.includes('if(rows!==21)'));
+});
+
+
+test("Oh verden chart has two provisional E7-Am-E7-Am endings and Steen's accordion solo agreement",async()=>{
+ const base=path.join(root,"editions/silva-ethno-repertoire/tiddlers");
+ const pending=JSON.parse(await readFile(path.join(base,"pending.json"),"utf8"));
+ const original=JSON.parse(await readFile(path.join(base,"songs.json"),"utf8"));
+ const workspace=JSON.parse(await readFile(path.join(base,"repertoire-workspace.json"),"utf8"));
+ const sheet=pending.find(t=>t.title==="SilbaÄtno · Oh verden");
+ const source=original.find(t=>t.title===sheet?.title);
+ const item=workspace.find(t=>t["repertoire-kind"]==="orchestra-item"&&t["music-title"]===sheet?.title);
+ assert.ok(sheet&&source&&item);
+ assert.equal(sheet["repertoire-sheet-format"],"chords");
+ assert.ok(sheet.tags.includes("RepertoireMelodi"));
+ assert.equal(sheet["abc-source"],undefined,"Do not invent melody pitches");
+ assert.equal(sheet.text,source.text,"The build must preserve the editable chart");
+ assert.match(sheet.text,/4\/4/);
+ assert.match(sheet.text,/E7 \| A7 \| Dm \| E7/);
+ assert.ok(sheet.text.includes("1. | E7 | Am | E7 | Am"));
+ assert.ok(sheet.text.includes("2. | E7 | Am | E7 | Am"));
+ assert.ok(sheet.text.includes("foreløbig"));
+ assert.equal(item["repertoire-cues"],"Steen spiller melodien solo på harmonika.");
+ assert.ok(!sheet.text.includes("Solo harmonika"),"The performance agreement is not a music section");
+ const book=await readFile(path.join(root,"plugins/repertoire/src/book-widget.js"),"utf8");
+ assert.ok(book.includes('f["repertoire-sheet-format"]==="chords"'));
+ assert.ok(book.includes('wiki.renderText("text/html","text/vnd.tiddlywiki",f.text||"")'));
 });
