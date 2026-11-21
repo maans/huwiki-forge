@@ -77,6 +77,10 @@ test('Turn Around stays editable after touch, mouse, backward seeks and playback
  assert.equal(await view.getAttribute('aria-expanded'),'false');
  await workshops.focus();await page.keyboard.press('Space');await page.keyboard.press('Tab');
  assert.equal(await header.locator('.huw-musical-manuscript-button').evaluate(b=>b===b.ownerDocument.activeElement),true);
+ await page.keyboard.press('ArrowDown');
+ assert.equal(await header.locator('.huw-musical-scenes-button').evaluate(b=>b===b.ownerDocument.activeElement),true);
+ await page.keyboard.press('Home');
+ assert.equal(await header.locator('.huw-musical-manuscript-button').evaluate(b=>b===b.ownerDocument.activeElement),true);
  await page.keyboard.press('Escape');assert.equal(await workshops.getAttribute('aria-expanded'),'false');
  assert.equal(await workshops.evaluate(b=>b===b.ownerDocument.activeElement),true);
  assert.equal(await tools.textContent(),'Dele og led','Escape in a menu preserves the editing tool');

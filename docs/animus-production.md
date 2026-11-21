@@ -1,6 +1,6 @@
 # AniMus production tools
 
-AniMus 0.13.0-beta.8 includes large figure and object workshops beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
+AniMus 0.13.0-beta.9 includes large figure and object workshops beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
 
 ## Create and edit a show
 

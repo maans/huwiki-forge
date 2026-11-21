@@ -74,6 +74,28 @@ function mount(o){
   var panel=el(doc,'div','huw-musical-menu-panel',undefined,group),menu={group:group,trigger:trigger,panel:panel};
   trigger.dataset.menu=id;trigger.setAttribute('aria-controls',idPrefix+id);
   trigger.setAttribute('aria-expanded','false');panel.id=idPrefix+id;panel.hidden=true;
+  group.addEventListener('keydown',function(event){
+   if(event.altKey||event.ctrlKey||event.metaKey)return;
+   var key=event.key,arrow=key==='ArrowDown'||key==='ArrowUp';
+   if(!arrow&&key!=='Tab'&&key!=='Home'&&key!=='End')return;
+   if(openMenu!==menu){
+    if(!arrow||event.target!==trigger)return;
+    trigger.click();
+   }
+   // A native picker owns its arrow keys. Within the disclosure, Tab also
+   // reaches buttons on Macs configured to tab only to form fields.
+   if(event.target.tagName==='SELECT'&&key!=='Tab')return;
+   var items=[trigger].concat(Array.prototype.filter.call(panel.querySelectorAll('button:enabled,a[href],select:enabled'),function(item){return item.getClientRects().length>0;}));
+   var index=items.indexOf(event.target);
+   if(index<0)return;
+   if(key==='Tab')index+=event.shiftKey?-1:1;
+   if(key==='Home')index=1;
+   if(key==='End')index=items.length-1;
+   if(key==='ArrowDown')index=index+1<items.length?index+1:1;
+   if(key==='ArrowUp')index=index>1?index-1:items.length-1;
+   if(index<0||index>=items.length)return;
+   event.preventDefault();items[index].focus();
+  });
   // Safari can focus the enclosing editor on mouse-down instead of the
   // button. Keep the item in place until the matching click is delivered.
   panel.addEventListener('mousedown',function(event){
