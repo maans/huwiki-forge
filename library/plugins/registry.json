@@ -33,10 +33,10 @@
       "fields": {
         "title": "$:/plugins/huwiki/animus-caption-i18n",
         "type": "application/json",
-        "name": "AniMus · bilingual captions / Tosprogede undertekster",
+        "name": "AniMus · Caption languages / Undertekstsprog",
         "description": "Caption translations displayed without modifying English sound, source text, timing, or lip-sync",
         "author": "HUWiki",
-        "version": "0.1.0-beta.4",
+        "version": "0.1.0-beta.5",
         "plugin-type": "plugin",
         "requires-reload": "yes",
         "core-version": ">=5.4.1"
@@ -82,7 +82,7 @@
         "name": "AniMus Forge I · Editor (beta)",
         "description": "AniMus production tools: layered SVG and drawn animation, ABC notation, recorded voices, scene timeline and Site view.",
         "author": "HUWiki Forge",
-        "version": "0.13.0-beta.14",
+        "version": "0.13.0-beta.15",
         "plugin-type": "plugin",
         "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/abc",
         "requires-reload": "yes",

@@ -13,60 +13,53 @@ exports.startup=function(){
  var wiki=$tw.wiki,TAG="$:/tags/HUW/CaptionTranslations",CHOICE="$:/config/huwiki/animus/caption-language";
  var HOSTS=".plato-player, .huw-musical",CAPTIONS=".plato-caption-text, .plato-caption-speaker, .huw-musical-caption-line, .huw-musical-caption-cue";
  var TOOLBARS=".plato-options, .huw-musical-transport";
- var byLanguage=Object.create(null);
+ var Tracks=require("$:/plugins/huwiki/animus-caption-i18n/tracks.js"),catalog;
  var speakers={"Narrator":"Fortælleren","The Narrator":"Fortælleren","The Prisoner":"Fangen","Prisoner":"Fangen","The Guide":"Vejviseren","Guide":"Vejviseren","The Elder":"Den ældre","Elder":"Den ældre","Chorus":"Koret"};
- function chosen(){var v=wiki.getTiddlerText(CHOICE,"auto");return /^(auto|en|da)$/.test(v)?v:"auto";}
- function autoLanguage(){return /(?:^|\/)da(?:[-_]|$)/i.test(wiki.getTiddlerText("$:/language","")||document.documentElement.lang||"")?"da":"en";}
- function language(){var v=chosen();return v==="auto"?autoLanguage():v;}
- function load(){
-  var result=Object.create(null);
-  (wiki.filterTiddlers("[tag["+TAG+"]]")||[]).forEach(function(title){
-   try{
-    var record=JSON.parse(wiki.getTiddlerText(title,"")),lang=String(record.targetLanguage||""),source=wiki.getTiddlerText(record.sourceTiddler||"","");
-    if(!/^[a-z]{2}$/.test(lang)||!source)return;
-    var original=JSON.parse(source),scenes=original.scenes||[],map=result[lang]||(result[lang]=Object.create(null));
-    scenes.forEach(function(scene){
-     var cues=scene.cues||[],translated=record.scenes&&record.scenes[scene.id];
-     if(!translated)return;
-     if(!Array.isArray(translated)||translated.length!==cues.length)throw Error("Caption count mismatch: "+scene.id);
-     translated.forEach(function(value,index){
-      var en=String(cues[index].text||"").trim();
-      if(!en||typeof value!=="string"||!value.trim())throw Error("Missing caption: "+scene.id+"/"+index);
-      if(map[en]&&map[en]!==value)throw Error("Ambiguous English caption: "+en);
-      map[en]=value;
-     });
-    });
-   }catch(error){if(typeof console!=="undefined")console.warn("AniMus caption translations:",title,error);}
-  });
-  byLanguage=result;
+ // The caption plugin can also run without the AniMus editor.
+ var editorLanguage=null,ui=function(text){return text;};
+ try{editorLanguage=require("$:/plugins/huwiki/musical/language.js");}catch(_optionalEditor){}
+ function loadLabels(){if(editorLanguage&&editorLanguage.translator)ui=editorLanguage.translator(wiki);}
+ function chosen(){var v=wiki.getTiddlerText(CHOICE,"auto");return v==="original"?v:Tracks.code(v)||"auto";}
+ function autoLanguage(){return Tracks.selected(wiki).split("-")[0];}
+ function language(host){var v=chosen(),choices=host&&host._huwCaptionSelect;
+  return v==="auto"||choices&&!choices._codes.includes(v)?Tracks.selected(wiki):v;
  }
- function translated(source,lang,isSpeaker){
-  if(lang==="en")return source;
-  if(isSpeaker)return lang==="da"?(speakers[source]||source):source;
-  var table=byLanguage[lang]||{};
-  if(Object.prototype.hasOwnProperty.call(table,source))return table[source];
-  var prefix=/^([^:\n]{1,80}):\s*([\s\S]*)$/.exec(source);
-  if(prefix&&Object.prototype.hasOwnProperty.call(table,prefix[2]))return (lang==="da"?(speakers[prefix[1]]||prefix[1]):prefix[1])+": "+table[prefix[2]];
-  return source;
+ function load(){catalog=Tracks.read(wiki);loadLabels();}
+ function translated(source,lang,node){
+  if(lang==="original")return source;
+  var danish=lang.split("-")[0]==="da",ref=node._animusCue||{};
+  if(node.classList.contains("plato-caption-speaker"))return danish?speakers[source]||source:source;
+  var line=ref.separateSpeaker?{prefix:"",text:source}:Tracks.split(source),text=Tracks.translation(catalog,lang,ref.film,ref.scene,ref.id,line.text);
+  if(!text)return source;
+  return line.prefix?(danish?speakers[line.prefix]||line.prefix:line.prefix)+": "+text:text;
  }
  function paintText(node,lang){
   var current=node.textContent||"";
   if(node._huwCaptionPainted!==current)node._huwCaptionSource=current;
-  var original=node._huwCaptionSource||"";
-  var next=translated(original,lang,node.classList.contains("plato-caption-speaker"));
-  node._huwCaptionPainted=next;
+  var original=node._animusCue?node._animusCue.source:node._huwCaptionSource||"";
+  var next=translated(original,lang,node);
+  node._huwCaptionPainted=next;node._huwTranslatedCue=node._animusCue;
   if(current!==next)node.textContent=next;
  }
  function updateChoiceLabels(wrapper){
-  var da=autoLanguage()==="da",title=da?"Undertekster: ":"Captions: ";
+  var da=autoLanguage()==="da",title=da?"Undertekster: ":ui("Captions")+": ";
   if(wrapper.firstChild.textContent!==title)wrapper.firstChild.textContent=title;
   var list=wrapper.querySelector("select");if(!list)return;
-  var auto=da?"Automatisk (wikiens sprog)":"Automatic (wiki language)";
-  if(list.options[0].textContent!==auto)list.options[0].textContent=auto;
-  var danish=da?"Dansk":"Danish",english=da?"Engelsk":"English";
-  if(list.options[1].textContent!==danish)list.options[1].textContent=danish;
-  if(list.options[2].textContent!==english)list.options[2].textContent=english;
-  var aria=da?"Sprog for undertekster":"Caption language";
+  var host=wrapper.closest(HOSTS),film=host&&host._animusFilm,locale=Tracks.selected(wiki);
+  if(wrapper._catalog!==catalog||wrapper._locale!==locale||wrapper._film!==film){
+   var codes=Tracks.options(catalog,film);
+   // Older bilingual wikis used "en" for the English original.
+   if(!codes.includes("en"))codes.push("en");
+   var choices=[["auto",da?"Automatisk (wikiens sprog)":ui("Automatic (wiki language)")]];
+   codes.forEach(function(code){choices.push([code,Tracks.name(code,locale)]);});
+   if(host&&host._animusFilm)choices.push(["original",da?"Originaltekst":ui("Original text")]);
+   while(list.firstChild)list.removeChild(list.firstChild);
+   choices.forEach(function(pair){var option=document.createElement("option");option.value=pair[0];option.textContent=pair[1];list.appendChild(option);});
+   wrapper._codes=choices.map(function(item){return item[0];});
+   wrapper._catalog=catalog;wrapper._locale=locale;wrapper._film=film;
+  }
+  var current=chosen();list.value=wrapper._codes.includes(current)?current:"auto";
+  var aria=da?"Sprog for undertekster":ui("Caption language");
   if(list.getAttribute("aria-label")!==aria)list.setAttribute("aria-label",aria);
  }
 
@@ -75,7 +68,7 @@ exports.startup=function(){
  // update only these small controls, never animation SVG frames.
  function localizePlayer(host){
   if(!host.classList.contains("plato-player"))return;
-  var da=autoLanguage()==="da",T=function(d,e){return da?d:e;};
+  var da=autoLanguage()==="da",T=function(d,e){return da?d:ui(e);};
   function txt(selector,value){var n=host.querySelector(selector);if(n&&n.textContent!==value)n.textContent=value;return n;}
   function att(selector,key,value){var n=host.querySelector(selector);if(n&&n.getAttribute(key)!==value)n.setAttribute(key,value);}
   var busy=host.getAttribute("aria-busy")==="true",playing=host.getAttribute("data-plato-playing")==="true";
@@ -139,31 +132,26 @@ exports.startup=function(){
   var wrapper=document.createElement("label");wrapper.className="huw-animus-caption-language";
   wrapper.appendChild(document.createElement("span"));
   var select=document.createElement("select");select.setAttribute("data-huw-animus-captions","language");
-  [["auto","Automatic (wiki language)"],["da","Dansk"],["en","English"]].forEach(function(pair){
-   var option=document.createElement("option");option.value=pair[0];option.textContent=pair[1];select.appendChild(option);
-  });
-  select.value=chosen();wrapper.appendChild(select);toolbar.appendChild(wrapper);host._huwCaptionSelect=wrapper;
+  wrapper.appendChild(select);toolbar.appendChild(wrapper);host._huwCaptionSelect=wrapper;
   updateChoiceLabels(wrapper);
   select.addEventListener("change",function(){
    if(chosen()!==select.value)wiki.addTiddler(new $tw.Tiddler({title:CHOICE,type:"text/plain",text:select.value}));
    updateAll();
   });
  }
- function updateHost(host,lang){
+ function updateHost(host){
    if(host.isConnected===false)return;
    localizePlayer(host);
-   if(!Object.keys(byLanguage).length)return;
+   if(!host._huwCaptionSelect&&!Tracks.options(catalog,host._animusFilm).length)return;
    mount(host);
    if(host._huwCaptionSelect){
-    var input=host._huwCaptionSelect.querySelector("select");if(input&&input.value!==chosen())input.value=chosen();
     updateChoiceLabels(host._huwCaptionSelect);
    }
-   var nodes=host.querySelectorAll(CAPTIONS);
+   var lang=language(host),nodes=host.querySelectorAll(CAPTIONS);
    Array.prototype.forEach.call(nodes,function(node){paintText(node,lang);});
  }
  function updateAll(){
-  var lang=language();
-  Array.prototype.forEach.call(document.querySelectorAll(HOSTS),function(host){updateHost(host,lang);});
+  Array.prototype.forEach.call(document.querySelectorAll(HOSTS),updateHost);
  }
  function changed(records){
   // Transport labels and SVG artwork change on every animation frame. Only
@@ -193,11 +181,10 @@ exports.startup=function(){
    });
   });
   if(!hosts.size&&!nodes.size)return;
-  var lang=language();
-  hosts.forEach(function(host){updateHost(host,lang);});
+  hosts.forEach(updateHost);
   nodes.forEach(function(node){
    var host=node.closest&&node.closest(HOSTS);
-   if(host&&!hosts.has(host)&&node.isConnected!==false&&node.textContent!==node._huwCaptionPainted)paintText(node,lang);
+   if(host&&!hosts.has(host)&&node.isConnected!==false&&(node._animusCue!==node._huwTranslatedCue||node.textContent!==node._huwCaptionPainted))paintText(node,language(host));
   });
  }
  function launch(){
@@ -205,8 +192,12 @@ exports.startup=function(){
   var observer=new MutationObserver(changed);
   observer.observe(document.body,{subtree:true,childList:true,characterData:true});
   wiki.addEventListener("change",function(changes){
-   if(changes["$:/language"]||changes[CHOICE])updateAll();
-   else if(Object.keys(changes).some(function(title){return wiki.getTiddler(title)&&wiki.getTiddler(title).hasTag(TAG)||title==="Turn Around · Timeline";})){load();updateAll();}
+   var reload=Object.keys(changes).some(function(title){
+    var tid=wiki.getTiddler(title);
+    return title.indexOf("AniMus/Translations/")===0||title.indexOf("$:/languages/")===0||catalog.watched[title]||tid&&tid.hasTag(TAG);
+   });
+   if(reload)load();else if(changes["$:/language"])loadLabels();
+   if(reload||changes["$:/language"]||changes[CHOICE])updateAll();
   });
  }
  if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",launch,{once:true});else launch();

@@ -99,7 +99,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
   this.computeAttributes(); this.execute();
   var self=this,doc=this.document,displayName=Language.projectLabels(this.wiki,this.filmTitle);
   this._localize=null;
-  var host=node(doc,"section","plato-player");
+  var host=node(doc,"section","plato-player");host._animusFilm=this.filmTitle;
   host.setAttribute("aria-label","Turn Around — Beyond the Cave");
   host.setAttribute("tabindex","0");
   host.setAttribute("data-plato-time","0.000");
@@ -236,17 +236,17 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
     });
     (view.clips||[]).forEach(function(clip){if(clip.view)hideAuthoredCaptions(clip.view);});
   }
-  function captionFromPart(part) {
+  function captionFromPart(part,scene) {
     var aliases={"narrator":"narrator","the narrator":"narrator","socrates":"narrator","prisoner":"prisoner","the prisoner":"prisoner","guide":"guide","the guide":"guide","elder":"elder","the elder":"elder","chorus":"chorus","the chorus":"chorus","fortælleren":"narrator","fangen":"prisoner","vejviseren":"guide","den ældre":"elder","koret":"chorus"};
     var text=String(part.text||""),prefix=/^\s*([^:\n]{1,80}):\s*([\s\S]*)$/.exec(text),target=part.lipSync&&part.lipSync.target;
     var speaker=prefix&&aliases[prefix[1].trim().toLowerCase()]||(SPEAKERS[target]?target:prefix&&prefix[1].trim())||"narrator";
     if(prefix)text=prefix[2];
-    return {id:part.id,speaker:speaker,text:text,kind:part.id.indexOf("song-line-")===0||part.id==="sing-label"?"song":"speech"};
+    return {id:part.id,scene:scene,speaker:speaker,text:text,kind:part.id.indexOf("song-line-")===0||part.id==="sing-label"?"song":"speech"};
   }
   function captionAt(view,seconds,depth) {
     if(!view||depth>16)return null;var active=null;
     (view.scene.parts||[]).forEach(function(part){if(part.type!=="text"||!/^(?:spoken-\d+|song-line-\d+|sing-label)$/.test(part.id)||Engine.state(part,seconds).opacity<.45)return;
-      if(!active||part.id.indexOf("spoken-")===0)active=captionFromPart(part);
+      if(!active||part.id.indexOf("spoken-")===0)active=captionFromPart(part,view.scene.id||view.scene._title);
     });
     if(active)return active;
     var which=Engine.clipAt(view.scene.scenes||[],seconds).index,elapsed=0;
@@ -311,9 +311,10 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
   }
   function updateCaption(local,global) {
     var active=captionAt(state.view,local,0)||captionAt(state.filmView,global,0);
-    var key=active?active.id+"\n"+active.text:"";
+    var key=active?active.scene+"\n"+active.id+"\n"+active.text:"";
     if(key!==lastCaption) {
       speakerLabel.textContent=active?(SPEAKERS[active.speaker]||active.speaker):"";
+      captionText._animusCue=active?{film:self.filmTitle,scene:active.scene,id:active.id,source:active.text,separateSpeaker:true}:null;
       captionText.textContent=active?active.text:"";
       caption.classList.toggle("is-song",!!active&&active.kind==="song");
       lastCaption=key;

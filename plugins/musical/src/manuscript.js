@@ -5,7 +5,8 @@ module-type: library
 \*/
 (function(){
 "use strict";
-var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
+var Language=require("$:/plugins/huwiki/musical/language.js");
+var isDanish=Language.isDanish;
 var LipSync=require("$:/plugins/huwiki/musical/lipsync.js");
 /* One shared screenplay workstation. Script cues remain in their original
    CutOut scene tiddlers; scene notes belong to the individual scenes, and
@@ -113,27 +114,38 @@ function lipSyncIssues(scene){
  });
 }
 function mount(o){
+ var ui=Language.translator(o.wiki);
  var displayName=o.displayName||function(value){return value;};var doc=o.doc,host=o.host,wiki=o.wiki,en=!isDanish(wiki);
- var L=en?{
+ var L=en?ui.labels({
   title:"Script workshop",subtitle:"Dialogue, lyrics, scene notes and shared subtitles",back:"Cancel",save:"Save and return",
   scene:"Scenes",cues:"Lines & subtitles",notes:"Scene notes",add:"+ New line",remove:"Delete selected line",when:"Starts",until:"Ends",
   edit:"Selected line",text:"Text shown to the audience",go:"Go to this point",empty:"No lines in this scene yet",types:{spoken:"Spoken line",song:"Song lyric",cue:"Song title"},
   style:"Subtitles · shared appearance",size:"Text size",bottom:"Distance from bottom",width:"Maximum width",bg:"Background",live:"Preview",all:"All scenes",
-  hint:"Scene notes stay inside the editor. They are never displayed to the audience.",warning:"Unsaved changes. Close without saving?",status:"All edits saved to their own CutOut scenes."}
+  hint:"Scene notes stay inside the editor. They are never displayed to the audience.",warning:"Unsaved changes. Close without saving?",status:"All edits saved to their own CutOut scenes."})
  :{
   title:"Manuskriptværksted",subtitle:"Replikker, sangtekster, scenenoter og fælles undertekster",back:"Annuller",save:"Gem og tilbage",
   scene:"Scener",cues:"Replikker og undertekster",notes:"Scenenoter",add:"+ Ny replik",remove:"Slet valgt replik",when:"Start",until:"Slut",
   edit:"Valgt replik",text:"Tekst, som publikum ser",go:"Gå til dette tidspunkt",empty:"Ingen replikker i denne scene endnu",types:{spoken:"Replik",song:"Sanglinje",cue:"Sangtitel"},
   style:"Undertekster · fælles udseende",size:"Tekststørrelse",bottom:"Afstand fra bunden",width:"Maksimal bredde",bg:"Baggrund",live:"Eksempel",all:"Alle scener",
   hint:"Scenenoter vises kun i redigeringsværkstedet – aldrig som undertekster for publikum.",warning:"Der er ændringer, som ikke er gemt. Luk uden at gemme?",status:"Ændringerne er gemt i de tilhørende CutOut-scener."};
- Object.assign(L,en?{
+ Object.assign(L,en?ui.labels({
   lipTitle:"Lip sync",lipEnable:"Enable for this line",lipActor:"Speaking figure",lipChoose:"Choose a figure",lipOpen:"Open mouth",lipClosed:"Closed mouth (optional)",lipNone:"None",lipChooseMouth:"Choose a mouth part",lipTiming:"Timing",lipAuto:"Linked recording, otherwise script",lipScript:"Script timing only",lipOffset:"Timing offset (s)",lipStrength:"Mouth movement (%)",lipAssign:"Assign speaking roles",lipAssigned:"Lines assigned",lipUnresolved:"Left for manual selection",lipPreserved:"Existing choices kept",lipMissing:"Missing",lipInvalid:"Choose a figure and its open mouth; the closed mouth must be a different part.",lipApprox:"Mouth movement is approximated from the line. A linked recording can supply its timing; the voice itself is not analysed.",lipSavedPreview:"Save and return, then play the line to check the result.",lipOff:"When disabled, the original mouth animation is kept.",lipNoParts:"This figure has no separate mouth parts. Add a mouth as its own SVG layer, or choose another figure.",sceneConflict:"Scenes changed elsewhere"
- }:{
+ }):{
   lipTitle:"Læbesynkronisering",lipEnable:"Aktivér for denne replik",lipActor:"Talende figur",lipChoose:"Vælg figur",lipOpen:"Åben mund",lipClosed:"Lukket mund (valgfri)",lipNone:"Ingen",lipChooseMouth:"Vælg munddel",lipTiming:"Timing",lipAuto:"Tilknyttet indtaling, ellers manuskript",lipScript:"Kun manuskriptets tider",lipOffset:"Tidsforskydning (s)",lipStrength:"Mundbevægelse (%)",lipAssign:"Fordel taleroller",lipAssigned:"Replikker fordelt",lipUnresolved:"Afventer manuelt valg",lipPreserved:"Eksisterende valg bevaret",lipMissing:"Mangler",lipInvalid:"Vælg en figur og dens åbne mund. Den lukkede mund skal være en anden del.",lipApprox:"Mundbevægelsen tilnærmes ud fra replikteksten. En tilknyttet indtaling kan styre timingen; selve stemmen analyseres ikke.",lipSavedPreview:"Gem og tilbage, og afspil derefter replikken for at se resultatet.",lipOff:"Når funktionen er slået fra, bevares den oprindelige mundanimation.",lipNoParts:"Figuren har ingen særskilte munddele. Tilføj munden som sit eget SVG-lag, eller vælg en anden figur.",sceneConflict:"Scener ændret andetsteds"
  });
+ var Tracks=null;
+ try{Tracks=require("$:/plugins/huwiki/animus-caption-i18n/tracks.js");}catch(_optionalCaptions){}
+ var catalog=null,captionLocale="",edits=new Map();
+ function lineTranslation(entry,part){
+  var scene=entry.scene.id||entry.title,source=Tracks.split(part.text).text;
+  var key=JSON.stringify([captionLocale,scene,part.id]),edit=edits.get(key);
+  var stored=catalog.films[o.sceneTitle]||{},lines=stored[captionLocale]||{};
+  return {key:key,lang:captionLocale,scene:scene,id:part.id,source:source,before:(lines[scene]||{})[part.id],
+   text:edit?edit.text:Tracks.translation(catalog,captionLocale,o.sceneTitle,scene,part.id,source)};
+ }
  var popup=null,items=[],selectedScene=0,selectedId="",drafts={},originals={},style={},initialStyle={},originalStyle={},dirty=false;
  function isOpen(){return !!popup;}
- function changed(){dirty=true;var s=popup&&popup.querySelector('.huw-script-status');if(s)s.textContent=en?"Unsaved changes":"Ændringer er ikke gemt";}
+ function changed(){dirty=true;var s=popup&&popup.querySelector('.huw-script-status');if(s)s.textContent=en?ui("Unsaved changes"):"Ændringer er ikke gemt";}
  function getEntry(index){return items[index]||null;}
  function data(entry){if(!entry)return null;return drafts[entry.title]||entry.scene;}
  function findCue(entry,id){return captions(data(entry)).find(function(p){return p.id===id;});}
@@ -160,7 +172,7 @@ function mount(o){
    if(part.id===selectedId)b.classList.add('is-active');
    element(doc,'span','huw-script-cue-time',display(entry.start+when.start),b);
    var text=element(doc,'span','huw-script-cue-text',undefined,b);
-   element(doc,'small','',cueName(part),text);element(doc,'span','',displayName(part.text||part.name||''),text);
+   element(doc,'small','',cueName(part),text);element(doc,'span','',captionLocale?(lineTranslation(entry,part).text||part.text):displayName(part.text||part.name||''),text);
   });
  }
  function refreshScenes(){var sidebar=popup.querySelector('.huw-script-scenes');sidebar.textContent='';
@@ -212,13 +224,13 @@ function mount(o){
   if(config.enabled&&config.target&&!mouths.length)element(doc,'p','huw-script-lipsync-warning',L.lipNoParts,group);
   element(doc,'p','huw-script-lipsync-hint',config.enabled?L.lipSavedPreview:L.lipOff,group);
   if(o.openFace){
-   var faceButton=button(group,en?'Save and open face workshop':'Gem og åbn ansigtsværksted',function(){
+   var faceButton=button(group,en?ui('Save and open face workshop'):'Gem og åbn ansigtsværksted',function(){
     var interval=timing(part,entry.duration),start=entry.start+interval.start,end=entry.start+interval.end,current=num(o.position(),start);
     var details={actorId:config.target,cueId:part.id,sceneTitle:entry.title,time:current>=start&&current<end?current:start+.01};
     if(save())o.openFace(details);
    },'huw-script-face-workshop');
    faceButton.disabled=!config.target;
-   element(doc,'p','huw-script-lipsync-hint',en?'Choose expressions and teach autosync your preferred mouth shapes for this character.':'Vælg ansigtsudtryk og lær autosync dine foretrukne mundformer for denne figur.',group);
+   element(doc,'p','huw-script-lipsync-hint',en?ui('Choose expressions and teach autosync your preferred mouth shapes for this character.'):'Vælg ansigtsudtryk og lær autosync dine foretrukne mundformer for denne figur.',group);
   }
  }
  function redraw(){if(!popup)return;var entry=selectedEntry();
@@ -226,17 +238,37 @@ function mount(o){
   var note=popup.querySelector('.huw-script-scene-notes'),right=popup.querySelector('.huw-script-selected');
   note.value=entry?initialNotes(entry):'';right.textContent='';
   var part=entry&&findCue(entry,selectedId);
-  if(!part){element(doc,'p','huw-script-placeholder',en?'Select a line to edit its text and timing.':'Vælg en replik for at redigere tekst og tidspunkt.',right);return;}
+  if(!part){element(doc,'p','huw-script-placeholder',en?ui('Select a line to edit its text and timing.'):'Vælg en replik for at redigere tekst og tidspunkt.',right);return;}
   element(doc,'h3','',cueName(part),right);
-  var textLabel=element(doc,'label','huw-script-field',undefined,right);labelText(textLabel,L.text);
-  var textarea=element(doc,'textarea','huw-script-line-input',undefined,textLabel);textarea.rows=4;textarea.value=part.text||'';
-  textarea.addEventListener('input',function(){part.text=textarea.value;changed();var shown=popup.querySelector('.huw-script-cue.is-active .huw-script-cue-text>span');if(shown)shown.textContent=textarea.value;});
+  if(Tracks&&catalog){
+   var locales=Tracks.options(catalog,o.sceneTitle);
+   if(locales.length){
+    var label=element(doc,'label','huw-script-field',undefined,right);
+    labelText(label,en?ui('Subtitle language'):'Undertekstsprog');
+    var picker=element(doc,'select','huw-script-caption-language',undefined,label);
+    element(doc,'option','',en?ui('Original text'):'Originaltekst',picker).value='';
+    locales.forEach(function(code){element(doc,'option','',Tracks.name(code,Tracks.selected(wiki)),picker).value=code;});
+    picker.value=captionLocale;
+    picker.onchange=function(){captionLocale=picker.value;redraw();};
+   }
+  }
+  if(captionLocale)element(doc,'p','huw-script-original-line',part.text||'',right);
+  var textLabel=element(doc,'label','huw-script-field',undefined,right);
+  labelText(textLabel,captionLocale?(en?ui('Translated subtitle'):'Oversat undertekst'):L.text);
+  var textarea=element(doc,'textarea','huw-script-line-input',undefined,textLabel),translation=captionLocale&&lineTranslation(entry,part);
+  textarea.rows=4;textarea.value=translation?translation.text:part.text||'';
+  textarea.addEventListener('input',function(){
+   if(translation){translation.text=textarea.value;edits.set(translation.key,translation);}
+   else part.text=textarea.value;
+   changed();var shown=popup.querySelector('.huw-script-cue.is-active .huw-script-cue-text>span');
+   if(shown)shown.textContent=textarea.value||part.text||'';
+  });
   var span=timing(part,entry.duration);
   var range=element(doc,'div','huw-script-range',undefined,right);
   field(range,L.when+' (s)','number',span.start,function(v){var now=timing(part,entry.duration);retime(part,num(v,now.start),now.end,entry.duration);changed();refreshList();});
   field(range,L.until+' (s)','number',span.end,function(v){var now=timing(part,entry.duration);retime(part,now.start,num(v,now.end),entry.duration);changed();refreshList();});
   button(right,L.go,function(){var at=timing(part,entry.duration);o.pause();o.seek(entry.start+at.start);},'huw-script-secondary');
-  if(o.openNarration)button(right,en?'Record this line':'Indtal replik',function(){
+  if(o.openNarration)button(right,en?ui('Record this line'):'Indtal replik',function(){
    var at=timing(part,entry.duration),role=/^([^:\n]{1,40}):/.exec(part.text||'');
    o.openNarration({cueId:part.id,sceneTitle:entry.title,text:part.text||'',role:role?role[1]:'',start:entry.start+at.start,name:part.name||cueName(part)});
   },'huw-script-primary');
@@ -244,6 +276,7 @@ function mount(o){
   button(right,L.remove,function(){if(!entry)return;var d=data(entry);d.parts=d.parts.filter(function(p){return p!==part;});selectedId='';changed();redraw();},'huw-script-danger');
  }
  function open(details){if(popup)return true;details=details||{};
+  captionLocale="";edits.clear();catalog=Tracks?Tracks.read(wiki):null;
   items=collect(wiki,o.film,o.sceneTitle);if(!items.length)return false;
   drafts={};originals={};items.forEach(function(item){if(!drafts[item.title]){drafts[item.title]=copy(item.scene);originals[item.title]=copy(item.scene);}});
   ensureStyle();initialStyle=copy(style);originalStyle=copy(o.film.musical&&o.film.musical.captionStyle||{});dirty=false;
@@ -274,7 +307,7 @@ function mount(o){
   var width=field(common,L.width+' (%)','range',style.width,function(v){style.width=clamp(num(v,98),45,100);changed();preview();});width.min=45;width.max=100;
   var bg=field(common,L.bg+' (%)','range',Math.round(style.background*100),function(v){style.background=clamp(num(v,66)/100,0,1);changed();preview();});bg.min=0;bg.max=100;
   var sample=element(doc,'div','huw-script-caption-preview',undefined,common);sample.setAttribute('aria-label',L.live);
-  element(doc,'div','huw-script-caption-sample',en?'SOLDIER: We can change the scene.':'SOLDAT: Vi kan ændre scenen.',sample);preview();
+  element(doc,'div','huw-script-caption-sample',en?ui('SOLDIER: We can change the scene.'):'SOLDAT: Vi kan ændre scenen.',sample);preview();
   var body=element(doc,'div','huw-script-columns',undefined,popup);
   var scenes=element(doc,'section','huw-script-pane huw-script-scene-pane',undefined,body);
   element(doc,'h3','',L.scene,scenes);element(doc,'div','huw-script-scenes',undefined,scenes);
@@ -283,7 +316,7 @@ function mount(o){
   button(cueTitle,L.add,function(){var entry=selectedEntry(),d=data(entry);if(!d)return;
    var ids=d.parts.filter(function(p){return /^spoken-\d+/.test(p.id);}).map(function(p){return Number(p.id.slice(7));});
    var next=ids.length?Math.max.apply(null,ids)+1:0,start=clamp(o.position()-entry.start,0,Math.max(.1,entry.duration-4)),id='spoken-'+next;
-   var part={id:id,name:en?'Line '+(next+1):'Replik '+(next+1),type:'text',parent:null,geo:{},fill:'#fff7e8',text:en?'NEW LINE: ':'NY REPLIK: ',fontSize:15,align:'middle',keys:[]};
+   var part={id:id,name:en?'Line '+(next+1):'Replik '+(next+1),type:'text',parent:null,geo:{},fill:'#fff7e8',text:en?ui('NEW LINE: '):'NY REPLIK: ',fontSize:15,align:'middle',keys:[]};
    retime(part,start,Math.min(start+4,entry.duration),entry.duration);d.parts.push(part);selectedId=id;changed();redraw();
   },'huw-script-primary');
   button(cues,L.lipAssign,function(){var entry=selectedEntry();if(!entry)return;
@@ -336,16 +369,22 @@ function mount(o){
    }
   }
   var status=popup.querySelector('.huw-script-status');
-  if(errors.length){status.textContent=(en?'Missing or unreadable scenes: ':'Manglende eller ulæselige scener: ')+errors.join(', ');return false;}
+  if(errors.length){status.textContent=(en?ui('Missing or unreadable scenes: '):'Manglende eller ulæselige scener: ')+errors.join(', ');return false;}
   if(conflicts.length){status.textContent=L.sceneConflict+': '+conflicts.join(', ');return false;}
   if(invalid.length){status.textContent=L.lipInvalid+' ('+invalid.join(', ')+')';return false;}
   // Merge just manuscript-owned fields into the latest scene. A recording made
   // while this workshop is open must retain its audio asset and clip metadata.
   // The root scene and its caption style are committed together in one write.
   var changes=Object.keys(pending).map(function(title){return pending[title];}).filter(function(c){return c.changed;});
+  var trackWrites=[];
+  if(edits.size){
+   try{trackWrites=Tracks.writes(wiki,o.sceneTitle,Array.from(edits.values()));}
+   catch(error){popup.querySelector('.huw-script-status').textContent=(en?ui('Subtitle track changed'):'Undertekstsporet er ændret')+' · '+error.message;return false;}
+  }
   changes.forEach(function(c){var text=JSON.stringify(c.data);o.markOwnWrite(c.title,text);wiki.addTiddler(new $tw.Tiddler(c.tid,{title:c.title,text:text}));
    if(c.title===o.sceneTitle){o.film.parts=copy(c.data.parts||[]);if(c.data.sceneNotes!==undefined)o.film.sceneNotes=c.data.sceneNotes;if(c.data.musical)o.film.musical=copy(c.data.musical);}
   });
+  trackWrites.forEach(function(fields){wiki.addTiddler(new $tw.Tiddler(wiki.getTiddler(fields.title),fields));});
   dirty=false;close(true);if(changes.length&&o.reload)o.reload();else if(o.repaint)o.repaint();return true;
  }
  return {open:open,close:function(){close(false);},dispose:function(){close(true);},isOpen:isOpen};

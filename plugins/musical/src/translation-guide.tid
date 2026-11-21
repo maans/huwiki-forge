@@ -1,0 +1,36 @@
+<$let locale={{{ [{$:/language}split[/]last[]] }}} pack={{{ [<locale>addprefix[AniMus/Translations/]] }}} json={{AniMus/Translations/Template}} guideLang={{{ [{$:/language}split[/]last[]lowercase[]split[-]first[]split[_]first[]match[da]then[da]else[en]] }}}>
+<$let introField={{{ [<guideLang>addprefix[prompt-]] }}} rulesField={{{ [<guideLang>addprefix[rules-]] }}}>
+<$let intro={{{ [<currentTiddler>get<introField>] }}} rules={{{ [<currentTiddler>get<rulesField>] }}}>
+<$let request={{{ [<intro>addsuffix<locale>addsuffix<rules>addsuffix<json>] }}}>
+
+<%if [{$:/language}split[/]last[]lowercase[]split[-]first[]split[_]first[]match[da]] %>
+
+# Gem wikien som HTML, og åbn din lokale kopi. Gå til [[$:/ControlPanel]], vælg ''Plugins → Hent flere plugins'', åbn ''TiddlyWikis officielle pluginbibliotek'', og vælg fanen ''Sprog''. Installér dit sprog, gem wikien og genindlæs den gemte kopi. Vælg derefter sproget under ''Værktøjer → Sprog'' i sidepanelet. [[TiddlyWikis vejledning|https://tiddlywiki.com/static/Languages.html]]
+# Kopiér prompten og de engelske AniMus-tekster med knappen nedenfor. Indsæt dem i den AI, du vil bruge. Du kan gennemlæse ordlisten i [[den engelske skabelon|AniMus/Translations/Template]].
+# Åbn din oversættelse nedenfor, indsæt AI'ens JSON-svar i tekstfeltet, og gem tiddleren. Kontrollér f.eks. afspilningsknappen og menuen Værksteder i en forestilling. Gem hele wikien for at beholde arbejdet. Du kan dele ordlisten ved at eksportere din oversættelsestiddler som JSON.
+
+Eksempel på tysk: <code>"▶ Play": "▶ Abspielen"</code>. Ved en delvis oversættelse vises de resterende betjeningstekster på engelsk.
+
+''Undertekster'' har deres egen sprogindstilling. Åbn ''Manuskript'', vælg en replik og dit ''Undertekstsprog''. Skriv eller indsæt oversættelsen, og vælg ''Gem og tilbage''. Vælg samme sprog under afspilningsvalgene for at høre originaloptagelsen med de nye undertekster. Du kan arbejde én replik ad gangen.
+
+<%else%>
+
+# Save the wiki as an HTML file and open your local copy. In the [[$:/ControlPanel]], choose ''Plugins → Get more plugins'', open the ''official TiddlyWiki plugin library'', and select ''Languages''. Install your language, save the wiki and reload the saved copy. Select your language with the language button under ''Tools'' in the sidebar. [[TiddlyWiki’s language instructions|https://tiddlywiki.com/static/Languages.html]]
+# Use the button below to copy the prompt and English AniMus editor strings. Paste them into the AI of your choice. You can inspect the [[English template|AniMus/Translations/Template]].
+# Open your translation below, paste the AI’s JSON response into its text field, and save the tiddler. Check the play button and Workshops menu in a show. Save the whole wiki to keep your work. To share the dictionary, export your translation tiddler as JSON.
+
+For example, German uses <code>"▶ Play": "▶ Abspielen"</code>. A partial translation falls back to English for the remaining controls.
+
+''Subtitles'' have their own language setting. Open ''Script'', select a line and choose its ''Subtitle language''. Enter or paste the translation, then select ''Save and return''. Choose the same language in the playback options to hear the original recording with the translated subtitles. You can work one line at a time.
+
+<%endif%>
+
+<$button><$action-sendmessage $message="tm-copy-to-clipboard" $param=<<request>>/><%if [{$:/language}split[/]last[]lowercase[]split[-]first[]split[_]first[]match[da]] %>Kopiér AI-prompt og ordliste<%else%>Copy AI prompt and dictionary<%endif%></$button>
+
+<%if [<pack>is[tiddler]] %>
+<$link to=<<pack>>/>
+<%else%>
+<$button><$action-sendmessage $message="tm-new-tiddler" $param="AniMus/Translations/Template" title=<<pack>>/><%if [{$:/language}split[/]last[]lowercase[]split[-]first[]split[_]first[]match[da]] %>Opret oversættelse<%else%>Create translation<%endif%> · <$text text=<<locale>>/></$button>
+<%endif%>
+
+</$let></$let></$let></$let>

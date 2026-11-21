@@ -5,7 +5,8 @@ module-type: widget
 \*/
 (function(){
 "use strict";
-var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
+var Language=require("$:/plugins/huwiki/musical/language.js");
+var isDanish=Language.isDanish;
 var Widget=require('$:/core/modules/widgets/widget.js').widget;
 var Scenes=require('$:/plugins/huwiki/musical/scenes.js');
 function create(wiki,name){
@@ -20,18 +21,20 @@ function Projects(tree,options){this.initialise(tree,options);}Projects.prototyp
 Projects.prototype.render=function(parent,next){this.parentDomNode=parent;this.computeAttributes();var self=this,doc=this.document,host=doc.createElement('div');host.className='huw-animus-new-project';parent.insertBefore(host,next);this.domNodes.push(host);
  var input=doc.createElement('input');input.type='text';host.appendChild(input);
  var button=doc.createElement('button');button.type='button';host.appendChild(button);
+ var ui;
  this._localize=function(){
+  ui=Language.translator(self.wiki);
   var da=isDanish(self.wiki);
-  input.placeholder=da?'Navn på din forestilling':'Name of your show';
+  input.placeholder=da?'Navn på din forestilling':ui('Name of your show');
   input.setAttribute('aria-label',input.placeholder);
-  button.textContent=da?'+ Ny forestilling':'+ New show';
+  button.textContent=da?'+ Ny forestilling':ui('+ New show');
  };
  this._localize();
- function submit(){var result=create(self.wiki,input.value|| (isDanish(self.wiki)?'Min musical':'My musical'));input.value='';self.dispatchEvent({type:'tm-navigate',navigateTo:result.title,navigateFromTitle:self.getVariable('currentTiddler')});}
+ function submit(){var result=create(self.wiki,input.value|| (isDanish(self.wiki)?'Min musical':ui('My musical')));input.value='';self.dispatchEvent({type:'tm-navigate',navigateTo:result.title,navigateFromTitle:self.getVariable('currentTiddler')});}
  button.onclick=submit;input.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();submit();}};
 };
 Projects.prototype.refresh=function(changed){
- if(!changed["$:/language"])return false;
+ if(!changed["$:/language"]&&!changed[Language.packTitle(this.wiki)])return false;
  this._localize();
  return true;
 };exports['animus-new-project']=Projects;exports.create=create;

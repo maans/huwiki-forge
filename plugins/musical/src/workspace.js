@@ -5,21 +5,22 @@ module-type: library
 \*/
 (function(){
 "use strict";
-var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
+var Language=require("$:/plugins/huwiki/musical/language.js");
+var isDanish=Language.isDanish;
 function el(doc,tag,cls,text,parent){
  var e=doc.createElement(tag);if(cls)e.className=cls;if(text!==undefined&&text!==null)e.textContent=text;
  if(parent)parent.appendChild(e);return e;
 }
 var toolbarId=0;
-function label(da){
- return !da?{
+function label(da,ui){
+ return !da?ui.labels({
   title:"AniMus",tools:"Tool",workshops:"Workshops",view:"View",focus:"Focus workspace",exit:"Exit focus",fit:"Split",scene:"Stage",score:"Score",
   properties:"Properties",close:"Close properties",all:"All tracks",music:"Music",camera:"Cameras",animation:"Animation",sceneTracks:"Stage & light",
   addKey:"Add keyframe",delKey:"Delete keyframe",zoomIn:"Zoom in",zoomOut:"Zoom out",
   sceneHint:"Click a stage element to edit it",timeline:"Timeline",preview:"Preview",
   zoomSelection:"Zoom to selection",resetPreviewZoom:"Reset zoom",zoomHint:"Enlarge the selected object or body part for editing (Z). The film camera stays unchanged.",
   fullscreen:"Full screen",exitFullscreen:"Exit full screen",clearSelection:"Clear selection"
- }:{
+ }):{
   title:"AniMus",tools:"Værktøj",workshops:"Værksteder",view:"Visning",focus:"Fokusvisning",exit:"Forlad fokus",fit:"Delt visning",scene:"Scene",score:"Noder",
   properties:"Egenskaber",close:"Luk egenskaber",all:"Alle spor",music:"Musik",camera:"Kameraer",animation:"Animation",sceneTracks:"Scene & lys",
   addKey:"Nyt nøglebillede",delKey:"Slet nøglebillede",zoomIn:"Zoom ind",zoomOut:"Zoom ud",
@@ -29,6 +30,7 @@ function label(da){
  };
 }
 function mount(o){
+ var ui=Language.translator(o.wiki);
  var displayName=o.displayName||function(value){return value;};
  var Puppet=require("$:/plugins/huwiki/musical/puppet.js");
  var Manuscript=require("$:/plugins/huwiki/musical/manuscript.js");
@@ -38,7 +40,7 @@ function mount(o){
  var SelectionZoom=require("$:/plugins/huwiki/musical/selection-zoom.js");
  var FacePanel=require("$:/plugins/huwiki/musical/face-panel.js");
  var FigurePanel=require("$:/plugins/huwiki/musical/figure-panel.js");
- var doc=o.doc,host=o.host,da=isDanish(o.wiki),L=label(da),editor=o.editor,root=host.querySelector(".huw-musical-editor");
+ var doc=o.doc,host=o.host,da=isDanish(o.wiki),L=label(da,ui),editor=o.editor,root=host.querySelector(".huw-musical-editor");
  if(!root)return {dispose:function(){}};
  host.classList.add("huw-musical--workspace");
  host.tabIndex=0;
@@ -130,17 +132,17 @@ function mount(o){
  var clearButtons=[];
  function clearButton(parent){var b=button(parent,'huw-musical-clear-selection',L.clearSelection,function(){clearSelection();});b.dataset.action='clear-selection';b.title=L.clearSelection+' (Esc)';clearButtons.push(b);return b;}
  var workshop=el(doc,'section','huw-musical-workshop-dock'),workshopAnchor=doc.createComment('figure and face workshop');
- workshop.hidden=true;workshop.setAttribute('data-animus-workshop','');workshop.setAttribute('aria-label',da?'Værksted for figurer, objekter og ansigter':'Character, object and face workshop');
+ workshop.hidden=true;workshop.setAttribute('data-animus-workshop','');workshop.setAttribute('aria-label',da?'Værksted for figurer, objekter og ansigter':ui('Character, object and face workshop'));
  host.insertBefore(workshopAnchor,o.layout.nextSibling);host.insertBefore(workshop,workshopAnchor);
  var workshopTop=el(doc,'header','huw-musical-workshop-top',undefined,workshop);
- el(doc,'strong','',da?'Værksted':'Workshop',workshopTop);
+ el(doc,'strong','',da?'Værksted':ui('Workshop'),workshopTop);
  var workshopTabs=el(doc,'div','huw-musical-workshop-tabs',undefined,workshopTop);
- workshopTabs.setAttribute('role','group');workshopTabs.setAttribute('aria-label',da?'Vælg værksted':'Choose workshop');
- var bodyTab=button(workshopTabs,'',da?'Figur':'Character',function(){returnToFigure();});bodyTab.dataset.workshopMode='figure';
- var faceTab=button(workshopTabs,'',da?'Ansigt':'Face',function(){showFaceWorkshop(workshopPart,'expression');});faceTab.dataset.workshopMode='face';
+ workshopTabs.setAttribute('role','group');workshopTabs.setAttribute('aria-label',da?'Vælg værksted':ui('Choose workshop'));
+ var bodyTab=button(workshopTabs,'',da?'Figur':ui('Character'),function(){returnToFigure();});bodyTab.dataset.workshopMode='figure';
+ var faceTab=button(workshopTabs,'',da?'Ansigt':ui('Face'),function(){showFaceWorkshop(workshopPart,'expression');});faceTab.dataset.workshopMode='face';
  clearButton(workshopTop);
  var workshopClose=button(workshopTop,'huw-musical-workshop-close','×',function(){hideWorkshop();host.focus({preventScroll:true});});
- workshopClose.setAttribute('aria-label',da?'Luk værksted':'Close workshop');
+ workshopClose.setAttribute('aria-label',da?'Luk værksted':ui('Close workshop'));
  var workshopBody=el(doc,'div','huw-musical-workshop-content',undefined,workshop);
  var figurePanel=FigurePanel.mount({displayName:displayName,doc:doc,wiki:o.wiki,host:host,parent:workshopBody,view:o.view,film:o.film,editor:editor,
   position:o.position,pause:o.pause,onLayout:reframeAfterLayout,
@@ -171,7 +173,7 @@ function mount(o){
   workshop.dataset.animusWorkshop=workshopMode;host.classList.toggle('huw-musical--workshop-open',visible);
   var context=figurePanel&&figurePanel.context&&figurePanel.context(),object=workshopMode==='figure'&&context&&context.kind==='object';
   workshop.dataset.workshopKind=object?'object':workshopMode;
-  bodyTab.textContent=object?(da?'Objekt':'Object'):(da?'Figur':'Character');faceTab.hidden=!!object;
+  bodyTab.textContent=object?(da?'Objekt':ui('Object')):(da?'Figur':ui('Character'));faceTab.hidden=!!object;
   bodyTab.setAttribute('aria-pressed',String(workshopMode==='figure'));faceTab.setAttribute('aria-pressed',String(workshopMode==='face'));
   faceTab.disabled=!faceContextFor(workshopPart);
  }
@@ -262,19 +264,19 @@ function mount(o){
  }
  var focusButton=button(viewActions,"huw-musical-focus-button",L.focus,toggleFocus);
  focusButton.setAttribute("aria-pressed","false");
- var figureButton=button(toolsMenu.panel,'huw-musical-transform-button huw-musical-figure-button',da?'Figur':'Figure',function(){toggleFigure();});
- figureButton.title=da?'Flyt, skalér, drej og skævvrid hele figuren, rekvisitten eller kulissen':'Move, scale, rotate and skew entire object';
- var partsButton=button(toolsMenu.panel,'huw-musical-transform-button huw-musical-parts-button',da?'Dele og led':'Parts and joints',function(){toggleParts();});
- partsButton.title=da?'Klik på en kropsdel. Træk den omkring sit led, eller brug drejehåndtaget. Ændringen gemmes ved tidsmarkøren.':'Select a body part. Drag it around its joint or use the rotation handle. Changes are keyed at the playhead.';
- var cameraButton=button(toolsMenu.panel,'huw-musical-transform-button',da?'Kameraramme':'Camera frame',function(){toggleCamera();});
- cameraButton.title=da?'Vis og redigér kameraets udsnit på scenen':'Edit camera viewport directly on the stage';
- var manuscriptButton=button(workshopActions,"huw-musical-manuscript-button",da?"Manuskript":"Script",function(){openManuscript();});
- manuscriptButton.title=da?"Manuskriptværksted: Replikker, undertekster, scenenoter":"Script workshop: dialogue, subtitles, scene notes";
- button(workshopActions,'huw-musical-scenes-button',da?'Scener':'Scenes',function(){sceneWorkshop.open();});
- button(workshopActions,'huw-musical-draw-button',da?'Tegn SVG':'Draw SVG',function(){sceneWorkshop.draw();});
- button(workshopActions,'huw-musical-score-button',da?'Musik':'Music',function(){scoreWorkshop.open(o.scoreTitle(),{clip:o.activeScoreClip()});});
- button(workshopActions,'huw-musical-audio-button',da?'Lydspor':'Audio tracks',function(){narration.open();});
- button(viewMenu.panel,'huw-musical-site-button',da?'Sitevisning':'Site view',function(){
+ var figureButton=button(toolsMenu.panel,'huw-musical-transform-button huw-musical-figure-button',da?'Figur':ui('Figure'),function(){toggleFigure();});
+ figureButton.title=da?'Flyt, skalér, drej og skævvrid hele figuren, rekvisitten eller kulissen':ui('Move, scale, rotate and skew entire object');
+ var partsButton=button(toolsMenu.panel,'huw-musical-transform-button huw-musical-parts-button',da?'Dele og led':ui('Parts and joints'),function(){toggleParts();});
+ partsButton.title=da?'Klik på en kropsdel. Træk den omkring sit led, eller brug drejehåndtaget. Ændringen gemmes ved tidsmarkøren.':ui('Select a body part. Drag it around its joint or use the rotation handle. Changes are keyed at the playhead.');
+ var cameraButton=button(toolsMenu.panel,'huw-musical-transform-button',da?'Kameraramme':ui('Camera frame'),function(){toggleCamera();});
+ cameraButton.title=da?'Vis og redigér kameraets udsnit på scenen':ui('Edit camera viewport directly on the stage');
+ var manuscriptButton=button(workshopActions,"huw-musical-manuscript-button",da?"Manuskript":ui("Script"),function(){openManuscript();});
+ manuscriptButton.title=da?"Manuskriptværksted: Replikker, undertekster, scenenoter":ui("Script workshop: dialogue, subtitles, scene notes");
+ button(workshopActions,'huw-musical-scenes-button',da?'Scener':ui('Scenes'),function(){sceneWorkshop.open();});
+ button(workshopActions,'huw-musical-draw-button',da?'Tegn SVG':ui('Draw SVG'),function(){sceneWorkshop.draw();});
+ button(workshopActions,'huw-musical-score-button',da?'Musik':ui('Music'),function(){scoreWorkshop.open(o.scoreTitle(),{clip:o.activeScoreClip()});});
+ button(workshopActions,'huw-musical-audio-button',da?'Lydspor':ui('Audio tracks'),function(){narration.open();});
+ button(viewMenu.panel,'huw-musical-site-button',da?'Sitevisning':ui('Site view'),function(){
   o.pause();if(focus)toggleFocus();if($tw.rootWidget)$tw.rootWidget.dispatchEvent({type:'tm-huwiki-sitepublisher',param:o.sceneTitle});
  });
  function updateToolButtons(){figureButton.setAttribute('aria-pressed',String(transformMode==='figure'));partsButton.setAttribute('aria-pressed',String(transformMode==='parts'));cameraButton.setAttribute('aria-pressed',String(transformMode==='camera'));
@@ -315,7 +317,7 @@ function mount(o){
   transformMode='figure';figureRoot='';showStageForTool();o.editor.setCameraEdit(false);
   if(candidate)chooseStageObject(candidate,true);
   updateToolButtons();refreshHandles();
-  figureButton.title=da?'Klik på en figur, rekvisit eller kulisse for at markere hele objektet':'Tap any figure, prop or scenery element to select the entire object';
+  figureButton.title=da?'Klik på en figur, rekvisit eller kulisse for at markere hele objektet':ui('Tap any figure, prop or scenery element to select the entire object');
  }
  function toggleParts(){
   if(cancelGesture)cancelGesture();
@@ -351,7 +353,7 @@ function mount(o){
  }
  var previewTools=el(doc,'div','huw-musical-preview-tools',undefined,stagePanel||actions);
  if(stagePanel){var stageHeading=stagePanel.querySelector('.huw-musical-subtitle');stagePanel.insertBefore(previewTools,stagePanel.firstChild);if(stageHeading)previewTools.appendChild(stageHeading);}
- var sceneZoom=toolbarMenu('stage-zoom',da?'Scenezoom':'Stage zoom',previewTools);
+ var sceneZoom=toolbarMenu('stage-zoom',da?'Scenezoom':ui('Stage zoom'),previewTools);
  var zoomSelectionButton=button(sceneZoom.panel,'huw-musical-zoom-selection',L.zoomSelection,function(){zoomToSelection();});
  zoomSelectionButton.title=L.zoomHint;zoomSelectionButton.setAttribute('aria-label',L.zoomSelection);zoomSelectionButton.setAttribute('aria-pressed','false');zoomSelectionButton.disabled=true;
  var resetPreviewButton=button(sceneZoom.panel,'huw-musical-reset-preview-zoom',L.resetPreviewZoom,function(){resetPreviewZoom();});
@@ -395,18 +397,18 @@ function mount(o){
  if(links){
   workshopsMenu.panel.appendChild(links);
   var shortcuts=links.querySelectorAll("a");
-  if(shortcuts[0]){shortcuts[0].title=shortcuts[0].textContent;shortcuts[0].textContent=da?'Åbn CutOut':'Open CutOut';}
-  if(shortcuts[1]){shortcuts[1].title=shortcuts[1].textContent;shortcuts[1].textContent=da?'Åbn ABC':'Open ABC';}
+  if(shortcuts[0]){shortcuts[0].title=shortcuts[0].textContent;shortcuts[0].textContent=da?'Åbn CutOut':ui('Open CutOut');}
+  if(shortcuts[1]){shortcuts[1].title=shortcuts[1].textContent;shortcuts[1].textContent=da?'Åbn ABC':ui('Open ABC');}
  }
  // Remove the old full-size camera-shot toolbar entirely. Each shot is now
  // edited as a keyframe on Camera A/B and Cuts tracks.
  var shots=host.querySelector(".huw-musical-shots");if(shots)shots.remove();
- var playbackMenu=toolbarMenu('playback',da?'Afspilningsvalg':'Playback options',o.transport);
+ var playbackMenu=toolbarMenu('playback',da?'Afspilningsvalg':ui('Playback options'),o.transport);
  playbackMenu.panel.classList.add('huw-musical-playback-options');
  var speed=host.querySelector('.huw-musical-speed');
  if(speed){
   var speedLabel=el(doc,'label','huw-musical-playback-field',undefined,playbackMenu.panel);
-  el(doc,'span','',da?'Hastighed':'Speed',speedLabel);speedLabel.appendChild(speed);
+  el(doc,'span','',da?'Hastighed':ui('Speed'),speedLabel);speedLabel.appendChild(speed);
  }
  var status=host.querySelector(".huw-musical-status");
  if(status){status.classList.add("huw-musical-inline-status");o.transport.insertBefore(status,playbackMenu.group);}
@@ -418,14 +420,14 @@ function mount(o){
  el(doc,"strong","huw-musical-timeline-title",L.timeline,toolbar);
  var filters=el(doc,"div","huw-musical-track-filters",undefined,toolbar);
  var trackFilter=el(doc,'select','huw-musical-filter',undefined,filters);
- trackFilter.setAttribute('aria-label',da?'Vis spor':'Show tracks');
+ trackFilter.setAttribute('aria-label',da?'Vis spor':ui('Show tracks'));
  [["all",L.all],["music",L.music],["camera",L.camera],["animation",L.animation],["scene",L.sceneTracks]].forEach(function(item){
   el(doc,'option','',item[1],trackFilter).value=item[0];
  });
  trackFilter.value='all';trackFilter.onchange=function(){editor.setFilter(trackFilter.value);};
  var controls=el(doc,"div","huw-musical-edit-controls",undefined,toolbar);
  var keyGroup=el(doc,'div','huw-musical-stepper',undefined,controls);
- var addKeyButton=button(keyGroup,"huw-musical-add-key",da?'＋ Nøglebillede':'＋ Keyframe',function(){editor.addKeyframe();setInspector(true);});
+ var addKeyButton=button(keyGroup,"huw-musical-add-key",da?'＋ Nøglebillede':ui('＋ Keyframe'),function(){editor.addKeyframe();setInspector(true);});
  var deleteKeyButton=button(keyGroup,"huw-musical-delete-key","⌫",function(){editor.removeKeyframe();});
  addKeyButton.setAttribute('aria-label',L.addKey);deleteKeyButton.setAttribute('aria-label',L.delKey);
  function updateEditButtons(){
@@ -456,11 +458,11 @@ function mount(o){
  if(oldHeader)oldHeader.classList.add("huw-musical-legacy-heading");
  if(oldHelp)oldHelp.classList.add("huw-musical-legacy-help");
  function updateInspectorHeading(){var t=editor.getSelection&&editor.getSelection();
-  var kind=t&&t.kind,name=kind==='figure'?(da?'Hele objekt':'Whole object'):
-   kind==='animation'?(da?'Animationsklip':'Animation clip'):
-   kind==='song'?(da?'Musikklip':'Music clip'):
-   kind==='camera'?(da?'Kamera':'Camera'):
-   kind==='film-part'||kind==='part'?(da?'Objekt':'Object'):L.properties;
+  var kind=t&&t.kind,name=kind==='figure'?(da?'Hele objekt':ui('Whole object')):
+   kind==='animation'?(da?'Animationsklip':ui('Animation clip')):
+   kind==='song'?(da?'Musikklip':ui('Music clip')):
+   kind==='camera'?(da?'Kamera':ui('Camera')):
+   kind==='film-part'||kind==='part'?(da?'Objekt':ui('Object')):L.properties;
   inspectorHeading.textContent=kind?L.properties+' · '+name:L.properties;
  }
  function setInspector(value){
@@ -703,7 +705,7 @@ function mount(o){
   diamond(handleSet.skewY,{x:(p[1].x+p[2].x)/2,y:(p[1].y+p[2].y)/2});
   var selectedScene=transformMode!=='camera'&&editor.resolvePartScene&&editor.resolvePartScene(figureRoot);
   var selectedPart=selectedScene&&selectedScene.parts&&selectedScene.parts.find(function(p){return p.id===figureRoot;});
-  selectLabel.textContent=transformMode==='camera'?(da?'Kamera '+cameraName:'Camera '+cameraName):(selectedPart&&displayName(selectedPart.name||selectedPart.id)||figureRoot||(da?'Hele objekt':'Whole object'));
+  selectLabel.textContent=transformMode==='camera'?(da?'Kamera '+cameraName:'Camera '+cameraName):(selectedPart&&displayName(selectedPart.name||selectedPart.id)||figureRoot||(da?'Hele objekt':ui('Whole object')));
   selectLabel.style.fontSize=String(13*unit)+'px';selectLabel.style.strokeWidth=String(4*unit)+'px';
   selectLabel.setAttribute('x',p[0].x+6*unit);selectLabel.setAttribute('y',p[0].y-11*unit);
  }

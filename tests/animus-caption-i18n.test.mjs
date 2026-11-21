@@ -30,6 +30,7 @@ async function captionFixture({views=1}={}){
   constructor(tag,cls=""){this.tagName=tag;this.className=cls;this.nodeType=1;this.children=[];this._attrs={};this.events={};this._text="";this.reads=0;this.queries=0;this.classList={contains:name=>this.className.split(" ").includes(name)};if(tag==="select")this.options=[];}
   get textContent(){this.reads++;return this._text;}
   set textContent(value){this._text=String(value);}
+  removeChild(child){this.children=this.children.filter(n=>n!==child);this.firstChild=this.children[0];if(this.options)this.options=this.options.filter(n=>n!==child);child.parentElement=null;}
   get isConnected(){return this.tagName==="body"||!!this.parentElement?.isConnected;}
   appendChild(child){child.parentElement=this;this.children.push(child);this.firstChild=this.children[0];if(this.tagName==="select")this.options.push(child);return child;}
   addEventListener(name,handler){this.events[name]=handler;}
@@ -62,7 +63,8 @@ async function captionFixture({views=1}={}){
  let mutation;
  class Observer{constructor(callback){mutation=callback;}observe(){}}
  const $tw={wiki,Tiddler:class{constructor(fields){Object.assign(this,fields);}}};
- const exports={};vm.runInNewContext(source,{exports,$tw,document,MutationObserver:Observer,console});exports.startup();
+ const tracks={};vm.runInNewContext(await readFile(new URL("../plugins/animus-caption-i18n/src/tracks.js",import.meta.url),"utf8"),{exports:tracks,Intl});
+ const exports={};vm.runInNewContext(source,{exports,$tw,document,MutationObserver:Observer,console,require:()=>tracks});exports.startup();
  return {players,document,store,script,addView,Element,mutation,change:onWikiChange};
 }
 
@@ -120,4 +122,48 @@ test("newly mounted players and caption subtrees translate without rescanning ex
  assert.equal(document.queries,scans);
  assert.equal(first.host.queries,firstScans);
  assert.equal(first.caption.reads,firstReads);
+});
+
+test("installed languages, translation dictionaries and imported subtitle tracks are available per film",async()=>{
+ const Tracks={}, english="Look at the wall.";
+ vm.runInNewContext(await readFile(new URL("../plugins/animus-caption-i18n/src/tracks.js",import.meta.url),"utf8"),{exports:Tracks,Intl});
+ const imported="French subtitles from another author";
+ const store={[imported]:JSON.stringify({schema:"animus-cues/2",sourceTiddler:"The cave",targetLanguage:"fr-FR",entries:{cave:{"spoken-1":{source:english,text:"Regarde le mur."}}}})};
+ const wiki={
+  filterTiddlers(filter){
+   if(filter.includes("plugin-type"))return ["$:/languages/de-DE"];
+   if(filter.includes("prefix["))return ["AniMus/Translations/pt-BR","AniMus/Translations/Template"];
+   return Object.keys(store);
+  },
+  getTiddlerText(title,fallback){return store[title]??fallback;}
+ };
+ const catalog=Tracks.read(wiki);
+ assert.deepEqual([...Tracks.options(catalog,"The cave")],["de-DE","fr-FR","pt-BR"]);
+ assert.deepEqual([...Tracks.options(catalog,"Another film")],["de-DE","pt-BR"]);
+ const get=(scene,source=english)=>Tracks.translation(Tracks.read(wiki),"fr-FR","The cave",scene,"spoken-1",source);
+ assert.equal(get("cave"),"Regarde le mur.");
+ assert.equal(get("outside"),"");
+ assert.equal(get("cave","Revised original"),"");
+ const change={lang:"fr-FR",scene:"outside",id:"spoken-1",source:english,text:"Regardez le mur."};
+ const [patch]=Tracks.writes(wiki,"The cave",[change]);assert.equal(patch.title,imported);
+ assert.equal(get("outside"),"","preparing a draft does not modify the wiki");
+ store[patch.title]=patch.text;
+ assert.equal(get("outside"),change.text);assert.equal(get("cave"),"Regarde le mur.");
+ assert.throws(()=>Tracks.writes(wiki,"The cave",[{...change,text:"Overwritten elsewhere"}]));
+ const before={source:english,text:change.text};
+ store[imported]=Tracks.writes(wiki,"The cave",[{...change,text:"",before}])[0].text;
+ assert.equal(get("outside"),"");assert.equal(get("cave"),"Regarde le mur.");
+});
+
+test("the optional translation guide includes the dictionary and applies only strings for the selected language",async()=>{
+ const Language={},tiddlers=JSON.parse((await json("../plugins/musical/dist/plugin.json")).text).tiddlers;
+ vm.runInNewContext(tiddlers["$:/plugins/huwiki/musical/language.js"].text,{exports:Language});
+ const locale="$:/languages/fr-FR",table=JSON.parse(tiddlers["AniMus/Translations/Template"].text);
+ for(const label of ["▶ Play","Workshops","Subtitle language","Translated subtitle"])assert.equal(table[label],label);
+ const references=Object.values(tiddlers).filter(t=>t.type!=="application/javascript"&&t.title!=="AniMus · Translation"&&t.text?.includes("AniMus · Translation"));
+ assert.deepEqual(references.map(t=>t.title),["AniMus · Produktionsværksteder"]);
+ const wiki={getTiddlerText:()=>locale,getTiddlerData:t=>t==="AniMus/Translations/fr-FR"?{"▶ Play":"▶ Lire","Original text":"","Subtitle language":{}}:null};
+ const tr=Language.translator(wiki);
+ assert.equal(tr("▶ Play"),"▶ Lire");assert.equal(tr("Original text"),"Original text");assert.equal(tr("Subtitle language"),"Subtitle language");
+ assert.equal(tr.labels({group:{play:"▶ Play"}}).group.play,"▶ Lire");
 });

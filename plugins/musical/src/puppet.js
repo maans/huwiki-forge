@@ -5,7 +5,8 @@ module-type: library
 \*/
 (function(){
 "use strict";
-var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
+var Language=require("$:/plugins/huwiki/musical/language.js");
+var isDanish=Language.isDanish;
 // The workshop edits the same hierarchy and asset schema as CutOut Edition.
 // It never converts an animated scene part into an unrelated canvas object.
 var Engine=require("$:/plugins/huwiki/cutout/engine.js");
@@ -49,11 +50,12 @@ function imageInfo(p){var g=p.geo||{},w=60,h=60,x=-30,y=-30;
  return {x:r(x),y:r(y),w:r(Math.max(1,w)),h:r(Math.max(1,h))};
 }
 function mount(o){
+ var ui=Language.translator(o.wiki);
  var doc=o.doc,stage=o.view.clips&&o.view.clips[0]&&o.view.clips[0].view,source=stage&&stage.scene||o.view.scene,film=o.film;
  if(!source||!Array.isArray(source.parts))return {open:function(){return false;},isOpen:function(){return false;},close:function(){}};
  var da=yes(o.wiki),L=da?{
-  title:"Dukkeværksted",back:"← Tilbage til animationen",save:"Gem og tilbage",cancel:"Annuller",tree:"Dukkens dele",settings:"Valgt del",choose:"Vælg en del på dukken eller i listen",name:"Navn",parent:"Forbundet med",none:"Dukkens rod",rot:"Drejning",pivot:"Drejepunkt",replace:"Udskift delens udseende",import:"Importér SVG/PNG/billede",copy:"Kopiér udseende fra",circle:"Cirkel",ellipse:"Ellipse",rect:"Firkant",stroke:"Streg",color:"Farve",elbow:"Del op med led",library:"Gem kopi som CutOut-dukke",svgLayers:"✎ Tegn i SVG-lag",hint:"Træk en del på dukken. Led og børn følger automatisk med. Ændringer gemmes først med Gem.",bad:"Dukkehierarkiet er ugyldigt",saved:"Ændringerne er gemt i CutOut-scenen.",removed:"Gemte ændringer kan fortrydes ved at annullere, før du gemmer."}:{
-  title:"Puppet workshop",back:"← Back to animation",save:"Save and back",cancel:"Cancel",tree:"Puppet parts",settings:"Selected part",choose:"Select a part on the puppet or in the list",name:"Name",parent:"Connected to",none:"Puppet root",rot:"Rotation",pivot:"Pivot",replace:"Replace part appearance",import:"Import SVG/PNG/image",copy:"Copy appearance from",circle:"Circle",ellipse:"Ellipse",rect:"Rectangle",stroke:"Line",color:"Color",elbow:"Split at joint",library:"Save copy to CutOut library",svgLayers:"✎ Draw SVG layers",hint:"Drag parts directly on the puppet. Children follow their joints. Changes are saved only when you press Save.",bad:"Invalid puppet hierarchy",saved:"Changes saved to the CutOut scene.",removed:"You can cancel unsaved changes."};
+  title:"Dukkeværksted",back:"← Tilbage til animationen",save:"Gem og tilbage",cancel:"Annuller",tree:"Dukkens dele",settings:"Valgt del",choose:"Vælg en del på dukken eller i listen",name:"Navn",parent:"Forbundet med",none:"Dukkens rod",rot:"Drejning",pivot:"Drejepunkt",replace:"Udskift delens udseende",import:"Importér SVG/PNG/billede",copy:"Kopiér udseende fra",circle:"Cirkel",ellipse:"Ellipse",rect:"Firkant",stroke:"Streg",color:"Farve",elbow:"Del op med led",library:"Gem kopi som CutOut-dukke",svgLayers:"✎ Tegn i SVG-lag",hint:"Træk en del på dukken. Led og børn følger automatisk med. Ændringer gemmes først med Gem.",bad:"Dukkehierarkiet er ugyldigt",saved:"Ændringerne er gemt i CutOut-scenen.",removed:"Gemte ændringer kan fortrydes ved at annullere, før du gemmer."}:ui.labels({
+  title:"Puppet workshop",back:"← Back to animation",save:"Save and back",cancel:"Cancel",tree:"Puppet parts",settings:"Selected part",choose:"Select a part on the puppet or in the list",name:"Name",parent:"Connected to",none:"Puppet root",rot:"Rotation",pivot:"Pivot",replace:"Replace part appearance",import:"Import SVG/PNG/image",copy:"Copy appearance from",circle:"Circle",ellipse:"Ellipse",rect:"Rectangle",stroke:"Line",color:"Color",elbow:"Split at joint",library:"Save copy to CutOut library",svgLayers:"✎ Draw SVG layers",hint:"Drag parts directly on the puppet. Children follow their joints. Changes are saved only when you press Save.",bad:"Invalid puppet hierarchy",saved:"Changes saved to the CutOut scene.",removed:"You can cancel unsaved changes."});
  var overlay=null,drawing=null,activeRoot="",activeStageTitle="",previewTime=0,previewFrame=null,previewNotice=null,workshopTitle="",parts=[],selected="",clip=null,canvas=null,tree=null,inspector=null,msg=null,preview=null,dirty=false,libraryRequested=false,originalIds={},cancelInteraction=null;
  // The Fyrtøjet performance contains acts -> scenes -> figures. Locate the
  // actual nested source instead of assuming all puppets live in scene one.
@@ -71,8 +73,8 @@ function mount(o){
  }
  function lookup(id){return parts.find(function(p){return p.id===id;});}
  function close(){if(cancelInteraction)cancelInteraction();if(drawing){drawing.close(true);drawing=null;}if(!overlay)return;overlay.remove();overlay=null;o.host.classList.remove("huw-musical--puppet-open");activeRoot="";}
- function exit(){if(dirty&&doc.defaultView&&!doc.defaultView.confirm(da?"Luk uden at gemme ændringerne?":"Close without saving changes?"))return;close();o.host.focus({preventScroll:true});}
- function writable(){dirty=true;if(msg)msg.textContent=da?"Ikke gemt endnu":"Not saved yet";}
+ function exit(){if(dirty&&doc.defaultView&&!doc.defaultView.confirm(da?"Luk uden at gemme ændringerne?":ui("Close without saving changes?")))return;close();o.host.focus({preventScroll:true});}
+ function writable(){dirty=true;if(msg)msg.textContent=da?"Ikke gemt endnu":ui("Not saved yet");}
  function selectedNode(){return lookup(selected);}
  function appearancePart(part){if(!part)return null;var drawing=part.type==="group"&&lookup(part.id+"-drawing");return drawing&&drawing.parent===part.id?drawing:part;}
  function setPreviewFrame(){
@@ -84,7 +86,7 @@ function mount(o){
   var target=appearancePart(lookup(selected||activeRoot)),id=target&&target.id,seen={},revealed=false;
   while(id&&!seen[id]){seen[id]=true;var node=preview.nodes[id],part=lookup(id);if(node&&n(node.el.getAttribute('opacity'),1)<=0){node.el.setAttribute('opacity','1');revealed=true;}id=part&&part.parent;}
   preview.svg.setAttribute('data-preview-time',String(previewTime));preview.svg.setAttribute('data-preview-revealed',String(revealed));
-  if(previewNotice){previewNotice.hidden=!revealed;previewNotice.textContent=da?"Vises kun i værkstedet":"Visible only in the workshop";}
+  if(previewNotice){previewNotice.hidden=!revealed;previewNotice.textContent=da?"Vises kun i værkstedet":ui("Visible only in the workshop");}
   setPreviewFrame();
  }
  function fitPreview(){
@@ -146,7 +148,7 @@ function mount(o){
  function button(host,label,onClick){var b=el(doc,"button","huw-puppet-action",label,host);b.type="button";b.onclick=onClick;return b;}
  function appearance(to,from){var generated=to.svgLayerIds||{};Object.keys(generated).forEach(function(id){parts=parts.filter(function(p){return p.id!==generated[id];});});delete to.svgDrawing;delete to.svgLayerIds;["type","geo","fill","stroke","strokeWidth","rig","text","fontSize","align","weight","fontFamily","variants","variantId","asset","assetId","imageData","src"].forEach(function(k){delete to[k];if(from[k]!==undefined)to[k]=clone(from[k]);});}
  function selectImage(file){if(!file)return;var allowed=/^image\/(png|jpeg|webp|svg\+xml)$/i;
-  if(!allowed.test(file.type)||file.size>8*1024*1024){msg.textContent=da?"Vælg SVG, PNG, JPEG eller WebP under 8 MB.":"Choose an SVG, PNG, JPEG or WebP under 8 MB.";return;}
+  if(!allowed.test(file.type)||file.size>8*1024*1024){msg.textContent=da?"Vælg SVG, PNG, JPEG eller WebP under 8 MB.":ui("Choose an SVG, PNG, JPEG or WebP under 8 MB.");return;}
   var target=appearancePart(selectedNode()),targetId=target&&target.id,targetOverlay=overlay;
   function use(data){var p=lookup(targetId);if(!overlay||overlay!==targetOverlay||!p)return;
    var bounds=imageInfo(p),node=preview&&preview.nodes[p.id],shape=node&&node.shape;
@@ -161,17 +163,17 @@ function mount(o){
  }
  function splitLimb(){var p=appearancePart(selectedNode());if(!p||p.type!=="path")return;
   var path=String(p.geo&&p.geo.d||""),match=path.match(/^M\s*0(?:\.0+)?[ ,]+0(?:\.0+)?\s+L\s*(-?\d+(?:\.\d+)?)[ ,]+(-?\d+(?:\.\d+)?)/i);
-  if(!match){msg.textContent=da?"Kan kun opdele en enkel streg fra et led.":"Can split a simple line starting at the joint.";return;}
+  if(!match){msg.textContent=da?"Kan kun opdele en enkel streg fra et led.":ui("Can split a simple line starting at the joint.");return;}
   var dx=Number(match[1]),dy=Number(match[2]),newId=p.id+"-lower",index=1;
   while(lookup(newId)||source.parts.some(function(q){return q.id===newId;}))newId=p.id+"-lower-"+(++index);
-  var midX=r(dx/2),midY=r(dy/2),child={id:newId,name:(p.name||p.id)+(da?" · underdel":" · lower"),type:"path",parent:p.id,pivot:{x:0,y:0},geo:{d:"M0 0 L"+midX+" "+midY},stroke:p.stroke||"#17202f",strokeWidth:p.strokeWidth||5,fill:"none",rig:true,keys:[{t:0,x:midX,y:midY,r:0,sx:1,sy:1,opacity:1}]};
+  var midX=r(dx/2),midY=r(dy/2),child={id:newId,name:(p.name||p.id)+(da?" · underdel":ui(" · lower")),type:"path",parent:p.id,pivot:{x:0,y:0},geo:{d:"M0 0 L"+midX+" "+midY},stroke:p.stroke||"#17202f",strokeWidth:p.strokeWidth||5,fill:"none",rig:true,keys:[{t:0,x:midX,y:midY,r:0,sx:1,sy:1,opacity:1}]};
   p.geo.d="M0 0 L"+midX+" "+midY;parts.splice(parts.indexOf(p)+1,0,child);selected=newId;writable();renderAll();
  }
- function renderInspector(){if(!inspector)return;inspector.textContent="";var p=selectedNode();if(!p){el(doc,"p","huw-puppet-hint",clip?L.choose:da?"Vælg objektet eller en af dets dele i visningen eller listen.":"Select the object or one of its parts in the preview or list.",inspector);return;}
+ function renderInspector(){if(!inspector)return;inspector.textContent="";var p=selectedNode();if(!p){el(doc,"p","huw-puppet-hint",clip?L.choose:da?"Vælg objektet eller en af dets dele i visningen eller listen.":ui("Select the object or one of its parts in the preview or list."),inspector);return;}
   el(doc,"h3","",p.name||p.id,inspector);
   input(L.name,p.name||p.id,"text",function(v){p.name=v;writable();renderTree();renderInspector();});
   var parentLabel=el(doc,"label","huw-puppet-field",undefined,inspector);el(doc,"span","",L.parent,parentLabel);var select=el(doc,"select","",undefined,parentLabel);
-  var opt=el(doc,"option","",clip?L.none:da?"Intet overordnet objekt":"No parent object",select);opt.value="";
+  var opt=el(doc,"option","",clip?L.none:da?"Intet overordnet objekt":ui("No parent object"),select);opt.value="";
   var invalid={};descendants(parts,p.id).forEach(function(d){invalid[d.id]=true;});
   parts.forEach(function(q){if(!invalid[q.id]){var item=el(doc,"option","",q.name||q.id,select);item.value=q.id;}});
   select.value=p.parent||"";select.disabled=p.id===activeRoot;
@@ -184,22 +186,22 @@ function mount(o){
   [["x","X"],["y","Y"]].forEach(function(item){input(item[1],n((p.pivot||{})[item[0]],0),"number",function(v){if(!Number.isFinite(v))return;p.pivot=p.pivot||{};p.pivot[item[0]]=v;writable();renderPreview();renderInspector();});});
   var visual=appearancePart(p),appearanceTitle=el(doc,"strong","huw-puppet-section-title",L.replace,inspector);appearanceTitle.dataset.puppetAppearanceTarget=visual.id;
   if(visual.type!=="group"&&visual.type!=="image"){
-   [["fill",da?"Fyldfarve":"Fill color","#f0b457",da?"Uden fyld":"No fill"],["stroke",da?"Stregfarve":"Stroke color","#243549",da?"Uden streg":"No stroke"]].forEach(function(item){
+   [["fill",da?"Fyldfarve":ui("Fill color"),"#f0b457",da?"Uden fyld":ui("No fill")],["stroke",da?"Stregfarve":ui("Stroke color"),"#243549",da?"Uden streg":ui("No stroke")]].forEach(function(item){
     var key=item[0],value=visual[key]===undefined?(key==="fill"?item[2]:"none"):visual[key],absent=value==="none"||value==="transparent";
     var colors=input(item[1],/^#[0-9a-f]{6}$/i.test(value)?value:item[2],"color",function(v){visual[key]=v;writable();renderPreview();});colors.dataset.puppetPaint=key;colors.disabled=absent;
     input(item[3],absent,"checkbox",function(disabled){visual[key]=disabled?"none":colors.value;writable();renderPreview();renderInspector();}).dataset.puppetPaint=key+"-none";
    });
-   var width=input(da?"Stregtykkelse":"Stroke width",n(visual.strokeWidth,1),"number",function(value){if(!Number.isFinite(value)||value<0)return;visual.strokeWidth=value;writable();renderPreview();});width.min="0";width.step="0.5";width.dataset.puppetPaint="stroke-width";
+   var width=input(da?"Stregtykkelse":ui("Stroke width"),n(visual.strokeWidth,1),"number",function(value){if(!Number.isFinite(value)||value<0)return;visual.strokeWidth=value;writable();renderPreview();});width.min="0";width.step="0.5";width.dataset.puppetPaint="stroke-width";
   }
   var shapes=el(doc,"div","huw-puppet-presets",undefined,inspector);
   [["circle",L.circle,{r:13}],["ellipse",L.ellipse,{rx:20,ry:13}],["rect",L.rect,{x:-16,y:-12,w:32,h:24}],["path",L.stroke,{d:"M0 0 L0 34"}]].forEach(function(row){button(shapes,row[1],function(){appearance(visual,{type:row[0],geo:row[2],fill:row[0]==="path"?"none":"#eab970",stroke:row[0]==="path"?"#243549":"#5b4053",strokeWidth:row[0]==="path"?5:1,rig:row[0]==="path"});writable();renderPreview();renderInspector();});});
   var copyLabel=el(doc,"label","huw-puppet-field",undefined,inspector);el(doc,"span","",L.copy,copyLabel);
-  var copy=el(doc,"select","",undefined,copyLabel);el(doc,"option","",da?"— Vælg del —":"— Choose part —",copy).value="";
+  var copy=el(doc,"select","",undefined,copyLabel);el(doc,"option","",da?"— Vælg del —":ui("— Choose part —"),copy).value="";
   source.parts.forEach(function(q){if(q.id!==visual.id&&q.type!=="group"){var option=el(doc,"option","",q.name||q.id,copy);option.value=q.id;}});
   copy.onchange=function(){var other=source.parts.find(function(q){return q.id===copy.value;});if(!other)return;appearance(visual,other);writable();renderPreview();renderInspector();};
   button(inspector,L.svgLayers,function(){
    var SvgLayers=optionalSvgLayers();
-   if(!SvgLayers){if(msg)msg.textContent=da?"SVG-lagværkstedet mangler i denne betaversion.":"The SVG layer workshop is unavailable in this beta.";return;}
+   if(!SvgLayers){if(msg)msg.textContent=da?"SVG-lagværkstedet mangler i denne betaversion.":ui("The SVG layer workshop is unavailable in this beta.");return;}
    drawing=SvgLayers.open({doc:doc,wiki:o.wiki,host:overlay,part:visual,da:da,duration:source.duration||4,onClose:function(){drawing=null;},onSave:function(layers,settings){
     SvgLayers.applyToParts(parts,visual,layers,settings);
     selected=p.id;writable();renderAll();return true;
@@ -208,7 +210,7 @@ function mount(o){
   var row=el(doc,"label","huw-puppet-file",L.import,inspector);var file=el(doc,"input","",undefined,row);file.type="file";file.accept=".svg,.png,.jpg,.jpeg,.webp,image/svg+xml,image/png,image/jpeg,image/webp";
   file.onchange=function(){selectImage(file.files&&file.files[0]);};
   if(visual.type==="path")button(inspector,L.elbow,splitLimb);
-  if(visual.type==="image"&&(visual.variants||[]).length>1){var variantLabel=el(doc,"label","huw-puppet-field",undefined,inspector);el(doc,"span","",da?"Billedvariant":"Image variant",variantLabel);
+  if(visual.type==="image"&&(visual.variants||[]).length>1){var variantLabel=el(doc,"label","huw-puppet-field",undefined,inspector);el(doc,"span","",da?"Billedvariant":ui("Image variant"),variantLabel);
    var variant=el(doc,"select","",undefined,variantLabel);(visual.variants||[]).forEach(function(v){var op=el(doc,"option","",v.name||v.id,variant);op.value=v.id;});variant.value=visual.variantId;variant.onchange=function(){visual.variantId=variant.value;writable();renderPreview();};}
  }
  function renderAll(){renderPreview();renderTree();renderInspector();}
@@ -246,7 +248,7 @@ function mount(o){
   // or backward. Inserting every new child after its parent reverses the stack.
   var insertion=before.slice(0,Math.max(0,rootIndex)).filter(function(p){return !originalIds[p.id];}).length;
   combined.splice.apply(combined,[insertion,0].concat(parts));
-  if(combined.length>300){msg.textContent=da?"Scenen kan højst have 300 dele. Brug færre SVG-lag.":"A scene supports at most 300 parts. Use fewer SVG layers.";return false;}
+  if(combined.length>300){msg.textContent=da?"Scenen kan højst have 300 dele. Brug færre SVG-lag.":ui("A scene supports at most 300 parts. Use fewer SVG layers.");return false;}
   var problem=Model.validate({parts:combined});if(problem.length){msg.textContent=problem.join(" · ");return false;}
   try{installAssets();}catch(err){msg.textContent=err.message;return false;}
   source.parts=combined;
@@ -256,7 +258,7 @@ function mount(o){
   var stageTitle=activeStageTitle||o.stageTitle,prior=o.wiki.getTiddler(stageTitle);if(!prior){msg.textContent="CutOut scene not found";return false;}
   var body=JSON.stringify(source);o.markOwnWrite(stageTitle,body);o.wiki.addTiddler(new $tw.Tiddler(prior,{title:stageTitle,text:body}));
   if(changedParts.length){var filmPrior=o.wiki.getTiddler(o.sceneTitle),filmBody=JSON.stringify(film);if(filmPrior){o.markOwnWrite(o.sceneTitle,filmBody);o.wiki.addTiddler(new $tw.Tiddler(filmPrior,{title:o.sceneTitle,text:filmBody}));}}
-  if(libraryRequested){var title=o.wiki.generateNewTitle((clip&&clip.name||"Musical")+(da?" – dukke":" – puppet"));
+  if(libraryRequested){var title=o.wiki.generateNewTitle((clip&&clip.name||"Musical")+(da?" – dukke":ui(" – puppet")));
    Model.write(o.wiki,title,{version:1,kind:"puppet",name:clip&&clip.name||L.title,width:800,height:450,duration:4,background:"transparent",parts:clone(parts)},"puppet");}
   rebuildStage();o.editor.redraw();dirty=false;exit();return true;
  }
@@ -266,7 +268,7 @@ function mount(o){
   if(overlay)close();activeRoot=root;previewTime=located.time;previewFrame=null;parts=clone(all);selected=id&&parts.some(function(p){return p.id===id;})?id:root;
   dirty=false;libraryRequested=false;originalIds={};all.forEach(function(p){originalIds[p.id]=true;});
   clip=(film.musical&&film.musical.animationClips||[]).find(function(c){return c.target===root;})||null;
-  workshopTitle=clip?L.title:(da?"Objektværksted":"Object workshop");
+  workshopTitle=clip?L.title:(da?"Objektværksted":ui("Object workshop"));
   o.pause();o.host.classList.add("huw-musical--puppet-open");
   overlay=el(doc,"section","huw-puppet-workshop",undefined,o.host);overlay.tabIndex=0;overlay.dataset.workshopKind=clip?'figure':'object';
   var bar=el(doc,"header","huw-puppet-appbar",undefined,overlay);
@@ -275,15 +277,15 @@ function mount(o){
   var closeBtn=button(bar,L.cancel,exit);closeBtn.classList.add("huw-puppet-cancel");
   button(bar,L.save,save).classList.add("huw-puppet-save");
   var layout=el(doc,"div","huw-puppet-layout",undefined,overlay);
-  var left=el(doc,"aside","huw-puppet-sidebar",undefined,layout);el(doc,"h3","",clip?L.tree:da?"Objektets dele":"Object parts",left);tree=el(doc,"div","huw-puppet-tree",undefined,left);
+  var left=el(doc,"aside","huw-puppet-sidebar",undefined,layout);el(doc,"h3","",clip?L.tree:da?"Objektets dele":ui("Object parts"),left);tree=el(doc,"div","huw-puppet-tree",undefined,left);
   var center=el(doc,"main","huw-puppet-center",undefined,layout);canvas=el(doc,"div","huw-puppet-canvas",undefined,center);
-  el(doc,"p","huw-puppet-hint",clip?L.hint:da?"Redigér objektets udseende og dele. Placering og drejning her ændrer hele animationsforløbet. Ændringer gemmes med Gem.":"Edit the object's appearance and parts. Position and rotation here adjust the whole animation path. Changes are saved with Save.",center);
+  el(doc,"p","huw-puppet-hint",clip?L.hint:da?"Redigér objektets udseende og dele. Placering og drejning her ændrer hele animationsforløbet. Ændringer gemmes med Gem.":ui("Edit the object's appearance and parts. Position and rotation here adjust the whole animation path. Changes are saved with Save."),center);
   previewNotice=el(doc,"p","huw-puppet-hint huw-puppet-preview-notice","",center);previewNotice.hidden=true;previewNotice.setAttribute("role","status");
   var right=el(doc,"aside","huw-puppet-inspector",undefined,layout);el(doc,"h2","",L.settings,right);
   inspector=el(doc,"div","huw-puppet-fields",undefined,right);
   var footer=el(doc,"footer","huw-puppet-footer",undefined,overlay);msg=el(doc,"output","",L.removed,footer);
   var choice=el(doc,"label","huw-puppet-library-toggle",undefined,footer),box=el(doc,"input","",undefined,choice);box.type="checkbox";
-  el(doc,"span","",clip?L.library:da?"Gem kopi i CutOut-biblioteket":"Save a copy to the CutOut library",choice);box.onchange=function(){libraryRequested=box.checked;};
+  el(doc,"span","",clip?L.library:da?"Gem kopi i CutOut-biblioteket":ui("Save a copy to the CutOut library"),choice);box.onchange=function(){libraryRequested=box.checked;};
   renderAll();overlay.addEventListener("keydown",function(e){if(e.target.closest&&e.target.closest('.huw-svg-workshop'))return;if(e.key==="Escape"){e.preventDefault();e.stopPropagation();clearSelection();}},true);
   // Parent-local coordinate system makes a wrist move with its elbow, not with the scene.
   canvas.addEventListener("pointerdown",function(e){if((e.button!==undefined&&e.button!==0)||e.isPrimary===false||!preview)return;

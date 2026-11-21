@@ -35,14 +35,14 @@ function node(doc,tag,cls,text,parent){
  if(text!==undefined)el.textContent=text;
  if(parent)parent.appendChild(el);return el;
 }
-function labels(da){
- return !da?{
+function labels(da,ui){
+ return !da?ui.labels({
   play:"▶ Play",pause:"Ⅱ Pause",stop:"■ Stop",loading:"Preparing sound …",
   error:"Playback unavailable: ",scene:"Scene",score:"Score",camera:"Camera shots",
   timeline:"Playback position",tempo:"Tempo",editScene:"Edit scene and camera in CutOut",
   editScore:"Edit ABC music",missing:"The scene or score is missing.",
   ready:"Ready · camera and animation follow the music",noAudio:"Music unavailable; the show continues without sound",finish:"Finished"
- }:{
+ }):{
   play:"▶ Afspil",pause:"Ⅱ Pause",stop:"■ Stop",loading:"Klargør lyd …",
   error:"Afspilning ikke mulig: ",scene:"Scene",score:"Noder",camera:"Kameraindstillinger",
   timeline:"Afspilningsposition",tempo:"Tempo",editScene:"Redigér scene og kamera i CutOut",
@@ -52,11 +52,11 @@ function labels(da){
 }
 Musical.prototype.render=function(parent,next){
  this.parentDomNode=parent;this.computeAttributes();this.execute();
- var self=this,doc=this.document,da=Language.isDanish(this.wiki),L=labels(da),displayName=Language.projectLabels(this.wiki,this.sceneTitle);
+ var self=this,doc=this.document,da=Language.isDanish(this.wiki),ui=Language.translator(this.wiki),L=labels(da,ui),displayName=Language.projectLabels(this.wiki,this.sceneTitle);
  var host=node(doc,"section","huw-musical");
  this._language=this.wiki.getTiddlerText("$:/language","");
  this._positionKey=JSON.stringify([this.getVariable("currentTiddler"),this.sceneTitle,this.scoreTitle,this.getAttribute("workshop","")]);
- this._danish=da;this._timeline=null;this.host=host;this._dead=false;this._frame=0;this._audio=null;this._pendingSeek=null;this._ownWritten={};this._editor=null;
+ this._danish=da;this._timeline=null;this.host=host;host._animusFilm=this.sceneTitle;this._dead=false;this._frame=0;this._audio=null;this._pendingSeek=null;this._ownWritten={};this._editor=null;
  parent.insertBefore(host,next);this.domNodes.push(host);
  var scene=Engine.readScene(this.wiki,this.sceneTitle);
  if(!scene){node(doc,"p","huw-musical-error",L.missing,host);return;}
@@ -64,7 +64,7 @@ Musical.prototype.render=function(parent,next){
  var lipOptions={sceneTitle:this.sceneTitle,audioClips:scene.musical&&scene.musical.audioClips||[],film:scene};
  var voice=new Narration.Player({wiki:this.wiki,doc:doc,clips:scene.musical&&scene.musical.audioClips||[],
   isAudible:function(clip){return !editor||!editor.isAudioAudible||editor.isAudioAudible(clip);},onError:function(message){
-  if(state)state.textContent=(da?'Lydspor: ':'Audio track: ')+String(message&&message.message||message);
+  if(state)state.textContent=(da?'Lydspor: ':ui('Audio track: '))+String(message&&message.message||message);
  }});
  function fullDuration(){return Math.max(.1,Playlist.total(clips),Number(scene.duration)||0,
   (scene.musical&&scene.musical.audioClips||[]).reduce(function(end,c){return Math.max(end,(Number(c.start)||0)+(Number(c.duration)||0));},0));}
@@ -111,7 +111,7 @@ Musical.prototype.render=function(parent,next){
    matches.forEach(function(part){var shape=outer.nodes&&outer.nodes[part.id];
     if(shape&&shape.el)shape.el.style.display="none";
    });
-   return {parts:matches,time:seconds};
+   return {parts:matches,time:seconds,scene:outer.scene.id||outer.scene._title||self.sceneTitle};
   }
   var current=Engine.clipAt(outer.scene.scenes||[],seconds),elapsed=0,answer=null;
   (outer.clips||[]).some(function(c,i){
@@ -128,14 +128,17 @@ Musical.prototype.render=function(parent,next){
  function updateCaptions(timeValue){
   var captionsVisible=!editor||!editor.isTrackVisible||editor.isTrackVisible("captions");
   if(captionOverlay.hidden!==!captionsVisible)captionOverlay.hidden=!captionsVisible;
-  var at=captionForTime(view,timeValue,0),cue="",line="";
+  var at=captionForTime(view,timeValue,0),cue="",line="",cueId="",lineId="";
   if(at){at.parts.forEach(function(p){var opacity=Engine.state(p,at.time).opacity;
    if(opacity<.45)return;
-   if(p.id==="sing-label")cue=String(p.text||"");
-   else if(!line||p.id.indexOf("spoken-")===0)line=String(p.text||"");
+   if(p.id==="sing-label"){cue=String(p.text||"");cueId=p.id;}
+   else if(!line||p.id.indexOf("spoken-")===0){line=String(p.text||"");lineId=p.id;}
   });}
-  var key=cue+"\u0000"+line;
-  if(key!==lastCaption){captionCue.textContent=cue;captionLine.textContent=line;
+  var key=[at&&at.scene,cueId,cue,lineId,line].join("\u0000");
+  if(key!==lastCaption){
+   captionCue._animusCue={film:self.sceneTitle,scene:at&&at.scene,id:cueId,source:cue};
+   captionLine._animusCue={film:self.sceneTitle,scene:at&&at.scene,id:lineId,source:line};
+   captionCue.textContent=cue;captionLine.textContent=line;
    captionCue.hidden=!cue;captionLine.hidden=!line;lastCaption=key;}
  }
 
@@ -392,7 +395,7 @@ Musical.prototype.render=function(parent,next){
  function audioProblem(song,error){
   if(!song||!alive())return;
   song.audioFailed=true;song.pending=null;
-  var message=String(error&&error.message||error||(da?'Lyden kunne ikke indlæses':'Audio could not be loaded'));
+  var message=String(error&&error.message||error||(da?'Lyden kunne ikke indlæses':ui('Audio could not be loaded')));
   host.dataset.audioMode='stage-only';host.dataset.audioFailureSong=song.title;host.dataset.audioFailureMessage=message.substring(0,160);
   state.textContent=L.noAudio+' ('+message.substring(0,90)+')';
   state.classList.remove('huw-musical-error');
@@ -860,7 +863,7 @@ Musical.prototype.render=function(parent,next){
 };
 Musical.prototype.onDestroy=function(){
  if(!this._shutdown)return;
- if(this._timeline&&this._language!==this.wiki.getTiddlerText("$:/language","")){
+ if(this._timeline&&(this._refreshLanguagePack||this._language!==this.wiki.getTiddlerText("$:/language",""))){
   // A language change can rebuild an enclosing page template and create a new widget.
   var positions=languagePositions.get(this.wiki)||new Map(),key=this._positionKey;
   positions.set(key,this._timeline.value());languagePositions.set(this.wiki,positions);
@@ -880,7 +883,8 @@ Musical.prototype.refresh=function(changed){
   if(Object.prototype.hasOwnProperty.call(own,title)&&own[title]===self.wiki.getTiddlerText(title,"")){delete own[title];return false;}
   delete own[title];return true;
  }
- var languageChanged=changed["$:/language"]&&this._danish!==Language.isDanish(this.wiki);
+ this._refreshLanguagePack=!!changed[Language.packTitle(this.wiki)];
+ var languageChanged=changed["$:/language"]&&this._language!==this.wiki.getTiddlerText("$:/language","")||this._refreshLanguagePack;
  if(Object.keys(attributes).length||externalChange(this.sceneTitle)||externalChange(this._stageTitle)||changed[this.scoreTitle]||languageChanged||(this._playlistTitles||[]).some(function(t){return changed[t];})){
   this.refreshSelf();
   return true;

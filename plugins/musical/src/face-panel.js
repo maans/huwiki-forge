@@ -5,7 +5,8 @@ module-type: library
 \*/
 (function(){
 "use strict";
-var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
+var Language=require("$:/plugins/huwiki/musical/language.js");
+var isDanish=Language.isDanish;
 var Face=require("$:/plugins/huwiki/musical/face.js"),NS="http://www.w3.org/2000/svg",serial=0;
 function element(doc,tag,cls,text,parent){var node=doc.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;if(parent)parent.appendChild(node);return node;}
 function copy(value){return JSON.parse(JSON.stringify(value||{}));}
@@ -27,10 +28,11 @@ function isFace(context,id){
  return !!(id===context.headId&&part&&/(?:^|[-_ ])(?:head|hoved|face|ansigt)(?:[-_ ]|$)/i.test((part.name||"")+" "+part.id));
 }
 function mount(o){
+ var ui=Language.translator(o.wiki);
  var displayName=o.displayName||function(value){return value;};
  var doc=o.doc,host=o.host,dock=o.dock||null,da=isDanish(o.wiki),uid="huw-face-"+(++serial);
  var L=da?{title:"Ansigt og tale",face:"Ansigt",eyes:"Øjne",mouth:"Mund",auto:"Auto",custom:"Auto · tilpasset",fixed:"Fast mund",script:"Manuskript",follow:"Følg manuskript",hold:"Hold denne mund",more:"Flere valg",close:"Luk ansigtsvalg",workshop:"Ansigtsværksted",back:"Tilbage til animationen",sounds:"Bogstavgrupper og mundvalg",history:"Anvendte ansigtsvalg",noHistory:"Der er endnu ingen ansigtsvalg på tidslinjen.",noLine:"Ingen replik ved tidsmarkøren",line:"Replik",from:"Fra",future:"dit valg bruges fremover",expressionHint:"Vælg et udtryk. Munden følger stadig talen.",eyesHint:"Vælg øjne eller blik ved tidsmarkøren.",soundHint:"Vælg en bogstavgruppe og derefter en mund. Valget gælder fra tidsmarkøren for denne figur, også i senere scener.",saved:"Valget er gemt ved tidsmarkøren.",empty:"Der er ingen mundtegninger til denne figur.",original:"Original",pause:"Pause",go:"Gå til",resetHint:"Brug manuskriptets automatiske mundvalg fra tidsmarkøren.",holdHint:"Hold den valgte mund fast fra tidsmarkøren. Følg manuskript slår automatisk mund til igen.",chooseHint:"Vælg en mund til denne bogstavgruppe"}:
- {title:"Face and speech",face:"Face",eyes:"Eyes",mouth:"Mouth",auto:"Auto",custom:"Auto · customised",fixed:"Fixed mouth",script:"Script",follow:"Follow script",hold:"Hold this mouth",more:"More choices",close:"Close face choices",workshop:"Face workshop",back:"Back to animation",sounds:"Letter groups and mouth choices",history:"Face choices on the timeline",noHistory:"There are no face choices on the timeline yet.",noLine:"No line at the playhead",line:"Line",from:"From",future:"your choice applies from here",expressionHint:"Choose an expression. The mouth still follows speech.",eyesHint:"Choose eyes or gaze at the playhead.",soundHint:"Choose a letter group, then a mouth. Your choice applies from the playhead for this character, including later scenes.",saved:"Choice saved at the playhead.",empty:"This character has no mouth drawings.",original:"Original",pause:"Pause",go:"Go to",resetHint:"Use the script's automatic mouth choice from the playhead.",holdHint:"Hold this mouth from the playhead. Follow script turns automatic mouth movement back on.",chooseHint:"Choose a mouth for this letter group"};
+ ui.labels({title:"Face and speech",face:"Face",eyes:"Eyes",mouth:"Mouth",auto:"Auto",custom:"Auto · customised",fixed:"Fixed mouth",script:"Script",follow:"Follow script",hold:"Hold this mouth",more:"More choices",close:"Close face choices",workshop:"Face workshop",back:"Back to animation",sounds:"Letter groups and mouth choices",history:"Face choices on the timeline",noHistory:"There are no face choices on the timeline yet.",noLine:"No line at the playhead",line:"Line",from:"From",future:"your choice applies from here",expressionHint:"Choose an expression. The mouth still follows speech.",eyesHint:"Choose eyes or gaze at the playhead.",soundHint:"Choose a letter group, then a mouth. Your choice applies from the playhead for this character, including later scenes.",saved:"Choice saved at the playhead.",empty:"This character has no mouth drawings.",original:"Original",pause:"Pause",go:"Go to",resetHint:"Use the script's automatic mouth choice from the playhead.",holdHint:"Hold this mouth from the playhead. Follow script turns automatic mouth movement back on.",chooseHint:"Choose a mouth for this letter group"});
  var panel=element(doc,"section","huw-musical-face-panel"),anchor=doc.createComment("face choices"),selectedId="",context=null,tab="expression",soundOverride="",dismissed=false,suspended=0,disposed=false,workshop=null,returnFocus=null,backgroundInert=[],cardStamp="",cardView=null,overviewStamp="",lastRefresh=-1;
  panel.hidden=true;panel.setAttribute("data-face-panel","");panel.setAttribute("aria-label",L.title);
  var panelParent=dock||o.parent;panelParent.insertBefore(anchor,dock?null:o.before||null);panelParent.insertBefore(panel,anchor);
@@ -54,7 +56,7 @@ function mount(o){
  var more=element(doc,"details","huw-musical-face-more",undefined,actions);element(doc,"summary","",L.more,more);
  var hold=button(more,"huw-musical-face-hold",L.hold,function(){var id=effectiveVariant();if(id)choose("mouth",id,"fixed");});hold.title=L.holdHint;hold.dataset.faceMode="fixed";
  var script=button(actions,"huw-musical-face-script",L.script,function(){var cue=context&&context.cue||{partId:context&&context.cueId,time:o.position()};if(!dock)closeWorkshop();if(o.onScript)o.onScript(cue);});
- var undo=button(actions,"huw-musical-face-undo",da?"Fortryd valget":"Undo choice",function(){if(o.undo)o.undo();overviewStamp="";refresh(true);});undo.disabled=true;
+ var undo=button(actions,"huw-musical-face-undo",da?"Fortryd valget":ui("Undo choice"),function(){if(o.undo)o.undo();overviewStamp="";refresh(true);});undo.disabled=true;
  var announcement=element(doc,"span","huw-musical-face-announcement","",panel);announcement.setAttribute("role","status");announcement.setAttribute("aria-live","polite");
  panel.addEventListener("keydown",escape);
  // selectedId is the retained editing target, not the editor's transient
@@ -64,7 +66,7 @@ function mount(o){
  function escape(e){if(e.key!=="Escape"||e.defaultPrevented||disposed||suspended)return;e.preventDefault();e.stopPropagation();if(deselect())return;if(workshop)leaveWorkshop();else{dismissed=true;show(false);if(o.onClose)o.onClose();}}
  function sound(){return soundOverride||context&&context.viseme||"rest";}
  function soundName(value){var item=(Face.SOUNDS||[]).find(function(s){return s.id===value;});return item?(da?item.label:item.en||item.label):value==="rest"?L.pause:value;}
- function sounds(){return Face.SOUNDS&&Face.SOUNDS.length?Face.SOUNDS:[{id:"A",letters:"a"},{id:"E",letters:"e / i / y / æ"},{id:"O",letters:"o / u / å / ø"},{id:"F",letters:"f / v"},{id:"M",letters:"m / b / p"},{id:"C",letters:da?"øvrige konsonanter":"other consonants"},{id:"rest",letters:L.pause}];}
+ function sounds(){return Face.SOUNDS&&Face.SOUNDS.length?Face.SOUNDS:[{id:"A",letters:"a"},{id:"E",letters:"e / i / y / æ"},{id:"O",letters:"o / u / å / ø"},{id:"F",letters:"f / v"},{id:"M",letters:"m / b / p"},{id:"C",letters:da?"øvrige konsonanter":ui("other consonants")},{id:"rest",letters:L.pause}];}
  function variantName(id){var v=(context&&context.variants||[]).find(function(item){return item.id===id;});return v&&(v.name||v.label)||id||L.original;}
  function effectiveVariant(value){if(!context)return "";var which=value||sound(),map=context.variantMap||{},state=context.state||{},manual=state.mouth&&state.mouth.mode==="fixed";
   if(manual&&!value)return state.mouth.variant||"";return map[which]||state.mouthMap&&state.mouthMap[which]||(!value||which===context.viseme?context.effectiveVariant:"")||context.defaultVariantMap&&context.defaultVariantMap[which]||"";
@@ -87,7 +89,7 @@ function mount(o){
   status.textContent=fixed?L.fixed:custom?L.custom:L.auto;status.dataset.faceAuto=fixed?"fixed":custom?"custom":"original";
   Object.keys(tabButtons).forEach(function(id){var active=id===tab;tabButtons[id].setAttribute("aria-selected",String(active));tabButtons[id].tabIndex=active?0:-1;});cards.setAttribute("aria-labelledby",tabButtons[tab].id);
   explanation.dataset.faceViseme=sound();explanation.textContent=tab==="mouth"?soundName(sound())+" · "+L.future:tab==="eyes"?L.eyesHint:L.expressionHint;
-  var lineLabel=context.cue&&context.cue.active===false?(da?"Nærmeste replik":"Nearest line"):L.line;
+  var lineLabel=context.cue&&context.cue.active===false?(da?"Nærmeste replik":ui("Nearest line")):L.line;
   line.textContent=lineLabel+": "+(currentCue()||L.noLine);line.title=line.textContent;script.title=L.script+(currentCue()?": "+currentCue():"");
   var currentCustom=!!(state.mouthMap&&state.mouthMap[sound()]);
   follow.hidden=more.hidden=tab!=="mouth";hold.disabled=!effectiveVariant();follow.setAttribute("aria-pressed",String(!fixed&&!currentCustom));follow.title=soundName(sound())+" · "+L.resetHint;
@@ -130,12 +132,12 @@ function mount(o){
   }catch(_unmounted){}
  }
  function history(){if(o.history)return o.history(context.actorId)||[];return (o.film.musical&&o.film.musical.faceKeys||[]).filter(function(k){return k.actor===context.actorId;});}
- function keyDescription(key){var words=[];if(key.mood){var p=(Face.PRESETS||[]).find(function(v){return v.id===key.mood;});words.push(p?(da?p.label:p.en||p.label):key.mood);}if(key.eyes){var e=(Face.EYES||[]).find(function(v){return v.id===key.eyes;});words.push((da?"Øjne: ":"Eyes: ")+(e?(da?e.label:e.en||e.label):key.eyes));}
+ function keyDescription(key){var words=[];if(key.mood){var p=(Face.PRESETS||[]).find(function(v){return v.id===key.mood;});words.push(p?(da?p.label:p.en||p.label):key.mood);}if(key.eyes){var e=(Face.EYES||[]).find(function(v){return v.id===key.eyes;});words.push((da?"Øjne: ":ui("Eyes: "))+(e?(da?e.label:e.en||e.label):key.eyes));}
   if(key.mouthMap===null)words.push(L.follow);else Object.keys(key.mouthMap||{}).forEach(function(id){words.push(soundName(id)+" → "+(key.mouthMap[id]?variantName(key.mouthMap[id]):L.original));});
   if(key.mouth&&key.mouth.mode==="fixed")words.push(L.fixed+": "+variantName(key.mouth.variant));else if(key.mouth&&key.mouth.mode==="auto"&&!key.mouthMap&&!words.length)words.push(L.auto);return words.join(" · ")||L.face;
  }
  function openWorkshop(){if(!context||workshop)return;o.pause();returnFocus=doc.activeElement;var parent=dock||(doc.fullscreenElement&&doc.fullscreenElement.contains(panel)?doc.fullscreenElement:host);workshop=element(doc,"section","huw-face-workshop"+(dock?" huw-face-workshop--inline":""),undefined,parent);workshop.setAttribute("role",dock?"region":"dialog");if(!dock)workshop.setAttribute("aria-modal","true");workshop.setAttribute("aria-label",L.workshop);workshop.tabIndex=-1;
-  var header=element(doc,"header","huw-face-workshop-header",undefined,workshop);element(doc,"h2","",L.workshop,header);var back=button(header,"huw-face-workshop-close",dock?(da?"← Hele figuren":"← Whole character"):L.back,leaveWorkshop);if(dock)back.dataset.faceBack="figure";
+  var header=element(doc,"header","huw-face-workshop-header",undefined,workshop);element(doc,"h2","",L.workshop,header);var back=button(header,"huw-face-workshop-close",dock?(da?"← Hele figuren":ui("← Whole character")):L.back,leaveWorkshop);if(dock)back.dataset.faceBack="figure";
   var body=element(doc,"div","huw-face-workshop-body",undefined,workshop);element(doc,"aside","huw-face-workshop-overview",undefined,body);var editing=element(doc,"div","huw-face-workshop-editing",undefined,body);editing.appendChild(panel);var historyDetails=element(doc,"details","huw-face-history-details",undefined,editing);element(doc,"summary","",L.history,historyDetails);element(doc,"section","huw-face-workshop-history",undefined,historyDetails);
   if(!dock)Array.prototype.forEach.call(parent.children,function(node){if(node!==workshop){backgroundInert.push({node:node,value:node.inert});node.inert=true;}});
   workshopButton.hidden=closeButton.hidden=true;host.classList.remove("huw-musical--face-open");host.classList.add("huw-musical--face-workshop-open");overviewStamp="";refresh(true);workshop.addEventListener("keydown",workshopKeys);workshop.focus({preventScroll:true});if(o.onLayout)o.onLayout();
@@ -151,7 +153,7 @@ function mount(o){
   large.addEventListener("click",function(e){var hit=e.target.closest&&e.target.closest("[data-cutout-id]");if(hit&&large.contains(hit))return;if(deselect()){e.preventDefault();e.stopPropagation();}});
   element(doc,"h3","",L.sounds,overview);element(doc,"p","huw-face-workshop-hint",L.soundHint,overview);
   sounds().forEach(function(item){var b=button(overview,"huw-face-sound","",function(){soundOverride=item.id;tab="mouth";cardStamp="";overviewStamp="";refresh(true);});b.dataset.faceSound=item.id;b.setAttribute("aria-pressed",String(sound()===item.id));
-   var thumb=element(doc,"span","huw-face-sound-thumbnail",undefined,b),current=effectiveVariant(item.id),original=context.defaultVariantMap&&context.defaultVariantMap[item.id],custom=!!(context.state&&context.state.mouthMap&&context.state.mouthMap[item.id]),pose=copy(context.state);if(current)pose.mouth={mode:"fixed",variant:current};thumbnail(thumb,pose,"mouth");var words=element(doc,"span","huw-face-sound-copy",undefined,b);element(doc,"strong","",soundName(item.id),words);element(doc,"span","",item.letters||"",words);element(doc,"span","huw-face-sound-choice",(custom?(da?"Dit valg: ":"Your choice: "):L.original+": ")+variantName(current),words);b.dataset.faceCustom=String(custom);
+   var thumb=element(doc,"span","huw-face-sound-thumbnail",undefined,b),current=effectiveVariant(item.id),original=context.defaultVariantMap&&context.defaultVariantMap[item.id],custom=!!(context.state&&context.state.mouthMap&&context.state.mouthMap[item.id]),pose=copy(context.state);if(current)pose.mouth={mode:"fixed",variant:current};thumbnail(thumb,pose,"mouth");var words=element(doc,"span","huw-face-sound-copy",undefined,b);element(doc,"strong","",soundName(item.id),words);element(doc,"span","",item.letters||"",words);element(doc,"span","huw-face-sound-choice",(custom?(da?"Dit valg: ":ui("Your choice: ")):L.original+": ")+variantName(current),words);b.dataset.faceCustom=String(custom);
    if(custom)element(doc,"span","huw-face-sound-original",L.original+": "+variantName(original),words);
   });
   historyPane.textContent="";if(!keys.length)element(doc,"p","huw-face-workshop-hint",L.noHistory,historyPane);

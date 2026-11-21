@@ -5,7 +5,8 @@ module-type: library
 \*/
 (function(){
 "use strict";
-var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
+var Language=require("$:/plugins/huwiki/musical/language.js");
+var isDanish=Language.isDanish;
 // Recorded voices and imported sound use the theatre's clock. The recorder is
 // independent of ABC; a microphone or media failure must never stop the show.
 function num(v,f){var n=Number(v);return Number.isFinite(n)?n:f;}
@@ -83,12 +84,13 @@ function mediaDuration(doc,source,fallback){return new Promise(function(resolve,
 function el(doc,tag,cls,text,parent){var node=doc.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;if(parent)parent.appendChild(node);return node;}
 function display(t){return Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0")+"."+Math.floor((t%1)*10);}
 function mount(o){
+ var ui=Language.translator(o.wiki);
  var doc=o.doc,wiki=o.wiki,host=o.host,win=doc.defaultView||(typeof window!=="undefined"?window:null),da=isDanish(wiki);
  var L=da?{
   title:"Lydspor og indtaling",subtitle:"Indtal replikker eller importér lyd, og placér klippene i forestillingen.",cancel:"Annuller",save:"Gem og tilbage",record:"● Indtal ny replik",stop:"■ Stop optagelse",retake:"Indtal valgt klip igen",import:"Importér lyd",clips:"Lydklip",empty:"Ingen lydklip endnu. Vælg en replik og tryk Indtal, eller importér en lydfil.",script:"Replik fra manuskript",none:"Fri indtaling",name:"Navn",role:"Rolle / stemme",text:"Tekst til indtaling",start:"Placering i forestillingen (s)",offset:"Klip begyndelsen fra (s)",end:"Slut i lydfil (s)",volume:"Lydstyrke",mute:"Lydløs",remove:"Fjern klip",duplicate:"Duplikér klip",preview:"Lyt til klippet",usePosition:"Brug tidsmarkør",recording:"Optager",requesting:"Venter på adgang til mikrofonen …",stopping:"Gør optagelsen klar …",reading:"Indlæser lyd …",unsaved:"Ændringer er ikke gemt",warning:"Luk uden at gemme lydklippene?",recordWarning:"Optagelsen er ikke gemt. Stop og luk værkstedet?",ready:"Vælg et klip for at redigere det.",clipLength:"Længde",sourceLength:"Lydfil",unsupported:"Indtaling kræver mikrofonadgang på HTTPS eller localhost i en browser, der understøtter lydoptagelse. Du kan også importere en lydfil.",denied:"Mikrofonadgang blev afvist. Tillad mikrofonen i browseren, eller importér en lydfil.",noMic:"Der blev ikke fundet en mikrofon.",micBusy:"Mikrofonen kan ikke åbnes. Kontrollér, om den bruges af et andet program.",saved:"Lydsporene er gemt.",audioType:"Vælg en lydfil, fx WAV, MP3, M4A, OGG eller WebM.",fileLarge:"Lydfilen er større end 100 MB. Del den i kortere klip før import.",missing:"Lydfilen til dette klip mangler.",recordNew:"Ny indtaling",at:"ved",keep:"Indtalingen gemmes som en lydfil i wikien. Gem også selve wikien efter arbejdet.",permission:"Mikrofonen aktiveres først, når du trykker Indtal.",keyboard:"Escape lukker værkstedet."
- }:{
+ }:ui.labels({
   title:"Audio tracks and recording",subtitle:"Record dialogue or import audio, then place clips in the show.",cancel:"Cancel",save:"Save and return",record:"● Record new line",stop:"■ Stop recording",retake:"Record selected clip again",import:"Import audio",clips:"Audio clips",empty:"No audio clips yet. Choose a line and press Record, or import an audio file.",script:"Line from script",none:"Free recording",name:"Name",role:"Role / voice",text:"Text to record",start:"Position in show (s)",offset:"Trim from beginning (s)",end:"End in audio file (s)",volume:"Volume",mute:"Muted",remove:"Remove clip",duplicate:"Duplicate clip",preview:"Listen to clip",usePosition:"Use playhead",recording:"Recording",requesting:"Waiting for microphone permission …",stopping:"Preparing recording …",reading:"Loading audio …",unsaved:"Unsaved changes",warning:"Close without saving audio clips?",recordWarning:"This recording has not been saved. Stop and close the workshop?",ready:"Select a clip to edit it.",clipLength:"Length",sourceLength:"Audio file",unsupported:"Recording requires microphone permission on HTTPS or localhost in a browser that supports audio recording. You can also import an audio file.",denied:"Microphone permission was denied. Allow the microphone in your browser, or import an audio file.",noMic:"No microphone was found.",micBusy:"The microphone cannot be opened. Check whether another application is using it.",saved:"Audio tracks saved.",audioType:"Choose an audio file, such as WAV, MP3, M4A, OGG or WebM.",fileLarge:"The audio file exceeds 100 MB. Split it into shorter clips before importing.",missing:"The audio file for this clip is missing.",recordNew:"New recording",at:"at",keep:"Recordings are stored as audio files inside this wiki. Save the wiki itself after editing.",permission:"The microphone is activated only when you press Record.",keyboard:"Escape closes the workshop."
- };
+ });
  var popup=null,list=null,inspector=null,status=null,recordButton=null,stopButton=null,retakeButton=null,saveButton=null,importInput=null,cueSelect=null,scriptText=null,roleInput=null;
  var drafts=[],pending={},selected="",dirty=false,busy=false,session=0,cues=[],context={},capture=null,timer=0,recordTarget="",recordContext=null,previewAudio=null;
  function say(text,error){if(status){status.textContent=text;status.classList.toggle("is-error",!!error);}}
@@ -133,7 +135,7 @@ function mount(o){
    preview.addEventListener("timeupdate",function(){if(preview.currentTime>=c.offset+c.duration){preview.pause();try{preview.currentTime=c.offset;}catch(_){};}});
   }else el(doc,"p","huw-narration-error",L.missing,inspector);
   var actions=el(doc,"div","huw-narration-clip-actions",undefined,inspector);
-  button(actions,L.duplicate,function(){var d=copy(c);d.id=uid();d.name=(c.name||L.recordNew)+(da?" · kopi":" · copy");d.start=round(c.start+c.duration);drafts.push(d);selected=d.id;changed();refreshList();refreshInspector();});
+  button(actions,L.duplicate,function(){var d=copy(c);d.id=uid();d.name=(c.name||L.recordNew)+(da?" · kopi":ui(" · copy"));d.start=round(c.start+c.duration);drafts.push(d);selected=d.id;changed();refreshList();refreshInspector();});
   button(actions,L.remove,function(){drafts=drafts.filter(function(p){return p.id!==c.id;});selected=drafts[0]&&drafts[0].id||"";changed();refreshList();refreshInspector();},"huw-narration-danger");
  }
  function errorText(err){var name=err&&err.name||"";return name==="NotAllowedError"||name==="SecurityError"?L.denied:name==="NotFoundError"?L.noMic:name==="NotReadableError"?L.micBusy:name==="NotSupportedError"?L.unsupported:String(err&&err.message||err||"");}
@@ -167,7 +169,7 @@ function mount(o){
  function close(force){if(!popup)return true;if(!force&&!confirmClose())return false;session++;if(capture){capture.dispose();capture=null;}clearTimer();stopPreview();popup.remove();popup=null;host.classList.remove("huw-musical--narration-open");drafts=[];pending={};dirty=false;busy=false;return true;}
  function save(){
   if(!popup||busy||recordingState()!=="idle")return false;
-  var prior=wiki.getTiddler(o.sceneTitle);if(!prior){say(da?"Forestillingen findes ikke længere.":"The show no longer exists.",true);return false;}
+  var prior=wiki.getTiddler(o.sceneTitle);if(!prior){say(da?"Forestillingen findes ikke længere.":ui("The show no longer exists."),true);return false;}
   var data;try{data=JSON.parse(prior.fields.text||"{}");}catch(err){say(errorText(err),true);return false;}
   var normalized=normalizeClips(drafts),missing=normalized.filter(function(c){return !pending[c.asset]&&!audioSource(wiki,c.asset);});if(missing.length){say(L.missing+" "+missing.map(function(c){return c.name||c.asset;}).join(", "),true);return false;}
   data.musical=data.musical||{};data.musical.audioClips=copy(normalized);
