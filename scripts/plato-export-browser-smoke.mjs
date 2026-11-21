@@ -454,6 +454,8 @@ try{
  passed('actual audience Play → Open in AniMus stops the audience clock and audio, and editor Play works before ABC loads');
 
  await wiki.evaluate(()=>window.__animusReleaseNotation());
+ assert.equal(await editor.locator('.huw-musical-score-page svg').count(),0,'the stage-only editor leaves hidden guide notation unrendered');
+ await editor.locator('.huw-musical-view-mode').selectOption('split');
  await wiki.waitForFunction(()=>{
   const visible=document.querySelector('.plato-native-studio .huw-musical-score-page:not([hidden])');
   return !!visible?.querySelector('svg');
@@ -465,7 +467,7 @@ try{
   clock:host.querySelector('.huw-musical-time').textContent,
   scorePages:[...host.querySelectorAll('.huw-musical-score-page')].filter(page=>page.querySelector('svg')).length
  }));
- assert.equal(editorStart.scorePages,1,'opening a long production renders only its visible muted guide');
+ assert.equal(editorStart.scorePages,1,'opening the score renders only the visible muted guide');
  assert.ok(Math.abs(editorStart.duration-481.377)<1e-9,'muted guide scores preserve the authored 8:01 film duration');
  assert.ok(Math.abs(editorStart.position-afterPendingPlayback.position)<.001,'late ABC completion retains the user playback position');
  assert.ok(Math.abs(editorStart.painted-afterPendingPlayback.painted)<.001,'late ABC completion retains the painted frame');
