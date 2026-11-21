@@ -120,7 +120,7 @@ ABCWidget.prototype.execute=function(){
  // Standalone scores always OPEN minimally, including older abc-view:full imports.
  // Explicit view="full" transclusions and the Repertoire Nodebog remain unchanged.
  if(this._standaloneView){
-  this._scoreView=ScoreView.resolve(Object.assign({},this._viewAttributes,{view:this._manualMode||'minimal'}),t.fields);
+  this._scoreView=ScoreView.resolve(Object.assign({},this._viewAttributes,{view:this._manualMode||(t.fields['abc-view']==='chords'?'chords':'minimal')}),t.fields);
   this._scoreView.audio=true;
   // A complete score keeps its musical title in both full and minimal views.
   // Inline article examples retain the existing show-title default (no),
@@ -637,7 +637,7 @@ ABCWidget.prototype.drawViewToggle=function(){
  var danish=I18n.language(this.wiki)==='da';
  var control=button(minimal?(danish?'Avanceret visning':'Advanced view'):(danish?'Normal visning':'Normal view'),function(){
   if(!self.wiki.getTiddler(self.title))return;
-  var next=self._scoreView.minimal?'full':'minimal';
+  var next=self._scoreView.minimal?'full':(self.wiki.getTiddler(self.title)?.fields['abc-view']==='chords'?'chords':'minimal');
   if(self._audioController)playback.stopOne(self._audioController);
   if(self._minimalPlayer&&self._minimalPlayer.controller)playback.stopOne(self._minimalPlayer.controller);
   self._manualMode=next;self._toggleFocusPending=true;
@@ -697,7 +697,7 @@ ABCWidget.prototype.refresh=function(changes){
   // A saved view change is structural only when it changes this instance.
   var resolved;
   try{
-   var attrs=this._standaloneView?Object.assign({},this._viewAttributes,{view:this._manualMode||'minimal'}):this._viewAttributes;
+   var attrs=this._standaloneView?Object.assign({},this._viewAttributes,{view:this._manualMode||(current.fields['abc-view']==='chords'?'chords':'minimal')}):this._viewAttributes;
    resolved=ScoreView.resolve(attrs,current.fields);
    if(this._standaloneView){resolved.audio=true;if(!this._viewAttributes['show-title'])resolved.showTitle=true;}
   }

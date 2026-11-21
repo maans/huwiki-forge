@@ -129,3 +129,10 @@ test("ABC Musik resolves a saved chord-only mode with audio enabled",()=>{
  assert.equal(result.minimal,true);
  assert.equal(result.audio,true);
 });
+
+
+test("Standalone chord-only charts preserve their initial view while ordinary full imports remain minimal",()=>{
+ assert.ok(widgetCode.includes("t.fields['abc-view']==='chords'?'chords':'minimal'"));
+ assert.ok(widgetCode.includes("current.fields['abc-view']==='chords'?'chords':'minimal'"));
+ assert.ok(widgetCode.includes("self.wiki.getTiddler(self.title)?.fields['abc-view']==='chords'?'chords':'minimal'"));
+});
