@@ -62,7 +62,9 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- editions/silva-ethno-repertoire/index.html editions/silva-ethno-repertoire/site/index.html editions/silva-ethno-repertoire/tiddlers/repertoire.json editions/silva-ethno-repertoire/tiddlers/config.json editions/silva-ethno-repertoire/conversion-report.json
+          # Keep editable wiki index.html owned by build-repertoire-demo.yml.
+          # This workflow only publishes the audience site and generated score data.
+          git add -- editions/silva-ethno-repertoire/site/index.html editions/silva-ethno-repertoire/tiddlers/repertoire.json editions/silva-ethno-repertoire/conversion-report.json
           if ! git diff --cached --quiet; then
             git commit -m 'build(silba-etno): publish 17 editable ABC scores and SitePublisher audience view'
             git reset --hard HEAD
