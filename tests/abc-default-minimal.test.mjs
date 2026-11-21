@@ -136,3 +136,9 @@ test("Standalone chord-only charts preserve their initial view while ordinary fu
  assert.ok(widgetCode.includes("current.fields['abc-view']==='chords'?'chords':'minimal'"));
  assert.ok(widgetCode.includes("self.wiki.getTiddler(self.title)?.fields['abc-view']==='chords'?'chords':'minimal'"));
 });
+
+
+test("Chord follow view and paginated score view never mount competing SVG managers",()=>{
+ assert.ok(widgetCode.includes("paged:self._standaloneView&&!view.range&&view.view!=='follow'&&view.view!=='chords'"));
+ assert.ok(widgetCode.includes("follow:view.view==='follow'||view.view==='chords'"));
+});
