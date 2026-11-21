@@ -90,6 +90,18 @@ module-type: library
     var list = node('div','huwabc-mini-mixer-list');list.setAttribute('role','tabpanel');content.appendChild(list);
     var backingList = node('div','huwabc-mini-mixer-list huwabc-mini-mixer-backing');backingList.setAttribute('role','tabpanel');content.appendChild(backingList);
     var chordList=node('div','huwabc-mini-mixer-chordlist');chordList.setAttribute('role','tabpanel');content.appendChild(chordList);
+    var roomRow=node('label','huwabc-mini-mixer-reverb');
+    var roomLabel=word('Rumklang','Reverb');
+    roomRow.appendChild(node('span','',roomLabel));
+    var roomSlider=node('input','huwabc-mini-mixer-slider');
+    roomSlider.type='range';roomSlider.min='0';roomSlider.max='100';roomSlider.step='1';
+    roomSlider.setAttribute('aria-label',roomLabel);
+    var roomValue=node('output','huwabc-mini-mixer-output');
+    roomRow.appendChild(roomSlider);roomRow.appendChild(roomValue);content.appendChild(roomRow);
+    roomRow.style.cssText='display:flex;align-items:center;gap:.6em;padding:.45em .65em;border-top:1px solid #ccc';
+    roomSlider.style.cssText='flex:1;min-width:0';
+    roomSlider.addEventListener('input',function(){changeBacking('reverb',Number(roomSlider.value),false);});
+    roomSlider.addEventListener('change',function(){changeBacking('reverb',Number(roomSlider.value),true);});
     var info = node('div','huwabc-mini-mixer-info');content.appendChild(info);
      // Minimal chord zoom; controls use the existing footer, not a new toolbar.
      var chordFontConfig='$:/config/huwiki/abc/chord-font-size';
@@ -411,6 +423,7 @@ module-type: library
     backingTab.addEventListener('click',function(){chooseTab('accompaniment');});
     chordTab.addEventListener('click',function(){chooseTab('chords');});
     function refreshControls() {
+      roomSlider.value=String(current.reverb||0);roomValue.textContent=roomSlider.value+'%';
       var settings=Routing.clean(current.voiceSettings);
       var solos=Accompaniment.activeSolo(current);
       rows.forEach(function(r){

@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "theseus-ship",
   "name": "The Ship of Theseus",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/pages.json",

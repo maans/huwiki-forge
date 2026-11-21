@@ -12,6 +12,7 @@ var Model = require("$:/plugins/huwiki/cutout/model.js");
 var Motion = require("$:/plugins/huwiki/musical/motion.js");
 var Playlist = require("$:/plugins/huwiki/musical/playlist.js");
 var Language=require("$:/plugins/huwiki/musical/language.js");
+var SoundFx;try{SoundFx=require("$:/plugins/huwiki/musical/sfx.js");}catch(_){}
 var DEFAULT_FILM = "Turn Around · Complete performance (film)";
 var SPEAKERS = {narrator:"Narrator",prisoner:"The Prisoner",guide:"The Guide",elder:"The Elder",chorus:"Chorus"};
 var SOUND_NAMES = {speech:"speech",song:"singing",music:"music",sfx:"ambient sound"};
@@ -122,7 +123,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
     return;
   }
   var win=doc.defaultView||window;
-  var removers=[],timeouts=new Set(),dead=false,raf=0,context=null,buses={};
+  var removers=[],timeouts=new Set(),dead=false,raf=0,context=null,buses={},effects=null,recordingRoom=null;
   var state={running:false,preparing:false,position:0,anchorTime:0,anchorAudio:0,anchorPerf:0,mode:"silent",generation:0,sceneIndex:-1,view:null,filmView:null,world:null,dimmer:null,subtitles:true,audioError:"",refreshError:""};
   var musical=timeline.film.musical||{},beatClock=Motion.beatClock(Playlist.reflow(musical.songs||[],""),function(title){var t=self.wiki.getTiddler(title),f=t&&t.fields||{};return f["abc-source"]||f.text||"";});
   var cache=Object.create(null),wanted=Object.create(null),decodeQueue=[],activeDecodes=0;
@@ -387,7 +388,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
     raf=0;
     if(dead) return;
     if(host.isConnected===false) {destroy();return;}
-    var t=time();paint(t);
+    var t=time();if(effects&&state.mode==="audio")effects.sync(t);paint(t);
     if(t>=duration&&state.running) {
       state.position=duration;state.running=false;stopSources();updateTransport();
       return;
@@ -427,7 +428,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
     if(state.filmView&&LipSync.reset)LipSync.reset(state.filmView);
     scenePane.textContent="";state.view=null;state.filmView=null;state.world=null;state.dimmer=null;state.sceneIndex=-1;
     timeline=next;scenes=timeline.scenes;duration=timeline.duration;
-    musical=timeline.film.musical||{};
+    musical=timeline.film.musical||{};if(effects)effects.cues=musical.sfx||[];
     beatClock=Motion.beatClock(Playlist.reflow(musical.songs||[],""),function(title){var t=self.wiki.getTiddler(title),f=t&&t.fields||{};return f["abc-source"]||f.text||"";});
     self._dependencies=timeline.dependencies;self._sourceTitles=scenes.map(function(scene){return scene.source;});
     self._audioTitles=[];scenes.forEach(function(scene){scene.tracks.forEach(function(track){self._audioTitles.push(track.asset);});});
@@ -525,9 +526,11 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
   function releaseSource(entry,stop) {
     if(!entry)return;
     try {entry.source.onended=null;if(stop)entry.source.stop();entry.source.disconnect();entry.source.buffer=null;}catch(_){}
-    try {entry.gain.disconnect();}catch(_){}
+    try {entry.gain.disconnect();if(entry.send)entry.send.disconnect();}catch(_){}
   }
   function stopSources() {
+    if(effects)effects.quiet();
+    if(recordingRoom){recordingRoom.dispose();recordingRoom=null;}
     Object.keys(scheduled).forEach(function(key){releaseSource(scheduled[key],true);});
     scheduled=Object.create(null);
   }
@@ -554,7 +557,12 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
       var source=context.createBufferSource(),gain=context.createGain();
       source.buffer=buffer;gain.gain.value=track.volume;
       source.connect(gain);gain.connect(buses[track.kind==="speech"?"speech":track.kind==="song"?"song":"music"]);
-      var playing={source:source,gain:gain};scheduled[key]=playing;
+      var send=null;
+      if(track.reverb>0&&context.createConvolver){
+       if(!recordingRoom)recordingRoom=require("$:/plugins/huwiki/abc/accompaniment.js").createRoom(context,buses.music);
+       send=context.createGain();send.gain.value=clamp(track.reverb,0,1);gain.connect(send);send.connect(recordingRoom.input());
+      }
+      var playing={source:source,gain:gain,send:send};scheduled[key]=playing;
       source.onended=function(){if(scheduled[key]===playing)delete scheduled[key];releaseSource(playing,false);};
       try {source.start(when,track.offset+elapsed,length-elapsed);}
       catch(error) {delete scheduled[key];scheduleFailures[key]=true;releaseSource(playing,false);reportAudio(track.asset,"An audio track could not start. Animation and other sound will continue.");}
@@ -585,6 +593,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
         if(!AudioContext) {reportAudio("unavailable","Audio is unavailable in this browser. The performance continues silently.");return Promise.resolve(false);}
         context=new AudioContext();
         ["speech","song","music"].forEach(function(kind){buses[kind]=context.createGain();buses[kind].gain.value=gains[kind];buses[kind].connect(context.destination);});
+        if(SoundFx)effects=new SoundFx.Fx(musical.sfx,{context:context,destination:buses.music});
         on(context,"statechange",audioStateChanged);
       }
       var resume=context.state==="running"?Promise.resolve():context.resume();
@@ -665,6 +674,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
     if(state.view&&LipSync.reset)LipSync.reset(state.view);state.view=null;
     if(state.filmView&&LipSync.reset)LipSync.reset(state.filmView);state.filmView=null;
     removers.forEach(function(remove){remove();});removers=[];
+    if(effects){effects.dispose();effects=null;}
     Object.keys(buses).forEach(function(kind){try{buses[kind].disconnect();}catch(_){}});buses={};
     if(context&&context.state!=="closed") {try{var closed=context.close();if(closed&&closed.catch)closed.catch(function(){});}catch(_){}}
     host.setAttribute("data-plato-playing","false");

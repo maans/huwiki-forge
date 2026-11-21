@@ -72,13 +72,13 @@ async function synthBuffers(ABC,song,soundfont,o){
   return buffers;
  }finally{synth.flattened=full;}
 }
-function scheduleBuffer(context,buffer,clip,from,to,globalStart,sourceOffset,volume){
+function scheduleBuffer(context,buffer,clip,from,to,globalStart,sourceOffset,volume,send){
  var begin=Math.max(from,globalStart),finish=Math.min(to,globalStart+clip.duration),offset=sourceOffset+begin-globalStart;
  if(finish<=begin||offset>=buffer.duration)return;
  var duration=Math.min(finish-begin,buffer.duration-offset);
  if(duration<=0)return;
  var source=context.createBufferSource(),gain=context.createGain();
- source.buffer=buffer;source.connect(gain);gain.connect(context.destination);
+ source.buffer=buffer;source.connect(gain);gain.connect(context.destination);if(send)gain.connect(send);
  var at=Math.max(0,begin-from);
  gain.gain.setValueAtTime(0,0);
  if(typeof volume==="function"){
@@ -97,13 +97,13 @@ async function renderPCM(o,enabled,consume){
  if(!root.OfflineAudioContext)throw Error("Offline audio rendering is unavailable in this browser.");
  cancelled(o);
  var musical=o.scene&&o.scene.musical||{},clips=Array.isArray(o.songs)?o.songs:[];
- var usedSongs=enabled.music?clips.filter(function(s){return s&&s.clip&&!s.clip.muted&&num(s.clip.volume,1)>0&&intersects(s.clip.start,s.clip.start+s.clip.duration,spec.from,spec.to);}):[];
+ var usedSongs=enabled.music?clips.filter(function(s){return s&&s.clip&&!s.clip.muted&&num(s.clip.volume,1)>0&&intersects(s.clip.start,s.clip.start+s.clip.duration+(s.config&&s.config.reverb?Accompaniment.roomSeconds:0),spec.from,spec.to);}):[];
  if(usedSongs.some(function(s){return !s.tune;}))throw Error("ABC score is still loading; wait for the score to appear before exporting its original music.");
  var usedRecordings=Narration.normalizeClips(musical.audioClips||[]).filter(function(c){
-  return enabled[recordingStem(c)]&&!c.muted&&c.volume>0&&intersects(c.start,c.start+c.duration,spec.from,spec.to);
+  return enabled[recordingStem(c)]&&!c.muted&&c.volume>0&&intersects(c.start,c.start+c.duration+(c.reverb?Accompaniment.roomSeconds:0),spec.from,spec.to);
  });
  var fxCues=Array.isArray(musical.sfx)?musical.sfx:[];
- var usedFx=enabled.effects?fxCues.filter(function(c){return c&&!c.muted&&num(c.t,-1)>=0&&num(c.t,-1)>=spec.from-LOOK_BEHIND_FRAMES/RATE&&num(c.t,-1)<spec.to;}):[];
+ var usedFx=enabled.effects?fxCues.filter(function(c){return c&&!c.muted&&num(c.t,-1)>=0&&num(c.t,-1)+Math.max(.08,num(c.duration,1))+.05+(c.reverb?Accompaniment.roomSeconds:0)>=spec.from&&num(c.t,-1)<spec.to;}):[];
  var musicBuffers=new Map(),voiceBuffers=new Map(),decoder=null;
  try{
   for(var i=0;i<spec.frameCount;i+=CHUNK_FRAMES){
@@ -118,18 +118,23 @@ async function renderPCM(o,enabled,consume){
     var context=new root.OfflineAudioContext(CHANNELS,prefix+count,RATE);
     for(var s=0;s<usedSongs.length;s++){
      var song=usedSongs[s],sc=song.clip;
-     if(!intersects(sc.start,sc.start+sc.duration,globalStart,regionEnd))continue;
+     var amount=num(song.config&&song.config.reverb,0)/100;
+     if(!intersects(sc.start,sc.start+sc.duration+(amount?Accompaniment.roomSeconds:0),globalStart,regionEnd))continue;
+     var send=null;
+     if(amount&&context.createConvolver){
+      send=context.createGain();send.gain.value=amount;send.connect(Accompaniment.createRoom(context).input());
+     }
      if(!musicBuffers.has(song)){
       progress(o,"Bygger ABC-lyd / Rendering original ABC sound",i/spec.frameCount);
       musicBuffers.set(song,await synthBuffers(o.ABC,song,o.soundFont,o));cancelled(o);
      }
      musicBuffers.get(song).forEach(function(bus){
-      scheduleBuffer(context,bus.buffer,sc,regionStart,regionEnd,sc.start,0,function(t){return bus.gain*Playlist.gainAt(sc,t);});
+      scheduleBuffer(context,bus.buffer,sc,regionStart,regionEnd,sc.start,0,function(t){return bus.gain*Playlist.gainAt(sc,t);},send);
      });
     }
     for(var j=0;j<usedRecordings.length;j++){
      var rec=usedRecordings[j];
-     if(!intersects(rec.start,rec.start+rec.duration,globalStart,regionEnd))continue;
+     if(!intersects(rec.start,rec.start+rec.duration+(rec.reverb?Accompaniment.roomSeconds:0),globalStart,regionEnd))continue;
      if(!voiceBuffers.has(rec.asset)){
       if(!decoder){
        // decodeAudioData works on OfflineAudioContext too, without creating a
@@ -139,12 +144,16 @@ async function renderPCM(o,enabled,consume){
       progress(o,"Indlæser indtaling / Loading recordings",i/spec.frameCount);
       voiceBuffers.set(rec.asset,await decodeData(decoder,Narration.audioSource(o.wiki,rec.asset),o,root));cancelled(o);
      }
-     scheduleBuffer(context,voiceBuffers.get(rec.asset),rec,regionStart,regionEnd,rec.start,rec.offset,rec.volume);
+     var recSend=null;
+     if(rec.reverb>0&&context.createConvolver){
+      recSend=context.createGain();recSend.gain.value=Math.min(1,rec.reverb);recSend.connect(Accompaniment.createRoom(context).input());
+     }
+     scheduleBuffer(context,voiceBuffers.get(rec.asset),rec,regionStart,regionEnd,rec.start,rec.offset,rec.volume,recSend);
     }
     if(usedFx.length){
      var effectsEngine=new SoundFx.Fx(usedFx,{context:context});
      usedFx.forEach(function(cue){var when=num(cue.t,-1);
-      if(when>=regionStart&&when<regionEnd)effectsEngine.fire(cue,when-regionStart);
+      if(when<regionEnd&&when+Math.max(.08,num(cue.duration,1))>=regionStart)effectsEngine.fire(cue,Math.max(0,when-regionStart),Math.max(0,regionStart-when));
      });
     }
     cancelled(o);progress(o,"Beregner lyd / Rendering audio",i/spec.frameCount);
@@ -162,7 +171,7 @@ async function renderPCM(o,enabled,consume){
    }
    await consume([left,right],offset,count,i,spec);cancelled(o);
    left=null;right=null;pcm=null;rendered=null;context=null;effectsEngine=null;
-   musicBuffers.forEach(function(buffer,song){if(song.clip.start+song.clip.duration<=globalEnd)musicBuffers.delete(song);});
+   musicBuffers.forEach(function(buffer,song){if(song.clip.start+song.clip.duration+(song.config&&song.config.reverb?Accompaniment.roomSeconds:0)<=globalEnd)musicBuffers.delete(song);});
    voiceBuffers.forEach(function(buffer,asset){if(!usedRecordings.some(function(rec){return rec.asset===asset&&rec.start+rec.duration>globalEnd;}))voiceBuffers.delete(asset);});
    progress(o,"Lyd klar / Audio rendered",Math.min(1,(i+count)/spec.frameCount));
    // Silent stems have no async browser rendering work. Yield a real task so

@@ -190,3 +190,16 @@ test("effects support an injected offline audio context without starting live au
  effects.fire({type:"bell",volume:0},2.25);
  assert.equal(effects.ctx,context);
 });
+
+test("an effect resumes inside its clip and repeated frame paints do not retrigger it",()=>{
+ const {Fx}=load("plugins/musical/src/sfx.js");
+ let closed=false;
+ const fx=new Fx([{type:"wind",t:2,duration:19}],{context:{close(){closed=true;}}});
+ const starts=[];
+ fx.fire=(cue,when,elapsed)=>starts.push([cue.type,elapsed]);
+ fx.sync(0);fx.seek(12);fx.sync(12);fx.sync(12);fx.sync(12.01);
+ fx.seek(2);fx.sync(2);fx.sync(2);
+ fx.seek(21);fx.sync(21);fx.dispose();
+ assert.deepEqual(starts,[["wind",10],["wind",0]]);
+ assert.equal(closed,false);
+});

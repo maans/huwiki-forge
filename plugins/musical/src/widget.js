@@ -664,6 +664,8 @@ Musical.prototype.render=function(parent,next){
    }
   },
   onAudioChange:function(updated){voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);paint(timeline.value());},
+  onFxChange:function(cues){sfx.cues=cues;if(timeline.running)sfx.seek(timeline.value());},
+  previewFx:function(cue){pauseAll();sfx.quiet();sfx.unlock();sfx.fire(cue);},
   onSelect:function(t){if(workspace)workspace.selectTrack(t);},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}

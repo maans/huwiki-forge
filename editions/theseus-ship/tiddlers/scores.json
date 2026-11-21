@@ -2,7 +2,7 @@
   {
     "title": "Theseus’ Ship · Score · Back from Crete",
     "type": "text/vnd.tiddlywiki",
-    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>> mixer=\"yes\"/>",
     "tags": "[[Theseus · Scores]]",
     "abc-source": "X:1\nT:Back from Crete\nC:Original music for The Ship of Theseus\nM:4/4\nL:1/8\nQ:1/4=104\n%%measurenb 1\n%%staffwidth 630\n%%score (V) (L) (B)\nK:Ddor\nV:V clef=treble name=\"Voice / flute\" snm=\"Fl.\"\n%%MIDI program 73\nV:L clef=treble name=\"Lyre\" snm=\"Lyr.\"\n%%MIDI program 46\nV:B clef=bass name=\"Bass\" snm=\"B.\"\n%%MIDI program 32\n[V:V] E2 F2 G4 | z8 |\n[V:L] D A, F2 D F A,2 | D2 F A, F2 D2 |\n[V:B] D,4 A,,4 | D,4 A,,4 |\n[V:V] z8 | A2 G F D4 |\n[V:L] A, F, C2 A, C F,2 | C2 E G, E2 C2 |\n[V:B] F,,4 F,,4 | C,4 G,,4 |\n[V:V] z8 | z8 |\n[V:L] B, G, D2 B, D G,2 | A,2 C E, C2 A,2 |\n[V:B] G,,4 G,,4 | A,,4 E,,4 |\n[V:V] F2 E2 D4 | A2 G F D4 |\n[V:L] D A, F2 D F A,2 | C2 E G, E2 C2 |\n[V:B] D,4 A,,4 | C,4 G,,4 |\n[V:V] F2 E2 D4 |]\n[V:L] D A, F2 D F A,2 |]\n[V:B] D,4 A,,4 |]\n",
     "abc-accompaniment": "no"
@@ -10,15 +10,15 @@
   {
     "title": "Theseus’ Ship · Score · Mind my toe",
     "type": "text/vnd.tiddlywiki",
-    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>> mixer=\"yes\"/>",
     "tags": "[[Theseus · Scores]]",
-    "abc-source": "X:1\nT:Mind my toe\nC:Original music for The Ship of Theseus\nM:4/4\nL:1/8\nQ:1/4=120\n%%measurenb 1\n%%staffwidth 630\n%%score (V) (L) (B)\nK:Ddor\nV:V clef=treble name=\"Voice / flute\" snm=\"Fl.\"\n%%MIDI program 73\nV:L clef=treble name=\"Lyre\" snm=\"Lyr.\"\n%%MIDI program 46\nV:B clef=bass name=\"Bass\" snm=\"B.\"\n%%MIDI program 32\n[V:V] c3 A G4 | z8 |\n[V:L] D A, F2 D F A,2 | D2 F A, F2 D2 |\n[V:B] D,4 A,,4 | D,4 A,,4 |\n[V:V] D2 F G A2 G2 | F2 D6 |\nw: Lift that board and mind | my toe\n[V:L] C G, E2 C E G,2 | A,2 C F, C2 A,2 |\n[V:B] C,4 G,,4 | F,,4 F,,4 |\n[V:V] F2 G A c2 A2 | G2 F6 |\nw: Tap it twice and let | her go\n[V:L] D A, F2 D F A,2 | C2 E G, E2 C2 |\n[V:B] D,4 A,,4 | C,4 G,,4 |\n[V:V] G2 A2 _B2 A2 | G F E6 |\nw: Keep that wood, the | one with three\n[V:L] A, E, C2 A, C E,2 | A,2 C F, C2 A,2 |\n[V:B] A,,4 E,,4 | F,,4 F,,4 |\n[V:V] F2 E2 D2 F2 | E C D6 |\nw: Three small cuts still | count for me\n[V:L] D A, F2 D F A,2 | A,2 C E, C2 A,2 |\n[V:B] D,4 A,,4 | A,,4 E,,4 |\n[V:V] A2 G F D4 | F2 E2 D4 |]\n[V:L] C G, E2 C E G,2 | D2 F A, F2 D2 |]\n[V:B] C,4 G,,4 | D,4 A,,4 |]\n",
+    "abc-source": "X:1\nT:Mind my toe\nC:The Ship of Theseus\nM:4/4\nL:1/16\nQ:1/4=120\n%%measurenb 1\n%%score (V) (L) (B)\nK:F\nV:V clef=treble name=\"Vocal / flute\" snm=\"V.\"\n%%MIDI program 73\nV:L clef=treble name=\"Lyre\" snm=\"Lyr.\"\n%%MIDI program 46\nV:B clef=bass name=\"Bass\" snm=\"B.\"\n%%MIDI program 32\n[V:V] z8 c4 A4 | C8 z8 |\n[V:L] F3 C A4 C2 F2 A4 | C4 G,4 E6 G,2 |\n[V:B] F,,8 C,8 | C,,8 G,,8 |\n[V:V] A4 F4 A4 A4 | B2 G6 E6 z2 |\nw: Lift that plank and | watch my toe\n[V:L] F3 C A4 C2 F2 A4 | E4 =B,4 G6 B,2 |\n[V:B] F,,12 C,4 | E,,8 =B,,8 |\n[V:V] F6 F2 G2 A6- | A2 G4 F2 D8 |\nw: Tap it twice and | * let her go\n[V:L] F3 C A4 C2 F2 A4 | D4 A,4 F6 A,2 |\n[V:B] F,,8 C,8 | D,,12 A,,4 |\n[V:V] z2 F4 D4 E6- | E2 B6 G4 E2 z2 |\nw: See those marks | * One two three\n[V:L] D3 A, F4 A,2 D2 F4 | E4 =B,4 G6 B,2 |\n[V:B] D,,8 A,,8 | E,,8 =B,,8 |\n[V:V] z2 F4 F2 F2 G2 A2 G2- | G4 F8- F2 z2 |\nw: Three small cuts still count for | * me *\n[V:L] F3 C A4 C2 F2 A4 | F4 C4 A6 C2 |\n[V:B] F,,12 C,4 | F,,8 C,8 |\n[V:V] z8 G4 E4 | F12 z4 |]\n[V:L] C3 G, E4 G,2 C2 E4 | F4 C4 A6 C2 |]\n[V:B] C,,8 G,,8 | F,,12 C,4 |]\n",
     "abc-accompaniment": "no"
   },
   {
     "title": "Theseus’ Ship · Score · The last plank",
     "type": "text/vnd.tiddlywiki",
-    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>> mixer=\"yes\"/>",
     "tags": "[[Theseus · Scores]]",
     "abc-source": "X:1\nT:The last plank\nC:Original music for The Ship of Theseus\nM:4/4\nL:1/8\nQ:1/4=120\n%%measurenb 1\n%%staffwidth 630\n%%score (V) (L) (B)\nK:Ddor\nV:V clef=treble name=\"Voice / flute\" snm=\"Fl.\"\n%%MIDI program 73\nV:L clef=treble name=\"Lyre\" snm=\"Lyr.\"\n%%MIDI program 46\nV:B clef=bass name=\"Bass\" snm=\"B.\"\n%%MIDI program 32\n[V:V] F2 E2 D4 | z8 |\n[V:L] D A, F2 D F A,2 | B,2 D G, D2 B,2 |\n[V:B] D,4 A,,4 | G,,4 G,,4 |\n[V:V] z8 | c3 A G4 |\n[V:L] C G, E2 C E G,2 | D2 F A, F2 D2 |\n[V:B] C,4 G,,4 | D,4 A,,4 |\n[V:V] z8 | z8 |\n[V:L] A, F, C2 A, C F,2 | C2 E G, E2 C2 |\n[V:B] F,,4 F,,4 | C,4 G,,4 |\n[V:V] E2 F2 G4 | z8 |\n[V:L] B, G, D2 B, D G,2 | A,2 C E, C2 A,2 |\n[V:B] G,,4 G,,4 | A,,4 E,,4 |\n[V:V] z8 | A2 G F D4 |\n[V:L] D A, F2 D F A,2 | A,2 C E, C2 A,2 |\n[V:B] D,4 A,,4 | A,,4 E,,4 |\n[V:V] F2 E2 D4 |]\n[V:L] D A, F2 D F A,2 |]\n[V:B] D,4 A,,4 |]\n",
     "abc-accompaniment": "no"
@@ -26,15 +26,15 @@
   {
     "title": "Theseus’ Ship · Score · The other berth",
     "type": "text/vnd.tiddlywiki",
-    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>> mixer=\"yes\"/>",
     "tags": "[[Theseus · Scores]]",
-    "abc-source": "X:1\nT:The other berth\nC:Original music for The Ship of Theseus\nM:4/4\nL:1/8\nQ:1/4=112\n%%measurenb 1\n%%staffwidth 630\n%%score (V) (L) (B)\nK:Ddor\nV:V clef=treble name=\"Voice / flute\" snm=\"Fl.\"\n%%MIDI program 73\nV:L clef=treble name=\"Lyre\" snm=\"Lyr.\"\n%%MIDI program 46\nV:B clef=bass name=\"Bass\" snm=\"B.\"\n%%MIDI program 32\n[V:V] A2 G F D4 | z8 |\n[V:L] D A, F2 D F A,2 | D2 F A, F2 D2 |\n[V:B] D,4 A,,4 | D,4 A,,4 |\n[V:V] z8 | A2 A2 G2 F2 |\nw:  | New wood knows the\n[V:L] A, F, C2 A, C F,2 | C2 E G, E2 C2 |\n[V:B] F,,4 F,,4 | C,4 G,,4 |\n[V:V] E F G6 | D2 F2 G2 A2 |\nw: old way home | Old wood wears the\n[V:L] D A, F2 D F A,2 | D2 F A, F2 D2 |\n[V:B] D,4 A,,4 | D,4 A,,4 |\n[V:V] G F E6 | F2 A c d2 c2 |\nw: marks I know | Mine can take you out\n[V:L] A, F, C2 A, C F,2 | C2 E G, E2 C2 |\n[V:B] F,,4 F,,4 | C,4 G,,4 |\n[V:V] A2 G6 | A2 G2 F2 E2 |\nw: to sea | So can mine Which\n[V:L] D A, F2 D F A,2 | A,2 C E, C2 A,2 |\n[V:B] D,4 A,,4 | A,,4 E,,4 |\n[V:V] D C D6 | F2 E2 D4 |]\nw: ship is she | * * *\n[V:L] C G, E2 C E G,2 | D2 F A, F2 D2 |]\n[V:B] C,4 G,,4 | D,4 A,,4 |]\n",
+    "abc-source": "X:1\nT:The other berth\nC:The Ship of Theseus\nM:4/4\nL:1/16\nQ:1/4=112\n%%measurenb 1\n%%score (V) (L) (B)\nK:Dm\nV:V clef=treble name=\"Vocal / flute\" snm=\"V.\"\n%%MIDI program 73\nV:L clef=treble name=\"Lyre\" snm=\"Lyr.\"\n%%MIDI program 46\nV:B clef=bass name=\"Bass\" snm=\"B.\"\n%%MIDI program 32\n[V:V] z8 A4 F4 | A,8 z8 |\n[V:L] D4 A,2 F2 D4 A,4 | A,4 E,2 C2 A,4 E,4 |\n[V:B] D,,8 A,,8 | A,,,8 E,,8 |\n[V:V] z8 D4 B,4 | D4 A6 G2 F4 |\nw:  | New wood knows the\n[V:L] G,4 D,2 B,2 G,4 D,4 | D4 A,2 F2 D4 A,4 |\n[V:B] G,,,12 D,,4 | D,,8 A,,8 |\n[V:V] E2 C2 A,8- A,2 z2 | F6 D4 C4 B,2 |\nw: old way home * | Old wood wears the\n[V:L] A,4 E,2 C2 A,4 E,4 | B,4 F,2 D2 B,4 F,4 |\n[V:B] A,,,8 E,,8 | B,,,12 F,,4 |\n[V:V] A,4 F,2 G,8- G,2 | z2 F6 D2 D6 |\nw: marks I know * | Mine can take\n[V:L] G,4 D,2 B,2 G,4 D,4 | D4 A,2 F2 D4 A,4 |\n[V:B] G,,,8 D,,8 | D,,8 A,,8 |\n[V:V] D2 D2 =B,2 C8 z2 | z2 B,2 C2 D6 D2 F2 |\nw: you out to sea | So can mine Which ship\n[V:L] A,4 E,2 C2 A,4 E,4 | B,4 F,2 D2 B,4 F,4 |\n[V:B] A,,,12 E,,4 | B,,,8 F,,8 |\n[V:V] D4 D8 z4 | D12 z4 |]\nw: is she | \n[V:L] D4 A,2 F2 D4 A,4 | D4 A,2 F2 D4 A,4 |]\n[V:B] D,,8 A,,8 | D,,12 A,,4 |]\n",
     "abc-accompaniment": "no"
   },
   {
     "title": "Theseus’ Ship · Score · One ticket",
     "type": "text/vnd.tiddlywiki",
-    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>> mixer=\"yes\"/>",
     "tags": "[[Theseus · Scores]]",
     "abc-source": "X:1\nT:One ticket\nC:Original music for The Ship of Theseus\nM:4/4\nL:1/8\nQ:1/4=100\n%%measurenb 1\n%%staffwidth 630\n%%score (V) (L) (B)\nK:Ddor\nV:V clef=treble name=\"Voice / flute\" snm=\"Fl.\"\n%%MIDI program 73\nV:L clef=treble name=\"Lyre\" snm=\"Lyr.\"\n%%MIDI program 46\nV:B clef=bass name=\"Bass\" snm=\"B.\"\n%%MIDI program 32\n[V:V] E2 F2 G4 | z8 |\n[V:L] D A, F2 D F A,2 | A,2 C F, C2 A,2 |\n[V:B] D,4 A,,4 | F,,4 F,,4 |\n[V:V] z8 | A2 G F D4 |\n[V:L] C G, E2 C E G,2 | B,2 D G, D2 B,2 |\n[V:B] C,4 G,,4 | G,,4 G,,4 |\n[V:V] z8 | z8 |\n[V:L] D A, F2 D F A,2 | A,2 C F, C2 A,2 |\n[V:B] D,4 A,,4 | F,,4 F,,4 |\n[V:V] F2 E2 D4 | z8 |\n[V:L] C G, E2 C E G,2 | A,2 C E, C2 A,2 |\n[V:B] C,4 G,,4 | A,,4 E,,4 |\n[V:V] E2 F2 G4 | F2 E2 D4 |]\n[V:L] D A, F2 D F A,2 | D2 F A, F2 D2 |]\n[V:B] D,4 A,,4 | D,4 A,,4 |]\n",
     "abc-accompaniment": "no"

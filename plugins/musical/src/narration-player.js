@@ -36,7 +36,7 @@ function total(clips){return normalizeClips(clips).reduce(function(v,c){return M
 function Player(o){
  o=o||{};this.wiki=o.wiki;this.doc=o.doc||(typeof document!=="undefined"?document:null);this.onError=o.onError||function(){};
  this.isAudible=typeof o.isAudible==="function"?o.isAudible:function(){return true;};
- this.lanes=[];this.clips=[];this.time=0;this.rate=1;this.running=false;this.dead=false;this.setClips(o.clips||[]);
+ this.context=null;this.room=null;this.lanes=[];this.clips=[];this.time=0;this.rate=1;this.running=false;this.dead=false;this.setClips(o.clips||[]);
 }
 Player.prototype._report=function(entry,error){
  if(entry.reported)return;entry.reported=true;try{this.onError(error,entry.clip);}catch(_){}
@@ -73,7 +73,7 @@ Player.prototype.setClips=function(clips){
   if(i<0){i=groups.length;groups.push([]);}
   groups[i].push(clip);ends[i]=clip.start+clip.duration;
  });
- while(this.lanes.length>groups.length)this._assign(this.lanes.pop(),null);
+ while(this.lanes.length>groups.length){var stale=this.lanes.pop();this._assign(stale,null);if(stale.node){stale.node.disconnect();stale.send.disconnect();}}
  groups.forEach(function(group,i){
   var lane=self.lanes[i]||(self.lanes[i]=self._newLane());lane.clips=group;
   if(lane.clip)self._assign(lane,group.find(function(c){return c.id===lane.clip.id&&c.asset===lane.clip.asset;})||null);
@@ -86,8 +86,23 @@ function nextClip(lane,time){
  while(lo<hi){var mid=(lo+hi)>>1,c=clips[mid];if(c.start+c.duration<=time)lo=mid+1;else hi=mid;}
  return clips[lo];
 }
+Player.prototype._prepareRoom=function(){
+ if(!this.clips.some(function(c){return Number(c.reverb)>0;}))return;
+ var win=this.doc&&this.doc.defaultView,C=win&&(win.AudioContext||win.webkitAudioContext);
+ if(!C)return;
+ if(!this.context){this.context=new C();this.room=require("$:/plugins/huwiki/abc/accompaniment.js").createRoom(this.context);}
+ if(this.context.state==="suspended")this.context.resume().catch(function(){});
+};
+Player.prototype._level=function(lane,clip){
+ var c=this.context;
+ if(!lane.node&&c&&Number(clip.reverb)>0&&lane.audio){
+  var src=c.createMediaElementSource(lane.audio),send=c.createGain();send.gain.value=0;
+  src.connect(c.destination);src.connect(send);send.connect(this.room.input());lane.node=src;lane.send=send;
+ }
+ if(lane.send)lane.send.gain.value=Math.max(0,Math.min(1,Number(clip.reverb)||0));
+};
 Player.prototype.unlock=function(){
- if(this.dead)return;var self=this;
+ if(this.dead)return;var self=this;this._prepareRoom();
  this.lanes.forEach(function(e){
   var clip=nextClip(e,self.time)||e.clips[0],a=e.audio;
   self._assign(e,clip);if(!a||!e.source)return;
@@ -105,7 +120,7 @@ Player.prototype._apply=function(e){
  if(e.blocked)return;
  var target=c.offset+Math.max(0,t-c.start);
  if(Number.isFinite(a.duration)&&target>=a.duration-.005){if(!a.paused)a.pause();return;}
- a.volume=c.volume;a.muted=false;
+ this._level(e,c);a.volume=c.volume;a.muted=false;
  try{a.playbackRate=this.rate;}catch(_){}
  try{if(Math.abs(num(a.currentTime,0)-target)>.16||a.paused)a.currentTime=target;}catch(_){}
  if(!a.paused||e.pending)return;
@@ -132,7 +147,7 @@ Player.prototype.seek=function(time){
  this.time=Math.max(0,num(time,0));
  this.lanes.forEach(function(lane){lane.reported=false;lane.blocked=false;});
 };
-Player.prototype.dispose=function(){if(this.dead)return;this.dead=true;this.running=false;this.setClips([]);};
+Player.prototype.dispose=function(){if(this.dead)return;this.dead=true;this.running=false;this.setClips([]);if(this.room)this.room.dispose();if(this.context)this.context.close().catch(function(){});};
 
 exports.Player=Player;exports.normalizeClips=normalizeClips;exports.audioSource=audioSource;exports.total=total;
 })();

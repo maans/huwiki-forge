@@ -135,7 +135,7 @@
     {
       "id": "turn-around",
       "name": "Turn Around — Beyond the Cave",
-      "version": "0.1.0-demo.11",
+      "version": "0.1.0-demo.12",
       "status": "test",
       "manifest": "../editions/turn-around/manifest.json",
       "description": "An AI-generated musical animation made with AniMus. Explore Plato’s cave, then edit the audio recordings, music, characters, camera and animation.",
@@ -152,7 +152,7 @@
     {
       "id": "theseus-ship",
       "name": "The Ship of Theseus",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "status": "test",
       "manifest": "../editions/theseus-ship/manifest.json",
       "description": "An editable AniMus musical about the Ship of Theseus. Watch two ships take shape and give the story your own ending.",

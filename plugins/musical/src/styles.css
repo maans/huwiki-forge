@@ -755,3 +755,11 @@
 @media(forced-colors:active){
  .huw-musical--workspace :is(.huw-musical-filter,.huw-musical-object-picker,.huw-musical-inspector select,.huw-musical-playback-options select){appearance:auto;background-image:none}
 }
+
+.huw-musical-fx-add{margin-inline-start:.4em;min-width:26px}
+.huw-musical-fx-clip{position:absolute;box-sizing:border-box;display:flex;align-items:center;gap:3px;height:25px;min-width:21px;padding:0 9px 0 1px;border:1px solid #278380;border-radius:5px;background:#d6efeb;color:#173d41;cursor:grab;touch-action:none;overflow:hidden;z-index:2}
+.huw-musical-fx-clip.is-selected,.huw-musical-fx-clip:focus-visible{outline:2px solid #176d79;z-index:3}
+.huw-musical-fx-icon{font-size:14px;line-height:1}.huw-musical-fx-name{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:11px}
+.huw-musical-fx-trim{position:absolute;inset:0 0 0 auto;width:8px;background:linear-gradient(90deg,transparent,#27838055);border-right:2px solid #278380;cursor:ew-resize}
+.huw-musical-fx-picker summary{cursor:pointer}.huw-musical-fx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:4px;margin:.4em 0;min-width:min(270px,100%)}
+.huw-musical-fx-grid button{display:flex;align-items:center;gap:.35em;padding:.35em;border:1px solid #cadcda;border-radius:4px}
