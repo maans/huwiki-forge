@@ -81,8 +81,8 @@ jobs:
           ])assert.ok(html.includes(token),token+' missing from public HTML');
           assert.ok(Buffer.byteLength(html)>3_000_000,'wiki HTML unexpectedly small');
           const m=JSON.parse(fs.readFileSync('editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json','utf8'));
-          assert.equal(m.filter(t=>t['repertoire-kind']==='orchestra-item').length,17);
-          console.log('Repertoire demo has 17 original scores and a book linked from the workshop');
+          assert.equal(m.filter(t=>t['repertoire-kind']==='orchestra-item').length,18);
+          console.log('Repertoire demo has 17 original ABC scores plus the Oh verden chord sheet, linked from the workshop');
           "
           node scripts/build-repertoire-plugin.mjs --check
           git diff --check
