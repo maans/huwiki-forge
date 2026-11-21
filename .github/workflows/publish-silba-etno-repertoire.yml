@@ -70,5 +70,15 @@ jobs:
             git stash push -m 'runner-only working-tree changes' --quiet || true
             git fetch origin "${GITHUB_REF_NAME}"
             git rebase "origin/${GITHUB_REF_NAME}"
-            git push origin "HEAD:${GITHUB_REF_NAME}"
+            pushed=0
+            for attempt in 1 2 3 4; do
+              if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+                pushed=1
+                break
+              fi
+              echo "Branch moved during SitePublisher export; rebasing and retrying (attempt $attempt)"
+              git fetch origin "${GITHUB_REF_NAME}"
+              git rebase "origin/${GITHUB_REF_NAME}"
+            done
+            test "$pushed" -eq 1
           fi
