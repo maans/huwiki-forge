@@ -33,6 +33,7 @@ function plan(){
 test("Dalarne A second ending stops at B's own opening repeat",()=>{
  assert.ok(dalarne,"The actual 17-score repertoire contains Dalarne");
  const result=plan();
+ assert.equal(result.active,true,"Shared audio planner must take over adjacent A/B volta repeats");
  assert.deepEqual(Array.from(result.sections,s=>[s.start,s.end,s.bodyEnd]),[[0,9,7],[9,19,15]]);
  assert.deepEqual(Array.from(result.sections[0].endings,e=>[e.start,e.end,e.numbers.join(",")]),[[7,8,"1"],[8,9,"2"]]);
  assert.deepEqual(Array.from(result.sections[1].endings,e=>[e.start,e.end,e.numbers.join(",")]),[[15,17,"1"],[17,19,"2"]]);
