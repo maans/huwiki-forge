@@ -74,10 +74,17 @@ function mount(o){
   var panel=el(doc,'div','huw-musical-menu-panel',undefined,group),menu={group:group,trigger:trigger,panel:panel};
   trigger.dataset.menu=id;trigger.setAttribute('aria-controls',idPrefix+id);
   trigger.setAttribute('aria-expanded','false');panel.id=idPrefix+id;panel.hidden=true;
-  // Return focus before the command runs so a workshop can take focus itself.
+  // Safari can focus the enclosing editor on mouse-down instead of the
+  // button. Keep the item in place until the matching click is delivered.
+  panel.addEventListener('mousedown',function(event){
+   var item=event.target.closest('button,a');
+   if(event.button===0&&item&&!item.disabled){
+    event.preventDefault();item.focus({preventScroll:true});
+   }
+  });
   panel.addEventListener('click',function(event){
-   if(openMenu===menu&&event.target.closest('button,a'))closeMenu(true);
-  },true);
+   if(openMenu===menu&&event.target.closest('button,a'))closeMenu(group.contains(doc.activeElement));
+  });
   return menu;
  }
  var toolsMenu=toolbarMenu('tools',L.tools),workshopsMenu=toolbarMenu('workshops',L.workshops),viewMenu=toolbarMenu('view',L.view);

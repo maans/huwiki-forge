@@ -167,6 +167,7 @@ try{
  await drawing.getByRole('button',{name:'Kopiér billede',exact:true}).click();assert.equal(await drawing.locator('.huw-svg-frame').count(),2);
  await drawing.getByRole('button',{name:'Fortryd',exact:true}).click();assert.equal(await drawing.locator('.huw-svg-frame').count(),1);
  await drawing.getByRole('button',{name:'Gentag',exact:true}).click();assert.equal(await drawing.locator('.huw-svg-frame').count(),2);
+ await drawing.locator('.huw-svg-frame-options summary').click();
  await drawing.getByLabel('Gentag',{exact:true}).check();await stroke(.3,.65,.65,.3);await screenshot('svg-drawing');
  await drawing.getByRole('button',{name:'Gem tegning',exact:true}).click();await drawing.waitFor({state:'detached'});
  production=await savedProduction();const rootPart=production.stage.parts.find(p=>p.svgDrawing);assert.ok(rootPart,'editable SVG model must be persisted');assert.equal(rootPart.svgDrawing.layers.length,2);assert.equal(rootPart.svgDrawing.frames.length,2);
