@@ -177,7 +177,10 @@ function build(ABC,source,overrides) {
   var identity=s.label+'|'+written.slice(s.start,s.end).map(function(m){return m.events.filter(function(e){return e.el_type==='note';}).map(function(e){return [e.duration,e.startTriplet||0,e.tripletMultiplier||1,e.endTriplet?1:0].join(',');}).join(' ');}).join('|');
   s.id='r'+s.start+'_'+s.end+'_'+hash(identity);s.count=Object.prototype.hasOwnProperty.call(overrides,s.id)?overrides[s.id]:s.notatedCount;
   s.label=s.label||'Afsnit '+(index+1);s.startBar=s.start;s.endBar=s.end-1;s.hasEndings=!!s.endings.length;
-  if(distinct.length||largest>2||Object.prototype.hasOwnProperty.call(overrides,s.id)||sections.some(function(o){return o!==s&&o.start>=s.start&&o.end<=s.end;}))active=true;
+  // Adjacent volta sections need a shared playback walk, even with ordinary
+   // two-pass repeats: ABCJS alone may attach B's opening |: to A's volta 2.
+   if(distinct.length||largest>2||Object.prototype.hasOwnProperty.call(overrides,s.id)||sections.some(function(o){return o!==s&&o.start>=s.start&&o.end<=s.end;})||
+      !!(s.endings.length&&bounds[s.end]&&bounds[s.end].flags.start))active=true;
   delete s.counts;
  });
  var order=[];
