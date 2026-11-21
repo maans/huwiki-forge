@@ -967,7 +967,11 @@ function attach(o){
      b.style.left=(100*c.start/axis)+'%';b.style.width=(100*Math.max(.1,c.duration)/axis)+'%';b.classList.toggle('is-muted',!!c.muted);b.setAttribute('aria-pressed',String(choice.id==='audio:'+c.id));
      b.title=displayName(c.name||(da?'Lyd':ui('Audio')))+' · '+round(c.start)+'–'+round(c.start+c.duration)+'s';
      b.onclick=function(ev){ev.stopPropagation();var now=Date.now(),last=lastClipTap,isDouble=last&&last.id==='audio:'+c.id&&now-last.time<480&&Math.abs(ev.clientX-last.x)<30&&Math.abs(ev.clientY-last.y)<30;
-      lastClipTap=isDouble?null:{id:'audio:'+c.id,time:now,x:ev.clientX,y:ev.clientY};choose('audio:'+c.id,0);o.seek(c.start);if(isDouble&&o.onEditAudio)o.onEditAudio({clipId:c.id});};
+      lastClipTap=isDouble?null:{id:'audio:'+c.id,time:now,x:ev.clientX,y:ev.clientY};
+      // Keep the selected clip under the pointer during the second click.
+      if(choice.id!=='audio:'+c.id)choose('audio:'+c.id,0);
+      if(Math.abs(playhead-c.start)>.0001)o.seek(c.start);
+      if(isDouble&&o.onEditAudio)o.onEditAudio({clipId:c.id});};
      b.ondblclick=function(ev){ev.preventDefault();ev.stopPropagation();if(o.onEditAudio)o.onEditAudio({clipId:c.id});};
      b.onkeydown=function(ev){if(ev.key==='Enter'){ev.preventDefault();if(o.onEditAudio)o.onEditAudio({clipId:c.id});}};
      b.onpointerdown=function(ev){if(ev.button!==undefined&&ev.button!==0)return;ev.stopPropagation();var rect=lane.getBoundingClientRect(),x=ev.clientX,start=c.start,moved=false;
