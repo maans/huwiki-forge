@@ -32,12 +32,18 @@ try{
   "Zoom, pages configuration and stand toolbar should be hidden");
  assert.equal(await page.locator(".huw-music-media-abc>.huw-music-section-label")
   .evaluate(el=>getComputedStyle(el).display),"none","No redundant ABC heading");
- await article.getByRole("button",{name:"Skift til avanceret visning"}).click();
+ const viewSwitch=article.locator(".huwabc-view-toggle");
+ assert.equal(await viewSwitch.count(),1,"Normal view needs an Advanced toggle");
+ assert.equal(await viewSwitch.isVisible(),true,"Advanced toggle must be visible");
+ await viewSwitch.click();
  await page.waitForFunction(()=>!!document.querySelector(".huwabc-score.huwabc-standalone:not(.huwabc-minimal)"));
  article=page.locator(".huwabc-score.huwabc-standalone:not(.huwabc-minimal)").first();
  assert.equal(await article.locator(".huwabc-instrument-group").isVisible(),true);
  await article.getByRole("button",{name:"PDF / Udskriv"}).waitFor({state:"visible"});
- await article.getByRole("button",{name:"Skift til normal visning"}).click();
+ const normalSwitch=article.locator(".huwabc-view-toggle");
+ assert.equal(await normalSwitch.count(),1);
+ assert.equal(await normalSwitch.isVisible(),true);
+ await normalSwitch.click();
  await page.waitForFunction(()=>!!document.querySelector(".huwabc-score.huwabc-standalone.huwabc-minimal"));
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.locator(".silba-home").waitFor();
