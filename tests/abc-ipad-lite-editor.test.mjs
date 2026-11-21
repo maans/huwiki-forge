@@ -55,16 +55,16 @@ function setup(){
 test("Only physical iPad Nodebog drafts use the compact editor",()=>{
  const f=setup();
  const widget={document:f.doc,wiki:f.wiki,title:draftTitle};
- assert.equal(f.api.useCompactNodebogEditor(widget),true);
+ assert.equal(f.api['huwiki-abc-edit'].useCompactNodebogEditor(widget),true);
  f.doc.defaultView.navigator={userAgent:"Mozilla/5.0 (Macintosh)",platform:"MacIntel",maxTouchPoints:5};
- assert.equal(f.api.useCompactNodebogEditor(widget),true,"desktop-style iPadOS UA still recognized");
+ assert.equal(f.api['huwiki-abc-edit'].useCompactNodebogEditor(widget),true,"desktop-style iPadOS UA still recognized");
  f.doc.defaultView.navigator.maxTouchPoints=0;
- assert.equal(f.api.useCompactNodebogEditor(widget),false,"ordinary Mac keeps full graphical editor");
+ assert.equal(f.api['huwiki-abc-edit'].useCompactNodebogEditor(widget),false,"ordinary Mac keeps full graphical editor");
  f.doc.defaultView.navigator.userAgent="Mozilla/5.0 (iPad)";
  f.wiki.addTiddler({fields:{title:focusTitle,text:JSON.stringify({title:songTitle,fromNodebog:false})}});
- assert.equal(f.api.useCompactNodebogEditor(widget),false,"standalone score editing remains unchanged");
+ assert.equal(f.api['huwiki-abc-edit'].useCompactNodebogEditor(widget),false,"standalone score editing remains unchanged");
  f.wiki.addTiddler({fields:{title:focusTitle,text:JSON.stringify({title:"other",fromNodebog:true})}});
- assert.equal(f.api.useCompactNodebogEditor(widget),false,"never misroute another score's draft");
+ assert.equal(f.api['huwiki-abc-edit'].useCompactNodebogEditor(widget),false,"never misroute another score's draft");
 });
 
 test("Compact editor mounts no SVG/piano/audio and writes only the native draft",()=>{
