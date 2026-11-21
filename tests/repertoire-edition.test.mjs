@@ -292,9 +292,9 @@ test("SilbaÄtno heading and icon actions respond to the actual wiki article wid
  const sheet=config.find(x=>x.title==="$:/silbaatno/repertoire/home.css");
  assert.ok(home&&sheet);
  assert.match(sheet.text,/container-name:silba-copy/,"heading uses its own content width, not viewport units");
- assert.match(sheet.text,/font-size:clamp\\(1\\.45rem,16cqi,4\\.9rem\\)/);
+ assert.match(sheet.text,/font-size:clamp\(1\.45rem,16cqi,4\.9rem\)/);
  assert.match(sheet.text,/white-space:nowrap/);
- assert.match(sheet.text,/@container silba-home \\(max-width:690px\\)/,
+ assert.match(sheet.text,/@container silba-home \(max-width:690px\)/,
   "hero should stack when the wiki story gets narrow, regardless of viewport");
  assert.equal((home.text.match(/class="silba-(?:primary|secondary) silba-action"/g)||[]).length,4);
  assert.equal((home.text.match(/class="silba-action-label"/g)||[]).length,4);
@@ -305,7 +305,7 @@ test("SilbaÄtno homepage links straight to the setlist book",async()=>{
  const config=JSON.parse(await readFile(path.join(root,"editions/silva-ethno-repertoire/tiddlers/config.json"),"utf8"));
  const home=config.find(x=>x.title==="SilbaÄtno Repertoire – Oversigt");
  assert.ok(home);
- assert.match(home.text,/<\$link to="Repertoire – Nodebog" class="silba-primary">Åbn nodebogen<\/\$link>/);
+ assert.match(home.text,/<\$link to="Repertoire – Nodebog" class="silba-primary silba-action" tooltip="Åbn nodebogen">/);
 });
 
 test("Nodebog prints PDF scores and cues with hidden-safe editor state",()=>{
