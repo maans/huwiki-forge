@@ -23,7 +23,7 @@ test("ABC starts in Minimal view; the mixer stays closed until needed",async()=>
   "a score should not open a sidebar mixer just because it is visible");
  assert.match(player,/ensureMiniMixer\(\)\.toggle/,"mixer is still available from the player control");
  const score=await readFile(path.join(root,"plugins/abc/src/score-widget.js"),"utf8");
- assert.ok(score.includes("this._manualMode||'minimal'"),"existing advanced scores open minimal");
+ assert.ok(score.includes("this._manualMode||(t.fields['abc-view']==='chords'?'chords':'minimal')"),"ordinary advanced scores open minimal; saved chord charts open in chord-only view");
  assert.ok(score.includes("Avanceret visning"),"Danish advanced label");
  assert.ok(score.includes("Normal visning"),"quiet default is named Normal");
  assert.ok(score.includes("Normal view"),"English quiet view label");

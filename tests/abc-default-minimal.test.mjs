@@ -112,7 +112,7 @@ test("Explicit full embedded nodebooks stay in full notation mode",()=>{
  assert.equal(reader._standaloneView,false);
  assert.equal(reader._scoreView.view,"full");
  assert.equal(reader._scoreView.minimal,false);
- assert.ok(widgetCode.includes("view:this._manualMode||'minimal'"));
+ assert.ok(widgetCode.includes("view:this._manualMode||(t.fields['abc-view']==='chords'?'chords':'minimal')"));
  assert.ok(!widgetCode.includes("new $tw.Tiddler(current,{'abc-view':next})"));
 });
 
