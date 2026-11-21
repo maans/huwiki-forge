@@ -24,15 +24,18 @@ const Book=exports["huwiki-repertoire-book"];
 
 // Exercise the real Book and TiddlyWiki event dispatch/draft lookup. Only DOM,
 // score rendering/audio and the ancestor navigator's draft UI are replaced.
-function fixture({readerActive=true,preexistingSource=false,createDraft=true}={}){
+function fixture({readerActive=true,preexistingSource=false,createDraft=true,ipad=false}={}){
  const wiki=new tw.Wiki(),source="Cocek Srece",item="Repertoire/item/Cocek",setlist="Repertoire/setlist/Concert";
  const original=new tw.Tiddler({title:source,"abc-source":"X:1\nT:Cocek Srece\nK:Dm\nD E F G|",text:"Original notes"});
  wiki.addTiddler(original);
  const storyTitle="$:/temp/TestStory",story=["Nodebog"];
  if(preexistingSource)story.push(source);
  wiki.addTiddler(new tw.Tiddler({title:storyTitle,list:story}));
- const log=[],tasks=new Map();let serial=0,controllers=0,draws=0,standaloneReaders=0;
+ const log=[],tasks=new Map(),frames=new Map();let serial=0,controllers=0,draws=0,standaloneReaders=0;
  const win={innerWidth:1180,innerHeight:820,
+  navigator:ipad?{userAgent:"Mozilla/5.0 (iPad; CPU OS 18_0 like Mac OS X)",maxTouchPoints:5}:{userAgent:"Mozilla/5.0 (Macintosh)",maxTouchPoints:0},
+  requestAnimationFrame(fn){const id=++serial;frames.set(id,fn);return id;},
+  cancelAnimationFrame(id){frames.delete(id);},
   setTimeout(fn){const id=++serial;tasks.set(id,fn);return id;},
   clearTimeout(id){tasks.delete(id);},removeEventListener(){},Event:class{constructor(type){this.type=type;}}};
  const addTiddler=wiki.addTiddler.bind(wiki);
@@ -96,6 +99,7 @@ function fixture({readerActive=true,preexistingSource=false,createDraft=true}={}
   return false;
  });
  function flushOne(){const batch=[...tasks.values()];tasks.clear();for(const fn of batch)fn();}
+ function flushFrame(){const batch=[...frames.values()];frames.clear();for(const fn of batch)fn();}
  function flush(){
   let turns=0;
   while(tasks.size){assert.ok(++turns<10,"editor handoff must settle");flushOne();}
@@ -110,7 +114,7 @@ function fixture({readerActive=true,preexistingSource=false,createDraft=true}={}
   book.refresh({[draft]:{deleted:kind!=="close"},[source]:{modified:kind==="save"},[storyTitle]:{modified:true}});
   if(flushReturn)flush();
  }
- return {book,wiki,source,item,setlist,original,host,classes,storyTitle,log,forwarded,pageCalls,tasks,edit,finish,flush,flushOne,
+ return {book,wiki,source,item,setlist,original,host,classes,storyTitle,log,forwarded,pageCalls,tasks,edit,finish,flush,flushOne,flushFrame,get pendingFrames(){return frames.size;},
   get controllers(){return controllers;},get draws(){return draws;},get standaloneReaders(){return standaloneReaders;}};
 }
 
@@ -199,4 +203,31 @@ test("declined editor requests restore, while destroying the book cancels pendin
  const removed=fixture();removed.edit();removed.book.onDestroy();removed.flush();
  assert.equal(removed.draws,0);assert.equal(removed.controllers,0);
  assert.equal(removed.book._editReturn,null);
+});
+
+test("Suspended book is truly removed from layout while the native draft renders",async()=>{
+ const styles=await readFile(new URL("../plugins/repertoire/src/styles.css",import.meta.url),"utf8");
+ assert.match(styles,/\.huwrep-book\[hidden\]\{display:none!important\}/);
+});
+
+test("iPad lets old SVG and audio layers clear before the native draft is mounted",()=>{
+ const f=fixture({ipad:true});f.edit();f.edit();
+ assert.equal(f.controllers,0,"old playback released synchronously");
+ assert.equal(f.forwarded.length,0,"do not mount a draft in the old score's frame");
+ f.book.refresh({"Unrelated song":{modified:true}});f.flush();
+ assert.equal(f.draws,0,"pending navigation must not restore old score prematurely");
+ assert.equal(f.pendingFrames,1);
+ f.flushFrame();assert.equal(f.forwarded.length,0,"one animation frame is not enough");
+ f.flushFrame();assert.equal(f.forwarded.length,1,"relay the original edit once after the second frame");
+ f.flush();assert.ok(f.wiki.findDraft(f.source));
+ assert.equal(f.draws,0);
+ f.finish("cancel");assert.equal(f.controllers,1);
+});
+
+test("destroying a book cancels its pending iPad editor handoff",()=>{
+ const f=fixture({ipad:true});f.edit();f.book.onDestroy();
+ f.flushFrame();f.flushFrame();f.flush();
+ assert.equal(f.pendingFrames,0);
+ assert.equal(f.forwarded.length,0,"closed books never open a late native draft");
+ assert.equal(f.controllers,0);
 });

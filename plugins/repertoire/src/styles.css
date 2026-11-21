@@ -104,6 +104,8 @@
 }
 
 /* Repertoire Nodebog – responsive reader, one ABC score loaded at a time. */
+/* An editor suspends the book; its author display:flex must not override HTML hidden. */
+.huwrep-book[hidden]{display:none!important}
 .huwrep-book{position:relative;display:flex;flex-direction:column;gap:0;min-height:70vh;border:1px solid #c6d9d0;border-radius:10px;overflow:hidden;background:#f6faf7;color:#183c31;font:inherit}
 .huwrep-book-header{position:relative;z-index:2;display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px;border-bottom:1px solid #d6e5dc;background:#edf5f0}
 .huwrep-book-header>.huwrep-input{width:auto;flex:1 1 170px;max-width:100%}

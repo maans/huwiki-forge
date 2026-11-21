@@ -217,6 +217,8 @@ try{
     assert.equal(editing.players,0,"The previous reader's playback controller is unregistered during editing");
     assert.equal(editing.connectedEditors,1,"Exactly one connected ABC draft is editable");
     assert.equal(editing.bookFullscreen,false,"The book cannot keep covering the draft editor");
+    assert.equal(await book.evaluate(node=>getComputedStyle(node).display),"none",
+     "The suspended book must leave the layout entirely, not merely set hidden=true");
     assert.equal(await book.locator(".huwabc-score").count(),0,"No embedded score DOM remains behind the editor");
     const draftTitle=await frame.getAttribute("data-tiddler-title");
     const original=await page.evaluate(title=>$tw.wiki.getTiddler(title).fields["abc-source"],sourceTitle);
