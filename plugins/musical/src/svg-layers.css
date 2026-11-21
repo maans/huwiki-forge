@@ -4,3 +4,7 @@
 .huw-svg-canvas-controls button[data-svg-action="deselect"]{min-height:44px;touch-action:manipulation}
 @media(max-width:900px){.huw-svg-body{grid-template-columns:150px minmax(140px,1fr) 145px}.huw-svg-toolbar button{font-size:12px;padding:4px 6px}.huw-svg-canvas-controls>span{display:none}.huw-svg-header{gap:5px;padding:7px}.huw-svg-header>strong{font-size:14px}.huw-svg-status{font-size:10px}}
 @media(max-width:620px){.huw-svg-workshop{position:fixed;inset:6px;min-height:0}.huw-svg-body{grid-template-columns:110px minmax(120px,1fr)}.huw-svg-properties{display:none}.huw-svg-sidebar{padding:6px}.huw-svg-frame-controls{gap:4px}.huw-svg-header .huw-svg-status{display:none}.huw-svg-header>strong{flex:1}.huw-svg-workshop .huw-svg-field{font-size:10px}.huw-svg-layer-properties input{width:48px}.huw-svg-toolbar{padding:5px}.huw-svg-frames{margin-top:4px}.huw-svg-frames-section{padding:5px}.huw-svg-canvas-host{padding:5px}}
+.huw-svg-tool-label{display:inline-flex;align-items:center;gap:6px}
+.huw-svg-tool-select{min-height:36px;padding:4px 8px;border:1px solid #9aadc2;border-radius:6px;background:#fff;color:#24364b;font:inherit}
+.huw-svg-frame-options{margin:2px 0}
+@media(pointer:coarse){.huw-svg-tool-select{min-height:44px}}

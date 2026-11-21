@@ -101,6 +101,7 @@ function mount(o){
  function setContext(details){context=Object.assign({start:o.position?o.position():0,text:"",role:"",name:""},details||{});if(scriptText)scriptText.value=context.text||"";if(roleInput)roleInput.value=context.role||"";if(cueSelect){var index=cues.findIndex(function(c){return c.cueId===context.cueId&&c.sceneTitle===context.sceneTitle;});cueSelect.value=index<0?"":String(index);}}
  function recordingState(){return capture&&capture.state||"idle";}
  function updateControls(){if(!popup)return;var state=recordingState(),working=state!=="idle"||busy;
+  recordButton.hidden=state==="recording";stopButton.hidden=state!=="recording";retakeButton.hidden=!chosen()||state==="recording";
   recordButton.disabled=working;stopButton.disabled=state!=="recording";retakeButton.disabled=working||!chosen();saveButton.disabled=working;importInput.disabled=working;cueSelect.disabled=working;scriptText.disabled=working;roleInput.disabled=working;
   popup.classList.toggle("is-recording",state==="recording");
   if(inspector)Array.prototype.forEach.call(inspector.querySelectorAll("input,textarea,button"),function(input){input.disabled=working;});

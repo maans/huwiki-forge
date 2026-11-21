@@ -80,3 +80,5 @@
  .huw-face-workshop--inline .huw-face-workshop-editing{grid-row:1}
  .huw-face-workshop--inline .huw-face-workshop-overview{border-top:1px solid #b4c8d4;border-bottom:0}
 }
+.huw-face-history-details{padding:0 12px}
+.huw-face-history-details .huw-face-workshop-history{padding:0 4px 8px;min-height:0}

@@ -61,8 +61,8 @@ function mount(o){
   menu.trigger.setAttribute('aria-expanded','false');menu.panel.hidden=true;
   if(restoreFocus)menu.trigger.focus({preventScroll:true});
  }
- function toolbarMenu(id,title){
-  var group=el(doc,'div','huw-musical-menu',undefined,actions);
+ function toolbarMenu(id,title,parent){
+  var group=el(doc,'div','huw-musical-menu',undefined,parent||actions);
   var trigger=button(group,'huw-musical-menu-trigger',title,function(){
    var wasOpen=openMenu===menu;
    closeMenu(false);if(wasOpen)return;
@@ -309,9 +309,10 @@ function mount(o){
  }
  var previewTools=el(doc,'div','huw-musical-preview-tools',undefined,stagePanel||actions);
  if(stagePanel){var stageHeading=stagePanel.querySelector('.huw-musical-subtitle');stagePanel.insertBefore(previewTools,stagePanel.firstChild);if(stageHeading)previewTools.appendChild(stageHeading);}
- var zoomSelectionButton=button(previewTools,'huw-musical-zoom-selection',L.zoomSelection,function(){zoomToSelection();});
+ var sceneZoom=toolbarMenu('stage-zoom',L.scene==='Scene'?'Scenezoom':'Stage zoom',previewTools);
+ var zoomSelectionButton=button(sceneZoom.panel,'huw-musical-zoom-selection',L.zoomSelection,function(){zoomToSelection();});
  zoomSelectionButton.title=L.zoomHint;zoomSelectionButton.setAttribute('aria-label',L.zoomSelection);zoomSelectionButton.setAttribute('aria-pressed','false');zoomSelectionButton.disabled=true;
- var resetPreviewButton=button(previewTools,'huw-musical-reset-preview-zoom',L.resetPreviewZoom,function(){resetPreviewZoom();});
+ var resetPreviewButton=button(sceneZoom.panel,'huw-musical-reset-preview-zoom',L.resetPreviewZoom,function(){resetPreviewZoom();});
  resetPreviewButton.title=L.resetPreviewZoom+' (0)';resetPreviewButton.disabled=true;
  clearButton(previewTools);
  var stageFullscreenButton=button(previewTools,'huw-musical-stage-fullscreen',L.fullscreen,toggleStageFullscreen);
@@ -358,8 +359,15 @@ function mount(o){
  // Remove the old full-size camera-shot toolbar entirely. Each shot is now
  // edited as a keyframe on Camera A/B and Cuts tracks.
  var shots=host.querySelector(".huw-musical-shots");if(shots)shots.remove();
+ var playbackMenu=toolbarMenu('playback',L.scene==='Scene'?'Afspilningsvalg':'Playback options',o.transport);
+ playbackMenu.panel.classList.add('huw-musical-playback-options');
+ var speed=host.querySelector('.huw-musical-speed');
+ if(speed){
+  var speedLabel=el(doc,'label','huw-musical-playback-field',undefined,playbackMenu.panel);
+  el(doc,'span','',L.scene==='Scene'?'Hastighed':'Speed',speedLabel);speedLabel.appendChild(speed);
+ }
  var status=host.querySelector(".huw-musical-status");
- if(status){status.classList.add("huw-musical-inline-status");o.transport.appendChild(status);}
+ if(status){status.classList.add("huw-musical-inline-status");o.transport.insertBefore(status,playbackMenu.group);}
  // The editor is no longer a growing article below the controls.
  var workbench=el(doc,"div","huw-musical-workbench");
  host.appendChild(workbench);
@@ -367,18 +375,19 @@ function mount(o){
  var toolbar=el(doc,"div","huw-musical-timeline-toolbar",undefined,timelinePane);
  el(doc,"strong","huw-musical-timeline-title",L.timeline,toolbar);
  var filters=el(doc,"div","huw-musical-track-filters",undefined,toolbar);
- var filterButtons={};
- [["all",L.all],["music",L.music],["camera",L.camera],["animation",L.animation],["scene",L.sceneTracks]].forEach(function(a){
-  filterButtons[a[0]]=button(filters,"huw-musical-filter",a[1],function(){
-   Object.keys(filterButtons).forEach(function(k){filterButtons[k].classList.toggle("is-active",k===a[0]);});
-   editor.setFilter(a[0]);
-  });
+ var trackFilter=el(doc,'select','huw-musical-filter',undefined,filters);
+ trackFilter.setAttribute('aria-label',L.scene==='Scene'?'Vis spor':'Show tracks');
+ [["all",L.all],["music",L.music],["camera",L.camera],["animation",L.animation],["scene",L.sceneTracks]].forEach(function(item){
+  el(doc,'option','',item[1],trackFilter).value=item[0];
  });
- filterButtons.all.classList.add("is-active");
+ trackFilter.value='all';trackFilter.onchange=function(){editor.setFilter(trackFilter.value);};
  var controls=el(doc,"div","huw-musical-edit-controls",undefined,toolbar);
- var addKeyButton=button(controls,"huw-musical-add-key","＋ "+L.addKey,function(){editor.addKeyframe();setInspector(true);});
- var deleteKeyButton=button(controls,"huw-musical-delete-key","⌫ "+L.delKey,function(){editor.removeKeyframe();});
+ var keyGroup=el(doc,'div','huw-musical-stepper',undefined,controls);
+ var addKeyButton=button(keyGroup,"huw-musical-add-key",L.scene==='Scene'?'＋ Nøglebillede':'＋ Keyframe',function(){editor.addKeyframe();setInspector(true);});
+ var deleteKeyButton=button(keyGroup,"huw-musical-delete-key","⌫",function(){editor.removeKeyframe();});
+ addKeyButton.setAttribute('aria-label',L.addKey);deleteKeyButton.setAttribute('aria-label',L.delKey);
  function updateEditButtons(){
+  if(editor.getFilter)trackFilter.value=editor.getFilter();
   var selected=editor.getSelection(),editable=selected&&['song','audio','audio-lane','scene-range','object-browser','captions','caption'].indexOf(selected.kind)<0;
   addKeyButton.disabled=deleteKeyButton.disabled=!editable;
   clearButtons.forEach(function(b){b.disabled=!selected;});
@@ -386,9 +395,10 @@ function mount(o){
   deleteKeyButton.title=editable?L.delKey:L.sceneHint;
  }
  updateEditButtons();
- var zoomOut=button(controls,"huw-musical-zoom-out","−",function(){editor.setZoom(editor.getZoom()/1.35);});
+ var timelineZoom=el(doc,"div","huw-musical-stepper",undefined,controls);
+ var zoomOut=button(timelineZoom,"huw-musical-zoom-out","−",function(){editor.setZoom(editor.getZoom()/1.35);});
  zoomOut.setAttribute("aria-label",L.zoomOut);zoomOut.title=L.zoomOut;
- var zoomIn=button(controls,"huw-musical-zoom-in","＋",function(){editor.setZoom(editor.getZoom()*1.35);});
+ var zoomIn=button(timelineZoom,"huw-musical-zoom-in","＋",function(){editor.setZoom(editor.getZoom()*1.35);});
  zoomIn.setAttribute("aria-label",L.zoomIn);zoomIn.title=L.zoomIn;
  timelinePane.appendChild(root);
  var drawer=el(doc,"aside","huw-musical-inspector-drawer",undefined,workbench);
@@ -495,7 +505,7 @@ function mount(o){
   }
  };
  function editingField(target){
-  return target&&(target.closest&&target.closest("input,select,textarea,[contenteditable=true],.huw-musical-workshop-dock,.huw-musical-face-panel,.huw-face-workshop"));
+  return target&&(target.closest&&target.closest("input,select,textarea,summary,[contenteditable=true],.huw-musical-workshop-dock,.huw-musical-face-panel,.huw-face-workshop"));
  }
  function escapeSelection(e){
   if(e.key!=='Escape'||e.defaultPrevented||e.altKey||e.ctrlKey||e.metaKey)return;
@@ -508,7 +518,7 @@ function mount(o){
   e.preventDefault();e.stopPropagation();clearSelection();
  }
  function keyboard(e){
-  if(e.defaultPrevented||(openMenu&&actions.contains(e.target)))return;
+  if(e.defaultPrevented||(openMenu&&openMenu.group.contains(e.target)))return;
   if(narration.isOpen()||scoreWorkshop.isOpen())return;
   if(manuscript.isOpen()){if(e.key==="Escape"){e.preventDefault();manuscript.close();}return;}
   if(puppet.isOpen())return;

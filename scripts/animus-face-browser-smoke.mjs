@@ -71,8 +71,8 @@ function selectedHeadClipping(svg){
 async function tapPart(id,head=false){
  // Start each direct selection with the full scene, then enlarge the actual
  // head before touching a small eye or mouth. Palette thumbnails are excluded.
- const reset=editor.locator('.huw-musical-reset-preview-zoom');if(await reset.isEnabled())await reset.tap();
- if(!head){await tapPart('prisoner-head-drawing',true);await editor.locator('.huw-musical-zoom-selection:enabled').tap();}
+ const reset=editor.locator('.huw-musical-reset-preview-zoom');if(await reset.isEnabled())await chooseToolbarItem(editor,'stage-zoom','.huw-musical-reset-preview-zoom','tap');
+ if(!head){await tapPart('prisoner-head-drawing',true);await chooseToolbarItem(editor,'stage-zoom','.huw-musical-zoom-selection:enabled','tap');}
  const part=editor.locator('.huw-musical-canvas > svg [data-cutout-id="'+id+'"]:visible').first();await part.scrollIntoViewIfNeeded();
  const painted=part.locator('image,path,ellipse,circle').first();
  const eyeSource=id==='prisoner-pupils'?await sourceSnapshot():null,eyeTime=eyeSource?await position():null;
@@ -93,7 +93,7 @@ async function tapPart(id,head=false){
     const target=options.includes('prisoner-head')?'prisoner-head':'prisoner';assert.ok(options.includes(target),'the object picker offers the off-camera prisoner');
     await picker.selectOption(target);const parts=editor.locator('.huw-musical-parts-button');if(await parts.getAttribute('aria-pressed')!=='true')await chooseToolbarItem(editor,'tools','.huw-musical-parts-button','tap');
    }
-   await editor.locator('.huw-musical-zoom-selection:enabled').tap();await painted.scrollIntoViewIfNeeded();point=await measure();
+   await chooseToolbarItem(editor,'stage-zoom','.huw-musical-zoom-selection:enabled','tap');await painted.scrollIntoViewIfNeeded();point=await measure();
    assert.ok(Math.abs(await position()-originalTime)<.001,'focusing an off-camera character retains the global playhead');
    assert.deepEqual(await sourceSnapshot(),originalSource,'selecting and focusing an off-camera character does not write source data');
   }
@@ -254,9 +254,9 @@ try{
  await wiki.locator('.plato-player').first().evaluate((host,t)=>host._platoPlayer.seek(t),cross.time);
  const audience=await face('prisoner',wiki.locator('.plato-scene').first());assert.equal(audience.href,cross.variants.E,'audience playback uses the same global learned mapping');
  await assertMapped(cross,'E');
- const stage=editor.locator('.huw-musical-canvas > svg'),resetPreview=editor.locator('.huw-musical-reset-preview-zoom');if(await resetPreview.isEnabled())await resetPreview.tap();
+ const stage=editor.locator('.huw-musical-canvas > svg'),resetPreview=editor.locator('.huw-musical-reset-preview-zoom');if(await resetPreview.isEnabled())await chooseToolbarItem(editor,'stage-zoom','.huw-musical-reset-preview-zoom','tap');
  const authoredClipping=await stage.evaluate(selectedHeadClipping);assert.ok(authoredClipping.length,'the active head belongs to a nested scene viewport');
- panel=await tapPart('prisoner-mouth-open');await editor.locator('.huw-musical-zoom-selection:enabled').tap();
+ panel=await tapPart('prisoner-mouth-open');await chooseToolbarItem(editor,'stage-zoom','.huw-musical-zoom-selection:enabled','tap');
  const zoom=await stage.getAttribute('viewBox'),previewClipping=await stage.evaluate(selectedHeadClipping),captions=editor.locator('[data-preview-track="captions"]');
  assert.ok(previewClipping.length&&previewClipping.every(overflow=>overflow==='visible'),'selection zoom releases the active head\'s nested viewport clipping');
  if(await captions.getAttribute('aria-pressed')==='true')await captions.tap();

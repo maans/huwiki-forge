@@ -137,7 +137,7 @@ async function openForearm(){
  // Use the ordinary object picker and selection zoom to expose the entire
  // actor when the authored camera currently frames only the face.
  const picker=editor.locator('.huw-musical-object-picker');await picker.focus();await picker.selectOption(actor);
- await editor.locator('.huw-musical-zoom-selection:enabled').tap();
+ await chooseToolbarItem(editor,'stage-zoom','.huw-musical-zoom-selection:enabled','tap');
  const parts=editor.locator('.huw-musical-parts-button');if(await parts.getAttribute('aria-pressed')!=='true')await chooseToolbarItem(editor,'tools','.huw-musical-parts-button','tap');
  const image=stage().locator('[data-cutout-id="'+drawing+'"]:visible image').first();
  await touchPoint(await nativePoint(image,[drawing],[-2,4,9].flatMap(x=>[25,42,58].map(y=>({x,y})))));
@@ -235,7 +235,7 @@ try{
  await tapFigurePart(joint);
  // The zoomed cave backdrop is real selectable artwork. Return to the
  // authored framing before tapping the genuinely empty stage letterbox.
- const resetZoom=editor.locator('.huw-musical-reset-preview-zoom');if(await resetZoom.isEnabled())await resetZoom.tap();selectionZoom=await stage().getAttribute('viewBox');
+ const resetZoom=editor.locator('.huw-musical-reset-preview-zoom');if(await resetZoom.isEnabled())await chooseToolbarItem(editor,'stage-zoom','.huw-musical-reset-preview-zoom','tap');selectionZoom=await stage().getAttribute('viewBox');
  await touchPoint(await blankPoint(editor.locator('.huw-musical-canvas')));
  await assertFigureCleared(initialPose,currentTime,selectionZoom,'a blank touch in the scene letterbox');
  // The object dropdown is rebuilt by its change handler. Use the native
@@ -352,7 +352,7 @@ try{
  passed('native save, a new page and cross-scene rewind preserve the body key and facial choices');
 
  const captions=editor.locator('[data-preview-track="captions"]');if(await captions.getAttribute('aria-pressed')==='true')await captions.tap();
- await editor.locator('.huw-musical-zoom-selection:enabled').tap();
+ await chooseToolbarItem(editor,'stage-zoom','.huw-musical-zoom-selection:enabled','tap');
  const zoom=await stage().getAttribute('viewBox'),beforeExport=await sources();
  await editor.evaluate(host=>{
   window.__figureExportFrames=[];const svg=host.querySelector('.huw-musical-canvas > svg');

@@ -70,10 +70,11 @@ function fixture(){
  const canvas=host.querySelector('.huw-svg-canvas');
  function button(label,within=host){const result=within.querySelectorAll('button').find(node=>node.textContent===label);assert.ok(result,'button '+label);return result;}
  function shape(id){const result=canvas.querySelector('[data-svg-shape="'+id+'"]');assert.ok(result,'shape '+id);return result;}
- function select(id,x=0,y=0){button('Flyt').click();shape(id).dispatch('pointerdown',{pointerType:'touch',pointerId:4,clientX:x,clientY:y});canvas.dispatch('pointerup',{pointerType:'touch',pointerId:4,clientX:x,clientY:y});}
+ function chooseTool(value){const control=host.querySelector('.huw-svg-tool-select');control.value=value;control.onchange();}
+ function select(id,x=0,y=0){chooseTool('select');shape(id).dispatch('pointerdown',{pointerType:'touch',pointerId:4,clientX:x,clientY:y});canvas.dispatch('pointerup',{pointerType:'touch',pointerId:4,clientX:x,clientY:y});}
  const selection=()=>canvas.querySelector('.is-selected-shape')?.getAttribute('data-svg-shape')||'';
  const selectedLayer=()=>host.querySelector('.huw-svg-layers .is-active')?.dataset.layerId;
- return {doc,host,api,canvas,part,sourceSnapshot,first,second,button,shape,select,selection,selectedLayer,get closes(){return closes;},get confirms(){return confirms;},get saves(){return saves;}};
+ return {doc,host,api,canvas,part,sourceSnapshot,first,second,button,chooseTool,shape,select,selection,selectedLayer,get closes(){return closes;},get confirms(){return confirms;},get saves(){return saves;}};
 }
 
 test('SVG Escape releases shape selection but retains the workshop, current layer and committed undo history',()=>{
@@ -103,7 +104,7 @@ test('SVG Escape rolls back an unfinished drag and pen stroke, without accepting
  assert.equal(JSON.stringify(h.api.getModel()),before);assert.equal(h.canvas.hasPointerCapture(5),false);assert.equal(h.selection(),'');
  h.canvas.dispatch('pointerup',{pointerType:'touch',pointerId:5,clientX:60,clientY:50});
  assert.equal(JSON.stringify(h.api.getModel()),before);assert.equal(h.button('Fortryd').disabled,true);
- h.button('Frihånd').click();h.canvas.dispatch('pointerdown',{pointerId:9,clientX:40,clientY:35});h.canvas.dispatch('pointermove',{pointerId:9,clientX:50,clientY:55});
+ h.chooseTool('pen');h.canvas.dispatch('pointerdown',{pointerId:9,clientX:40,clientY:35});h.canvas.dispatch('pointermove',{pointerId:9,clientX:50,clientY:55});
  assert.notEqual(JSON.stringify(h.api.getModel()),before);
  h.host.querySelector('[data-svg-action="deselect"]').click();
  assert.equal(JSON.stringify(h.api.getModel()),before);assert.equal(h.canvas.dataset.tool,'select');assert.equal(h.selection(),'');

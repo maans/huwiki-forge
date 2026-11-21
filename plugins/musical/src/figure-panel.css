@@ -29,3 +29,6 @@
 .huw-musical-object-reveal{margin-left:auto}
 .huw-musical-object-appearance,.huw-musical-object-properties{flex:0 0 auto}
 @media(max-width:640px){.huw-musical-figure-panel{padding:8px}.huw-musical-figure-body{gap:6px}.huw-musical-figure-parts{flex-basis:122px}.huw-musical-figure-selected-label{flex:1 1 auto}.huw-musical-figure-time{font-size:12px}.huw-musical-figure-fit{padding:7px!important}.huw-musical-figure-hint{font-size:11px}}
+.huw-musical-figure-parts[hidden],.huw-musical-figure-parts-toggle[hidden]{display:none}
+.huw-musical-figure-parts-toggle::after{content:' ▾'}
+.huw-musical-figure-parts-toggle[aria-expanded=true]::after{content:' ▴'}

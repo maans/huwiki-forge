@@ -492,12 +492,17 @@ function attach(o){
    draw();o.repaint();
   }
  }
+ var openSongOptions="";
  function drawSongForm(){
   var t=track(),i=t.index,k=m.songs[i];
   if(!k)return;
   var clips=typeof o.clips==="function"?o.clips():m.songs;
   var clip=clips.find(function(x){return x.id===k.id;})||k;
-  var actions=el(doc,"div","huw-musical-key-actions huw-musical-song-actions",undefined,inspector);
+  var clipOptions=el(doc,'details','huw-musical-song-options',undefined,inspector);
+  el(doc,'summary','',L===translations.da?'Redigér musikklip':'Edit music clip',clipOptions);
+  clipOptions.open=openSongOptions===k.id;
+  clipOptions.ontoggle=function(){if(clipOptions.parentNode===inspector)openSongOptions=clipOptions.open?k.id:'';};
+  var actions=el(doc,"div","huw-musical-key-actions huw-musical-song-actions",undefined,clipOptions);
   var available=songChoices(),select=el(doc,"select","huw-musical-song-select",undefined,actions);
   select.setAttribute("aria-label",L.chooseSong);
   available.forEach(function(title){var option=el(doc,"option","",title,select);option.value=title;});
@@ -516,7 +521,8 @@ function attach(o){
   function button(cls,title,fn,disabled){
    var b=el(doc,"button",cls,title,actions);b.type="button";b.disabled=!!disabled;b.onclick=fn;return b;
   }
-  button('huw-musical-edit-score',L===translations.da?'Redigér noder':'Edit notation',function(){if(o.onEditScore)o.onEditScore(k.score);});
+  var editScore=button('huw-musical-edit-score',L===translations.da?'Redigér noder':'Edit notation',function(){if(o.onEditScore)o.onEditScore(k.score);});
+  inspector.insertBefore(editScore,clipOptions);
   button("huw-musical-add-song",L.addSong,function(){
    var id="song-"+(m.songs.length+1);while(m.songs.some(function(s){return s.id===id;}))id+="-x";
    var cross=Math.min(2,k.duration);
@@ -1252,7 +1258,7 @@ function attach(o){
  function removeKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)removePoint(t);}
  draw();return {paint:paint,redraw:draw,selectPart:selectPart,selectSong:selectSong,clearSelection:clearSelection,beginPartMove:beginPartMove,
   openAnimation:openAnimation,closeAnimation:closeAnimation,inClipDetail:function(){return !!detailClipId;},getDetailClip:activeDetail,
-  addKeyframe:addKeyframe,removeKeyframe:removeKeyframe,setFilter:setFilter,setZoom:setZoom,
+  addKeyframe:addKeyframe,removeKeyframe:removeKeyframe,setFilter:setFilter,getFilter:function(){return filter;},setZoom:setZoom,
   getZoom:function(){return zoom;},getSelection:track,
   faceContext:faceContext,chooseFace:chooseFace,faceHistory:faceHistory,selectFaceKey:selectFaceKey,undoFace:undoFace,canUndoFace:function(){return faceUndo.length>0;},
   selectFigure:selectFigure,ensureFigureTrack:ensureFigureTrack,beginFigureTransform:beginFigureTransform,figureStateFor:figureState,

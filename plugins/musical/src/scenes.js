@@ -76,18 +76,23 @@ function mount(o){
  function mark(){dirty=true;updateDurations(film);items=entries();}
  function field(parent,label,value,type,fn){var wrap=el(doc,'label','huw-scene-field',undefined,parent);el(doc,'span','',label,wrap);var input=el(doc,'input','',undefined,wrap);input.type=type;input.value=value;input.onchange=function(){fn(input.value);mark();renderList();};return input;}
  function renderList(){var list=popup.querySelector('.huw-scene-list');list.textContent='';items.forEach(function(e,i){var b=button(list,(i+1)+'. '+(e.clip.name||e.scene&&e.scene.name||'Scene')+' · '+Math.round(e.start)+'s',function(){choice=e.id;render();});b.classList.toggle('is-active',selected()===e);});}
+ var orderOpen=false;
  function render(){renderList();var host=popup.querySelector('.huw-scene-details');host.textContent='';var e=selected();if(!e)return;
   field(host,da?'Scenens navn':'Scene name',e.clip.name||e.scene&&e.scene.name||'','text',function(v){e.clip.name=v;if(e.scene)e.scene.name=v;});
   var length=field(host,da?'Varighed (sek.)':'Duration (sec)',e.clip.duration,'number',function(v){e.clip.duration=Math.max(.25,Math.min(3600,num(v,e.clip.duration)));if(e.scene)e.scene.duration=Math.max(e.scene.duration||0,e.clip.duration);});length.min=.25;length.max=3600;length.step=.25;
   if(e.scene)field(host,da?'Baggrund':'Background',/^#[0-9a-f]{6}$/i.test(e.scene.background||'')?e.scene.background:'#edf3f5','color',function(v){e.scene.background=v;});
   var actions=el(doc,'div','huw-scene-actions',undefined,host);
-  button(actions,da?'← Tidligere':'← Earlier',function(){var i=e.parent.scenes.indexOf(e.clip);if(i<1)return;e.parent.scenes.splice(i,1);e.parent.scenes.splice(i-1,0,e.clip);mark();render();}).disabled=e.index===0;
-  button(actions,da?'Senere →':'Later →',function(){var i=e.parent.scenes.indexOf(e.clip);if(i>=e.parent.scenes.length-1)return;e.parent.scenes.splice(i,1);e.parent.scenes.splice(i+1,0,e.clip);mark();render();}).disabled=e.index===e.parent.scenes.length-1;
+  var order=el(doc,'details','huw-scene-order',undefined,host);
+  el(doc,'summary','',da?'Rækkefølge og timing':'Order and timing',order);
+  order.open=orderOpen;order.ontoggle=function(){if(order.parentNode===host)orderOpen=order.open;};
+  var move=el(doc,'div','huw-scene-actions',undefined,order);
+  button(move,da?'← Tidligere':'← Earlier',function(){var i=e.parent.scenes.indexOf(e.clip);if(i<1)return;e.parent.scenes.splice(i,1);e.parent.scenes.splice(i-1,0,e.clip);mark();render();}).disabled=e.index===0;
+  button(move,da?'Senere →':'Later →',function(){var i=e.parent.scenes.indexOf(e.clip);if(i>=e.parent.scenes.length-1)return;e.parent.scenes.splice(i,1);e.parent.scenes.splice(i+1,0,e.clip);mark();render();}).disabled=e.index===e.parent.scenes.length-1;
   button(actions,da?'+ Ny scene':'+ New scene',function(){var name=da?'Ny scene':'New scene',title=wiki.generateNewTitle((o.film.name||'AniMus')+' · '+name);while(drafts[title])title+=' 2';var next=blankScene(name);drafts[title]=next;originals[title]=null;
    var c={id:id('clip'),source:title,sourceId:next.id,name:name,duration:16,offset:0,speed:1,loop:false};e.parent.scenes.splice(e.index+1,0,c);mark();choice=items.find(function(x){return x.clip===c;}).id;render();});
   button(actions,da?'Vis scenen':'Show scene',function(){o.seek(e.start);});
   el(doc,'p','huw-scene-hint',da?'Dobbeltklik på en figur i scenen for at redigere dens dele og led. Brug Tegn SVG for at tilføje eller tegne en figur.':'Double-click a figure on stage to edit its parts and joints. Use Draw SVG to add or draw a figure.',host);
-  var label=el(doc,'label','huw-scene-field',undefined,host),check=el(doc,'input','',undefined,label);check.type='checkbox';check.checked=follow;check.disabled=!timingSafe;el(doc,'span','',da?'Lad musik, lyd og sceneskift følge scenerne':'Move music, audio and stage cues with scenes',label);check.onchange=function(){follow=check.checked;};
+  var label=el(doc,'label','huw-scene-field',undefined,order),check=el(doc,'input','',undefined,label);check.type='checkbox';check.checked=follow;check.disabled=!timingSafe;el(doc,'span','',da?'Lad musik, lyd og sceneskift følge scenerne':'Move music, audio and stage cues with scenes',label);check.onchange=function(){follow=check.checked;};
   if(!timingSafe)el(doc,'p','huw-scene-hint',da?'Denne komposition bruger scene-loop, startforskydning eller ændret hastighed. Justér musik og lydklip på tidslinjen, når du flytter scener.':'This composition uses scene loops, offsets or speed changes. Adjust music and audio on the timeline when moving scenes.',host);
  }
  function close(force){if(!popup)return true;if(dirty&&!force&&!doc.defaultView.confirm(da?'Luk uden at gemme scenerne?':'Close without saving scenes?'))return false;popup.remove();popup=null;dirty=false;return true;}
@@ -98,7 +103,7 @@ function mount(o){
   Object.keys(drafts).forEach(function(title){var body=JSON.stringify(drafts[title]),prior=wiki.getTiddler(title);if(prior&&prior.fields.text===body)return;o.markOwnWrite(title,body);wiki.addTiddler(new $tw.Tiddler(prior||{title:title,type:'application/json','cutout-project':'yes','cutout-id':drafts[title].id},{text:body}));});
   close(true);o.reload();
  }
- function open(){if(popup)return true;o.pause();drafts={};originals={};film=resolve(o.sceneTitle);if(!film)return false;items=entries();if(!items.length)return false;
+ function open(){if(popup)return true;orderOpen=false;o.pause();drafts={};originals={};film=resolve(o.sceneTitle);if(!film)return false;items=entries();if(!items.length)return false;
   before=ranges(copy(film),function(t){return copy(resolve(t));});choice=(items.find(function(e){return o.position()>=e.start&&o.position()<e.start+e.clip.duration;})||items[0]).id;dirty=false;timingSafe=canFollowScenes(film,resolve);follow=timingSafe;
   popup=el(doc,'section','huw-scene-workshop',undefined,o.host);popup.setAttribute('role','dialog');popup.setAttribute('aria-modal','true');popup.setAttribute('aria-label',da?'Scener og rækkefølge':'Scenes and order');popup.tabIndex=-1;
   var head=el(doc,'header','huw-scene-workshop-header',undefined,popup);el(doc,'strong','',da?'Scener og rækkefølge':'Scenes and order',head);button(head,da?'Annuller':'Cancel',function(){close(false);});button(head,da?'Gem og tilbage':'Save and return',save).classList.add('huw-scene-save');

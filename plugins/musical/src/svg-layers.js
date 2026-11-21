@@ -111,8 +111,22 @@ function open(o){
  function clearSelection(){cancelGesture();stop();selectedShape="";tool="select";render();}
  function close(force){if(closed)return false;cancelGesture();if(dirty&&!force&&!win.confirm(L.close))return false;stop();closed=true;overlay.remove();if(o.onClose)o.onClose();if(o.host&&o.host.focus)o.host.focus({preventScroll:true});return true;}
  button(heading,L.cancel,function(){close(false);});button(heading,L.save,function(){try{cancelGesture();var exported=exportLayers(doc,model,o.duration);if(o.onSave&&o.onSave(exported,{model:M.copy(model),sceneDuration:o.duration})===false)return;dirty=false;close(true);}catch(error){tell(error);}},"huw-svg-primary");
- var toolbar=el(doc,"div","huw-svg-toolbar",undefined,overlay),toolButtons={};
- [["select",L.select],["pen",L.pen],["rect",L.rect],["ellipse",L.ellipse],["line",L.line],["text",L.text],["erase",L.erase]].forEach(function(pair){toolButtons[pair[0]]=button(toolbar,pair[1],function(){cancelGesture();tool=pair[0];renderTools();if(tool==="text")mutate(function(){var layer=M.layerById(model,selectedLayer);if(layer.locked)return;var shape={id:M.id("shape"),type:"text",text:da?"Tekst":"Text",left:model.bounds.x+model.bounds.w/2,top:model.bounds.y+model.bounds.h/2,fontSize:Math.max(12,model.bounds.w*.12),fill:fill,stroke:"none"};model.frames[frameIndex].artwork[selectedLayer].push(shape);selectedShape=shape.id;tool="select";});});});
+ var toolbar=el(doc,"div","huw-svg-toolbar",undefined,overlay);
+ var toolLabel=el(doc,'label','huw-svg-tool-label',undefined,toolbar);
+ el(doc,'span','',da?'Værktøj':'Tool',toolLabel);
+ var toolSelect=el(doc,'select','huw-svg-tool-select',undefined,toolLabel);
+ [["select",L.select],["pen",L.pen],["rect",L.rect],["ellipse",L.ellipse],["line",L.line],["text",L.text],["erase",L.erase]].forEach(function(pair){
+  el(doc,'option','',pair[1],toolSelect).value=pair[0];
+ });
+ toolSelect.onchange=function(){
+  if(playing)stop();cancelGesture();
+  if(toolSelect.value==='text'&&M.layerById(model,selectedLayer).locked){renderTools();return;}
+  tool=toolSelect.value;renderTools();
+  if(tool==="text")mutate(function(){
+   var shape={id:M.id("shape"),type:"text",text:da?"Tekst":"Text",left:model.bounds.x+model.bounds.w/2,top:model.bounds.y+model.bounds.h/2,fontSize:Math.max(12,model.bounds.w*.12),fill:fill,stroke:"none"};
+   model.frames[frameIndex].artwork[selectedLayer].push(shape);selectedShape=shape.id;tool="select";
+  });
+ };
  var undoButton=button(toolbar,L.undo,function(){cancelGesture();var next=history.undo();if(next){model=next;frameIndex=Math.min(frameIndex,model.frames.length-1);if(!M.layerById(model,selectedLayer))selectedLayer=model.layers[0].id;selectedShape="";dirty=true;render();}}),redoButton=button(toolbar,L.redo,function(){cancelGesture();var next=history.redo();if(next){model=next;frameIndex=Math.min(frameIndex,model.frames.length-1);if(!M.layerById(model,selectedLayer))selectedLayer=model.layers[0].id;selectedShape="";dirty=true;render();}});
  var fileLabel=el(doc,"label","huw-svg-import",L.import,toolbar),file=el(doc,"input","",undefined,fileLabel);file.type="file";file.accept=".svg,image/svg+xml";file.onchange=function(){var chosen=file.files&&file.files[0];if(!chosen)return;if(chosen.size>4*1024*1024){tell(da?"Vælg en SVG under 4 MB.":"Choose an SVG under 4 MB.");return;}chosen.text().then(function(text){if(closed)return;mutate(function(){var added=importSvgLayers(doc,model,text,frameIndex);selectedLayer=added[added.length-1];});}).catch(tell);file.value="";};
  var body=el(doc,"div","huw-svg-body",undefined,overlay),sidebar=el(doc,"aside","huw-svg-sidebar",undefined,body);el(doc,"h3","",L.layers,sidebar);var layerControls=el(doc,"div","huw-svg-buttons",undefined,sidebar);
@@ -127,12 +141,15 @@ function open(o){
  var framesSection=el(doc,"section","huw-svg-frames-section",undefined,overlay),frameControls=el(doc,"div","huw-svg-frame-controls",undefined,framesSection);el(doc,"strong","",L.frames,frameControls);
  button(frameControls,L.newFrame,function(){mutate(function(){frameIndex=M.addFrame(model,frameIndex,false);});});button(frameControls,L.copyFrame,function(){mutate(function(){frameIndex=M.addFrame(model,frameIndex,true);});});button(frameControls,L.remove,function(){mutate(function(){M.removeFrame(model,frameIndex);frameIndex=Math.min(frameIndex,model.frames.length-1);});});
  var playButton=button(frameControls,L.play,function(){});playButton.onclick=function(){if(playing){stop();render();}else start();};
- var fps=input(frameControls,L.fps,"number",model.fps,function(v){mutate(function(){model.fps=M.clamp(v,1,60);});});fps.min="1";fps.max="60";
- var hold=input(frameControls,L.hold,"number",1,function(v){mutate(function(){model.frames[frameIndex].hold=M.clamp(Math.round(v),1,120);});});hold.min="1";hold.max="120";
- input(frameControls,L.onion,"checkbox",onion,function(v){onion=v;paint();});var loop=input(frameControls,L.loop,"checkbox",model.loop,function(v){mutate(function(){model.loop=v;});});var startTime=input(frameControls,L.start,"number",model.start,function(v){mutate(function(){model.start=Math.max(0,M.number(v,0));});});startTime.min="0";startTime.step="0.1";
+ var framesOptions=el(doc,'details','huw-svg-frame-options',undefined,framesSection);
+ el(doc,'summary','',da?'Billedtiming og løgskind':'Frame timing and onion skin',framesOptions);
+ var timing=el(doc,'div','huw-svg-frame-controls',undefined,framesOptions);
+ var fps=input(timing,L.fps,"number",model.fps,function(v){mutate(function(){model.fps=M.clamp(v,1,60);});});fps.min="1";fps.max="60";
+ var hold=input(timing,L.hold,"number",1,function(v){mutate(function(){model.frames[frameIndex].hold=M.clamp(Math.round(v),1,120);});});hold.min="1";hold.max="120";
+ input(timing,L.onion,"checkbox",onion,function(v){onion=v;paint();});var loop=input(timing,L.loop,"checkbox",model.loop,function(v){mutate(function(){model.loop=v;});});var startTime=input(timing,L.start,"number",model.start,function(v){mutate(function(){model.start=Math.max(0,M.number(v,0));});});startTime.min="0";startTime.step="0.1";
  var frameList=el(doc,"div","huw-svg-frames",undefined,framesSection);
  function currentShape(){var art=model.frames[frameIndex].artwork[selectedLayer]||[];return art.find(function(shape){return shape.id===selectedShape;});}
- function renderTools(){Object.keys(toolButtons).forEach(function(key){toolButtons[key].classList.toggle("is-active",key===tool);toolButtons[key].setAttribute("aria-pressed",String(key===tool));});canvas.dataset.tool=tool;}
+ function renderTools(){toolSelect.value=tool;canvas.dataset.tool=tool;}
  function renderLayers(){layerList.textContent="";model.layers.slice().reverse().forEach(function(layer){var row=el(doc,"div","huw-svg-layer-row",undefined,layerList),b=button(row,(layer.visible?"● ":"○ ")+(layer.locked?"🔒 ":"")+layer.name,function(){selectedLayer=layer.id;selectedShape="";render();});b.dataset.layerId=layer.id;b.classList.toggle("is-active",layer.id===selectedLayer);});layerProperties.textContent="";var layer=M.layerById(model,selectedLayer);if(!layer)return;
   input(layerProperties,L.name,"text",layer.name,function(v){mutate(function(){layer.name=v||L.layers;});});input(layerProperties,L.visible,"checkbox",layer.visible,function(v){mutate(function(){layer.visible=v;});});input(layerProperties,L.locked,"checkbox",layer.locked,function(v){mutate(function(){layer.locked=v;});});
   [["x","X"],["y","Y"],["sx","Scale X"],["sy","Scale Y"],["r",da?"Drejning":"Rotation"]].forEach(function(pair){var field=input(layerProperties,pair[1],"number",M.number(layer[pair[0]],pair[0][0]==="s"?1:0),function(v){if(layer.locked)return;mutate(function(){layer[pair[0]]=pair[0][0]==="s"?M.clamp(v,.01,100):M.number(v,0);});});field.step=pair[0][0]==="s"?"0.1":"1";field.disabled=layer.locked;});
@@ -176,7 +193,7 @@ function open(o){
   function cancel(e){if(!matches(e))return;cleanup();model=before;selectedShape="";render();}
   canvas.addEventListener("pointermove",move);canvas.addEventListener("pointerup",done);canvas.addEventListener("pointercancel",cancel);canvas.addEventListener("lostpointercapture",cancel);
  });
- overlay.addEventListener("keydown",function(event){var editing=/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName);if(event.key==="Escape"){event.preventDefault();event.stopPropagation();clearSelection();return;}if(editing)return;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="z"){event.preventDefault();event.stopPropagation();(event.shiftKey?redoButton:undoButton).click();}else if(event.key==="Delete"||event.key==="Backspace"){var shape=currentShape(),layer=M.layerById(model,selectedLayer);if(shape&&layer&&!layer.locked){event.preventDefault();event.stopPropagation();mutate(function(){model.frames[frameIndex].artwork[selectedLayer]=model.frames[frameIndex].artwork[selectedLayer].filter(function(s){return s.id!==shape.id;});});}}else if(event.code==="Space"){event.preventDefault();event.stopPropagation();if(playing)stop();else start();}},true);
+ overlay.addEventListener("keydown",function(event){var editing=/^(INPUT|TEXTAREA|SELECT)$/.test(event.target.tagName);if(event.key==="Escape"){event.preventDefault();event.stopPropagation();clearSelection();return;}if(editing)return;if((event.ctrlKey||event.metaKey)&&event.key.toLowerCase()==="z"){event.preventDefault();event.stopPropagation();(event.shiftKey?redoButton:undoButton).click();}else if(event.key==="Delete"||event.key==="Backspace"){var shape=currentShape(),layer=M.layerById(model,selectedLayer);if(shape&&layer&&!layer.locked){event.preventDefault();event.stopPropagation();mutate(function(){model.frames[frameIndex].artwork[selectedLayer]=model.frames[frameIndex].artwork[selectedLayer].filter(function(s){return s.id!==shape.id;});});}}else if(event.code==="Space"&&!/^(BUTTON|SUMMARY)$/.test(event.target.tagName)){event.preventDefault();event.stopPropagation();if(playing)stop();else start();}},true);
  render();overlay.focus({preventScroll:true});return {close:close,clearSelection:clearSelection,cancelGesture:cancelGesture,getModel:function(){return M.copy(model);},element:overlay};
 }
 exports.open=open;exports.fromPart=fromPart;exports.svgOf=svgOf;exports.sanitizeSvg=sanitizeSvg;exports.exportLayers=exportLayers;exports.applyToParts=applyToParts;exports.importSvgLayers=importSvgLayers;

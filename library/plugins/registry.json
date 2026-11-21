@@ -36,7 +36,7 @@
         "name": "AniMus · bilingual captions / Tosprogede undertekster",
         "description": "Caption translations displayed without modifying English sound, source text, timing, or lip-sync",
         "author": "HUWiki",
-        "version": "0.1.0-beta.2",
+        "version": "0.1.0-beta.3",
         "plugin-type": "plugin",
         "requires-reload": "yes",
         "core-version": ">=5.4.1"
@@ -82,7 +82,7 @@
         "name": "AniMus Forge I · Editor (beta)",
         "description": "AniMus production tools: layered SVG and drawn animation, ABC notation, recorded voices, scene timeline and Site view.",
         "author": "HUWiki Forge",
-        "version": "0.13.0-beta.6",
+        "version": "0.13.0-beta.7",
         "plugin-type": "plugin",
         "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/abc",
         "requires-reload": "yes",

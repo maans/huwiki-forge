@@ -480,7 +480,9 @@ try{
  // must remain local to the workbench and must not erase export content.
  await chooseToolbarItem(editor,'view','[data-preview="stage"]');
  await editor.locator('.huw-musical-range').evaluate(input=>{input.value='5.5';input.dispatchEvent(new Event('input',{bubbles:true}));});
+ await editor.locator('[data-menu="playback"]').click();
  await editor.locator('[data-huw-animus-captions="language"]').selectOption('da');
+ await editor.locator('[data-menu="playback"]').click();
  const stageSvg=editor.locator('.huw-musical-canvas > svg'),authoredViewBox=await stageSvg.getAttribute('viewBox');
  const previewSource=await wiki.evaluate(()=>{
   const timeline=document.querySelector('.plato-player')._platoPlayer.getTimeline();
@@ -539,7 +541,7 @@ try{
  const outline=editor.locator('.huw-musical-transform-overlay[data-mode="parts"] .huw-musical-transform-outline');
  await outline.waitFor();assert.notEqual(await outline.evaluate(node=>getComputedStyle(node).strokeDasharray),'none','selected face has the dashed editing frame');
  assert.equal(await editor.locator('.huw-musical-transform-label').textContent(),'Head','the normal click selects the anatomical head and its attached facial parts');
- await editor.locator('.huw-musical-zoom-selection:enabled').click();
+ await chooseToolbarItem(editor,'stage-zoom','.huw-musical-zoom-selection:enabled','click');
  const zoomedViewBox=await stageSvg.getAttribute('viewBox');
  assert.ok(Number(zoomedViewBox.split(/\s+/)[2])<Number(authoredViewBox.split(/\s+/)[2])*.6,'Zoom to selection brings the face into a usable close view');
  assert.equal(await editor.locator('.huw-musical-zoom-selection').getAttribute('aria-pressed'),'true');
@@ -591,7 +593,7 @@ try{
  assert.equal(await editor.locator('.huw-musical-caption-overlay').evaluate(node=>node.hidden),true,'hidden captions stay hidden when returning to editing');
  assert.equal(await stageSvg.getAttribute('viewBox'),previewBeforeExport,'export restores the exact selected face view');
  assert.ok(Math.abs(Number(await editor.locator('.huw-musical-range').inputValue())-5.5)<.001,'export returns to the original paused editing position');
- await editor.locator('.huw-musical-reset-preview-zoom').click();
+ await chooseToolbarItem(editor,'stage-zoom','.huw-musical-reset-preview-zoom','click');
  assert.equal(await stageSvg.getAttribute('viewBox'),authoredViewBox,'Reset zoom returns to the authored performance view');
  await captionSwitch.click();await audioSwitch.click();
  passed('normal editor has timed caption blocks, track switches and face zoom; exports retain authored speech/captions/camera and restore preview choices');

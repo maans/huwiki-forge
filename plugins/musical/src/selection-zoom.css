@@ -17,3 +17,8 @@
 .huw-musical-stage.huw-musical-stage--expanded .huw-musical-preview-tools,
 .huw-musical-stage:fullscreen .huw-musical-preview-tools{padding:4px 0;gap:8px}
 @media(max-width:600px){.huw-musical-preview-tools{gap:4px}.huw-musical--workspace .huw-musical-preview-tools button{font-size:11px;min-height:32px}}
+.huw-musical--workspace .huw-musical-preview-tools .huw-musical-menu-trigger{min-height:38px}
+.huw-musical--workspace .huw-musical-preview-tools .huw-musical-menu-panel{left:0;right:auto}
+.huw-musical--workspace .huw-musical-preview-tools .huw-musical-menu-panel button{background:transparent;color:#eef5fa;border:0;text-align:left}
+.huw-musical--workspace .huw-musical-preview-tools .huw-musical-menu-panel button:hover{background:#2c465c}
+@media(pointer:coarse){.huw-musical--workspace .huw-musical-preview-tools :is(button,.huw-musical-menu-trigger){min-height:44px}}

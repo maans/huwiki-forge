@@ -49,12 +49,17 @@ function mount(o){
   popup=el(doc,'section','huw-score-workshop',undefined,o.host);popup.setAttribute('role','dialog');popup.setAttribute('aria-modal','true');popup.setAttribute('aria-label',da?'ABC-musikværksted':'ABC music workshop');popup.tabIndex=-1;
   var bar=el(doc,'header','huw-score-workshop-header',undefined,popup);el(doc,'strong','',da?'ABC-musikværksted':'ABC music workshop',bar);el(doc,'span','huw-score-workshop-title',title,bar);
   button(bar,da?'Annuller':'Cancel',function(){close(false);});
-  button(bar,da?'Gem kopi':'Save a copy',function(){title=wiki.generateNewTitle(title+(da?' – kopi':' – copy'));newScore=true;save();});
+  var files=el(doc,'details','huw-score-files',undefined,bar);
+  el(doc,'summary','',da?'Filer':'Files',files);
+  var fileActions=el(doc,'div','huw-score-file-actions',undefined,files);
+  button(fileActions,da?'Gem kopi':'Save a copy',function(){title=wiki.generateNewTitle(title+(da?' – kopi':' – copy'));newScore=true;save();});
   button(bar,da?'Gem og tilbage':'Save and return',save,'huw-score-save');
-  var importer=el(doc,'label','huw-score-import',da?'Importér ABC-fil':'Import ABC file',bar),file=el(doc,'input','',undefined,importer);file.type='file';file.accept='.abc,.txt,text/plain';
+  var importer=el(doc,'label','huw-score-import',da?'Importér ABC-fil':'Import ABC file',fileActions),file=el(doc,'input','',undefined,importer);file.type='file';file.accept='.abc,.txt,text/plain';
   file.onchange=function(){var f=file.files&&file.files[0];if(!f)return;var requestedDraft=draft,requestedPopup=popup,reader=new doc.defaultView.FileReader();reader.onload=function(){if(popup!==requestedPopup||draft!==requestedDraft)return;var old=wiki.getTiddler(requestedDraft);if(!old)return;wiki.addTiddler(new $tw.Tiddler(old,{'abc-source':String(reader.result||'')}));renderEditor();};reader.readAsText(f);};
   el(doc,'div','huw-score-workshop-body',undefined,popup);el(doc,'output','huw-score-workshop-status','',popup);
-  popup.addEventListener('keydown',function(e){e.stopPropagation();if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();close(false);}});
+  popup.addEventListener('pointerdown',function(e){if(files.open&&!files.contains(e.target))files.open=false;});
+  files.addEventListener('focusout',function(e){if(e.relatedTarget&&!files.contains(e.relatedTarget))files.open=false;});
+  popup.addEventListener('keydown',function(e){e.stopPropagation();if(e.key==='Escape'&&!e.defaultPrevented){e.preventDefault();if(files.open){files.open=false;files.querySelector('summary').focus();}else close(false);}});
   o.host.classList.add('huw-musical--score-open');renderEditor();popup.focus({preventScroll:true});return true;
  }
  return {open:open,close:close,isOpen:function(){return !!popup;},dispose:function(){close(true);}};

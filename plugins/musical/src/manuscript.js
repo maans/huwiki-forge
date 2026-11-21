@@ -263,8 +263,9 @@ function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(w
   var actions=element(doc,'div','huw-script-header-actions',undefined,header);
   button(actions,L.back,function(){close();},'huw-script-secondary');
   button(actions,L.save,function(){save();},'huw-script-primary');
-  var common=element(doc,'section','huw-script-common',undefined,popup);
-  var styleLabel=element(doc,'strong','',L.style,common);
+  var subtitleOptions=element(doc,'details','huw-script-appearance',undefined,popup);
+  element(doc,'summary','',L.style,subtitleOptions);
+  var common=element(doc,'div','huw-script-common',undefined,subtitleOptions);
   field(common,L.size+' (%)','range',Math.round(style.scale*100),function(v){style.scale=clamp(num(v,100)/100,.65,2.2);changed();preview();}).min=65;
   var controls=common.querySelectorAll('input[type=range]');controls[0].max=220;
   var distance=field(common,L.bottom+' (%)','range',style.bottom,function(v){style.bottom=clamp(num(v,5),1,30);changed();preview();});distance.min=1;distance.max=30;

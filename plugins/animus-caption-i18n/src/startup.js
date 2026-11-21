@@ -133,7 +133,7 @@ exports.startup=function(){
   }
  }
  function mount(host){
-  var toolbar=host.querySelector(".plato-options")||host.querySelector(".huw-musical-transport");
+  var toolbar=host.querySelector(".plato-options")||host.querySelector(".huw-musical-playback-options")||host.querySelector(".huw-musical-transport");
   if(!toolbar||host._huwCaptionSelect)return;
   var wrapper=document.createElement("label");wrapper.className="huw-animus-caption-language";
   wrapper.appendChild(document.createElement("span"));
