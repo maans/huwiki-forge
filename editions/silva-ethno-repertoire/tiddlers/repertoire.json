@@ -30,7 +30,7 @@
     "silba-musescore-date": "2026-08-21",
     "silba-import-state": "abc-konverteret",
     "type": "text/vnd.tiddlywiki",
-    "abc-source": "X:1\nT:Låt från Dalarne\nC:De nordiske spillemænd\nM:2/4\nL:1/8\nQ:1/4=100\nK:F#m\n[P:A] |:\"F#m\"c2 cc | \"E\"B2 B2 | \"F#m\"c2 c2 | \"C#\"=f2 ^f2 |\n\"E7\"g2 ag | \"F#m\"f2 e2 | c4 | [1 z4 :|\n[2 z2\"A\" A2 |: [P:B]\"E\"B2 cd | \"A\"e2 c2 | \"Bm\"B2 AB |\n\"C#7\"c2 B2 | \"F#m\"A2 GA | \"Bm\"B2\"C#7\" G2 | [1\"F#m\"F4 |\nz2\"A\" A2 :| [2\"F#\"F4 | z4 |\n",
+    "abc-source": "X:1\nT:Låt från Dalarne\nC:De nordiske spillemænd\nM:2/4\nL:1/8\nQ:1/4=100\nK:F#m\n[P:A] |:\"F#m\"c2 cc | \"E\"B2 B2 | \"F#m\"c2 c2 | \"C#\"=f2 ^f2 |\n\"E7\"g2 ag | \"F#m\"f2 e2 | c4 | [1 z4 :| [2 z2\"A\" A2 |:\n[P:B]\"E\"B2 cd | \"A\"e2 c2 | \"Bm\"B2 AB |\n\"C#7\"c2 B2 | \"F#m\"A2 GA | \"Bm\"B2\"C#7\" G2 | [1\"F#m\"F4 |\nz2\"A\" A2 :| [2\"F#\"F4 | z4 |\n",
     "abc-view": "full",
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\":true,\"metronome\":false,\"style\":\"folk\",\"bassSource\":\"style\",\"bass\":\"alternating\",\"chords\":\"folk\",\"drums\":\"folk\",\"melodyInstrument\":\"source\",\"melodyVolume\":100,\"bassVolume\":50,\"chordVolume\":45,\"drumVolume\":40,\"droneEnabled\":false,\"variation\":20}",
