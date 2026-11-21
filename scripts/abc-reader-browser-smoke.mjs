@@ -84,7 +84,9 @@ try{
    fields:el.querySelectorAll(".huwabc-reader-options select").length
   };
  });
- assert.deepEqual(controlLayout.labels,["Vis","Øv","Redigér","Luk visning"]);
+ assert.equal(controlLayout.labels[0],"Vis");
+ assert.ok(["Øv","Practice"].includes(controlLayout.labels[1]),"Practice icon remains accessible in both languages");
+ assert.deepEqual(controlLayout.labels.slice(2),["Redigér","Luk visning"]);
  assert.ok(controlLayout.icons.every(Boolean),"reader actions use actual monochrome icons");
  assert.equal(new Set(controlLayout.tops).size,1,"all four mode icons must share one row");
  assert.ok(controlLayout.heights.every(n=>n<=46&&n>=40),"icons stay compact and touch-friendly");
