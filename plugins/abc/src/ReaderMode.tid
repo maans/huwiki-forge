@@ -280,3 +280,9 @@ tags: $:/tags/Stylesheet
   max-height:43dvh!important
  }
 }
+
+/* Page-count choices belong to Nodepult, never the everyday Normal reader.
+   Keep editor-only layout controls available for notation editing. */
+.huwabc-page-shell:not(.huwabc-page-is-desk):not(.huwabc-page-editor) > .huwabc-page-toolbar > .huwabc-page-choice:first-child{
+ display:none!important;
+}

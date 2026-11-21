@@ -90,9 +90,9 @@ test("Advanced mode only lasts in the current reader and does not write original
  assert.equal(reader._manualMode,"full");
  assert.equal(reader._scoreView.view,"full");
  assert.equal(reader.host.children.at(-1).children.at(-1).textContent,"Normal visning");
+ assert.equal(reader.host.children.at(-1).children.at(-1).attributes["aria-label"],"Skift til normal visning");
  reader.host.children.at(-1).children.at(-1).click();
  assert.equal(reader._scoreView.view,"minimal");
- assert.equal(reader.host.children.at(-1).children.at(-1).attributes["aria-label"],"Skift til avanceret visning");
  assert.equal(writes.length,0,"changing the view must not create or edit a tiddler");
  assert.equal(tiddlers["A · Old import"].fields["abc-view"],"full");
 });
@@ -101,6 +101,8 @@ test("English interface uses Advanced view rather than Normal view",()=>{
  const {reader}=fixture("en");
  reader.execute();reader.drawViewToggle();
  assert.equal(reader.host.children.at(-1).children.at(-1).textContent,"Advanced view");
+ reader.host.children.at(-1).children.at(-1).click();
+ assert.equal(reader.host.children.at(-1).children.at(-1).textContent,"Normal view");
 });
 
 test("Explicit full embedded nodebooks stay in full notation mode",()=>{
@@ -112,4 +114,11 @@ test("Explicit full embedded nodebooks stay in full notation mode",()=>{
  assert.equal(reader._scoreView.minimal,false);
  assert.ok(widgetCode.includes("view:this._manualMode||'minimal'"));
  assert.ok(!widgetCode.includes("new $tw.Tiddler(current,{'abc-view':next})"));
+});
+
+test("Page-count picker is reserved for Nodepult, with the editor unaffected",async()=>{
+ const source=await readFile(path.join(root,"plugins/abc/src/ReaderMode.tid"),"utf8");
+ assert.ok(source.includes(".huwabc-page-shell:not(.huwabc-page-is-desk):not(.huwabc-page-editor)"));
+ assert.ok(source.includes(".huwabc-page-choice:first-child"));
+ assert.equal(packed["$:/plugins/huwiki/abc/ReaderMode"].text,source.slice(source.indexOf("\n\n")+2));
 });

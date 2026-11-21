@@ -3,12 +3,12 @@
   "name": "ABC Musik",
   "title": "$:/plugins/huwiki/abc",
   "stability": "experimental",
-  "description": "ABC Musik – Normal er standardvisning med noder, afspilning og bladring; Avanceret har PDF, tonearter og værktøjer",
+  "description": "ABC Musik – Normal visning som standard, Avanceret som tilvalg, sidetal kun i Nodepult",
   "plugin-type": "plugin",
   "license": "MIT",
   "type": "application/json",
-  "version": "0.3.39-test.9",
+  "version": "0.3.39-test.10",
   "author": "HUWiki",
   "revision": "8",
-  "modified": "20261121025500000"
+  "modified": "20261121031000000"
 }
