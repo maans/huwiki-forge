@@ -27,6 +27,16 @@ test('Turn Around stays editable after touch, mouse, backward seeks and playback
  await page.goto('http://127.0.0.1:'+server.address().port+'/demo/?edition=turn-around&lang=da');
  const wiki=page.frameLocator('#wiki');
  await wiki.locator('.plato-player').first().waitFor();
+ // Recorded takes are detached media elements. Observe the native play calls
+ // so a moving picture with a silent, failed soundtrack cannot pass.
+ await wiki.locator('.plato-player').first().evaluate(()=>{
+  const play=HTMLMediaElement.prototype.play;
+  window.testRecordings=new Set();
+  HTMLMediaElement.prototype.play=function(){
+   if(this instanceof HTMLAudioElement)window.testRecordings.add(this);
+   return play.call(this);
+  };
+ });
  await wiki.locator('.plato-home .plato-native-link a').click();
  const editor=wiki.locator('.plato-native-studio.huw-musical'),range=editor.locator('.huw-musical-range');
  const play=editor.locator('.huw-musical-play'),stop=editor.locator('.huw-musical-stop');
@@ -48,6 +58,10 @@ test('Turn Around stays editable after touch, mouse, backward seeks and playback
    const frame=document.querySelector('#wiki').contentDocument;
    return Number(frame.querySelector('.huw-musical-range').value)>start+.4;
   },start,{timeout:5000});
+  await page.waitForFunction(()=>{
+   const media=document.querySelector('#wiki').contentWindow.testRecordings;
+   return [...media].some(a=>!a.paused&&!a.muted&&!a.error&&a.readyState>=2&&a.currentTime>.1);
+  },null,{timeout:5000});
   await stop.click({timeout:5000});
   assert.equal(Number(await range.inputValue()),0);
   assert.equal(await editor.getAttribute('data-playing'),'false');
