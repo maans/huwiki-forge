@@ -70,8 +70,8 @@ for(const song of ready){
  // Keep the following B repeat on its own line. This changes engraving only:
  // repeated playback is corrected in the shared ABC repeat-plan module.
  if(name==='laat-fraan-dalarna-cbb.mscz'){
-  const before='[1 z4 :|\\n[2 z2"A" A2 |: [P:B]';
-  const after='[1 z4 :| [2 z2"A" A2 |:\\n[P:B]';
+  const before='[1 z4 :|\n[2 z2"A" A2 |: [P:B]';
+  const after='[1 z4 :| [2 z2"A" A2 |:\n[P:B]';
   if(!rendered.abc.includes(before))throw Error('Dalarne endings changed in source; review volta layout before publishing');
   rendered.abc=rendered.abc.replace(before,after);
  }
