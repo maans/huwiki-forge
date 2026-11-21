@@ -572,6 +572,12 @@ function attach(o){
    (L.overlap||"Overlap")+": "+(overlaps.length?overlaps.join(", "):"—"),inspector);
  }
  function recordedFx(c){return c&&(c.kind==="sfx"||c.kind==="effects");}
+ function clipLevel(ends,start,duration){
+  var level=ends.findIndex(function(end){return end<=start;});
+  if(level<0)level=ends.length;
+  ends[level]=start+duration;
+  return level;
+ }
  function fxName(type){
   var preset=Sfx.PRESETS[type];return preset?(da?preset[1]:ui(preset[2])):String(type||"FX");
  }
@@ -921,8 +927,8 @@ function attach(o){
     var ends=[],minimumSpan=21*axis/Math.max(1,lane.clientWidth||800),allFx=keys(t).concat(m.audioClips.filter(recordedFx));
     function fxStart(c){return recordedFx(c)?c.start:c.t;}
     allFx.sort(function(a,b){return fxStart(a)-fxStart(b);}).forEach(function(k){
-     var start=fxStart(k),level=ends.findIndex(function(end){return end<=start;});if(level<0)level=ends.length;
-     ends[level]=start+Math.max(minimumSpan,num(k.duration,1));fxBlock(lane,t,k,keys(t).indexOf(k),axis,level);
+     var start=fxStart(k),level=clipLevel(ends,start,Math.max(minimumSpan,num(k.duration,1)));
+     fxBlock(lane,t,k,keys(t).indexOf(k),axis,level);
     });
     if(ends.length>1)lane.style.minHeight=(ends.length*27+5)+"px";
    }else if(t.kind==="object-browser"){
@@ -962,8 +968,11 @@ function attach(o){
      b.ondblclick=function(ev){ev.preventDefault();ev.stopPropagation();if(o.onEditCaptions)o.onEditCaptions({partId:cue.partId,sceneTitle:cue.sceneTitle,time:cue.start});};
     });
    }else if(t.kind==='audio-lane'){
-    m.audioClips.forEach(function(c){if(recordedFx(c))return;
+    var recordingEnds=[],minimumRecording=18*axis/Math.max(1,lane.clientWidth||800);
+    m.audioClips.filter(function(c){return !recordedFx(c);}).sort(function(a,b){return a.start-b.start;}).forEach(function(c){
      var b=el(doc,'button','huw-musical-recorded-clip',(c.role?displayName(c.role)+': ':'')+displayName(c.name||c.text||(da?'Lyd':ui('Audio'))),lane);b.type='button';
+     var level=clipLevel(recordingEnds,c.start,Math.max(minimumRecording,c.duration));
+     b.style.top=(8+32*level)+'px';
      b.style.left=(100*c.start/axis)+'%';b.style.width=(100*Math.max(.1,c.duration)/axis)+'%';b.classList.toggle('is-muted',!!c.muted);b.setAttribute('aria-pressed',String(choice.id==='audio:'+c.id));
      b.title=displayName(c.name||(da?'Lyd':ui('Audio')))+' · '+round(c.start)+'–'+round(c.start+c.duration)+'s';
      b.onclick=function(ev){ev.stopPropagation();var now=Date.now(),last=lastClipTap,isDouble=last&&last.id==='audio:'+c.id&&now-last.time<480&&Math.abs(ev.clientX-last.x)<30&&Math.abs(ev.clientY-last.y)<30;
@@ -981,6 +990,7 @@ function attach(o){
       function up(){finish(false);}function abort(){finish(true);}b.addEventListener('pointermove',move);b.addEventListener('pointerup',up);b.addEventListener('pointercancel',abort);
      };
     });
+    if(recordingEnds.length>1)lane.style.minHeight=(recordingEnds.length*32+11)+'px';
    }else if(t.kind==="scene-range"){
     var begin=0;
     (film.scenes||[]).forEach(function(act){

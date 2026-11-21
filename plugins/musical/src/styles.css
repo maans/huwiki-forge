@@ -763,4 +763,4 @@
 .huw-musical-fx-trim{position:absolute;inset:0 0 0 auto;width:8px;background:linear-gradient(90deg,transparent,#27838055);border-right:2px solid #278380;cursor:ew-resize}
 .huw-musical-fx-picker summary{cursor:pointer}.huw-musical-fx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:4px;margin:.4em 0;min-width:min(270px,100%)}
 .huw-musical-fx-grid button{display:flex;align-items:center;gap:.35em;padding:.35em;border:1px solid #cadcda;border-radius:4px}
-.huw-musical--workspace .huw-musical-track[data-track-id="sfx"]{height:auto}
+.huw-musical--workspace .huw-musical-track:is([data-track-id="sfx"],[data-track-id="audio-lane"]){height:auto}
