@@ -397,6 +397,7 @@ ABCWidget.prototype.draw=function(){
     if(self.getAttribute("preview")==="yes"||self._editorHandoff)return false;
     // Capture the page anchor before releasing the viewer and its controller.
     var requested=Object.assign({title:self.title,focus:focus,
+     fromNodebog:!!(self.host&&self.host.closest('.huwrep-book')),
      originState:self._viewState&&self._viewState.key},self._pager?self._pager.anchor():{});
     self._editorHandoff=true;
     self.wiki.addTiddler(new $tw.Tiddler({title:"$:/temp/huwiki/abc/edit-focus",text:JSON.stringify(requested)}));
