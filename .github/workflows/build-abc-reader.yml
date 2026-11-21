@@ -6,6 +6,7 @@ on:
       - 'plugins/abc/src/**'
       - 'plugins/abc/plugin-info.json'
       - 'tests/abc-reader-mode.test.mjs'
+      - 'tests/abc-ipad-lite-editor.test.mjs'
       - 'tests/abc-repeat-volta.test.mjs'
       - 'tests/abc-reader-fallback.test.mjs'
       - 'tests/abc-mini-mixer-title.test.mjs'

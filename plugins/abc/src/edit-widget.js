@@ -33,11 +33,73 @@ var KEY_OPTIONS=[['C','C-dur'],['G','G-dur'],['D','D-dur'],['A','A-dur'],['E','E
 var METERS=[['4/4','4/4'],['3/4','3/4'],['2/4','2/4'],['6/8','6/8'],['9/8','9/8'],['12/8','12/8'],['5/4','5/4'],['7/8','7/8'],['C','C (4/4)'],['C|','Alla breve']];
 var LENS=[['1/8','Ottendedel'],['1/4','Fjerdedel'],['1/16','Sekstendedel'],['1/2','Halvnode']];
 var LAYOUTS=[['standard','Klassisk'],['sangark','Sangark'],['jazz','Jazz lead sheet'],['klaver','Klaver'],['rytme','Rytme og trommer'],['kompakt','Kompakt']];
+// On iPad, editing FROM Nodebog first opens a genuine native ABC draft
+// without allocating the heavy SVG editor, piano, arranger and inspector.
+function useCompactNodebogEditor(widget){
+ var win=widget.document&&widget.document.defaultView,nav=win&&win.navigator;
+ var ua=String(nav&&nav.userAgent||'');
+ var ipad=!!(nav&&(/iPad|iPhone|iPod/i.test(ua)||
+  ((/Macintosh/.test(ua)||nav.platform==='MacIntel')&&Number(nav.maxTouchPoints)>1)));
+ if(!ipad)return false;
+ var tid=widget.wiki.getTiddler(widget.title);
+ if(!tid||!tid.fields['draft.of'])return false;
+ try{
+  var req=JSON.parse(widget.wiki.getTiddlerText('$:/temp/huwiki/abc/edit-focus','null'));
+  return !!(req&&req.fromNodebog===true&&req.title===tid.fields['draft.of']);
+ }catch(_ignore){return false;}
+}
 function Editor(p,o){this.initialise(p,o);}
 Editor.prototype=new Widget();
 Editor.prototype.execute=function(){this.title=this.getAttribute('tiddler',this.getVariable('currentTiddler'));};
-Editor.prototype.onDestroy=function(){if(this._cancelPreview){this._cancelPreview();this._cancelPreview=null;}if(this._contextPopup){this._contextPopup.destroy();this._contextPopup=null;}if(this._pager)this._pager.destroy();if(this._viewState)this._viewState.destroy();if(this._closeExpanded)this._closeExpanded();if(this._localeObserver){this._localeObserver.destroy();this._localeObserver=null;}if(this._unbindShortcut){this._unbindShortcut();this._unbindShortcut=null;}};
-Editor.prototype.render=function(parent,next){this.parentDomNode=parent;this.computeAttributes();this.execute();var h=E('div','huwabc-edit-workshop');parent.insertBefore(h,next);this.domNodes.push(h);this.host=h;this.start();this._localeObserver=I18n.observe(h,this.wiki);};
+Editor.prototype.onDestroy=function(){if(this._liteDetach){this._liteDetach();this._liteDetach=null;}if(this._cancelPreview){this._cancelPreview();this._cancelPreview=null;}if(this._contextPopup){this._contextPopup.destroy();this._contextPopup=null;}if(this._pager)this._pager.destroy();if(this._viewState)this._viewState.destroy();if(this._closeExpanded)this._closeExpanded();if(this._localeObserver){this._localeObserver.destroy();this._localeObserver=null;}if(this._unbindShortcut){this._unbindShortcut();this._unbindShortcut=null;}};
+Editor.prototype.render=function(parent,next){this.parentDomNode=parent;this.computeAttributes();this.execute();var h=E('div','huwabc-edit-workshop');parent.insertBefore(h,next);this.domNodes.push(h);this.host=h;this._liteMode=useCompactNodebogEditor(this);if(this._liteMode)this.startLite();else this.start();this._localeObserver=I18n.observe(h,this.wiki);};
+Editor.prototype.startLite=function(){
+ var self=this,tid=this.wiki.getTiddler(this.title),host=this.host;
+ if(!tid){host.textContent='Redigeringskladden blev ikke fundet.';return;}
+ var danish=I18n.language(this.wiki)==='da',tr=function(da,en){return danish?da:en;};
+ var source=String(tools.getSource(this.wiki,this.title)||'').replace(/\r\n?/g,'\n');
+ host.textContent='';host.classList.add('huwabc-edit-lite');
+ var heading=E('h3','huwabc-edit-lite-title',tr('Redigér nodeark','Edit score'));
+ var info=E('p','huwabc-edit-lite-note',tr(
+  'Kompakt redigering på iPad. Ret ABC-noder, akkorder og tekst her. Gem eller annullér med knapperne ovenfor. Det grafiske værksted er ikke indlæst.',
+  'Compact iPad editing. Edit ABC notes, chords and lyrics here. Save or cancel with the controls above. The graphical workshop has not been loaded.'));
+ var field=E('label','huwabc-edit-lite-field');
+ field.appendChild(E('span','',tr('ABC-kilde','ABC source')));
+ var textarea=E('textarea','huwabc-code huwabc-edit-lite-code');
+ textarea.value=source;textarea.rows=18;textarea.spellcheck=false;
+ textarea.setAttribute('aria-label','ABC musik: toner, sangtekst og akkorder');
+ field.appendChild(textarea);
+ var status=E('p','huwabc-edit-lite-status',tr('Originalen ændres først, når du vælger Gem.','The original changes only when you choose Save.'));
+ status.setAttribute('role','status');status.setAttribute('aria-live','polite');
+ var actions=E('div','huwabc-edit-lite-actions');
+ var graphic=B(tr('Åbn grafisk nodeværksted','Open graphical score workshop'),function(){
+  // Upgrade this SAME draft only when explicitly requested.
+  if(self._liteDetach){self._liteDetach();self._liteDetach=null;}
+  self._liteMode=false;host.classList.remove('huwabc-edit-lite');self.start();
+ },'huwabc-edit-lite-graphic');
+ actions.appendChild(graphic);
+ host.append(heading,info,field,status,actions);
+ function writeDraft(){
+  if(!host.isConnected)return;
+  var next=textarea.value.replace(/\r\n?/g,'\n');
+  if(next===source)return;
+  var old=self.wiki.getTiddler(self.title);
+  if(!old)return;
+  source=next;
+  self.wiki.addTiddler(new $tw.Tiddler(old,{
+   'abc-source':source,'abc-key':tools.header(source,'K'),
+   'abc-meter':tools.header(source,'M'),'abc-rhythm':tools.header(source,'R')
+  }));
+  status.textContent=tr('Kladden er opdateret. Vælg Gem for at beholde rettelserne.',
+   'Draft updated. Choose Save to keep your changes.');
+ }
+ textarea.addEventListener('input',writeDraft);
+ this._liteDetach=function(){textarea.removeEventListener('input',writeDraft);};
+ try{
+  var req=JSON.parse(this.wiki.getTiddlerText('$:/temp/huwiki/abc/edit-focus','null'));
+  if(req&&req.title===tid.fields['draft.of'])this.wiki.deleteTiddler('$:/temp/huwiki/abc/edit-focus');
+ }catch(_ignore){}
+};
 Editor.prototype.start=function(){
  var self=this,tid=this.wiki.getTiddler(this.title),source=tools.getSource(this.wiki,this.title).replace(/\r\n?/g,'\n'),abc=null,timer=null,map=null,selected=null,anchor=null,history=[],future=[],drag=null,entryMode=false,entryLength=.25,lastEntryMidi=60,entryVerse=0,contextPopup=null,metaItems=[],metadata=null,metaKey=null,metaSource='';
  if(!tid){this.host.textContent='Redigeringskladden blev ikke fundet.';return;}
@@ -379,5 +441,6 @@ Editor.prototype.start=function(){
  tools.load().then(function(lib){return jazzFont.ready(document).then(function(){return lib;});}).then(function(lib){if(!host.isConnected)return;abc=lib;transposeControls.sync();renderPreview();}).catch(function(ex){status.textContent='ABCJS kunne ikke indlæses: '+ex.message;});
 };
 Editor.prototype.refresh=function(changes){var attr=this.computeAttributes();if(attr.tiddler){this.refreshSelf();return true;}return false;};
+Editor.useCompactNodebogEditor=useCompactNodebogEditor;
 exports['huwiki-abc-edit']=Editor;
 })();
