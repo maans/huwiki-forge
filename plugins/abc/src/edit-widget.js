@@ -441,6 +441,6 @@ Editor.prototype.start=function(){
  tools.load().then(function(lib){return jazzFont.ready(document).then(function(){return lib;});}).then(function(lib){if(!host.isConnected)return;abc=lib;transposeControls.sync();renderPreview();}).catch(function(ex){status.textContent='ABCJS kunne ikke indlæses: '+ex.message;});
 };
 Editor.prototype.refresh=function(changes){var attr=this.computeAttributes();if(attr.tiddler){this.refreshSelf();return true;}return false;};
-exports.useCompactNodebogEditor=useCompactNodebogEditor;
+Editor.useCompactNodebogEditor=useCompactNodebogEditor;
 exports['huwiki-abc-edit']=Editor;
 })();
