@@ -258,6 +258,40 @@ try{
    assert.equal(expected.counts.editorDisposals,3,"Every draft editor is disposed after save or cancel");
    assert.deepEqual(errors,[],"No browser/runtime errors occurred");
    await page.screenshot({path:path.join(out,"restored-reader.png")});
+
+   // The book handoff above has its own resource cleanup. Standalone score
+   // tiddlers use a different path: open the same source directly from StoryList
+   // and ensure Advanced → Redigér noder frees its SVG/audio synchronously.
+   await page.evaluate(title=>{
+    const story="$:/StoryList",current=$tw.wiki.getTiddler(story);
+    $tw.wiki.addTiddler(new $tw.Tiddler(current,{title:story,list:[title]}));
+   },sourceTitle);
+   const direct=page.locator(".huwabc-score.huwabc-standalone");
+   await direct.first().waitFor({state:"visible"});
+   await activate(direct.first().locator(".huwabc-view-toggle"));
+   const editScoreButton=direct.first().locator(".huwabc-actions .huwabc-primary");
+   await editScoreButton.waitFor({state:"visible"});
+   const directBefore=await assertSettled(page,"Standalone advanced source reader");
+   assert.equal(directBefore.scores,1,"Only the standalone source score is mounted");
+   await activate(editScoreButton);
+   const directDraft=page.locator(".huwabc-edit-frame");
+   await directDraft.waitFor({state:"visible"});
+   await directDraft.locator(".huwabc-edit-preview svg").first().waitFor({state:"visible"});
+   const opened=await assertSettled(page,"Standalone native editor");
+   assert.equal(opened.scores,0,"No old standalone SVG widget remains while editing");
+   assert.equal(opened.players,0,"Standalone audio is disposed before the draft is mounted");
+   assert.equal(opened.connectedEditors,1,"One visible editor is created");
+   const cancelHint=await page.evaluate(()=>$tw.wiki.getTiddlerText("$:/language/Buttons/Cancel/Hint"));
+   await activateDraftControl(directDraft.getByRole("button",{name:cancelHint,exact:true}));
+   await directDraft.waitFor({state:"detached"});
+   await direct.first().waitFor({state:"visible"});
+   const directRestored=await assertSettled(page,"Standalone return after cancel");
+   assert.equal(directRestored.scores,1,"Cancel restores only one source viewer");
+   assert.equal(directRestored.editors,0,"No draft editor remains after cancel");
+   assert.ok(directRestored.players<=1,"No duplicate audio controller after returning");
+   assert.deepEqual(errors,[],"No native WebKit or Chromium runtime errors");
+   step("Advanced standalone score → native draft → cancel: one score and no leaked player");
+   await page.screenshot({path:path.join(out,"restored-standalone-score.png")});
    allResults.push({scenario:scenario.name,success:true,steps,final:expected,dialogs,errors});
   }catch(error){
    let state;

@@ -93,6 +93,16 @@ function inputField(label,value,opts,callback){
   holder.appendChild(box);
   return {holder:holder,control:box};
 }
+// Avoid a second full set of SVGs and a second audio engine during the
+// native draft handoff. Repertoire has its own stateful handoff and must keep it.
+function prepareEditorHandoff(widget){
+  if(!widget||!widget._standaloneView||!widget.host||!widget.host.isConnected||
+     widget.host.closest('.huwrep-book'))return false;
+  widget.onDestroy();
+  widget.host.hidden=true;
+  widget.host.textContent='';
+  return true;
+}
 function ABCWidget(parseTreeNode,options){this.initialise(parseTreeNode,options);}
 ABCWidget.prototype=new Widget();
 ABCWidget.prototype.execute=function(){
@@ -132,7 +142,7 @@ ABCWidget.prototype.render=function(parent,nextSibling){
   var host=el("section","huwabc-score"+(this._scoreView.minimal?" huwabc-minimal":"")+(this._standaloneView?" huwabc-standalone":" huwabc-example")+(this.wiki.getTiddler(this.title)&&this.wiki.getTiddler(this.title).fields["abc-font"]==="petaluma"?" huwabc-jazz-font":""));
   host.setAttribute("data-huwabc-title",this.title);
   parent.insertBefore(host,nextSibling);this.domNodes.push(host);
-  this.host=host;this.editing=false;this.draft=null;this.chordStyle=null;this._mounted=true;this._audioController=null;this._unbindShortcut=null;this._renderToken=0;
+  this.host=host;this.editing=false;this.draft=null;this.chordStyle=null;this._mounted=true;this._audioController=null;this._unbindShortcut=null;this._renderToken=0;this._editorHandoff=false;
   this._viewState=ViewState.mount(this,host);
   this.draw();
   this._viewState.bind();
@@ -384,8 +394,15 @@ ABCWidget.prototype.draw=function(){
   // TiddlyWiki's normal draft editor remains the only source of editable data.
   // A short-lived temp tiddler chooses where the editor should put focus.
   function openEditor(focus){
-    if(self.getAttribute("preview")==="yes")return false;
-    self.wiki.addTiddler(new $tw.Tiddler({title:"$:/temp/huwiki/abc/edit-focus",text:JSON.stringify(Object.assign({title:self.title,focus:focus,originState:self._viewState&&self._viewState.key},self._pager?self._pager.anchor():{}))}));
+    if(self.getAttribute("preview")==="yes"||self._editorHandoff)return false;
+    // Capture the page anchor before releasing the viewer and its controller.
+    var requested=Object.assign({title:self.title,focus:focus,
+     originState:self._viewState&&self._viewState.key},self._pager?self._pager.anchor():{});
+    self._editorHandoff=true;
+    self.wiki.addTiddler(new $tw.Tiddler({title:"$:/temp/huwiki/abc/edit-focus",text:JSON.stringify(requested)}));
+    // Standalone source scores otherwise overlap the heavy native editor until
+    // TiddlyWiki's next DOM refresh. Repertoire owns its separate handoff.
+    prepareEditorHandoff(self);
     self.dispatchEvent({type:"tm-edit-tiddler",param:self.title,tiddlerTitle:self.title});
     return true;
   }
@@ -693,4 +710,5 @@ ABCWidget.prototype.refresh=function(changes){
   return !!(plan.score||plan.audio||plan.live||plan.controls||plan.pages);
 };
 exports["huwiki-abc"]=ABCWidget;
+exports.prepareEditorHandoff=prepareEditorHandoff;
 })();
