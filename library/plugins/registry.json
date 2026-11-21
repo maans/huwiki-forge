@@ -7,7 +7,7 @@
         "title": "$:/plugins/huwiki/abc",
         "type": "application/json",
         "name": "ABC Musik",
-        "description": "ABC Musik – Normal er den tidligere Minimal-visning med kun noder og afspilning; Avanceret er frivillig; mixer åbnes ved behov",
+        "description": "ABC Musik – Normal er standardvisning med noder, afspilning og bladring; Avanceret har PDF, tonearter og værktøjer",
         "author": "HUWiki",
         "version": "0.3.39-test.9",
         "plugin-type": "plugin",
