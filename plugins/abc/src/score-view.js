@@ -44,7 +44,7 @@ exports.resolve=function(attributes,fields){
  var explicit=present(a.view)?String(a.view).trim().toLowerCase():'auto';
  if(['auto','full','minimal','notes','follow','chords'].indexOf(explicit)<0)throw new Error('Visning skal være auto, full, minimal, notes, follow eller chords.');
  var embedded=flag(a.embedded,false,'embedded');
- var saved=['full','minimal','notes'].indexOf(f['abc-view'])>=0?f['abc-view']:'minimal';
+ var saved=['full','minimal','notes','chords'].indexOf(f['abc-view'])>=0?f['abc-view']:'minimal';
  var mode=explicit==='auto'?(range||embedded?'minimal':saved):explicit;
  if(range&&mode==='full')throw new Error('Et taktudsnit bruger minimal visning. Vælg view="minimal".');
  var audio=(mode!=='notes'&&String(a.audio||'').trim().toLowerCase()==='all')?true:flag(a.audio,mode!=='notes'&&!(saved==='notes'&&explicit!=='full'),'audio');

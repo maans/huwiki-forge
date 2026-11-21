@@ -59,7 +59,7 @@ try{
  await page.locator(".silba-home").evaluate(node=>node.style.removeProperty("width"));
 
  // The three statistic cards must navigate to real, filtered TiddlyWiki lists.
- for(const [i,title,expected] of [[0,"SilbaÄtno – Nodeark",17],[1,"SilbaÄtno – Hovedliste",14],[2,"SilbaÄtno – Bruttoliste",21]]){
+ for(const [i,title,expected] of [[0,"SilbaÄtno – Nodeark",18],[1,"SilbaÄtno – Hovedliste",14],[2,"SilbaÄtno – Bruttoliste",21]]){
   await page.locator(".silba-metrics .silba-metric").nth(i).click();
   const list=page.locator('.tc-tiddler-frame[data-tiddler-title="'+title+'"] .silba-generated-list .silba-track-list li');
   await list.first().waitFor();
@@ -70,9 +70,30 @@ try{
  assert.equal(await pendingEntry.count(),1,"The full gross list must include an editable placeholder for Oh verden");
  await pendingEntry.locator("a.silba-track-link").click();
  await page.locator('.tc-tiddler-frame[data-tiddler-title="SilbaÄtno · Oh verden"]').waitFor();
- const visibleChords=page.locator('.tc-tiddler-frame[data-tiddler-title="SilbaÄtno · Oh verden"] .huwrep-chord-line');
- assert.equal(await visibleChords.count(),2,"Oh verden should render A and B chord sections");
- assert.ok((await visibleChords.nth(1).innerText()).includes("2. | E7 | Am | E7 | Am"));
+ // Oh verden must render in ABC Musik with its chord-only player, not as a pre/code section.
+ const ohScore=page.locator('.huwabc-standalone[data-huwabc-title="SilbaÄtno · Oh verden"]').first();
+ await ohScore.waitFor();
+ await ohScore.locator(".huwabc-follow-chords-only").first().waitFor({state:"attached"});
+ assert.equal(await ohScore.locator(".huwrep-chord-line").count(),0,"No HTML chord substitute");
+ const chart=await page.evaluate(()=>{
+  const f=$tw.wiki.getTiddler("SilbaÄtno · Oh verden").fields;
+  const ABC=$tw.modules.execute("$:/plugins/huwiki/abc/vendor/abcjs.js");
+  const data=$tw.modules.execute("$:/plugins/huwiki/abc/chord-chart.js").extract(ABC,f["abc-source"]);
+  const Acc=$tw.modules.execute("$:/plugins/huwiki/abc/accompaniment.js");
+  const tune=ABC.parseOnly(f["abc-source"])[0];
+  const arr=Acc.prepare(ABC,tune,f["abc-source"],JSON.parse(f["abc-accompaniment"]),false,f);
+  return {chords:data.chords.map(c=>c.name),measures:data.measures.length,
+    parts:arr.parts.map(p=>({name:p.name,notes:p.notes.length})),
+    tempo:f["abc-source"].match(/^Q:(.*)$/m)?.[1],
+    style:JSON.parse(f["abc-accompaniment"]).style};
+ });
+ assert.deepEqual(chart.chords,["E7","A7","Dm","E7","E7","Am","E7","Dm","E7","Dm","E7","Am"]);
+ assert.equal(chart.measures,8);
+ assert.equal(chart.tempo,"1/4=66");
+ assert.equal(chart.style,"balkan-44");
+ for(const name of ["Bas","Akkorder","Slagtøj"])
+  assert.ok(chart.parts.some(p=>p.name===name&&p.notes>0),
+   "4/4 Balkan needs playable "+name+": "+JSON.stringify(chart.parts));
 
 
  // Use the real ABCJS parser, not a mocked score, to confirm both A/B repeats

@@ -1,15 +1,22 @@
 [
   {
     "title": "SilbaÄtno · Oh verden",
-    "text": "''Becifringsark · 4/4 · foreløbig arbejdsudgave''\n\n!! A\n<pre class=\"huwrep-chord-line\">||: E7 | A7 | Dm | E7 :||</pre>\n\n!! B\n<pre class=\"huwrep-chord-line\">||: E7  Am | E7  Dm | E7  Dm |\n  1. | E7 | Am | E7 | Am :||\n  2. | E7 | Am | E7 | Am  ||</pre>\n\n''OBS:'' Begge volter er foreløbigt sat til E7–Am–E7–Am. Ret akkorderne, når de to afslutninger er kontrolleret. Der mangler fortsat en verificeret melodikilde.\n",
-    "tags": "SilbaÄtno SilbaÄtnoTrack RepertoireMelodi",
+    "text": "Becifringerne er endnu ikke verificeret.",
+    "tags": "ABC SilbaÄtno SilbaÄtnoTrack RepertoireMelodi",
     "silba-order": "05",
     "silba-section": "hovedliste",
     "silba-musescore-file": "",
     "silba-musescore-date": "",
-    "silba-import-state": "mangler-kilde",
+    "silba-import-state": "abc-becifringsark-ikke-verificeret",
     "repertoire-sheet-format": "chords",
-    "type": "text/vnd.tiddlywiki"
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Oh verden\nR:Balkan\nM:4/4\nL:1/4\nQ:1/4=66\nK:Am\nP:A\n|: \"E7\"z4 | \"A7\"z4 | \"Dm\"z4 | \"E7\"z4 :|\nP:B\n|: \"E7\"z2 \"Am\"z2 | \"E7\"z2 \"Dm\"z2 | \"E7\"z2 \"Dm\"z2 | \"E7\"z2 \"Am\"z2 :|\n",
+    "abc-view": "chords",
+    "abc-key": "Am",
+    "abc-meter": "4/4",
+    "abc-rhythm": "Balkan 4/4",
+    "abc-chords-style": "jazz",
+    "abc-accompaniment": "{\"enabled\":true,\"style\":\"balkan-44\",\"bassSource\":\"style\",\"bass\":\"balkan\",\"chords\":\"balkan\",\"drums\":\"balkan\",\"bassInstrument\":32,\"chordInstrument\":21,\"melodyVolume\":0,\"bassVolume\":58,\"chordVolume\":51,\"drumVolume\":28,\"variation\":10,\"metronome\":false,\"form\":\"AB\"}"
   },
   {
     "title": "SilbaÄtno · Hjul og Stejle nr. 6 – Bulgarsk Horo (G)",

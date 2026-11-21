@@ -438,7 +438,7 @@ Book.prototype.draw=function(){
    var Score=require("$:/plugins/huwiki/abc/score-widget.js")["huwiki-abc"];
    var tree={type:"huwiki-abc",attributes:{
     tiddler:{type:"string",value:source.fields.title},
-    view:{type:"string",value:"full"},
+    view:{type:"string",value:f["repertoire-sheet-format"]==="chords"?"chords":"full"},
     embedded:{type:"string",value:"yes"},
     audio:{type:"string",value:"all"},
     "show-title":{type:"string",value:"no"}}};
@@ -483,15 +483,6 @@ Book.prototype.draw=function(){
    scoreHost.appendChild(el(doc,"p","huwrep-muted","Noderne kunne ikke vises: "+error.message));
    stage.appendChild(btn(doc,"Åbn originalen",function(){self.navigate(source.fields.title);}));
   }
- }else if(f&&f["repertoire-sheet-format"]==="chords"){
-  // An editable WikiText chord chart belongs in Nodebog without fake melody notes.
-  var chordFrame=el(doc,"div","huwrep-chord-frame");
-  var chordSheet=el(doc,"article","huwrep-chord-sheet");
-  chordSheet.setAttribute("aria-label","Becifringsark");
-  chordSheet.innerHTML=wiki.renderText("text/html","text/vnd.tiddlywiki",f.text||"");
-  chordFrame.appendChild(chordSheet);
-  chordFrame.appendChild(btn(doc,"Åbn / rediger becifringsark",function(){self.navigate(source.fields.title);}));
-  stage.appendChild(chordFrame);
  }else{
   var imageTitle=f&&f["repertoire-image"]||"";
   var image=wiki.getTiddler(imageTitle)||source;

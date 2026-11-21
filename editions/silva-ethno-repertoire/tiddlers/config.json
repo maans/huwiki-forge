@@ -30,7 +30,7 @@
   {
     "title": "$:/silbaatno/repertoire/list-row",
     "type": "text/vnd.tiddlywiki",
-    "text": "<li class=\"silba-track-row\">\n  <span class=\"silba-index\"><$view field=\"silba-order\"/></span>\n  <$link to=<<currentTiddler>> class=\"silba-track-link\"><$text text={{{ [<currentTiddler>removeprefix[SilbaÄtno · ]] }}}/></$link>\n  <$list filter=\"[<currentTiddler>has[abc-source]]\"><span class=\"silba-track-meta\">Nodeark · ABC</span></$list>\n  <$list filter=\"[<currentTiddler>has[repertoire-sheet-format]]\"><span class=\"silba-track-meta\">Becifringsark</span></$list>\n  <$list filter=\"[<currentTiddler>!has[abc-source]!has[repertoire-sheet-format]]\"><span class=\"silba-track-meta silba-track-pending\">Afventer nodeark</span></$list>\n</li>"
+    "text": "<li class=\"silba-track-row\">\n  <span class=\"silba-index\"><$view field=\"silba-order\"/></span>\n  <$link to=<<currentTiddler>> class=\"silba-track-link\"><$text text={{{ [<currentTiddler>removeprefix[SilbaÄtno · ]] }}}/></$link>\n  <$list filter=\"[<currentTiddler>has[abc-source]!has[repertoire-sheet-format]]\"><span class=\"silba-track-meta\">Nodeark · ABC</span></$list>\n  <$list filter=\"[<currentTiddler>has[repertoire-sheet-format]]\"><span class=\"silba-track-meta\">Becifringsark · ABC</span></$list>\n  <$list filter=\"[<currentTiddler>!has[abc-source]!has[repertoire-sheet-format]]\"><span class=\"silba-track-meta silba-track-pending\">Afventer nodeark</span></$list>\n</li>"
   },
   {
     "title": "SilbaÄtno – Nodeark",

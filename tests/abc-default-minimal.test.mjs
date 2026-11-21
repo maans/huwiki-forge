@@ -122,3 +122,10 @@ test("Page-count picker is reserved for Nodepult, with the editor unaffected",as
  assert.ok(source.includes(".huwabc-page-choice:first-child"));
  assert.equal(packed["$:/plugins/huwiki/abc/ReaderMode"].text,source.slice(source.indexOf("\n\n")+2));
 });
+
+test("ABC Musik resolves a saved chord-only mode with audio enabled",()=>{
+ const result=view.resolve({},{"abc-view":"chords","abc-source":"X:1\\nK:Am\\n\"E7\"z2 \"Am\"z2 |"});
+ assert.equal(result.view,"chords");
+ assert.equal(result.minimal,true);
+ assert.equal(result.audio,true);
+});

@@ -425,7 +425,9 @@ test("SilbaÄtno statistic cards open auto-generated native TiddlyWiki lists",as
  assert.equal(pending.filter(t=>t["silba-section"]==="hovedliste").length,1);
  assert.equal(pending.filter(t=>t["silba-section"]==="usikre").length,1);
  assert.equal(pending.filter(t=>t["silba-section"]==="ude").length,2);
- assert.ok(pending.every(t=>t.tags.includes("SilbaÄtnoTrack")&&!t["abc-source"]));
+ assert.ok(pending.every(t=>t.tags.includes("SilbaÄtnoTrack")));
+ assert.equal(pending.filter(t=>!!t["abc-source"]).length,1);
+ assert.equal(pending.filter(t=>!t["abc-source"]).length,3);
  for(const title of ["SilbaÄtno – Nodeark","SilbaÄtno – Hovedliste","SilbaÄtno – Bruttoliste"]){
   assert.match(home.text,new RegExp('to="'+title+'".*class="silba-metric"'));
   const page=config.find(t=>t.title===title);
@@ -458,27 +460,29 @@ test("SitePublisher uses a generated 17-title list, independently of the gross-l
 });
 
 
-test("Oh verden chart has two provisional E7-Am-E7-Am endings and Steen's accordion solo agreement",async()=>{
+test("Oh verden is a playable slow 4/4 Balkan ABC chord chart, not a WikiText code block",async()=>{
  const base=path.join(root,"editions/silva-ethno-repertoire/tiddlers");
- const pending=JSON.parse(await readFile(path.join(base,"pending.json"),"utf8"));
- const original=JSON.parse(await readFile(path.join(base,"songs.json"),"utf8"));
- const workspace=JSON.parse(await readFile(path.join(base,"repertoire-workspace.json"),"utf8"));
- const sheet=pending.find(t=>t.title==="SilbaÄtno · Oh verden");
- const source=original.find(t=>t.title===sheet?.title);
- const item=workspace.find(t=>t["repertoire-kind"]==="orchestra-item"&&t["music-title"]===sheet?.title);
- assert.ok(sheet&&source&&item);
+ const source=JSON.parse(await readFile(path.join(base,"songs.json"),"utf8")).find(t=>t.title==="SilbaÄtno · Oh verden");
+ const sheet=JSON.parse(await readFile(path.join(base,"pending.json"),"utf8")).find(t=>t.title==="SilbaÄtno · Oh verden");
+ const item=JSON.parse(await readFile(path.join(base,"repertoire-workspace.json"),"utf8"))
+  .find(t=>t["repertoire-kind"]==="orchestra-item"&&t["music-title"]===sheet?.title);
+ assert.ok(source&&sheet&&item);
+ assert.equal(source["abc-source"],sheet["abc-source"]);
  assert.equal(sheet["repertoire-sheet-format"],"chords");
- assert.ok(sheet.tags.includes("RepertoireMelodi"));
- assert.equal(sheet["abc-source"],undefined,"Do not invent melody pitches");
- assert.equal(sheet.text,source.text,"The build must preserve the editable chart");
- assert.match(sheet.text,/4\/4/);
- assert.match(sheet.text,/E7 \| A7 \| Dm \| E7/);
- assert.ok(sheet.text.includes("1. | E7 | Am | E7 | Am"));
- assert.ok(sheet.text.includes("2. | E7 | Am | E7 | Am"));
- assert.ok(sheet.text.includes("foreløbig"));
+ assert.equal(sheet["abc-view"],"chords");
+ assert.ok(sheet.tags.split(" ").includes("ABC"));
+ assert.ok(sheet["abc-source"].includes("M:4/4"));
+ assert.ok(sheet["abc-source"].includes("Q:1/4=66"));
+ assert.ok(sheet["abc-source"].includes('|: "E7"z4 | "A7"z4 | "Dm"z4 | "E7"z4 :|'));
+ assert.ok(sheet["abc-source"].includes('|: "E7"z2 "Am"z2 | "E7"z2 "Dm"z2 | "E7"z2 "Dm"z2 | "E7"z2 "Am"z2 :|'));
+ assert.ok(!sheet["abc-source"].includes("[1")&&!sheet["abc-source"].includes("[2"));
+ assert.equal(sheet.text,"Becifringerne er endnu ikke verificeret.");
+ const a=JSON.parse(sheet["abc-accompaniment"]);
+ assert.equal(a.style,"balkan-44");assert.equal(a.enabled,true);assert.equal(a.metronome,false);
  assert.equal(item["repertoire-cues"],"Steen spiller melodien solo på harmonika.");
- assert.ok(!sheet.text.includes("Solo harmonika"),"The performance agreement is not a music section");
  const book=await readFile(path.join(root,"plugins/repertoire/src/book-widget.js"),"utf8");
- assert.ok(book.includes('f["repertoire-sheet-format"]==="chords"'));
- assert.ok(book.includes('wiki.renderText("text/html","text/vnd.tiddlywiki",f.text||"")'));
+ assert.ok(book.includes('value:f["repertoire-sheet-format"]==="chords"?"chords":"full"'));
+ const style=await readFile(path.join(root,"plugins/abc/src/meter-arranger.js"),"utf8");
+ assert.ok(style.includes("'balkan-44'"));
+ assert.ok(style.includes("bassTicks=[0,2];roles=[0,7];compTicks=[1,3]"));
 });

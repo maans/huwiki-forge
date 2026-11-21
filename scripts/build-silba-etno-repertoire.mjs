@@ -130,7 +130,7 @@ await writeFile(out,JSON.stringify(output,null,2)+"\n");
 // Publish only the titles without a playable score; the 17 converted titles
 // already live in repertoire.json and must not be duplicated in the Edition.
 const pending=sources.filter(s=>!s["silba-musescore-file"]).map(s=>({
- ...s,tags:"SilbaÄtno SilbaÄtnoTrack"+(s["repertoire-sheet-format"]==="chords"?" RepertoireMelodi":""),type:"text/vnd.tiddlywiki"
+ ...s,tags:(s["abc-source"]?"ABC ":"")+"SilbaÄtno SilbaÄtnoTrack"+(s["repertoire-sheet-format"]==="chords"?" RepertoireMelodi":""),type:"text/vnd.tiddlywiki"
 }));
 if(pending.length+output.length!==sources.length)throw Error("Bruttolisten er ikke komplet");
 await writeFile(path.join(base,"tiddlers/pending.json"),JSON.stringify(pending,null,2)+"\n");
