@@ -542,7 +542,7 @@ try{
  await face.click({position:{x:headPoint.x,y:headPoint.y}});
  const outline=editor.locator('.huw-musical-transform-overlay[data-mode="parts"] .huw-musical-transform-outline');
  await outline.waitFor();assert.notEqual(await outline.evaluate(node=>getComputedStyle(node).strokeDasharray),'none','selected face has the dashed editing frame');
- assert.equal(await editor.locator('.huw-musical-transform-label').textContent(),'Head','the normal click selects the anatomical head and its attached facial parts');
+ assert.equal(await editor.locator('.huw-musical-transform-label').textContent(),'Hoved','the normal click selects the anatomical head and its attached facial parts');
  await chooseToolbarItem(editor,'stage-zoom','.huw-musical-zoom-selection:enabled','click');
  const zoomedViewBox=await stageSvg.getAttribute('viewBox');
  assert.ok(Number(zoomedViewBox.split(/\s+/)[2])<Number(authoredViewBox.split(/\s+/)[2])*.6,'Zoom to selection brings the face into a usable close view');

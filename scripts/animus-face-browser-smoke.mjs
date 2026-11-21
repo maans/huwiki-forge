@@ -86,7 +86,7 @@ async function tapPart(id,head=false){
    // A face key keeps his head selected. After reopening, use the ordinary
    // object picker first; both routes focus the character before direct touch.
    const originalTime=await position(),originalSource=await sourceSnapshot();
-   const selectedHead=await editor.locator('.huw-musical-transform-label').textContent()==='Head'&&await editor.locator('[data-face-panel]').getAttribute('data-face-target')==='prisoner';
+   const selectedHead=await editor.locator('.huw-musical-transform-label').textContent()==='Hoved'&&await editor.locator('[data-face-panel]').getAttribute('data-face-target')==='prisoner';
    if(!selectedHead){
     const picker=editor.locator('.huw-musical-object-picker');await picker.focus();
     const options=await picker.locator('option').evaluateAll(nodes=>nodes.map(node=>node.value));
