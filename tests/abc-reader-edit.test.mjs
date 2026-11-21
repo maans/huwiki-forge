@@ -117,3 +117,41 @@ test("arrows work without score focus, but text fields keep their own arrows",()
  h.reader.destroy();
  assert.equal(h.doc.listenerCount("keydown"),0);
 });
+
+
+test("standalone score releases audio and SVG before the native editor opens",async()=>{
+ const scoreCode=await readFile(new URL("../plugins/abc/src/score-widget.js",import.meta.url),"utf8");
+ const out={};
+ runInNewContext(scoreCode,{exports:out,require(id){
+  return id==="$:/core/modules/widgets/widget.js"?{widget:function(){}}:{};
+ }});
+ const prepare=out.prepareEditorHandoff;
+ assert.equal(typeof prepare,"function");
+ let disposed=0;
+ function fixture(standalone,book){
+  const host={isConnected:true,hidden:false,textContent:"Large ABC score",
+   closest(selector){return book&&selector===".huwrep-book"?{}:null;}};
+  return {host,_standaloneView:standalone,onDestroy(){disposed++;}};
+ }
+ const direct=fixture(true,false);
+ assert.equal(prepare(direct),true);
+ assert.equal(disposed,1);
+ assert.equal(direct.host.hidden,true);
+ assert.equal(direct.host.textContent,"");
+ const embedded=fixture(false,false),repertoire=fixture(true,true);
+ assert.equal(prepare(embedded),false);
+ assert.equal(prepare(repertoire),false);
+ assert.equal(disposed,1,"Repertoire's own stateful edit handoff remains in charge");
+ assert.match(scoreCode,/prepareEditorHandoff\(self\);\s*self\.dispatchEvent\(\{type:"tm-edit-tiddler"/,
+  "source reader must be disposed before the native edit event");
+ assert.match(scoreCode,/self\._editorHandoff\)return false/,
+  "multiple taps must not open overlapping editors");
+});
+
+test("iPad editor keeps one visible score and avoids redraw storms",async()=>{
+ const code=await readFile(new URL("../plugins/abc/src/edit-widget.js",import.meta.url),"utf8");
+ assert.match(code,/preview\.style\.visibility='hidden'/,"retire the old SVG compositor layer");
+ assert.match(code,/preview\.style\.visibility=oldVisibility/,"restore visibility even after a parse error");
+ assert.match(code,/mobileWebKit\?420:130/,"iPad typing redraw is throttled");
+ assert.match(code,/this\._cancelPreview/,"pending redraws are cancelled on editor teardown");
+});
