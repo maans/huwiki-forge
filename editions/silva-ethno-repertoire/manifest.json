@@ -8,6 +8,7 @@
     "tiddlers/config.json",
     "tiddlers/repertoire.json",
     "tiddlers/pending.json",
+    "tiddlers/site-export-list.json",
     "../shared/libraries.json",
     "tiddlers/repertoire-workspace.json"
   ],

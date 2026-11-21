@@ -134,6 +134,14 @@ const pending=sources.filter(s=>!s["silba-musescore-file"]).map(s=>({
 }));
 if(pending.length+output.length!==sources.length)throw Error("Bruttolisten er ikke komplet");
 await writeFile(path.join(base,"tiddlers/pending.json"),JSON.stringify(pending,null,2)+"\n");
+// SitePublisher needs a stable list field, not links discovered on the
+// homepage: the homepage now includes pending numbers and list-navigation cards.
+const exportList=[{
+ title:"SilbaÄtno – Site-eksport (nodeark)",type:"text/vnd.tiddlywiki",
+ list:output.map(s=>"[["+s.title+"]]").join(" "),
+ text:"SitePublishers automatiske eksportliste med kun redigerbare nodeark. Rækkefølgen genereres ved konverteringen."
+}];
+await writeFile(path.join(base,"tiddlers/site-export-list.json"),JSON.stringify(exportList,null,2)+"\n");
 // Keep the original report creation timestamp to make repeated builds deterministic.
 const reportFile=path.join(base,"conversion-report.json");
 let firstCreated="2026-11-18";

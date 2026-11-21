@@ -438,3 +438,19 @@ test("SilbaÄtno statistic cards open auto-generated native TiddlyWiki lists",as
  assert.ok(template.text.includes("removeprefix[SilbaÄtno · "));
  assert.match(template.text,/Afventer nodeark/);
 });
+
+
+test("SitePublisher uses a generated 17-title list, independently of the gross-list dashboard",async()=>{
+ const base=path.join(root,"editions/silva-ethno-repertoire");
+ const listFile=JSON.parse(await readFile(path.join(base,"tiddlers/site-export-list.json"),"utf8"));
+ const manifest=JSON.parse(await readFile(path.join(base,"manifest.json"),"utf8"));
+ const scores=JSON.parse(await readFile(path.join(base,"tiddlers/repertoire.json"),"utf8"));
+ const publisher=await readFile(path.join(root,"scripts/publish-silba-etno-site.mjs"),"utf8");
+ assert.ok(manifest.tiddlers.includes("tiddlers/site-export-list.json"));
+ assert.equal(listFile.length,1);
+ assert.equal(listFile[0].title,"SilbaÄtno – Site-eksport (nodeark)");
+ const listed=[...listFile[0].list.matchAll(/\\[\\[([^\\]]+)\\]\\]/g)].map(match=>match[1]);
+ assert.deepEqual(listed,scores.map(score=>score.title));
+ assert.ok(publisher.includes('box.value='+JSON.stringify("SilbaÄtno – Site-eksport (nodeark)")+';'));
+ assert.ok(publisher.includes('if(rows!==21)'));
+});

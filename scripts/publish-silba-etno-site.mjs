@@ -14,10 +14,10 @@ try {
  page.on("pageerror",error=>console.error("Browser error:",error.message));
  await page.goto(pathToFileURL(path.join(folder,"index.html")).href,{waitUntil:"load",timeout:120000});
  await page.waitForFunction(()=>window.$tw&&$tw.rootWidget&&$tw.wiki,undefined,{timeout:90000});
- // Confirm the front page renders real list rows, not literal asterisks or inline widgets.
+ // Verify all 21 published repertoire titles, including the four pending entries, render as linked rows.
  await page.waitForSelector(".silba-home",{timeout:30000});
- const rows=await page.locator(".silba-track-list li").count();
- if(rows!==17)throw Error("Homepage malformed: expected 17 styled score rows, got "+rows);
+ const rows=await page.locator(".silba-home .silba-track-list li").count();
+ if(rows!==21)throw Error("Homepage malformed: expected the full 21-title gross list, got "+rows);
  const photoStyle=await page.locator(".silba-photo-visual").evaluate(el=>getComputedStyle(el).backgroundImage);
  if(!photoStyle.includes("silbaaetno-2026.jpg"))throw Error("Orchestra image CSS missing");
  console.log("Photo uses source-site image with CSS fallback");
@@ -35,7 +35,7 @@ try {
   source.value="list";source.dispatchEvent(new Event("change",{bubbles:true}));
   const box=document.querySelector('input[list="huw-sitepublisher-lists"]');
   if(!box)throw Error("SitePublisher list text input missing");
-  box.value="SilbaÄtno Repertoire – Oversigt";
+  box.value="SilbaÄtno – Site-eksport (nodeark)";
   box.dispatchEvent(new Event("change",{bubbles:true}));
  });
  await page.waitForFunction(()=>{
