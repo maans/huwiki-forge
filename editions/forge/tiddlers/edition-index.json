@@ -174,7 +174,7 @@
     "edition-id": "theseus-ship",
     "name": "The Ship of Theseus",
     "status": "test",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "order": "02.42",
     "build-url": "https://forge.måns.dk/assembler/?edition=theseus-ship",
     "build-url-da": "https://forge.måns.dk/assembler/?edition=theseus-ship&lang=da",

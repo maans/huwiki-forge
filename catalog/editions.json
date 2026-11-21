@@ -152,7 +152,7 @@
     {
       "id": "theseus-ship",
       "name": "The Ship of Theseus",
-      "version": "0.1.2",
+      "version": "0.1.3",
       "status": "test",
       "manifest": "../editions/theseus-ship/manifest.json",
       "description": "An editable AniMus musical about the Ship of Theseus. Watch two ships take shape and give the story your own ending.",

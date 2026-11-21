@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import {loadEdition} from '../assembler/assemble.mjs';
 
@@ -8,6 +9,17 @@ const fetchLocal=async address=>{
  const bytes=await readFile(new URL(new URL(address).pathname.slice(1),root),'utf8');
  return {ok:true,json:async()=>JSON.parse(bytes)};
 };
+
+test('updated Theseus dialogue, songs, scores and captions have content-specific cache keys', async () => {
+ const manifestUrl=new URL('editions/theseus-ship/manifest.json',root);
+ const manifest=JSON.parse(await readFile(manifestUrl,'utf8'));
+ for(const name of ['film','audio-board','audio-twins','scores','pages']){
+  const file=new URL('tiddlers/'+name+'.json',manifestUrl);
+  const reference=manifest.tiddlers.map(ref=>new URL(ref,manifestUrl)).find(url=>url.pathname===file.pathname);
+  const digest=createHash('sha256').update(await readFile(file)).digest('hex').slice(0,12);
+  assert.equal(reference?.searchParams.get('v'),digest,name);
+ }
+});
 
 test('the independent Theseus edition plays and edits the same bilingual musical',async()=>{
  const {manifest,tiddlers}=await loadEdition('https://forge.example/editions/theseus-ship/manifest.json',fetchLocal);
@@ -35,6 +47,22 @@ test('the independent Theseus edition plays and edits the same bilingual musical
   }
   const takes=film.musical.audioClips.filter(a=>a.sceneTitle===clip.source);
   assert.ok(takes.some(t=>t.kind==='music'));
+  const duet=takes.filter(t=>t.kind==='song').sort((a,b)=>a.start-b.start);
+  if(duet.length){
+   assert.deepEqual(duet.map(t=>t.role),['Pip','Mara','Pip','Mara']);
+   for(const take of duet){
+    const cue=parts.get(take.cueId);
+    const actor=take.role.toLowerCase();
+    assert.equal(cue.lipSync.target,actor);
+    assert.equal(cue.lipSync.open,actor+'-mouth-open');
+    assert.equal(cue.lipSync.visemeAudioAsset,take.asset);
+    assert.equal(cue.lipSync.visemeText,take.role+': '+take.text);
+    const shot=scene.camera.keys.find(k=>Math.abs(k.t-(take.start-offset))<.001);
+    assert.ok(shot && shot.zoom>1,'camera cuts to '+take.role);
+    const subject=parts.get(actor).keys[0];
+    assert.ok(Math.abs(shot.x-subject.x)<scene.width/shot.zoom*.35,'singer in frame');
+   }
+  }
   for(const take of takes){
    const audio=wiki.get(take.asset);
    assert.equal(audio?.type,'audio/mpeg');
