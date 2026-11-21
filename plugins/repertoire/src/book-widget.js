@@ -35,6 +35,11 @@ function shortName(wiki,item){
  var prefix=label+" · ";
  return label&&original.indexOf(prefix)===0?original.slice(prefix.length):original;
 }
+function prefersFrameSeparatedEdit(win){
+ var nav=win&&win.navigator,ua=String(nav&&nav.userAgent||"");
+ // iPadOS can advertise itself as a desktop Mac even in Chrome on iPad.
+ return /iPad|iPhone|iPod/i.test(ua)||(/Macintosh/.test(ua)&&Number(nav&&nav.maxTouchPoints)>1);
+}
 function Book(parseTreeNode,options){this.initialise(parseTreeNode,options);}
 Book.prototype=new Widget();
 Book.prototype.disposeScore=function(){
@@ -50,6 +55,8 @@ Book.prototype.disposeScore=function(){
  this.children=[];
 };
 Book.prototype.onDestroy=function(){
+ if(this._editRaf&&this._win&&this._win.cancelAnimationFrame)this._win.cancelAnimationFrame(this._editRaf);
+ this._editRaf=null;
  if(this._editCheck&&this._win)this._win.clearTimeout(this._editCheck);
  this._editCheck=null;this._editReturn=null;this._returnPage=null;
  this.disposeScore();
@@ -119,8 +126,27 @@ Book.prototype.handleEditTiddler=function(event){
  this.disposeScore();
  this.host.classList.remove("huwrep-book-fullscreen","huwrep-reader-active","huwrep-reader-practice");
  this.host.hidden=true;this.host.textContent="";
+ // On physical iPads a draft rendered in the SAME frame as the old animated
+ // score can exhaust WebKit's tab memory. Let the old SVG/audio layers be
+ // painted away over two frames before the native navigator creates a draft.
+ // The original edit event is forwarded once, from our parent (bypassing this
+ // book's own handler), without creating another editor or changing the source.
+ if(prefersFrameSeparatedEdit(this._win)&&this._win.requestAnimationFrame&&this.parentWidget){
+  var self=this,win=this._win,parent=this.parentWidget;
+  state.pendingNavigation=true;
+  this._editRaf=win.requestAnimationFrame(function(){
+   self._editRaf=win.requestAnimationFrame(function(){
+    self._editRaf=null;
+    if(self._editReturn!==state||!self.host||!self.host.isConnected)return;
+    state.pendingNavigation=false;
+    parent.dispatchEvent(event);
+    self.queueEditorCheck();
+   });
+  });
+  return false;
+ }
  this.queueEditorCheck();
- return true; // Forward this same event exactly once; the navigator owns drafts.
+ return true; // Desktop handoff stays native and synchronous.
 };
 Book.prototype.queueEditorCheck=function(){
  if(!this._editReturn||this._editCheck||!this._win)return;
@@ -133,7 +159,7 @@ Book.prototype.queueEditorCheck=function(){
 };
 Book.prototype.checkEditorReturn=function(){
  var state=this._editReturn;
- if(!state||!this.host||!this.host.isConnected)return;
+ if(!state||state.pendingNavigation||!this.host||!this.host.isConnected)return;
  var draft=this.wiki.findDraft(state.source),story=this.wiki.getTiddlerList(state.story);
  if(draft&&story.indexOf(draft)>=0){state.draft=draft;return;}
  // Save/cancel replace the draft with the original in the story. If the song
@@ -491,6 +517,7 @@ Book.prototype.refresh=function(changed){
  changed=changed||{};
  if(this._editReturn){
   var state=this._editReturn;
+  if(state.pendingNavigation)return false;
   if(!state.draft||changed[state.draft]||changed[state.source]||changed[state.story])this.queueEditorCheck();
   return false;
  }
