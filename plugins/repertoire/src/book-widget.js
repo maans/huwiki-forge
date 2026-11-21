@@ -485,11 +485,13 @@ Book.prototype.draw=function(){
   }
  }else if(f&&f["repertoire-sheet-format"]==="chords"){
   // An editable WikiText chord chart belongs in Nodebog without fake melody notes.
+  var chordFrame=el(doc,"div","huwrep-chord-frame");
   var chordSheet=el(doc,"article","huwrep-chord-sheet");
   chordSheet.setAttribute("aria-label","Becifringsark");
   chordSheet.innerHTML=wiki.renderText("text/html","text/vnd.tiddlywiki",f.text||"");
-  stage.appendChild(chordSheet);
-  stage.appendChild(btn(doc,"Åbn / rediger becifringsark",function(){self.navigate(source.fields.title);}));
+  chordFrame.appendChild(chordSheet);
+  chordFrame.appendChild(btn(doc,"Åbn / rediger becifringsark",function(){self.navigate(source.fields.title);}));
+  stage.appendChild(chordFrame);
  }else{
   var imageTitle=f&&f["repertoire-image"]||"";
   var image=wiki.getTiddler(imageTitle)||source;
