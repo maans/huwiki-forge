@@ -11,6 +11,7 @@ on:
       - 'plugins/abc/dist/plugin.json'
       - 'plugins/abc/src/**'
       - 'tests/abc-repeat-volta.test.mjs'
+      - 'tests/abc-chord-overview.test.mjs'
       - 'plugins/abc/plugin-info.json'
       - 'plugins/repertoire/src/**'
       - 'plugins/repertoire/plugin-info.json'
@@ -50,7 +51,7 @@ jobs:
       - name: Synchronize native Forge plugin registry
         run: node scripts/build-forge-plugin-library.mjs
       - name: Verify orchestra, setlist and iPad book navigation
-        run: node --test tests/repertoire-edition.test.mjs tests/abc-repeat-volta.test.mjs
+        run: node --test tests/repertoire-edition.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-chord-overview.test.mjs
       - name: Assemble interactive Repertoire demo with original ABC scores
         run: node scripts/assemble-silba-etno-repertoire.mjs
       - name: Install browser controller for iPad reader acceptance

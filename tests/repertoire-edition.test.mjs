@@ -470,6 +470,8 @@ test("Oh verden is a playable slow 4/4 Balkan ABC chord chart, not a WikiText co
  assert.equal(source["abc-source"],sheet["abc-source"]);
  assert.equal(sheet["repertoire-sheet-format"],"chords");
  assert.equal(sheet["abc-view"],"chords");
+ assert.equal(sheet["abc-chords-overview"],"yes");
+ assert.equal(sheet["abc-double-time-section"],"B");
  assert.equal(sheet["abc-bars-per-line"],"4");
  assert.equal(source["abc-bars-per-line"],"4");
  assert.ok(sheet.tags.split(" ").includes("ABC"));
@@ -478,7 +480,8 @@ test("Oh verden is a playable slow 4/4 Balkan ABC chord chart, not a WikiText co
  assert.ok(sheet["abc-source"].includes('|: "E7"z4 | "A7"z4 | "Dm"z4 | "E7"z4 :|'));
  assert.ok(sheet["abc-source"].includes('|: "E7"z2 "Am"z2 | "E7"z2 "Dm"z2 | "E7"z2 "Dm"z2 | "E7"z2 "Am"z2 :|'));
  assert.ok(!sheet["abc-source"].includes("[1")&&!sheet["abc-source"].includes("[2"));
- assert.equal(sheet.text,"Becifringerne er endnu ikke verificeret.");
+ assert.match(sheet.text,/B-stykket spilles med dobbelt rytmisk puls/);
+ assert.match(sheet.text,/endnu ikke verificeret/);
  const a=JSON.parse(sheet["abc-accompaniment"]);
  assert.equal(a.style,"balkan-44");assert.equal(a.enabled,true);assert.equal(a.metronome,false);
  assert.equal(item["repertoire-cues"],"Steen spiller melodien solo på harmonika.");

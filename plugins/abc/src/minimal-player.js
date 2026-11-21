@@ -21,6 +21,7 @@ var Shortcuts=require('$:/plugins/huwiki/abc/keyboard-shortcuts.js');
 var StartPosition=require('$:/plugins/huwiki/abc/start-position.js');
 var ChordKeys=require('$:/plugins/huwiki/abc/chord-keys.js');
 var FollowViewport=require('$:/plugins/huwiki/abc/follow-viewport.js');
+var ChordOverview=require('$:/plugins/huwiki/abc/chord-overview.js');
 var FloatingMixer=require('$:/plugins/huwiki/abc/floating-mixer.js');
 
 // One small renderer is shared by live transclusions and exported examples.
@@ -33,7 +34,8 @@ exports.mount=function(host,options){
  var config=options.config?Accompaniment.clean(options.config):Accompaniment.read(fields);
  var activeNotes=[],cursorLine=null,detachObserver=null,locale=null,controlsLocale=null,playButton=null,unbindShortcuts=null;
  var pendingStart=null,chosenNode=null,cueDataReady=false,updateRevision=0,renderPending=false;
- var viewport=null,miniMixer=null,mixerButton=null;
+ var viewport=null,chordOverview=null,miniMixer=null,mixerButton=null;
+ var showOverview=!!(options.followChordsOnly&&fields['abc-chords-overview']==='yes');
  var drone=options.audio===false?null:Accompaniment.createDrone(function(){return config;},function(){return source;});
  function make(tag,cls,text){var node=doc.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;}
  function alive(){return !closed&&host.isConnected!==false&&(!options.isCurrent||options.isCurrent());}
@@ -41,7 +43,10 @@ exports.mount=function(host,options){
  var box=make('section','huwabc-minimal-player');
  // Normal mode is a compact notation/player view; Advanced owns instrument/print controls.
  var paper=make('div','huwabc-paper huwabc-minimal-paper');
- if(options.follow){box.classList.add('huwabc-follow-player');if(options.showTitle)box.classList.add('huwabc-follow-with-title');viewport=FollowViewport.mount(paper,{voice:options.followVoice||1,measures:options.followMeasures||3,zoom:1.2,chords:options.followChords||'below',chordVoice:options.followChordVoice||0,chordsOnly:!!options.followChordsOnly,showTitle:options.showTitle});if(options.followChordsOnly)box.classList.add('huwabc-follow-chords-only');}
+ if(options.follow){
+  if(showOverview)box.classList.add('huwabc-chord-overview-player');
+  else{box.classList.add('huwabc-follow-player');if(options.showTitle)box.classList.add('huwabc-follow-with-title');viewport=FollowViewport.mount(paper,{voice:options.followVoice||1,measures:options.followMeasures||3,zoom:1.2,chords:options.followChords||'below',chordVoice:options.followChordVoice||0,chordsOnly:!!options.followChordsOnly,showTitle:options.showTitle});if(options.followChordsOnly)box.classList.add('huwabc-follow-chords-only');}
+ }
  var controls=options.audio===false?null:make('div','huwabc-minimal-controls');
  var externalControls=!!(controls&&options.controlsHost),shortcutHost=options.shortcutHost||box;
  var status=make('div','huwabc-minimal-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');status.hidden=true;
@@ -58,6 +63,7 @@ exports.mount=function(host,options){
  function clearFollow(){
   activeNotes.forEach(function(node){if(node&&node.classList)node.classList.remove('huwabc-playing-note');});activeNotes=[];
   if(cursorLine&&cursorLine.parentNode)cursorLine.parentNode.removeChild(cursorLine);cursorLine=null;
+  if(chordOverview)chordOverview.clear();
  }
  function playing(value){
   if(pager)pager.setPlaying(value);
@@ -120,10 +126,16 @@ exports.mount=function(host,options){
  }
  function paperClicked(event){
   if(!alive()||!controller||!event.target||!event.target.closest)return;
+  var overviewChord=event.target.closest('.huwabc-chord-overview-chord');
   var chord=event.target.closest('.abcjs-chord'),tab=event.target.closest('[data-huwabc-tab-source]');
-  if(!chord&&!tab)return; // Clicking empty paper only activates this score.
+  if(!chord&&!tab&&!overviewChord)return; // Overview chords are selectable too.
   try{
-   if(chord){
+   if(overviewChord){
+    var overHarmony=ChordKeys.parse(overviewChord.textContent);
+    var charAttr=overviewChord.getAttribute('data-huwabc-source-char');
+    if(charAttr!==null)cueStart(Number(charAttr),overviewChord,null);
+    if(overHarmony)audition(InstrumentView.soundingPitches(overHarmony.pitches),'Akkordlyd:');
+   }else if(chord){
     var harmony=ChordKeys.parse(chord.textContent);if(!harmony){show('Akkorden kunne ikke læses.',true);return;}
     var element=sourceElement(chord),sourceChar=element&&element.startChar;
     cueStart(typeof sourceChar==='number'?sourceChar:null,chord,element&&element.currentTrackMilliseconds);
@@ -153,6 +165,7 @@ exports.mount=function(host,options){
   if(pager)pager.onEvent(event);
   if(miniMixer)miniMixer.updateEvent(event);
   clearFollow();
+  if(chordOverview){chordOverview.follow(event);return;}
   (event.elements||[]).forEach(function(group){(Array.isArray(group)?group:[group]).forEach(function(node){
    // ABCJS events can include non-note SVG elements. In the follow camera,
    // never add a highlight class to rectangles/overlays or hidden voices.
@@ -239,6 +252,7 @@ exports.mount=function(host,options){
   mixerVisibility();
  }
  function render(){
+  if(chordOverview){chordOverview.destroy();chordOverview=null;}
   var tabConfig=Tabs.read(fields),tabEnabled=fields['abc-tabs']==='yes',displayed=Display.presentation(source);
   var tabOptions=Tabs.options(ABC,displayed,tabEnabled,tabConfig),layout=fields['abc-layout']||'standard';
   var chordStyle=fields['abc-chords-style']||(options.wiki&&options.wiki.getTiddlerText?options.wiki.getTiddlerText('$:/config/huwiki/abc/chords-style','jazz'):'jazz');
@@ -248,7 +262,7 @@ exports.mount=function(host,options){
   var results=JazzFont.render(ABC,useJazz,function(){return ABC.renderAbc(paper,displayed,Object.assign({
    visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options,responsive:'resize',staffwidth:720,scale:layout==='kompakt'?.88:1,jazzchords:jazzChords,
    format:JazzFont.formatFonts(useJazz,{stretchlast:true,gchordfont:useJazz?'PetalumaScript 20':jazzChords?'Helvetica 18 bold':'Helvetica 16'}),
-   oneSvgPerLine:!!pager||!!viewport,expandToWidest:true,add_classes:true,selectTypes:options.audio===false?false:undefined,selectionColor:'currentColor',clickListener:options.audio===false?undefined:noteClicked,
+   oneSvgPerLine:!!pager||!!viewport||showOverview,expandToWidest:true,add_classes:true,selectTypes:options.audio===false?false:undefined,selectionColor:'currentColor',clickListener:options.audio===false?undefined:noteClicked,
    wrap:{minSpacing:1.5,maxSpacing:2.8,preferredMeasuresPerLine:viewport?Math.max(2,Math.min(4,Number(options.followMeasures)||3)):layout==='jazz'?4:3},
    afterParsing:function(tune){
     SheetLayout.prepare(tune,fields,displayed);
@@ -270,6 +284,7 @@ exports.mount=function(host,options){
   if(tabOptions.options.length)Tabs.rhythm(paper,visual,tabConfig);
   if(pager)pager.layout(visual,fields);
   if(viewport)viewport.layout();
+  if(showOverview)chordOverview=ChordOverview.mount(paper,{ABC:ABC,source:displayed,fields:fields,barsPerLine:fields['abc-bars-per-line']});
   if(visual.warnings&&visual.warnings.length)show('ABCJS: '+visual.warnings.slice(0,2).join(' · '),true);
   else if(warning||tabOptions.message)show(warning||tabOptions.message,true);
  }
@@ -317,6 +332,7 @@ exports.mount=function(host,options){
   if(detachObserver)detachObserver.disconnect();if(locale)locale.destroy();if(controlsLocale)controlsLocale.destroy();
   if(unbindShortcuts)unbindShortcuts();shortcutHost.removeEventListener('pointerdown',activateByPointer,true);paper.removeEventListener('click',paperClicked);
   if(viewport)viewport.destroy();
+  if(chordOverview){chordOverview.destroy();chordOverview=null;}
   stopDrone();clearCue();clearFollow();
   if(controller){controller._disposed=true;Playback.unregister(controller);controller.destroy();}
   if(controls&&controls.parentNode)controls.parentNode.removeChild(controls);

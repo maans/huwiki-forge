@@ -103,3 +103,35 @@ type: text/css
 .huwabc-score.huwabc-minimal .huwabc-page-shell:not(.huwabc-page-is-desk)>.huwabc-page-toolbar{display:none!important}
 .huwabc-score.huwabc-minimal .huwabc-page-shell{margin-top:0}
 .huw-music-media-abc:has(>.huwabc-score.huwabc-standalone.huwabc-minimal)>.huw-music-section-label{display:none!important}
+
+
+/* Complete ABC chord charts: retain all measures, repeats and parts in one view.
+   Rendered ABCJS SVGs remain in the DOM for audio timings, but are not painted. */
+.huwabc-chord-overview-player{max-width:100%;min-width:0;box-sizing:border-box;border:1px solid #cbdcd3;border-radius:12px;padding:9px;background:#fffdf8}
+.huwabc-chord-overview-player .huwabc-minimal-paper{width:100%;max-height:none!important;min-height:0!important;height:auto!important;overflow:visible!important;position:relative;padding:0;margin:0}
+.huwabc-chord-overview-player .huwabc-minimal-paper>svg{position:absolute!important;width:1px!important;height:1px!important;opacity:0!important;pointer-events:none!important;overflow:hidden!important}
+.huwabc-chord-overview{display:grid;gap:17px;width:100%;box-sizing:border-box;padding:12px 7px}
+.huwabc-chord-overview-row{display:grid;grid-template-columns:minmax(35px,66px) minmax(0,1fr);align-items:center;gap:9px;min-width:0}
+.huwabc-chord-overview-part{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;min-width:0;line-height:1.25}
+.huwabc-chord-overview-part-label{font-size:clamp(1.05rem,2vw,1.4rem);color:#294a44}
+.huwabc-chord-overview-feel{font-size:clamp(.63rem,1.1vw,.76rem);font-weight:650;text-align:center;color:#a25a2c}
+.huwabc-chord-overview-line{display:flex;align-items:stretch;gap:3px;min-width:0;width:100%}
+.huwabc-chord-overview-bars{display:grid;grid-template-columns:repeat(var(--huwabc-bar-count),minmax(0,1fr));min-width:0;flex:1;border-top:1px solid #9bb1a9;border-bottom:1px solid #9bb1a9}
+.huwabc-chord-overview-bar{min-width:0;display:flex;justify-content:center;align-items:center;border-left:1px solid #9bb1a9}
+.huwabc-chord-overview-bar:last-child{border-right:1px solid #9bb1a9}
+.huwabc-chord-overview-chords{display:grid;grid-template-columns:repeat(var(--huwabc-chord-count),minmax(0,1fr));align-items:stretch;gap:1px;min-width:0;width:100%;min-height:70px}
+.huwabc-chord-overview-chord{min-width:0;border:0;border-radius:4px;padding:9px 2px;background:transparent;color:#246352;font:750 clamp(.84rem,2.15vw,1.45rem)/1.3 system-ui,sans-serif;cursor:pointer;white-space:nowrap;text-align:center}
+.huwabc-chord-overview-chord:hover,.huwabc-chord-overview-chord:focus-visible{background:#e7f5ee;outline:2px solid #4f947d;outline-offset:-2px}
+.huwabc-chord-overview-chord.huwabc-chord-overview-current{background:#e9c8a7;color:#723920;box-shadow:inset 0 -3px #ba6a3f}
+.huwabc-chord-overview-chord.huwabc-cue-selected{background:#cce6fa;color:#26577d}
+.huwabc-chord-overview-repeat{font:800 clamp(.94rem,1.8vw,1.35rem)/1 system-ui,sans-serif;color:#294a44;align-self:center;white-space:nowrap;flex:0 0 auto}
+.huwabc-chord-overview-player .huwabc-minimal-controls{padding-top:5px}
+@media(max-width:600px){
+ .huwabc-chord-overview{padding:9px 0;gap:11px}
+ .huwabc-chord-overview-row{grid-template-columns:38px minmax(0,1fr);gap:3px}
+ .huwabc-chord-overview-line{gap:2px}
+ .huwabc-chord-overview-chords{min-height:54px}
+ .huwabc-chord-overview-chord{font-size:clamp(.73rem,2.75vw,1.05rem);padding:7px 0}
+ .huwabc-chord-overview-feel{font-size:.6rem}
+}
+@media print{.huwabc-chord-overview-player .huwabc-minimal-controls{display:none!important}.huwabc-chord-overview{break-inside:avoid}}

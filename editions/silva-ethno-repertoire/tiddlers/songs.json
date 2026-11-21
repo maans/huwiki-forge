@@ -41,7 +41,7 @@
   },
   {
     "title": "SilbaÄtno · Oh verden",
-    "text": "Becifringerne er endnu ikke verificeret.",
+    "text": "B-stykket spilles med dobbelt rytmisk puls (dobbelt tempo). Becifringerne er endnu ikke verificeret.",
     "tags": "SilbaÄtnoTrack",
     "silba-order": "05",
     "silba-section": "hovedliste",
@@ -56,7 +56,9 @@
     "abc-rhythm": "Balkan 4/4",
     "abc-chords-style": "jazz",
     "abc-accompaniment": "{\"enabled\":true,\"style\":\"balkan-44\",\"bassSource\":\"style\",\"bass\":\"balkan\",\"chords\":\"balkan\",\"drums\":\"balkan\",\"bassInstrument\":32,\"chordInstrument\":21,\"melodyVolume\":0,\"bassVolume\":58,\"chordVolume\":51,\"drumVolume\":28,\"variation\":10,\"metronome\":false,\"form\":\"AB\"}",
-    "abc-bars-per-line": "4"
+    "abc-bars-per-line": "4",
+    "abc-chords-overview": "yes",
+    "abc-double-time-section": "B"
   },
   {
     "title": "SilbaÄtno · Cupria Express (Fm)",

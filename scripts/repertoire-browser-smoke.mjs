@@ -73,26 +73,32 @@ try{
  // Oh verden must render in ABC Musik with its chord-only player, not as a pre/code section.
  const ohScore=page.locator('.huwabc-standalone[data-huwabc-title="SilbaÄtno · Oh verden"]').first();
  await ohScore.waitFor();
- try{
-  await ohScore.locator(".huwabc-follow-chords-only").first().waitFor({state:"attached",timeout:10000});
- }catch(error){
-  const diagnostics=await ohScore.evaluate(node=>({
-   classes:node.className,
-   html:node.outerHTML.slice(0,5000),
-   text:node.innerText.slice(0,1500),
-   minimal:node.querySelector(".huwabc-minimal-player")?.className,
-   errors:Array.from(node.querySelectorAll(".huwabc-error")).map(x=>x.textContent)
-  }));
-  throw Error("Oh verden chord-only ABC failed to mount: "+JSON.stringify({diagnostics,pageErrors:errors.slice(-10)}));
- }
- assert.equal(await ohScore.locator(".huwrep-chord-line").count(),0,"No HTML chord substitute");
- const systemInfo=await ohScore.evaluate(node=>({
-  systems:node.querySelectorAll('svg[data-huwabc-follow-frame]').length,
-  frames:[...node.querySelectorAll('svg[data-huwabc-follow-frame]')].map(svg=>({
-   visible:svg.style.display!=='none',chords:svg.querySelectorAll('text.abcjs-chord[data-name="chord"]').length
-  }))
+ await ohScore.locator(".huwabc-chord-overview-row").first().waitFor({state:"visible"});
+ assert.equal(await ohScore.locator(".huwrep-chord-line").count(),0,"No WikiText code block");
+ const overview=await ohScore.evaluate(node=>({
+  rows:[...node.querySelectorAll(".huwabc-chord-overview-row")].map(row=>{
+   const box=row.getBoundingClientRect();
+   return {part:row.getAttribute("data-part"),bars:row.querySelectorAll(".huwabc-chord-overview-bar").length,
+    chords:[...row.querySelectorAll(".huwabc-chord-overview-chord")].map(c=>c.textContent.trim()),
+    repeats:[...row.querySelectorAll(".huwabc-chord-overview-repeat")].map(c=>c.textContent.trim()),
+    label:row.querySelector(".huwabc-chord-overview-feel")?.textContent.trim()||"",
+    visible:box.width>0&&box.height>0};
+  }),
+  paperScrollWidth:node.querySelector(".huwabc-minimal-paper")?.scrollWidth,
+  paperWidth:node.querySelector(".huwabc-minimal-paper")?.clientWidth
  }));
- assert.equal(systemInfo.systems,2,"Exactly two 4-bar systems expected: "+JSON.stringify(systemInfo));
+ assert.equal(overview.rows.length,2,"Whole song must fit on the screen");
+ assert.deepEqual(overview.rows.map(r=>r.part),["A","B"]);
+ assert.deepEqual(overview.rows.map(r=>r.bars),[4,4]);
+ assert.deepEqual(overview.rows[0].chords,["E7","A7","Dm","E7"]);
+ assert.deepEqual(overview.rows[1].chords,["E7","Am","E7","Dm","E7","Dm","E7","Am"]);
+ assert.ok(overview.rows.every(r=>r.visible),"Both rows must remain visible simultaneously");
+ assert.ok(overview.rows.every(r=>r.repeats.includes("|:")&&r.repeats.includes(":|")),
+  "A and B must keep both repeat marks: "+JSON.stringify(overview.rows));
+ assert.equal(overview.rows[1].label,"Dobbelt tempo");
+ assert.ok(overview.paperScrollWidth<=overview.paperWidth+2,"No horizontal scrolling or cropped bars: "+JSON.stringify(overview));
+ assert.equal(await ohScore.locator(".huwabc-chord-overview-chord[data-huwabc-source-char]").count(),12,
+  "Every chord can select its playback position");
  const chart=await page.evaluate(()=>{
   const f=$tw.wiki.getTiddler("SilbaÄtno · Oh verden").fields;
   const ABC=$tw.modules.execute("$:/plugins/huwiki/abc/vendor/abcjs.js");
@@ -102,6 +108,7 @@ try{
   const arr=Acc.prepare(ABC,tune,f["abc-source"],JSON.parse(f["abc-accompaniment"]),false,f);
   return {chords:data.chords.map(c=>c.name),measures:data.measures.length,
     parts:arr.parts.map(p=>({name:p.name,notes:p.notes.length})),
+    feel:arr.bars.map(b=>({doubleTime:b.doubleTime,start:b.start,end:b.end})),
     tempo:f["abc-source"].match(/^Q:(.*)$/m)?.[1],
     style:JSON.parse(f["abc-accompaniment"]).style};
  });
@@ -109,6 +116,9 @@ try{
  assert.equal(chart.measures,8);
  assert.equal(chart.tempo,"1/4=66");
  assert.equal(chart.style,"balkan-44");
+ assert.ok(chart.feel.some(b=>!b.doubleTime)&&chart.feel.some(b=>b.doubleTime),
+   "The accompaniment must change feel at B: "+JSON.stringify(chart.feel));
+ assert.ok(chart.feel.every(b=>b.end>b.start),"Double-time must preserve bar lengths");
  for(const name of ["Bas","Akkorder","Slagtøj"])
   assert.ok(chart.parts.some(p=>p.name===name&&p.notes>0),
    "4/4 Balkan needs playable "+name+": "+JSON.stringify(chart.parts));

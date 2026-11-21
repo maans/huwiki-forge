@@ -122,6 +122,8 @@ function generate(style,timeline,form,c,source,fields,rootSeeds,chordSeeds,live,
  var random=randomFor(String(source)+'|'+style+'|'+(c.seed||1));
  (timeline.bars||[]).forEach(function(bar){
   var m=bar.meter,groups=groupsFor(style,bar,source,fields,form),accents=starts(groups),name=specific(style,bar,form),phase=bar.sourceBar%2;
+  var part=form&&form.sections&&form.sections.find(function(section){return bar.index>=section.start&&bar.index<section.end;});
+  var doubleTime=!!(name==='balkan-44'&&m.num===4&&m.den===4&&part&&fields&&fields['abc-double-time-section']===part.id);
   var unit=1/m.den,nominal=m.num*unit,offset=bar.index===0&&bar.duration<nominal-EPS?nominal-bar.duration:0;
   // Re-enter the same written measure with the same figure. A new meter always
   // starts its own local pattern; there is no pattern-wide time stretching.
@@ -137,8 +139,11 @@ function generate(style,timeline,form,c,source,fields,rootSeeds,chordSeeds,live,
    // Restrained procession, not a driving polka. Support the second beat.
    bassTicks=[0,1];roles=[0,7];compTicks=[1];
   }else if(name==='balkan-44'&&m.num===4&&m.den===4){
-   // Slow square Balkan 4/4: bass on beats 1/3 and accordion on 2/4.
-   bassTicks=[0,2];roles=[0,7];compTicks=[1,3];
+   // A: relaxed bass on 1/3 and accordion on 2/4.
+   // Double-time B doubles the ATTACK frequency, without changing the 4/4
+   // measure length or an ABC melody that has not yet been transcribed.
+   if(doubleTime){bassTicks=[0,1,2,3];roles=[0,7,0,7];compTicks=[.5,1.5,2.5,3.5];}
+   else{bassTicks=[0,2];roles=[0,7];compTicks=[1,3];}
   }else if(name==='no-bruremarsj-mixed'&&(m.den===4&&[2,4].indexOf(m.num)>=0)){
    // Preserve written 2/4 insertions rather than force 4/4 onto them.
    bassTicks=m.num===4?[0,2]:[0,1];roles=[0,7];compTicks=m.num===4?[1,3]:[1];
@@ -186,7 +191,7 @@ function generate(style,timeline,form,c,source,fields,rootSeeds,chordSeeds,live,
   else if(c.chords==='offbeat')compTicks=accents.map(function(t,i){return t+groups[i]-1;});
   else if(c.chords==='afterbeat')compTicks=accents.slice(1);
   else if(c.chords==='arpeggio')compTicks=Array.from({length:m.num},function(_,i){return i;});
-  out.bars.push({index:bar.index,start:bar.start,end:bar.end,meter:m,group:groups,style:name,bassGrid:writtenGrid?'written':'style'});
+  out.bars.push({index:bar.index,start:bar.start,end:bar.end,meter:m,group:groups,style:name,doubleTime:doubleTime,bassGrid:writtenGrid?'written':'style'});
   function when(tick){var p=tick*unit-offset;if(p<-EPS||p>=bar.duration-EPS)return null;return bar.start+Math.max(0,p);}
   function put(target,tick,pitch,volume,duration,seed){var time=when(tick);if(time===null||!Number.isFinite(pitch))return;var len=Math.min(duration,bar.end-time);if(len<=EPS)return;target.push(Object.assign({},seed||{cmd:'note'},{cmd:'note',start:time,pitch:Math.round(pitch),duration:len,gap:0,volume:clamp(Math.round(volume),1,127)}));}
   var writtenHarmony=null,writtenPhase=0;
@@ -212,9 +217,14 @@ function generate(style,timeline,form,c,source,fields,rootSeeds,chordSeeds,live,
   function drum(tick,pitch,velocity,length){put(out.drums,tick,pitch,c.drumVolume*velocity/100,Math.min(unit*(length||.42),.09),{instrument:128});}
   if(c.enabled&&c.drums!=='off'&&c.drumVolume>0){
    if(name==='balkan-44'&&c.drums==='balkan'){
-    // Quiet tapan-like low drum and sticks, without a pop-kit backbeat.
-    drum(0,35,72,.60);drum(2,35,59,.50);
-    drum(1,37,37,.22);drum(3,37,43,.24);
+    // Tapan-like low drum and sticks; double-time makes eight attacks
+    // rather than four, but each physical 4/4 bar keeps its duration.
+    if(doubleTime){
+     [0,1,2,3].forEach(function(tick){drum(tick,35,tick%2?45:66,.44);drum(tick+.5,37,tick%2?36:43,.23);});
+    }else{
+     drum(0,35,72,.60);drum(2,35,59,.50);
+     drum(1,37,37,.22);drum(3,37,43,.24);
+    }
    }else if(c.drums==='nordic' && /^se-|^no-bruremarsj/.test(name)){
     // GM35 low cajón stroke, GM37 side/rim. No automatic hi-hat/backbeat.
     if(name==='se-polka-24'){
