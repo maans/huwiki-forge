@@ -24,6 +24,36 @@ try{
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.waitForFunction(()=>window.$tw&&$tw.wiki&&$tw.rootWidget);
  await page.locator(".silba-home").waitFor();
+ // Responsive SilbaÄtno hero: the sidebar can narrow a TiddlyWiki story
+ // without shrinking the outer browser viewport. The headline must stay on
+ // one line, and all four labelled icon actions must remain in one row.
+ const actions=page.locator(".silba-actions .silba-action");
+ assert.equal(await actions.count(),4,"Exactly four compact hero actions remain");
+ assert.equal(await actions.locator("svg").count(),4,"Each icon must render as an actual SVG");
+ assert.equal(await actions.locator(".silba-action-label").count(),4,"Icon links retain accessible names");
+ for(const width of [1000,800,690,520,360]){
+  await page.locator(".silba-home").evaluate((node,w)=>node.style.width=w+"px",width);
+  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+  const geometry=await page.evaluate(()=>{
+   const hero=document.querySelector(".silba-home"),heading=hero.querySelector(".silba-hero h1");
+   const links=Array.from(hero.querySelectorAll(".silba-actions .silba-action"));
+   const rects=links.map(n=>n.getBoundingClientRect());
+   const box=heading.getBoundingClientRect();
+   const style=getComputedStyle(heading);
+   return {width:hero.getBoundingClientRect().width,headlineWidth:heading.scrollWidth,availableWidth:heading.clientWidth,
+    lineHeight:parseFloat(style.lineHeight),headingHeight:box.height,
+    links:rects.map(r=>({x:r.x,y:r.y,width:r.width,height:r.height}))};
+  });
+  assert.ok(geometry.headlineWidth<=geometry.availableWidth+2,
+   "SilbaÄtno title must fit its own card at "+width+"px: "+JSON.stringify(geometry));
+  assert.ok(geometry.headingHeight<=geometry.lineHeight+2,
+   "SilbaÄtno title cannot wrap at "+width+"px");
+  assert.ok(geometry.links.every(link=>link.width>=43&&link.height>=43),
+   "Icon buttons must keep iPad-friendly touch targets");
+  assert.ok(geometry.links.every(link=>Math.abs(link.y-geometry.links[0].y)<2),
+   "All four actions must remain on the same row at "+width+"px");
+ }
+ await page.locator(".silba-home").evaluate(node=>node.style.removeProperty("width"));
  // Use the real ABCJS parser, not a mocked score, to confirm both A/B repeats
  // unfold independently. This also validates the exact first/second-volta
  // line break after the MuseScore import.
