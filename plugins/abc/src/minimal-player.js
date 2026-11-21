@@ -47,7 +47,7 @@ exports.mount=function(host,options){
  var status=make('div','huwabc-minimal-status');status.setAttribute('role','status');status.setAttribute('aria-live','polite');status.hidden=true;
  if(controls)(externalControls?options.controlsHost:box).appendChild(controls);
  box.appendChild(paper);box.appendChild(status);host.appendChild(box);
- if(options.follow&&controls)box.insertBefore(paper,controls);
+ if(options.follow&&controls&&controls.parentNode===box)box.insertBefore(paper,controls);
  var pager=options.paged?PageView.mount(paper,{wiki:options.wiki,state:options.state,title:fields.title||"",audio:options.audio!==false,transport:function(){return controls;},
   onMixer:function(anchor){if(options.audio===false)return;ensureMiniMixer().show({anchor:anchor,floating:true});}}):null;
  function show(message,error){
