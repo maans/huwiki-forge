@@ -9,7 +9,7 @@ The landing page uses a photograph sourced from [the orchestra website](https://
 - [Editable Music Edition](./index.html) — 17 complete, editable ABC scores, notation, mixer and playback.
 - [Audience SitePublisher view](./site/index.html) — all 17 scores in **one standalone HTML file** with navigation, notation and playback.
 - [Original MuseScore files](./sources/) — the 17 exact MSCZ attachments used as sources.
-- [Conversion report](./conversion-report.json) — source names, bar counts, voice counts, automatically trimmed transposed duplicates and warnings.
+- [Conversion report](./conversion-report.json) — source names, bar counts, voice counts, automatically trimmed transposed duplicates and warnings. These diagnostics live in the report, **not as repeated text beneath every score**.
 
 The editor and audience versions link to one another. The audience Site opens the first score in the music stand (nodepult) and navigates between all 17 tunes. The editor homepage uses native WikiText-compatible HTML markup and a scoped stylesheet. The audience HTML comes from the existing HUWiki SitePublisher, not a second custom viewer or synthesizer.
 

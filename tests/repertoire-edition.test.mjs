@@ -190,6 +190,21 @@ test("reordering does not mutate the orchestra repertoire",()=>{
  assert.equal(model.items(wiki,orch).length,3);
 });
 
+test("SilbaÄtno importer keeps technical conversion diagnostics in the report, not the score article",async()=>{
+ const base=path.join(root,"editions/silva-ethno-repertoire");
+ const scores=JSON.parse(await readFile(path.join(base,"tiddlers/repertoire.json"),"utf8"));
+ const report=JSON.parse(await readFile(path.join(base,"conversion-report.json"),"utf8"));
+ const converter=await readFile(path.join(root,"scripts/build-silba-etno-repertoire.mjs"),"utf8");
+ assert.equal(scores.length,17);
+ assert.equal(report.entries.length,17);
+ assert.ok(scores.every(song=>song.text===""&&song["abc-source"]&&song["huwiki-import-source"]));
+ assert.ok(report.entries.every(entry=>typeof entry.duplicateRemoved==="boolean"&&Array.isArray(entry.warnings)));
+ const example=report.entries.find(entry=>entry.source==="laat-fraan-dalarna-cbb.mscz");
+ assert.ok(example&&example.duplicateRemoved,"Original duplicate-removal information is preserved");
+ assert.ok(converter.includes('"text":""'),"Rebuild must not recreate technical prose");
+ assert.doesNotMatch(converter,/var statusNote=/);
+});
+
 test("SilbaÄtno Edition links all 17 scores and leaves their ABC bodies untouched",async()=>{
  const folder=path.join(root,"editions/silva-ethno-repertoire");
  const manifest=JSON.parse(await readFile(path.join(folder,"manifest.json"),"utf8"));

@@ -86,9 +86,6 @@ for(const song of ready){
   droneEnabled:false,variation:20
  };
  const warn=[...new Set(rendered.warnings||[])];
- const statusNote=duplicateRemoved?
-   "En transponeret dublet i anden halvdel er udeladt efter automatisk mønstergenkendelse. Kontrollér mod originalpartituret.":
-   "Hele partituret er konverteret; kontrollér nodebillede, gentagelser og afspilning mod originalen.";
  const result={...song,
   "type":"text/vnd.tiddlywiki",
   "tags":"ABC SilbaÄtno SilbaÄtnoTrack",
@@ -103,8 +100,10 @@ for(const song of ready){
   "silba-import-state":"abc-konverteret",
   "silba-abc-voices":String(rendered.voices),
   "silba-abc-notes":String(rendered.notes),
-  "text":"! "+heading+"\n\nOriginal: "+name+" · "+rendered.voices+" stemmer · "+last+" takter.\n\n"+statusNote+
-   (warn.length?"\n\n!! Importbemærkninger\n"+warn.map(w=>"* "+w).join("\n"):"")
+  // The score and its title are rendered by the ABC view template.
+  // Keep importer diagnostics in conversion-report.json and source fields,
+  // not as duplicate user-facing prose underneath the notation.
+  "text":""
  };
  Object.keys(result).forEach(k=>{if(typeof result[k]!=="string")throw Error("Non-string "+k+" in "+name);});
  if(used.has(result.title))throw Error("Duplicate song "+result.title);used.add(result.title);
