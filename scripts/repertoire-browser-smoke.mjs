@@ -73,7 +73,18 @@ try{
  // Oh verden must render in ABC Musik with its chord-only player, not as a pre/code section.
  const ohScore=page.locator('.huwabc-standalone[data-huwabc-title="SilbaÄtno · Oh verden"]').first();
  await ohScore.waitFor();
- await ohScore.locator(".huwabc-follow-chords-only").first().waitFor({state:"attached"});
+ try{
+  await ohScore.locator(".huwabc-follow-chords-only").first().waitFor({state:"attached",timeout:10000});
+ }catch(error){
+  const diagnostics=await ohScore.evaluate(node=>({
+   classes:node.className,
+   html:node.outerHTML.slice(0,5000),
+   text:node.innerText.slice(0,1500),
+   minimal:node.querySelector(".huwabc-minimal-player")?.className,
+   errors:Array.from(node.querySelectorAll(".huwabc-error")).map(x=>x.textContent)
+  }));
+  throw Error("Oh verden chord-only ABC failed to mount: "+JSON.stringify({diagnostics,pageErrors:errors.slice(-10)}));
+ }
  assert.equal(await ohScore.locator(".huwrep-chord-line").count(),0,"No HTML chord substitute");
  const chart=await page.evaluate(()=>{
   const f=$tw.wiki.getTiddler("SilbaÄtno · Oh verden").fields;
