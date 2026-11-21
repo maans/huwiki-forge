@@ -205,6 +205,11 @@ test("declined editor requests restore, while destroying the book cancels pendin
  assert.equal(removed.book._editReturn,null);
 });
 
+test("Suspended book is truly removed from layout while the native draft renders",async()=>{
+ const styles=await readFile(new URL("../plugins/repertoire/src/styles.css",import.meta.url),"utf8");
+ assert.match(styles,/\.huwrep-book\[hidden\]\{display:none!important\}/);
+});
+
 test("iPad lets old SVG and audio layers clear before the native draft is mounted",()=>{
  const f=fixture({ipad:true});f.edit();f.edit();
  assert.equal(f.controllers,0,"old playback released synchronously");
