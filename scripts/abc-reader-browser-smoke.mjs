@@ -39,7 +39,9 @@ try{
  await page.waitForFunction(()=>!!document.querySelector(".huwabc-score.huwabc-standalone:not(.huwabc-minimal)"));
  article=page.locator(".huwabc-score.huwabc-standalone:not(.huwabc-minimal)").first();
  assert.equal(await article.locator(".huwabc-instrument-group").isVisible(),true);
- await article.getByRole("button",{name:"PDF / Udskriv"}).waitFor({state:"visible"});
+ const pdfButton=article.locator(".huwabc-actions button").filter({hasText:"PDF"}).first();
+ assert.equal(await pdfButton.count(),1,"Advanced mode retains its PDF action");
+ assert.equal(await pdfButton.isVisible(),true,"PDF action must be visible in Advanced mode");
  const normalSwitch=article.locator(".huwabc-view-toggle");
  assert.equal(await normalSwitch.count(),1);
  assert.equal(await normalSwitch.isVisible(),true);
