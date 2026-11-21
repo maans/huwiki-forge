@@ -150,6 +150,21 @@ try{
   try{
    await page.goto(url,{waitUntil:"domcontentloaded",timeout:90000});
    await page.waitForFunction(()=>window.$tw?.wiki&&$tw.rootWidget);
+   // Real WebKit and Chromium parser check: an adjacent B repeat must not
+   // become part of A's second ending or desynchronize the accompaniment.
+   const dalarneRepeat=await page.evaluate(()=>{
+    const ABC=$tw.modules.execute("$:/plugins/huwiki/abc/vendor/abcjs.js");
+    const planner=$tw.modules.execute("$:/plugins/huwiki/abc/repeat-plan.js");
+    const source=$tw.wiki.getTiddler("SilbaÄtno · Låt från Dalarne").fields["abc-source"];
+    const plan=planner.build(ABC,source,{});
+    return {active:plan.active,order:plan.order,sections:plan.sections.map(s=>[s.start,s.end])};
+   });
+   assert.equal(dalarneRepeat.active,true,"Adjacent A/B voltas must use shared playback");
+   assert.deepEqual(dalarneRepeat.sections,[[0,9],[9,19]],"A and B must remain independent");
+   assert.deepEqual(dalarneRepeat.order,[
+    0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,8,
+    9,10,11,12,13,14,15,16,9,10,11,12,13,14,17,18
+   ],"Dalarne must play the full 32-bar repeat order");
    await installProbe(page);
    await activate(page.getByRole("link",{name:"Åbn nodebogen",exact:true}));
    const book=page.locator(".huwrep-book").first();
