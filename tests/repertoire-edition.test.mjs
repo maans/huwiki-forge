@@ -428,13 +428,13 @@ test("SilbaÄtno statistic cards open auto-generated native TiddlyWiki lists",as
   assert.match(home.text,new RegExp('to="'+title+'".*class="silba-metric"'));
   const page=config.find(t=>t.title===title);
   assert.ok(page,"Missing clickable destination: "+title);
-  assert.match(page.text,/\\<\\$list filter=/);
-  assert.match(page.text,/template="\\$:\/silbaatno\/repertoire\/list-row"/);
+  assert.ok(page.text.includes("<$list filter="));
+  assert.ok(page.text.includes('template="$:/silbaatno/repertoire/list-row"'));
  }
  assert.equal((home.text.match(/class="silba-metric"/g)||[]).length,3);
- assert.match(home.text,/\\<\\$count filter=/);
+ assert.ok(home.text.includes("<$count filter="));
  assert.equal((home.text.match(/class="silba-track-list"/g)||[]).length,3);
  assert.doesNotMatch(home.text,/<li>/,"Homepage lists must be data-driven rather than hardcoded");
- assert.match(template.text,/removeprefix\\[SilbaÄtno · /);
+ assert.ok(template.text.includes("removeprefix[SilbaÄtno · "));
  assert.match(template.text,/Afventer nodeark/);
 });
