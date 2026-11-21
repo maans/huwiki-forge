@@ -59,6 +59,23 @@ test("Reader supports page and tune boundaries, preserving playing score",()=>{
  assert.ok(code.includes("outerChoice.dispatchEvent"),"manual ABC page modes must not conflict with a parent Repertoire book");
 });
 
+test("Normal score pages grow with the available reading height, without altering music or edit view",async()=>{
+ const pageCode=await readFile(path.join(root,"plugins/abc/src/page-view.js"),"utf8");
+ assert.equal(bundled[prefix+"page-view.js"]?.text,pageCode,
+  "the published ABC plugin must use the responsive pagination module");
+ const exports={};
+ runInNewContext(pageCode,{exports,require(){return {};}});
+ const height=exports.availablePageHeight;
+ assert.equal(height(1000,220,56,false),708,"visible area beneath controls replaces the old 640px cap");
+ assert.equal(height(1000,70,56,false),858,"hiding panels lets the page grow vertically");
+ assert.equal(height(1000,690,56,false),640,"scores below the fold retain a usable minimum");
+ assert.equal(height(1000,70,56,true),480,"editor preview retains its original limit");
+ assert.equal(height(1400,110,56,false),1218,"tall displays are no longer limited to 800px");
+ assert.match(pageCode,/observer\.observe\(outer\)/,"watch changes to the enclosing frame");
+ assert.match(pageCode,/viewport\.getBoundingClientRect\(\)\.top/,"measure the page's position, not just the window");
+ assert.match(pageCode,/Move the original system SVGs, not copies/,"keep ABC playback and note selection untouched");
+});
+
 test("Reader sizing uses measured viewport with default fit and no fixed zoom",()=>{
  assert.match(code,/this\.fitMode="fit"/);
  assert.match(code,/\["fit","Tilpas skærm"\]/);
