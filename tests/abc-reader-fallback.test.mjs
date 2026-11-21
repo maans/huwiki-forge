@@ -6,6 +6,7 @@ import {runInNewContext} from 'node:vm';
 
 const require=createRequire(import.meta.url),read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 const plugin=JSON.parse(await read('plugins/abc/dist/plugin.json'));
+const pluginInfo=JSON.parse(await read('plugins/abc/plugin-info.json'));
 const tiddlers=JSON.parse(plugin.text).tiddlers;
 const moduleTitle='$:/plugins/huwiki/abc/reader-fallback.js',templateTitle='$:/plugins/huwiki/abc/ViewAddon';
 const source=await read('plugins/abc/src/reader-fallback.js'),exports={};
@@ -44,7 +45,7 @@ function render(wiki){
 test('readable ABC reader fallback is the code shipped in the plugin',()=>{
  assert.equal(tiddlers[moduleTitle].text,source);
  assert.match(tiddlers[templateTitle].text,/huwiki-abc-needs-reader/);
- assert.equal(plugin.version,'0.3.39-test.4');
+ assert.equal(plugin.version,pluginInfo.version);
 });
 test('ordinary ABC fields with prose still receive exactly one fallback reader',()=>{
  assert.deepEqual(render(createWiki('These are the rehearsal notes.')),[fixtureTitle]);

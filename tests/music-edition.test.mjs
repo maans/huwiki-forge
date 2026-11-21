@@ -45,7 +45,7 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  for(const t of tiddlers.filter(t=>t.title.startsWith("$:/plugins/huwiki/lessons-"))){
   assert.equal(t.dependents,"$:/plugins/huwiki/abc",t.title);
  }
- assert.equal(byTitle.get("$:/plugins/huwiki/abc").version,"0.3.39-test.4");
+ assert.equal(byTitle.get("$:/plugins/huwiki/abc").version,JSON.parse(await readFile(path.join(root,"plugins/abc/plugin-info.json"),"utf8")).version);
  const jingle=byTitle.get("TiddlyWiki Jingle");
  assert.ok(jingle,"TiddlyWiki Jingle must be shipped as an editable tiddler");
  assert.equal(jingle["abc-swing"],"66");
