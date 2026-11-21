@@ -3,12 +3,12 @@
   "name": "ABC Musik",
   "title": "$:/plugins/huwiki/abc",
   "stability": "experimental",
-  "description": "ABC Musik Edition – nodebogsvisning af sætliste-transponering uden at ændre original ABC",
+  "description": "ABC Musik Edition – korte orkestermelodititler i mixere; fulde tiddler-ID'er bevares",
   "plugin-type": "plugin",
   "license": "MIT",
   "type": "application/json",
-  "version": "0.3.39-test.5",
+  "version": "0.3.39-test.6",
   "author": "HUWiki",
   "revision": "8",
-  "modified": "20261121003200000"
+  "modified": "20261121015000000"
 }
