@@ -48,4 +48,19 @@ test('Split keeps visible notation and animated artwork while editing in wide an
  await chooseView('score');assert.equal(await stage.isVisible(),false);assert.equal(await notes.first().isVisible(),true);
  await chooseView('stage');assert.equal(await score.isVisible(),false);assert.equal(await stage.isVisible(),true);
  await chooseView('split');await checkSplit(false);
+ const activeScore=score.locator('.huw-musical-score-page:not([hidden])');
+ const playhead=editor.locator('.huw-musical-range');
+ async function clickNote(system,bar,expected){
+  const note=activeScore.locator('.abcjs-note.abcjs-v0.abcjs-l'+system+'.abcjs-m'+bar).first();
+  await note.locator('path').first().click();
+  assert.ok(Math.abs(Number(await playhead.inputValue())-expected)<.02,'a note click seeks the master clock to '+expected);
+ }
+ await clickNote(1,0,8*60/90); // Bar 3, across the opening clef change.
+ await clickNote(2,2,32*60/90); // Bar 9, directly on a ledger line.
+ await playhead.evaluate(input=>{
+  input.value='26';input.dispatchEvent(new Event('input',{bubbles:true}));
+  input.dispatchEvent(new Event('change',{bubbles:true}));
+ });
+ await activeScore.locator('.huw-musical-score-label').filter({hasText:'Voices on the Wall'}).waitFor();
+ await clickNote(0,1,25.854+4*60/104); // Scene 2, after a tempo change.
 });

@@ -1,0 +1,146 @@
+[
+  {
+    "title": "Turn Around · Score · 01 · The Whole World",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:The Whole World\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=90\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=bass name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A clef=bass] E,3 F, E,2 z2 | B,,2 E,2 G,F, E,2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | z8 |\n[V:A clef=treble] E2 GA G2 z2 | z8 | G3 A B2 G2 | F E3 B,2 z2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] z8 | B3 z c2 z2 | z8 | z8 |\n[V:A clef=bass] E,F, G,2 F,2 E,2 | B,,2 E,4 z2 | E4 z4 |]\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 |]\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 |]\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | z8 | z8 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 02 · Voices on the Wall",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Voices on the Wall\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=104\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] B,2 E2 GF E2 | E2 GA G2 z2 | F2 E3 B, z2 | z8 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] F E3 B,2 z2 | EF G2 F2 E2 | B,2 E4 z2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 |\n[V:A] E3 F E2 z2 | B,2 E2 GF E2 | E2 GA G2 z2 |\n[V:L] E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] F2 E3 B, z2 | z8 | E4 z4 |]\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 |]\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 |]\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 03 · Never Wrong",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Never Wrong\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=109\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] E2 GA G2 z2 | F2 E3 B, z2 | G3 A B2 G2 | z8 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] EF G2 F2 E2 | B,2 E4 z2 | E3 F E2 z2 | B,2 E2 GF E2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] E2 GA G2 z2 | F2 E3 B, z2 | G3 A B2 G2 | z8 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | z4 E,3 z |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z8 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | z8 |\n[V:A] z8 | z8 | z8 | z8 |\n[V:L] z3 B,3 z2 | z8 | z E3 z4 | B,3 z z4 |\n[V:K] z8 | z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 | z8 |\n[V:A] z8 | z8 | z8 | z8 |\n[V:L] z4 z3 E,- | E,2 z2 B,3 z | z8 | z2 E3 z z2 |\n[V:K] z8 | z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 | z8 |\n[V:A] z8 | z8 | z8 | z8 |]\n[V:L] z B,3 z4 | z8 | z8 | z8 |]\n[V:K] z8 | z8 | z8 | z8 |]\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 | z8 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 04 · Up You Get",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Up You Get\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=100\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] F2 E3 B, z2 | G3 A B2 G2 | F E3 B,2 z2 | z8 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | z8 | z8 | B3 z c2 z2 |\n[V:A] B,2 E4 z2 | E3 F E2 z2 | B,2 E2 GF E2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | B4 c2 z2 |\n[V:A] E2 GA G2 z2 | F2 E3 B, z2 | E4 z4 |]\n[V:L] E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |]\n[V:K] z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |]\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | B3 z c2 z2 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 05 · The Real Thing",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:The Real Thing\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=104\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] E3 F E2 z2 | B,2 E2 GF E2 | E2 GA G2 z2 | z8 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] G3 A B2 G2 | F E3 B,2 z2 | EF G2 F2 E2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 |\n[V:A] B,2 E4 z2 | E3 F E2 z2 | E4 z4 |]\n[V:L] E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |]\n[V:K] z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |]\n[V:D] [K:none clef=perc stafflines=1] B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 06 · One More Step",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:One More Step\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=117\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] E3 F E2 z2 | E2 GA G2 z2 | G3 A B2 G2 | EF G2 F2 E2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] E3 F E2 z2 | E2 GA G2 z2 | G3 A B2 G2 | EF G2 F2 E2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] E3 F E2 z2 | E2 GA G2 z2 | z8 | z8 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | z4 z3 E,- | E,2 z2 z4 |\n[V:K] E,,4 z4 | z4 B,2 z2 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | z8 | z8 |\n[V:A] z8 | z8 | z8 | z8 |\n[V:L] B,3 z z4 | z3 E3 z2 | z4 B,3 z | z8 |\n[V:K] z8 | z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 | z8 |\n[V:A] z8 | z8 | z8 | z8 |\n[V:L] E,3 z z4 | z B,3 z4 | z4 z E3 | z4 z3 B,- |\n[V:K] z8 | z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 | z8 |\n[V:A] z8 | z8 | z8 | z8 |]\n[V:L] B,2 z2 z4 | z8 | z8 | z8 |]\n[V:K] z8 | z8 | z8 | z8 |]\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 | z8 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 07 · Too Much Light",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Too Much Light\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=88\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\n[V:A] z4 e2 z2 | z4 e2 z2 | B2 d2 cB A2 | z8 |\n[V:L] z8 | z8 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:A] FG A2 B2 G2 | E4 z4 | G2 B2 AG E2 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 |\n[V:A] A2 Bc B2 z2 | d3 c B2 A2 | E4 z4 |]\n[V:L] G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |]\n[V:K] z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 08 · The Other Side",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:The Other Side\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=89\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] G2 A2 B3 z | B2 d2 cB A2 | G3 A G2 E2 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | z8 | z8 |\n[V:A] z8 | E4 z4 | G2 B2 AG E2 |\n[V:L] G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B3 z c2 z2 | z8 | z8 |\n[V:A] A2 Bc B2 z2 | d3 c B2 A2 | E4 z4 |]\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 |]\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 |]\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | z8 | z8 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 09 · What Makes Seeing Possible",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:What Makes Seeing Possible\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=105\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] G2 B2 AG E2 | A2 Bc B2 z2 | d3 c B2 A2 | z8 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] B2 d2 cB A2 | G3 A G2 E2 | FG A2 B2 G2 | E4 z4 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] G2 B2 AG E2 | z8 | z8 | z8 |\n[V:L] E,2 B, z E2 z2 | z2 E,3 z z2 | z2 B,3 z z2 | z4 z3 E- |\n[V:K] E,4 z4 | z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | z8 | z8 | z8 |\n[V:A] z8 | z8 | z8 |\n[V:L] E2 z2 z B,3 | z8 | E,3 z z4 |\n[V:K] z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 |\n[V:A] z8 | z8 | z8 |\n[V:L] z B,3 z4 | z4 z E3 | z4 z B,3 |\n[V:K] z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 |\n[V:A] z8 | z8 | z8 |]\n[V:L] z8 | z8 | z8 |]\n[V:K] z8 | z8 | z8 |]\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 10 · The Ones Below",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:The Ones Below\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=96\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] A2 Bc B2 z2 | d3 c B2 A2 | G2 A2 B3 z | z8 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | z8 | z8 | B3 z c2 z2 |\n[V:A] G3 A G2 E2 | FG A2 B2 G2 | E4 z4 | E4 z4 |]\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |]\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |]\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | B4 c2 z2 | z8 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 11 · Home Again",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Home Again\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=101\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=bass name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A clef=bass] E,2 G,A, G,2 z2 | F,2 E,3 B,, z2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 |\n[V:A clef=treble] G3 A B2 G2 | z8 | EF G2 F2 E2 | B,2 E4 z2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A clef=bass] E,3 F, E,2 z2 | B,,2 E,2 G,F, E,2 | E4 z4 |]\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 |]\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 |]\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 12 · Hands Off My Chain",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Hands Off My Chain\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=115\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] EF E z G2 F2 | G3 A B2 G2 | F E3 B,2 z2 | EF E z G2 F2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] B,2 E4 z2 | E3 F E2 z2 | EF E z G2 F2 | E2 GA G2 z2 |\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] F2 E3 B, z2 | EF E z G2 F2 | F E3 B,2 z2 | F4 z4 |]\n[V:L] E,3 z B,2 z2 | E,2 z2 F,E, z2 | E,3 z B,2 z2 | E,2 z2 F,E, z2 |]\n[V:K] E,,4 z4 | z4 B,2 z2 | E,,4 z4 | z4 B,2 z2 |]\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 13 · Same Eyes, Bigger Questions",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Same Eyes, Bigger Questions\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=95\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] G2 B2 AG E2 | A2 Bc B2 z2 | d3 c B2 A2 | z8 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | z8 | z8 | B3 z c2 z2 |\n[V:A] B2 d2 cB A2 | G3 A G2 E2 | FG A2 B2 G2 | E4 z4 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | B4 c2 z2 | z8 |\n[V:A] G2 B2 AG E2 | A2 Bc B2 z2 | E4 z4 |]\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 |]\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 |]\n[V:D] [K:none clef=perc stafflines=1] z8 | B3 z c2 z2 | z8 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Score · 14 · Room for Two",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Room for Two\n% Original digital composition for AniMus. Instrumental parts from the recorded soundtrack to Turn Around — Beyond the Cave.\nM:4/4\nL:1/8\nQ:1/4=109\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%score A L K D\n%%percmap B 36\n%%percmap c 38\nK:Em\nV:A clef=treble name=\"Aulos\" snm=\"Aul.\"\n%%MIDI program 68\nV:L clef=bass name=\"Lyra\" snm=\"Lyr.\"\n%%MIDI program 46\nV:K clef=bass name=\"Kithara\" snm=\"Kith.\"\n%%MIDI program 24\nV:D clef=perc stafflines=1 name=\"Frame drum\" snm=\"Dr.\"\n%%MIDI channel 10\n[V:A] A2 Bc B2 z2 | d3 c B2 A2 | G2 A2 B3 z | z8 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] G3 A G2 E2 | FG A2 B2 G2 | E4 z4 | G2 B2 AG E2 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] A2 Bc B2 z2 | d3 c B2 A2 | G2 A2 B3 z | z8 |\n[V:L] E,2 B, z E2 z2 | G,3 B, E2 z2 | E,2 B, z E2 z2 | G,3 B, E2 z2 |\n[V:K] E,4 z4 | z4 B,2 z2 | E,4 z4 | z4 B,2 z2 |\n[V:D] [K:none clef=perc stafflines=1] B4 c2 z2 | B3 z c2 z2 | B4 c2 z2 | B3 z c2 z2 |\n[V:A] z8 | z8 | z8 | z8 |\n[V:L] z6 E,2- | E, z z2 z2 B,2- | B, z z2 z4 | z E3 z4 |\n[V:K] z8 | z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 | z8 |\n[V:A] z8 | z8 | z8 | z8 |\n[V:L] z B,3 z4 | z4 z E,3 | z4 B,3 z | z8 |\n[V:K] z8 | z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 | z8 |\n[V:A] z8 | z8 | z8 | z8 |\n[V:L] E3 z z4 | z B,3 z4 | z8 | z8 |\n[V:K] z8 | z8 | z8 | z8 |\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | z8 | z8 |\n[V:A] z8 | z8 | E4 z4 |]\n[V:L] z8 | z8 | E,2 B, z E2 z2 |]\n[V:K] z8 | z8 | E,4 z4 |]\n[V:D] [K:none clef=perc stafflines=1] z8 | z8 | B4 c2 z2 |]\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Vocal score · 03",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Never Wrong\n% Original lyrics; AI-generated vocal performance. Vocal transcription of the recorded take; exact vocal timing and pitch estimates are retained in the production data.\nM:4/4\nL:1/16\nQ:1/4=84\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%vocalfont Helvetica 12\nK:Em\nE3F2G3 z FE3G3- | GA3- A2B2- B3 z z4 |\nw: turn a- round keep your eyes * a- * head *\nB2B2 G4 z E2G A4 | G4- G E8 z3 |\nw: trust the wall and the life we've * led\nz2 EF F4 F3E2G2A- | A4 B8 z4 |\nw: count the shapes and be- lieve your * eyes\nBB2G- G4 E3G2A2A- | AE3- E12- |\nw: noth- ing lives * where the shad- ow * dies *\nE2 z2 z4 z8 |]\nw: *\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Vocal score · 06",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:One More Step\n% Original lyrics; AI-generated vocal performance. Vocal transcription of the recorded take; exact vocal timing and pitch estimates are retained in the production data.\nM:4/4\nL:1/16\nQ:1/4=84\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%vocalfont Helvetica 12\nK:Em\nE4 E3 F4 z z GAF- | F D4 E6 z z A3- |\nw: turn a- round let the old * ground go take\nAD3 D3 E4 F F4 | B3 B6 z3 B3B,- |\nw: * one step past the things you know fear can\nB,2 B4 z2 EB,F3G3 | A4 z4 z2 B3D3 |\nw: * shout let your feet re- ply one more\nE3 z z E2F2G2G3B,2- | B,3 z z4 z8 |]\nw: step and a wid- er sky *\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Vocal score · 09",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:What Makes Seeing Possible\n% Original lyrics; AI-generated vocal performance. Vocal transcription of the recorded take; exact vocal timing and pitch estimates are retained in the production data.\nM:4/4\nL:1/16\nQ:1/4=84\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%vocalfont Helvetica 12\nK:Em\nE4- EE3 G3 z z =FBA- | A2A2 G4- G3 z z4 |\nw: turn * a- round let the day- * light through *\nz2 BB2 B4 A3 G2AA- | AB,3- B,6 z2 z2 B2- |\nw: noth- ing ends where the shad- ows * do * there\nB2E3B3 B3G3A2 | A2 B6- B z3 z3 A |\nw: * is more than we ev- er knew * room\nA4 G3G3 z2 EF3 | D4 E4- E z3 z4 |]\nw: for ques- tions and room for you *\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  },
+  {
+    "title": "Turn Around · Vocal score · 14",
+    "text": "<$huwiki-abc tiddler=<<currentTiddler>>/>",
+    "type": "text/vnd.tiddlywiki",
+    "abc-source": "X:1\nT:Room for Two\n% Original lyrics; AI-generated vocal performance. Vocal transcription of the recorded take; exact vocal timing and pitch estimates are retained in the production data.\nM:4/4\nL:1/16\nQ:1/4=84\n%%measurenb 1\n%%staffwidth 540\n%%titlefont serif 17\n%%vocalfont Helvetica 12\nK:Em\nE4 G2B3 z3 AAB2 | ^G4 E6 z2 z B3 |\nw: turn a- round there are hands to hold bring\nA4 A3^A3=A2 B3^G- | ^G2^G2- ^G3 z z4 =G2G2- |\nw: your light to the dark and * cold * you must\nG2E3E2E3G3G3- | GA3- A2 z2 z B4 A3- |\nw: * o- pen your eyes to * see * take your\nAB3 z3 B AG3- G2F2- | F2 E6 z8 |]\nw: * time you can walk * with * me\n",
+    "abc-accompaniment": "{\"enabled\":false}",
+    "tags": "[[Turn Around · Score]]"
+  }
+]
