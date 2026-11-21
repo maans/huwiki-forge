@@ -24,6 +24,32 @@ try{
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.waitForFunction(()=>window.$tw&&$tw.wiki&&$tw.rootWidget);
  await page.locator(".silba-home").waitFor();
+ // A standalone score from an older import may still store abc-view:full.
+ // Opening it must nonetheless start in the quiet, reversible minimal view.
+ const oldScoreTitle="SilbaÄtno · Låt från Dalarne";
+ const previouslySaved=await page.evaluate(id=>$tw.wiki.getTiddler(id).fields["abc-view"],oldScoreTitle);
+ assert.equal(previouslySaved,"full","Fixture is an older advanced-view import");
+ await page.locator(".silba-home").getByRole("link",{name:"Låt från Dalarne"}).click();
+ const standalone=page.locator('.huwabc-standalone[data-huwabc-title="SilbaÄtno · Låt från Dalarne"]').first();
+ await standalone.waitFor();
+ assert.ok(await standalone.evaluate(node=>node.classList.contains("huwabc-minimal")),
+  "Ordinary ABC scores should open in minimal view");
+ const advanced=standalone.locator(".huwabc-view-toggle");
+ assert.equal((await advanced.innerText()).trim(),"Avanceret visning");
+ await advanced.click();
+ await page.waitForFunction(()=>
+  [...document.querySelectorAll(".huwabc-standalone")].some(node=>
+   node.getAttribute("data-huwabc-title")==="SilbaÄtno · Låt från Dalarne"&&!node.classList.contains("huwabc-minimal")));
+ assert.equal((await standalone.locator(".huwabc-view-toggle").innerText()).trim(),"Minimal visning");
+ assert.equal(await page.evaluate(id=>$tw.wiki.getTiddler(id).fields["abc-view"],oldScoreTitle),
+  previouslySaved,"The display-only toggle must not rewrite the music");
+ await page.locator(".silba-home").getByRole("link",{name:"Brudmarch från Jämtland"}).click();
+ const nextStandalone=page.locator('.huwabc-standalone[data-huwabc-title="SilbaÄtno · Brudmarch från Jämtland"]').first();
+ await nextStandalone.waitFor();
+ assert.ok(await nextStandalone.evaluate(node=>node.classList.contains("huwabc-minimal")),
+  "Each newly opened score must independently start minimal");
+ await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
+ await page.locator(".silba-home").waitFor();
  // Visit the workshop first: compact cards add/remove songs without a separate button.
  await page.getByRole("link",{name:"Åbn repertoireværksted"}).click();
  const grid=page.locator(".huwrep-repertoire .huwrep-song-grid");

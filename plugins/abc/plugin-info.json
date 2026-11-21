@@ -3,12 +3,12 @@
   "name": "ABC Musik",
   "title": "$:/plugins/huwiki/abc",
   "stability": "experimental",
-  "description": "ABC Musik Edition – korte orkestermelodititler i mixere; fulde tiddler-ID'er bevares",
+  "description": "ABC Musik – alle almindelige nodeark starter minimalt; Avanceret visning er et midlertidigt tilvalg; nodebog og audio bevares",
   "plugin-type": "plugin",
   "license": "MIT",
   "type": "application/json",
-  "version": "0.3.39-test.6",
+  "version": "0.3.39-test.7",
   "author": "HUWiki",
   "revision": "8",
-  "modified": "20261121015000000"
+  "modified": "20261121022000000"
 }

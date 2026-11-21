@@ -97,6 +97,8 @@ function ABCWidget(parseTreeNode,options){this.initialise(parseTreeNode,options)
 ABCWidget.prototype=new Widget();
 ABCWidget.prototype.execute=function(){
  this.title=this.getAttribute("tiddler",this.getVariable("currentTiddler"));
+ // A new tune starts as a compact score, regardless of any old saved full view.
+ if(this._lastScoreTitle!==this.title){this._manualMode=null;this._lastScoreTitle=this.title;}
  var self=this,t=this.wiki.getTiddler(this.title);this._viewAttributes={};this._viewError=null;
  ['view','from','start','count','to','end','bars','audio','show-title','embedded','voice','measures','chords','chord-voice','swing','mixer'].forEach(function(key){self._viewAttributes[key]=self.getAttribute(key,'');});
  try{this._scoreView=ScoreView.resolve(this._viewAttributes,t?t.fields:{});}catch(error){this._viewError=error;this._scoreView={minimal:true};}
@@ -105,9 +107,10 @@ ABCWidget.prototype.execute=function(){
  // example widgets keep their requested presentation without extra controls.
  this._standaloneView=!!(t&&!t.fields['draft.of']&&!this._viewError&&!this._scoreView.range&&!this._scoreView.embedded&&
   (!explicit||explicit==='auto')&&this.getAttribute('preview','')!=='yes'&&this.title===current&&(!story||story===this.title));
- // The standalone reader has two modes. Previously saved notation-only views
- // remain compact, now with the same Play button as the minimal reader.
+ // Standalone scores always OPEN minimally, including older abc-view:full imports.
+ // Explicit view="full" transclusions and the Repertoire Nodebog remain unchanged.
  if(this._standaloneView){
+  this._scoreView=ScoreView.resolve(Object.assign({},this._viewAttributes,{view:this._manualMode||'minimal'}),t.fields);
   this._scoreView.audio=true;
   // A complete score keeps its musical title in both full and minimal views.
   // Inline article examples retain the existing show-title default (no),
@@ -613,16 +616,18 @@ ABCWidget.prototype.draw=function(){
 ABCWidget.prototype.drawViewToggle=function(){
  var self=this,minimal=this._scoreView.minimal,row=el('div','huwabc-view-toggle-row');
  if(minimal){this._minimalControlsHost=el('div','huwabc-minimal-toolbar');row.appendChild(this._minimalControlsHost);}
- var control=button(minimal?'Normal visning':'Minimal visning',function(){
-  var current=self.wiki.getTiddler(self.title);if(!current)return;
+ var danish=I18n.language(this.wiki)==='da';
+ var control=button(minimal?(danish?'Avanceret visning':'Advanced view'):(danish?'Minimal visning':'Minimal view'),function(){
+  if(!self.wiki.getTiddler(self.title))return;
   var next=self._scoreView.minimal?'full':'minimal';
   if(self._audioController)playback.stopOne(self._audioController);
   if(self._minimalPlayer&&self._minimalPlayer.controller)playback.stopOne(self._minimalPlayer.controller);
-  self._toggleFocusPending=true;
-  self.wiki.addTiddler(new $tw.Tiddler(current,{'abc-view':next}));
+  self._manualMode=next;self._toggleFocusPending=true;
+  // Reader-only choice: no mutation of the original music tiddler.
+  self.refreshSelf();
  },'huwabc-view-toggle');
- control.setAttribute('title',minimal?'Vis alle værktøjer':'Vis kun noder og afspilning');
- control.setAttribute('aria-label',minimal?'Skift til normal visning':'Skift til minimal visning');
+ control.setAttribute('title',minimal?(danish?'Vis avancerede værktøjer':'Show advanced tools'):(danish?'Vis kun noder og afspilning':'Show only score and player'));
+ control.setAttribute('aria-label',minimal?(danish?'Skift til avanceret visning':'Switch to advanced view'):(danish?'Skift til minimal visning':'Switch to minimal view'));
  row.appendChild(control);this.host.appendChild(row);
  if(this._toggleFocusPending){this._toggleFocusPending=false;try{control.focus({preventScroll:true});}catch(ignore){control.focus();}}
 };
@@ -673,7 +678,11 @@ ABCWidget.prototype.refresh=function(changes){
   if(!current||!before||!RefreshPolicy.source(current.fields)||!RefreshPolicy.source(before)||this._viewError){this.refreshSelf();return true;}
   // A saved view change is structural only when it changes this instance.
   var resolved;
-  try{resolved=ScoreView.resolve(this._viewAttributes,current.fields);if(this._standaloneView){resolved.audio=true;if(!this._viewAttributes['show-title'])resolved.showTitle=true;}}
+  try{
+   var attrs=this._standaloneView?Object.assign({},this._viewAttributes,{view:this._manualMode||'minimal'}):this._viewAttributes;
+   resolved=ScoreView.resolve(attrs,current.fields);
+   if(this._standaloneView){resolved.audio=true;if(!this._viewAttributes['show-title'])resolved.showTitle=true;}
+  }
   catch(error){this.refreshSelf();return true;}
   if(JSON.stringify(resolved)!==JSON.stringify(this._scoreView)){this.refreshSelf();return true;}
   var plan=RefreshPolicy.plan(before,current.fields);
