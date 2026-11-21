@@ -150,6 +150,23 @@
       }
     },
     {
+      "id": "theseus-ship",
+      "name": "The Ship of Theseus",
+      "version": "0.1.0",
+      "status": "test",
+      "manifest": "../editions/theseus-ship/manifest.json",
+      "description": "An editable AniMus musical about the Ship of Theseus. Watch two ships take shape and give the story your own ending.",
+      "home": {
+        "headingDa": "Theseus’ skib",
+        "headingEn": "The Ship of Theseus",
+        "descriptionDa": "En kort AniMus-musical om Theseus’ skib. Se to skibe blive til, og giv selv historien en ny slutning.",
+        "descriptionEn": "An editable AniMus musical about the Ship of Theseus. Watch two ships take shape and give the story your own ending.",
+        "noteDa": "1 min. 56 sek. · Engelsk tale og sang med danske undertekster.",
+        "noteEn": "1 min 56 sec · English dialogue and songs with Danish subtitles.",
+        "order": "02.42"
+      }
+    },
+    {
       "id": "ai",
       "name": "AI Edition (test)",
       "description": "AI Forge 0.4.2 with OpenAI, Claude and Google Gemini, local LM Studio/Ollama, approved ForgeShare Vault and screenshot analysis.",

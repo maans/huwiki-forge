@@ -100,7 +100,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
   var self=this,doc=this.document,displayName=Language.projectLabels(this.wiki,this.filmTitle);
   this._localize=null;
   var host=node(doc,"section","plato-player");host._animusFilm=this.filmTitle;
-  host.setAttribute("aria-label","Turn Around — Beyond the Cave");
+  host.setAttribute("aria-label",displayName(this.getAttribute("label","Turn Around — Beyond the Cave")));
   host.setAttribute("tabindex","0");
   host.setAttribute("data-plato-time","0.000");
   host.setAttribute("data-plato-playing","false");

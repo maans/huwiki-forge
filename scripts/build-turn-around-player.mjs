@@ -24,9 +24,16 @@ export async function buildTurnAroundPlayer({check=false}={}){
     if(at<0||output.indexOf(before,at+before.length)!==-1)throw Error(title+' cannot be replaced unambiguously');
     output=output.slice(0,at)+JSON.stringify(source)+output.slice(at+before.length);
   }
-  if(output===original)return false;
-  await writeFile(target,output);
-  return true;
+  // Other AniMus editions can load the same viewer without importing a production's story or audio.
+  const audience=new URL('editions/shared/animus-audience.json',root);
+  const viewerTitles=['$:/plugins/maans/plato/player.js','$:/plugins/maans/plato/player.css'];
+  const saved=JSON.parse(output);
+  const viewer=JSON.stringify(viewerTitles.map(title=>saved.find(row=>row.title===title)),null,2)+'\n';
+  const previous=await readFile(audience,'utf8').catch(error=>{if(error.code!=='ENOENT')throw error;return '';});
+  if(check&&viewer!==previous)throw Error('Shared AniMus audience viewer is stale');
+  if(viewer!==previous)await writeFile(audience,viewer);
+  if(output!==original)await writeFile(target,output);
+  return viewer!==previous||output!==original;
 }
 if(process.argv[1]&&path.resolve(process.argv[1])===fileURLToPath(import.meta.url)){
   const changed=await buildTurnAroundPlayer({check:process.argv.includes('--check')});
