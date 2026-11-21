@@ -35,12 +35,15 @@ try{
  assert.ok(await standalone.evaluate(node=>node.classList.contains("huwabc-minimal")),
   "Ordinary ABC scores should open in minimal view");
  const advanced=standalone.locator(".huwabc-view-toggle");
- assert.equal((await advanced.innerText()).trim(),"Avanceret visning");
+ const advancedLabel=(await advanced.innerText()).trim();
+ assert.ok(["Avanceret visning","Advanced view"].includes(advancedLabel),
+  "The label must use Advanced view, localized to the wiki language: "+advancedLabel);
  await advanced.click();
  await page.waitForFunction(()=>
   [...document.querySelectorAll(".huwabc-standalone")].some(node=>
    node.getAttribute("data-huwabc-title")==="SilbaÄtno · Låt från Dalarne"&&!node.classList.contains("huwabc-minimal")));
- assert.equal((await standalone.locator(".huwabc-view-toggle").innerText()).trim(),"Minimal visning");
+ assert.equal((await standalone.locator(".huwabc-view-toggle").innerText()).trim(),
+  advancedLabel==="Advanced view"?"Minimal view":"Minimal visning");
  assert.equal(await page.evaluate(id=>$tw.wiki.getTiddler(id).fields["abc-view"],oldScoreTitle),
   previouslySaved,"The display-only toggle must not rewrite the music");
  await page.locator(".silba-home").getByRole("link",{name:"Brudmarch från Jämtland"}).click();
