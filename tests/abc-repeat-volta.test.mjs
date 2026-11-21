@@ -45,7 +45,7 @@ test("Dalarne A second ending stops at B's own opening repeat",()=>{
  ]);
  assert.equal(result.order.length,32,"Melody and chord accompaniment must walk the same 32 bars");
 });
-test("Dalarne keeps first and second A voltas together without merging B",()=>{
+test("Dalarne keeps first and second A voltas together without merging B",async()=>{
  assert.match(dalarne["abc-source"],/\[1 z4 :\| \[2 z2"A" A2 \|:\n\[P:B\]/);
  const build=await readFile(path.join(root,"scripts/build-silba-etno-repertoire.mjs"),"utf8");
  assert.match(build,/laat-fraan-dalarna-cbb\.mscz/);
