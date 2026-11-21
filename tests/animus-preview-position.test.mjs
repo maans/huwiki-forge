@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -33,6 +34,7 @@ function harness(t,{rendered=false}={}){
  function Widget(){}
  Object.assign(Widget.prototype,{
   initialise(_tree,options){Object.assign(this,options);this.domNodes=[];},computeAttributes(){return {};},
+  getVariable(){return 'Preview';},
   getAttribute(name,fallback){return name==='scene'?'Film':name==='score'?'Score A':fallback;},
   removeChildDomNodes(){this.domNodes.forEach(node=>node.remove());this.domNodes=[];}
  });
@@ -56,7 +58,7 @@ function harness(t,{rendered=false}={}){
   '$:/plugins/huwiki/musical/lipsync.js':{apply(){},reset(){}}
  };
  if(rendered){delete modules['$:/plugins/huwiki/cutout/engine.js'];delete modules['$:/plugins/huwiki/musical/lipsync.js'];}
- function load(name){
+ function load(name){if(name===languageTitle)return language;
   if(modules[name])return modules[name];
   const match=/\/([^/]+)\.js$/.exec(name),code=cutout[name]?.text||sources[match?.[1]];if(!code)throw Error('Missing '+name);
   const exports={};modules[name]=exports;

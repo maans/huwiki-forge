@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -36,6 +37,7 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
   getTiddlerText:(title,fallback='')=>title==='$:/language'?'$:/languages/en-GB':fallback};
  function Widget(){}
  Widget.prototype.initialise=function(_tree,options){Object.assign(this,options);this.domNodes=[];};
+ Widget.prototype.getVariable=()=> 'Test show';
  Widget.prototype.computeAttributes=()=>({});
  Widget.prototype.getAttribute=(name,fallback)=>name==='scene'?'Film':name==='score'?songs[0].score:fallback;
  function Sound(){ }
@@ -73,7 +75,7 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
   '$:/plugins/huwiki/musical/lipsync.js':{apply(){},invalidate(){},reset(){}}
  };
  const exports={};runInNewContext(widgetSource,{exports,...shared,$tw:{rootWidget:{}},window:doc.defaultView,
-  require(name){if(!deps[name])throw Error('Unavailable test module: '+name);return deps[name];},
+  require(name){if(name===languageTitle)return language;if(!deps[name])throw Error('Unavailable test module: '+name);return deps[name];},
   requestAnimationFrame(callback){const id=++nextFrame;frames.set(id,callback);return id;},
   cancelAnimationFrame:id=>frames.delete(id)});
  const widget=new exports['musical-stage']({}, {document:doc,wiki});widget.render(doc.body,null);

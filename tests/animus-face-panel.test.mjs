@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
@@ -8,7 +9,7 @@ const root = new URL('../', import.meta.url);
 const face = {};
 runInNewContext(readFileSync(new URL('plugins/musical/src/face.js', root), 'utf8'), {exports: face, require: () => ({})});
 const panel = {};
-runInNewContext(readFileSync(new URL('plugins/musical/src/face-panel.js', root), 'utf8'), {exports: panel, require: () => face});
+runInNewContext(readFileSync(new URL('plugins/musical/src/face-panel.js', root), 'utf8'), {exports: panel, require: id => id===languageTitle?language:face});
 const plain = value => JSON.parse(JSON.stringify(value));
 
 test('a flat custom actor exposes facial parts without treating its arms as a head', () => {

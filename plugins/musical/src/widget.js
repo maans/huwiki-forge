@@ -5,6 +5,7 @@ module-type: widget
 \*/
 (function(){
 "use strict";
+var Language=require("$:/plugins/huwiki/musical/language.js");
 var Widget=require("$:/core/modules/widgets/widget.js").widget;
 var Engine=require("$:/plugins/huwiki/cutout/engine.js");
 var Loader=require("$:/plugins/huwiki/abc/loader.js");
@@ -20,6 +21,7 @@ var Playlist=require("$:/plugins/huwiki/musical/playlist.js");
 var SoundFx=require("$:/plugins/huwiki/musical/sfx.js");
 var Narration=require("$:/plugins/huwiki/musical/narration.js");
 var LipSync=require("$:/plugins/huwiki/musical/lipsync.js");
+var languagePositions=new WeakMap();
 var ACTIVE_PAINT={activeOnly:true};
 function Musical(tree,options){this.initialise(tree,options);}
 Musical.prototype=new Widget();
@@ -33,10 +35,8 @@ function node(doc,tag,cls,text,parent){
  if(text!==undefined)el.textContent=text;
  if(parent)parent.appendChild(el);return el;
 }
-function labels(wiki){
- var code=wiki.getTiddlerText("$:/language","");
- var en=/\/en(?:-|$)/i.test(code);
- return en?{
+function labels(da){
+ return !da?{
   play:"▶ Play",pause:"Ⅱ Pause",stop:"■ Stop",loading:"Preparing sound …",
   error:"Playback unavailable: ",scene:"Scene",score:"Score",camera:"Camera shots",
   timeline:"Playback position",tempo:"Tempo",editScene:"Edit scene and camera in CutOut",
@@ -52,9 +52,11 @@ function labels(wiki){
 }
 Musical.prototype.render=function(parent,next){
  this.parentDomNode=parent;this.computeAttributes();this.execute();
- var self=this,doc=this.document,L=labels(this.wiki);
+ var self=this,doc=this.document,da=Language.isDanish(this.wiki),L=labels(da),displayName=Language.projectLabels(this.wiki,this.sceneTitle);
  var host=node(doc,"section","huw-musical");
- this.host=host;this._dead=false;this._frame=0;this._audio=null;this._pendingSeek=null;this._ownWritten={};this._editor=null;
+ this._language=this.wiki.getTiddlerText("$:/language","");
+ this._positionKey=JSON.stringify([this.getVariable("currentTiddler"),this.sceneTitle,this.scoreTitle,this.getAttribute("workshop","")]);
+ this._danish=da;this._timeline=null;this.host=host;this._dead=false;this._frame=0;this._audio=null;this._pendingSeek=null;this._ownWritten={};this._editor=null;
  parent.insertBefore(host,next);this.domNodes.push(host);
  var scene=Engine.readScene(this.wiki,this.sceneTitle);
  if(!scene){node(doc,"p","huw-musical-error",L.missing,host);return;}
@@ -62,7 +64,7 @@ Musical.prototype.render=function(parent,next){
  var lipOptions={sceneTitle:this.sceneTitle,audioClips:scene.musical&&scene.musical.audioClips||[],film:scene};
  var voice=new Narration.Player({wiki:this.wiki,doc:doc,clips:scene.musical&&scene.musical.audioClips||[],
   isAudible:function(clip){return !editor||!editor.isAudioAudible||editor.isAudioAudible(clip);},onError:function(message){
-  if(state)state.textContent=(L.scene==='Scene'?'Lydspor: ':'Audio track: ')+String(message&&message.message||message);
+  if(state)state.textContent=(da?'Lydspor: ':'Audio track: ')+String(message&&message.message||message);
  }});
  function fullDuration(){return Math.max(.1,Playlist.total(clips),Number(scene.duration)||0,
   (scene.musical&&scene.musical.audioClips||[]).reduce(function(end,c){return Math.max(end,(Number(c.start)||0)+(Number(c.duration)||0));},0));}
@@ -174,7 +176,7 @@ Musical.prototype.render=function(parent,next){
  function timeLabel(n,precise){
   var hundredths=Math.round(Math.max(0,n)*100),s=precise?Math.floor(hundredths/100):Math.floor(Math.max(0,n));
   var label=Math.floor(s/60)+":"+String(s%60).padStart(2,"0");
-  return precise&&hundredths%100?label+(L.score==="Noder"?",":".")+String(hundredths%100).padStart(2,"0"):label;
+  return precise&&hundredths%100?label+(da?",":".")+String(hundredths%100).padStart(2,"0"):label;
  }
  var duration=fullDuration(),timeline=null,ready=false,controller=null,activeIndex=0,stopping=false,changingSpeed=false;
  var editor=null,workspace=null,session=null,preparing=false,generation=0,lastGainUpdate=0,visibleKey="",ABCObject=null,soundReady=false,soundfont="";
@@ -390,9 +392,9 @@ Musical.prototype.render=function(parent,next){
  function audioProblem(song,error){
   if(!song||!alive())return;
   song.audioFailed=true;song.pending=null;
-  var message=String(error&&error.message||error||'Lyd kunne ikke indlæses');
+  var message=String(error&&error.message||error||(da?'Lyden kunne ikke indlæses':'Audio could not be loaded'));
   host.dataset.audioMode='stage-only';host.dataset.audioFailureSong=song.title;host.dataset.audioFailureMessage=message.substring(0,160);
-  state.textContent='Scenen fortsætter uden musiklyd ('+message.substring(0,90)+')';
+  state.textContent=L.noAudio+' ('+message.substring(0,90)+')';
   state.classList.remove('huw-musical-error');
  }
  // Controllers are intentionally lazy. Nine simultaneously initialised ABCJS
@@ -476,6 +478,7 @@ Musical.prototype.render=function(parent,next){
   host.dataset.cameraTime=visualTime.toFixed(2);
  }
  timeline=new Timeline(duration,paint);
+ this._timeline=timeline;
  function frame(){
   self._frame=0;if(!alive()||!timeline.running)return;
   paint(timeline.value());
@@ -624,7 +627,7 @@ Musical.prototype.render=function(parent,next){
    self._pendingFaceOpen=null;current.openFace(pending);
   });
  }
- editor=Editor.attach({doc:doc,host:host,wiki:this.wiki,film:scene,view:view,
+ editor=Editor.attach({displayName:displayName,doc:doc,host:host,wiki:this.wiki,film:scene,view:view,
   sceneTitle:this.sceneTitle,stageTitle:this._stageTitle,scoreTitle:this.scoreTitle,
   duration:function(){return duration;},clips:function(){return clips;},beatClock:function(){return beatClock;},
   updateClips:function(updated){
@@ -664,8 +667,8 @@ Musical.prototype.render=function(parent,next){
  });
  this._editor=editor;
  workspace=Workspace.mount({
-  previewPreference:this._previewPreference,rememberPreview:function(mode){self._previewPreference=mode;},
-  doc:doc,host:host,wiki:this.wiki,parentWidget:this,project:scene.name||"Musical",film:scene,sceneTitle:this.sceneTitle,stageTitle:this._stageTitle,
+  displayName:displayName,previewPreference:this._previewPreference,rememberPreview:function(mode){self._previewPreference=mode;},
+  doc:doc,host:host,wiki:this.wiki,parentWidget:this,project:displayName(scene.name||"Musical"),film:scene,sceneTitle:this.sceneTitle,stageTitle:this._stageTitle,
   scoreTitle:function(){return songs[activeIndex]&&songs[activeIndex].title||self.scoreTitle;},
   activeScoreClip:function(){return clips[activeIndex];},
   seekScore:function(id,times){
@@ -779,6 +782,10 @@ Musical.prototype.render=function(parent,next){
  }
  // Scene animation and recorded takes are usable before notation finishes.
  // A pending ABC library must never disable their shared Play gesture.
+ var positions=languagePositions.get(this.wiki);
+ if(positions&&positions.has(this._positionKey)){
+  seek(positions.get(this._positionKey));positions.delete(this._positionKey);
+ }
  Playback.register(session);ready=true;play.disabled=false;state.textContent=L.ready;
  // A long production can contain many muted guide scores. Only draw the
  // visible guide; drawing all of them at once blocks the editor's main thread.
@@ -790,6 +797,11 @@ Musical.prototype.render=function(parent,next){
    var parsed=ABCObject.renderAbc(song.page,song.source,{responsive:"resize",add_classes:true});
    song.tune=parsed&&parsed[0];
    if(!song.tune)throw Error("ABC notation could not be rendered: "+song.title);
+   if(song.page.querySelectorAll)Array.prototype.forEach.call(song.page.querySelectorAll("text, tspan"),function(label){
+    if(label.childElementCount)return;
+    var original=label.textContent,translated=displayName(original);
+    if(translated!==original)label.textContent=translated;
+   });
    var seconds=typeof song.tune.getTotalTime==="function"?Number(song.tune.getTotalTime()):NaN;
    if(!(seconds>0)){
     if(typeof song.tune.setTiming==="function")song.tune.setTiming();
@@ -812,7 +824,7 @@ Musical.prototype.render=function(parent,next){
     // iPad/Safari audio resources. Use live mode only when backing is enabled.
     // With enabled:false the written ABC voices still use ABC's shared mixer.
     Accompaniment.prepare(ABCObject,song.tune,song.source,song.config,song.config.enabled===true,song.fields);
-   var heading=node(doc,"div","huw-musical-score-label",song.title);
+   var heading=node(doc,"div","huw-musical-score-label",displayName(song.title));
    song.page.insertBefore(heading,song.page.firstChild);
   }catch(error){
    song.notationFailed=true;song.tune=null;
@@ -846,8 +858,18 @@ Musical.prototype.render=function(parent,next){
   state.textContent=!clips.some(audibleClip)?L.ready:L.noAudio+" ("+String(error&&error.message||error).slice(0,100)+")";
  });
 };
+Musical.prototype.onDestroy=function(){
+ if(!this._shutdown)return;
+ if(this._timeline&&this._language!==this.wiki.getTiddlerText("$:/language","")){
+  // A language change can rebuild an enclosing page template and create a new widget.
+  var positions=languagePositions.get(this.wiki)||new Map(),key=this._positionKey;
+  positions.set(key,this._timeline.value());languagePositions.set(this.wiki,positions);
+  Promise.resolve().then(function(){positions.delete(key);});
+ }
+ this._shutdown();this._shutdown=null;
+};
 Musical.prototype.removeChildDomNodes=function(){
- if(this._shutdown)this._shutdown();
+ this.onDestroy();
  Widget.prototype.removeChildDomNodes.call(this);
 };
 Musical.prototype.refresh=function(changed){
@@ -858,8 +880,10 @@ Musical.prototype.refresh=function(changed){
   if(Object.prototype.hasOwnProperty.call(own,title)&&own[title]===self.wiki.getTiddlerText(title,"")){delete own[title];return false;}
   delete own[title];return true;
  }
- if(Object.keys(attributes).length||externalChange(this.sceneTitle)||externalChange(this._stageTitle)||changed[this.scoreTitle]||changed["$:/language"]||(this._playlistTitles||[]).some(function(t){return changed[t];})){
-  this.refreshSelf();return true;
+ var languageChanged=changed["$:/language"]&&this._danish!==Language.isDanish(this.wiki);
+ if(Object.keys(attributes).length||externalChange(this.sceneTitle)||externalChange(this._stageTitle)||changed[this.scoreTitle]||languageChanged||(this._playlistTitles||[]).some(function(t){return changed[t];})){
+  this.refreshSelf();
+  return true;
  }
  return false;
 };

@@ -62,7 +62,7 @@ test('Split keeps visible notation and animated artwork while editing in wide an
   input.value='26';input.dispatchEvent(new Event('input',{bubbles:true}));
   input.dispatchEvent(new Event('change',{bubbles:true}));
  });
- await activeScore.locator('.huw-musical-score-label').filter({hasText:'Voices on the Wall'}).waitFor();
+ await activeScore.locator('.huw-musical-score-label').filter({hasText:'Stemmer på væggen'}).waitFor();
  await clickNote(0,1,25.854+4*60/104); // Scene 2, after a tempo change.
 });
 
@@ -134,4 +134,28 @@ test('score taps, written chords and workshop selections seek the picture and ru
  await checkPictureAndRuler(editor,clipStart+8);
  await workshop.getByRole('button',{name:'Annuller',exact:true}).click();
  await checkPictureAndRuler(editor,clipStart+8);
+});
+
+test('changing the open wiki language updates the page, player and editor at the same score position',
+ {skip:process.env.ANIMUS_SPLIT_TESTS!=='1',timeout:120000},async t=>{
+ const base=await serveDemo(t);
+ const {chromium}=await import('playwright-core');
+ const browser=await chromium.launch({headless:true,executablePath:process.env.CHROME_BIN||undefined});
+ t.after(()=>browser.close());
+ const page=await browser.newPage();
+ await page.goto(base+'/demo/?edition=turn-around&lang=da');
+ const wiki=page.frameLocator('#wiki');
+ await wiki.locator('.plato-native-link a').click();
+ const editor=wiki.locator('.plato-native-studio');
+ const position=editor.locator('.huw-musical-range');
+ await position.evaluate(input=>{input.value='32';input.dispatchEvent(new Event('input',{bubbles:true}));});
+ for(const [locale,danish] of [['en-GB',false],['fr-FR',false],['da-DK',true]]){
+  await wiki.locator('body').evaluate((body,code)=>body.ownerDocument.defaultView.$tw.wiki.setText('$:/language','text',undefined,'$:/languages/'+code),locale);
+  await editor.getByRole('button',{name:danish?'Værksteder':'Workshops',exact:true}).waitFor();
+  const show=wiki.locator('.plato-home');
+  await show.getByRole('link',{name:danish?'Åbn i AniMus':'Open in AniMus',exact:true}).waitFor();
+  assert.match(await show.locator('.plato-chapters option').first().textContent(),danish?/Hele verden/:/The Whole World/);
+  assert.match(await editor.locator('.huw-musical-score-label:visible').textContent(),danish?/Stemmer på væggen/:/Voices on the Wall/);
+  assert.ok(Math.abs(Number(await position.inputValue())-32)<.02);
+ }
 });

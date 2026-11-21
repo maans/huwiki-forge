@@ -5,6 +5,7 @@ module-type: widget
 \*/
 (function(){
 "use strict";
+var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
 var Widget=require('$:/core/modules/widgets/widget.js').widget;
 var Scenes=require('$:/plugins/huwiki/musical/scenes.js');
 function create(wiki,name){
@@ -16,11 +17,22 @@ function create(wiki,name){
  wiki.addTiddler(new $tw.Tiddler({title:title,type:'text/vnd.tiddlywiki',tags:['AniMusProjects'],'animus-scene':filmTitle,'animus-score':scoreTitle,text:'<$musical-stage scene={{!!animus-scene}} score={{!!animus-score}}/>'}));return {title:title,filmTitle:filmTitle,scoreTitle:scoreTitle,stageTitle:stageTitle};
 }
 function Projects(tree,options){this.initialise(tree,options);}Projects.prototype=new Widget();
-Projects.prototype.render=function(parent,next){this.parentDomNode=parent;this.computeAttributes();var self=this,doc=this.document,da=!/\/en(?:-|$)/i.test(this.wiki.getTiddlerText('$:/language','')),host=doc.createElement('div');host.className='huw-animus-new-project';parent.insertBefore(host,next);this.domNodes.push(host);
- var input=doc.createElement('input');input.type='text';input.placeholder=da?'Navn på din forestilling':'Name of your show';input.setAttribute('aria-label',input.placeholder);host.appendChild(input);
- var button=doc.createElement('button');button.type='button';button.textContent=da?'+ Ny forestilling':'+ New show';host.appendChild(button);
- function submit(){var result=create(self.wiki,input.value|| (da?'Min musical':'My musical'));input.value='';self.dispatchEvent({type:'tm-navigate',navigateTo:result.title,navigateFromTitle:self.getVariable('currentTiddler')});}
+Projects.prototype.render=function(parent,next){this.parentDomNode=parent;this.computeAttributes();var self=this,doc=this.document,host=doc.createElement('div');host.className='huw-animus-new-project';parent.insertBefore(host,next);this.domNodes.push(host);
+ var input=doc.createElement('input');input.type='text';host.appendChild(input);
+ var button=doc.createElement('button');button.type='button';host.appendChild(button);
+ this._localize=function(){
+  var da=isDanish(self.wiki);
+  input.placeholder=da?'Navn på din forestilling':'Name of your show';
+  input.setAttribute('aria-label',input.placeholder);
+  button.textContent=da?'+ Ny forestilling':'+ New show';
+ };
+ this._localize();
+ function submit(){var result=create(self.wiki,input.value|| (isDanish(self.wiki)?'Min musical':'My musical'));input.value='';self.dispatchEvent({type:'tm-navigate',navigateTo:result.title,navigateFromTitle:self.getVariable('currentTiddler')});}
  button.onclick=submit;input.onkeydown=function(e){if(e.key==='Enter'){e.preventDefault();submit();}};
 };
-Projects.prototype.refresh=function(){return false;};exports['animus-new-project']=Projects;exports.create=create;
+Projects.prototype.refresh=function(changed){
+ if(!changed["$:/language"])return false;
+ this._localize();
+ return true;
+};exports['animus-new-project']=Projects;exports.create=create;
 })();

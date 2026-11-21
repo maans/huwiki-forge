@@ -5,6 +5,7 @@ module-type: library
 \*/
 (function(){
 "use strict";
+var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
 var Engine=require('$:/plugins/huwiki/cutout/engine.js');
 function copy(x){return JSON.parse(JSON.stringify(x));}
 function num(x,f){x=Number(x);return Number.isFinite(x)?x:f;}
@@ -56,7 +57,8 @@ function retime(film,before,after){
  return film;
 }
 function mount(o){
- var doc=o.doc,wiki=o.wiki,da=!/\/en(?:-|$)/i.test(wiki.getTiddlerText('$:/language',''));
+ var displayName=o.displayName||function(value){return value;};
+ var doc=o.doc,wiki=o.wiki,da=isDanish(wiki);
  var popup=null,drafts={},originals={},film=null,items=[],choice='',dirty=false,follow=true,timingSafe=true,before=[];
  function button(host,text,fn){var b=el(doc,'button','',text,host);b.type='button';b.onclick=fn;return b;}
  function resolve(title){if(drafts[title])return drafts[title];var t=wiki.getTiddler(title);if(!t)return null;try{drafts[title]=JSON.parse(t.fields.text);originals[title]=t.fields.text;return drafts[title];}catch(_){return null;}}
@@ -75,7 +77,7 @@ function mount(o){
  }
  function mark(){dirty=true;updateDurations(film);items=entries();}
  function field(parent,label,value,type,fn){var wrap=el(doc,'label','huw-scene-field',undefined,parent);el(doc,'span','',label,wrap);var input=el(doc,'input','',undefined,wrap);input.type=type;input.value=value;input.onchange=function(){fn(input.value);mark();renderList();};return input;}
- function renderList(){var list=popup.querySelector('.huw-scene-list');list.textContent='';items.forEach(function(e,i){var b=button(list,(i+1)+'. '+(e.clip.name||e.scene&&e.scene.name||'Scene')+' · '+Math.round(e.start)+'s',function(){choice=e.id;render();});b.classList.toggle('is-active',selected()===e);});}
+ function renderList(){var list=popup.querySelector('.huw-scene-list');list.textContent='';items.forEach(function(e,i){var b=button(list,(i+1)+'. '+displayName(e.clip.name||e.scene&&e.scene.name||'Scene')+' · '+Math.round(e.start)+'s',function(){choice=e.id;render();});b.classList.toggle('is-active',selected()===e);});}
  var orderOpen=false;
  function render(){renderList();var host=popup.querySelector('.huw-scene-details');host.textContent='';var e=selected();if(!e)return;
   field(host,da?'Scenens navn':'Scene name',e.clip.name||e.scene&&e.scene.name||'','text',function(v){e.clip.name=v;if(e.scene)e.scene.name=v;});

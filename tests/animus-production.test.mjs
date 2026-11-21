@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -17,7 +18,7 @@ function wiki(initial={}){
  };
 }
 function api(name,deps={}){
- const exports={};runInNewContext(source[name],{exports,$tw:{Tiddler,rootWidget:{}},require(id){return deps[id]||{};},Date,Math,Promise});return exports;
+ const exports={};runInNewContext(source[name],{exports,$tw:{Tiddler,rootWidget:{}},require(id){if(id===languageTitle)return language;return deps[id]||{};},Date,Math,Promise});return exports;
 }
 function scenes(){return api('scenes');}
 function rangesFixture(){

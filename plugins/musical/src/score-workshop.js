@@ -5,10 +5,11 @@ module-type: library
 \*/
 (function(){
 "use strict";
+var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
 var Loader=require('$:/plugins/huwiki/abc/loader.js');
 function el(doc,tag,cls,text,parent){var e=doc.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;if(parent)parent.appendChild(e);return e;}
 function mount(o){
- var doc=o.doc,wiki=o.wiki,da=!/\/en(?:-|$)/i.test(wiki.getTiddlerText('$:/language',''));
+ var doc=o.doc,wiki=o.wiki,da=isDanish(wiki);
  var popup=null,editor=null,draft='',title='',original='',origin=null,newScore=false,onSaved=null,clip=null;
  function button(host,text,action,cls){var b=el(doc,'button',cls||'',text,host);b.type='button';b.onclick=action;return b;}
  function destroyWidget(w){if(!w)return;(w.children||[]).forEach(destroyWidget);if(typeof w.onDestroy==='function')w.onDestroy();}

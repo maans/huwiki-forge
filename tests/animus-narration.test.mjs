@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -8,7 +9,7 @@ const playerSource=await readFile(new URL('narration-player.js',directory),'utf8
 const narrationSource=await readFile(new URL('narration.js',directory),'utf8');
 function load(){
  const playback={};runInNewContext(playerSource,{exports:playback});
- const api={};runInNewContext(narrationSource,{exports:api,require(id){assert.equal(id,'$:/plugins/huwiki/musical/narration-player.js');return playback;},Promise,Blob,Date,Math});
+ const api={};runInNewContext(narrationSource,{exports:api,require(id){if(id===languageTitle)return language;assert.equal(id,'$:/plugins/huwiki/musical/narration-player.js');return playback;},Promise,Blob,Date,Math});
  return api;
 }
 const tick=()=>new Promise(resolve=>setImmediate(resolve));

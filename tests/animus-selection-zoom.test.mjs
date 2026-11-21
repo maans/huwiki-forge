@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -8,7 +9,7 @@ const workspaceCode=await readFile(new URL('../plugins/musical/src/workspace.js'
 const zoom={};runInNewContext(zoomCode,{exports:zoom});
 const face={},facePanel={};
 runInNewContext(await readFile(new URL('../plugins/musical/src/face.js',import.meta.url),'utf8'),{exports:face,require:()=>({})});
-runInNewContext(await readFile(new URL('../plugins/musical/src/face-panel.js',import.meta.url),'utf8'),{exports:facePanel,require:()=>face});
+runInNewContext(await readFile(new URL('../plugins/musical/src/face-panel.js',import.meta.url),'utf8'),{exports:facePanel,require:id=>id===languageTitle?language:face});
 const near=(actual,expected,message)=>assert.ok(Math.abs(actual-expected)<1e-6,message||`${actual} should equal ${expected}`);
 const plain=value=>JSON.parse(JSON.stringify(value));
 function geometry(){
@@ -112,7 +113,7 @@ function workspaceHarness(options={}){
   '$:/plugins/huwiki/musical/score-workshop.js':{mount:inactive},
   '$:/plugins/huwiki/musical/scenes.js':{mount:inactive}
  };
- const api={};runInNewContext(workspaceCode,{exports:api,require:name=>{if(!modules[name])throw Error(name);return modules[name];},$tw:{}});
+ const api={};runInNewContext(workspaceCode,{exports:api,require:name=>{if(name===languageTitle)return language;if(!modules[name])throw Error(name);return modules[name];},$tw:{}});
  const view={svg,nodes:{actor:{el:actor},arm:{el:arm}},clips:[]};
  workspace=api.mount({doc,host,editor,film,view,layout,transport,play,project:'Show',sceneTitle:'Film',wiki:{getTiddlerText:()=>'$:/languages/en-GB'},scoreTitle:()=>'',position:()=>position,pause(){paused++;},seek(time){position=time;seeks++;},repaint});
  return {...h,host,stage,canvas,film,view,workspace,editor,repaint,faceCommands,figureCalls,openFigureFace(id){figureOptions.onFace({partId:id,actorId:'actor',headId:'head',tab:id==='mouth'?'mouth':'eyes'});},

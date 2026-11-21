@@ -5,7 +5,7 @@
   },
   {
     "title": "$:/SiteSubtitle",
-    "text": "Fyrtøjet · Tændstikorkestret · Fælles redigering"
+    "text": "<%if [{$:/language}split[/]last[]lowercase[]split[-]first[]split[_]first[]match[da]] %>Fyrtøjet · Tændstikorkestret · Fælles redigering<%else%>The Tinderbox · The Stick Orchestra · Shared editor<%endif%>"
   },
   {
     "title": "$:/theme",

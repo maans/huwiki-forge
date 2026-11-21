@@ -9,7 +9,7 @@ const source=await read('editions/turn-around/src/player.js');
 const production=JSON.parse(await read('editions/turn-around/tiddlers/production.json'));
 const packed=production.find(row=>row.title==='$:/plugins/maans/plato/player.js').text;
 const cutout=JSON.parse(JSON.parse(await read('plugins/cutout/dist/plugin.json')).text).tiddlers;
-const musical=Object.fromEntries(await Promise.all(['playlist','motion','lipsync','face'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
+const musical=Object.fromEntries(await Promise.all(['playlist','motion','lipsync','face','language'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
 const pose=x=>({t:0,x,y:50,r:0,sx:1,sy:1,opacity:1});
 const record=(title,data)=>({title,type:'application/json',text:JSON.stringify(data)});
 function fixtures(audio){

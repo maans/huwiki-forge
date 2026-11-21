@@ -13,7 +13,7 @@ var Soundtrack=require("$:/plugins/huwiki/animus-video-export/audio.js");
 var Bundle=require("$:/plugins/huwiki/animus-video-export/bundle.js");
 function num(n,f){n=Number(n);return Number.isFinite(n)?n:f;}
 function clamp(n,a,b){return Math.min(b,Math.max(a,n));}
-function hasDanish(o){var lang=o.wiki&&o.wiki.getTiddlerText("$:/language","")||o.host.ownerDocument.documentElement.lang||"en";return /(?:da|dansk)/i.test(lang);}
+function hasDanish(o){var lang=o.wiki?o.wiki.getTiddlerText("$:/language",""):o.host.ownerDocument.documentElement.lang;return /(?:^|\/)da(?:[-_]|$)/i.test(lang||"");}
 function ui(doc,tag,parent,cls,text){var n=doc.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=String(text);if(parent)parent.appendChild(n);return n;}
 function label(parent,text,child){var row=ui(parent.ownerDocument,"label",parent,"huw-video-field");ui(parent.ownerDocument,"span",row,"",text);row.appendChild(child);return row;}
 function makeOption(select,value,text){var o=ui(select.ownerDocument,"option",select,"",text);o.value=value;return o;}
@@ -245,7 +245,7 @@ function attach(o){
  var trigger=ui(doc,"button",o.controls,"huw-video-export-button",T("↓ Eksportér video","↓ Export video"));
  trigger.type="button";trigger.setAttribute("data-animus-video-export","1");
  var ids=["video","music","speech","effects","captions"],names={video:"video.mp4",music:"music.wav",speech:"speech.wav",effects:"effects.wav",captions:"captions.vtt"};
- var labels={video:T("Video (.mp4)","Video (.mp4)"),music:T("Musik (.wav)","Music (.wav)"),speech:T("Tale og sang (.wav)","Speech and singing (.wav)"),effects:T("Lydeffekter (.wav)","Sound effects (.wav)"),captions:T("Undertekster (.vtt)","Captions (.vtt)")};
+ function fileLabels(){return {video:T("Video (.mp4)","Video (.mp4)"),music:T("Musik (.wav)","Music (.wav)"),speech:T("Tale og sang (.wav)","Speech and singing (.wav)"),effects:T("Lydeffekter (.wav)","Sound effects (.wav)"),captions:T("Undertekster (.vtt)","Captions (.vtt)")};}
  var settings={start:0,end:Math.round(o.duration()*1000)/1000,width:1280,fps:30,audio:"playback",captions:"burn"};
  var selected={video:true,music:false,speech:false,effects:false,captions:true};
  // One current reusable rendition plus the last displayed rendition per kind.
@@ -275,6 +275,10 @@ function attach(o){
   return {visual:part("visual"),audio:JSON.stringify([part("audio"),o.soundFont?o.soundFont():""]),captions:JSON.stringify([part("captions"),choice,language]),captionLanguage:choice};
  }
  function wikiChanged(changes){
+  if(changes&&changes["$:/language"]&&da!==hasDanish(o)){
+   da=hasDanish(o);trigger.textContent=T("↓ Eksportér video","↓ Export video");
+   if(overlay&&!busy){hideDialog();open();}
+  }
   if(Object.keys(changes||{}).some(function(title){return !/^\$:\/(?:temp\/|state\/|status\/|StoryList$|HistoryList$)/.test(title);}))generation++;
   if(uiState&&!busy)refresh();
  }
@@ -428,7 +432,7 @@ function attach(o){
   var rows={};
   ids.forEach(function(id){
    var row=ui(doc,"div",files,"huw-video-file-row"),field=ui(doc,"label",row,"huw-video-file-choice"),check=ui(doc,"input",field,"");check.type="checkbox";check.checked=selected[id];check.setAttribute("data-export-file",id);
-   var info=ui(doc,"span",field,"huw-video-file-info");ui(doc,"strong",info,"huw-video-file-name",labels[id]);
+   var info=ui(doc,"span",field,"huw-video-file-info");ui(doc,"strong",info,"huw-video-file-name",fileLabels()[id]);
    ui(doc,"span",info,"huw-video-file-filename",names[id]);
    var status=ui(doc,"span",info,"huw-video-file-status"),context=ui(doc,"span",info,"huw-video-file-context");
    var arrow=ui(doc,"button",row,"huw-video-file-download","↓");arrow.type="button";arrow.disabled=true;arrow.setAttribute("aria-label",T("Hent ","Save ")+names[id]);arrow.setAttribute("title",T("Hent ","Save ")+names[id]);

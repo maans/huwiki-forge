@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -17,7 +18,7 @@ function harness() {
   const film = {version: 1, width: 800, height: 450, duration: 4, parts: [], musical: {animationClips: []}}, records = {Scene: {title: 'Scene', text: JSON.stringify(source)}, Film: {title: 'Film', text: JSON.stringify(film)}}, writes = [];
   const wiki = {getTiddlerText: (title, fallback = '') => records[title]?.text ?? fallback, getTiddler: title => records[title] && new Tiddler(records[title]), addTiddler(tiddler) {records[tiddler.fields.title] = plain(tiddler.fields);writes.push(tiddler.fields.title);}};
   const cache = {};
-  function load(id) {if(cache[id]) return cache[id];const exported = {};cache[id] = exported;const code = id.endsWith('/puppet.js') ? puppetSource : bundle[id]?.text;if(!code) throw Error('Missing module: ' + id);vm.runInNewContext(code, {exports: exported, require: load, $tw: {Tiddler}, console});return exported;}
+  function load(id) {if(id===languageTitle)return language;if(cache[id]) return cache[id];const exported = {};cache[id] = exported;const code = id.endsWith('/puppet.js') ? puppetSource : bundle[id]?.text;if(!code) throw Error('Missing module: ' + id);vm.runInNewContext(code, {exports: exported, require: load, $tw: {Tiddler}, console});return exported;}
   const engine = load('$:/plugins/huwiki/cutout/engine.js'), puppet = load('$:/plugins/huwiki/musical/puppet.js'), doc = svgDocument(), host = doc.createElement('main');doc.body.appendChild(host);
   let confirms = 0;doc.defaultView.confirm = () => {confirms++;return true;};
   const sceneView = engine.build(doc, wiki, source, false), view = {clips: [{view: sceneView}]};host.appendChild(sceneView.svg);engine.paint(sceneView, 0);

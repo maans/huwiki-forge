@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -18,7 +19,7 @@ const matching={
  actors(scene){return scene.parts.filter(p=>p.type==='group'&&p.id.startsWith('actor-')).map(p=>({id:p.id,label:p.name,open:p.id+'-mouth-open',closed:p.id+'-mouth-closed'}));},
  suggest(scene,text){const prefix=/^\s*([^:]+):/.exec(text)?.[1]?.trim().toLowerCase();return prefix?this.actors(scene).filter(a=>a.label.toLowerCase()===prefix):[];}
 };
-function api(matcher=matching){const exports={};runInNewContext(source,{exports,$tw:{Tiddler},require:id=>{assert.equal(id,'$:/plugins/huwiki/musical/lipsync.js');return matcher;}});return exports;}
+function api(matcher=matching){const exports={};runInNewContext(source,{exports,$tw:{Tiddler},require:id=>{if(id===languageTitle)return language;assert.equal(id,'$:/plugins/huwiki/musical/lipsync.js');return matcher;}});return exports;}
 
 class Node {
  constructor(tag){this.tagName=tag.toUpperCase();this.children=[];this.className='';this.parentNode=null;this.attributes={};this._text='';this.listeners={};this.style={};

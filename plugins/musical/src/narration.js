@@ -5,6 +5,7 @@ module-type: library
 \*/
 (function(){
 "use strict";
+var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
 // Recorded voices and imported sound use the theatre's clock. The recorder is
 // independent of ABC; a microphone or media failure must never stop the show.
 function num(v,f){var n=Number(v);return Number.isFinite(n)?n:f;}
@@ -82,7 +83,7 @@ function mediaDuration(doc,source,fallback){return new Promise(function(resolve,
 function el(doc,tag,cls,text,parent){var node=doc.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;if(parent)parent.appendChild(node);return node;}
 function display(t){return Math.floor(t/60)+":"+String(Math.floor(t%60)).padStart(2,"0")+"."+Math.floor((t%1)*10);}
 function mount(o){
- var doc=o.doc,wiki=o.wiki,host=o.host,win=doc.defaultView||(typeof window!=="undefined"?window:null),da=!/\/en(?:-|$)/i.test(wiki.getTiddlerText("$:/language",""));
+ var doc=o.doc,wiki=o.wiki,host=o.host,win=doc.defaultView||(typeof window!=="undefined"?window:null),da=isDanish(wiki);
  var L=da?{
   title:"Lydspor og indtaling",subtitle:"Indtal replikker eller importér lyd, og placér klippene i forestillingen.",cancel:"Annuller",save:"Gem og tilbage",record:"● Indtal ny replik",stop:"■ Stop optagelse",retake:"Indtal valgt klip igen",import:"Importér lyd",clips:"Lydklip",empty:"Ingen lydklip endnu. Vælg en replik og tryk Indtal, eller importér en lydfil.",script:"Replik fra manuskript",none:"Fri indtaling",name:"Navn",role:"Rolle / stemme",text:"Tekst til indtaling",start:"Placering i forestillingen (s)",offset:"Klip begyndelsen fra (s)",end:"Slut i lydfil (s)",volume:"Lydstyrke",mute:"Lydløs",remove:"Fjern klip",duplicate:"Duplikér klip",preview:"Lyt til klippet",usePosition:"Brug tidsmarkør",recording:"Optager",requesting:"Venter på adgang til mikrofonen …",stopping:"Gør optagelsen klar …",reading:"Indlæser lyd …",unsaved:"Ændringer er ikke gemt",warning:"Luk uden at gemme lydklippene?",recordWarning:"Optagelsen er ikke gemt. Stop og luk værkstedet?",ready:"Vælg et klip for at redigere det.",clipLength:"Længde",sourceLength:"Lydfil",unsupported:"Indtaling kræver mikrofonadgang på HTTPS eller localhost i en browser, der understøtter lydoptagelse. Du kan også importere en lydfil.",denied:"Mikrofonadgang blev afvist. Tillad mikrofonen i browseren, eller importér en lydfil.",noMic:"Der blev ikke fundet en mikrofon.",micBusy:"Mikrofonen kan ikke åbnes. Kontrollér, om den bruges af et andet program.",saved:"Lydsporene er gemt.",audioType:"Vælg en lydfil, fx WAV, MP3, M4A, OGG eller WebM.",fileLarge:"Lydfilen er større end 100 MB. Del den i kortere klip før import.",missing:"Lydfilen til dette klip mangler.",recordNew:"Ny indtaling",at:"ved",keep:"Indtalingen gemmes som en lydfil i wikien. Gem også selve wikien efter arbejdet.",permission:"Mikrofonen aktiveres først, når du trykker Indtal.",keyboard:"Escape lukker værkstedet."
  }:{

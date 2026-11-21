@@ -63,8 +63,9 @@ exports.startup=function(){
   var list=wrapper.querySelector("select");if(!list)return;
   var auto=da?"Automatisk (wikiens sprog)":"Automatic (wiki language)";
   if(list.options[0].textContent!==auto)list.options[0].textContent=auto;
-  if(list.options[1].textContent!=="Dansk")list.options[1].textContent="Dansk";
-  if(list.options[2].textContent!=="English")list.options[2].textContent="English";
+  var danish=da?"Dansk":"Danish",english=da?"Engelsk":"English";
+  if(list.options[1].textContent!==danish)list.options[1].textContent=danish;
+  if(list.options[2].textContent!==english)list.options[2].textContent=english;
   var aria=da?"Sprog for undertekster":"Caption language";
   if(list.getAttribute("aria-label")!==aria)list.setAttribute("aria-label",aria);
  }

@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -11,7 +12,7 @@ const plain = value => JSON.parse(JSON.stringify(value));
 class Tiddler {constructor(...items) {this.fields = Object.assign({}, ...items.filter(Boolean).map(item => item.fields || item));}}
 function modules() {
   const cache = {};
-  function load(name) {
+  function load(name) {if(name===languageTitle)return language;
     if(cache[name]) return cache[name];
     const exported = {}; cache[name] = exported;
     if(name.endsWith('/i18n.js')) return Object.assign(exported, {t: value => value, contentName: (_title, value) => value, language: () => 'en'});

@@ -11,6 +11,7 @@ var LipSync = require("$:/plugins/huwiki/musical/lipsync.js");
 var Model = require("$:/plugins/huwiki/cutout/model.js");
 var Motion = require("$:/plugins/huwiki/musical/motion.js");
 var Playlist = require("$:/plugins/huwiki/musical/playlist.js");
+var Language=require("$:/plugins/huwiki/musical/language.js");
 var DEFAULT_FILM = "Turn Around · Complete performance (film)";
 var SPEAKERS = {narrator:"Narrator",prisoner:"The Prisoner",guide:"The Guide",elder:"The Elder",chorus:"Chorus"};
 var SOUND_NAMES = {speech:"speech",song:"singing",music:"music",sfx:"ambient sound"};
@@ -96,7 +97,8 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
   if(this._shutdown) this._shutdown();
   this.parentDomNode=parent;
   this.computeAttributes(); this.execute();
-  var self=this,doc=this.document;
+  var self=this,doc=this.document,displayName=Language.projectLabels(this.wiki,this.filmTitle);
+  this._localize=null;
   var host=node(doc,"section","plato-player");
   host.setAttribute("aria-label","Turn Around — Beyond the Cave");
   host.setAttribute("tabindex","0");
@@ -153,10 +155,14 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
   var options=node(doc,"div","plato-options",null,host);
   var chapters=node(doc,"select","plato-chapters",null,options);
   chapters.setAttribute("aria-label","Choose a chapter");
-  scenes.forEach(function(scene,index) {
-    var option=node(doc,"option","",String(index+1).padStart(2,"0")+" · "+scene.title+"  ("+clockLabel(scene.start)+")",chapters);
-    option.value=String(index);
-  });
+  function chapterOptions() {
+    chapters.textContent="";
+    scenes.forEach(function(scene,index){
+      var option=node(doc,"option","",String(index+1).padStart(2,"0")+" · "+displayName(scene.title)+"  ("+clockLabel(scene.start)+")",chapters);
+      option.value=String(index);
+    });
+  }
+  chapterOptions();
   var subtitlesButton=button(doc,options,"plato-button plato-secondary","Captions","Show captions");
   subtitlesButton.setAttribute("aria-pressed","true");
   var soundWrap=node(doc,"div","plato-sound-wrap",null,options);
@@ -267,6 +273,17 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
     state.dimmer=doc.createElementNS("http://www.w3.org/2000/svg","rect");state.dimmer.setAttribute("class","plato-native-lighting");state.dimmer.setAttribute("fill","#040716");state.dimmer.setAttribute("pointer-events","none");state.filmView.svg.appendChild(state.dimmer);
     hideAuthoredCaptions(state.filmView);scenePane.appendChild(state.filmView.svg);
   }
+  function sceneLabels(index) {
+    if(!scenes[index])return;
+    var name=displayName(scenes[index].title);
+    sceneBadge.textContent=String(index+1).padStart(2,"0")+" / "+String(scenes.length).padStart(2,"0")+"  ·  "+name;
+    chapters.value=String(index);
+    progressLabel.textContent=scenes.length+(Language.isDanish(self.wiki)?" scener · ":" scenes · ")+clockLabel(duration)+" · "+name;
+  }
+  this._localize=function(){
+    displayName=Language.projectLabels(self.wiki,self.filmTitle);
+    chapterOptions();sceneLabels(state.sceneIndex);
+  };
   function showScene(index) {
     if(index===state.sceneIndex) return;
     if(state.view&&LipSync.reset) LipSync.reset(state.view);
@@ -284,12 +301,10 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
         state.view.svg.setAttribute("width",timeline.film.width);state.view.svg.setAttribute("height",timeline.film.height);
         var foreground=(timeline.film.parts||[]).find(function(p){return p.foreground&&!p.parent&&state.filmView.nodes[p.id];});
         state.world.insertBefore(state.view.svg,foreground?state.filmView.nodes[foreground.id].el:null);
-      } catch(error) {node(doc,"div","plato-load-error","The scene could not be shown: "+scene.title,scenePane);}
-    } else if(scene.source)node(doc,"div","plato-load-error","The scene is missing: "+scene.title,scenePane);
+      } catch(error) {node(doc,"div","plato-load-error",(Language.isDanish(self.wiki)?"Scenen kunne ikke vises: ":"The scene could not be shown: ")+displayName(scene.title),scenePane);}
+    } else if(scene.source)node(doc,"div","plato-load-error",(Language.isDanish(self.wiki)?"Scenen mangler: ":"The scene is missing: ")+displayName(scene.title),scenePane);
     host.setAttribute("data-plato-scene",scene.id);
-    sceneBadge.textContent=String(index+1).padStart(2,"0")+" / "+String(scenes.length).padStart(2,"0")+"  ·  "+scene.title;
-    chapters.value=String(index);
-    progressLabel.textContent=scenes.length+" scenes · "+clockLabel(duration)+" · "+scene.title;
+    sceneLabels(index);
     lastCaption="";
     setAudioWindow(index);
     if(context&&context.state!=="closed") prepareWindow(index);
@@ -415,7 +430,7 @@ PlatoPlayer.prototype.render=function(parent,nextSibling) {
     beatClock=Motion.beatClock(Playlist.reflow(musical.songs||[],""),function(title){var t=self.wiki.getTiddler(title),f=t&&t.fields||{};return f["abc-source"]||f.text||"";});
     self._dependencies=timeline.dependencies;self._sourceTitles=scenes.map(function(scene){return scene.source;});
     self._audioTitles=[];scenes.forEach(function(scene){scene.tracks.forEach(function(track){self._audioTitles.push(track.asset);});});
-    chapters.textContent="";scenes.forEach(function(scene,index){var option=node(doc,"option","",String(index+1).padStart(2,"0")+" · "+scene.title+"  ("+clockLabel(scene.start)+")",chapters);option.value=String(index);});
+    chapterOptions();
     captionStyle=timeline.captionStyle;captionScale=clamp(number(captionStyle.scale,1),.65,2.2);captionWidth=clamp(number(captionStyle.width,88),45,100);
     caption.style.left=(100-captionWidth)/2+"%";caption.style.right=(100-captionWidth)/2+"%";caption.style.bottom=clamp(number(captionStyle.bottom,4.5),1,30)+"%";
     captionText.style.fontSize="clamp(12px,"+(1.9*captionScale).toFixed(3)+"cqw,"+Math.round(27*captionScale)+"px)";
@@ -704,6 +719,7 @@ PlatoPlayer.prototype.refresh=function(changedTiddlers) {
     if(this._shutdown)this._shutdown();
     this.refreshSelf();return true;
   }
+  if(changedTiddlers["$:/language"]&&this._localize)this._localize();
   if(changedTiddlers[this.filmTitle]||
     (this._sourceTitles||[]).some(function(title){return !!changedTiddlers[title];})||
     (this._audioTitles||[]).some(function(title){return !!changedTiddlers[title];})||

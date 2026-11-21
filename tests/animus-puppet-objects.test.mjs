@@ -15,6 +15,7 @@ function scene(parts){return {version:1,kind:'scene',width:1600,height:900,durat
 function harness({scenes={Scene:scene([horse])},sequence=[{source:'Scene',duration:26}],filmParts=[],time=1,id='shadow-horse',figureTransforms={},withEditor=false}={}){
  const film={version:1,kind:'theatre',width:1600,height:900,duration:sequence.reduce((sum,c)=>sum+c.duration,0)||26,parts:plain(filmParts),scenes:sequence,musical:{animationClips:[],figureTransforms:plain(figureTransforms)}};
  const records=Object.fromEntries(Object.entries({...scenes,Film:film}).map(([title,data])=>[title,{title,type:'application/json',text:JSON.stringify(data)}])),writes=[];
+  records['$:/language']={title:'$:/language',text:'$:/languages/da-DK'};
  const initial=plain(records),wiki={getTiddlerText:(title,fallback='')=>records[title]?.text??fallback,getTiddler:title=>records[title]&&new Tiddler(records[title]),
   addTiddler(tiddler){records[tiddler.fields.title]=plain(tiddler.fields);writes.push(tiddler.fields.title);},each(callback){Object.entries(records).forEach(([title,fields])=>callback(new Tiddler(fields),title));},getTiddlers:()=>Object.keys(records),getModificationFields:()=>({}),generateNewTitle:title=>title};
  const cache={};function load(id){if(cache[id])return cache[id];const exports={};cache[id]=exports;const musical=/^\$:\/plugins\/huwiki\/musical\/([^/]+)\.js$/.exec(id),code=musical?(musical[1]==='puppet'?puppetSource:readFileSync(new URL('plugins/musical/src/'+musical[1]+'.js',root),'utf8')):bundle[id]?.text;if(!code)throw Error('Missing '+id);

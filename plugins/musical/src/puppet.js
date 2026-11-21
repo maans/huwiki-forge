@@ -5,6 +5,7 @@ module-type: library
 \*/
 (function(){
 "use strict";
+var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
 // The workshop edits the same hierarchy and asset schema as CutOut Edition.
 // It never converts an animated scene part into an unrelated canvas object.
 var Engine=require("$:/plugins/huwiki/cutout/engine.js");
@@ -19,7 +20,7 @@ function el(doc,tag,cls,text,parent){var e=doc.createElement(tag);if(cls)e.class
 function clone(v){return JSON.parse(JSON.stringify(v));}
 function n(v,f){var x=Number(v);return Number.isFinite(x)?x:f;}
 function r(v){return Math.round(v*100)/100;}
-function yes(wiki){return !/\/en(?:-|$)/i.test(wiki.getTiddlerText("$:/language",""));}
+function yes(wiki){return isDanish(wiki);}
 function descendants(parts,root){var ids={},nodes={};parts.forEach(function(p){nodes[p.id]=p;});
  function walk(id){if(ids[id])return;ids[id]=true;parts.forEach(function(p){if(p.parent===id)walk(p.id);});}walk(root);
  return parts.filter(function(p){return ids[p.id];});}

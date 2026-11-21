@@ -135,7 +135,7 @@
     {
       "id": "turn-around",
       "name": "Turn Around — Beyond the Cave",
-      "version": "0.1.0-demo.9",
+      "version": "0.1.0-demo.10",
       "status": "test",
       "manifest": "../editions/turn-around/manifest.json",
       "description": "An AI-generated musical animation made with AniMus. Explore Plato’s cave, then edit the audio recordings, music, characters, camera and animation.",

@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
@@ -11,7 +12,7 @@ const sources=Object.fromEntries(await Promise.all(['playlist','motion','sfx','e
 const plain=value=>JSON.parse(JSON.stringify(value));
 class Tiddler {constructor(...items){this.fields=Object.assign({},...items.filter(Boolean).map(i=>i.fields||i));}}
 function wiki(initial){const records=plain(initial),writes=[];return {records,writes,getTiddler:title=>records[title]?new Tiddler(records[title]):null,getTiddlerText:(title,fallback='')=>records[title]?.text??fallback,getTiddlers:()=>Object.keys(records),each(fn){for(const [title,fields] of Object.entries(records))fn(new Tiddler(fields),title);},addTiddler(t){records[t.fields.title]=plain(t.fields);writes.push(t.fields.title);},getModificationFields:()=>({}),generateNewTitle:title=>title};}
-function modules(){const cache={};function load(name){if(cache[name])return cache[name];const exported={};cache[name]=exported;
+function modules(){const cache={};function load(name){if(name===languageTitle)return language;if(cache[name])return cache[name];const exported={};cache[name]=exported;
  if(name.endsWith('/i18n.js'))return Object.assign(exported,{t:value=>value,contentName:(_title,value)=>value,language:()=> 'en'});
  const musical=/\$:\/plugins\/huwiki\/musical\/([^/]+)\.js$/.exec(name),code=musical?sources[musical[1]]:name==='$:/plugins/huwiki/cutout/direct-edit.js'?directEditSource:cutout[name]?.text;
  if(!code)throw Error('Test module missing: '+name);runInNewContext(code,{exports:exported,require:load,$tw:{Tiddler},console});return exported;

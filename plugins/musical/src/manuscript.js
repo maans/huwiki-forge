@@ -5,6 +5,7 @@ module-type: library
 \*/
 (function(){
 "use strict";
+var isDanish=require("$:/plugins/huwiki/musical/language.js").isDanish;
 var LipSync=require("$:/plugins/huwiki/musical/lipsync.js");
 /* One shared screenplay workstation. Script cues remain in their original
    CutOut scene tiddlers; scene notes belong to the individual scenes, and
@@ -111,7 +112,8 @@ function lipSyncIssues(scene){
   return mouths.indexOf(config.open)<0||!!config.closed&&mouths.indexOf(config.closed)<0;
  });
 }
-function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(wiki.getTiddlerText("$:/language",""));
+function mount(o){
+ var displayName=o.displayName||function(value){return value;};var doc=o.doc,host=o.host,wiki=o.wiki,en=!isDanish(wiki);
  var L=en?{
   title:"Script workshop",subtitle:"Dialogue, lyrics, scene notes and shared subtitles",back:"Cancel",save:"Save and return",
   scene:"Scenes",cues:"Lines & subtitles",notes:"Scene notes",add:"+ New line",remove:"Delete selected line",when:"Starts",until:"Ends",
@@ -158,14 +160,14 @@ function mount(o){var doc=o.doc,host=o.host,wiki=o.wiki,en=/\/en(?:-|$)/i.test(w
    if(part.id===selectedId)b.classList.add('is-active');
    element(doc,'span','huw-script-cue-time',display(entry.start+when.start),b);
    var text=element(doc,'span','huw-script-cue-text',undefined,b);
-   element(doc,'small','',cueName(part),text);element(doc,'span','',part.text||part.name||'',text);
+   element(doc,'small','',cueName(part),text);element(doc,'span','',displayName(part.text||part.name||''),text);
   });
  }
  function refreshScenes(){var sidebar=popup.querySelector('.huw-script-scenes');sidebar.textContent='';
   items.forEach(function(entry,i){var b=button(sidebar,'',function(){selectScene(i)},'huw-script-scene');
    if(i===selectedScene)b.classList.add('is-active');
    element(doc,'span','huw-script-scene-time',display(entry.start),b);
-   element(doc,'span','',entry.path||entry.name,b);
+   element(doc,'span','',displayName(entry.path||entry.name),b);
   });
  }
  function renderLipSync(parent,entry,part){

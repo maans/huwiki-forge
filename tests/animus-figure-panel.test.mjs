@@ -1,3 +1,4 @@
+import {language, languageTitle} from './helpers/animus-language.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -25,7 +26,7 @@ function nativeEvents(doc) {
 class Tiddler {constructor(...items) {this.fields = Object.assign({}, ...items.filter(Boolean).map(item => item.fields || item));}}
 function modules(globals = {}) {
   const cache = {};
-  function load(name) {
+  function load(name) {if(name===languageTitle)return language;
     if(cache[name]) return cache[name];const exported = {};cache[name] = exported;
     if(name.endsWith('/i18n.js')) return Object.assign(exported, {t: value => value, contentName: (_title, value) => value, language: () => 'en'});
     const musical = /\$:\/plugins\/huwiki\/musical\/([^/]+)\.js$/.exec(name), code = musical ? sources[musical[1]] : cutout[name]?.text;
@@ -61,6 +62,7 @@ function harness({initial, motion = false, reentry = true, globals = {}, faceWor
   const withObjects = value => ({...value, parts: [...value.parts, ...plain(extraParts)]});
   const film = {version: 1, width: 800, height: 450, duration: 20, parts: [], camera: {keys: [{t: 0, x: 400, y: 225, zoom: 1.7, r: 13, skewX: 4}]}, scenes: [{source: 'First', duration: 10}, {source: 'Second', duration: 10, speed: 2, offset: 1, loop: true}], musical: {songs: [{id: 'music', score: 'Score', start: 0, duration: 20}], animationClips: motion ? [{id: 'arm-loop', name: 'Arm loop', target: 'prisoner', start: 10, duration: 10, beatsPerLoop: 8, loop: true, motion: {'prisoner-forearm-right': [pose(0, {y: 76, r: 10}), pose(8, {y: 76, r: 50})]}}] : [], faceKeys: [{actor: 'prisoner', t: 0, eyes: 'squint', mouthMap: {O: 'E'}}]}};
   const records = plain(initial || {Film: row('Film', film), First: row('First', withObjects(scene())), Second: row('Second', withObjects(scene(true))), Score: {title: 'Score', type: 'text/vnd.abc', text: 'X:1\nK:C\nC D E F|'}}), writes = [], selections = [], faces = [], deselections = [], appearanceOpens = [], propertiesOpens = [];
+  records['$:/language']={title:'$:/language',text:'$:/languages/da-DK'};
   const wiki = {getTiddler: title => records[title] ? new Tiddler(records[title]) : null, getTiddlerText: (title, fallback = '') => records[title]?.text ?? fallback, getTiddlers: () => Object.keys(records), each(fn) {for(const [title, fields] of Object.entries(records)) fn(new Tiddler(fields), title);}, addTiddler(t) {records[t.fields.title] = plain(t.fields);writes.push(t.fields.title);}, getModificationFields: () => ({}), generateNewTitle: title => title};
   const api = modules(globals), doc = svgDocument(), data = api.engine.readScene(wiki, 'Film'), view = api.engine.build(doc, wiki, data, false), host = doc.createElement('main'), dock = doc.createElement('section');doc.body.appendChild(host);host.appendChild(view.svg);host.appendChild(dock);
   const native = nativeEvents(doc);
