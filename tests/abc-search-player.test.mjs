@@ -5,6 +5,7 @@ import {runInNewContext} from "node:vm";
 
 const read=path=>readFile(new URL("../"+path,import.meta.url),"utf8");
 const plugin=JSON.parse(await read("plugins/abc/dist/plugin.json"));
+const pluginInfo=JSON.parse(await read("plugins/abc/plugin-info.json"));
 const modules=JSON.parse(plugin.text).tiddlers;
 const moduleTitle="$:/plugins/huwiki/abc/search-widget.js";
 const source=await read("plugins/abc/src/search-widget.js");
@@ -66,7 +67,7 @@ function makeHarness(){
 
 test("the maintained ABC collection search widget is bundled verbatim",()=>{
  assert.equal(modules[moduleTitle].text,source);
- assert.equal(plugin.version,"0.3.39-test.4");
+ assert.equal(plugin.version,pluginInfo.version);
 });
 
 test("opening a searched tune gives the score reader TiddlyWiki's document and shows notes",()=>{
