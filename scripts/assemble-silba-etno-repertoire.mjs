@@ -27,9 +27,10 @@ if(process.argv.includes("--with-site")){
 }
 const assembled=await loadEdition(
  "https://local.invalid/forge/editions/silva-ethno-repertoire/manifest.json",localFetch);
-const scores=assembled.tiddlers.filter(t=>String(t.tags||"").split(/\s+/).includes("SilbaÄtnoTrack")&&t["abc-source"]);
-if(scores.length!==17)throw Error("Cannot publish: expected 17 playable ABC scores, got "+scores.length);
+const scores=assembled.tiddlers.filter(t=>String(t.tags||"").split(/\s+/).includes("SilbaÄtnoTrack")&&t["abc-source"]&&!t["repertoire-sheet-format"]);
+const charts=assembled.tiddlers.filter(t=>String(t.tags||"").split(/\s+/).includes("SilbaÄtnoTrack")&&t["abc-source"]&&t["repertoire-sheet-format"]==="chords");
+if(scores.length!==17||charts.length!==1)throw Error("Cannot publish: expected 17 original ABC scores and one editable chord sheet, got "+scores.length+" + "+charts.length);
 const core=await readFile(path.join(root,"core/empty.html"),"utf8");
 const html=assembleHtml(core,assembled.tiddlers);
 await writeFile(path.join(folder,"index.html"),html);
-console.log("Editable SilbaÄtno Repertoire wiki:",Buffer.byteLength(html),"bytes",scores.length,"scores");
+console.log("Editable SilbaÄtno Repertoire wiki:",Buffer.byteLength(html),"bytes",scores.length,"scores plus",charts.length,"chord chart");
