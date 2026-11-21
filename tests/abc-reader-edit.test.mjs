@@ -168,7 +168,7 @@ test("Nodebog offers four compact icon tools in one row with accessible names",(
   assert.equal(button.children[0].tagName,"SVG");
   assert.equal(button.children[0].attrs["aria-hidden"],"true");
  }
- assert.equal(r.listButton,null,"standalone reader has no duplicate setlist button");
+ assert.equal(r.listButton,undefined,"standalone reader has no duplicate setlist button");
  assert.equal(r.menu.attrs["aria-label"],"Vis eller skjul nodemenu");
  h.reader.enter();
  r.practice.dispatchEvent({type:"click"});
