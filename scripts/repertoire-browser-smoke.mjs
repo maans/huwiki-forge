@@ -34,6 +34,9 @@ try{
  await standalone.waitFor();
  assert.ok(await standalone.evaluate(node=>node.classList.contains("huwabc-minimal")),
   "Ordinary ABC scores should open in minimal view");
+ await standalone.locator(".huwabc-mini-open").waitFor({state:"visible",timeout:30000});
+ assert.equal(await page.locator(".huwabc-mini-mixer:visible").count(),0,
+  "A minimal score must not automatically open a sidebar mixer");
  const advanced=standalone.locator(".huwabc-view-toggle");
  const advancedLabel=(await advanced.innerText()).trim();
  assert.ok(["Avanceret visning","Advanced view"].includes(advancedLabel),

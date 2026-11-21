@@ -12,6 +12,24 @@ const code=await readFile(path.join(root,"plugins/abc/src/reader-mode.js"),"utf8
 const widget=await readFile(path.join(root,"plugins/abc/src/score-widget.js"),"utf8");
 const css=await readFile(path.join(root,"plugins/abc/src/ReaderMode.tid"),"utf8");
 
+test("ABC starts in Minimal view; the mixer stays closed until needed",async()=>{
+ const src=await readFile(path.join(root,"plugins/abc/src/score-view.js"),"utf8");
+ const resolved={};runInNewContext(src,{exports:resolved});
+ assert.equal(resolved.resolve({},{}).view,"minimal","new score without a setting uses minimal");
+ assert.equal(resolved.resolve({view:"full"},{}).view,"full","explicit full macro in nodebook stays full");
+ const player=await readFile(path.join(root,"plugins/abc/src/minimal-player.js"),"utf8");
+ assert.ok(player.includes("initiallyVisible:false"),"lazily opened mixer starts hidden");
+ assert.ok(!player.includes("if(visual&&controls&&options.sidebarMixer)ensureMiniMixer();"),
+  "a score should not open a sidebar mixer just because it is visible");
+ assert.match(player,/ensureMiniMixer\(\)\.toggle/,"mixer is still available from the player control");
+ const score=await readFile(path.join(root,"plugins/abc/src/score-widget.js"),"utf8");
+ assert.ok(score.includes("this._manualMode||'minimal'"),"existing advanced scores open minimal");
+ assert.ok(score.includes("Avanceret visning"),"Danish advanced label");
+ assert.ok(score.includes("Advanced view"),"English advanced label");
+ assert.ok(!score.includes("new $tw.Tiddler(current,{'abc-view':next})"),
+  "mode changes never rewrite a source tiddler");
+});
+
 test("ABC ships one shared musician reader instead of forking the notation engine",()=>{
  assert.equal(bundled[prefix+"reader-mode.js"]?.text,code);
  assert.equal(bundled[prefix+"score-widget.js"]?.text,widget);
