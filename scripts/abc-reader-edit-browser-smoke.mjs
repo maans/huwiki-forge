@@ -269,10 +269,11 @@ try{
    const direct=page.locator(".huwabc-score.huwabc-standalone");
    await direct.first().waitFor({state:"visible"});
    await activate(direct.first().locator(".huwabc-view-toggle"));
-   await direct.first().getByRole("button",{name:"Redigér noder"}).waitFor({state:"visible"});
+   const editScoreButton=direct.first().locator(".huwabc-actions .huwabc-primary");
+   await editScoreButton.waitFor({state:"visible"});
    const directBefore=await assertSettled(page,"Standalone advanced source reader");
    assert.equal(directBefore.scores,1,"Only the standalone source score is mounted");
-   await activate(direct.first().getByRole("button",{name:"Redigér noder"}));
+   await activate(editScoreButton);
    const directDraft=page.locator(".huwabc-edit-frame");
    await directDraft.waitFor({state:"visible"});
    await directDraft.locator(".huwabc-edit-preview svg").first().waitFor({state:"visible"});
