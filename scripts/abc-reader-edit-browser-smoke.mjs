@@ -210,7 +210,15 @@ try{
     await activate(book.getByRole("button",{name:"Redigér",exact:true}));
     const frame=page.locator(".huwabc-edit-frame");
     await frame.waitFor({state:"visible"});
-    await frame.locator(".huwabc-edit-preview svg").first().waitFor({state:"visible"});
+    if(scenario.touch){
+     await frame.locator(".huwabc-edit-lite-code").waitFor({state:"visible"});
+     assert.equal(await frame.locator(".huwabc-edit-preview svg").count(),0,
+      "iPad must not allocate the large graphical SVG editor during Nodebog handoff");
+     assert.equal(await frame.getByRole("button",{name:/Åbn grafisk nodeværksted|Open graphical score workshop/}).count(),1,
+      "Graphical editing remains an explicit option on the same draft");
+    }else{
+     await frame.locator(".huwabc-edit-preview svg").first().waitFor({state:"visible"});
+    }
     assert.equal(await frame.count(),1,"One native draft frame opens from one menu activation");
     const editing=await assertSettled(page,`Cycle ${cycle+1} open`);
     assert.equal(editing.scores,0,"The source reader is disposed before editing; hiding its controls is insufficient");
