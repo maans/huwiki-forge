@@ -298,7 +298,7 @@
     {
       "id": "cutout",
       "name": "CutOut",
-      "version": "0.6.2-test.4",
+      "version": "0.6.2-test.5",
       "description": "Offline animation workshop · Dukker, animationer og lokal ZIP · Test",
       "file": "../plugins/cutout/dist/plugin.json",
       "status": "test"

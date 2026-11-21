@@ -277,9 +277,9 @@ function attach(o){
    stop.setAttribute("stop-color","black");stop.setAttribute("stop-opacity",String(item[1]));gradient.appendChild(stop);
   });focusDefs.appendChild(gradient);
   var mask=doc.createElementNS(NS,"mask");mask.setAttribute("id",focusId);
-  mask.setAttribute("maskUnits","userSpaceOnUse");
-  mask.setAttribute("x","-10000");mask.setAttribute("y","-10000");mask.setAttribute("width","20000");mask.setAttribute("height","20000");
-  var back=doc.createElementNS(NS,"rect");["x","y","width","height"].forEach(function(k,i){back.setAttribute(k,[-10000,-10000,20000,20000][i]);});
+  mask.setAttribute("maskUnits","objectBoundingBox");
+  mask.setAttribute("x","0");mask.setAttribute("y","0");mask.setAttribute("width","1");mask.setAttribute("height","1");
+  var back=doc.createElementNS(NS,"rect");
   back.setAttribute("fill","white");mask.appendChild(back);
   for(var n=0;n<2;n++){
    var hole=doc.createElementNS(NS,"ellipse");hole.setAttribute("fill","url(#"+gradientId+")");
@@ -322,7 +322,9 @@ function attach(o){
    var person=source&&source.parts.find(function(p){return p.id===detail.target;});
    if(person){var pose=Engine.state(person,time);o.view.svg.setAttribute("viewBox",[round(pose.x-200),round(pose.y-165),400,225].join(" "));}
   }
-  paintTransform(time);applyPreviewVisibility(time);
+  paintTransform(time);
+  if(focusDefs)["x","y","width","height"].forEach(function(k){back.setAttribute(k,overlay.getAttribute(k));});
+  applyPreviewVisibility(time);
   var cameraText=detail?(L===translations.da?"Animation: ":"Animation: ")+detail.name:L.camera+" "+activeCam(time);
   if(cameraLabel.textContent!==cameraText)cameraLabel.textContent=cameraText;playhead=time;
   var axis=axisDuration();

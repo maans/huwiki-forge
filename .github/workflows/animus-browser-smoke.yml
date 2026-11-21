@@ -31,6 +31,7 @@ on:
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
       - tests/animus-lipsync-editor.test.mjs
+      - tests/animus-ipad-browser.test.mjs
       - tests/animus-direct-edit.test.mjs
       - tests/helpers/svg-test-dom.mjs
       - tests/animus-presentation.test.mjs
@@ -68,6 +69,7 @@ on:
       - tests/abc-reader-fallback.test.mjs
       - tests/animus-lipsync.test.mjs
       - tests/animus-lipsync-editor.test.mjs
+      - tests/animus-ipad-browser.test.mjs
       - tests/animus-direct-edit.test.mjs
       - tests/helpers/svg-test-dom.mjs
       - tests/animus-presentation.test.mjs
@@ -79,6 +81,20 @@ on:
 permissions:
   contents: read
 jobs:
+  ipad-webkit:
+    runs-on: macos-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - run: npx playwright-core install webkit
+      - name: Test the ordinary Turn Around editor with an iPad viewport and touch input
+        env:
+          ANIMUS_WEBKIT_TESTS: '1'
+        run: node --test tests/animus-ipad-browser.test.mjs
   production:
     runs-on: ubuntu-latest
     timeout-minutes: 12

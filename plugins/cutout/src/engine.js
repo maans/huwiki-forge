@@ -138,33 +138,41 @@ function buildTree(doc,wiki,scene,editable,ancestry){
  parts.forEach(function(p){if(p.foreground&&!p.parent&&nodes[p.id])svg.appendChild(nodes[p.id].el);});
  return {svg:svg,nodes:nodes,back:back,clips:clips,wiki:wiki,scene:scene};
 }
-function paint(view,t,selected){
- var camera=cameraBox(view.scene,t);set(view.svg,'viewBox',[camera.x,camera.y,camera.width,camera.height].join(' '));
+function paint(view,t,selected,options){
+ var camera=cameraBox(view.scene,t);setChanged(view.svg,'viewBox',[camera.x,camera.y,camera.width,camera.height].join(' '));
  Object.keys(view.nodes).forEach(function(id){var v=view.nodes[id],p=v.part,s=state(p,t),pv=p.pivot||{x:0,y:0};
   if(v.nested){
    var ct=timing(t,v.nested.duration,p);
-   v.el.setAttribute('display',ct.active?'inline':'none');
+   setChanged(v.el,'display',ct.active?'inline':'none');
    // Hidden animation trees do not need a pose until they become active.
    // Use the absolute local clock when revealing them, so seeks in either
    // direction and loop boundaries do not depend on a previously painted frame.
-   if(ct.active)paint(v.nested,ct.time);
+   if(ct.active)paint(v.nested,ct.time,undefined,options);
   }
   if(p.type==='image'&&p.variants){var variant=p.variants.find(function(a){return a.id===s.variantId;})||p.variants[0];if(variant&&v.variant!==variant.id){set(v.shape,'href',imageHref(view.wiki,variant));v.variant=variant.id;}}
   var transform='translate('+s.x+' '+s.y+') rotate('+s.r+') scale('+s.sx+' '+s.sy+') translate('+(-finite(pv.x,0))+' '+(-finite(pv.y,0))+')';
-  v.el.setAttribute('transform',transform);v.el.setAttribute('opacity',s.opacity);
+  setChanged(v.el,'transform',transform);setChanged(v.el,'opacity',s.opacity);
   v.el.classList&&v.el.classList.toggle('huw-cutout-selected',selected===id);
  });
  if(view.clips.length){
   var at=clipAt(view.scene.scenes,t);
   view.clips.forEach(function(c,i){
    var active=i===at.index;
-   c.el.setAttribute('display',active?'inline':'none');
-   // Keep the complete tree for scene editing and dependency tracking, but
-   // evaluate only the scene on stage. Updating every hidden scene made each
-   // pointer movement in AniMus repaint the entire performance.
-   if(active&&c.view)paint(c.view,localTime(at.time,c.duration,c.settings));
+   setChanged(c.el,'display',active?'inline':'none');
+   if(!c.view)return;
+   // Keep editable model and node references, but only mount the current
+   // scene's artwork in AniMus. A cut restores the same tree at its local time.
+   if(active){
+    paint(c.view,localTime(at.time,c.duration,c.settings),undefined,options);
+    if(options&&options.activeOnly&&c.view.svg.parentNode!==c.el)c.el.appendChild(c.view.svg);
+   }else if(options&&options.activeOnly&&c.view.svg.parentNode===c.el){
+    c.el.removeChild(c.view.svg);
+   }
   });
  }
+}
+function setChanged(el,key,value){
+ var text=String(value);if(el.getAttribute(key)!==text)el.setAttribute(key,text);
 }
 function dependencies(view){var out={};function walk(v){if(v.scene._title)out[v.scene._title]=true;Object.keys(v.nodes).forEach(function(id){var n=v.nodes[id],p=n.part;if(n.nested)walk(n.nested);[p].concat(p.variants||[]).forEach(function(a){var title=M.resolve(v.wiki,a.assetId,a.asset);if(title)out[title]=true;});});v.clips.forEach(function(c){if(c.view)walk(c.view);});}walk(view);return out;}
 exports.dependencies=dependencies;

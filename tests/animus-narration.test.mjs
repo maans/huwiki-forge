@@ -120,3 +120,21 @@ test('script cues retain the nested scene clock, offsets, clipping and roles',()
  const cues=api.collectCues(wiki,{name:'Film',scenes:[{source:'intro',duration:10},{source:'scene',duration:5,speed:2,offset:2}]});
  assert.equal(cues.length,1);assert.equal(cues[0].start,12);assert.equal(cues[0].role,'SOLDAT');assert.equal(cues[0].sceneTitle,'scene');assert.equal(cues[0].cueId,'spoken-1');
 });
+
+test('a long recording timeline primes only simultaneous voices and reuses them across cuts and backward seeks',async()=>{
+ const clips=Array.from({length:120},(_,i)=>({id:'line-'+i,asset:i%2?'second':'voice',start:i*2,duration:2}));
+ clips.push({id:'music',asset:'second',start:0,duration:240});
+ const {player,created}=fixture(clips);
+ assert.equal(created.length,2);
+ assert.ok(created.every(a=>!a.src),'opening the editor does not load recordings');
+ for(const t of [180,10,232,1])player.seek(t);
+ assert.ok(created.every(a=>!a.plays&&!a.pauses&&!a.src),'paused seeks only move the clock');
+ player.unlock();player.sync(1,1);await tick();
+ assert.ok(created.every(a=>!a.paused));
+ const speech=created[0],bed=created[1],bedStarts=bed.plays;
+ player.sync(3,1);await tick();assert.equal(speech.src,'data:audio/mp4;base64,ZGVm');
+ assert.equal(speech.currentTime,1);assert.equal(bed.plays,bedStarts);
+ player.seek(.5);player.sync(.5,1);await tick();
+ assert.equal(speech.src,'data:audio/webm;base64,YWJj');assert.equal(speech.currentTime,.5);
+ assert.equal(created.length,2);player.dispose();assert.ok(created.every(a=>!a.src));
+});

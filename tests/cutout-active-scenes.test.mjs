@@ -135,3 +135,16 @@ test('a theatre inside the active film clip also paints only its active scene',(
  b.reset();engine.paint(h.view,5);
  assert.ok(a.writes>0);assert.equal(b.writes,0);assert.equal(x(act.clips[0].view.nodes.actor.el),10);
 });
+
+test('AniMus mounts only the current artwork and restores the same editable nodes after a cut',()=>{
+ const h=harness({Film:{...scene(),scenes:[{source:'A',duration:4},{source:'B',duration:4}]},A:scene([part()],4),B:scene([part()],4)});
+ const [first,second]=h.view.clips,actor=first.view.nodes.actor.el;
+ const seek=t=>engine.paint(h.view,t,undefined,{activeOnly:true});
+ seek(1);assert.equal(actor.isConnected,true);assert.equal(second.view.svg.isConnected,false);
+ seek(5);assert.equal(actor.isConnected,false);assert.equal(second.view.svg.isConnected,true);
+ assert.equal(x(second.view.nodes.actor.el),10);
+ first.view.scene.parts[0].keys=[pose(0,100),pose(4,140)];
+ seek(2);assert.equal(first.view.nodes.actor.el,actor);assert.equal(actor.isConnected,true);
+ assert.equal(x(actor),120);assert.equal(second.view.svg.isConnected,false);
+ assert.deepEqual(Object.keys(engine.dependencies(h.view)).sort(),['A','B','Film']);
+});

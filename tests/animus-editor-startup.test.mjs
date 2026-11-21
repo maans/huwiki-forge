@@ -83,7 +83,7 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
    previewMode(mode){widget.host.dataset.previewMode=mode;if(mode!=='stage')workspaceOptions.refreshScore();},
   seek(time){range.value=String(time);range.dispatch('input');},
   updateClips(rows){editorOptions.updateClips(rows);},
-  async load(){load.resolve(ABC);await load.promise;await Promise.resolve();assert.equal(play.disabled,false);assert.ok(widget._songStates.filter(song=>!song.clip.muted||!song.page.hidden).every(song=>song.tune));},
+  async load(){load.resolve(ABC);await load.promise;await Promise.resolve();assert.equal(play.disabled,false);assert.ok(widget._songStates.filter(song=>!song.clip.muted||(!song.page.hidden&&widget.host.dataset.previewMode!=="stage")).every(song=>song.tune));},
   async flush(){await Promise.resolve();await Promise.resolve();},
   advance(ms){now+=ms;const queued=[...frames.entries()];frames.clear();for(const [,callback] of queued)callback(now);},
   get duration(){return editorOptions.duration();},get audioPreparations(){return audioPreparations;},
@@ -235,5 +235,19 @@ test('iPad stage-only seek updates the cursor without rendering the next hidden 
  assert.ok(f.widget._songStates[2].tune);
  f.previewMode('stage');f.seek(30);
  assert.equal(f.notationRenders,2,'another stage-only seek does not render another hidden score');
+ f.widget._shutdown();
+});
+
+test('opening directly in stage view and dragging with a pointer skips hidden notation and intermediate frames',async()=>{
+ const f=fixture();f.previewMode('stage');await f.load();
+ assert.equal(f.notationRenders,0);
+ const before=f.painted.length;
+ f.range.dispatch('pointerdown',{pointerId:4});
+ for(const t of [30,60,90])f.seek(t);
+ assert.equal(f.painted.length,before);
+ f.advance(16);assert.equal(f.painted.length,before+1);assert.equal(f.painted.at(-1),90);
+ f.seek(120);f.range.dispatch('pointerup',{pointerId:4});f.advance(16);
+ assert.equal(f.painted.length,before+2);assert.equal(f.painted.at(-1),120);
+ f.previewMode('split');assert.equal(f.notationRenders,1);
  f.widget._shutdown();
 });

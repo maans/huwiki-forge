@@ -18,7 +18,7 @@ test('CutOut preserves original project model, samples and vendor license; engin
   // builder in this comparison rather than excluding it from the audit.
   .replace(/function build\(doc,wiki,scene,editable,ancestry\)\{[\s\S]*?\n\}\nfunction buildTree\(/,'function build(')
   .replace(/\bbuildTree\(/g,'build(')
-  .replace(/function paint\(view,t,selected\)\{[\s\S]*?\nfunction dependencies\(/,'function dependencies(');
+  .replace(/function paint\(view,t,selected(?:,options)?\)\{[\s\S]*?\nfunction dependencies\(/,'function dependencies(');
  assert.equal(withoutRenderingChanges(engine.text),withoutRenderingChanges(originalEngine.text),'Keep original parsing, geometry, clocks and dependencies intact');
  for(const title of ['Demo – Tændstikmand','Demo – Tændstikmand (dukke)'])assert.deepEqual(after[title],before[title]);
  assert.equal(plugin.author,original.author);assert.equal(plugin.license,original.license,'Do not invent a license absent from the original');

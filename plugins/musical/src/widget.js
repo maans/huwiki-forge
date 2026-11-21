@@ -83,7 +83,7 @@ Musical.prototype.render=function(parent,next){
  node(doc,"h3","huw-musical-subtitle",L.scene,stagePanel);
  var stage=node(doc,"div","huw-musical-canvas",stagePanel);
  var view=Engine.build(doc,this.wiki,scene);
- this._view=view;stage.appendChild(view.svg);Engine.paint(view,0,undefined,ACTIVE_PAINT);
+ this._view=view;Engine.paint(view,0,undefined,ACTIVE_PAINT);stage.appendChild(view.svg);
  // Captions belong to the audience's camera view, not to scenery SVG.
  // The CutOut source stays editable and unchanged; only this performance
  // hides its scene-space subtitle glyphs and displays a fixed overlay.
@@ -448,7 +448,7 @@ Musical.prototype.render=function(parent,next){
    else sfx.last=t;
    voice.sync(t,timeline.rate);syncAudio(t);
   }
-  if(doc.activeElement!==time)time.value=String(t);
+  if(scrubTime==null&&Number(time.value)!==t)time.value=String(t);
   var clockLabel=timeLabel(t)+" / "+timeLabel(duration);
   if(clock.textContent!==clockLabel)clock.textContent=clockLabel;
   host.dataset.cameraTime=visualTime.toFixed(2);
@@ -457,7 +457,7 @@ Musical.prototype.render=function(parent,next){
  function frame(){
   self._frame=0;if(!alive()||!timeline.running)return;
   paint(timeline.value());
-  self._frame=requestAnimationFrame(frame);
+  if(timeline.running)startFrames();
  }
  function startFrames(){if(!self._frame&&alive())self._frame=requestAnimationFrame(frame);}
  function stopFrames(){if(self._frame)cancelAnimationFrame(self._frame);self._frame=0;}
@@ -517,7 +517,7 @@ Musical.prototype.render=function(parent,next){
   applyGains(seconds,true);
  }
  function stopAll(){
-  generation++;stopping=true;timeline.pause();setPlaying(false);sfx.seek(0);voice.pause();voice.seek(0);
+  generation++;stopping=true;timeline.running=false;setPlaying(false);sfx.seek(0);voice.pause();voice.seek(0);
   songs.forEach(function(song){
    song.starting=false;song.finished=false;song.gain=0;song.appliedGain=-1;
    if(song.controller)Playback.stopOne(song.controller);
@@ -545,7 +545,30 @@ Musical.prototype.render=function(parent,next){
   state.textContent=hasMusic?(audioActivated?L.loading:L.noAudio):L.ready;
   syncAudio(timeline.value());
  };
- time.addEventListener("input",function(){seek(Number(time.value));});
+ // Native sliders can emit several inputs before Safari paints. Show the
+ // last position of each frame, and commit the release even outside the range.
+ var scrubPointer=null,scrubFrame=0,scrubTime=null;
+ function flushScrub(){
+  if(scrubFrame)cancelAnimationFrame(scrubFrame);
+  scrubFrame=0;
+  if(scrubTime!==null){var target=scrubTime;scrubTime=null;seek(target);}
+ }
+ function endScrub(event){
+  if(event.pointerId!==scrubPointer)return;
+  scrubPointer=null;flushScrub();
+  doc.removeEventListener("pointerup",endScrub);doc.removeEventListener("pointercancel",endScrub);
+ }
+ time.addEventListener("pointerdown",function(event){
+  if(event.button!==0||scrubPointer!==null)return;
+  scrubPointer=event.pointerId;
+  doc.addEventListener("pointerup",endScrub);doc.addEventListener("pointercancel",endScrub);
+ });
+ time.addEventListener("input",function(){
+  scrubTime=Number(time.value);
+  if(scrubPointer===null)flushScrub();
+  else if(!scrubFrame)scrubFrame=requestAnimationFrame(flushScrub);
+ });
+ time.addEventListener("change",flushScrub);
  speed.addEventListener("change",function(){
   if(!ready)return;
   var wasRunning=timeline.running,position=timeline.value();
@@ -560,6 +583,8 @@ Musical.prototype.render=function(parent,next){
   if(wasRunning){timeline.play();setPlaying(true);syncAudio(position);}
  });
  this._shutdown=function(){
+  if(scrubFrame)cancelAnimationFrame(scrubFrame);
+  doc.removeEventListener("pointerup",endScrub);doc.removeEventListener("pointercancel",endScrub);
   self._dead=true;generation++;stopFrames();if(self._videoExporter)self._videoExporter.dispose();sfx.dispose();voice.dispose();LipSync.reset(view);clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
   if(session)Playback.unregister(session);
   songs.forEach(function(song){
@@ -771,9 +796,8 @@ Musical.prototype.render=function(parent,next){
   if(!alive())return;
   var canAudio=!!(ABC.synth&&ABC.synth.supportsAudio&&ABC.synth.supportsAudio());
   ABCObject=ABC;soundReady=canAudio;
-  // Prepare the initially visible guide once for score and export workflows.
-   // Later stage-only seeks skip rendering new guides until a score is opened.
-   songs.forEach(function(song){if(!song.clip.muted||!song.page.hidden)ensureNotation(song);});
+  // Audible scores determine timing. Muted guides only need engraving when the score is visible.
+  songs.forEach(function(song){if(!song.clip.muted||(!song.page.hidden&&host.dataset.previewMode!=="stage"))ensureNotation(song);});
   clips=Playlist.reflow(songs.map(function(song){return song.clip;}),self.scoreTitle);
   beatClock=Motion.beatClock(clips,function(title){var tid=self.wiki.getTiddler(title);return tid&&tid.fields&&(tid.fields["abc-source"]||tid.fields.text)||"";});
   songs.forEach(function(song,i){song.clip=clips[i];});
@@ -781,7 +805,7 @@ Musical.prototype.render=function(parent,next){
   // The editor may already have sought past an opening fade while ABC loaded.
   // Preserve that cursor instead of repainting an unrelated first frame.
   var position=timeline.value();
-  time.max=String(duration);showSong(position);paint(position);
+  time.max=String(duration);paint(position);
   // The notes and visual master clock are ready before samples finish loading.
   // Audio remains optional; no missing SoundFont can block the theatre.
   state.textContent=canAudio||!clips.some(audibleClip)?L.ready:L.noAudio;
