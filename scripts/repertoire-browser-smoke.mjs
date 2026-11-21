@@ -32,8 +32,9 @@ try{
   const planner=$tw.modules.execute("$:/plugins/huwiki/abc/repeat-plan.js");
   const source=$tw.wiki.getTiddler("SilbaÄtno · Låt från Dalarne").fields["abc-source"];
   const p=planner.build(ABC,source,{});
-  return {order:p.order.map(n=>n+1),sections:p.sections.map(s=>[s.start,s.end])};
+  return {active:p.active,order:p.order.map(n=>n+1),sections:p.sections.map(s=>[s.start,s.end])};
  });
+ assert.equal(volta.active,true,"Volta playback must use the shared repeat timeline");
  assert.deepEqual(volta.sections,[[0,9],[9,19]],"A and B must remain separate repeats even when A volta 2 ends at B |:");
  assert.deepEqual(volta.order,[
   1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,9,
