@@ -24,6 +24,21 @@ try{
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.waitForFunction(()=>window.$tw&&$tw.wiki&&$tw.rootWidget);
  await page.locator(".silba-home").waitFor();
+ // Use the real ABCJS parser, not a mocked score, to confirm both A/B repeats
+ // unfold independently. This also validates the exact first/second-volta
+ // line break after the MuseScore import.
+ const volta=await page.evaluate(()=>{
+  const ABC=$tw.modules.execute("$:/plugins/huwiki/abc/vendor/abcjs.js");
+  const planner=$tw.modules.execute("$:/plugins/huwiki/abc/repeat-plan.js");
+  const source=$tw.wiki.getTiddler("SilbaÄtno · Låt från Dalarne").fields["abc-source"];
+  const p=planner.build(ABC,source,{});
+  return {order:p.order.map(n=>n+1),sections:p.sections.map(s=>[s.start,s.end])};
+ });
+ assert.deepEqual(volta.sections,[[0,9],[9,19]],"A and B must remain separate repeats even when A volta 2 ends at B |:");
+ assert.deepEqual(volta.order,[
+  1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,9,
+  10,11,12,13,14,15,16,17,10,11,12,13,14,15,18,19
+ ],"ABCJS must play the 32 written bars of Dalarne in the correct repeated order");
  // A standalone score from an older import may still store abc-view:full.
  // Opening it must nonetheless start in the quiet, reversible minimal view.
  const oldScoreTitle="SilbaÄtno · Låt från Dalarne";
