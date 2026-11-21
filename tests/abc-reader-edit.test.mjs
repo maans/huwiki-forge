@@ -32,7 +32,7 @@ function harness(onEdit){
    setAttribute(name,value){this.attrs[name]=String(value);},
    closest(){return null;},querySelector(){return null;}
   });return n;
- }});
+ },createElementNS(_namespace,tag){return this.createElement(tag);}});
  const host=doc.createElement("section"),actions=doc.createElement("div"),paper=doc.createElement("div");
  host.append(actions,paper);
  // A presentation class must never be used to redispatch a synthetic click.
@@ -154,4 +154,38 @@ test("iPad editor keeps one visible score and avoids redraw storms",async()=>{
  assert.match(code,/preview\.style\.visibility=oldVisibility/,"restore visibility even after a parse error");
  assert.match(code,/mobileWebKit\?420:130/,"iPad typing redraw is throttled");
  assert.match(code,/this\._cancelPreview/,"pending redraws are cancelled on editor teardown");
+});
+
+test("Nodebog offers four compact icon tools in one row with accessible names",()=>{
+ const h=harness(()=>true),r=h.reader;
+ assert.equal(r.panel.children[1].className,"huwabc-reader-modes","icons share one toolbar row");
+ const controls=r.panel.children[1].children;
+ assert.equal(controls.length,4,"Vis, Øv, Redigér and Luk remain four independent actions");
+ for(const [button,name] of [[r.vis,"Vis"],[r.practice,"Øv"],[r.edit,"Redigér"],[r.close,"Luk visning"]]){
+  assert.equal(button.attrs["aria-label"],name,"icon has a readable screen reader name");
+  assert.equal(button.attrs.title,name,"mouse hover explains the icon");
+  assert.equal(button.children.length,1,"icon replaces the oversized text label");
+  assert.equal(button.children[0].tagName,"SVG");
+  assert.equal(button.children[0].attrs["aria-hidden"],"true");
+ }
+ assert.equal(r.listButton,undefined,"standalone reader has no duplicate setlist button");
+ assert.equal(r.menu.attrs["aria-label"],"Vis eller skjul nodemenu");
+ h.reader.enter();
+ r.practice.dispatchEvent({type:"click"});
+ assert.equal(r.mode,"practice");
+ assert.equal(r.practice.attrs["aria-pressed"],"true");
+ r.vis.dispatchEvent({type:"click"});
+ assert.equal(r.mode,"vis");
+ r.close.dispatchEvent({type:"click"});
+ assert.equal(r.active,false,"close icon returns to the normal score view");
+ r.destroy();
+});
+
+test("Reader palette places compact icons and fit selectors without covering the page",async()=>{
+ const css=await readFile(new URL("../plugins/abc/src/ReaderMode.tid",import.meta.url),"utf8");
+ assert.match(css,/grid-template-columns:repeat\(4,minmax\(0,1fr\)\)/,"four icons must stay side by side");
+ assert.match(css,/grid-template-columns:repeat\(2,minmax\(0,1fr\)\)/,"two size fields remain on one row");
+ assert.match(css,/\.huwabc-reader-menu-panel\{\s*position:absolute/,"menu floats below toolbar icons");
+ assert.match(css,/\.huwabc-reader-toolbar>\.huwabc-reader-list/,"number list is a small icon");
+ assert.match(css,/\.huwabc-reader-icon-button svg/,"vector icons are styled consistently");
 });

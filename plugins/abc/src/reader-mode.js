@@ -18,6 +18,34 @@ function action(doc,label,cls,fn){
  var b=node(doc,"button",cls,label);
  b.type="button";b.addEventListener("click",fn);return b;
 }
+// A small, monochrome icon set. Keep readable accessible names and tooltips:
+// musicians need four buttons in one row rather than four large text bars.
+function icon(doc,kind){
+ var ns="http://www.w3.org/2000/svg",svg=doc.createElementNS(ns,"svg");
+ svg.setAttribute("viewBox","0 0 24 24");
+ svg.setAttribute("width","20");svg.setAttribute("height","20");
+ svg.setAttribute("fill","none");svg.setAttribute("stroke","currentColor");
+ svg.setAttribute("stroke-width","1.8");svg.setAttribute("stroke-linecap","round");
+ svg.setAttribute("stroke-linejoin","round");svg.setAttribute("aria-hidden","true");
+ var shapes={
+  view:[["path",{d:"M2 12s3.8-6.5 10-6.5S22 12 22 12s-3.8 6.5-10 6.5S2 12 2 12Z"}],["circle",{cx:12,cy:12,r:3}]],
+  practice:[["path",{d:"M9 18V5l12-2v12"}],["ellipse",{cx:6,cy:18,rx:3,ry:2}],["ellipse",{cx:18,cy:15,rx:3,ry:2}]],
+  edit:[["path",{d:"M12 20h9"}],["path",{d:"m16.5 3.5 4 4L8.5 19.5l-5 1 1-5L16.5 3.5Z"}]],
+  close:[["path",{d:"M18 6 6 18M6 6l12 12"}]],
+  list:[["path",{d:"M8 6h13M8 12h13M8 18h13"}],["path",{d:"M3 6h.01M3 12h.01M3 18h.01"}]],
+  menu:[["path",{d:"M4 7h16M4 12h16M4 17h16"}]]
+ };
+ (shapes[kind]||shapes.menu).forEach(function(pair){
+  var el=doc.createElementNS(ns,pair[0]);Object.keys(pair[1]).forEach(function(name){el.setAttribute(name,String(pair[1][name]));});svg.appendChild(el);
+ });
+ return svg;
+}
+function iconAction(doc,label,cls,kind,fn){
+ var b=action(doc,"",cls+" huwabc-reader-icon-button",fn);
+ b.appendChild(icon(doc,kind));
+ b.setAttribute("aria-label",label);b.setAttribute("title",label);
+ return b;
+}
 function pageAction(info,delta){
  if(!info||!Number(info.count))return "unready";
  var current=Math.max(1,Number(info.page)||1);
@@ -58,13 +86,13 @@ Reader.prototype.create=function(){
  var toolbar=node(doc,"div","huwabc-reader-toolbar");
  toolbar.setAttribute("role","toolbar");toolbar.setAttribute("aria-label","Nodevisning");
  this.toolbar=toolbar;
- this.menu=action(doc,"☰","huwabc-reader-menu",function(){self.controlsOpen=!self.controlsOpen;if(self.controlsOpen&&self.book){var list=self.book.querySelector(".huwrep-book-list");if(list)list.hidden=true;}self.sync();});
+ this.menu=iconAction(doc,"Vis eller skjul nodemenu","huwabc-reader-menu","menu",function(){self.controlsOpen=!self.controlsOpen;if(self.controlsOpen&&self.book){var list=self.book.querySelector(".huwrep-book-list");if(list)list.hidden=true;}self.sync();});
  this.menu.setAttribute("aria-label","Vis eller skjul nodemenu");
  toolbar.appendChild(this.menu);
  // In a setlist, keep the familiar searchable number drawer accessible
  // without exposing Repertoire's outer six rows of editing controls.
  if(this.book){
-  this.listButton=action(doc,"☷ Nummerliste","huwabc-reader-list",function(){
+  this.listButton=iconAction(doc,"Nummerliste","huwabc-reader-list","list",function(){
    var list=self.book.querySelector(".huwrep-book-list");
    if(!list)return;
    list.hidden=!list.hidden;
@@ -78,13 +106,14 @@ Reader.prototype.create=function(){
  toolbar.appendChild(this.panel);
  this.panel.appendChild(node(doc,"strong","huwabc-reader-title",this.title));
  var modes=node(doc,"div","huwabc-reader-modes");
- this.vis=action(doc,"Vis","huwabc-reader-mode-button",function(){self.mode="vis";self.sync();});
- this.practice=action(doc,"Øv","huwabc-reader-mode-button",function(){self.mode="practice";self.sync();});
- this.edit=action(doc,"Redigér","huwabc-reader-mode-button",function(event){self.openEditor(event);});
+ this.vis=iconAction(doc,"Vis","huwabc-reader-mode-button","view",function(){self.mode="vis";self.sync();});
+ this.practice=iconAction(doc,"Øv","huwabc-reader-mode-button","practice",function(){self.mode="practice";self.sync();});
+ this.edit=iconAction(doc,"Redigér","huwabc-reader-mode-button","edit",function(event){self.openEditor(event);});
  this.edit.disabled=typeof this.onEdit!=="function";
  this.vis.setAttribute("aria-pressed","true");
  this.practice.setAttribute("aria-pressed","false");
- modes.append(this.vis,this.practice,this.edit);
+ this.close=iconAction(doc,"Luk visning","huwabc-reader-mode-button huwabc-reader-close","close",function(){self.exit();});
+ modes.append(this.vis,this.practice,this.edit,this.close);
  this.panel.appendChild(modes);
  var options=node(doc,"div","huwabc-reader-options");
  var pages=node(doc,"label","huwabc-reader-field");
@@ -103,7 +132,7 @@ Reader.prototype.create=function(){
  this.fitChoice.value=this.fitMode;
  this.listen(this.fitChoice,"change",function(){self.fitMode=self.fitChoice.value;try{self.win.localStorage.setItem("huwabc-reader-fit-mode",self.fitMode);}catch(_ignored){}self.updateScale();});
  fitField.appendChild(this.fitChoice);options.appendChild(fitField);
- options.appendChild(action(doc,"Luk visning","huwabc-reader-close",function(){self.exit();}));
+ // Closing is the fourth icon in the same row as Vis, Øv and Redigér.
  this.panel.appendChild(options);
  this.status=node(doc,"span","huwabc-reader-counter");
  this.panel.appendChild(this.status);

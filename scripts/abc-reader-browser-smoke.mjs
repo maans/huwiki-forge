@@ -68,6 +68,29 @@ try{
  await score.locator(".huwabc-paper svg").first().waitFor({state:"attached",timeout:10000});
  await score.evaluate(el=>{window.__abcReaderOriginalSvg=el.querySelector(".huwabc-paper svg");});
  await score.locator(".huwabc-reader-menu").click();
+ // The performance menu must leave room for the sheet: four small icon
+ // actions in one row, with hover/screen-reader labels and no wide text bars.
+ const controlLayout=await score.evaluate(el=>{
+  const panel=el.querySelector(".huwabc-reader-menu-panel");
+  const icons=Array.from(el.querySelectorAll(".huwabc-reader-modes button"));
+  const list=el.querySelector(".huwabc-reader-list");
+  return {
+   panelWidth:panel.getBoundingClientRect().width,
+   labels:icons.map(b=>b.getAttribute("aria-label")),
+   icons:icons.map(b=>!!b.querySelector("svg")),
+   tops:icons.map(b=>Math.round(b.getBoundingClientRect().top)),
+   heights:icons.map(b=>b.getBoundingClientRect().height),
+   listWidth:list&&list.getBoundingClientRect().width,
+   fields:el.querySelectorAll(".huwabc-reader-options select").length
+  };
+ });
+ assert.deepEqual(controlLayout.labels,["Vis","Øv","Redigér","Luk visning"]);
+ assert.ok(controlLayout.icons.every(Boolean),"reader actions use actual monochrome icons");
+ assert.equal(new Set(controlLayout.tops).size,1,"all four mode icons must share one row");
+ assert.ok(controlLayout.heights.every(n=>n<=46&&n>=40),"icons stay compact and touch-friendly");
+ assert.ok(controlLayout.panelWidth<=290,"the old dark menu must not cover a large score area");
+ assert.ok(controlLayout.listWidth<=46,"the number list button is icon-sized");
+ assert.equal(controlLayout.fields,2,"page layout and fit are the only remaining fields");
  await score.locator(".huwabc-reader-modes button").nth(1).click();
  assert.ok(await score.evaluate(el=>el.classList.contains("huwabc-reader-practice")),"Practice should keep the same score open");
  await score.locator(".huwabc-reader-modes button").nth(0).click();
