@@ -1,12 +1,14 @@
 # AniMus production tools
 
-AniMus 0.13.0-beta.10 includes large figure and object workshops beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
+AniMus 0.13.0-beta.11 includes large figure and object workshops beneath the stage, facial expressions and learned mouth choices alongside production workshops, direct figure and joint editing, a captions track, preview visibility and audio controls, selection zoom, and video export on the existing stage and music timeline. SitePublisher 0.1.18-test.1 provides audience programme and performance starting views with the shared facial renderer and exporter. The example productions remain separate plugins.
 
 ## Create and edit a show
 
 Open **AniMus Forge I · Start** or the show gallery. Enter a title and choose **New show**. A new show contains an empty scene and a silent ABC score. The scene, score and film are ordinary editable tiddlers.
 
 In a show’s top bar, the first menu displays the active editing tool. **Workshops** opens the production editors. **View** switches between stage, score and split preview and includes focus, properties and Site view.
+
+The editor opens in **Split**. The score and stage stay visible when you choose an editing tool. They stack when the editor is too narrow to show them side by side.
 
 **Stage zoom** contains selection zoom and reset. Use the track selector on the timeline and **Playback options** for speed and translated caption languages when available. In the workshops, expand the character parts, facial history, caption appearance or frame timing as needed.
 
@@ -191,6 +193,8 @@ Automatic cue movement during scene rearrangement supports ordinary sequential s
 ## Dansk
 
 Åbn AniMus-startsiden eller galleriet, skriv et navn, og vælg **Ny forestilling**. Den første menu viser det aktive værktøj. Under **Værksteder** finder du **Manuskript**, **Scener**, **Tegn SVG**, **Musik** og **Lydspor**. Under **Visning** vælger du scene, noder eller delt visning. Her finder du også fokusvisning, egenskaber og sitevisning.
+
+Editoren starter i **Delt visning**. Noder og scene forbliver synlige, når du vælger et redigeringsværktøj. De står under hinanden, hvis editoren er for smal til at vise dem side om side.
 
 **Scenezoom** samler zoom til markering og nulstilling. Vælg sporgruppe direkte på tidslinjen. **Afspilningsvalg** samler hastighed og undertekstsprog, når der findes oversættelser. I værkstederne kan du folde figurens dele, ansigtshistorik, underteksternes udseende og billedtiming ud efter behov.
 

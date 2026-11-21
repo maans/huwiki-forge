@@ -454,6 +454,8 @@ try{
  assert.equal((await player.evaluate(host=>host._platoPlayer.getAudioState())).scheduledTracks,0);
  passed('actual audience Play → Open in AniMus stops the audience clock and audio, and editor Play works before ABC loads');
 
+ assert.equal(await editor.getAttribute('data-preview-mode'),'split','the normal startup shows the score beside the animated scene');
+ await chooseToolbarItem(editor,'view','[data-preview="stage"]');
  await wiki.evaluate(()=>window.__animusReleaseNotation());
  assert.equal(await editor.locator('.huw-musical-score-page svg').count(),0,'the stage-only editor leaves hidden guide notation unrendered');
  await chooseToolbarItem(editor,'view','[data-preview="split"]');

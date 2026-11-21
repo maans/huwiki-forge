@@ -117,7 +117,7 @@ function mount(o){
  var viewModes=el(doc,'div','huw-musical-menu-section',undefined,viewMenu.panel);
  var viewActions=el(doc,'div','huw-musical-menu-section',undefined,viewMenu.panel);
  var workshopActions=el(doc,'div','huw-musical-menu-section',undefined,workshopsMenu.panel);
- var inspectorOpen=false,mode="split",focus=false,puppet=Puppet.mount(o),lastTap=null,suppressedStageTap=null;
+ var inspectorOpen=false,mode=o.previewPreference||"split",focus=false,puppet=Puppet.mount(o),lastTap=null,suppressedStageTap=null;
  var narration=Narration.mount(o),scoreWorkshop=ScoreWorkshop.mount(o),sceneWorkshop=SceneWorkshop.mount(o);
  var manuscript=Manuscript.mount(Object.assign({},o,{openNarration:function(details){narration.open(details);},openFace:o.openFace||openFace}));
  var transformMode='',figureRoot='',cameraName='A',latestPart='',cancelGesture=null;
@@ -142,7 +142,7 @@ function mount(o){
  var workshopBody=el(doc,'div','huw-musical-workshop-content',undefined,workshop);
  var figurePanel=FigurePanel.mount({doc:doc,wiki:o.wiki,host:host,parent:workshopBody,view:o.view,film:o.film,editor:editor,
   position:o.position,pause:o.pause,onLayout:reframeAfterLayout,
-  onSelect:function(id){selectionCleared=false;lastBodyPart=id;latestPart=id;figureRoot=id;workshopPart=id;transformMode='parts';useStageMode();editor.setCameraEdit(false);updateToolButtons();setInspector(false);refreshHandles();},
+  onSelect:function(id){selectionCleared=false;lastBodyPart=id;latestPart=id;figureRoot=id;workshopPart=id;transformMode='parts';showStageForTool();editor.setCameraEdit(false);updateToolButtons();setInspector(false);refreshHandles();},
   onDeselect:function(){clearSelection();},
   onEditAppearance:openAppearance,onProperties:showObjectProperties,
   onFace:function(details){showFaceWorkshop(details.partId,details.tab);}
@@ -192,7 +192,7 @@ function mount(o){
  function returnToFigure(details){
   var id=lastBodyPart||details&&details.headId||workshopPart;if(!id)return;
   if(cancelGesture)cancelGesture();o.pause();routingWorkshop=true;
-  try{transformMode='parts';useStageMode();editor.setCameraEdit(false);if(!selectionCleared&&editor.selectPart(id,true)){figureRoot=id;latestPart=id;}}
+  try{transformMode='parts';showStageForTool();editor.setCameraEdit(false);if(!selectionCleared&&editor.selectPart(id,true)){figureRoot=id;latestPart=id;}}
   finally{routingWorkshop=false;}
   showFigureWorkshop(id);updateToolButtons();setInspector(false);refreshHandles();bodyTab.focus({preventScroll:true});
  }
@@ -246,7 +246,7 @@ function mount(o){
   if(cancelGesture)cancelGesture();figurePanel.cancelGesture();o.pause();
   return outsideStage(function(){
    routingWorkshop=true;
-   try{transformMode='parts';useStageMode();editor.setCameraEdit(false);if(!editor.selectPart(id,true))return false;figureRoot=latestPart=id;}
+   try{transformMode='parts';showStageForTool();editor.setCameraEdit(false);if(!editor.selectPart(id,true))return false;figureRoot=latestPart=id;}
    finally{routingWorkshop=false;}
    figurePanel.select(id);syncWorkshop();updateToolButtons();setInspector(true);refreshHandles();
    if(drawer.scrollIntoView)drawer.scrollIntoView({block:'nearest'});drawer.tabIndex=-1;drawer.focus({preventScroll:true});return true;
@@ -281,8 +281,12 @@ function mount(o){
   toolsMenu.trigger.setAttribute('aria-label',active?L.tools+', '+active.textContent:L.tools);
  }
  var previousPreviewMode=null;
- function useStageMode(){if(previousPreviewMode===null)previousPreviewMode=mode;setPreviewMode('stage');}
- function restorePreviewMode(){if(previousPreviewMode!==null){if(mode==='stage')setPreviewMode(previousPreviewMode);previousPreviewMode=null;}}
+ function showStageForTool(){
+  if(mode==='score'){previousPreviewMode=mode;setPreviewMode('split');}
+ }
+ function restorePreviewMode(){
+  if(previousPreviewMode!==null){setPreviewMode(previousPreviewMode);previousPreviewMode=null;}
+ }
  function stopTool(){if(cancelGesture)cancelGesture();transformMode='';o.editor.setCameraEdit(false);updateToolButtons();restorePreviewMode();refreshHandles();}
  function chooseStageObject(id,quiet){
   // A figure, prop, background or other scene object is always selected by
@@ -306,7 +310,7 @@ function mount(o){
   if(editor.inClipDetail&&editor.inClipDetail())editor.closeAnimation();
   var selected=o.editor.getSelection&&o.editor.getSelection();
   var candidate=latestPart||(selected&&selected.kind==='figure'&&selected.part)||'';
-  transformMode='figure';figureRoot='';useStageMode();o.editor.setCameraEdit(false);
+  transformMode='figure';figureRoot='';showStageForTool();o.editor.setCameraEdit(false);
   if(candidate)chooseStageObject(candidate,true);
   updateToolButtons();refreshHandles();
   figureButton.title=L.scene==='Scene'?'Klik på en figur, rekvisit eller kulisse for at markere hele objektet':'Tap any figure, prop or scenery element to select the entire object';
@@ -315,21 +319,24 @@ function mount(o){
   if(cancelGesture)cancelGesture();
   if(transformMode==='parts'){if(editor.inClipDetail&&editor.inClipDetail())editor.closeAnimation();stopTool();return;}
   var selected=editor.getSelection&&editor.getSelection(),candidate=latestPart||(selected&&selected.part)||'';
-  transformMode='parts';figureRoot='';useStageMode();o.pause();editor.setCameraEdit(false);
+  transformMode='parts';figureRoot='';showStageForTool();o.pause();editor.setCameraEdit(false);
   if(candidate&&editor.selectPart(candidate,true)){figureRoot=candidate;latestPart=candidate;setInspector(true);}
   updateToolButtons();refreshHandles();
  }
  function toggleCamera(){if(transformMode==='camera'){stopTool();return;}
   hideWorkshop();
   if(o.editor.inClipDetail&&o.editor.inClipDetail())o.editor.closeAnimation();
-  cameraName=o.editor.activeCamera(o.position());transformMode='camera';useStageMode();o.pause();o.editor.selectCamera(cameraName);o.editor.setCameraEdit(true);
+  cameraName=o.editor.activeCamera(o.position());transformMode='camera';showStageForTool();o.pause();o.editor.selectCamera(cameraName);o.editor.setCameraEdit(true);
   setInspector(true);updateToolButtons();refreshHandles();
  }
  updateToolButtons();
 
  var modeButtons={};
  [["split",L.fit],["stage",L.scene],["score",L.score]].forEach(function(item){
-  var key=item[0],b=button(viewModes,'',item[1],function(){setPreviewMode(key);});
+  var key=item[0],b=button(viewModes,'',item[1],function(){
+   previousPreviewMode=null;
+   if(o.rememberPreview)o.rememberPreview(key);setPreviewMode(key);
+  });
   b.dataset.preview=key;b.setAttribute('aria-pressed',String(key===mode));modeButtons[key]=b;
  });
  host.dataset.previewMode=mode;
@@ -477,7 +484,7 @@ function mount(o){
   Array.prototype.forEach.call(o.view.svg.querySelectorAll('.huw-musical-selected-element'),function(node){node.classList.remove('huw-musical-selected-element');});
   updateEditButtons();
   if(t&&t.kind==='face'){
-   figureRoot=t.part;latestPart=t.part;transformMode='parts';useStageMode();o.pause();editor.setCameraEdit(false);
+   figureRoot=t.part;latestPart=t.part;transformMode='parts';showStageForTool();o.pause();editor.setCameraEdit(false);
    if(!routingWorkshop)showFaceWorkshop(t.part);updateToolButtons();setInspector(false);refreshHandles();return;
   }
   // A stage gesture opens the workshop only after pointer-up. Changing layout
@@ -901,7 +908,7 @@ function mount(o){
   details=details||{};if(cancelGesture)cancelGesture();o.pause();
   if(Number.isFinite(Number(details.time))&&Math.abs(o.position()-Number(details.time))>.001)o.seek(Number(details.time));
   var context=editor.faceContext&&editor.faceContext(details.actorId||details.partId||latestPart);if(!context)return false;
-  figureRoot=context.headId;latestPart=context.headId;transformMode='parts';useStageMode();editor.setCameraEdit(false);
+  figureRoot=context.headId;latestPart=context.headId;transformMode='parts';showStageForTool();editor.setCameraEdit(false);
   routingWorkshop=true;try{editor.selectPart(context.headId,true);}finally{routingWorkshop=false;}
   showFaceWorkshop(context.headId,'expression');updateToolButtons();setInspector(false);refreshHandles();return true;
  }

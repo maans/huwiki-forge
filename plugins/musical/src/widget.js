@@ -213,8 +213,11 @@ Musical.prototype.render=function(parent,next){
     cursor.line.setAttribute("y1",a.y);cursor.line.setAttribute("y2",b.y);svg.appendChild(cursor.line);
    }
    // Keep the score readable but never steal scroll from a hidden score.
-   if(!song.page.hidden){var panel=scorePanel.getBoundingClientRect();
-    if(rect.top<panel.top+35||rect.bottom>panel.bottom-16)scorePanel.scrollTop+=rect.top-panel.top-90;}
+   if(!song.page.hidden){
+    var scroller=host.classList.contains('huw-musical--workspace')?paper:scorePanel;
+    var panel=scroller.getBoundingClientRect();
+    if(rect.top<panel.top+8||rect.bottom>panel.bottom-8)scroller.scrollTop+=rect.top-panel.top-Math.min(64,panel.height/3);
+   }
   }
  }
  function showSong(t){
@@ -642,6 +645,7 @@ Musical.prototype.render=function(parent,next){
  });
  this._editor=editor;
  workspace=Workspace.mount({
+  previewPreference:this._previewPreference,rememberPreview:function(mode){self._previewPreference=mode;},
   doc:doc,host:host,wiki:this.wiki,parentWidget:this,project:scene.name||"Musical",film:scene,sceneTitle:this.sceneTitle,stageTitle:this._stageTitle,
   scoreTitle:function(){return songs[activeIndex]&&songs[activeIndex].title||self.scoreTitle;},
   onAudioChange:function(updated){voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);if(editor)editor.redraw();paint(timeline.value());},
