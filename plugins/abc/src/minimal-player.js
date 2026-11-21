@@ -284,7 +284,17 @@ exports.mount=function(host,options){
   if(tabOptions.options.length)Tabs.rhythm(paper,visual,tabConfig);
   if(pager)pager.layout(visual,fields);
   if(viewport)viewport.layout();
-  if(showOverview)chordOverview=ChordOverview.mount(paper,{ABC:ABC,source:displayed,fields:fields,barsPerLine:fields['abc-bars-per-line']});
+  if(showOverview){
+   // ABCJS may put its score SVGs inside positioned wrapper DIVs. Hiding only
+   // paper > svg leaves those wrappers' full page height in the document flow.
+   // Retain the original elements for timing/audio while removing *all* their
+   // layout boxes before mounting the complete chord chart.
+   Array.prototype.forEach.call(paper.children,function(node){
+    node.classList.add('huwabc-chord-overview-source');
+    node.setAttribute('aria-hidden','true');
+   });
+   chordOverview=ChordOverview.mount(paper,{ABC:ABC,source:displayed,fields:fields,barsPerLine:fields['abc-bars-per-line']});
+  }
   if(visual.warnings&&visual.warnings.length)show('ABCJS: '+visual.warnings.slice(0,2).join(' · '),true);
   else if(warning||tabOptions.message)show(warning||tabOptions.message,true);
  }

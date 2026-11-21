@@ -84,3 +84,13 @@ test("Balkan 4/4 B doubles backing attacks without changing written bar duration
  assert.equal(attacks(arranged.drums,0),4);
  assert.equal(attacks(arranged.drums,4),8);
 });
+
+test("Chord-only overview keeps ABCJS wrappers out of normal layout while preserving audio DOM",async()=>{
+ const player=await readFile(path.join(root,"plugins/abc/src/minimal-player.js"),"utf8");
+ const css=await readFile(path.join(root,"plugins/abc/src/NormalStyles.tid"),"utf8");
+ assert.ok(player.includes("node.classList.add('huwabc-chord-overview-source')"));
+ assert.ok(player.includes("node.setAttribute('aria-hidden','true')"));
+ assert.ok(css.includes(".huwabc-minimal-paper>.huwabc-chord-overview-source"));
+ assert.match(css,/position:absolute!important/);
+ assert.ok(css.includes("height:1px!important"));
+});

@@ -85,7 +85,20 @@ try{
     visible:box.width>0&&box.height>0};
   }),
   paperScrollWidth:node.querySelector(".huwabc-minimal-paper")?.scrollWidth,
-  paperWidth:node.querySelector(".huwabc-minimal-paper")?.clientWidth
+  paperWidth:node.querySelector(".huwabc-minimal-paper")?.clientWidth,
+  geometry:(()=>{
+   const paper=node.querySelector(".huwabc-minimal-paper");
+   const chart=paper?.querySelector(".huwabc-chord-overview");
+   const first=chart?.querySelector(".huwabc-chord-overview-row");
+   const origin=paper?.getBoundingClientRect();
+   const chartRect=chart?.getBoundingClientRect();
+   const firstRect=first?.getBoundingClientRect();
+   const hidden=[...paper.querySelectorAll(":scope > .huwabc-chord-overview-source")];
+   return {paperHeight:origin?.height,chartHeight:chartRect?.height,
+    chartTop:chartRect?.top-origin?.top,firstRowTop:firstRect?.top-origin?.top,
+    sourceCount:hidden.length,sourceHeights:hidden.map(x=>x.getBoundingClientRect().height),
+    sourcePositions:hidden.map(x=>getComputedStyle(x).position)};
+  })()
  }));
  assert.equal(overview.rows.length,2,"Whole song must fit on the screen");
  assert.deepEqual(overview.rows.map(r=>r.part),["A","B"]);
@@ -97,6 +110,13 @@ try{
   "A and B must keep both repeat marks: "+JSON.stringify(overview.rows));
  assert.equal(overview.rows[1].label,"Dobbelt tempo");
  assert.ok(overview.paperScrollWidth<=overview.paperWidth+2,"No horizontal scrolling or cropped bars: "+JSON.stringify(overview));
+ assert.ok(overview.geometry.sourceCount>=1,"ABCJS notation must remain in the DOM for playback");
+ assert.ok(overview.geometry.sourcePositions.every(p=>p==="absolute"),"Hidden ABCJS wrappers must not occupy layout space: "+JSON.stringify(overview.geometry));
+ assert.ok(overview.geometry.sourceHeights.every(h=>h<=2),"Underlying score may not create a tall blank region: "+JSON.stringify(overview.geometry));
+ assert.ok(overview.geometry.chartTop>=-2&&overview.geometry.chartTop<30,"Chord chart must begin at top of paper: "+JSON.stringify(overview.geometry));
+ assert.ok(overview.geometry.firstRowTop>=0&&overview.geometry.firstRowTop<80,"First A bar must be visible immediately, not a page lower: "+JSON.stringify(overview.geometry));
+ assert.ok(overview.geometry.paperHeight<320,"Two 4-bar rows must not leave an A4-sized blank area: "+JSON.stringify(overview.geometry));
+
  assert.equal(await ohScore.locator(".huwabc-chord-overview-chord[data-huwabc-source-char]").count(),12,
   "Every chord can select its playback position");
  const chart=await page.evaluate(()=>{
