@@ -470,6 +470,8 @@ test("Oh verden is a playable slow 4/4 Balkan ABC chord chart, not a WikiText co
  assert.equal(source["abc-source"],sheet["abc-source"]);
  assert.equal(sheet["repertoire-sheet-format"],"chords");
  assert.equal(sheet["abc-view"],"chords");
+ assert.equal(sheet["abc-bars-per-line"],"4");
+ assert.equal(source["abc-bars-per-line"],"4");
  assert.ok(sheet.tags.split(" ").includes("ABC"));
  assert.ok(sheet["abc-source"].includes("M:4/4"));
  assert.ok(sheet["abc-source"].includes("Q:1/4=66"));

@@ -86,6 +86,13 @@ try{
   throw Error("Oh verden chord-only ABC failed to mount: "+JSON.stringify({diagnostics,pageErrors:errors.slice(-10)}));
  }
  assert.equal(await ohScore.locator(".huwrep-chord-line").count(),0,"No HTML chord substitute");
+ const systemInfo=await ohScore.evaluate(node=>({
+  systems:node.querySelectorAll('svg[data-huwabc-follow-frame]').length,
+  frames:[...node.querySelectorAll('svg[data-huwabc-follow-frame]')].map(svg=>({
+   visible:svg.style.display!=='none',chords:svg.querySelectorAll('text.abcjs-chord[data-name="chord"]').length
+  }))
+ }));
+ assert.equal(systemInfo.systems,2,"Exactly two 4-bar systems expected: "+JSON.stringify(systemInfo));
  const chart=await page.evaluate(()=>{
   const f=$tw.wiki.getTiddler("SilbaÄtno · Oh verden").fields;
   const ABC=$tw.modules.execute("$:/plugins/huwiki/abc/vendor/abcjs.js");

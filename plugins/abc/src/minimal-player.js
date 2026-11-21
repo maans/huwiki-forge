@@ -244,6 +244,7 @@ exports.mount=function(host,options){
   var chordStyle=fields['abc-chords-style']||(options.wiki&&options.wiki.getTiddlerText?options.wiki.getTiddlerText('$:/config/huwiki/abc/chords-style','jazz'):'jazz');
   var jazzChords=chordStyle!=='standard',useJazz=fields['abc-font']==='petaluma';
    box.classList.toggle('huwabc-jazz-font',useJazz);
+  // Respect explicit bars-per-line in chord charts as well as ordinary notation.
   var results=JazzFont.render(ABC,useJazz,function(){return ABC.renderAbc(paper,displayed,Object.assign({
    visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options,responsive:'resize',staffwidth:720,scale:layout==='kompakt'?.88:1,jazzchords:jazzChords,
    format:JazzFont.formatFonts(useJazz,{stretchlast:true,gchordfont:useJazz?'PetalumaScript 20':jazzChords?'Helvetica 18 bold':'Helvetica 16'}),
@@ -261,7 +262,7 @@ exports.mount=function(host,options){
      (tune.lines||[]).forEach(function(line){if(line.subtitle!==undefined)delete line.subtitle;});
     }
    }
-  },viewport?{}:SheetLayout.options(ABC,displayed,fields)));});
+  },viewport&&!(options.followChordsOnly&&fields["abc-bars-per-line"])?{}:SheetLayout.options(ABC,displayed,fields)));});
   if(!results||!results[0])throw new Error('Kunne ikke danne noder. Kontrollér ABC-teksten.');
   visual=results[0];
   var warning=tabOptions.options.length?Tabs.finish(visual,tabConfig):'';

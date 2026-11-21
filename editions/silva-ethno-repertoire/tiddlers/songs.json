@@ -55,7 +55,8 @@
     "abc-meter": "4/4",
     "abc-rhythm": "Balkan 4/4",
     "abc-chords-style": "jazz",
-    "abc-accompaniment": "{\"enabled\":true,\"style\":\"balkan-44\",\"bassSource\":\"style\",\"bass\":\"balkan\",\"chords\":\"balkan\",\"drums\":\"balkan\",\"bassInstrument\":32,\"chordInstrument\":21,\"melodyVolume\":0,\"bassVolume\":58,\"chordVolume\":51,\"drumVolume\":28,\"variation\":10,\"metronome\":false,\"form\":\"AB\"}"
+    "abc-accompaniment": "{\"enabled\":true,\"style\":\"balkan-44\",\"bassSource\":\"style\",\"bass\":\"balkan\",\"chords\":\"balkan\",\"drums\":\"balkan\",\"bassInstrument\":32,\"chordInstrument\":21,\"melodyVolume\":0,\"bassVolume\":58,\"chordVolume\":51,\"drumVolume\":28,\"variation\":10,\"metronome\":false,\"form\":\"AB\"}",
+    "abc-bars-per-line": "4"
   },
   {
     "title": "SilbaÄtno · Cupria Express (Fm)",
