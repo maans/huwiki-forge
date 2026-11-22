@@ -9,13 +9,13 @@ await mkdir(out,{recursive:true});
 const read=path=>readFile(new URL(path,root),'utf8');
 const packages=await Promise.all(['cutout','abc','musical','animus-starter-kenney','animus-theme-greek-harbour'].map(async n=>JSON.parse(await read('plugins/'+n+'/dist/plugin.json'))));
 const templateTitle='$:/plugins/huwiki/animus-starter-kenney/template',templateStore=JSON.parse(packages[3].text).tiddlers;
-const html=assembleHtml(await read('core/empty.html'),packages.concat([{title:'$:/DefaultTiddlers',text:'Material test'},{title:'Material test',text:'<$animus-new-project/>'},{title:'$:/language',text:'$:/languages/en-GB'}]));
+const html=assembleHtml(await read('core/empty.html'),packages.concat([{title:'$:/DefaultTiddlers',text:'[[Material test]]'},{title:'Material test',text:'<$animus-new-project/>'},{title:'$:/language',text:'$:/languages/en-GB'}]));
 let server,startUrl;if(process.env.ANIMUS_FILE_TEST){const file=new URL('fixture.html',out);await writeFile(file,html);startUrl=file.href;server={close(){}};}else{server=createServer((req,res)=>{res.setHeader('Content-Type','text/html');res.end(html);});await new Promise(r=>server.listen(0,'127.0.0.1',r));startUrl='http://127.0.0.1:'+server.address().port;}
-let browser;const errors=[];try{
+let browser,page;const errors=[];try{
  browser=await chromium.launch({headless:true,...(process.env.CHROME_BIN?{executablePath:process.env.CHROME_BIN}:{})});
- const page=await browser.newPage({viewport:{width:1280,height:900}});page.on('pageerror',e=>errors.push(e.message));
+ page=await browser.newPage({viewport:{width:1280,height:900}});page.on('pageerror',e=>errors.push(e.message));
  const catalogue=JSON.parse(await read('assets/animus/catalog.json'));
- await page.route('https://forge.xn--mns-ula.dk/assets/animus/catalog.json',r=>r.fulfill({contentType:'application/json',body:JSON.stringify(catalogue)}));
+ await page.route('https://forge.xn--mns-ula.dk/assets/animus/catalog.json',r=>r.fulfill({contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(catalogue)}));
  await page.goto(startUrl);await page.getByRole('combobox',{name:'Starting scene',exact:true}).waitFor();
  const before=await page.evaluate(t=>$tw.wiki.getTiddlerText(t),templateTitle);
  await page.getByRole('combobox',{name:'Starting scene',exact:true}).selectOption(templateTitle);
@@ -42,4 +42,4 @@ let browser;const errors=[];try{
  console.log('PASS materials filters include whole backgrounds and import a single reusable puppet offline');
  await page.screenshot({path:new URL('editor.png',out).pathname});assert.deepEqual(errors,[]);console.log('PASS no browser runtime errors');
  await writeFile(new URL('result.json',out),JSON.stringify({checks:5,errors},null,2));
-}finally{if(browser)await browser.close();server.close();}
+}catch(error){if(page){await page.screenshot({path:new URL('failure.png',out).pathname}).catch(()=>{});console.error('PAGE:',(await page.locator('body').innerText()).slice(0,5000));console.error('ERRORS:',JSON.stringify(errors));}throw error;}finally{if(browser)await browser.close();server.close();}

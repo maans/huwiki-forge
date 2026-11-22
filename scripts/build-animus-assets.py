@@ -58,7 +58,7 @@ def remote_entries(index):
  for f in index['backgrounds']:
   path=f['path'];name=pathlib.PurePosixPath(path).stem;cat='background' if path.startswith('Backgrounds/') and '/Elements/' not in path else 'scenery'
   id='kenney-background-'+slug(name);url=raw+urllib.parse.quote(path)
-  result.append(entry(id,re.sub(r'([a-z])([A-Z])',r'\1 \2',name),cat,'kenney-backgrounds','Kenney','https://opengameart.org/content/background-elements-redux',assets=[dict(id=id,url=url,mime='image/png')],preview=url,keywords='background backdrop baggrund kulisse træ tree hus house bjerg mountain hegn fence' if cat=='background' else name))
+  result.append(entry(id,re.sub(r'([a-z])([A-Z])',r'\1 \2',name),cat,'kenney-backgrounds','Kenney','https://opengameart.org/content/background-elements-redux',assets=[dict(id=id,url=url,mime='image/png')],preview=url,keywords=cat+' '+name))
  raw='https://raw.githubusercontent.com/ThirdPartyNinjas/GlitchAssets/'+index['glitchRevision']+'/Items/'
  for f in index['glitch']:
   path=f['path'];name=pathlib.PurePosixPath(path).stem;id='glitch-'+slug(path[:-4]);url=raw+urllib.parse.quote(path)
@@ -132,7 +132,8 @@ def package(name,title,entries,scene_name):
   ps=copy.deepcopy(e.get('parts',[]))
   if not ps:
    a=e['assets'][0];w,h=a['width'],a['height'];scale=max(960/w,540/h) if e['category']=='background' else min(150/w,180/h)
-   ps=[image_part('image',e['name'],None,a['id'],480 if e['category']!='background' else 480,420 if e['category']!='background' else 0,w*scale,h*scale)]
+   ps=[image_part('image',e['name'],None,a['id'],110 if e['id'].endswith('-tree') else 820 if e['id'].endswith('-house1') else 480,470 if e['category']!='background' else 0,w*scale,h*scale)]
+   if e['category']!='background':ps[0]['geo']['y']=-h*scale
   ids={p['id']:e['id']+'-'+p['id'] for p in ps}
   for part in ps:
    part['id']=ids[part['id']];parent=part.get('parent');part['parent']=ids.get(parent)
