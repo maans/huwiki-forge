@@ -204,3 +204,25 @@ test('placing the shoulder above the body moves its subtree and preserves animat
  const drawn=Array.from(nodes.actor.el.children);
  assert.ok(drawn.indexOf(nodes.shoulder.el)>drawn.indexOf(nodes.body.el));
 });
+
+test('duplicate, mirror and reparent support multiple undo and redo steps before saving',()=>{
+ const root={id:'actor',type:'group'},arm={id:'arm',name:'Arm',parent:'actor',type:'group',keys:[{t:0,sx:1},{t:2,sx:2}]},hand={...plain(horse),id:'hand',parent:'arm'},body={id:'body',parent:'actor',type:'group'};
+ const h=harness({scenes:{Scene:scene([root,arm,hand,body])},id:'arm'});
+ h.overlay.querySelector('[data-puppet-duplicate]').click();
+ const copy=h.overlay.querySelector('[data-puppet-mirror]').dataset.puppetMirror;
+ assert.notEqual(copy,'arm');
+ h.overlay.querySelector('[data-puppet-mirror]').click();
+ change(field(h,'Lag (1 = bagest)'),3);
+ change(field(h,'Forbundet med'),'body');
+ h.overlay.querySelector('.huw-puppet-undo').click();
+ assert.equal(field(h,'Forbundet med').value,'actor');
+ h.overlay.querySelector('.huw-puppet-undo').click();
+ assert.equal(Number(field(h,'Lag (1 = bagest)').value),2);
+ h.overlay.querySelector('.huw-puppet-redo').click();
+ h.overlay.querySelector('.huw-puppet-redo').click();
+ const saved=h.save().parts;
+ assert.deepEqual(saved.find(p=>p.id==='arm'),arm);
+ assert.equal(saved.find(p=>p.id===copy).parent,'body');
+ assert.deepEqual(saved.find(p=>p.id===copy).keys.map(k=>k.sx),[-1,-2]);
+ assert.deepEqual(saved.find(p=>p.parent===copy).keys,hand.keys);
+});
