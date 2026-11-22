@@ -60,10 +60,12 @@
     },
     "demo": {
       "da": {
-        "name": "Demo Edition"
+        "name": "TiddlyWiki + Forge Plugin Library",
+        "description": "Standard-TiddlyWiki med Forge Plugin Library tilføjet."
       },
       "en": {
-        "name": "Demo Edition"
+        "name": "TiddlyWiki + Forge Plugin Library",
+        "description": "Standard TiddlyWiki with Forge Plugin Library added."
       }
     },
     "cutout": {
@@ -540,6 +542,26 @@
       "en": {
         "name": "Repertoire",
         "description": "Organize a shared music library with orchestras, setlists, and separate keys and arrangements. Open existing ABC scores or images."
+      }
+    },
+    "$:/plugins/huwiki/animus-starter-kenney": {
+      "en": {
+        "name": "AniMus · Kenney Starter",
+        "description": "Six articulated characters, scenery, props and an editable starting scene."
+      },
+      "da": {
+        "name": "AniMus · Kenney-startpakke",
+        "description": "Seks ledopdelte figurer, kulisser, rekvisitter og en redigerbar startscene."
+      }
+    },
+    "$:/plugins/huwiki/animus-theme-greek-harbour": {
+      "en": {
+        "name": "AniMus · The Greek Harbour",
+        "description": "Hand-painted harbour, ship and Theseus characters with an editable starting scene."
+      },
+      "da": {
+        "name": "AniMus · Den græske havn",
+        "description": "Håndmalet havn, skib og Theseus-figurer med en redigerbar startscene."
       }
     }
   }

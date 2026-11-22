@@ -46,7 +46,7 @@ def toon_entries(folder):
     img(side+'-'+('elbow' if bone=='arm' else 'knee'),('Elbow' if bone=='arm' else 'Knee')+' '+side,upper['id'],a,0,half*3-1,crop=second)
     if bone=='arm':img(side+'-hand','Hand '+side,side+'-elbow','hand',0,half*3-5,scale=2.4)
   img('body','Body','actor','body',0,-162)
-  p=img('head','Head','actor','head',0,-296);p['geo']['y']=0
+  p=img('head','Head','actor','head',0,-113);p['geo']['y']=-by['head']['height']*3
   # Remove unused head/back/pose files from the character's dependency list.
   assets=[a for a in assets if a['id'] in set(used.values())]
   e=entry(id,d.name,'figure','kenney-toon','Kenney','https://opengameart.org/content/toon-characters-1',assets=assets,parts=ps,preview=by['head']['url'],height=300,keywords='figure character puppet figur dukke robot zombie person menneske '+d.name)
@@ -148,7 +148,7 @@ def package(name,title,entries,scene_name):
    scene['parts'].append(part)
  template=prefix+'/template';tiddlers[template]=dict(title=template,type='application/json',tags='$:/tags/AniMus/Template',**{'cutout-project':'yes','cutout-id':scene['id'],'animus-template-name':title},text=json.dumps(scene,ensure_ascii=False))
  # Keep the entry gallery native to TiddlyWiki; adding to a scene uses the shared picker.
- page=title;tiddlers[page]=dict(title=page,tags='AniMus',text=scene_name+'\n\n<$animus-new-project template="'+template+'"/>\n\nOpen an AniMus scene and choose **Workshops → Materials**. / Åbn en AniMus-scene og vælg **Værksteder → Materialer**.')
+ page=title;tiddlers[page]=dict(title=page,tags='AniMus',text='<$animus-new-project template="'+template+'"/>')
  info=dict(title=prefix,name=title,description=scene_name,author='HUWiki Forge',version='0.1.0',type='application/json',**{'plugin-type':'plugin','requires-reload':'yes','dependents':'$:/plugins/huwiki/musical','license':'Mixed; per-element provenance'})
  save_json(ROOT/'plugins'/name/'dist/plugin.json',{**info,'text':json.dumps({'tiddlers':tiddlers},ensure_ascii=False,separators=(',',':'))})
 
