@@ -679,6 +679,61 @@ function attach(o){
    block.onpointerup=function(){finish(false);};block.onpointercancel=function(){finish(true);};
   };
  }
+ function rigControls(t){
+  var ctx=partContext(t.part,o.view,playhead,[],true,0),root=ctx&&ctx.view.nodes[t.part].part;
+  if(!root||!root.animusRig||!ctx.active)return;
+  var rig=require("$:/plugins/huwiki/musical/skeleton.js"),scene=ctx.view.scene;
+  var group=el(doc,"fieldset","huw-musical-rig-controls",undefined,inspector);el(doc,"legend","",da?"Bevægelsesbibliotek":"Motion library",group);
+  function dropdown(name,options){
+   var label=el(doc,"label","",name+" ",group),select=el(doc,"select","",undefined,label);
+   options.forEach(function(opt){el(doc,"option","",opt[1],select).value=opt[0];});select.value=String(options[0][0]);return select;
+  }
+  var kind=dropdown(da?"Bevægelse":"Movement",Object.keys(rig.cycles).map(function(id){return [id,rig.cycles[id][da?0:1]];}));
+  var dir=dropdown(da?"Retning":"Direction",[["1",da?"Mod højre":"Right"],["-1",da?"Mod venstre":"Left"],["0",da?"På stedet":"In place"]]);
+  var tempo=dropdown("Tempo",[["1",da?"Normalt":"Normal"],["0.75",da?"Langsomt":"Slow"],["1.5",da?"Hurtigt":"Fast"]]);
+  var count=dropdown(da?"Gentagelser":"Repeats",[1,2,3,4,6,8].map(function(v){return [v,v];}));
+  var track={kind:scene===film?"film-part":"part",part:t.part};
+  var tryButton=el(doc,"button","",da?"Prøv bevægelsen":"Preview motion",group);tryButton.type="button";
+  var sampleView=el(doc,"div","huw-rig-motion-preview",undefined,group);
+  function removePreview(){sampleView.textContent="";}
+  kind.onchange=dir.onchange=tempo.onchange=count.onchange=removePreview;
+  tryButton.onclick=function(){
+   removePreview();var ids=new Set([root.id]),members=[root];
+   for(var i=0;i<members.length;i++)scene.parts.forEach(function(p){if(p.parent===members[i].id&&!ids.has(p.id)){ids.add(p.id);members.push(p);}});
+   var now=partContext(t.part,o.view,playhead,[],true,0);if(!now||!now.active)return;
+   var copy=members.map(function(p){return Object.assign({},p,{keys:[Object.assign({t:0},Engine.state(p,now.time))]});});
+   var span=rig.cycles[kind.value][2]/Number(tempo.value),data;
+   try{data=rig.sequence(copy,copy[0],0,kind.value,dir.value==="-1"?-1:1,1,span+.001,dir.value==="0",Number(tempo.value));}
+   catch(err){status.textContent=da?"Kontrollér leddene og sæt kropsdelene fast på skelettet.":"Check the joints and attach artwork to the rig.";return;}
+   data.forEach(function(keys,p){p.keys=keys;});
+   var view=Engine.build(doc,o.wiki,{version:1,width:scene.width,height:scene.height,duration:span,parts:copy,background:"transparent"},false);
+   sampleView.appendChild(view.svg);var bounds=[],node=view.nodes[root.id].el;
+   for(var f=0;f<=8;f++){Engine.paint(view,span*f/8);var b=node.getBBox(),m=node.transform.baseVal.consolidate();
+    if(!m)continue;[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].forEach(function(pt){var v=view.svg.createSVGPoint();v.x=pt[0];v.y=pt[1];bounds.push(v.matrixTransform(m.matrix));});}
+   if(bounds.length){var xs=bounds.map(p=>p.x),ys=bounds.map(p=>p.y),x=Math.min(...xs),y=Math.min(...ys);view.svg.setAttribute("viewBox",[x-8,y-8,Math.max(...xs)-x+16,Math.max(...ys)-y+16].join(" "));}
+   var frameBox=view.svg.getAttribute("viewBox"),first=null;function tick(stamp){if(!group.contains(view.svg)||!inspector.contains(group))return;if(first===null)first=stamp;var elapsed=(stamp-first)/1000;Engine.paint(view,Math.min(span,elapsed));view.svg.setAttribute("viewBox",frameBox);if(elapsed<span)doc.defaultView.requestAnimationFrame(tick);}
+   doc.defaultView.requestAnimationFrame(tick);
+  };
+  var add=el(doc,"button","",da?"Indsæt ved tidsmarkøren":"Insert at playhead",group);add.type="button";
+  add.onclick=function(){
+   var now=partContext(t.part,o.view,playhead,[],true,0);if(!now||now.view!==ctx.view||!now.active)return;
+   var at=now.time,type=kind.value,cycles=Number(count.value),data;
+   try{data=rig.sequence(scene.parts,root,at,type,dir.value==="-1"?-1:1,cycles,scene.duration,dir.value==="0",Number(tempo.value));}
+   catch(err){var reasons={duration:da?"Bevægelsen går ud over scenens slutning.":"Movement extends past the scene.",unbound:da?"Sæt først en kropsdel fast på skelettet i dukkeværkstedet.":"Attach artwork to the skeleton first.",overlap:da?"Der er allerede nøglebilleder her. Vælg et ledigt tidsrum.":"This range contains keyframes. Choose a free range."};status.textContent=reasons[err.message]||(da?"Denne skalering kan ikke bevares.":"Cannot preserve this scale.");return;}
+   var id="rig-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7),prior={};
+   data.forEach(function(keys,p){
+    var old=p.keys||[];prior[p.id]=old.filter(function(k){return Math.abs(k.t-at)<1e-8;});
+    var keep=old.filter(function(k){return Math.abs(k.t-at)>=1e-8;});
+    if(at>0&&!old.some(function(k){return k.t<=at;}))keys.unshift(Object.assign({t:0},Engine.state(p,0)));
+    p.keys=keep.concat(keys.map(function(k){return Object.assign({},k,{animusMove:id});})).sort(function(a,b){return a.t-b.t;});
+   });
+   (root.animusMoves||(root.animusMoves=[])).push({id:id,type:type,start:at,end:at+cycles*rig.cycles[type][2]/Number(tempo.value),prior:prior});
+   save(track);draw();o.repaint();
+  };
+  var moves=root.animusMoves||[],last=moves[moves.length-1];
+  if(last){var undo=el(doc,"button","",(da?"Fjern seneste bevægelse":"Remove last movement")+" · "+rig.cycles[last.type][da?0:1],group);undo.type="button";
+   undo.onclick=function(){scene.parts.forEach(function(p){if(!Object.prototype.hasOwnProperty.call(last.prior,p.id))return;p.keys=(p.keys||[]).filter(function(k){return k.animusMove!==last.id;}).concat(last.prior[p.id]).sort(function(a,b){return a.t-b.t;});});moves.pop();save(track);draw();o.repaint();};}
+ }
  function drawForm(){inspector.textContent="";var t=track(),k=selected();
   if(!t){el(doc,'p','huw-musical-inspector-help',da?'Ingen markering. Vælg en figur, kropsdel eller et spor.':ui('Nothing selected. Choose a character, body part or track.'),inspector);return;}
   var kindNames={"figure":da?"Hele objekt":ui("Whole object"),"animation":da?"Animationsklip":ui("Animation clip"),
@@ -689,6 +744,7 @@ function attach(o){
    "captions":da?"Undertekster":ui("Captions"),"scene-range":da?"Scene":ui("Scene"),"object-browser":da?"Objektvælger":ui("Object picker")};
   el(doc,"span","huw-musical-inspector-type",kindNames[t.kind]||(da?"Egenskaber":ui("Properties")),inspector);
   el(doc,"strong","huw-musical-inspector-selection",t.name,inspector);
+  if(t.kind==="figure")rigControls(t);
   var explanation=t.kind==="figure"?(da?"Flyt, drej, skalér eller skævvrid hele objektet. Ændringer kan gemmes som nøglebilleder; dukkeleddene bevares.":ui("Move, rotate, scale or skew the whole object. Changes are keyframed; the puppet joints are preserved.")):
    t.kind==="animation"?(da?"Du redigerer bevægelsesklippets tid og gentagelse – ikke figurens størrelse. Dobbeltklik på klippet for ledbevægelser.":ui("You are editing the clip timing and repetition, not the whole figure's size. Double-click the clip for limb motion.")):
    t.kind==="song"?(da?"Her redigeres musikklippets start, fade, lydstyrke og mute. Dobbeltklik på klippet for at åbne ABC.":ui("Edit the music clip's start, fades, volume and mute. Double-click the clip to open ABC.")):
@@ -979,6 +1035,17 @@ function attach(o){
    if(t.foldable)foldButton(title,t,t.foldKey,t.expanded,function(){groupExpanded[t.foldKey]=!groupExpanded[t.foldKey];});
    if(t.layerRoot){var handle=el(doc,'button','huwrep-order-handle','⠿',title);handle.type='button';handle.setAttribute('aria-label',(da?'Flyt lag: ':ui('Move layer: '))+t.name);handle.title=da?'Træk op for at flytte frem, ned for at flytte bagud':ui('Drag up to bring forward, down to send back');title.insertBefore(handle,title.firstChild);handle.onclick=function(e){e.stopPropagation();};}
    var lane=el(doc,"div","huw-musical-lane",undefined,row);
+   if(t.kind==="figure"){
+    var rigStage=currentStage(),scenePart=rigStage.nodes&&rigStage.nodes[t.part]&&rigStage.nodes[t.part].part;
+    (scenePart&&scenePart.animusMoves||[]).forEach(function(move){
+     var names=require("$:/plugins/huwiki/musical/skeleton.js").cycles[move.type];if(!names)return;
+     var keyTrack={kind:rigStage.scene===film?"film-part":"part",part:t.part};
+     var start=toFilm(move.start,keyTrack),end=toFilm(move.end,keyTrack);
+     var block=el(doc,"button","huw-musical-motion-clip",names[da?0:1],lane);
+     block.type="button";block.style.left=100*start/axis+"%";block.style.width=100*Math.max(0,end-start)/axis+"%";
+     block.onclick=function(ev){ev.stopPropagation();o.seek(start);choose(t.id,0);};
+    });
+   }
    lane.onclick=function(ev){
     if(ev.target.closest&&ev.target.closest(".huw-musical-key,.huw-musical-song-clip,.huw-musical-fx-clip,.huw-musical-caption-clip"))return;
     var rect=lane.getBoundingClientRect(),u=lim((ev.clientX-rect.left)/Math.max(1,rect.width),0,1);

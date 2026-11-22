@@ -1,0 +1,10 @@
+/*\
+title: $:/plugins/huwiki/musical/rig.css
+tags: $:/tags/Stylesheet
+type: text/css
+\*/
+.huw-rig-paint{position:absolute;inset:0;z-index:10;background:#183043;color:white;padding:1rem;overflow:auto;text-align:center}
+.huw-rig-paint canvas{display:block;max-width:95%;max-height:58vh;margin:1rem auto;background:repeating-conic-gradient(#eee 0 25%,#fff 0 50%) 0 0/18px 18px}
+.huw-rig-paint button,.huw-musical-rig-controls select,.huw-musical-rig-controls button{margin:.2rem;padding:.4rem}
+.huw-musical-rig-controls label{display:inline-block;margin:.2rem}
+.huw-rig-motion-preview svg{display:block;width:100%;height:150px;background:#e4f0f5}

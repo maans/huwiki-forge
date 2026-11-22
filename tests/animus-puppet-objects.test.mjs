@@ -247,3 +247,22 @@ test('turning a limb by dragging rotates around its joint and supports undo',()=
  assert.equal(Number(field(h,'Drejning').value),90);h.overlay.querySelector('.huw-puppet-undo').click();
  assert.equal(Number(field(h,'Drejning').value),0);
 });
+
+test('workshop-only fitted joints bind artwork and produce editable travelling scene keys',()=>{
+ const root={id:'doll',type:'group',keys:[{t:0,x:150,y:200}]};
+ const body={id:'body',parent:'doll',type:'rect',geo:{x:-50,y:-90,w:100,h:190}};
+ const h=harness({scenes:{Scene:scene([root,body])},id:'body',withEditor:true,time:0});
+ const button=(host,title)=>{const b=host.querySelectorAll('button').find(b=>b.textContent===title);assert.ok(b,title);return b;};
+ button(h.overlay,'Vis skelet').click();
+ const handle=h.canvas.querySelector('[data-rig-joint="handR"]');assert.ok(handle);
+ handle.dispatch('pointerdown');h.canvas.dispatch('pointermove',{clientX:120,clientY:150});h.canvas.dispatch('pointerup');
+ button(h.overlay,'Sæt fast på skelet').click();
+ h.canvas.querySelector('[data-rig-joint="chest"]').dispatch('pointerdown');
+ const saved=h.save();assert.equal(saved.parts[1].animusJoint,'chest');assert.ok(saved.parts[0].animusRig);
+ assert.equal(h.view.svg.querySelector('[data-rig-joint]'),null);
+ h.editor.selectFigure('doll');button(h.host,'Indsæt ved tidsmarkøren').click();
+ let src=JSON.parse(h.records.Scene.text);assert.equal(src.parts[0].animusMoves.length,1);assert.ok(src.parts[0].keys.at(-1).x>150);
+ assert.ok(h.host.querySelector('.huw-musical-motion-clip'));
+ button(h.host,'Fjern seneste bevægelse · Gang').click();
+ src=JSON.parse(h.records.Scene.text);assert.deepEqual(src.parts[0].keys,root.keys);
+});
