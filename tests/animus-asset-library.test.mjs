@@ -43,3 +43,20 @@ test('a downloaded audio effect is reusable offline and inserts only on the effe
  const placed=a.placeSound(film,local,3);assert.equal(placed.musical.audioClips.at(-1).kind,'effects');assert.equal(placed.musical.audioClips.at(-1).start,3);assert.deepEqual(placed.musical.songs,film.musical.songs);assert.deepEqual(placed.musical.sfx,film.musical.sfx);assert.equal(film.musical.audioClips.length,1);
  await a.importEntry(w,item,{fetcher:async()=>{throw Error('offline');}});
 });
+
+test('Kenney props are picked individually and neither the starter scene nor the puppet inserts them',()=>{
+ const pkg=JSON.parse(fs.readFileSync(new URL('../plugins/animus-starter-kenney/dist/plugin.json',import.meta.url),'utf8'));
+ const items=JSON.parse(pkg.text).tiddlers;
+ const scene=JSON.parse(items[pkg.title+'/template'].text);
+ const item=id=>JSON.parse(items[pkg.title+'/items/'+id].text);
+ const props=['glitch-food-apple-apple','glitch-tools-hatchet-class-axe-class-axe'].map(item);
+ const propImages=props.map(prop=>prop.assets[0].title);
+ const library=api();
+ const withPuppet=library.place(scene,item('kenney-female-person'),{}).scene;
+ assert(!withPuppet.parts.some(part=>propImages.includes(part.asset)));
+ for(const prop of props){
+  const placed=library.place(withPuppet,prop,{}).scene;
+  assert.equal(placed.parts.length,withPuppet.parts.length+1);
+  assert.equal(placed.parts.at(-1).asset,prop.assets[0].title);
+ }
+});

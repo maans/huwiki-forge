@@ -25,7 +25,7 @@ let browser,page;const errors=[];try{
  const created=await page.evaluate(()=>{const f=$tw.wiki.getTiddler('My starter animation').fields;return {film:f['animus-scene'],stage:JSON.parse($tw.wiki.getTiddlerText(f['animus-scene'])).scenes[0].source};});
  assert.equal(await page.evaluate(t=>$tw.wiki.getTiddlerText(t),templateTitle),before,'template stays unchanged');
  console.log('PASS template creates an independent editable animation');
- const groupRows=editor.locator('.huw-musical-tracks [data-layer-id]');assert(await groupRows.count()>5);
+ const groupRows=editor.locator('.huw-musical-tracks [data-layer-id]');assert.equal(await groupRows.count(),5);
  const fold=groupRows.filter({has:page.locator('[aria-expanded="false"]')}).first().locator('.huw-musical-group-fold');
  const foldedCount=await editor.locator('.huw-musical-group-child').count();await fold.click();assert(await editor.locator('.huw-musical-group-child').count()>foldedCount);
  await editor.locator('.huw-musical-tracks [aria-expanded="true"]').first().click();assert.equal(await editor.locator('.huw-musical-group-child').count(),foldedCount);
@@ -36,7 +36,7 @@ let browser,page;const errors=[];try{
  assert.equal(await groupRows.first().getAttribute('data-layer-id'),timelineSecond);assert.equal(await groupRows.nth(1).getAttribute('data-layer-id'),timelineFirst);
  console.log('PASS lazy figure folding and timeline layer order');
  await editor.locator('.huw-musical-timeline-toolbar .huw-musical-layers-button').click();const layers=editor.locator('.huw-layer-panel');await layers.waitFor();
- let ids=await layers.locator('[data-layer-id]').evaluateAll(rows=>rows.map(x=>x.dataset.layerId));assert(ids.length>5);
+ let ids=await layers.locator('[data-layer-id]').evaluateAll(rows=>rows.map(x=>x.dataset.layerId));assert.equal(ids.length,5);
  const first=ids[0],second=ids[1],snapshot=await page.evaluate(t=>JSON.parse($tw.wiki.getTiddlerText(t)),created.stage);
  await layers.locator('.huwrep-order-row').nth(1).locator('.huwrep-order-handle').focus();await page.keyboard.press('ArrowUp');
  let next=await layers.locator('[data-layer-id]').evaluateAll(rows=>rows.map(x=>x.dataset.layerId));assert.equal(next[0],second);assert.equal(next[1],first);
