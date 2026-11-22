@@ -18,6 +18,10 @@ const {manifest,tiddlers}=await loadEdition('http://localhost/editions/animus/ma
  const file=new URL(new URL(url).pathname.slice(1),root);const value=JSON.parse(await readFile(file,'utf8'));return {ok:true,json:async()=>value};
 });
 const initial=new Map(tiddlers.map(t=>[t.title,t]));
+assert.equal(initial.has('$:/plugins/huwiki/animus-example-fyrtoejet'),false,'the small workshop does not load a complete show');
+// The final reader/mixer regression uses a score from the optional production.
+// Install that fixture explicitly now that shows open in independent editions.
+const tinderbox=JSON.parse(await readFile(new URL('plugins/animus-example-fyrtoejet/dist/plugin.json',root),'utf8'));initial.set(tinderbox.title,tinderbox);
 for(const t of [{title:'$:/language',text:'$:/languages/da-DK'},{title:'$:/DefaultTiddlers',text:'[[AniMus Forge I · Start]]'},{title:'$:/StoryList',list:'[[AniMus Forge I · Start]]',text:''},{title:'$:/config/huwiki/abc/audio-engine-mode',text:'original'}])initial.set(t.title,t);
 const html=assembleHtml(await readFile(new URL('core/empty.html',root),'utf8'),[...initial.values()]);
 await mkdir(out,{recursive:true});
