@@ -1,0 +1,1 @@
+{"parts":[{"id":"light-beam","name":"Firelight across the cave","type":"path","keys":[{"t":0,"x":0,"y":0,"r":0,"sx":1,"sy":1,"opacity":1}],"pivot":{"x":0,"y":0},"geo":{"d":"M1360 575L100 170 90 610Z"},"fill":"#f4ca83","stroke":"none","strokeWidth":1.6,"rig":true,"parent":null}]}

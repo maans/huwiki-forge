@@ -1,0 +1,1 @@
+{"parts":[{"id":"gull-0","name":"gull 0","type":"group","keys":[{"t":0,"x":0,"y":0,"r":0,"sx":1,"sy":1,"opacity":1}],"parent":null},{"id":"gull-wing-0","name":"gull wing 0","type":"path","keys":[{"t":0,"x":0,"y":0,"r":0,"sx":1,"sy":0.72,"opacity":1,"easing":"smooth"}],"parent":"gull-0","geo":{"d":"M-19 -6 Q-9 -7 0 0 Q9 -9 21 -6 Q8 -4 0 4 Q-10 -2 -19 -6Z"},"fill":"#483e3c"}]}
