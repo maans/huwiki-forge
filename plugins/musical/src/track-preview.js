@@ -15,7 +15,7 @@ function create(){
   set:function(id,value){if(value)delete disabled[id];else disabled[id]=true;},
   disabled:function(){return exportsInProgress?[]:Object.keys(disabled);},
   song:function(clip){return enabled("music:"+(clip.lane==="B"?"B":"A"))&&enabled("song:"+clip.id);},
-  audio:function(clip){return enabled(clip.kind==="sfx"||clip.kind==="effects"?"sfx":"audio-lane")&&enabled("audio:"+clip.id);},
+  audio:function(clip){return enabled(clip.kind==="sfx"||clip.kind==="effects"?"audio-fx":"audio-lane")&&enabled("audio:"+clip.id);},
   effects:function(){return enabled("sfx");},
   exporting:function(){return exportsInProgress>0;},
   beginExport:function(){exportsInProgress++;var restored=false;return function(){if(!restored){restored=true;exportsInProgress=Math.max(0,exportsInProgress-1);}};}

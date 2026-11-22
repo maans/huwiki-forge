@@ -81,9 +81,36 @@ function imageHref(wiki,part){
  if(part.src&&/^data:image\/(?:png|jpeg|webp|gif);base64,/.test(part.src))return part.src;
  return '';
 }
-function graphic(doc,wiki,p){
+var spriteSerial=0;
+function spriteCrop(p,variant){var g=p.geo||{},c=variant&&variant.crop||g.crop;if(!c||!['x','y','w','h','sourceWidth','sourceHeight'].every(function(k){return Number.isFinite(Number(c[k]));})||c.w<=0||c.h<=0||c.sourceWidth<=0||c.sourceHeight<=0)return null;return c;}
+function spriteSource(doc,wiki,p,variant,context,crop){
+ var href=imageHref(wiki,variant||p),found=context.sources.find(function(s){return s.href===href&&s.width===crop.sourceWidth&&s.height===crop.sourceHeight;});
+ if(!found){var id='co-sprite-'+(++spriteSerial),el=createSvg(doc,'image');set(el,'id',id);set(el,'href',href);set(el,'width',crop.sourceWidth);set(el,'height',crop.sourceHeight);context.defs.appendChild(el);found={id:id,href:href,width:crop.sourceWidth,height:crop.sourceHeight};context.sources.push(found);}
+ return '#'+found.id;
+}
+function updateSprite(doc,wiki,p,variant,el,context){
+ var crop=spriteCrop(p,variant);if(!crop)return;
+ setChanged(el,'viewBox',[crop.x,crop.y,crop.w,crop.h].join(' '));
+ setChanged(el.firstChild,'href',spriteSource(doc,wiki,p,variant,context,crop));
+}
+// Facial variants can be atlas crops. Switch their source region without
+// changing the local geometry or the authored pose of the head.
+function showImageVariant(view,node,variant){
+ if(!view||!node||!node.shape||!node.part||node.part.type!=='image')return false;
+ variant=variant||node.part;
+ if(spriteCrop(node.part)&&node.shape.firstChild)updateSprite(view.document,view.wiki,node.part,variant,node.shape,view.imageContext);
+ else setChanged(node.shape,'href',imageHref(view.wiki,variant));
+ return true;
+}
+function graphic(doc,wiki,p,imageContext){
  var tag=p.type==='circle'?'circle':p.type==='ellipse'?'ellipse':p.type==='rect'?'rect':p.type==='path'?'path':p.type==='text'?'text':p.type==='image'?'image':'g';
  var el=createSvg(doc,tag),g=p.geo||{};
+ if(tag==='image'&&spriteCrop(p)){
+  el=createSvg(doc,'svg');el.appendChild(createSvg(doc,'use'));set(el,'overflow','hidden');
+  var spriteVariant=(p.variants||[]).find(function(v){return v.id===p.variantId;})||(p.variants||[])[0];
+  updateSprite(doc,wiki,p,spriteVariant,el,imageContext);
+  set(el,'x',finite(g.x,-75));set(el,'y',finite(g.y,-55));set(el,'width',Math.max(1,finite(g.w,150)));set(el,'height',Math.max(1,finite(g.h,110)));set(el,'preserveAspectRatio','xMidYMid meet');return el;
+ }
  if(tag==='rect'){set(el,'x',finite(g.x,-40));set(el,'y',finite(g.y,-25));set(el,'width',Math.max(0,finite(g.w,80)));set(el,'height',Math.max(0,finite(g.h,50)));set(el,'rx',finite(g.rx,0));}
  else if(tag==='circle'){set(el,'r',Math.max(0,finite(g.r,25)));set(el,'cx',finite(g.cx,0));set(el,'cy',finite(g.cy,0));}
  else if(tag==='ellipse'){set(el,'rx',Math.max(0,finite(g.rx,30)));set(el,'ry',Math.max(0,finite(g.ry,18)));}
@@ -102,7 +129,9 @@ function timing(t,duration,settings){settings=settings||{};var active=t>=finite(
 function localTime(t,duration,settings){return timing(t,duration,settings).time;}
 function clipAt(clips,t){var start=0,total=clips.reduce(function(n,c){return n+Math.max(.1,finite(c.duration,4));},0);t=clamp(t,0,total);for(var i=0;i<clips.length;i++){var d=Math.max(.1,finite(clips[i].duration,4));if(t<start+d||i===clips.length-1)return {index:i,time:t-start};start+=d;}return {index:-1,time:0};}
 function build(doc,wiki,scene,editable,ancestry){
- var view=buildTree(doc,wiki,scene,editable,ancestry),style=createSvg(doc,'style');
+ var imageContext={defs:createSvg(doc,'defs'),sources:[]};
+ var view=buildTree(doc,wiki,scene,editable,ancestry,imageContext),style=createSvg(doc,'style');
+ view.svg.insertBefore(imageContext.defs,view.svg.firstChild);
  // SVG opacity does not exclude invisible artwork from hit testing. Follow
  // the final rendered attribute, including later Motion/lipsync overrides,
  // without changing display, geometry or any authored pointer-event value.
@@ -111,7 +140,7 @@ function build(doc,wiki,scene,editable,ancestry){
  view.svg.appendChild(style);
  return view;
 }
-function buildTree(doc,wiki,scene,editable,ancestry){
+function buildTree(doc,wiki,scene,editable,ancestry,imageContext){
  ancestry=(ancestry||[]).slice();if(scene._title)ancestry.push(scene._title);
  var svg=createSvg(doc,'svg');svg.setAttribute('viewBox','0 0 '+scene.width+' '+scene.height);svg.setAttribute('class','huw-cutout-svg');svg.setAttribute('role','img');svg.setAttribute('aria-label',scene.name||'CutOut-animation');
  var back=createSvg(doc,'rect');set(back,'width',scene.width);set(back,'height',scene.height);set(back,'fill',scene.background===undefined?'transparent':scene.background);svg.appendChild(back);
@@ -124,19 +153,19 @@ function buildTree(doc,wiki,scene,editable,ancestry){
   var nested=null,shape;
   if(p.type==='animation'){
    var target=M.resolve(wiki,p.animationId,p.animation);
-   if(target&&ancestry.indexOf(target)<0&&ancestry.length<16){var child=readScene(wiki,target);if(child){nested=buildTree(doc,wiki,child,false,ancestry);nested.duration=child.duration;shape=nested.svg;shape.setAttribute('class','co-nested-svg');var geo=p.geo||{};set(shape,'x',finite(geo.x,-100));set(shape,'y',finite(geo.y,-75));set(shape,'width',finite(geo.w,200));set(shape,'height',finite(geo.h,150));}}
+   if(target&&ancestry.indexOf(target)<0&&ancestry.length<16){var child=readScene(wiki,target);if(child){nested=buildTree(doc,wiki,child,false,ancestry,imageContext);nested.duration=child.duration;shape=nested.svg;shape.setAttribute('class','co-nested-svg');var geo=p.geo||{};set(shape,'x',finite(geo.x,-100));set(shape,'y',finite(geo.y,-75));set(shape,'width',finite(geo.w,200));set(shape,'height',finite(geo.h,150));}}
    if(!shape){shape=createSvg(doc,'text');shape.textContent=coUi.t('⚠ Manglende eller cirkulær kilde');set(shape,'font-size',14);set(shape,'fill','#b42318');}
   }
-  if(!shape)shape=graphic(doc,wiki,p);
+  if(!shape)shape=graphic(doc,wiki,p,imageContext);
   holder.appendChild(shape);parent.appendChild(holder);nodes[p.id]={el:holder,part:p,nested:nested,shape:shape,variant:null};
   add(holder,p.id,seen,depth+1);
   if(editable){var joint=createSvg(doc,'circle');set(joint,'cx',finite((p.pivot||{}).x,0));set(joint,'cy',finite((p.pivot||{}).y,0));set(joint,'r',8);joint.setAttribute('class','huw-cutout-joint');joint.setAttribute('data-cutout-joint','yes');holder.appendChild(joint);}
  });}
  add(svg,'root',{},0);
- (scene.scenes||[]).forEach(function(c){var target=M.resolve(wiki,c.sourceId,c.source||c.animation||c.theatre),source=target&&ancestry.indexOf(target)<0&&ancestry.length<16&&readScene(wiki,target),nested=source&&buildTree(doc,wiki,source,false,ancestry),holder=createSvg(doc,'g');svg.appendChild(holder);if(nested){holder.appendChild(nested.svg);nested.svg.setAttribute('class','co-nested-svg');set(nested.svg,'width',scene.width);set(nested.svg,'height',scene.height);}else{var warning=createSvg(doc,'text');warning.textContent=coUi.t('⚠ Scene mangler eller er cirkulær');set(warning,'y',40);holder.appendChild(warning);}clips.push({el:holder,view:nested,duration:source?source.duration:1,settings:c});});
+ (scene.scenes||[]).forEach(function(c){var target=M.resolve(wiki,c.sourceId,c.source||c.animation||c.theatre),source=target&&ancestry.indexOf(target)<0&&ancestry.length<16&&readScene(wiki,target),nested=source&&buildTree(doc,wiki,source,false,ancestry,imageContext),holder=createSvg(doc,'g');svg.appendChild(holder);if(nested){holder.appendChild(nested.svg);nested.svg.setAttribute('class','co-nested-svg');set(nested.svg,'width',scene.width);set(nested.svg,'height',scene.height);}else{var warning=createSvg(doc,'text');warning.textContent=coUi.t('⚠ Scene mangler eller er cirkulær');set(warning,'y',40);holder.appendChild(warning);}clips.push({el:holder,view:nested,duration:source?source.duration:1,settings:c});});
  // Foreground roots (for example the proscenium) stay above every scene clip.
  parts.forEach(function(p){if(p.foreground&&!p.parent&&nodes[p.id])svg.appendChild(nodes[p.id].el);});
- return {svg:svg,nodes:nodes,back:back,clips:clips,wiki:wiki,scene:scene};
+ return {svg:svg,nodes:nodes,back:back,clips:clips,wiki:wiki,scene:scene,imageContext:imageContext,document:doc};
 }
 function paint(view,t,selected,options){
  var camera=cameraBox(view.scene,t);setChanged(view.svg,'viewBox',[camera.x,camera.y,camera.width,camera.height].join(' '));
@@ -149,7 +178,7 @@ function paint(view,t,selected,options){
    // direction and loop boundaries do not depend on a previously painted frame.
    if(ct.active)paint(v.nested,ct.time,undefined,options);
   }
-  if(p.type==='image'&&p.variants){var variant=p.variants.find(function(a){return a.id===s.variantId;})||p.variants[0];if(variant&&v.variant!==variant.id){set(v.shape,'href',imageHref(view.wiki,variant));v.variant=variant.id;}}
+  if(p.type==='image'&&p.variants){var variant=p.variants.find(function(a){return a.id===s.variantId;})||p.variants[0];if(variant&&v.variant!==variant.id){if(spriteCrop(p))updateSprite(view.document,view.wiki,p,variant,v.shape,view.imageContext);else set(v.shape,'href',imageHref(view.wiki,variant));v.variant=variant.id;}}
   var transform='translate('+s.x+' '+s.y+') rotate('+s.r+') scale('+s.sx+' '+s.sy+') translate('+(-finite(pv.x,0))+' '+(-finite(pv.y,0))+')';
   setChanged(v.el,'transform',transform);setChanged(v.el,'opacity',s.opacity);
   v.el.classList&&v.el.classList.toggle('huw-cutout-selected',selected===id);
@@ -177,5 +206,6 @@ function setChanged(el,key,value){
 function dependencies(view){var out={};function walk(v){if(v.scene._title)out[v.scene._title]=true;Object.keys(v.nodes).forEach(function(id){var n=v.nodes[id],p=n.part;if(n.nested)walk(n.nested);[p].concat(p.variants||[]).forEach(function(a){var title=M.resolve(v.wiki,a.assetId,a.asset);if(title)out[title]=true;});});v.clips.forEach(function(c){if(c.view)walk(c.view);});}walk(view);return out;}
 exports.dependencies=dependencies;
 exports.cameraState=cameraState;exports.cameraBox=cameraBox;
-exports.timing=timing;exports.clipAt=clipAt;exports.imageHref=imageHref;exports.localTime=localTime;exports.state=state;exports.readScene=readScene;exports.writeScene=writeScene;exports.build=build;exports.paint=paint;exports.clamp=clamp;exports.finite=finite;exports.PROPERTIES=PROPERTIES;
+exports.timing=timing;exports.clipAt=clipAt;exports.imageHref=imageHref;exports.showImageVariant=showImageVariant;exports.localTime=localTime;exports.state=state;exports.readScene=readScene;exports.writeScene=writeScene;exports.build=build;exports.paint=paint;exports.clamp=clamp;exports.finite=finite;exports.PROPERTIES=PROPERTIES;
 })();
+

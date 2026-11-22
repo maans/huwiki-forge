@@ -1,0 +1,51 @@
+name: Theseus playback acceptance
+on:
+  push:
+    branches: [main, 'fix/theseus-complete-20261122']
+    paths:
+      - 'editions/theseus-ship/**'
+      - 'editions/shared/animus-audience.json'
+      - 'plugins/musical/**'
+      - 'plugins/cutout/**'
+      - 'plugins/animus-caption-i18n/**'
+      - 'tests/theseus*.mjs'
+      - '.github/workflows/theseus-browser.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  playback:
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, webkit]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate production and reproducible plugins
+        run: |
+          node --test tests/theseus-ship.test.mjs
+          node scripts/build-animus.mjs --check
+          node scripts/build-animus-video-export.mjs --check
+          node scripts/build-animus-caption-i18n.mjs --check
+          node scripts/build-cutout-ui.mjs --check
+          node scripts/build-turn-around-player.mjs --check
+          node scripts/build-forge-home.mjs --check
+      - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - run: npx playwright-core install --with-deps ${{ matrix.browser }}
+      - name: Exercise both language versions and the editor
+        env:
+          THESEUS_BROWSER_TESTS: '1'
+          THESEUS_BROWSER: ${{ matrix.browser }}
+        run: node --test tests/theseus-browser.test.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: theseus-${{ matrix.browser }}
+          path: test-results/theseus/
+          if-no-files-found: ignore
+          retention-days: 7

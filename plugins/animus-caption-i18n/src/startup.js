@@ -22,7 +22,7 @@ exports.startup=function(){
  function chosen(){var v=wiki.getTiddlerText(CHOICE,"auto");return v==="original"?v:Tracks.code(v)||"auto";}
  function autoLanguage(){return Tracks.selected(wiki).split("-")[0];}
  function language(host){var v=chosen(),choices=host&&host._huwCaptionSelect;
-  return v==="auto"||choices&&!choices._codes.includes(v)?Tracks.selected(wiki):v;
+  return v==="auto"||choices&&!choices._codes.includes(v)?Tracks.automatic(wiki,host):v;
  }
  function load(){catalog=Tracks.read(wiki);loadLabels();}
  function translated(source,lang,node){
@@ -50,7 +50,8 @@ exports.startup=function(){
    var codes=Tracks.options(catalog,film);
    // Older bilingual wikis used "en" for the English original.
    if(!codes.includes("en"))codes.push("en");
-   var choices=[["auto",da?"Automatisk (wikiens sprog)":ui("Automatic (wiki language)")]];
+   var audio=host&&Tracks.code(host.getAttribute("data-animus-audio-language"));
+   var choices=[["auto",audio?(da?"Automatisk (lydens sprog)":"Automatic (audio language)"):(da?"Automatisk (wikiens sprog)":ui("Automatic (wiki language)"))]];
    codes.forEach(function(code){choices.push([code,Tracks.name(code,locale)]);});
    if(host&&host._animusFilm)choices.push(["original",da?"Originaltekst":ui("Original text")]);
    while(list.firstChild)list.removeChild(list.firstChild);

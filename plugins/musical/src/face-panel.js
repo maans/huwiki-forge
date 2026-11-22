@@ -8,6 +8,8 @@ module-type: library
 var Language=require("$:/plugins/huwiki/musical/language.js");
 var isDanish=Language.isDanish;
 var Face=require("$:/plugins/huwiki/musical/face.js"),NS="http://www.w3.org/2000/svg",serial=0;
+var Figure=require("$:/plugins/huwiki/musical/figure-panel.js");
+var Engine=require("$:/plugins/huwiki/cutout/engine.js");
 function element(doc,tag,cls,text,parent){var node=doc.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;if(parent)parent.appendChild(node);return node;}
 function copy(value){return JSON.parse(JSON.stringify(value||{}));}
 function timeLabel(value){var n=Math.max(0,Number(value)||0),seconds=(n%60).toFixed(1);return Math.floor(n/60)+":"+(Number(seconds)<10?"0":"")+seconds;}
@@ -119,14 +121,20 @@ function mount(o){
   Array.prototype.forEach.call(head.querySelectorAll(".huw-cutout-joint,.huw-musical-transform-overlay"),function(node){node.remove();});
   var all=[head].concat(Array.prototype.slice.call(head.querySelectorAll("[data-cutout-id]")));
   all.forEach(function(node){var id=node.getAttribute("data-cutout-id"),original=view.nodes&&view.nodes[id];node.classList.remove("huw-musical-selected-element","huw-musical-preview-hidden");if(original)nodes[id]={el:node,shape:node.firstElementChild,part:original.part,variant:original.variant};});
-  var defs=view.svg&&view.svg.querySelector("defs");if(defs)mini.appendChild(defs.cloneNode(true));mini.appendChild(head);
+  var needed={};Object.keys(nodes).forEach(function(id){var part=nodes[id].part;if(part.type!=="image")return;needed[Engine.imageHref(view.wiki,part)]=true;(part.variants||[]).forEach(function(v){needed[Engine.imageHref(view.wiki,v)]=true;});});
+  var defs=view.svg&&view.svg.querySelector("defs");if(defs){var localDefs=defs.cloneNode(false);Array.prototype.forEach.call(defs.children||defs.childNodes,function(def){if(def.tagName&&def.tagName.toLowerCase()==="image"&&!needed[def.getAttribute("href")])return;localDefs.appendChild(def.cloneNode(true));});mini.appendChild(localDefs);}mini.appendChild(head);
   var ids={};Array.prototype.forEach.call(mini.querySelectorAll("[id]"),function(node){var id=node.getAttribute("id");ids[id]=prefix+id;node.setAttribute("id",ids[id]);});
   Array.prototype.forEach.call(mini.querySelectorAll("*"),function(node){Array.prototype.slice.call(node.attributes||[]).forEach(function(a){var value=a.value;Object.keys(ids).forEach(function(id){value=value.split("#"+id).join("#"+ids[id]);});if(value!==a.value)node.setAttribute(a.name,value);});});
   parent.appendChild(mini);
-  if(Face.preview)Face.preview({svg:mini,nodes:nodes,scene:view.scene,wiki:view.wiki,clips:[],localTime:context.localTime},context.actorId,state);
+  // A cropped sprite needs the miniature's own atlas context. Build it from
+  // the already cloned definitions after their IDs have been namespaced.
+  var miniDefs=mini.querySelector("defs");if(!miniDefs){miniDefs=doc.createElementNS(NS,"defs");mini.insertBefore(miniDefs,mini.firstChild);}
+  var miniContext={defs:miniDefs,sources:[]};
+  if(view.imageContext)miniContext.sources=view.imageContext.sources.filter(function(source){return needed[source.href];}).map(function(source){return Object.assign({},source,{id:ids[source.id]||source.id});});
+  if(Face.preview)Face.preview({svg:mini,nodes:nodes,scene:view.scene,wiki:view.wiki,document:doc,imageContext:miniContext,clips:[],localTime:context.localTime},context.actorId,state);
   var parts=context.parts||{},targets=channel==="mouth"?[parts.open,parts.closed]:channel==="eyes"?[].concat(parts.eyes||[],parts.pupils||[],parts.brows||[],parts.lids||[]):[context.headId],bounds=[];
-  try{var inverse=mini.getCTM().inverse();targets.forEach(function(id){var node=nodes[id]&&nodes[id].el;if(!node)return;var bb=node.getBBox(),matrix=inverse.multiply(node.getCTM());if(!(bb.width>0&&bb.height>0))return;[[bb.x,bb.y],[bb.x+bb.width,bb.y],[bb.x+bb.width,bb.y+bb.height],[bb.x,bb.y+bb.height]].forEach(function(p){bounds.push({x:matrix.a*p[0]+matrix.c*p[1]+matrix.e,y:matrix.b*p[0]+matrix.d*p[1]+matrix.f});});});
-   if(!bounds.length){var bb=head.getBBox();bounds=[{x:bb.x,y:bb.y},{x:bb.x+bb.width,y:bb.y+bb.height}];}
+  try{targets.forEach(function(id){var node=nodes[id]&&nodes[id].el;if(!node)return;var frame=Figure.frameFor(mini,node,0,nodes);if(frame)bounds.push({x:frame.x,y:frame.y},{x:frame.x+frame.width,y:frame.y+frame.height});});
+   if(!bounds.length){var frame=Figure.frameFor(mini,head,0,nodes);if(frame)bounds=[{x:frame.x,y:frame.y},{x:frame.x+frame.width,y:frame.y+frame.height}];}
    var xx=bounds.map(function(p){return p.x;}),yy=bounds.map(function(p){return p.y;}),left=Math.min.apply(null,xx),top=Math.min.apply(null,yy),width=Math.max.apply(null,xx)-left,height=Math.max.apply(null,yy)-top,pad=Math.max(4,Math.max(width,height)*.14);
    if(width>0&&height>0)mini.setAttribute("viewBox",[left-pad,top-pad,width+2*pad,height+2*pad].join(" "));
   }catch(_unmounted){}

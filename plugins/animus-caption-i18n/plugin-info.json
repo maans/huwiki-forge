@@ -4,7 +4,7 @@
   "name": "AniMus · Caption languages / Undertekstsprog",
   "description": "Caption translations displayed without modifying English sound, source text, timing, or lip-sync",
   "author": "HUWiki",
-  "version": "0.1.0-beta.5",
+  "version": "0.1.0-beta.6",
   "plugin-type": "plugin",
   "core-version": ">=5.4.1",
   "requires-reload": "yes"

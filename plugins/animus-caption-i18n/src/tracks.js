@@ -14,6 +14,9 @@ function code(value){
 }
 exports.code=code;
 exports.selected=function(wiki){return code(wiki.getTiddlerText("$:/language",""))||"en";};
+// Bilingual performances use their selected audio language for automatic
+// captions; ordinary scenes retain the wiki-language default.
+exports.automatic=function(wiki,host){return host&&code(host.getAttribute("data-animus-audio-language"))||exports.selected(wiki);};
 exports.name=function(tag,locale){
  try{return new Intl.DisplayNames([locale],{type:"language"}).of(tag)||tag;}catch(_){return tag;}
 };

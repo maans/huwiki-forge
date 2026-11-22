@@ -1,0 +1,27 @@
+/* Compact effect lanes share the existing recording player. */
+.huw-musical-effects-track.is-collapsed .huw-musical-lane{min-height:30px!important;height:30px}
+.huw-musical-effects-track.is-collapsed .huw-musical-fx-name,.huw-musical-effects-track.is-collapsed .huw-musical-fx-trim{display:none}
+.huw-musical-fx-clip.is-collapsed{min-width:24px!important;width:24px;padding:2px!important;justify-content:center;overflow:hidden}
+.huw-musical-fx-fold,.huw-musical-fx-add{min-width:24px!important;width:24px;padding:2px!important;line-height:1.2}
+.huw-musical-effects-backdrop{position:fixed;inset:0;z-index:100001;background:rgba(0,0,0,.26);display:flex;align-items:center;justify-content:center;padding:12px}
+.huw-musical-effects-dialog{box-sizing:border-box;width:420px;max-width:100%;max-height:75vh;overflow:auto;background:<<colour tiddler-background>>;color:<<colour foreground>>;border:1px solid <<colour tiddler-border>>;border-radius:9px;box-shadow:0 8px 28px #0004;padding:12px}
+.huw-musical-effects-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.huw-musical-effects-heading button{font-size:1.3em;line-height:1;padding:3px 8px}
+.huw-musical-effects-search{box-sizing:border-box;width:100%;margin-bottom:8px}
+.huw-musical-effects-toolbar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;align-items:center}
+.huw-musical-effect-import{position:relative;overflow:hidden;display:inline-block;border:1px solid <<colour button-border>>;border-radius:4px;padding:3px 8px;cursor:pointer}
+.huw-musical-effect-import input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%}
+.huw-musical-effects-library{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.huw-musical-effects-tile{position:relative;border:1px solid <<colour tiddler-border>>;border-radius:6px;overflow:hidden}
+.huw-musical-effect-choice{box-sizing:border-box;display:flex;flex-direction:column;align-items:center;gap:4px;width:100%;min-height:78px;padding:6px 6px 22px!important;white-space:normal;overflow-wrap:anywhere;border:0!important}
+.huw-musical-effect-choice[aria-pressed="true"]{box-shadow:inset 0 0 0 2px <<colour primary>>}
+.huw-musical-effect-symbol{font-size:25px;line-height:1.3}
+.huw-musical-effect-listen{position:absolute;bottom:1px;right:3px;min-width:23px;padding:1px 5px!important;font-size:12px}
+.huw-musical-effects-empty{grid-column:1/-1}
+.huw-musical-effects-status{display:block;font-size:.85em;overflow-wrap:anywhere;margin-bottom:5px}
+@media(max-width:420px){.huw-musical-effects-library{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.huw-musical-cue-score{padding:.5rem;max-width:62rem;margin:auto}
+.huw-musical-cue-score-row{display:grid!important;grid-template-columns:4.5em 1fr;gap:.7em;text-align:left!important;width:100%;margin:.2em 0!important;padding:.55em .7em!important;line-height:1.45;white-space:normal!important;border:1px solid #bbb!important;border-radius:.3em!important;background:transparent!important;color:inherit!important}
+.huw-musical-cue-score-time{font-variant-numeric:tabular-nums;opacity:.75}
+.huw-musical-cue-score-row.huw-musical-note-active{background:#f6dfa8!important;color:#24211c!important;border-color:#8b6a2c!important}
+.huw-musical-cue-score-row:focus-visible{outline:3px solid #a87a2c;outline-offset:2px}

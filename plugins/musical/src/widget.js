@@ -18,6 +18,7 @@ var Editor=require("$:/plugins/huwiki/musical/editor.js"),Motion=require("$:/plu
 var Workspace=require("$:/plugins/huwiki/musical/workspace.js");
 var VideoExport=null;try{VideoExport=require("$:/plugins/huwiki/animus-video-export/runtime.js");}catch(_optionalExport){}
 var Playlist=require("$:/plugins/huwiki/musical/playlist.js");
+var CueScore=require("$:/plugins/huwiki/musical/cue-score.js");
 var SoundFx=require("$:/plugins/huwiki/musical/sfx.js");
 var Narration=require("$:/plugins/huwiki/musical/narration.js");
 var LipSync=require("$:/plugins/huwiki/musical/lipsync.js");
@@ -60,7 +61,7 @@ Musical.prototype.render=function(parent,next){
  parent.insertBefore(host,next);this.domNodes.push(host);
  var scene=Engine.readScene(this.wiki,this.sceneTitle);
  if(!scene){node(doc,"p","huw-musical-error",L.missing,host);return;}
- var sfx=new SoundFx.Fx(scene.musical&&scene.musical.sfx);
+ var sfx=new SoundFx.Fx(scene.musical&&scene.musical.sfx,{onError:function(){if(state)state.textContent=da?'En effekt kunne ikke afspilles; forestillingen fortsætter.':ui('An effect could not play; the performance continues.');}});
  var lipOptions={sceneTitle:this.sceneTitle,audioClips:scene.musical&&scene.musical.audioClips||[],film:scene};
  var voice=new Narration.Player({wiki:this.wiki,doc:doc,clips:scene.musical&&scene.musical.audioClips||[],
   isAudible:function(clip){return !editor||!editor.isAudioAudible||editor.isAudioAudible(clip);},onError:function(message){
@@ -73,11 +74,11 @@ Musical.prototype.render=function(parent,next){
  var songs=clips.map(function(c){
   var item=self.wiki.getTiddler(c.score),fields=item?item.fields:{};
   var source=fields["abc-source"]||fields.text||"";
-  return {clip:c,title:c.score,source:source,fields:fields,guideTiming:c.muted,config:Accompaniment.read(fields),events:[],tune:null,controller:null,page:null,pending:null,settingUp:null,audioFailed:false};
+  return {clip:c,title:c.score,source:source,fields:fields,cueScore:CueScore.read(fields),guideTiming:c.muted,config:Accompaniment.read(fields),events:[],tune:null,controller:null,page:null,pending:null,settingUp:null,audioFailed:false};
  });
  this._playlistTitles=songs.map(function(s){return s.title;});
  this._songStates=songs;
- if(!songs.length||songs.some(function(s){return !s.source.trim();})){
+ if(!songs.length||songs.some(function(s){return !s.source.trim()&&!s.cueScore;})){
   node(doc,"p","huw-musical-error","En scene eller et nodeark mangler. / Missing scene or score.",host);return;
  }
  var layout=node(doc,"div","huw-musical-layout",host);
@@ -89,7 +90,8 @@ Musical.prototype.render=function(parent,next){
  // Captions belong to the audience's camera view, not to scenery SVG.
  // The CutOut source stays editable and unchanged; only this performance
  // hides its scene-space subtitle glyphs and displays a fixed overlay.
- var captionOverlay=node(doc,"div","huw-musical-caption-overlay",undefined,stage);
+ var captionBelow=scene.musical&&scene.musical.captionStyle&&scene.musical.captionStyle.placement==="below";
+ var captionOverlay=node(doc,"div","huw-musical-caption-overlay"+(captionBelow?" is-below":""),undefined,captionBelow?host:stage);
  captionOverlay.setAttribute("aria-live","off");
  var captionCue=node(doc,"div","huw-musical-caption-cue","",captionOverlay);
  var captionLine=node(doc,"div","huw-musical-caption-line","",captionOverlay);
@@ -144,6 +146,13 @@ Musical.prototype.render=function(parent,next){
 
  var scorePanel=node(doc,"div","huw-musical-score",layout);
  node(doc,"h3","huw-musical-subtitle",L.score,scorePanel);
+ var cueIndex=null;
+ if(songs.some(function(song){return !!song.cueScore;})){
+  cueIndex=node(doc,"select","huw-musical-cue-score-index",undefined,scorePanel);
+  cueIndex.setAttribute("aria-label",da?"Partiturafsnit":"Score section");
+  songs.forEach(function(song,index){if(song.cueScore){var option=node(doc,"option","",song.cueScore.title,cueIndex);option.value=String(index);}});
+  cueIndex.onchange=function(){var clip=clips[Number(cueIndex.value)];if(clip)seek(clip.start);};
+ }
  var paper=node(doc,"div","huw-musical-paper",scorePanel);
  songs.forEach(function(song,i){
   song.page=node(doc,"div","huw-musical-score-page",undefined,paper);
@@ -233,6 +242,7 @@ Musical.prototype.render=function(parent,next){
   var active=Playlist.activeAt(clips,t),primary=Playlist.locate(clips,t),i=primary.index;
   if(i<0)return;
   activeIndex=i;controller=songs[i].controller||null;self._audio=controller;
+  if(cueIndex&&songs[i].cueScore)cueIndex.value=String(i);
   var visible=active.length?active.map(function(v){return v.index;}):[i],key=visible.join(",");
   if(key!==visibleKey){visibleKey=key;songs.forEach(function(song,j){song.page.hidden=visible.indexOf(j)<0;});}
   host.dataset.activeSong=songs[i].title;
@@ -663,9 +673,10 @@ Musical.prototype.render=function(parent,next){
     syncAudio(position);
    }
   },
-  onAudioChange:function(updated){voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);paint(timeline.value());},
-  onFxChange:function(cues){sfx.cues=cues;if(timeline.running)sfx.seek(timeline.value());},
+  onAudioChange:function(updated){scene.musical.audioClips=updated;refreshCueScores();voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);paint(timeline.value());},
+  onFxChange:function(cues){scene.musical.sfx=cues;refreshCueScores();sfx.cues=cues;if(timeline.running)sfx.seek(timeline.value());paint(timeline.value());},
   previewFx:function(cue){pauseAll();sfx.quiet();sfx.unlock();sfx.fire(cue);},
+  stopPreviewFx:function(){sfx.quiet();},
   onSelect:function(t){if(workspace)workspace.selectTrack(t);},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}
@@ -680,7 +691,7 @@ Musical.prototype.render=function(parent,next){
    var index=clips.findIndex(function(clip){return clip.id===id;});
    if(index>=0&&times.length)seekScore(index,times);
   },
-  onAudioChange:function(updated){voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);if(editor)editor.redraw();paint(timeline.value());},
+  onAudioChange:function(updated){scene.musical.audioClips=updated;refreshCueScores();voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);if(editor)editor.redraw();paint(timeline.value());},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},repaint:function(){paint(timeline.value());},
   openFace:openFace,
   layout:layout,transport:transport,play:play,view:view,editor:editor,
@@ -796,7 +807,16 @@ Musical.prototype.render=function(parent,next){
  // visible guide; drawing all of them at once blocks the editor's main thread.
  // Audible scores are still prepared up front so their performed lengths are
  // known, while muted guides keep the film's authored timing.
+ function refreshCueScores(){
+  songs.forEach(function(song,index){if(song.cueScore){clearNotes(index);song.cueReady=false;song.page.textContent="";song.events=[];}});
+ }
  function ensureNotation(song){
+  if(song&&song.cueScore){
+   if(!song.cueReady){
+    var index=songs.indexOf(song);
+    song.events=CueScore.render(CueScore.resolve(song.cueScore,scene,song.clip),{doc:doc,page:song.page,seek:function(times){seekScore(index,times);}});song.cueReady=true;
+   }return;
+  }
   if(!ABCObject||!song||song.tune||song.notationFailed)return;
   try{
    var parsed=ABCObject.renderAbc(song.page,song.source,{responsive:"resize",add_classes:true});

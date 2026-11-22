@@ -21,21 +21,28 @@ function Fx(cues,options){
  this.cues=Array.isArray(cues)?cues:[];this.ctx=options&&options.context;
  this.destination=options&&options.destination;this.owned=false;this.last=null;
  this.active=new Set();this.bus=null;this.room=null;
+ this.strict=!!(options&&options.strict);this.onError=options&&options.onError;this.failures=Object.create(null);
 }
+Fx.prototype.report=function(error,cue){
+ if(this.strict)throw error;
+ var key=String(cue&&(cue.id||cue.type)||"audio")+":"+String(error&&error.message||error);
+ if(this.failures[key])return;this.failures[key]=true;
+ if(this.onError)try{this.onError(error,cue);}catch(_){}
+};
 Fx.prototype.ensure=function(){
  if(!this.ctx){
   var C=typeof window!=="undefined"&&(window.AudioContext||window.webkitAudioContext);
   if(!C)return null;
-  try{this.ctx=new C();this.owned=true;}catch(_){return null;}
+  try{this.ctx=new C();this.owned=true;}catch(error){this.report(error);return null;}
  }
- if(!this.bus&&this.ctx.createDynamicsCompressor){
+ if(!this.bus&&!this.compressorFailed&&this.ctx.createDynamicsCompressor)try{
   var comp=this.ctx.createDynamicsCompressor();
   comp.threshold.value=-16;comp.knee.value=12;comp.ratio.value=5;comp.attack.value=.008;comp.release.value=.22;
   comp.connect(this.destination||this.ctx.destination);this.bus=comp;
- }
+ }catch(error){if(comp)try{comp.disconnect();}catch(_){}this.compressorFailed=true;this.report(error);}
  return this.ctx;
 };
-Fx.prototype.unlock=function(){var c=this.ensure();if(c&&c.state==="suspended")c.resume().catch(function(){});};
+Fx.prototype.unlock=function(){var self=this;try{var c=this.ensure();if(c&&c.state==="suspended")Promise.resolve(c.resume()).catch(function(error){self.report(error);});}catch(error){this.report(error);}};
 Fx.prototype._noise=function(){var c=this.ctx;if(!this.noise){var b=c.createBuffer(1,c.sampleRate*2,c.sampleRate),a=b.getChannelData(0),seed=12347;
  for(var i=0;i<a.length;i++){seed=(seed*1664525+1013904223)>>>0;a[i]=((seed/4294967296)*2-1)*.85;}this.noise=b;}return this.noise;};
 
@@ -64,6 +71,15 @@ Fx.prototype._claps=function(){
 // Each event is placed within the clip. Starting playback inside an effect
 // resumes its envelope and texture at the elapsed time.
 Fx.prototype.fire=function(cue,at,offset){
+ var nodes=[],self=this;
+ try{this._fire(cue,at,offset,nodes);}catch(error){
+  // Dispose only this cue's partial graph. Other effects and recordings keep
+  // playing, and a later cue can still start after an isolated failure.
+  nodes.forEach(function(node){self.active.delete(node);try{if(node.stop)node.stop();}catch(_){}try{node.disconnect();}catch(_){} });
+  this.report(error,cue);
+ }
+};
+Fx.prototype._fire=function(cue,at,offset,nodes){
  var volume=clamp(num(cue.volume,1),0,1),duration=Math.max(.08,num(cue.duration,1));
  var skip=Math.max(0,num(offset,0));
  if(cue.muted||!volume||skip>=duration||!this.ensure())return;
@@ -71,24 +87,26 @@ Fx.prototype.fire=function(cue,at,offset){
  var destination=this.bus||this.destination||c.destination,send=null,count=0;
  var amount=clamp(num(cue.reverb,0),0,1);
  if(amount&&c.createConvolver){
-  if(!this.room)this.room=require("$:/plugins/huwiki/abc/accompaniment.js").createRoom(c,destination);
-  send=c.createGain();send.gain.value=amount;send.connect(this.room.input());
+  try{
+   if(!this.room)this.room=require("$:/plugins/huwiki/abc/accompaniment.js").createRoom(c,destination);
+   send=c.createGain();nodes.push(send);send.gain.value=amount;send.connect(this.room.input());
+  }catch(error){if(send)try{send.disconnect();}catch(_){}send=null;this.report(error,cue);}
  }
  function note(kind,position,length,level,freq,endFreq,shape){
   var start=position*duration,len=length*duration,elapsed=Math.max(0,skip-start);
   if(elapsed>=len)return;
   var t=now+Math.max(0,start-skip),remaining=len-elapsed,src,filter;
   if(kind==="tone"){
-   src=c.createOscillator();src.type=shape||"sine";
+   src=c.createOscillator();nodes.push(src);src.type=shape||"sine";
    src.frequency.setValueAtTime(freq*Math.pow((endFreq||freq)/freq,elapsed/len),t);
    if(endFreq)src.frequency.exponentialRampToValueAtTime(endFreq,t+remaining);
   }else{
-   src=c.createBufferSource();src.buffer=kind==="claps"?self._claps():self._noise();src.loop=true;
-   filter=c.createBiquadFilter();filter.type=shape||"lowpass";filter.frequency.value=freq;
+   src=c.createBufferSource();nodes.push(src);src.buffer=kind==="claps"?self._claps():self._noise();src.loop=true;
+   filter=c.createBiquadFilter();nodes.push(filter);filter.type=shape||"lowpass";filter.frequency.value=freq;
    if(kind==="claps")filter.Q.value=.48;
    src.connect(filter);
   }
-  var gain=c.createGain(),peak=Math.max(.0002,.36*level*volume),floor=.0001;
+  var gain=c.createGain(),peak=Math.max(.0002,.36*level*volume),floor=.0001;nodes.push(gain);
   var attack=Math.min(kind==="tone"?.025:.10,len*.20);
   var release=kind==="claps"?Math.max(attack,len-.45):attack;
   function envelope(x){
@@ -101,7 +119,7 @@ Fx.prototype.fire=function(cue,at,offset){
   gain.gain.exponentialRampToValueAtTime(floor,t+remaining);
   (filter||src).connect(gain);gain.connect(destination);if(send)gain.connect(send);
   count++;self.active.add(src);
-  src.onended=function(){self.active.delete(src);gain.disconnect();src.disconnect();if(filter)filter.disconnect();if(--count===0&&send)send.disconnect();};
+  src.onended=function(){self.active.delete(src);[gain,src,filter].forEach(function(node){if(node)try{node.disconnect();}catch(_){} });if(--count===0&&send)try{send.disconnect();}catch(_){} };
   if(filter)src.start(t,elapsed%src.buffer.duration);else src.start(t);
   src.stop(t+remaining);
  }
@@ -136,10 +154,10 @@ Fx.prototype.sync=function(t){
 };
 Fx.prototype.quiet=function(){
  this.active.forEach(function(src){try{src.stop();}catch(_){}});
- this.active.clear();if(this.room){this.room.dispose();this.room=null;}
+ this.active.clear();if(this.room){try{this.room.dispose();}catch(error){this.report(error);}this.room=null;}
  this.last=null;
 };
 Fx.prototype.seek=function(){this.quiet();};
-Fx.prototype.dispose=function(){this.quiet();if(this.bus&&this.bus.disconnect)this.bus.disconnect();if(this.owned&&this.ctx)this.ctx.close().catch(function(){});this.ctx=null;this.bus=null;};
+Fx.prototype.dispose=function(){this.quiet();if(this.bus&&this.bus.disconnect)try{this.bus.disconnect();}catch(_){}if(this.owned&&this.ctx)try{Promise.resolve(this.ctx.close()).catch(function(){});}catch(_){}this.ctx=null;this.bus=null;};
 exports.Fx=Fx;exports.TYPES=TYPES;exports.PRESETS=PRESETS;
 })();

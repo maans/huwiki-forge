@@ -85,7 +85,10 @@ function sampleTimed(frames,elapsed,duration){var resting={viseme:"rest",open:0,
  if(amount<.08)return resting;return {viseme:frame.viseme,open:amount,width:shape.width,height:shape.height,timed:true};
 }
 function compile(scene,options){options=options||{};var title=String(scene._title||options.sceneTitle||""),map=partMap(scene),characters=actors(scene),cues=[],bindings=[],seen=Object.create(null),recordings=Array.isArray(options.audioClips)?options.audioClips:[];
- (scene.parts||[]).forEach(function(part,index){var config=part.lipSync;if(part.type!=="text"||!config||config.enabled!==true)return;var actor=characters.find(function(item){return item.id===config.target;}),target=String(config.target||""),has=Object.prototype.hasOwnProperty,open=String((has.call(config,"open")?config.open:actor&&actor.open)||""),closed=String((has.call(config,"closed")?config.closed:actor&&actor.closed)||"");
+ (scene.parts||[]).forEach(function(part,index){var source=part.lipSync;if(part.type!=="text"||!source||source.enabled!==true)return;
+  var targets=Array.isArray(source.targets)&&source.targets.length?source.targets:[source.target];
+  targets.filter(function(target,i){return target&&targets.indexOf(target)===i;}).forEach(function(target){
+  var config=Object.assign({},source,{target:target}),actor=characters.find(function(item){return item.id===config.target;}),target=String(config.target||""),has=Object.prototype.hasOwnProperty,open=String((has.call(config,"open")?config.open:actor&&actor.open)||""),closed=String((has.call(config,"closed")?config.closed:actor&&actor.closed)||"");
   if(!target||!map[target]||!map[open]||!beneath(map,open,target)||closed===open)return;if(closed&&(!map[closed]||!beneath(map,closed,target)))return;
   var jaw=target+"-jaw",binding={target:target,open:open,closed:closed,jaw:map[jaw]&&beneath(map,jaw,target)?jaw:""},key=target+"\n"+open+"\n"+closed;if(!seen[key]){seen[key]=binding;bindings.push(binding);}else binding=seen[key];
   var matches=recordings.filter(function(clip){return clip&&String(clip.cueId||"")===String(part.id)&&String(clip.sceneTitle||"")===title;}).map(function(clip,clipIndex){var offset=Math.max(0,num(clip.offset,0)),duration=Math.max(0,num(clip.duration,0));return {id:String(clip.id||clipIndex),asset:String(clip.asset||""),start:Math.max(0,num(clip.start,0)),offset:offset,duration:duration,sourceDuration:Math.max(offset+duration,num(clip.sourceDuration,offset+duration)),speech:speech(clip.text||part.text||"")};});
@@ -93,15 +96,17 @@ function compile(scene,options){options=options||{};var title=String(scene._titl
   // Editing text or replacing a recording must not silently reuse stale timing.
   var sameText=!has.call(config,"visemeText")||String(config.visemeText)===String(part.text||"");
   cues.push({id:String(part.id),index:index,binding:binding,offset:num(config.offset,0),strength:clamp(num(config.strength,1),0,1),mode:config.timing==="script"?"script":"auto",intervals:ranges(part,scene.duration),speech:speech(part.text||""),visemes:sameText?timedFrames(config.visemes):null,visemeAudioAsset:String(config.visemeAudioAsset||""),recordings:matches});
+  });
  });return {sceneTitle:title,actors:characters,cues:cues,bindings:bindings};
 }
 var CONFIG_FIELDS=["enabled","target","open","closed","timing","offset","strength","visemes","visemeText","visemeAudioAsset"];
 var CLIP_FIELDS=["id","cueId","sceneTitle","asset","start","offset","duration","sourceDuration","text"];
+function targetStamp(config){return JSON.stringify(config.targets||null);}
 function visemeStamp(config){return (Array.isArray(config.visemes)?config.visemes:[]).map(function(f){return f?[f.t,f.viseme,f.open]:null;});}
 function sameVisemes(config,stamp){var frames=Array.isArray(config.visemes)?config.visemes:[];return !!stamp&&frames.length===stamp.length&&!frames.some(function(frame,i){var old=stamp[i];return !frame?!old?false:true:!old||frame.t!==old[0]||frame.viseme!==old[1]||frame.open!==old[2];});}
-function sourceStamp(scene){var entries=[];(scene.parts||[]).forEach(function(part){if(!part.lipSync)return;var config=part.lipSync;entries.push({part:part,text:part.text,config:config,values:CONFIG_FIELDS.map(function(k){return config[k];}),visemeValues:visemeStamp(config),keys:part.keys,keyValues:(part.keys||[]).map(function(k){return [k.t,k.opacity];})});});return {parts:scene.parts,length:(scene.parts||[]).length,entries:entries,duration:scene.duration};}
+function sourceStamp(scene){var entries=[];(scene.parts||[]).forEach(function(part){if(!part.lipSync)return;var config=part.lipSync;entries.push({part:part,text:part.text,config:config,targetValues:targetStamp(config),values:CONFIG_FIELDS.map(function(k){return config[k];}),visemeValues:visemeStamp(config),keys:part.keys,keyValues:(part.keys||[]).map(function(k){return [k.t,k.opacity];})});});return {parts:scene.parts,length:(scene.parts||[]).length,entries:entries,duration:scene.duration};}
 function sameSource(scene,stamp){if(!stamp||stamp.parts!==scene.parts||stamp.length!==(scene.parts||[]).length||stamp.duration!==scene.duration)return false;var index=0,valid=true;(scene.parts||[]).some(function(part){if(!part.lipSync)return false;var saved=stamp.entries[index++],config=part.lipSync;if(!saved||saved.part!==part||saved.text!==part.text||saved.config!==config||saved.keys!==part.keys||saved.keyValues.length!==(part.keys||[]).length){valid=false;return true;}
-  if(CONFIG_FIELDS.some(function(k,i){return config[k]!==saved.values[i];})||!sameVisemes(config,saved.visemeValues)||(part.keys||[]).some(function(k,i){return k.t!==saved.keyValues[i][0]||k.opacity!==saved.keyValues[i][1];})){valid=false;return true;}return false;});return valid&&index===stamp.entries.length;}
+  if(targetStamp(config)!==saved.targetValues||CONFIG_FIELDS.some(function(k,i){return config[k]!==saved.values[i];})||!sameVisemes(config,saved.visemeValues)||(part.keys||[]).some(function(k,i){return k.t!==saved.keyValues[i][0]||k.opacity!==saved.keyValues[i][1];})){valid=false;return true;}return false;});return valid&&index===stamp.entries.length;}
 function clipStamp(clips){return clips.map(function(clip){return CLIP_FIELDS.map(function(key){return clip&&clip[key];});});}
 function sameClips(clips,stamp){return !!stamp&&stamp.length===clips.length&&!clips.some(function(clip,i){return CLIP_FIELDS.some(function(key,j){return (clip&&clip[key])!==stamp[i][j];});});}
 function cacheFor(view,options,title){var cache=views.get(view),clips=options.audioClips||[];if(!cache){cache={plan:null,nodes:Object.create(null),local:0};views.set(view,cache);}if(!cache.plan||cache.scene!==view.scene||cache.title!==title||!sameSource(view.scene,cache.source)||!sameClips(clips,cache.clips)){
@@ -113,7 +118,7 @@ function keep(cache,node,id){var saved=cache.nodes[id];if(!saved||saved.node!==n
 function jawTransform(part,time,amount){var s=Engine.state(part,time),p=part.pivot||{};return "translate("+s.x+" "+(s.y+Math.min(1.5,Math.max(0,amount)))+") rotate("+s.r+") scale("+s.sx+" "+s.sy+") translate("+(-num(p.x,0))+" "+(-num(p.y,0))+")";}
 function restoreNode(saved,view,time,opacity){var node=saved.node,part=node.part||{},shape=node.shape;GEOMETRY.forEach(function(key){set(shape,key,saved.geometry[key]);});
  if(saved.jaw)set(node.el,"transform",jawTransform(part,time,0));
- if(part.type==="image"){var state=Engine.state(part,time),variant=(part.variants||[]).find(function(v){return v.id===state.variantId;})||(part.variants||[])[0],href=variant&&typeof Engine.imageHref==="function"?Engine.imageHref(view.wiki,variant):saved.href;set(shape,"href",href);}
+ if(part.type==="image"){var state=Engine.state(part,time),variant=(part.variants||[]).find(function(v){return v.id===state.variantId;})||(part.variants||[])[0];if(typeof Engine.showImageVariant==="function")Engine.showImageVariant(view,node,variant||part);else{var href=variant&&typeof Engine.imageHref==="function"?Engine.imageHref(view.wiki,variant):saved.href;set(shape,"href",href);}}
  if(opacity)set(node.el,"opacity",saved.opacity);set(node.el,"data-lipsync-viseme",saved.hadViseme);set(node.el,"data-lipsync-cue",saved.hadCue);
 }
 function restoreShapes(cache,view,time,opacity){Object.keys(cache.nodes).forEach(function(id){restoreNode(cache.nodes[id],view,time,opacity);});}
@@ -126,10 +131,10 @@ function appearance(cache,view,binding,value,cueId,strength){var open=view.nodes
  // only the mouth's visibility and local graphic geometry.
  if(saved.opacity===null)saved.opacity=open.el.getAttribute("opacity");
  set(open.el,"opacity",speaking||(!closed&&hasRest)?1:0);set(open.el,"data-lipsync-viseme",speaking?value.viseme:"rest");set(open.el,"data-lipsync-cue",speaking?cueId:"");
- if(variant&&typeof Engine.imageHref==="function"){var href=Engine.imageHref(view.wiki,variant);if(href)set(shape,"href",href);
-  if(speaking&&value.timed){var g=part.geo||{},cx=num(g.x,0)+num(g.w,1)/2,cy=num(g.y,0)+num(g.h,1)/2,base=saved.geometry.transform||"",xs=.95+.1*amount,ys=.85+.3*amount;set(shape,"transform",base+" translate("+cx+" "+cy+") scale("+xs+" "+ys+") translate("+(-cx)+" "+(-cy)+")");}
+ if(variant&&typeof Engine.imageHref==="function"){if(typeof Engine.showImageVariant==="function")Engine.showImageVariant(view,open,variant);else{var href=Engine.imageHref(view.wiki,variant);if(href)set(shape,"href",href);}
+  if(speaking&&value.timed&&part.deformMouth===true){var g=part.geo||{},cx=num(g.x,0)+num(g.w,1)/2,cy=num(g.y,0)+num(g.h,1)/2,base=saved.geometry.transform||"",xs=.95+.1*amount,ys=.85+.3*amount;set(shape,"transform",base+" translate("+cx+" "+cy+") scale("+xs+" "+ys+") translate("+(-cx)+" "+(-cy)+")");}
  }
- else if(speaking&&shape){var width=1+(value.width-1)*strength,height=Math.max(.08,value.height*strength);
+ else if(speaking&&shape&&(part.type!=="image"||part.deformMouth===true)){var width=1+(value.width-1)*strength,height=Math.max(.08,value.height*strength);
   if(part.type==="ellipse"){set(shape,"rx",num(saved.geometry.rx,num(part.geo&&part.geo.rx,5))*width);set(shape,"ry",num(saved.geometry.ry,num(part.geo&&part.geo.ry,6))*height);}
   else{var geo=part.geo||{},cx=num(geo.cx,0),cy=num(geo.cy,0),base=saved.geometry.transform||"";set(shape,"transform",base+" translate("+cx+" "+cy+") scale("+width+" "+height+") translate("+(-cx)+" "+(-cy)+")");}
  }

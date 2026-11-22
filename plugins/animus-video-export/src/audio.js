@@ -148,10 +148,10 @@ async function renderPCM(o,enabled,consume){
      if(rec.reverb>0&&context.createConvolver){
       recSend=context.createGain();recSend.gain.value=Math.min(1,rec.reverb);recSend.connect(Accompaniment.createRoom(context).input());
      }
-     scheduleBuffer(context,voiceBuffers.get(rec.asset),rec,regionStart,regionEnd,rec.start,rec.offset,rec.volume,recSend);
+     scheduleBuffer(context,voiceBuffers.get(rec.asset),rec,regionStart,regionEnd,rec.start,rec.offset,(function(clip){return function(t){return Narration.gainAt(clip,t);};})(rec),recSend);
     }
     if(usedFx.length){
-     var effectsEngine=new SoundFx.Fx(usedFx,{context:context});
+     var effectsEngine=new SoundFx.Fx(usedFx,{context:context,strict:true});
      usedFx.forEach(function(cue){var when=num(cue.t,-1);
       if(when<regionEnd&&when+Math.max(.08,num(cue.duration,1))>=regionStart)effectsEngine.fire(cue,Math.max(0,when-regionStart),Math.max(0,regionStart-when));
      });

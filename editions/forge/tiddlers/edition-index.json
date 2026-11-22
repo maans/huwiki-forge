@@ -174,7 +174,7 @@
     "edition-id": "theseus-ship",
     "name": "The Ship of Theseus",
     "status": "test",
-    "version": "0.1.3",
+    "version": "0.2.0-beta.1",
     "order": "02.42",
     "build-url": "https://forge.måns.dk/assembler/?edition=theseus-ship",
     "build-url-da": "https://forge.måns.dk/assembler/?edition=theseus-ship&lang=da",
@@ -183,10 +183,10 @@
     "demo-url-en": "https://forge.måns.dk/demo/?edition=theseus-ship&lang=en",
     "heading-da": "Theseus’ skib",
     "heading-en": "The Ship of Theseus",
-    "description-da": "En kort AniMus-musical om Theseus’ skib. Se to skibe blive til, og giv selv historien en ny slutning.",
-    "description-en": "An editable AniMus musical about the Ship of Theseus. Watch two ships take shape and give the story your own ending.",
-    "note-da": "1 min. 56 sek. · Engelsk tale og sang med danske undertekster.",
-    "note-en": "1 min 56 sec · English dialogue and songs with Danish subtitles."
+    "description-da": "En musical i 14 scener med Mara, Pip og Ione om skibet, træet og det, vi bærer videre.",
+    "description-en": "A fourteen-scene musical with Mara, Pip and Ione about the ship, its timber and what we carry forward.",
+    "note-da": "Dansk og engelsk tale · to sange på hvert sprog · redigér i AniMus.",
+    "note-en": "Danish and English dialogue · two songs in each language · editable in AniMus."
   },
   {
     "title": "$:/huwiki/forge/edition/ai",

@@ -8,6 +8,7 @@ module-type: library
 var Language=require("$:/plugins/huwiki/musical/language.js");
 var isDanish=Language.isDanish;
 var Sfx=require("$:/plugins/huwiki/musical/sfx.js");
+var EffectsLibrary=require("$:/plugins/huwiki/musical/effects-library.js");
 var Model=require("$:/plugins/huwiki/cutout/model.js");
 var TrackPreview=require("$:/plugins/huwiki/musical/track-preview.js");
 function optionalSvgLayers(){
@@ -56,7 +57,7 @@ function attach(o){
  L.volume=da?"Lydstyrke (%)":ui("Volume (%)");
  L.mute=da?"Slå lyd fra":ui("Mute");
  L.overlap=da?"Overlap":ui("Overlap");
- L.help=da?"To musikspor og ét effektspor. Flere musikklip kan ligge på samme spor. Træk klip for at flytte dem, og lav crossfades mellem musik A og B. Dobbeltklik på et musikklip for at åbne nodeeditoren.":ui("Two reusable music lanes and one SFX lane. Place multiple clips on either lane; crossfade between A and B. Double-click a music clip to edit its ABC notation.");
+ L.help=da?"Dobbeltklik på et effektklip for at udskifte eller slette det. Fold effektsporene ud for at redigere varighed og overlap.":ui("Double-click an effect clip to replace or delete it. Expand effect lanes to edit duration and overlaps.");
 
  if(!Array.isArray(m.songs)||!m.songs.length)m.songs=[{id:"song-1",score:o.scoreTitle,start:0,duration:film.duration,kind:"complete-abc"}];
  m.songs=Playlist.reflow(m.songs,o.scoreTitle);
@@ -88,7 +89,9 @@ function attach(o){
   if(!m.figureTransforms[c.target])m.figureTransforms[c.target]={keys:[{t:0,x:0,y:0,r:0,sx:1,sy:1,skewX:0,skewY:0,easing:'smooth'}]};
   tracks.push({id:'figure:'+c.target,kind:'figure',part:c.target,name:(da?'Hele objekt · ':ui('Whole object · '))+displayName(c.name||c.target)});
  });
- tracks.push({id:"sfx",kind:"sfx",name:da?"Lydeffekter (SFX)":ui("Sound effects (SFX)")});
+ tracks.push({id:"sfx",kind:"sfx",name:da?"MIDI-effekter":ui("MIDI effects")});
+ tracks.push({id:"audio-fx",kind:"audio-fx",name:da?"Audioeffekter":ui("Audio effects")});
+ var effectExpanded={sfx:false,"audio-fx":false},effectLibrary=null,lastFxOpen=0;
  tracks.push({id:"audio-lane",kind:"audio-lane",name:da?"Indtaling og lydfiler":ui("Voice and audio files")});
  tracks.push({id:"camera-A",kind:"camera",name:L.cameraA},{id:"camera-B",kind:"camera",name:L.cameraB},{id:"cuts",kind:"cut",name:L.cuts});
  tracks=tracks.filter(function(t){return t.kind!=='part'||!!sceneForPart(t.part,o.view,0);});
@@ -113,7 +116,7 @@ function attach(o){
   ensureFaceTrack(context||{actorId:k.actor,label:k.actor});
  });
  m.animationClips.forEach(function(c){map["accent:"+c.id]={id:"accent:"+c.id,kind:"accent",clipId:c.id,name:displayName(c.name||c.id)+" · solo"};});
- function audioTrack(t){return ["song","song-lane","audio","audio-lane","sfx"].indexOf(t.kind)>=0;}
+ function audioTrack(t){return ["song","song-lane","audio","audio-lane","sfx","audio-fx"].indexOf(t.kind)>=0;}
  function setPreviewEnabled(id,enabled){
   preview.set(id,enabled!==false);previewControls.forEach(function(control){control.update();});
   if(o.onPreviewChange)o.onPreviewChange();o.repaint();
@@ -179,7 +182,7 @@ function attach(o){
  function audioTracks(){return m.audioClips.map(function(c,i){return {id:'audio:'+c.id,kind:'audio',index:i,name:displayName(c.name||c.role||c.id)};});}
  function musicLanes(){return [{id:"music:A",kind:"song-lane",lane:"A",name:da?"♫ Musik A":ui("♫ Music A")},
   {id:"music:B",kind:"song-lane",lane:"B",name:da?"♫ Musik B":ui("♫ Music B")}];}
- function group(t){return (t.kind==="song"||t.kind==="song-lane"||t.kind==="sfx"||t.kind==='audio'||t.kind==='audio-lane')?"music":(t.kind==="camera"||t.kind==="cut")?"camera":(t.id==="lights"||t.kind==="captions"||["backdrop","stage","foreground"].indexOf(t.id)>=0)?"scene":"animation";}
+ function group(t){return (t.kind==="song"||t.kind==="song-lane"||t.kind==="sfx"||t.kind==='audio'||t.kind==='audio-lane'||t.kind==='audio-fx')?"music":(t.kind==="camera"||t.kind==="cut")?"camera":(t.id==="lights"||t.kind==="captions"||["backdrop","stage","foreground"].indexOf(t.id)>=0)?"scene":"animation";}
  function track(){if(!choice.id)return null;return songTracks().concat(audioTracks()).find(function(s){return s.id===choice.id;})||map[choice.id]||songTracks()[0]||tracks[0];}
  function axisDuration(){return Math.max(1,o.duration(),film.duration,Playlist.total(m.songs));}
  function part(t){var scene=t.kind==='film-part'?film:sceneForPart(t.part,o.view,0)||source;return scene&&(scene.parts||[]).find(function(p){return p.id===t.part;});}
@@ -590,25 +593,37 @@ function attach(o){
   input.oninput=function(){output.textContent=input.value+"%";k[field]=Number(input.value)/100;};
   input.onchange=function(){input.oninput();save(track());};
  }
+ function openEffects(t,k){
+  if(effectLibrary)return;
+  if(o.pause)o.pause();
+  var audioMode=t.kind==="audio-fx"||recordedFx(k);
+  effectLibrary=EffectsLibrary.open({doc:doc,wiki:o.wiki,host:root,danish:da,ui:ui,mode:audioMode?"audio":"synth",presets:Sfx.PRESETS,selected:k,
+   onPause:o.pause,onPreview:function(entry){if(o.previewFx)o.previewFx({type:entry.id,duration:1,volume:.7,reverb:0});},
+   onStopPreview:function(){if(o.stopPreviewFx)o.stopPreviewFx();},
+   onClose:function(){effectLibrary=null;},
+   onChoose:function(entry){
+    if(audioMode){
+     if(k)EffectsLibrary.replaceAudio(k,entry);
+     else {k=EffectsLibrary.makeClip(entry,playhead,axisDuration());m.audioClips.push(k);}
+     save({kind:"audio"});choice={id:"audio:"+k.id,key:0};draw();o.repaint();
+    }else if(k){k.type=entry.id;save(t);choice={id:"sfx",key:m.sfx.indexOf(k)};draw();o.repaint();}
+    else newPoint(t,playhead,entry.id);
+   },onDelete:k?function(){
+    if(audioMode){m.audioClips=m.audioClips.filter(function(c){return c!==k;});save({kind:"audio"});choice={id:"audio-fx",key:-1};}
+    else {m.sfx=m.sfx.filter(function(c){return c!==k;});save(t);choice={id:"sfx",key:-1};}
+    draw();o.repaint();
+   }:null});
+ }
  function fxForm(t,k){
-  var picker=el(doc,"details","huw-musical-fx-picker",undefined,inspector);
-  el(doc,"summary","",da?"Tilføj lydeffekt":ui("Add sound effect"),picker);picker.open=!k;
-  var grid=el(doc,"div","huw-musical-fx-grid",undefined,picker);
-  Object.keys(Sfx.PRESETS).forEach(function(type){
-   var name=fxName(type),btn=el(doc,"button","",undefined,grid);btn.type="button";btn.dataset.fxType=type;
-   el(doc,"span","",Sfx.PRESETS[type][0],btn).setAttribute("aria-hidden","true");el(doc,"span","",name,btn);
-   btn.onclick=function(){newPoint(t,playhead,type);};
-  });
+  var audioMode=t.kind==="audio-fx"||recordedFx(k),chooseEffect=el(doc,"button","huw-musical-open-effects",k?(da?"Udskift eller slet effekt":ui("Replace or delete effect")):(da?"＋ Effektbibliotek":ui("＋ Effect library")),inspector);chooseEffect.type="button";
+  chooseEffect.onclick=function(){openEffects(t,k);};
   if(!k)return;
-  formSelect(k,da?"Lyd":ui("Sound"),"type",Object.keys(Sfx.PRESETS).map(function(type){return [type,Sfx.PRESETS[type][0]+" "+fxName(type)];}));
-  formText(k,L.name,"label");
-  formNumber(k,L.time,"t",.05,0,Math.max(0,film.duration-num(k.duration,1)));
-  formNumber(k,da?"Varighed (sek.)":ui("Duration (sec)"),"duration",.05,.08,Math.max(.08,film.duration-k.t));
+  formText(k,L.name,audioMode?"name":"label");
+  formNumber(k,L.time,audioMode?"start":"t",.05,0,Math.max(0,film.duration-num(k.duration,1)));
+  formNumber(k,da?"Varighed (sek.)":ui("Duration (sec)"),"duration",.05,.02,audioMode?Math.max(.02,(k.sourceDuration||film.duration)-num(k.offset,0)):Math.max(.08,film.duration-k.t));
   fxLevel(k,"volume",da?"Lydstyrke":ui("Volume"),1);fxLevel(k,"reverb",da?"Rumklang":ui("Reverb"),0);
-  var actions=el(doc,"div","huw-musical-key-actions",undefined,inspector);
-  var audition=el(doc,"button","",da?"▶ Lyt":ui("▶ Listen"),actions);audition.type="button";
-  audition.onclick=function(){if(o.previewFx)o.previewFx(k);};
-  var del=el(doc,"button","",L.remove,actions);del.type="button";del.onclick=function(){removePoint(t);};
+  if(audioMode){formNumber(k,L.fadeIn,"fadeIn",.05,0,k.duration);formNumber(k,L.fadeOut,"fadeOut",.05,0,k.duration);}
+  if(!audioMode){var audition=el(doc,"button","",da?"▶ Lyt":ui("▶ Listen"),inspector);audition.type="button";audition.onclick=function(){if(o.previewFx)o.previewFx(k);};}
  }
  function fxBlock(lane,t,k,index,axis,level){
   var recorded=recordedFx(k),field=recorded?"start":"t",id=recorded?"audio:"+k.id:t.id;
@@ -617,21 +632,31 @@ function attach(o){
   var block=el(doc,"button","huw-musical-fx-clip",undefined,lane);block.type="button";
   block.dataset.fxType=recorded?"recording":k.type;block.style.top=(level*27+3)+"px";
   var name=recorded?displayName(k.name||k.asset):(k.label||fxName(k.type));
+  var collapsed=!effectExpanded[t.id];block.classList.toggle("is-collapsed",collapsed);block.dataset.fxId=k.id||String(index);
   el(doc,"span","huw-musical-fx-icon",recorded?(k.icon||"🔊"):preset[0],block).setAttribute("aria-hidden","true");
   el(doc,"span","huw-musical-fx-name",name,block);
   var handle=el(doc,"span","huw-musical-fx-trim","",block);
   handle.title=da?"Træk for at ændre varighed":ui("Drag to change duration");
   function paint(){
-   block.style.left=(100*k[field]/axis)+"%";block.style.width=(100*num(k.duration,1)/axis)+"%";
+   block.style.left=(100*k[field]/axis)+"%";block.style.width=collapsed?"24px":(100*num(k.duration,1)/axis)+"%";
    block.title=name+" · "+round(k[field])+" s · "+round(num(k.duration,1))+" s";block.setAttribute("aria-label",block.title);
   }
   paint();if(id===choice.id&&(recorded||index===choice.key))block.classList.add("is-selected");
-  block.onclick=function(e){e.stopPropagation();choose(id,recorded?0:keys(t).indexOf(k));o.seek(toAudio(k[field]));};
+  block.onclick=function(e){
+   e.stopPropagation();var now=Date.now(),tapId="fx:"+(k.id||index),last=lastClipTap,isDouble=last&&last.id===tapId&&now-last.time<480&&Math.abs(e.clientX-last.x)<30&&Math.abs(e.clientY-last.y)<30;
+   lastClipTap=isDouble?null:{id:tapId,time:now,x:e.clientX,y:e.clientY};
+   if(o.pause)o.pause();
+   if(choice.id!==id||(!recorded&&choice.key!==m.sfx.indexOf(k)))choose(id,recorded?0:m.sfx.indexOf(k));
+   o.seek(toAudio(k[field]));
+   if(isDouble){lastFxOpen=now;openEffects(t,k);}
+  };
+  block.ondblclick=function(e){e.preventDefault();e.stopPropagation();if(Date.now()-lastFxOpen>150){lastFxOpen=Date.now();openEffects(t,k);}};
+  block.onkeydown=function(e){if(e.key==="Enter"){e.preventDefault();openEffects(t,k);}};
   block.onpointerdown=function(e){
-   if(e.button!==0)return;e.stopPropagation();var x=e.clientX,rect=lane.getBoundingClientRect(),start=k[field],length=num(k.duration,1),trim=e.target===handle,moved=false;
-   block.setPointerCapture(e.pointerId);
+   if(e.button!==undefined&&e.button!==0)return;e.stopPropagation();var x=e.clientX,rect=lane.getBoundingClientRect(),start=k[field],length=num(k.duration,1),trim=!collapsed&&e.target===handle,moved=false;
+   if(block.setPointerCapture)block.setPointerCapture(e.pointerId);
    block.onpointermove=function(ev){
-    var dx=ev.clientX-x;if(!moved&&Math.abs(dx)<3)return;moved=true;
+    var dx=ev.clientX-x;if(!moved&&Math.abs(dx)<3)return;if(!moved&&o.pause)o.pause();moved=true;lastClipTap=null;
     var change=dx*axis/Math.max(1,rect.width);
     if(trim)k.duration=round(lim(length+change,.08,Math.min(maxLength,Math.max(.08,axis-start))));
     else k[field]=round(lim(start+change,0,Math.max(0,axis-length)));
@@ -652,7 +677,7 @@ function attach(o){
    "song":da?"Musikklip":ui("Music clip"),"part":da?"Kulisse / del":ui("Scenery / part"),
    "film-part":da?"Sceneobjekt / rekvisit":ui("Stage object / prop"),"camera":da?"Kamera":ui("Camera"),
    "motion":da?"Ledbevægelse":ui("Limb motion"),"accent":da?"Bevægelsesaccent":ui("Motion accent"),"face":da?"Ansigtsudtryk og autosync":ui("Face expressions and autosync"),
-   "light":da?"Lys":ui("Lighting"),"sfx":da?"Lydeffekt":ui("Sound effect"),"cut":da?"Kameraklip":ui("Camera cut"),
+   "audio-fx":da?"Audioeffekter":ui("Audio effects"),"light":da?"Lys":ui("Lighting"),"sfx":da?"MIDI-effekt":ui("MIDI effect"),"cut":da?"Kameraklip":ui("Camera cut"),
    "captions":da?"Undertekster":ui("Captions"),"scene-range":da?"Scene":ui("Scene"),"object-browser":da?"Objektvælger":ui("Object picker")};
   el(doc,"span","huw-musical-inspector-type",kindNames[t.kind]||(da?"Egenskaber":ui("Properties")),inspector);
   el(doc,"strong","huw-musical-inspector-selection",t.name,inspector);
@@ -664,7 +689,7 @@ function attach(o){
    t.kind==="motion"?(da?"Dette punkt ændrer én del af figurens bevægelsesløkke.":ui("This point changes one part of the figure's motion loop.")):
    t.kind==="sfx"?(da?"Træk et lydklip for at flytte det, eller træk i højre kant for at ændre varigheden.":ui("Drag a sound clip to move it, or drag its right edge to change its duration.")):"";
   if(explanation)el(doc,"p","huw-musical-inspector-help",explanation,inspector);
-  if(t.kind==="sfx"){fxForm(t,k);return;}
+  if(t.kind==="sfx"||t.kind==="audio-fx"||t.kind==="audio"&&recordedFx(k)){fxForm(t,k);return;}
   if(t.kind==='face'){
    el(doc,'p','huw-musical-inspector-help',da?'Valgene gælder fra nøglebilledet og frem for denne figur, også i senere scener. Mundvalg forbedrer autosync for den valgte bogstavgruppe.':ui('Choices apply from this keyframe onwards for this character, including later scenes. Mouth choices update autosync for the selected letter group.'),inspector);
    if(k){el(doc,'p','huw-musical-face-key-description',faceKeyLabel(k),inspector);formNumber(k,L.time,'t',.05,0,axisDuration());}
@@ -879,8 +904,8 @@ function attach(o){
    var rect=ruleLane.getBoundingClientRect(),fraction=lim((ev.clientX-rect.left)/Math.max(1,rect.width),0,1);
    o.seek(toAudio(fraction*axis));
   };
-  var all=musicLanes().concat(tracks.filter(function(t){return t.kind==="sfx";}))
-   .concat(tracks.filter(function(t){return t.kind!=="song"&&t.kind!=="sfx";}))
+  var all=musicLanes().concat(tracks.filter(function(t){return t.kind==="sfx"||t.kind==="audio-fx";}))
+   .concat(tracks.filter(function(t){return t.kind!=="song"&&t.kind!=="sfx"&&t.kind!=="audio-fx";}))
    .filter(function(t){return filter==="all"||group(t)===filter;});
   all.forEach(function(t){
    var row=el(doc,"div","huw-musical-track",undefined,rows);
@@ -920,17 +945,21 @@ function attach(o){
     // timeline and inspector just because the user scrubbed on a touch screen.
     o.seek(toAudio(u*axis));
    };
-   if(t.kind==="sfx"){
+   if(t.kind==="sfx"||t.kind==="audio-fx"){
+    row.classList.add("huw-musical-effects-track");row.classList.toggle("is-collapsed",!effectExpanded[t.id]);
+    var fold=el(doc,"button","huw-musical-fx-fold",effectExpanded[t.id]?"▾":"▸",title);fold.type="button";fold.setAttribute("aria-expanded",String(!!effectExpanded[t.id]));
+    fold.title=(effectExpanded[t.id]?(da?"Klap sammen: ":ui("Collapse: ")):(da?"Fold ud: ":ui("Expand: ")))+t.name;fold.setAttribute("aria-label",fold.title);
+    fold.onclick=function(ev){ev.preventDefault();ev.stopPropagation();effectExpanded[t.id]=!effectExpanded[t.id];draw();};
     var addFx=el(doc,"button","huw-musical-fx-add","+",title);addFx.type="button";
-    addFx.title=da?"Tilføj lydeffekt":ui("Add sound effect");addFx.setAttribute("aria-label",addFx.title);
-    addFx.onclick=function(ev){ev.stopPropagation();choose(t.id,-1);};
-    var ends=[],minimumSpan=21*axis/Math.max(1,lane.clientWidth||800),allFx=keys(t).concat(m.audioClips.filter(recordedFx));
+    addFx.title=da?"Åbn effektbibliotek":ui("Open effect library");addFx.setAttribute("aria-label",addFx.title+": "+t.name);
+    addFx.onclick=function(ev){ev.stopPropagation();openEffects(t,null);};
+    var ends=[],minimumSpan=21*axis/Math.max(1,lane.clientWidth||800),allFx=t.kind==="sfx"?m.sfx.slice():m.audioClips.filter(recordedFx);
     function fxStart(c){return recordedFx(c)?c.start:c.t;}
     allFx.sort(function(a,b){return fxStart(a)-fxStart(b);}).forEach(function(k){
-     var start=fxStart(k),level=clipLevel(ends,start,Math.max(minimumSpan,num(k.duration,1)));
-     fxBlock(lane,t,k,keys(t).indexOf(k),axis,level);
+     var start=fxStart(k),level=effectExpanded[t.id]?clipLevel(ends,start,Math.max(minimumSpan,num(k.duration,1))):0;
+     fxBlock(lane,t,k,m.sfx.indexOf(k),axis,level);
     });
-    if(ends.length>1)lane.style.minHeight=(ends.length*27+5)+"px";
+    lane.style.minHeight=effectExpanded[t.id]?Math.max(32,ends.length*27+5)+"px":"30px";
    }else if(t.kind==="object-browser"){
     // This single compact lane is a fast selector for *untracked* props and
     // scenery as well as puppets. It does not create 40 extra timeline rows.
@@ -1371,7 +1400,7 @@ function attach(o){
   return true;
  }
  function setZoom(value){zoom=lim(value,1,5);rows.style.setProperty("--musical-zoom",String(zoom));draw();}
- function addKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)newPoint(t,playhead);}
+ function addKeyframe(){var t=track();if(t&&(t.kind==="sfx"||t.kind==="audio-fx"))return openEffects(t,null);if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)newPoint(t,playhead);}
  function removeKeyframe(){var t=track();if(t&&['song','scene-range','audio','audio-lane','object-browser','captions'].indexOf(t.kind)<0)removePoint(t);}
  draw();return {paint:paint,redraw:draw,revealPlayhead:revealPlayhead,selectPart:selectPart,selectSong:selectSong,clearSelection:clearSelection,beginPartMove:beginPartMove,
   openAnimation:openAnimation,closeAnimation:closeAnimation,inClipDetail:function(){return !!detailClipId;},getDetailClip:activeDetail,
@@ -1387,7 +1416,7 @@ function attach(o){
   getCaptionCues:function(){return captionCues.slice();},
   isJointMove:isJointMove,getPartPivot:getPartPivot,
   resolvePartScene:function(id){return sceneForPart(id,o.view,0);},
-  dispose:function(){clearPreviewVisibility();if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};
+  dispose:function(){if(effectLibrary)effectLibrary.close();clearPreviewVisibility();if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};
 }
 exports.attach=attach;exports.ensureMusical=ensureMusical;exports.interpolate=interpolate;
 })();
