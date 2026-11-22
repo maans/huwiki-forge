@@ -188,6 +188,30 @@ function mount(o){
   options.setAttribute("aria-label",say("Ansigtsdel","Facial part"));
   var choices=el(doc,"select","",undefined,section);
   choices.setAttribute("aria-label",say("Variant","Variant"));
+  var hints={
+   rest:["Pause · Lad læberne hvile let mod hinanden.","Rest · Let the lips meet gently.","M8 20 Q24 23 40 20"],
+   M:["M, B, P · Sig »mor«. Tegn læberne presset sammen lige før vokalen.","M, B, P · Say ‘mum’. Draw the lips pressed together just before the vowel.","M8 20 Q24 17 40 20 Q24 24 8 20Z"],
+   A:["A · Sig »far«. Sænk kæben, og tegn en høj, åben mund.","A · Say ‘ah’. Drop the jaw and draw a tall opening.","M11 13 Q24 8 37 13 Q35 34 24 33 Q13 34 11 13Z"],
+   E:["E, I, Y, Æ · Prøv et langt i som i »is«. Træk mundvigene ud, og lad en smal åbning stå.","E, I, Y, Æ · Say ‘ee’ as in ‘see’. Spread the corners and leave a narrow opening.","M5 17 Q24 14 43 17 Q25 29 5 17Z"],
+   O:["O, U, Å, Ø · Sig »sol«. Skyd læberne lidt frem, og tegn en rund åbning.","O, U, Å, Ø · Say ‘oh’. Push the lips forward and draw a round opening.","M16 20 A8 11 0 1 0 32 20 A8 11 0 1 0 16 20Z"],
+   F:["F, V · Sig »fisk«. Lad fortænderne i overmunden berøre underlæben.","F, V · Say ‘fish’. Rest the upper front teeth against the lower lip.","M8 16 Q24 13 40 16 Q35 28 24 25 Q15 26 8 16Z M12 17 L14 21 L34 21 L36 17"],
+   C:["Andre konsonanter · Sig s som i »sol«. Tegn en lille åbning med tænderne tæt på hinanden.","Other consonants · Say ‘s’ as in ‘sun’. Leave a small gap with the teeth close together.","M8 18 Q24 15 40 18 Q31 25 12 23Z M10 20 L38 20"]
+  };
+  var guide=el(doc,"div","huw-puppet-face-guide",undefined,section);
+  var example=doc.createElementNS(NS,"svg");example.setAttribute("viewBox","0 0 48 40");example.setAttribute("width","60");example.setAttribute("height","50");example.setAttribute("aria-hidden","true");guide.appendChild(example);
+  var outline=doc.createElementNS(NS,"path");outline.setAttribute("fill","none");outline.setAttribute("stroke","currentColor");outline.setAttribute("stroke-width","2");example.appendChild(outline);
+  var prompt=el(doc,"span","",undefined,guide);prompt.setAttribute("aria-live","polite");
+  var progress=el(doc,"p","huw-puppet-hint",undefined,guide);
+  function updateGuide(){
+   var mouth=options.value==="authoredMouth",hint=mouth&&hints[choices.value];
+   example.style.display=hint?"":"none";
+   if(hint)outline.setAttribute("d",hint[2]);
+   prompt.textContent=hint?hint[da?0:1]:say("Tegn begge øjne, som de skal se ud i det valgte udtryk. Blink bruger tegningen for Lukkede.","Draw both eyes in the selected pose. Blink uses the Closed drawing.");
+   var part=parts.find(function(p){return p.parent===head.id&&p.facialRole===options.value;});
+   var completed=(part&&part.variants||[]).filter(function(v){return v.id!=="original";});
+   progress.textContent=mouth?say("Tegn munden på samme sted på hovedet hver gang. ","Keep the mouth in the same place on the head each time. ")+
+    say("Mundformer tegnet: ","Mouth shapes drawn: ")+completed.length+" / "+Face.SOUNDS.length:"";
+  }
   var box=imageInfo(head),canvas=el(doc,"canvas","",undefined,section);
   canvas.width=Math.min(768,Math.max(96,Math.round(480*Math.min(1,box.w/box.h))));
   canvas.height=Math.max(1,Math.min(768,Math.round(canvas.width*box.h/box.w)));
@@ -209,8 +233,8 @@ function mount(o){
   canvas.onpointermove=function(e){if(pen&&pen.id===e.pointerId)paint(e,false);};
   canvas.onlostpointercapture=function(){pen=null;};
   function clear(){if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height);painted=false;}
-  function refreshChoices(){choices.textContent="";(options.value==="authoredMouth"?Face.SOUNDS:Face.EYES.filter(function(v){return v.id!=="auto"&&v.id!=="blink";})).forEach(function(v){el(doc,"option","",da?v.label:v.en,choices).value=v.id;});clear();}
-  options.onchange=refreshChoices;choices.onchange=clear;refreshChoices();
+  function refreshChoices(){choices.textContent="";(options.value==="authoredMouth"?Face.SOUNDS:Face.EYES.filter(function(v){return v.id!=="auto"&&v.id!=="blink";})).forEach(function(v){el(doc,"option","",da?v.label:v.en,choices).value=v.id;});clear();updateGuide();}
+  options.onchange=refreshChoices;choices.onchange=function(){clear();updateGuide();};refreshChoices();
   button(section,say("Ryd tegning","Clear drawing"),clear);
   button(section,say("Brug tegning","Use drawing"),function(){
    if(!painted)return;
@@ -223,7 +247,7 @@ function mount(o){
    if(mouth)variant.viseme=id;
    var index=part.variants.findIndex(function(v){return v.id===id;});
    if(index<0)part.variants.push(variant);else part.variants[index]=variant;
-   writable();renderTree();renderPreview();msg.textContent=say("Tegningen er tilføjet. Vælg Gem og tilbage.","Drawing added. Choose Save and back.");
+   writable();renderTree();renderPreview();updateGuide();msg.textContent=say("Tegningen er tilføjet. Vælg Gem og tilbage.","Drawing added. Choose Save and back.");
   });
  }
  function renderInspector(){if(!inspector)return;inspector.textContent="";var p=selectedNode();if(!p){el(doc,"p","huw-puppet-hint",clip?L.choose:da?"Vælg objektet eller en af dets dele i visningen eller listen.":ui("Select the object or one of its parts in the preview or list."),inspector);return;}
