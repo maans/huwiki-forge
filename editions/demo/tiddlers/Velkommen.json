@@ -1,5 +1,6 @@
 {
   "title": "Demo: Velkommen",
   "type": "text/vnd.tiddlywiki",
-  "text": "! TiddlyWiki Forge — demo\n\nDenne tiddler er indsat fra Edition-manifestet, inden TiddlyWiki startede.\n\nJavaScript-plugin startet: ''{{$:/state/HUWikiForge/DemoPluginStarted}}''\n\nRedigér denne tiddler, og brug derefter TiddlyWikis almindelige //Gem//-funktion."
+  "text": "<$list filter=\"[{$:/language}else[$:/languages/en-GB]prefix[$:/languages/da]]\" variable=\"locale\">\n! Standard-TiddlyWiki med Forge Plugin Library\n\nDette er en almindelig TiddlyWiki med Forge Plugin Library tilføjet.\n\nOpret dine egne tiddlere med plusknappen, og gem med TiddlyWikis Gem-knap.\n\nDu kan installere flere plugins fra //Forge Plugin Library// via [[Kontrolpanel|$:/ControlPanel]] → Plugins → Get more plugins. Det kræver internet at hente plugins. F-knappen fører tilbage til Forge.\n</$list>\n<$list filter=\"[{$:/language}else[$:/languages/en-GB]!prefix[$:/languages/da]]\" variable=\"locale\">\n! Standard TiddlyWiki with Forge Plugin Library\n\nThis is a standard TiddlyWiki with Forge Plugin Library added.\n\nUse the plus button to create your own tiddlers, and save with TiddlyWiki’s Save button.\n\nInstall more plugins from //Forge Plugin Library// via the [[Control Panel|$:/ControlPanel]] → Plugins → Get more plugins. Downloading plugins requires internet access. The F button takes you back to Forge.\n</$list>",
+  "caption": "TiddlyWiki + Forge Plugin Library"
 }

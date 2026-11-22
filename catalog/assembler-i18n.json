@@ -60,10 +60,12 @@
     },
     "demo": {
       "da": {
-        "name": "Demo Edition"
+        "name": "TiddlyWiki + Forge Plugin Library",
+        "description": "Standard-TiddlyWiki med Forge Plugin Library tilføjet."
       },
       "en": {
-        "name": "Demo Edition"
+        "name": "TiddlyWiki + Forge Plugin Library",
+        "description": "Standard TiddlyWiki with Forge Plugin Library added."
       }
     },
     "cutout": {
