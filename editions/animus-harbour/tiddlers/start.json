@@ -1,0 +1,19 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "Græsk havn · Startscene"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[AniMus · Harbour start]]"
+  },
+  {
+    "title": "AniMus · Harbour start",
+    "type": "text/vnd.tiddlywiki",
+    "text": "! AniMus · Græsk havn / Greek harbour\n\n<$animus-new-project template=\"$:/plugins/huwiki/animus-theme-greek-harbour/template\"/>\n"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  }
+]

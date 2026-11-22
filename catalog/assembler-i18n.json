@@ -36,10 +36,12 @@
     },
     "animus": {
       "da": {
-        "name": "AniMus Forge I (beta)"
+        "name": "AniMus · Animationsværksted",
+        "description": "Start med en tom scene eller en startpakke. Åbn de færdige forestillinger fra værkstedets galleri."
       },
       "en": {
-        "name": "AniMus Forge I (beta)"
+        "name": "AniMus · Animation workshop",
+        "description": "Start with a blank stage or a starter template. Open complete productions separately from the workshop gallery."
       }
     },
     "ai": {
@@ -130,6 +132,36 @@
       "en": {
         "name": "The Ship of Theseus",
         "description": "A fourteen-scene musical with Mara, Pip and Ione about the ship, its timber and what we carry forward."
+      }
+    },
+    "animus-orchestra": {
+      "da": {
+        "name": "Tændstikorkestret",
+        "description": "Åbner i en selvstændig AniMus-wiki."
+      },
+      "en": {
+        "name": "The Stick Orchestra",
+        "description": "Opens in a separate AniMus wiki."
+      }
+    },
+    "animus-tinderbox": {
+      "da": {
+        "name": "Fyrtøjet",
+        "description": "Åbner i en selvstændig AniMus-wiki."
+      },
+      "en": {
+        "name": "The Tinderbox",
+        "description": "Opens in a separate AniMus wiki."
+      }
+    },
+    "animus-harbour": {
+      "da": {
+        "name": "Græsk havn · Startscene",
+        "description": "Åbner i en selvstændig AniMus-wiki."
+      },
+      "en": {
+        "name": "Greek harbour starter",
+        "description": "Opens in a separate AniMus wiki."
       }
     }
   },

@@ -358,3 +358,50 @@ test('a different part focuses automatically and a direct pointer gesture never 
  const focused=h.preview.getAttribute('viewBox');h.dock.querySelector('[data-figure-fit-selected]').click();assert.equal(h.preview.getAttribute('viewBox'),focused);
  assert.deepEqual(h.writes,[]);
 });
+
+
+test('cross-scene export skips hidden timeline rebuilds and restores switches even after an explicit redraw',()=>{
+ const h=harness(),before=JSON.stringify(h.records);
+ h.editor.setTrackVisible('captions',false);h.editor.setTrackAudible('audio-lane',false);
+ const originalRow=h.host.querySelector('[data-layer-id="prisoner"]'),restore=h.editor.beginExport();
+ h.options.seek(2);assert.equal(h.host.querySelector('[data-layer-id="prisoner"]'),originalRow,'export does not build rows for another scene');
+ h.editor.redraw();assert.equal(h.host.querySelector('[data-preview-track="captions"]').getAttribute('aria-pressed'),'true');
+ h.options.seek(13);restore();
+ for(const id of ['captions','audio-lane'])assert.equal(h.host.querySelector('[data-preview-track="'+id+'"]').getAttribute('aria-pressed'),'false');
+ assert.equal(h.editor.isTrackVisible('captions'),false);assert.equal(h.editor.isAudioAudible({id:'voice',kind:'speech'}),false);
+ assert.equal(JSON.stringify(h.records),before);assert.deepEqual(h.writes,[]);
+});
+
+test('the rotation handle remains inside the preview after fitting and manual zoom without changing the camera or sources',()=>{
+ const h=harness(),before=JSON.stringify(h.records),camera=h.view.svg.getAttribute('viewBox');h.panel.select('prisoner-forearm-right');
+ const range=h.dock.querySelector('[data-figure-zoom]');
+ for(const percent of [100,400,800]){
+  range.value=String(percent);range.dispatch('input');
+  const [x,y,w,height]=h.preview.getAttribute('viewBox').split(' ').map(Number),handle=h.preview.querySelector('[data-figure-action="rotate"]');
+  const cx=Number(handle.getAttribute('cx')),cy=Number(handle.getAttribute('cy')),r=Number(handle.getAttribute('r'));
+  assert.ok(cx-r>=x&&cx+r<=x+w,'the full horizontal hit area stays visible');
+  assert.ok(cy-r>=y&&cy+r<=y+height,'the full vertical hit area stays visible');
+ }
+ assert.equal(JSON.stringify(h.records),before);assert.equal(h.view.svg.getAttribute('viewBox'),camera);assert.deepEqual(h.writes,[]);
+});
+
+test('timeline starts with whole objects, lazily unfolds their real hierarchy, and leaves scene data intact',()=>{
+ const h=harness(),before=JSON.stringify(h.data),source=h.records.Second.text;
+ const actor=()=>h.host.querySelector('[data-layer-id="prisoner"]');assert.ok(actor());
+ assert.equal(actor().querySelector('.huw-musical-group-fold').getAttribute('aria-expanded'),'false');
+ assert.equal(h.host.querySelector('[data-track-id="part:prisoner-head"]'),null);
+ actor().querySelector('.huw-musical-group-fold').click();
+ assert.ok(h.host.querySelector('[data-track-id="face:prisoner"]'));
+ const head=()=>h.host.querySelector('[data-track-id="part:prisoner-head"]');assert.ok(head());
+ assert.equal(h.host.querySelector('[data-track-id="part:prisoner-eyes"]'),null);
+ head().querySelector('.huw-musical-group-fold').click();assert.ok(h.host.querySelector('[data-track-id="part:prisoner-eyes"]'));
+ actor().querySelector('.huw-musical-group-fold').click();assert.equal(head(),null);
+ assert.equal(JSON.stringify(h.data),before);assert.equal(h.records.Second.text,source);assert.equal(h.writes.length,0);
+});
+test('folded recordings use one overview and create editable clip nodes only while expanded',()=>{
+ const h=harness();h.data.musical.audioClips=Array.from({length:180},(_,i)=>({id:'take-'+i,start:i/20,duration:2,name:'Take '+i}));h.editor.redraw();
+ const row=()=>h.host.querySelector('[data-track-id="audio-lane"]');
+ assert.equal(row().querySelectorAll('.huw-musical-recorded-clip').length,0);assert.ok(row().querySelector('.huw-musical-audio-overview'));
+ row().querySelector('.huw-musical-group-fold').click();assert.equal(row().querySelectorAll('.huw-musical-recorded-clip').length,180);
+ row().querySelector('.huw-musical-group-fold').click();assert.equal(row().querySelectorAll('.huw-musical-recorded-clip').length,0);assert.equal(h.writes.length,0);
+});

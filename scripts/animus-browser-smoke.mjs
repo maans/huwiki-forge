@@ -18,6 +18,10 @@ const {manifest,tiddlers}=await loadEdition('http://localhost/editions/animus/ma
  const file=new URL(new URL(url).pathname.slice(1),root);const value=JSON.parse(await readFile(file,'utf8'));return {ok:true,json:async()=>value};
 });
 const initial=new Map(tiddlers.map(t=>[t.title,t]));
+assert.equal(initial.has('$:/plugins/huwiki/animus-example-fyrtoejet'),false,'the small workshop does not load a complete show');
+// The final reader/mixer regression uses a score from the optional production.
+// Install that fixture explicitly now that shows open in independent editions.
+const tinderbox=JSON.parse(await readFile(new URL('plugins/animus-example-fyrtoejet/dist/plugin.json',root),'utf8'));initial.set(tinderbox.title,tinderbox);
 for(const t of [{title:'$:/language',text:'$:/languages/da-DK'},{title:'$:/DefaultTiddlers',text:'[[AniMus Forge I · Start]]'},{title:'$:/StoryList',list:'[[AniMus Forge I · Start]]',text:''},{title:'$:/config/huwiki/abc/audio-engine-mode',text:'original'}])initial.set(t.title,t);
 const html=assembleHtml(await readFile(new URL('core/empty.html',root),'utf8'),[...initial.values()]);
 await mkdir(out,{recursive:true});
@@ -232,6 +236,8 @@ try{
  const stored=await page.evaluate(asset=>$tw.wiki.getTiddler(asset).fields,voice.asset);assert.equal(stored.type,'audio/wav');assert.equal(stored.text,voiceWav.toString('base64'));
  await chooseToolbarItem(show,'workshops','.huw-musical-audio-button');audio=show.locator('.huw-narration-workshop');await audio.locator('.huw-narration-clip').click();assert.equal(await audio.getByLabel('Klip begyndelsen fra (s)',{exact:true}).inputValue(),'0.25');assert.equal(await audio.getByLabel('Slut i lydfil (s)',{exact:true}).inputValue(),'1.5');
  await audio.getByRole('button',{name:'Annuller',exact:true}).click();await audio.waitFor({state:'detached'});
+ assert.equal(await show.locator('.huw-musical-recorded-clip').count(),0,'recorded clips stay unmounted until their lane is opened');
+ await show.locator('.huw-musical-audio-track .huw-musical-group-fold').click();
  const laneClip=show.locator('.huw-musical-recorded-clip');await laneClip.click();assert.equal(await laneClip.getAttribute('aria-pressed'),'true','a single click selects the recorded clip');
  // The first selection redraws the timeline. Real double-click events must
  // still find the replacement clip, including its pointer-capture handlers.
@@ -338,3 +344,4 @@ try{
  if(context)try{await context.tracing.stop({path:fileURLToPath(new URL('trace.zip',out))});}catch(_){}
  if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));
 }
+

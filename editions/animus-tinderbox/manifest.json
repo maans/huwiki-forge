@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "animus-tinderbox",
+  "name": "The Tinderbox",
+  "version": "0.13.0-beta.21-groups.1",
+  "coreVersion": "5.4.1",
+  "tiddlers": [
+    "../shared/libraries.json",
+    "../animus/tiddlers/gallery.json",
+    "tiddlers/start.json"
+  ],
+  "plugins": [
+    "../../themes/modern/dist/theme.json",
+    "../../languages/da-DK/plugin.json",
+    "../../plugins/cutout/dist/plugin.json",
+    "../../plugins/abc/dist/plugin.json",
+    "../../plugins/musical/dist/plugin.json",
+    "../../plugins/animus-video-export/dist/plugin.json",
+    "../../plugins/musescore-import/dist/plugin.json",
+    "../../plugins/site-publisher/dist/plugin.json",
+    "../../plugins/print-article/dist/plugin.json",
+    "../../plugins/animus-caption-i18n/dist/plugin.json",
+    "../../plugins/animus-starter-kenney/dist/plugin.json",
+    "../../plugins/animus-example-fyrtoejet/dist/plugin.json"
+  ]
+}

@@ -42,7 +42,7 @@ test("AniMus Edition and plugin registry reference exact beta packages",async()=
  for(const [filename,title] of packages.concat([["plugins/animus-video-export/dist/plugin.json","$:/plugins/huwiki/animus-video-export"]])){
   const pkg=await load(filename);
   const rel="../../"+filename;
-  assert.ok(manifest.plugins.includes(rel),rel);
+  if(filename.includes('animus-example-'))assert.ok(!manifest.plugins.includes(rel),rel+' is only loaded by its separate show');else assert.ok(manifest.plugins.includes(rel),rel);
   const record=registry.items.find(x=>x.fields.title===title);
   assert.ok(record,title);
   assert.equal(record.path,rel);
@@ -51,5 +51,5 @@ test("AniMus Edition and plugin registry reference exact beta packages",async()=
  const exported=await load("plugins/animus-video-export/dist/plugin.json");
  assert.ok(JSON.parse(exported.text).tiddlers["$:/plugins/huwiki/animus-video-export/runtime.js"]);
  const gallery=await load("editions/animus/tiddlers/gallery.json");
- assert.ok(gallery.some(t=>t.title==="Musical Studio · Forestillinger"&&t.text.includes("Fyrtøjet")&&t.text.includes("Tændstikorkestret")));
+ assert.ok(gallery.some(t=>t.title==="AniMus Forge I · Start"&&t.text.includes("Fyrtøjet")&&t.text.includes("Tændstikorkestret")));
 });

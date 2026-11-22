@@ -16,3 +16,30 @@ test('Background goes behind existing figures; props attach to an existing hand'
 test('Articulated figures preserve hierarchy, crops and unique identities',()=>{const a=api(),local={...entry,category:'figure',assets:[{...entry.assets[0],title:'image'}],parts:[{id:'root',type:'group',keys:[]},{id:'arm',parent:'root',type:'image',asset:'apple',geo:{crop:{x:1,y:2,w:3,h:4,sourceWidth:20,sourceHeight:30}},keys:[]}]};const first=a.place({parts:[]},local).scene;const second=a.place(first,local).scene;assert.equal(new Set(second.parts.map(p=>p.id)).size,4);assert.equal(second.parts[1].parent,second.parts[0].id);assert.equal(second.parts[1].asset,'image');assert.equal(second.parts[1].geo.crop.x,1);});
 test('Malformed image responses and external source URLs are rejected',async()=>{const a=api(),w=wiki();await assert.rejects(a.importEntry(w,{...entry,assets:[{...entry.assets[0],url:'http://example.com/a.png'}]},{fetcher:async()=>response()}),/Unsupported/);await assert.rejects(a.importEntry(w,entry,{fetcher:async()=>({ok:true,headers:{get:()=>null},arrayBuffer:async()=>new ArrayBuffer(24)})}),/PNG/);assert.equal(w.rows.size,0);});
 test('Starting from a template keeps the original and creates independent project sources',()=>{const exported={},w=wiki([{title:'sample',text:JSON.stringify({version:1,id:'sample',kind:'animation',width:960,height:540,duration:16,parts:[{id:'actor',type:'group',keys:[{t:0,x:10}]}]})}]);vm.runInNewContext(fs.readFileSync(new URL('../plugins/musical/src/projects.js',import.meta.url),'utf8'),{exports:exported,$tw:{Tiddler},require:name=>name.includes('widgets/widget')?{widget:function(){}}:name.includes('scenes.js')?{blankScene(){throw Error('template expected');}}:{},Date,Math});const original=w.getTiddlerText('sample');const result=exported.create(w,'My film','sample');const stage=JSON.parse(w.getTiddlerText(result.stageTitle));stage.parts[0].keys[0].x=99;w.addTiddler(new Tiddler({title:result.stageTitle,text:JSON.stringify(stage)}));assert.equal(w.getTiddlerText('sample'),original);assert.equal(JSON.parse(w.getTiddlerText(result.filmTitle)).width,960);assert.notEqual(stage.id,'sample');});
+
+test('a production item downloads its model and own dependencies once, then works offline',async()=>{
+ const a=api(),w=wiki(),urls=[];const item={...entry,id:'production-test',modelUrl:'https://forge.xn--mns-ula.dk/assets/animus/models/test.json'};
+ const model={parts:[{id:'root',type:'group'},{id:'arm',parent:'root',type:'image',asset:'apple'}]};
+ const local=await a.importEntry(w,item,{fetcher:async url=>{urls.push(url);return url===item.modelUrl?{ok:true,text:async()=>JSON.stringify(model)}:response();}});
+ assert.deepEqual(urls,[item.modelUrl,item.assets[0].url]);assert.equal(local.parts[1].parent,'root');
+ const reused=await a.importEntry(w,item,{fetcher:async()=>{throw Error('offline');}});assert.equal(reused.parts.length,2);
+ const placed=a.place({parts:[]},reused).scene;assert.equal(placed.parts[1].parent,placed.parts[0].id);
+});
+test('vector props need only their model, without fake image downloads',async()=>{
+ const a=api(),w=wiki(),model={parts:[{id:'table',type:'path',geo:{d:'M0 0h80v10H0z'},keys:[{t:0}]}]},item={...entry,id:'production-table',assets:[],modelUrl:'https://forge.xn--mns-ula.dk/assets/animus/models/table.json'};
+ let calls=0;const local=await a.importEntry(w,item,{fetcher:async()=>{calls++;return {ok:true,text:async()=>JSON.stringify(model)};}});assert.equal(calls,1);assert.equal(w.rows.size,1);assert.equal(a.place({parts:[]},local).scene.parts[0].type,'path');
+});
+test('a missing or malformed production model leaves no partial imported item',async()=>{
+ const a=api(),w=wiki(),item={...entry,id:'production-bad',assets:[],modelUrl:'https://forge.xn--mns-ula.dk/assets/animus/models/bad.json'};
+ await assert.rejects(a.importEntry(w,item,{fetcher:async()=>({ok:true,text:async()=>JSON.stringify({parts:[]})})}),/Invalid material/);assert.equal(w.rows.size,0);
+});
+
+test('a downloaded audio effect is reusable offline and inserts only on the effects lane',async()=>{
+ const a=api(),w=wiki(),wav=Buffer.alloc(48);wav.write('RIFF',0);wav.write('WAVE',8);
+ const item={...entry,id:'wood-audio',name:'Wood creak',category:'sound',duration:.8,icon:'🪵',assets:[{id:'wood-audio',url:'https://forge.xn--mns-ula.dk/assets/animus/files/audio/wood.wav',mime:'audio/wav'}]};
+ const local=await a.importEntry(w,item,{fetcher:async()=>({ok:true,headers:{get:()=>null},arrayBuffer:async()=>wav.buffer.slice(wav.byteOffset,wav.byteOffset+wav.length)})});
+ const stored=w.getTiddler(local.assets[0].title).fields;assert.equal(stored.type,'audio/wav');assert(stored.tags.includes('AudioEffect'));
+ const film={duration:10,parts:[],musical:{songs:[{id:'song'}],sfx:[{id:'midi'}],audioClips:[{id:'speech',kind:'speech'}]}};
+ const placed=a.placeSound(film,local,3);assert.equal(placed.musical.audioClips.at(-1).kind,'effects');assert.equal(placed.musical.audioClips.at(-1).start,3);assert.deepEqual(placed.musical.songs,film.musical.songs);assert.deepEqual(placed.musical.sfx,film.musical.sfx);assert.equal(film.musical.audioClips.length,1);
+ await a.importEntry(w,item,{fetcher:async()=>{throw Error('offline');}});
+});

@@ -1,0 +1,14 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "Fyrtøjet"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[Fyrtøjet · Start]]"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  }
+]

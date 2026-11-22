@@ -428,6 +428,8 @@ function mount(o){
  });
  trackFilter.value='all';trackFilter.onchange=function(){editor.setFilter(trackFilter.value);};
  var controls=el(doc,"div","huw-musical-edit-controls",undefined,toolbar);
+ var layersButton=button(controls,"huw-musical-layers-button",da?'Lag ↕':ui('Layers ↕'),function(){editor.openLayers();});
+ layersButton.title=da?'Lagrækkefølge · forrest øverst':ui('Layer order · front at top');
  var keyGroup=el(doc,'div','huw-musical-stepper',undefined,controls);
  var addKeyButton=button(keyGroup,"huw-musical-add-key",da?'＋ Nøglebillede':ui('＋ Keyframe'),function(){editor.addKeyframe();setInspector(true);});
  var deleteKeyButton=button(keyGroup,"huw-musical-delete-key","⌫",function(){editor.removeKeyframe();});
