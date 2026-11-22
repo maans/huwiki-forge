@@ -360,6 +360,19 @@ test('a different part focuses automatically and a direct pointer gesture never 
 });
 
 
+test('the rotation handle remains inside the preview after fitting and manual zoom without changing the camera or sources',()=>{
+ const h=harness(),before=JSON.stringify(h.records),camera=h.view.svg.getAttribute('viewBox');h.panel.select('prisoner-forearm-right');
+ const range=h.dock.querySelector('[data-figure-zoom]');
+ for(const percent of [100,400,800]){
+  range.value=String(percent);range.dispatch('input');
+  const [x,y,w,height]=h.preview.getAttribute('viewBox').split(' ').map(Number),handle=h.preview.querySelector('[data-figure-action="rotate"]');
+  const cx=Number(handle.getAttribute('cx')),cy=Number(handle.getAttribute('cy')),r=Number(handle.getAttribute('r'));
+  assert.ok(cx-r>=x&&cx+r<=x+w,'the full horizontal hit area stays visible');
+  assert.ok(cy-r>=y&&cy+r<=y+height,'the full vertical hit area stays visible');
+ }
+ assert.equal(JSON.stringify(h.records),before);assert.equal(h.view.svg.getAttribute('viewBox'),camera);assert.deepEqual(h.writes,[]);
+});
+
 test('timeline starts with whole objects, lazily unfolds their real hierarchy, and leaves scene data intact',()=>{
  const h=harness(),before=JSON.stringify(h.data),source=h.records.Second.text;
  const actor=()=>h.host.querySelector('[data-layer-id="prisoner"]');assert.ok(actor());

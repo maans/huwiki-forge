@@ -310,6 +310,9 @@ try{
  assert.ok(Math.abs(await position()-currentTime)<.001);
  passed('native rotation preserves the joint and attached hand, mirrors on stage and saves only the correct later-scene key');
 
+ // Selection zoom now intentionally frames the edited forearm. Use the
+ // visible whole-figure control before reaching another part of the actor.
+ await figurePanel().locator('[data-figure-fit]').tap();
  const eye=figurePreview().locator('[data-cutout-id="prisoner-pupils"] image');
  await touchPoint(await nativePoint(eye,['prisoner-pupils','prisoner-eyes','prisoner-brows','prisoner-eye-lids'],[{x:-14,y:-58}]));
  const faceWorkshop=editor.locator('.huw-face-workshop--inline:visible');await faceWorkshop.waitFor();
@@ -323,6 +326,7 @@ try{
  assert.equal(await figurePanel().getAttribute('data-figure-actor'),actor);assert.equal(await figurePanel().getAttribute('data-figure-selected'),joint);
  assert.ok(Math.abs(await position()-currentTime)<.001);assert.deepEqual(await actorPose(figurePreview()),eyePose,'returning to the whole actor retains its current limb and eye pose');
 
+ await figurePanel().locator('[data-figure-fit]').tap();
  const beforeMouth=await sources(),mouth=figurePreview().locator('[data-cutout-id="prisoner-mouth-open"] image');
  await touchPoint(await nativePoint(mouth,['prisoner-mouth-open']));await faceWorkshop.waitFor();
  assert.equal(await faceWorkshop.locator('[data-face-tab="mouth"]').getAttribute('aria-selected'),'true');

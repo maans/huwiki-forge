@@ -232,6 +232,8 @@ try{
  const stored=await page.evaluate(asset=>$tw.wiki.getTiddler(asset).fields,voice.asset);assert.equal(stored.type,'audio/wav');assert.equal(stored.text,voiceWav.toString('base64'));
  await chooseToolbarItem(show,'workshops','.huw-musical-audio-button');audio=show.locator('.huw-narration-workshop');await audio.locator('.huw-narration-clip').click();assert.equal(await audio.getByLabel('Klip begyndelsen fra (s)',{exact:true}).inputValue(),'0.25');assert.equal(await audio.getByLabel('Slut i lydfil (s)',{exact:true}).inputValue(),'1.5');
  await audio.getByRole('button',{name:'Annuller',exact:true}).click();await audio.waitFor({state:'detached'});
+ assert.equal(await show.locator('.huw-musical-recorded-clip').count(),0,'recorded clips stay unmounted until their lane is opened');
+ await show.locator('.huw-musical-audio-track .huw-musical-group-fold').click();
  const laneClip=show.locator('.huw-musical-recorded-clip');await laneClip.click();assert.equal(await laneClip.getAttribute('aria-pressed'),'true','a single click selects the recorded clip');
  // The first selection redraws the timeline. Real double-click events must
  // still find the replacement clip, including its pointer-capture handlers.
@@ -338,3 +340,4 @@ try{
  if(context)try{await context.tracing.stop({path:fileURLToPath(new URL('trace.zip',out))});}catch(_){}
  if(browser)await browser.close();await new Promise(resolve=>server.close(resolve));
 }
+
