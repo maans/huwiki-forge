@@ -246,17 +246,23 @@ test('film-part appearance editing stays on the film even when scene sources reu
 });
 
 
-test('fit a three-cycle walk between figure keys, open the block and retime it without losing placement',()=>{
+function rigMotionRecords(end){
  const records=editorHarness().w.records,stage=JSON.parse(records.Scene.text),film=JSON.parse(records.Film.text);
  const rig=modules().load('$:/plugins/huwiki/musical/skeleton.js');
  stage.parts[0].animusRig=rig.template({x:-30,y:-100,width:60,height:100});
  stage.parts.find(p=>p.id==='arm').animusJoint='shoulderL';
- film.musical.figureTransforms={actor:{keys:[pose(0),pose(3.06,{x:130})]}};
+ film.musical.figureTransforms={actor:{keys:[pose(0),pose(end,{x:130})]}};
  records.Scene.text=JSON.stringify(stage);records.Film.text=JSON.stringify(film);
+ return records;
+}
+
+test('fit a three-cycle walk between figure keys, open the block and retime it without losing placement',()=>{
+ const records=rigMotionRecords(3.06),film=JSON.parse(records.Film.text);
  const h=editorHarness(records),button=name=>h.host.querySelectorAll('button').find(b=>b.textContent===name);
  h.options.seek(0);h.editor.selectFigure('actor');
  const group=h.host.querySelector('.huw-musical-rig-controls'),selects=group.querySelectorAll('select');
  selects[3].value='3';selects[3].dispatch('change');
+ selects[1].value='0';
  assert.equal(Number(group.querySelector('input').value),3.3);
  button('Fit to next keyframe').click();
  assert.equal(Number(group.querySelector('input').value),3.06);assert.equal(selects[1].value,'0');
@@ -281,4 +287,35 @@ test('fit a three-cycle walk between figure keys, open the block and retime it w
  edit.querySelector('input').value='4';button('Save duration').click();
  assert.equal(root().animusMoves[0].end,4);close(root().keys.at(-1).t,4);
  assert.deepEqual(plain(h.data.musical.figureTransforms.actor.keys),film.musical.figureTransforms.actor.keys);
+});
+
+test('fitting three cartwheels to the next keyframe preserves the chosen travel direction',()=>{
+ const records=rigMotionRecords(8),stage=JSON.parse(records.Scene.text);
+ stage.parts.find(p=>p.id==='actor').keys=[pose()];
+ stage.parts.find(p=>p.id==='arm').keys=[pose()];
+ records.Scene.text=JSON.stringify(stage);
+ for(const direction of ['-1','1','0']){
+  const h=editorHarness(records);
+  h.options.seek(0);
+  h.editor.selectFigure('actor');
+  const group=h.host.querySelector('.huw-musical-rig-controls');
+  const [movement,travel,,repeats]=group.querySelectorAll('select');
+  const button=name=>group.querySelectorAll('button').find(b=>b.textContent===name);
+  movement.value='wheel';movement.dispatch('change');
+  travel.value=direction;travel.dispatch('change');
+  repeats.value='3';repeats.dispatch('change');
+  const duration=group.querySelector('input');
+  assert.equal(Number(duration.value),4.5);
+  button('Fit to next keyframe').click();
+  assert.equal(travel.value,direction);
+  assert.equal(Number(duration.value),8);
+  button('Insert at playhead').click();
+  const actor=JSON.parse(h.w.records.Scene.text).parts.find(p=>p.id==='actor');
+  assert.equal(actor.animusMoves[0].type,'wheel');
+  const first=actor.keys[0],last=actor.keys.at(-1);
+  close(last.t,8);
+  close(Math.abs(last.r-first.r),3*360);
+  if(direction==='0')close(last.x,first.x);
+  else assert.ok((last.x-first.x)*Number(direction)>1);
+ }
 });

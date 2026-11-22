@@ -733,14 +733,12 @@ function attach(o){
   function presetDuration(){
    duration.value=String(round(Number(count.value)*rig.cycles[kind.value][2]/Number(tempo.value)/clockRate));
   }
-  // Use the authored figure transform for travel between two positions.
-  // The rig then supplies the gait without moving the figure a second time.
   var fit=el(doc,"button","",da?"Til næste kontrolpunkt":"Fit to next keyframe",group);fit.type="button";
   function nextKey(){return keys(t).find(function(key){return key.t>playhead+1e-6;});}
   fit.onclick=function(){
    var next=nextKey();
    if(!next){status.textContent=da?"Der skal være et senere kontrolpunkt på figurens spor.":"Add a later keyframe on the figure track.";return;}
-   duration.value=String(round(next.t-playhead));dir.value="0";removePreview();
+   duration.value=String(round(next.t-playhead));removePreview();
   };
   presetDuration();
   function motionRate(){
