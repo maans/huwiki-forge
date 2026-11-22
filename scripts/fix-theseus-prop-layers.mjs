@@ -1,4 +1,5 @@
 import {readFile,writeFile,readdir} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
 import {pathToFileURL} from 'node:url';
 export function correctScene(scene,english=false){
  const parts=scene.parts||[],by=Object.fromEntries(parts.map(p=>[p.id,p])),props=[];
@@ -17,6 +18,9 @@ async function main(){const dir=new URL('../editions/theseus-ship/tiddlers/',imp
  for(const name of await readdir(dir)){if(!/^production-pages-\d+\.json$/.test(name))continue;const file=new URL(name,dir),data=JSON.parse(await readFile(file,'utf8'));let changed=false;
   for(const t of data){let scene;try{scene=JSON.parse(t.text);}catch{continue;}if(!scene?.parts?.length)continue;const before=JSON.stringify(scene),after=JSON.stringify(correctScene(scene,t.title.endsWith(' · English')));if(before!==after){t.text=after;changed=true;count++;}}
   if(changed)await writeFile(file,JSON.stringify(data,null,2)+'\n');
- }console.log('Corrected '+count+' Theseus scenes');
+ }
+ const manifestFile=new URL('../editions/theseus-ship/manifest.json',import.meta.url),manifest=JSON.parse(await readFile(manifestFile,'utf8'));
+ for(let i=0;i<manifest.tiddlers.length;i++){const path=manifest.tiddlers[i].split('?')[0];if(!/^tiddlers\/production-pages-/.test(path))continue;const bytes=await readFile(new URL('../editions/theseus-ship/'+path,import.meta.url));manifest.tiddlers[i]=path+'?v='+createHash('sha256').update(bytes).digest('hex').slice(0,12);}
+ await writeFile(manifestFile,JSON.stringify(manifest,null,2)+'\n');console.log('Corrected '+count+' Theseus scenes');
 }
 if(process.argv[1]&&import.meta.url===pathToFileURL(process.argv[1]).href)await main();

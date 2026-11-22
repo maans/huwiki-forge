@@ -5,7 +5,6 @@
   "version": "0.13.0-beta.21-groups.1",
   "coreVersion": "5.4.1",
   "tiddlers": [
-    "../animus/tiddlers/config.json",
     "../shared/libraries.json",
     "../animus/tiddlers/gallery.json",
     "tiddlers/start.json"

@@ -5,11 +5,15 @@
   },
   {
     "title": "$:/DefaultTiddlers",
-    "text": "[[AniMus Forge I · Start]]"
+    "text": "[[AniMus · Harbour start]]"
   },
   {
-    "title": "AniMus Forge I · Start",
+    "title": "AniMus · Harbour start",
     "type": "text/vnd.tiddlywiki",
     "text": "! AniMus · Græsk havn / Greek harbour\n\n<$animus-new-project template=\"$:/plugins/huwiki/animus-theme-greek-harbour/template\"/>\n"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
   }
 ]

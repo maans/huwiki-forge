@@ -6,5 +6,9 @@
   {
     "title": "$:/DefaultTiddlers",
     "text": "[[Musical – Start]]"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
   }
 ]

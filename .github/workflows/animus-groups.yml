@@ -14,11 +14,18 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip install Pillow==11.3.0
+      - run: command -v ffmpeg || (sudo apt-get update && sudo apt-get install -y ffmpeg)
       - run: npm ci --ignore-scripts
       - name: Build scene corrections and searchable production materials
         run: |
           node scripts/fix-theseus-prop-layers.mjs
           node scripts/index-animus-productions.mjs
+          python scripts/prepare-animus-audio-effects.py
+          python scripts/thumbnail-animus-catalog.py
           node scripts/build-animus.mjs
           node scripts/build-forge-plugin-library.mjs
           node scripts/build-forge-home.mjs
@@ -42,7 +49,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add assets/animus editions/theseus-ship/tiddlers/production-pages-*.json plugins/musical/dist/plugin.json library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
+          git add assets/animus editions/theseus-ship/manifest.json editions/theseus-ship/tiddlers/production-pages-*.json plugins/musical/dist/plugin.json library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
           git diff --cached --quiet || git commit -m 'Build grouped AniMus editor, separate show cards and reusable production materials'
           git push origin HEAD:${{ github.ref_name }}
       - uses: actions/upload-artifact@v4
