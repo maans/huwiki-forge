@@ -100,7 +100,7 @@ function realHorse(){
   return plain(horseSource);
 }
 
-test('selecting a forearm shows only its whole active actor with the current authored and runtime pose', () => {
+test('selecting a forearm focuses it while retaining its active actor and current authored and runtime pose', () => {
   const h = harness(), before = JSON.stringify(h.data), camera = h.view.svg.getAttribute('viewBox');
   assert.equal(h.layouts, 0, 'mount cannot call workspace before initialization finishes');
   assert.equal(h.panel.select('prisoner-forearm-right-drawing'), true);
@@ -119,7 +119,7 @@ test('selecting a forearm shows only its whole active actor with the current aut
   pointClose(actorPoint(h, clonePart(h, 'prisoner-hand-right'), {x: 0, y: 0}, true), actorPoint(h, h.leaf.nodes['prisoner-hand-right'].el));
   const matrix = h.view.svg.getScreenCTM().inverse().multiply(h.leaf.nodes.prisoner.el.parentNode.getScreenCTM()), mirrored = matrixFor(h.preview.firstChild.getAttribute('transform'));
   for(const key of ['a', 'b', 'c', 'd', 'e', 'f']) close(mirrored[key], matrix[key], 'ancestor ' + key);
-  const fitted = h.preview.getAttribute('viewBox').split(' ').map(Number);assert.ok(fitted[2] > 80 && fitted[3] > 180, 'fit covers the complete figure, not the selected forearm');
+  const fitted = h.preview.getAttribute('viewBox').split(' ').map(Number);assert.ok(fitted[3] < 180, 'fit focuses the selected forearm, not the whole actor');
   const cloned = clonePart(h, 'prisoner');h.panel.refresh(true);h.panel.select('prisoner-hand-right');assert.equal(clonePart(h, 'prisoner'), cloned);assert.equal(h.layouts, 1);
   assert.equal(h.view.svg.getAttribute('viewBox'), camera);assert.equal(JSON.stringify(h.data), before);assert.deepEqual(h.writes, []);
 });
@@ -132,7 +132,7 @@ test('atlas artwork fits the whole actor using cropped viewports and retains its
     records[title].text=JSON.stringify(source);
   }
   const h=harness({initial:records}),before=JSON.stringify(h.data);
-  assert.equal(h.panel.select('prisoner-forearm-right-drawing'),true);
+  assert.equal(h.panel.select('prisoner-forearm-right-drawing'),true);h.dock.querySelector('[data-figure-fit]').click();
   const frame=h.preview.getAttribute('viewBox').split(' ').map(Number);
   assert(frame[2]>80&&frame[3]>180,'the whole actor stays in view');
   assert(frame[2]<1000&&frame[3]<1000,'the unused atlas area stays outside the fit');
@@ -142,7 +142,7 @@ test('atlas artwork fits the whole actor using cropped viewports and retains its
 });
 
 test('dragging the mirrored semantic forearm preserves its joint, moves the hand and saves a scene-local key', () => {
-  const h = harness();h.panel.select('prisoner-forearm-right-drawing');
+  const h = harness();h.panel.select('prisoner-forearm-right-drawing');h.dock.querySelector('[data-figure-fit]').click();
   const firstBefore = h.records.First.text, filmBefore = h.records.Film.text, source = h.leaf.scene, before = plain(source.parts), pivotBefore = actorPoint(h, h.leaf.nodes['prisoner-forearm-right'].el), handBefore = actorPoint(h, h.leaf.nodes['prisoner-hand-right'].el), camera = h.view.svg.getAttribute('viewBox'), fitted = h.preview.getAttribute('viewBox');
   const node = clonePart(h, 'prisoner-forearm-right'), editing = drag(h, 'prisoner-forearm-right', 35, null);
   assert.equal(editing.canvas.hasPointerCapture(7), true);assert.equal(clonePart(h, 'prisoner-forearm-right'), node, 'selection reentry must retain the captured tree');
@@ -321,3 +321,40 @@ test('a prop wrapper with one generated drawing is an object while articulated c
   h.panel.select('prisoner-forearm-right-drawing');assert.equal(h.panel.context().kind, 'figure');assert.equal(h.panel.context().hasJoints, true);assert.equal(h.panel.context().isObject, false);assert.deepEqual(h.writes, []);
 });
 
+
+
+test('manual zoom stays fixed through redraw, time changes, selection reentry and joint edits without changing the camera', () => {
+ const h=harness();h.panel.select('prisoner-forearm-right');
+ const camera=h.view.svg.getAttribute('viewBox'),film=JSON.stringify(h.data),records=JSON.stringify(h.records);
+ const range=h.dock.querySelector('[data-figure-zoom]');range.value='450';range.dispatch('input');
+ const frame=h.preview.getAttribute('viewBox');h.panel.refresh(true);h.panel.select('prisoner-forearm-right');
+ assert.equal(h.preview.getAttribute('viewBox'),frame);assert.equal(JSON.stringify(h.records),records);assert.deepEqual(h.writes,[]);
+ h.options.seek(14);assert.equal(h.preview.getAttribute('viewBox'),frame);
+ drag(h,'prisoner-forearm-right',12);assert.equal(h.preview.getAttribute('viewBox'),frame);
+ assert.equal(h.view.svg.getAttribute('viewBox'),camera);assert.equal(JSON.stringify(h.data),film);assert.deepEqual(h.writes,['Second']);
+});
+
+test('zoom buttons and slider change magnification and fit controls restore whole or selected framing', () => {
+ const h=harness();h.panel.select('prisoner-forearm-right');const selected=h.preview.getAttribute('viewBox');
+ h.dock.querySelector('[data-figure-fit]').click();const whole=h.preview.getAttribute('viewBox');assert.notEqual(whole,selected);
+ const read=()=>h.preview.getAttribute('viewBox').split(' ').map(Number);
+ const wide=read()[2];h.dock.querySelector('[data-figure-zoom-in]').click();close(read()[2],wide/1.25);
+ h.dock.querySelector('[data-figure-zoom-out]').click();close(read()[2],wide);
+ const range=h.dock.querySelector('[data-figure-zoom]');range.value='400';range.dispatch('input');close(read()[2],wide/4);
+ range.value='99999';range.dispatch('input');assert.equal(h.dock.querySelector('[data-figure-zoom-in]').disabled,true);
+ range.value='1';range.dispatch('input');assert.equal(h.dock.querySelector('[data-figure-zoom-out]').disabled,true);
+ h.dock.querySelector('[data-figure-fit-selected]').click();assert.equal(h.preview.getAttribute('viewBox'),selected);
+ h.dock.querySelector('[data-figure-fit]').click();assert.equal(h.preview.getAttribute('viewBox'),whole);
+ assert.deepEqual(h.writes,[]);
+});
+
+test('a different part focuses automatically and a direct pointer gesture never jumps at pointerdown', () => {
+ const h=harness();h.panel.select('prisoner');const wide=h.preview.getAttribute('viewBox'),target=clonePart(h,'prisoner-forearm-right-drawing').firstChild;
+ const canvas=h.dock.querySelector('.huw-musical-figure-canvas'),point=target.getScreenCTM().point({x:0,y:35});
+ target.dispatch('pointerdown',{pointerId:7,clientX:point.x,clientY:point.y});assert.equal(h.preview.getAttribute('viewBox'),wide);
+ canvas.dispatch('pointerup',{pointerId:7,clientX:point.x,clientY:point.y});assert.notEqual(h.preview.getAttribute('viewBox'),wide);
+ const range=h.dock.querySelector('[data-figure-zoom]');range.value='200';range.dispatch('input');const manual=h.preview.getAttribute('viewBox');
+ h.panel.select('prisoner-head');assert.notEqual(h.preview.getAttribute('viewBox'),manual);
+ const focused=h.preview.getAttribute('viewBox');h.dock.querySelector('[data-figure-fit-selected]').click();assert.equal(h.preview.getAttribute('viewBox'),focused);
+ assert.deepEqual(h.writes,[]);
+});

@@ -32,3 +32,9 @@
 .huw-musical-figure-parts[hidden],.huw-musical-figure-parts-toggle[hidden]{display:none}
 .huw-musical-figure-parts-toggle::after{content:' ▾'}
 .huw-musical-figure-parts-toggle[aria-expanded=true]::after{content:' ▴'}
+
+.huw-musical-figure-zoom{display:flex;align-items:center;gap:8px;flex:0 0 auto;min-width:0;margin:0 0 8px;font-size:14px}
+.huw-musical-figure-zoom button{padding:4px 10px;min-width:44px;font-size:20px}
+.huw-musical-figure-zoom-range{width:clamp(100px,22vw,230px);max-width:100%;min-width:60px;margin:0;accent-color:#207aa8;cursor:pointer;flex:0 1 230px;height:32px}
+.huw-musical-figure-zoom-value{min-width:4.5em;font-variant-numeric:tabular-nums;color:#36546a}
+.huw-musical-figure-panel button:disabled{opacity:.45;cursor:default}

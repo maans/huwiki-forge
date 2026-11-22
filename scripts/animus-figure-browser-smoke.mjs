@@ -105,6 +105,7 @@ async function blankPoint(locator){
  assert.ok(point,'a visible empty canvas region receives a native tap, without selecting the painted backdrop');return point;
 }
 async function tapFigurePart(id){
+ await figurePanel().locator("[data-figure-fit]").tap();
  await wiki.evaluate(()=>{
   if(window.__figureInputEvents)return;window.__figureInputEvents=[];window.__figureTapTargets=[];
   for(const type of ['pointerdown','pointerup','pointercancel','gotpointercapture','lostpointercapture'])document.addEventListener(type,event=>{
@@ -203,6 +204,21 @@ try{
  const orientation=svg=>{const root=[...svg.querySelectorAll('[data-cutout-id="prisoner"]')].find(node=>{for(let n=node;n&&n!==svg;n=n.parentElement)if(n.hidden||getComputedStyle(n).display==='none')return false;return true;}),m=root.getScreenCTM(),scale=Math.sqrt(Math.abs(m.a*m.d-m.b*m.c));return [m.a,m.b,m.c,m.d].map(value=>value/scale);};
  const stageOrientation=await stage().evaluate(orientation),previewOrientation=await figurePreview().evaluate(orientation);
  assert.ok(stageOrientation.every((value,index)=>Math.abs(value-previewOrientation[index])<1e-5),'the whole-figure preview preserves the original mirror, rotation and proportions');
+ const selectedFrame=await figurePreview().getAttribute('viewBox');
+ const stageCamera=await stage().getAttribute('viewBox');
+ await figurePanel().locator('[data-figure-fit]').tap();
+ const wholeFrame=await figurePreview().getAttribute('viewBox');
+ assert.notEqual(selectedFrame,wholeFrame,'opening a forearm focuses the selected part');
+ const wholeWidth=Number(wholeFrame.split(' ')[2]);
+ await figurePanel().locator('[data-figure-zoom-in]').tap();
+ assert.ok(Math.abs(Number((await figurePreview().getAttribute('viewBox')).split(' ')[2])-wholeWidth/1.25)<.001);
+ const slider=figurePanel().locator('[data-figure-zoom]');await slider.fill('300');await slider.press('ArrowRight');
+ const manualFrame=await figurePreview().getAttribute('viewBox');
+ await figurePanel().locator('[data-figure-fit-selected]').tap();assert.equal(await figurePreview().getAttribute('viewBox'),selectedFrame);
+ assert.notEqual(manualFrame,selectedFrame);assert.equal(await stage().getAttribute('viewBox'),stageCamera);
+ await assertSources(originalSources,'zoom and fit controls never save camera or pose keys');
+ await figurePanel().locator('[data-figure-fit]').tap();
+ passed('selected-part focus and manual zoom controls preserve the authored camera and poses');
  const fit=await figurePreview().evaluate(svg=>{
   const box=svg.getBoundingClientRect(),root=svg.querySelector('[data-cutout-id="prisoner"]'),actor=root.getBoundingClientRect();
   const ids=['prisoner-head-drawing','prisoner-shin-left-drawing','prisoner-shin-right-drawing'];
