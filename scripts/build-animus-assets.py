@@ -158,6 +158,7 @@ def main():
  if args.toon:entries+=toon_entries(args.toon)
  if args.theseus:entries+=greek_entries(args.theseus)
  if args.rgs:entries+=rgs_entries(args.rgs)
+ entries=json.loads((ROOT/'scripts/animus-workshop-materials.json').read_text())+entries
  if len({e['id'] for e in entries})!=len(entries):raise ValueError('Duplicate catalogue ID')
  save_json(OUT/'catalog.json',dict(schemaVersion=1,entries=entries))
  if args.packages:
