@@ -252,6 +252,17 @@ function mount(o){
  }
  function renderInspector(){if(!inspector)return;inspector.textContent="";var p=selectedNode();if(!p){el(doc,"p","huw-puppet-hint",clip?L.choose:da?"Vælg objektet eller en af dets dele i visningen eller listen.":ui("Select the object or one of its parts in the preview or list."),inspector);return;}
   el(doc,"h3","",p.name||p.id,inspector);
+  if(p.id!==activeRoot){
+   var branch=descendants(parts,p.id);
+   var label=da?"Slet del":ui("Delete part");
+   if(branch.length>1)label+=da?" med underdele ("+branch.length+")":" ("+branch.length+")";
+   button(inspector,label,function(){
+    if(cancelInteraction)cancelInteraction();
+    var removed=new Set(branch.map(function(part){return part.id;}));
+    parts=parts.filter(function(part){return !removed.has(part.id);});
+    selected=p.parent||activeRoot;writable();renderAll();
+   }).dataset.puppetDelete=p.id;
+  }
   faceArtwork(p);
   input(L.name,p.name||p.id,"text",function(v){p.name=v;writable();renderTree();renderInspector();});
   var parentLabel=el(doc,"label","huw-puppet-field",undefined,inspector);el(doc,"span","",L.parent,parentLabel);var select=el(doc,"select","",undefined,parentLabel);

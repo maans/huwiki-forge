@@ -180,3 +180,13 @@ test('rebuilding reused scene appearances keeps unedited DOM nodes connected to 
   assert.match(occurrence.nodes.companion.el.getAttribute('transform'),/^translate\(321 123\)/,'later transforms repaint the retained node from its updated source record');
  }
 });
+
+test('deleting a shoulder removes its descendants only after saving',()=>{
+ const root={id:'actor',type:'group'},arm={id:'shoulder',parent:'actor',type:'group'},elbow={id:'elbow',parent:'shoulder',type:'group'},hand={id:'hand',parent:'elbow',type:'circle'},other={...plain(horse),parent:'actor'};
+ const h=harness({scenes:{Scene:scene([root,arm,elbow,hand,other])},id:'shoulder'});
+ h.overlay.querySelector('[data-puppet-delete]').dispatch('click');
+ assert.deepEqual(h.records,h.initial);
+ assert.equal(h.overlay.querySelector('[data-puppet-delete]'),null);
+ assert.deepEqual(h.save().parts,[root,other]);
+ for(const id of ['shoulder','elbow','hand'])assert.equal(h.view.clips[0].view.nodes[id],undefined);
+});
