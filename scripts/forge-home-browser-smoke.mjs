@@ -44,13 +44,15 @@ try {
  assert.ok(guide.includes('0.1.19')&&guide.includes('Flere oplysninger')&&guide.includes('Open Anyway'),'HOWTO covers the version, Windows and Mac first-run approval');
  assert.equal(await page.locator('[data-edition="ai"]').getByRole('heading',{name:'AI conversations, tasks and your models'}).count(),1);
  const catalog=JSON.parse(await readFile(path.join(root,'catalog/editions.json'),'utf8'));
- assert.equal(await page.locator('.forge-card[data-edition]').count(),catalog.editions.length);
+ const visibleEditions=catalog.editions.filter(edition=>!edition.home?.hidden);
+ for(const edition of catalog.editions.filter(edition=>edition.home?.hidden))assert.equal(await page.locator(`[data-edition="${edition.id}"]`).count(),0,'Show cards belong in AniMus');
+ assert.equal(await page.locator('.forge-card[data-edition]').count(),visibleEditions.length);
  assert.equal(await page.getByRole('button',{name:'show sidebar',exact:true}).isVisible(),true);
  const columns=await page.locator('.forge-grid').evaluate(el=>getComputedStyle(el).gridTemplateColumns.split(' ').length);
  assert.equal(columns,3,'Three Edition cards across at 1440px');
  assert.equal(await page.getByRole('link',{name:'Forge your own wiki ↗',exact:true}).getAttribute('href'),'https://forge.måns.dk/assembler/?lang=en');
  assert.equal(await page.getByRole('link',{name:'Open InstantWiki ↗',exact:true}).getAttribute('href'),'https://forge.måns.dk/instantwiki/');
- assert.equal(await page.locator('.forge-grid > p .forge-card[data-edition]').count(),catalog.editions.length);
+ assert.equal(await page.locator('.forge-grid > p .forge-card[data-edition]').count(),visibleEditions.length);
  assert.equal(await page.getByRole('button',{name:'Edit this tiddler',exact:true}).isVisible(),false,'HTTP guest view hides edit');
  await page.getByRole('button',{name:'show sidebar',exact:true}).click();
  assert.equal((await page.locator('.tc-site-title').innerText()).trim(),'TiddlyWiki Forge');
@@ -73,7 +75,7 @@ try {
  await page.getByRole('button',{name:'show sidebar',exact:true}).waitFor({state:'visible'});
  console.log('PASS Tools returns in editing; reading hides Tools and switches an active Tools tab to Open');
  console.log('PASS original padlock in native More menu reversibly restores editing');
- for(const edition of catalog.editions){
+ for(const edition of visibleEditions){
   const card=page.locator(`[data-edition="${edition.id}"]`);
   assert.equal(await card.locator('.forge-card-action').getAttribute('href'),'https://forge.måns.dk/assembler/?edition='+edition.id+'&lang=en');
   assert.equal(await card.locator('.forge-card-demo').getAttribute('href'),'https://forge.måns.dk/demo/?edition='+edition.id+'&lang=en');
@@ -105,7 +107,7 @@ try {
  const local=await offline.newPage();local.setDefaultTimeout(15000);local.on('pageerror',e=>errors.push(e.message));
  await local.goto(pathToFileURL(saved).href);
  await local.getByRole('heading',{name:'Form din næste wiki.',exact:true}).waitFor();
- assert.equal(await local.locator('.forge-card[data-edition]').count(),catalog.editions.length);
+ assert.equal(await local.locator('.forge-card[data-edition]').count(),visibleEditions.length);
  const frame=local.locator('[data-tiddler-title="HUWiki Forge"]');
  const edit=frame.locator('button[class*="Buttons%2Fedit"]');assert.equal(await edit.isVisible(),true,'Saved local copy is editable');
  // Exercise native draft editor and commit, then save/reopen the actual download.
