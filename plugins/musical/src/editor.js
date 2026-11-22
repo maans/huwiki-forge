@@ -336,7 +336,7 @@ function attach(o){
   applyPreviewVisibility(time);
   var cameraText=detail?(da?"Animation: ":ui("Animation: "))+detail.name:L.camera+" "+activeCam(time);
   if(cameraLabel.textContent!==cameraText)cameraLabel.textContent=cameraText;playhead=time;
-  if(!detailClipId&&groupScene&&currentStage().scene!==groupScene)draw();
+  if(!detailClipId&&!preview.exporting()&&groupScene&&currentStage().scene!==groupScene)draw();
   var axis=axisDuration();
   playheads.forEach(function(e){
    if(e.dataset.cursorMode==="beat"){
@@ -1474,7 +1474,7 @@ function attach(o){
   setCameraEdit:function(v){cameraEditActive=!!v;o.repaint();},cameraStateFor:cameraStateFor,
   isTrackVisible:preview.enabled,isSongAudible:preview.song,isAudioAudible:preview.audio,isSfxAudible:preview.effects,
   setTrackVisible:setPreviewEnabled,setTrackAudible:setPreviewEnabled,isExporting:preview.exporting,
-  beginExport:function(){var restore=preview.beginExport();if(o.onPreviewChange)o.onPreviewChange();o.repaint();return function(){restore();if(o.onPreviewChange)o.onPreviewChange();o.repaint();};},
+  beginExport:function(){var restore=preview.beginExport();if(o.onPreviewChange)o.onPreviewChange();o.repaint();return function(){restore();previewControls.forEach(function(control){control.update();});if(o.onPreviewChange)o.onPreviewChange();o.repaint();};},
   getCaptionCues:function(){return captionCues.slice();},
   isJointMove:isJointMove,getPartPivot:getPartPivot,
   resolvePartScene:function(id){return sceneForPart(id,o.view,0);},

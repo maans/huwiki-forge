@@ -360,6 +360,18 @@ test('a different part focuses automatically and a direct pointer gesture never 
 });
 
 
+test('cross-scene export skips hidden timeline rebuilds and restores switches even after an explicit redraw',()=>{
+ const h=harness(),before=JSON.stringify(h.records);
+ h.editor.setTrackVisible('captions',false);h.editor.setTrackAudible('audio-lane',false);
+ const originalRow=h.host.querySelector('[data-layer-id="prisoner"]'),restore=h.editor.beginExport();
+ h.options.seek(2);assert.equal(h.host.querySelector('[data-layer-id="prisoner"]'),originalRow,'export does not build rows for another scene');
+ h.editor.redraw();assert.equal(h.host.querySelector('[data-preview-track="captions"]').getAttribute('aria-pressed'),'true');
+ h.options.seek(13);restore();
+ for(const id of ['captions','audio-lane'])assert.equal(h.host.querySelector('[data-preview-track="'+id+'"]').getAttribute('aria-pressed'),'false');
+ assert.equal(h.editor.isTrackVisible('captions'),false);assert.equal(h.editor.isAudioAudible({id:'voice',kind:'speech'}),false);
+ assert.equal(JSON.stringify(h.records),before);assert.deepEqual(h.writes,[]);
+});
+
 test('the rotation handle remains inside the preview after fitting and manual zoom without changing the camera or sources',()=>{
  const h=harness(),before=JSON.stringify(h.records),camera=h.view.svg.getAttribute('viewBox');h.panel.select('prisoner-forearm-right');
  const range=h.dock.querySelector('[data-figure-zoom]');
