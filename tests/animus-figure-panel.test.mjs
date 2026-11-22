@@ -7,7 +7,7 @@ import {Matrix, SvgNode, matrixFor, svgDocument} from './helpers/svg-test-dom.mj
 
 const root = new URL('../', import.meta.url), read = path => fs.readFileSync(new URL(path, root), 'utf8'), plain = value => JSON.parse(JSON.stringify(value));
 const cutout = JSON.parse(JSON.parse(read('plugins/cutout/dist/plugin.json')).text).tiddlers;
-const sources = Object.fromEntries(['playlist', 'motion', 'sfx', 'editor', 'puppet', 'track-preview', 'lipsync', 'face', 'figure-panel'].map(name => [name, read('plugins/musical/src/' + name + '.js')]));
+const sources = Object.fromEntries(['playlist', 'motion', 'sfx', 'editor', 'puppet', 'track-preview','effects-library', 'lipsync', 'face', 'figure-panel'].map(name => [name, read('plugins/musical/src/' + name + '.js')]));
 // The production code uses native DOM cloning. Add that independent operation
 // to the minimal SVG test surface; its existing matrix math remains unchanged.
 SvgNode.prototype.getAttributeNames = function() {return [...new Set([...Object.keys(this.attributes), ...(this.className ? ['class'] : [])])];};
@@ -122,6 +122,23 @@ test('selecting a forearm shows only its whole active actor with the current aut
   const fitted = h.preview.getAttribute('viewBox').split(' ').map(Number);assert.ok(fitted[2] > 80 && fitted[3] > 180, 'fit covers the complete figure, not the selected forearm');
   const cloned = clonePart(h, 'prisoner');h.panel.refresh(true);h.panel.select('prisoner-hand-right');assert.equal(clonePart(h, 'prisoner'), cloned);assert.equal(h.layouts, 1);
   assert.equal(h.view.svg.getAttribute('viewBox'), camera);assert.equal(JSON.stringify(h.data), before);assert.deepEqual(h.writes, []);
+});
+
+test('atlas artwork fits the whole actor using cropped viewports and retains its shared image definition', () => {
+  const original=harness().records, records=plain(original);
+  for(const title of ['First','Second']){
+    const source=JSON.parse(records[title].text),head=source.parts.find(p=>p.id==='prisoner-head-drawing');
+    head.geo.crop={x:120,y:80,w:80,h:95,sourceWidth:10000,sourceHeight:10000};
+    records[title].text=JSON.stringify(source);
+  }
+  const h=harness({initial:records}),before=JSON.stringify(h.data);
+  assert.equal(h.panel.select('prisoner-forearm-right-drawing'),true);
+  const frame=h.preview.getAttribute('viewBox').split(' ').map(Number);
+  assert(frame[2]>80&&frame[3]>180,'the whole actor stays in view');
+  assert(frame[2]<1000&&frame[3]<1000,'the unused atlas area stays outside the fit');
+  const use=clonePart(h,'prisoner-head-drawing').querySelector('use');
+  assert(use);assert(h.preview.querySelector(use.getAttribute('href')),'the preview retains the referenced atlas definition');
+  assert.equal(JSON.stringify(h.data),before);assert.deepEqual(h.writes,[]);
 });
 
 test('dragging the mirrored semantic forearm preserves its joint, moves the hand and saves a scene-local key', () => {
@@ -303,3 +320,4 @@ test('a prop wrapper with one generated drawing is an object while articulated c
   const h = harness({extraParts: [{id: 'prop', name: 'Carved horse on a pole', type: 'group', keys: [pose(0, {x: 180, y: 190})]}, {id: 'prop-drawing', type: 'rect', parent: 'prop', geo: {x: -40, y: -85, w: 80, h: 150}, keys: [pose()]}]});h.panel.select('prop-drawing');assert.equal(h.panel.selectedPart(), 'prop');assert.equal(h.panel.context().kind, 'object');assert.equal(h.panel.context().parts.length, 2);assert.equal(h.panel.context().hasJoints, false);assert.ok(clonePart(h, 'prop-drawing'));
   h.panel.select('prisoner-forearm-right-drawing');assert.equal(h.panel.context().kind, 'figure');assert.equal(h.panel.context().hasJoints, true);assert.equal(h.panel.context().isObject, false);assert.deepEqual(h.writes, []);
 });
+

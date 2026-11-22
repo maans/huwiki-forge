@@ -13,12 +13,19 @@ test('CutOut preserves original project model, samples and vendor license; engin
  assert.deepEqual({...engine,text:originalEngine.text},originalEngine,'Preserve engine metadata and authorship');
  assert.equal(engine.text,await read('plugins/cutout/src/engine.js'),'Ship the reviewed readable engine source');
  const withoutRenderingChanges=text=>text
+  // Atlas definitions, crop viewports and variant selection affect rendering
+  // only. Keep comparing every existing non-image geometry branch verbatim.
+  .replace(/var spriteSerial=0;[\s\S]*?\nfunction graphic\(/,'function graphic(')
+  .replace(/ if\(tag==='image'&&spriteCrop\(p\)\)\{[\s\S]*?\n \}\n/,'')
+  .replace(/,imageContext:imageContext,document:doc/g,'')
+  .replace(/,imageContext/g,'')
+  .replace(/exports\.showImageVariant=showImageVariant;/,'')
   // The root-only hit-testing stylesheet wraps the original tree builder.
   // Normalize that wrapper and its internal calls, retaining the full geometry
   // builder in this comparison rather than excluding it from the audit.
   .replace(/function build\(doc,wiki,scene,editable,ancestry\)\{[\s\S]*?\n\}\nfunction buildTree\(/,'function build(')
   .replace(/\bbuildTree\(/g,'build(')
-  .replace(/function paint\(view,t,selected(?:,options)?\)\{[\s\S]*?\nfunction dependencies\(/,'function dependencies(');
+  .replace(/function paint\(view,t,selected(?:,options)?\)\{[\s\S]*?\nfunction dependencies\(/,'function dependencies(').trim();
  assert.equal(withoutRenderingChanges(engine.text),withoutRenderingChanges(originalEngine.text),'Keep original parsing, geometry, clocks and dependencies intact');
  for(const title of ['Demo – Tændstikmand','Demo – Tændstikmand (dukke)'])assert.deepEqual(after[title],before[title]);
  assert.equal(plugin.author,original.author);assert.equal(plugin.license,original.license,'Do not invent a license absent from the original');
@@ -42,3 +49,4 @@ test('Native language translates CutOut without changing user project data',()=>
  }
  assert.equal(ui.t('My unique project',{getTiddlerText:()=>'$:/languages/en-GB'}),'My unique project');
 });
+

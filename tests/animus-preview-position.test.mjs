@@ -6,7 +6,7 @@ import {runInNewContext} from 'node:vm';
 import {SvgNode,svgDocument} from './helpers/svg-test-dom.mjs';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
-const sources=Object.fromEntries(await Promise.all(['widget','sync','playlist','puppet','figure-panel','face','lipsync'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
+const sources=Object.fromEntries(await Promise.all(['cue-score','widget','sync','playlist','puppet','figure-panel','face','lipsync'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
 const cutout=JSON.parse(JSON.parse(await read('plugins/cutout/dist/plugin.json')).text).tiddlers;
 SvgNode.prototype.getAttributeNames=function(){return [...new Set([...Object.keys(this.attributes),...(this.className?['class']:[])])];};
 SvgNode.prototype.cloneNode=function(deep){const node=new SvgNode(this.localName,this.ownerDocument);for(const name of this.getAttributeNames())node.setAttribute(name,this.getAttribute(name));node._text=this._text;node.nodeType=this.nodeType;Object.assign(node.style,this.style);if(deep)for(const child of this.children)node.appendChild(child.cloneNode(true));return node;};
@@ -106,3 +106,4 @@ test('same-time repaint and deselection keep the figure preview in the fully ren
  h.workspace.seek(5);const silent=mouth(stage);assert.equal(silent['prisoner-mouth-closed'].opacity,'1');assert.deepEqual(mouth(preview),silent,'the unselected workshop still follows a later silent pose');
  h.workspace.seek(1);assert.deepEqual(mouth(stage),speaking);assert.deepEqual(mouth(preview),speaking);assert.equal(h.panel.selectedPart(),'');assert.equal(h.rows.Film.text,source,'preview repaint creates no saved facial or animation keys');
 });
+

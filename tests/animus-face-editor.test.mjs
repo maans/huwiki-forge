@@ -7,7 +7,7 @@ import {svgDocument} from './helpers/svg-test-dom.mjs';
 
 const root = new URL('../', import.meta.url), read = path => fs.readFileSync(new URL(path, root), 'utf8');
 const cutout = JSON.parse(JSON.parse(read('plugins/cutout/dist/plugin.json')).text).tiddlers;
-const sources = Object.fromEntries(['playlist', 'motion', 'sfx', 'editor', 'puppet', 'track-preview', 'lipsync', 'face'].map(name => [name, read('plugins/musical/src/' + name + '.js')]));
+const sources = Object.fromEntries(['playlist', 'motion', 'sfx', 'editor', 'puppet', 'track-preview','effects-library', 'lipsync', 'face'].map(name => [name, read('plugins/musical/src/' + name + '.js')]));
 const plain = value => JSON.parse(JSON.stringify(value));
 class Tiddler {constructor(...items) {this.fields = Object.assign({}, ...items.filter(Boolean).map(item => item.fields || item));}}
 function modules() {
@@ -127,3 +127,4 @@ test('leaving animation detail does not resurrect a selection cleared inside it'
   assert.equal(h.editor.inClipDetail(),true,'deselecting does not leave the working view');
   h.editor.closeAnimation();assert.equal(h.editor.getSelection(),null);assert.equal(h.host.querySelector('.huw-musical-track.is-selected'),null);assert.equal(h.writes.length,0);
 });
+

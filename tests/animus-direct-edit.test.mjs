@@ -8,7 +8,7 @@ import {Matrix,svgDocument} from './helpers/svg-test-dom.mjs';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 const cutout=JSON.parse(JSON.parse(await read('plugins/cutout/dist/plugin.json')).text).tiddlers;
 const directEditSource=await read('plugins/cutout/src/direct-edit.js');
-const sources=Object.fromEntries(await Promise.all(['playlist','motion','sfx','editor','puppet','track-preview'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
+const sources=Object.fromEntries(await Promise.all(['playlist','motion','sfx','editor','puppet','track-preview','effects-library'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
 const plain=value=>JSON.parse(JSON.stringify(value));
 class Tiddler {constructor(...items){this.fields=Object.assign({},...items.filter(Boolean).map(i=>i.fields||i));}}
 function wiki(initial){const records=plain(initial),writes=[];return {records,writes,getTiddler:title=>records[title]?new Tiddler(records[title]):null,getTiddlerText:(title,fallback='')=>records[title]?.text??fallback,getTiddlers:()=>Object.keys(records),each(fn){for(const [title,fields] of Object.entries(records))fn(new Tiddler(fields),title);},addTiddler(t){records[t.fields.title]=plain(t.fields);writes.push(t.fields.title);},getModificationFields:()=>({}),generateNewTitle:title=>title};}
@@ -244,3 +244,4 @@ test('film-part appearance editing stays on the film even when scene sources reu
  assert.equal(h.view.nodes['film-text'].shape.getAttribute('fill'),'#aabbcc');assert.equal(h.view.nodes['film-text'].shape.textContent,'Updated whole film');assert.equal(h.view.clips[0].view.nodes['film-text'].shape.textContent,'Nested first');for(const view of [h.view.clips[1].view,h.view.clips[2].view]){assert.equal(view.nodes['film-text'].shape.textContent,'Nested later');assert.equal(view.nodes['film-text'].shape.getAttribute('fill'),'#778899');}
  const saved=JSON.parse(h.w.records.Film.text).parts.find(part=>part.id==='film-text');assert.equal(saved.fill,'#aabbcc');assert.equal(saved.text,'Updated whole film');assert.equal(h.w.records.First.text,firstBefore);assert.equal(h.w.records.Second.text,secondBefore);assert.deepEqual(h.w.writes,['Film','Film']);assert.equal(h.time,12);
 });
+

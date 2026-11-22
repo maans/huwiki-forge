@@ -31,7 +31,10 @@ function matrixText(matrix){return "matrix("+[matrix.a,matrix.b,matrix.c,matrix.
 function point(svg,x,y,matrix){var p=svg.createSVGPoint();p.x=x;p.y=y;return p.matrixTransform(matrix);}
 function relativeMatrix(from,to){try{var a=from&&from.getScreenCTM&&from.getScreenCTM(),b=to&&to.getScreenCTM&&to.getScreenCTM();return a&&b?b.inverse().multiply(a):null;}catch(_unavailable){return null;}}
 function frameFor(svg,node,padding,lookup){try{
- var points=[],items=lookup?[node].concat(Array.prototype.slice.call(node.querySelectorAll("[data-cutout-id]"))):[node];
+ var candidates=[node].concat(Array.prototype.slice.call(node.querySelectorAll("[data-cutout-id]")));
+ var cropped=lookup&&candidates.some(function(el){var entry=lookup[el.getAttribute&&el.getAttribute("data-cutout-id")];return entry&&entry.part&&entry.part.geo&&entry.part.geo.crop;});
+ if(!cropped)lookup=null;
+ var points=[],items=lookup?candidates:[node];
  items.forEach(function(el){var id=el.getAttribute&&el.getAttribute("data-cutout-id"),entry=lookup&&lookup[id],part=entry&&entry.part,geo=part&&part.geo||{},box;
   if(lookup&&(!part||part.type==="group"))return;
   for(var up=el;up&&up!==node.parentNode;up=up.parentNode)if(up.getAttribute&&(up.getAttribute("display")==="none"||up.getAttribute("opacity")==="0"))return;
@@ -54,7 +57,7 @@ function mount(o){
  var O=da?{title:"Hele objektet",fit:"Vis hele objektet",hint:"Træk objektet for at flytte det, eller brug det blå håndtag til at dreje det. Ændringen gemmes ved tidsmarkøren, når du slipper. Tom plads eller Escape slipper markeringen.",appearance:"Redigér / udskift",properties:"Egenskaber",none:"Intet objekt valgt",selected:"Valgt objekt",rotate:"Drej det valgte objekt",invisible:"Objektet er usynligt ved dette tidspunkt.",reveal:"Vis som hjælp",hideReveal:"Skjul hjælpevisning",revealed:"Hjælpevisning · objektet er stadig usynligt i animationen."}:ui.labels({title:"Whole object",fit:"Fit whole object",hint:"Drag the object to move it, or use the blue handle to rotate it. Release to save the change at the playhead. Empty space or Escape clears the selection.",appearance:"Edit / replace",properties:"Properties",none:"No object selected",selected:"Selected object",rotate:"Rotate the selected object",invisible:"The object is invisible at this time.",reveal:"Show as guide",hideReveal:"Hide guide",revealed:"Guide preview · the object is still invisible in the animation."});
  var panel=element(doc,"section","huw-musical-figure-panel",undefined,parent);panel.setAttribute("data-figure-panel","");panel.setAttribute("aria-label",L.title);panel.tabIndex=-1;panel.hidden=true;
  var header=element(doc,"header","huw-musical-figure-header",undefined,panel),title=element(doc,"strong","huw-musical-figure-title",L.title,header),selectedLabel=element(doc,"span","huw-musical-figure-selected-label","",header),clockLabel=element(doc,"span","huw-musical-figure-time","",header);
- var fitWhole=false;
+ var fitWhole=true;
  var fit=element(doc,"button","huw-musical-figure-fit",L.fit,header);fit.type="button";fit.setAttribute("data-figure-fit","");fit.onclick=function(){fitWhole=true;fitFrame();};
  var appearance=element(doc,"button","huw-musical-object-appearance",O.appearance,header);appearance.type="button";appearance.setAttribute("data-object-appearance","");appearance.hidden=true;appearance.onclick=function(){if(!context||!o.onEditAppearance)return;finish(false);o.onEditAppearance(selectedId||context.rootId);};
  var properties=element(doc,"button","huw-musical-object-properties",O.properties,header);properties.type="button";properties.setAttribute("data-object-properties","");properties.hidden=true;properties.onclick=function(){if(!context||!o.onProperties)return;finish(false);o.onProperties(selectedId||context.rootId);};
@@ -122,14 +125,14 @@ function mount(o){
   labels();if(!gesture&&(!frame||force||lastTime!==time))fitFrame();else drawSelection();lastTime=time;return true;
  }
  function select(id,options){if(disposed)return false;var next=id&&resolve(o.view,id,num(o.position(),0),o.film);if(!next)return false;if(gesture&&next.partId!==selectedId)finish(false);
-  if(!context||next.rootId!==context.rootId)reveal=false;if(selectedId!==next.partId){frame=null;fitWhole=false;}selectedId=next.partId;context=next;opened=true;visibility();refresh(false);if(options&&options.focus){panel.focus({preventScroll:true});if(panel.scrollIntoView)panel.scrollIntoView({block:"nearest"});}return true;
+  if(!context||next.rootId!==context.rootId)reveal=false;if(selectedId!==next.partId){frame=null;fitWhole=true;}selectedId=next.partId;context=next;opened=true;visibility();refresh(false);if(options&&options.focus){panel.focus({preventScroll:true});if(panel.scrollIntoView)panel.scrollIntoView({block:"nearest"});}return true;
  }
  function clearSelection(){if(disposed)return false;var changed=!!(selectedId||gesture);finish(false);selectedId="";if(context)context.partId="";labels();drawSelection();if(doc.activeElement===rotate)panel.focus({preventScroll:true});if(changed)status.textContent=L.cleared;return changed;}
  function deselect(){var changed=clearSelection();if(changed&&o.onDeselect)o.onDeselect();return changed;}
  function facialChoice(id){if(context&&context.isObject)return null;var face=context&&editor.faceContext&&editor.faceContext(id),channel=faceHit(face,id);return channel&&o.onFace?{partId:id,actorId:face.actorId,headId:face.headId,tab:channel}:null;}
  function pick(id,routeFace){if(!context)return false;var face=routeFace&&facialChoice(id);
   if(face){o.pause();o.onFace(face);return false;}
-  var normalized=semanticId(context.scene,id);if(!nodes[normalized])return false;selectedId=normalized;context.partId=normalized;frame=null;fitWhole=false;selecting=true;
+  var normalized=semanticId(context.scene,id);if(!nodes[normalized])return false;selectedId=normalized;context.partId=normalized;frame=null;fitWhole=true;selecting=true;
   try{if(editor.selectPart(normalized,true)===false)return false;if(o.onSelect)o.onSelect(normalized);}finally{selecting=false;}
   labels();if(routeFace)fitFrame();else drawSelection();return true;
  }

@@ -61,6 +61,7 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
   '$:/plugins/huwiki/abc/accompaniment.js':{read:()=>({enabled:false}),prepare(){}},
   '$:/plugins/huwiki/abc/start-position.js':{seek(){}},
   '$:/plugins/huwiki/animus-video-export/runtime.js':{attach(options){exportOptions=options;return {dispose(){}};}},
+  '$:/plugins/huwiki/musical/cue-score.js':localModule('cue-score'),
   '$:/plugins/huwiki/musical/sync.js':localModule('sync'),
   '$:/plugins/huwiki/musical/playlist.js':localModule('playlist'),
   '$:/plugins/huwiki/musical/editor.js':{attach(options){editorOptions=options;return {paint(){},redraw(){},dispose(){},
@@ -253,3 +254,4 @@ test('opening directly in stage view and dragging with a pointer skips hidden no
  f.previewMode('split');assert.equal(f.notationRenders,1);
  f.widget._shutdown();
 });
+

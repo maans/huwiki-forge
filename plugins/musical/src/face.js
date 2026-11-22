@@ -69,6 +69,7 @@ function anatomy(scene){var cached=anatomies.get(scene),parts=scene.parts||[];if
    else if(/(?:^| )(?:eye|eyes|oeje|oejne)(?: |$)/.test(label))facial.eyes.push(candidate.id);
    else if(candidate.facialRole==="surface")facial.surfaces.push(candidate.id);
   });
+  if(!facial.surfaces.length)delete facial.surfaces;
   var open=map[facial.open],variants=(open&&open.variants||[]).map(function(variant){return Object.assign({},variant);});
   faces.push({actorId:String(root.actorId||root.characterId||root.id),actorPartId:root.id,headId:head.id,label:String(root.role||root.speaker||root.characterName||root.name||root.id),parts:facial,variants:variants});
  });cached={parts:parts,length:parts.length,map:map,faces:faces};anatomies.set(scene,cached);return cached;
