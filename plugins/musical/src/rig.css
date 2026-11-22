@@ -8,3 +8,6 @@ type: text/css
 .huw-rig-paint button,.huw-musical-rig-controls select,.huw-musical-rig-controls button{margin:.2rem;padding:.4rem}
 .huw-musical-rig-controls label{display:inline-block;margin:.2rem}
 .huw-rig-motion-preview > svg{display:block;width:100%;height:150px;background:#e4f0f5}
+
+.huw-musical-rig-controls .huw-rig-duration{width:6em}
+.huw-musical-lane,.huw-musical-lane-title{-webkit-touch-callout:none}

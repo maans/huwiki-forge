@@ -483,7 +483,7 @@ function mount(o){
   host.classList.toggle("huw-musical--inspector-open",inspectorOpen);
   inspectorButton.setAttribute("aria-pressed",String(inspectorOpen));
  }
- function selection(t){
+ function selection(t,properties){
   // The timeline and stage are two views of the *same* selected object.
   // Selecting a row title, its keyframe or its animation clip must display
   // the corresponding dashed frame without aiming at a tiny stage shape.
@@ -499,13 +499,14 @@ function mount(o){
   var focused=doc.activeElement;if(!focused||focused===doc.body||!focused.isConnected)host.focus({preventScroll:true});
   Array.prototype.forEach.call(o.view.svg.querySelectorAll('.huw-musical-selected-element'),function(node){node.classList.remove('huw-musical-selected-element');});
   updateEditButtons();
+  if(properties&&workshopMode)hideWorkshop();
   if(t&&t.kind==='face'){
    figureRoot=t.part;latestPart=t.part;transformMode='parts';showStageForTool();o.pause();editor.setCameraEdit(false);
-   if(!routingWorkshop)showFaceWorkshop(t.part);updateToolButtons();setInspector(false);refreshHandles();return;
+   if(!routingWorkshop&&!properties)showFaceWorkshop(t.part);updateToolButtons();setInspector(!!properties);refreshHandles();return;
   }
   // A stage gesture opens the workshop only after pointer-up. Changing layout
   // during pointer-down would move the SVG under a finger while dragging.
-  if(!selectingOnStage&&!routingWorkshop){var partId=t&&['part','film-part','motion','figure'].indexOf(t.kind)>=0?t.part:null;if(partId)showPartWorkshop(partId);else hideWorkshop();}
+  if(!properties&&!selectingOnStage&&!routingWorkshop){var partId=t&&['part','film-part','motion','figure'].indexOf(t.kind)>=0?t.part:null;if(partId)showPartWorkshop(partId);else hideWorkshop();}
   if(transformMode==='parts'||(editor.inClipDetail&&editor.inClipDetail()&&t&&t.kind==='motion')){
    if(t&&['part','film-part','motion'].indexOf(t.kind)>=0){figureRoot=t.part;latestPart=t.part;transformMode='parts';o.pause();editor.setCameraEdit(false);}
    if(t&&['part','film-part','motion','animation'].indexOf(t.kind)>=0){updateToolButtons();setInspector(keepInspector||!workshopMode);refreshHandles();return;}
