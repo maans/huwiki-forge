@@ -26378,7 +26378,7 @@
         },
         {
           "id": "back-arm",
-          "name": "Shoulder back",
+          "name": "Højre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -26415,7 +26415,7 @@
         },
         {
           "id": "back-elbow",
-          "name": "Elbow back",
+          "name": "Højre underarm",
           "type": "image",
           "parent": "back-arm",
           "pivot": {
@@ -26452,7 +26452,7 @@
         },
         {
           "id": "back-hand",
-          "name": "Hand back",
+          "name": "Højre hånd",
           "type": "image",
           "parent": "back-elbow",
           "pivot": {
@@ -26481,7 +26481,7 @@
         },
         {
           "id": "back-leg",
-          "name": "Hip back",
+          "name": "Højre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -26518,7 +26518,7 @@
         },
         {
           "id": "back-knee",
-          "name": "Knee back",
+          "name": "Højre underben",
           "type": "image",
           "parent": "back-leg",
           "pivot": {
@@ -26555,7 +26555,7 @@
         },
         {
           "id": "front-arm",
-          "name": "Shoulder front",
+          "name": "Venstre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -26592,7 +26592,7 @@
         },
         {
           "id": "front-elbow",
-          "name": "Elbow front",
+          "name": "Venstre underarm",
           "type": "image",
           "parent": "front-arm",
           "pivot": {
@@ -26629,7 +26629,7 @@
         },
         {
           "id": "front-hand",
-          "name": "Hand front",
+          "name": "Venstre hånd",
           "type": "image",
           "parent": "front-elbow",
           "pivot": {
@@ -26658,7 +26658,7 @@
         },
         {
           "id": "front-leg",
-          "name": "Hip front",
+          "name": "Venstre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -26695,7 +26695,7 @@
         },
         {
           "id": "front-knee",
-          "name": "Knee front",
+          "name": "Venstre underben",
           "type": "image",
           "parent": "front-leg",
           "pivot": {
@@ -26875,7 +26875,7 @@
         },
         {
           "id": "back-arm",
-          "name": "Shoulder back",
+          "name": "Højre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -26912,7 +26912,7 @@
         },
         {
           "id": "back-elbow",
-          "name": "Elbow back",
+          "name": "Højre underarm",
           "type": "image",
           "parent": "back-arm",
           "pivot": {
@@ -26949,7 +26949,7 @@
         },
         {
           "id": "back-hand",
-          "name": "Hand back",
+          "name": "Højre hånd",
           "type": "image",
           "parent": "back-elbow",
           "pivot": {
@@ -26978,7 +26978,7 @@
         },
         {
           "id": "back-leg",
-          "name": "Hip back",
+          "name": "Højre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -27015,7 +27015,7 @@
         },
         {
           "id": "back-knee",
-          "name": "Knee back",
+          "name": "Højre underben",
           "type": "image",
           "parent": "back-leg",
           "pivot": {
@@ -27052,7 +27052,7 @@
         },
         {
           "id": "front-arm",
-          "name": "Shoulder front",
+          "name": "Venstre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -27089,7 +27089,7 @@
         },
         {
           "id": "front-elbow",
-          "name": "Elbow front",
+          "name": "Venstre underarm",
           "type": "image",
           "parent": "front-arm",
           "pivot": {
@@ -27126,7 +27126,7 @@
         },
         {
           "id": "front-hand",
-          "name": "Hand front",
+          "name": "Venstre hånd",
           "type": "image",
           "parent": "front-elbow",
           "pivot": {
@@ -27155,7 +27155,7 @@
         },
         {
           "id": "front-leg",
-          "name": "Hip front",
+          "name": "Venstre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -27192,7 +27192,7 @@
         },
         {
           "id": "front-knee",
-          "name": "Knee front",
+          "name": "Venstre underben",
           "type": "image",
           "parent": "front-leg",
           "pivot": {
@@ -27372,7 +27372,7 @@
         },
         {
           "id": "back-arm",
-          "name": "Shoulder back",
+          "name": "Højre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -27409,7 +27409,7 @@
         },
         {
           "id": "back-elbow",
-          "name": "Elbow back",
+          "name": "Højre underarm",
           "type": "image",
           "parent": "back-arm",
           "pivot": {
@@ -27446,7 +27446,7 @@
         },
         {
           "id": "back-hand",
-          "name": "Hand back",
+          "name": "Højre hånd",
           "type": "image",
           "parent": "back-elbow",
           "pivot": {
@@ -27475,7 +27475,7 @@
         },
         {
           "id": "back-leg",
-          "name": "Hip back",
+          "name": "Højre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -27512,7 +27512,7 @@
         },
         {
           "id": "back-knee",
-          "name": "Knee back",
+          "name": "Højre underben",
           "type": "image",
           "parent": "back-leg",
           "pivot": {
@@ -27549,7 +27549,7 @@
         },
         {
           "id": "front-arm",
-          "name": "Shoulder front",
+          "name": "Venstre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -27586,7 +27586,7 @@
         },
         {
           "id": "front-elbow",
-          "name": "Elbow front",
+          "name": "Venstre underarm",
           "type": "image",
           "parent": "front-arm",
           "pivot": {
@@ -27623,7 +27623,7 @@
         },
         {
           "id": "front-hand",
-          "name": "Hand front",
+          "name": "Venstre hånd",
           "type": "image",
           "parent": "front-elbow",
           "pivot": {
@@ -27652,7 +27652,7 @@
         },
         {
           "id": "front-leg",
-          "name": "Hip front",
+          "name": "Venstre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -27689,7 +27689,7 @@
         },
         {
           "id": "front-knee",
-          "name": "Knee front",
+          "name": "Venstre underben",
           "type": "image",
           "parent": "front-leg",
           "pivot": {
@@ -27869,7 +27869,7 @@
         },
         {
           "id": "back-arm",
-          "name": "Shoulder back",
+          "name": "Højre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -27906,7 +27906,7 @@
         },
         {
           "id": "back-elbow",
-          "name": "Elbow back",
+          "name": "Højre underarm",
           "type": "image",
           "parent": "back-arm",
           "pivot": {
@@ -27943,7 +27943,7 @@
         },
         {
           "id": "back-hand",
-          "name": "Hand back",
+          "name": "Højre hånd",
           "type": "image",
           "parent": "back-elbow",
           "pivot": {
@@ -27972,7 +27972,7 @@
         },
         {
           "id": "back-leg",
-          "name": "Hip back",
+          "name": "Højre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -28009,7 +28009,7 @@
         },
         {
           "id": "back-knee",
-          "name": "Knee back",
+          "name": "Højre underben",
           "type": "image",
           "parent": "back-leg",
           "pivot": {
@@ -28046,7 +28046,7 @@
         },
         {
           "id": "front-arm",
-          "name": "Shoulder front",
+          "name": "Venstre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -28083,7 +28083,7 @@
         },
         {
           "id": "front-elbow",
-          "name": "Elbow front",
+          "name": "Venstre underarm",
           "type": "image",
           "parent": "front-arm",
           "pivot": {
@@ -28120,7 +28120,7 @@
         },
         {
           "id": "front-hand",
-          "name": "Hand front",
+          "name": "Venstre hånd",
           "type": "image",
           "parent": "front-elbow",
           "pivot": {
@@ -28149,7 +28149,7 @@
         },
         {
           "id": "front-leg",
-          "name": "Hip front",
+          "name": "Venstre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -28186,7 +28186,7 @@
         },
         {
           "id": "front-knee",
-          "name": "Knee front",
+          "name": "Venstre underben",
           "type": "image",
           "parent": "front-leg",
           "pivot": {
@@ -28366,7 +28366,7 @@
         },
         {
           "id": "back-arm",
-          "name": "Shoulder back",
+          "name": "Højre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -28403,7 +28403,7 @@
         },
         {
           "id": "back-elbow",
-          "name": "Elbow back",
+          "name": "Højre underarm",
           "type": "image",
           "parent": "back-arm",
           "pivot": {
@@ -28440,7 +28440,7 @@
         },
         {
           "id": "back-hand",
-          "name": "Hand back",
+          "name": "Højre hånd",
           "type": "image",
           "parent": "back-elbow",
           "pivot": {
@@ -28469,7 +28469,7 @@
         },
         {
           "id": "back-leg",
-          "name": "Hip back",
+          "name": "Højre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -28506,7 +28506,7 @@
         },
         {
           "id": "back-knee",
-          "name": "Knee back",
+          "name": "Højre underben",
           "type": "image",
           "parent": "back-leg",
           "pivot": {
@@ -28543,7 +28543,7 @@
         },
         {
           "id": "front-arm",
-          "name": "Shoulder front",
+          "name": "Venstre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -28580,7 +28580,7 @@
         },
         {
           "id": "front-elbow",
-          "name": "Elbow front",
+          "name": "Venstre underarm",
           "type": "image",
           "parent": "front-arm",
           "pivot": {
@@ -28617,7 +28617,7 @@
         },
         {
           "id": "front-hand",
-          "name": "Hand front",
+          "name": "Venstre hånd",
           "type": "image",
           "parent": "front-elbow",
           "pivot": {
@@ -28646,7 +28646,7 @@
         },
         {
           "id": "front-leg",
-          "name": "Hip front",
+          "name": "Venstre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -28683,7 +28683,7 @@
         },
         {
           "id": "front-knee",
-          "name": "Knee front",
+          "name": "Venstre underben",
           "type": "image",
           "parent": "front-leg",
           "pivot": {
@@ -28863,7 +28863,7 @@
         },
         {
           "id": "back-arm",
-          "name": "Shoulder back",
+          "name": "Højre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -28900,7 +28900,7 @@
         },
         {
           "id": "back-elbow",
-          "name": "Elbow back",
+          "name": "Højre underarm",
           "type": "image",
           "parent": "back-arm",
           "pivot": {
@@ -28937,7 +28937,7 @@
         },
         {
           "id": "back-hand",
-          "name": "Hand back",
+          "name": "Højre hånd",
           "type": "image",
           "parent": "back-elbow",
           "pivot": {
@@ -28966,7 +28966,7 @@
         },
         {
           "id": "back-leg",
-          "name": "Hip back",
+          "name": "Højre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -29003,7 +29003,7 @@
         },
         {
           "id": "back-knee",
-          "name": "Knee back",
+          "name": "Højre underben",
           "type": "image",
           "parent": "back-leg",
           "pivot": {
@@ -29040,7 +29040,7 @@
         },
         {
           "id": "front-arm",
-          "name": "Shoulder front",
+          "name": "Venstre overarm",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -29077,7 +29077,7 @@
         },
         {
           "id": "front-elbow",
-          "name": "Elbow front",
+          "name": "Venstre underarm",
           "type": "image",
           "parent": "front-arm",
           "pivot": {
@@ -29114,7 +29114,7 @@
         },
         {
           "id": "front-hand",
-          "name": "Hand front",
+          "name": "Venstre hånd",
           "type": "image",
           "parent": "front-elbow",
           "pivot": {
@@ -29143,7 +29143,7 @@
         },
         {
           "id": "front-leg",
-          "name": "Hip front",
+          "name": "Venstre lår",
           "type": "image",
           "parent": "actor",
           "pivot": {
@@ -29180,7 +29180,7 @@
         },
         {
           "id": "front-knee",
-          "name": "Knee front",
+          "name": "Venstre underben",
           "type": "image",
           "parent": "front-leg",
           "pivot": {

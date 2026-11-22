@@ -81,7 +81,7 @@
         "name": "AniMus · Kenney Starter",
         "description": "Six articulated characters, scenery and individual props / Seks ledopdelte figurer, kulisser og rekvisitter",
         "author": "HUWiki Forge",
-        "version": "0.1.0",
+        "version": "0.1.1",
         "plugin-type": "plugin",
         "dependents": "$:/plugins/huwiki/musical",
         "requires-reload": "yes",

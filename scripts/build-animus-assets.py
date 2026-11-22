@@ -37,14 +37,14 @@ def toon_entries(folder):
    p=image_part(key,name,parent,v['id'],x,y,w,h,crop);ps.append(p);return p
   # The original straight arm and leg are split at their middle. Pivots stay
   # at the cut edge, so elbows and knees rotate without detaching the artwork.
-  for side,x in [('back',-40),('front',40)]:
+  for side,x,label in [('back',-40,'Højre'),('front',40,'Venstre')]:
    for bone,a,y in [('arm','arm',-158),('leg','leg',-52)]:
     v=by[a];half=v['height']/2
     first=dict(x=0,y=0,w=v['width'],h=half,sourceWidth=v['width'],sourceHeight=v['height'])
     second={**first,'y':half}
-    upper=img(side+'-'+bone,('Shoulder' if bone=='arm' else 'Hip')+' '+side,'actor',a,x if bone=='arm' else x*.5,y,crop=first)
-    img(side+'-'+('elbow' if bone=='arm' else 'knee'),('Elbow' if bone=='arm' else 'Knee')+' '+side,upper['id'],a,0,half*3-1,crop=second)
-    if bone=='arm':img(side+'-hand','Hand '+side,side+'-elbow','hand',0,half*3-5,scale=2.4)
+    upper=img(side+'-'+bone,label+(' overarm' if bone=='arm' else ' lår'),'actor',a,x if bone=='arm' else x*.5,y,crop=first)
+    img(side+'-'+('elbow' if bone=='arm' else 'knee'),label+(' underarm' if bone=='arm' else ' underben'),upper['id'],a,0,half*3-1,crop=second)
+    if bone=='arm':img(side+'-hand',label+' hånd',side+'-elbow','hand',0,half*3-5,scale=2.4)
   img('body','Body','actor','body',0,-162)
   p=img('head','Head','actor','head',0,-113);p['geo']['y']=-by['head']['height']*3
   # Remove unused head/back/pose files from the character's dependency list.
@@ -143,13 +143,13 @@ def package(name,title,entries,scene_name):
    if not parent:
     if e['category']=='figure':part['keys']=[pose(260+figure_index*230,470)];figure_index+=1
     elif e['category']=='prop':part['keys']=[pose(500,320)]
-   if e['collection']=='kenney-toon' and part.get('name','').startswith('Elbow front'):
+   if e['collection']=='kenney-toon' and part['id']==ids.get('front-elbow'):
     first=part['keys'][0];part['keys']=[{**first,'t':t,'r':angle} for t,angle in [(0,0),(4,-35),(8,0),(12,-35),(16,0)]]
    scene['parts'].append(part)
  template=prefix+'/template';tiddlers[template]=dict(title=template,type='application/json',tags='$:/tags/AniMus/Template',**{'cutout-project':'yes','cutout-id':scene['id'],'animus-template-name':title},text=json.dumps(scene,ensure_ascii=False))
  # Keep the entry gallery native to TiddlyWiki; adding to a scene uses the shared picker.
  page=title;tiddlers[page]=dict(title=page,tags='AniMus',text='<$animus-new-project template="'+template+'"/>')
- info=dict(title=prefix,name=title,description=scene_name,author='HUWiki Forge',version='0.1.0',type='application/json',**{'plugin-type':'plugin','requires-reload':'yes','dependents':'$:/plugins/huwiki/musical','license':'Mixed; per-element provenance'})
+ info=dict(title=prefix,name=title,description=scene_name,author='HUWiki Forge',version=('0.1.1' if name=='animus-starter-kenney' else '0.1.0'),type='application/json',**{'plugin-type':'plugin','requires-reload':'yes','dependents':'$:/plugins/huwiki/musical','license':'Mixed; per-element provenance'})
  save_json(ROOT/'plugins'/name/'dist/plugin.json',{**info,'text':json.dumps({'tiddlers':tiddlers},ensure_ascii=False,separators=(',',':'))})
 
 def main():
