@@ -1,0 +1,5583 @@
+{
+  "kenneyRevision": "45df48c4d45f8716216b1a9e22df0b69cd9f5932",
+  "glitchRevision": "478902aa91b0355c798991ed97dd8e7191308f48",
+  "backgrounds": [
+    {
+      "path": "Backgrounds/Elements/cloudLayer1.png",
+      "sha": "a78cf70626d77491750ce4746b810a21e075b70b",
+      "size": 4284
+    },
+    {
+      "path": "Backgrounds/Elements/cloudLayer2.png",
+      "sha": "2f038fa3e264bff09c1de256af58f43fdcb2de6b",
+      "size": 3141
+    },
+    {
+      "path": "Backgrounds/Elements/cloudLayerB1.png",
+      "sha": "a99c31fbc47164b9c69d9d2758f6609731396547",
+      "size": 5071
+    },
+    {
+      "path": "Backgrounds/Elements/cloudLayerB2.png",
+      "sha": "9da8ec407a26cce81808f0394145fabd2502ead4",
+      "size": 3648
+    },
+    {
+      "path": "Backgrounds/Elements/groundLayer1.png",
+      "sha": "d3fc4f8850e95643fc42f15a45e84db932ce5bab",
+      "size": 2549
+    },
+    {
+      "path": "Backgrounds/Elements/groundLayer2.png",
+      "sha": "72e0bc94ccc2b4553c986e346a73c9e838eac233",
+      "size": 1423
+    },
+    {
+      "path": "Backgrounds/Elements/hills.png",
+      "sha": "d0a0f68f8cd87c7c2b477e2e434c7cfd2fb56d6e",
+      "size": 4242
+    },
+    {
+      "path": "Backgrounds/Elements/hillsLarge.png",
+      "sha": "7935eaabcd91c9fb6d046c064cc25245bd0d6e5d",
+      "size": 5211
+    },
+    {
+      "path": "Backgrounds/Elements/mountainA.png",
+      "sha": "a62926882b2250eb30ed479ae69fd8b340aed850",
+      "size": 3685
+    },
+    {
+      "path": "Backgrounds/Elements/mountainB.png",
+      "sha": "197fc44fadabf806cb3c0de39f4b346ea2ed058e",
+      "size": 3160
+    },
+    {
+      "path": "Backgrounds/Elements/mountainC.png",
+      "sha": "77d5c3ad7ad74431ecd812deff4917f4e453d079",
+      "size": 4106
+    },
+    {
+      "path": "Backgrounds/Elements/mountains.png",
+      "sha": "874aace8311bb8f0437470e2ad5c33baf83ce242",
+      "size": 5254
+    },
+    {
+      "path": "Backgrounds/backgroundCastles.png",
+      "sha": "bae0cd9d3834802052f2552b66559dd3dcd38f02",
+      "size": 14738
+    },
+    {
+      "path": "Backgrounds/backgroundColorDesert.png",
+      "sha": "88b351f0d3274a3ae37aa556936f3e6c7786aa9d",
+      "size": 18073
+    },
+    {
+      "path": "Backgrounds/backgroundColorFall.png",
+      "sha": "bc7e2a63c4f85a534193c1fee5fe1711eb620ff1",
+      "size": 20649
+    },
+    {
+      "path": "Backgrounds/backgroundColorForest.png",
+      "sha": "05b015494ae14944512683e6269a9951600b169e",
+      "size": 21963
+    },
+    {
+      "path": "Backgrounds/backgroundColorGrass.png",
+      "sha": "87ce76f497956e8d8f4efe267e9b84d926ba7f27",
+      "size": 22809
+    },
+    {
+      "path": "Backgrounds/backgroundDesert.png",
+      "sha": "37bfa8e0f5c59fd0240d05b9362f39e524ef1aee",
+      "size": 16511
+    },
+    {
+      "path": "Backgrounds/backgroundEmpty.png",
+      "sha": "225adf4c152fdb8748a71172636185d600cdb4b5",
+      "size": 9444
+    },
+    {
+      "path": "Backgrounds/backgroundForest.png",
+      "sha": "f000859bd3b2f87780dd5318bfa28cdbc6baab48",
+      "size": 20205
+    },
+    {
+      "path": "PNG/Default/bush1.png",
+      "sha": "c2b2bf2dfe33e87af112fdd9c7c49e58dde4177c",
+      "size": 889
+    },
+    {
+      "path": "PNG/Default/bush2.png",
+      "sha": "5196a7d0cf455bbaa50c239011bd0bf44bfb660e",
+      "size": 1240
+    },
+    {
+      "path": "PNG/Default/bush3.png",
+      "sha": "a500ed1e8bb9fd14c56062da31199b7ce96d3a95",
+      "size": 1484
+    },
+    {
+      "path": "PNG/Default/bush4.png",
+      "sha": "5b52b1813415dfa85ecb794d599693cd9d393179",
+      "size": 1414
+    },
+    {
+      "path": "PNG/Default/bushAlt1.png",
+      "sha": "55d10292bd38f3895637d96fb470422e16b97633",
+      "size": 984
+    },
+    {
+      "path": "PNG/Default/bushAlt2.png",
+      "sha": "e85aa013dc99fbdfbd210e78e474533a633e59fc",
+      "size": 1301
+    },
+    {
+      "path": "PNG/Default/bushAlt3.png",
+      "sha": "567ce2f58ef8a958b36d7a582684756f0334c93e",
+      "size": 1249
+    },
+    {
+      "path": "PNG/Default/bushAlt4.png",
+      "sha": "5a6a62e910049b78e1fc9c6390bf1037de485f72",
+      "size": 1380
+    },
+    {
+      "path": "PNG/Default/bushOrange1.png",
+      "sha": "2a81c8746411848519eb33b6c4b36700eb6eb7de",
+      "size": 959
+    },
+    {
+      "path": "PNG/Default/bushOrange2.png",
+      "sha": "063d34cdaa1ff12f511d98bcd0b1f836fd9ebfd8",
+      "size": 1354
+    },
+    {
+      "path": "PNG/Default/bushOrange3.png",
+      "sha": "362dd8ffd20dbcef3bf06a2f7345f288d4a08d18",
+      "size": 1495
+    },
+    {
+      "path": "PNG/Default/bushOrange4.png",
+      "sha": "5738d6891ea3ef17dc91ddfbb5bc15a069becfdb",
+      "size": 1079
+    },
+    {
+      "path": "PNG/Default/cactus1.png",
+      "sha": "1168be06837bf926604c1e41cac4af20e6a21f0d",
+      "size": 1572
+    },
+    {
+      "path": "PNG/Default/cactus2.png",
+      "sha": "c10152ee84eea9fbffc7fbedb343fb585066fb26",
+      "size": 1378
+    },
+    {
+      "path": "PNG/Default/cactus3.png",
+      "sha": "0cb3143cfd60a9960db0247cac7c8a97fca14b63",
+      "size": 1308
+    },
+    {
+      "path": "PNG/Default/castleSmall.png",
+      "sha": "6d42973f17c80452c193f87d3461a28be0d2a0a2",
+      "size": 1407
+    },
+    {
+      "path": "PNG/Default/castleSmallAlt.png",
+      "sha": "3bf1863c90899142be11a5c177f8edf16e57a929",
+      "size": 1479
+    },
+    {
+      "path": "PNG/Default/castleWall.png",
+      "sha": "9c6652c3fab17e1d2e95b74909bd2cd1b247ff74",
+      "size": 197
+    },
+    {
+      "path": "PNG/Default/castleWallAlt.png",
+      "sha": "8778341e887749fe2455f7e6fe2ec27f5675b0db",
+      "size": 165
+    },
+    {
+      "path": "PNG/Default/cloud1.png",
+      "sha": "e75a510ef198ca058668310105d83d859de39dfb",
+      "size": 2104
+    },
+    {
+      "path": "PNG/Default/cloud2.png",
+      "sha": "cb6c8f17a54db45a427908574180f2e7d4ea547b",
+      "size": 2331
+    },
+    {
+      "path": "PNG/Default/cloud3.png",
+      "sha": "5af256966db0723a6bfb7a6325b0a7fcfceef947",
+      "size": 2214
+    },
+    {
+      "path": "PNG/Default/cloud4.png",
+      "sha": "67382ef0a03b0c50a461b266620d34ec8d83635d",
+      "size": 2516
+    },
+    {
+      "path": "PNG/Default/cloud5.png",
+      "sha": "edc71ed1461370cafeb2afefef3502df60a04ef9",
+      "size": 2140
+    },
+    {
+      "path": "PNG/Default/cloud6.png",
+      "sha": "b5c526f4c4fc70fbcbe3ca80aa437d3e5011ea56",
+      "size": 2367
+    },
+    {
+      "path": "PNG/Default/cloud7.png",
+      "sha": "dccbd0d89e1398d482f431c378795647fcd462c4",
+      "size": 2260
+    },
+    {
+      "path": "PNG/Default/cloud8.png",
+      "sha": "71ce3dc6c3b6e36e8cccbccc006d3f2396627123",
+      "size": 2538
+    },
+    {
+      "path": "PNG/Default/fence.png",
+      "sha": "17069f87617514c77bcb08e4259c25aa494fb4d8",
+      "size": 1368
+    },
+    {
+      "path": "PNG/Default/fenceIron.png",
+      "sha": "88504b7ce724c833d5a9dfe37d614746851ec9fb",
+      "size": 869
+    },
+    {
+      "path": "PNG/Default/house1.png",
+      "sha": "9fb58c47841a889b7a1fb6a31d184f2598e79326",
+      "size": 4015
+    },
+    {
+      "path": "PNG/Default/house2.png",
+      "sha": "fedf30de783dc257ee41810f97c87889dc67de8a",
+      "size": 4232
+    },
+    {
+      "path": "PNG/Default/houseAlt1.png",
+      "sha": "6d889bec06888bf4aa36b0319c06d7bd39166233",
+      "size": 3752
+    },
+    {
+      "path": "PNG/Default/houseAlt2.png",
+      "sha": "b6215ca66716cf05a2ecfba29a24ba47f75d836b",
+      "size": 3890
+    },
+    {
+      "path": "PNG/Default/houseSmall1.png",
+      "sha": "ffd5ca3515023ba9248135039d3d90ef6433a6b4",
+      "size": 1043
+    },
+    {
+      "path": "PNG/Default/houseSmall2.png",
+      "sha": "35eb083ce44e6e2f25a6136140c5d01eb7fc99c8",
+      "size": 1256
+    },
+    {
+      "path": "PNG/Default/houseSmallAlt1.png",
+      "sha": "114ad5c543760b90c0501f6d56ad4e764ae34d4d",
+      "size": 895
+    },
+    {
+      "path": "PNG/Default/houseSmallAlt2.png",
+      "sha": "426693fecb168a31c6e559ed6e6618e761c6981b",
+      "size": 1167
+    },
+    {
+      "path": "PNG/Default/moon.png",
+      "sha": "4c21b93dd76f800d4d3809eb9a12eb1c0d071a56",
+      "size": 1601
+    },
+    {
+      "path": "PNG/Default/moonFull.png",
+      "sha": "bb04cf16b8fcb45067cacc1ef7899a1ea1f5a67c",
+      "size": 1600
+    },
+    {
+      "path": "PNG/Default/pyramid.png",
+      "sha": "19c9deb32397dd9dd983a6b4cd498fd689eefcc9",
+      "size": 3122
+    },
+    {
+      "path": "PNG/Default/pyramidMayan.png",
+      "sha": "53e700e710ed601cad6b625b0a24d1f736b34843",
+      "size": 2926
+    },
+    {
+      "path": "PNG/Default/sun.png",
+      "sha": "0004b9e64e7feb5d1273b3f3efabdb9796e4e8a5",
+      "size": 1285
+    },
+    {
+      "path": "PNG/Default/tower.png",
+      "sha": "198fe078098d9ac9ee6dc60ef7171580cef3cbb7",
+      "size": 1466
+    },
+    {
+      "path": "PNG/Default/towerAlt.png",
+      "sha": "93babc0229930cab6fee3c56875d68dc95c62105",
+      "size": 1451
+    },
+    {
+      "path": "PNG/Default/towerSmall.png",
+      "sha": "3c134c375906d1271ea8c2bbff18bc0139dd2a3d",
+      "size": 894
+    },
+    {
+      "path": "PNG/Default/towerSmallAlt.png",
+      "sha": "212293f7e875ad28e5e6029e65a6c96c12086fbc",
+      "size": 899
+    },
+    {
+      "path": "PNG/Default/tree.png",
+      "sha": "89357fd067ff22fc13f1756b132c1fd0d6396b00",
+      "size": 2743
+    },
+    {
+      "path": "PNG/Default/treeDead.png",
+      "sha": "4824eafc106edf76b386e10db955eebdb1d25ea3",
+      "size": 4089
+    },
+    {
+      "path": "PNG/Default/treeFrozen.png",
+      "sha": "b3bb0450332a7214e9f6e7fa4bfa10c22507a8cb",
+      "size": 3134
+    },
+    {
+      "path": "PNG/Default/treeLong.png",
+      "sha": "70ac5739acc71491adecc0d93f001d0fc5a0403a",
+      "size": 2085
+    },
+    {
+      "path": "PNG/Default/treeLongFrozen.png",
+      "sha": "af200e32774260f5a909029734e5d0310de58800",
+      "size": 1824
+    },
+    {
+      "path": "PNG/Default/treeLongOrange.png",
+      "sha": "2e340de3bd51f614c571ac494e02669a6be85131",
+      "size": 2202
+    },
+    {
+      "path": "PNG/Default/treeLongSnow.png",
+      "sha": "7b080d1ee8237c903f7bcda32df9a3dce4560d7f",
+      "size": 2517
+    },
+    {
+      "path": "PNG/Default/treeOrange.png",
+      "sha": "7f550d05147f7f8503f3d6491d537f00fd3bde51",
+      "size": 2854
+    },
+    {
+      "path": "PNG/Default/treePalm.png",
+      "sha": "eb67c1b809855c8bd811d189d564331533714e89",
+      "size": 4201
+    },
+    {
+      "path": "PNG/Default/treePine.png",
+      "sha": "80381fea738ef52f13f906481468e15b760860f6",
+      "size": 2562
+    },
+    {
+      "path": "PNG/Default/treePineFrozen.png",
+      "sha": "3d7c03247919d53c2f49941abc444cfe259afc84",
+      "size": 2696
+    },
+    {
+      "path": "PNG/Default/treePineOrange.png",
+      "sha": "89c591b825cb5a4edc308763133fe531ab8ca437",
+      "size": 2820
+    },
+    {
+      "path": "PNG/Default/treePineSnow.png",
+      "sha": "4d8633fa3ded3d596853e793f38e7b783bab8939",
+      "size": 3231
+    },
+    {
+      "path": "PNG/Default/treeSmall_green1.png",
+      "sha": "1834b4fd584c4e0911a84df33c19b4a27236d03f",
+      "size": 735
+    },
+    {
+      "path": "PNG/Default/treeSmall_green2.png",
+      "sha": "d937933d6e620bea90c32cf7a6794a68c8b9c016",
+      "size": 870
+    },
+    {
+      "path": "PNG/Default/treeSmall_green3.png",
+      "sha": "13e0fb964ecf1bf02a227805b5be848271ee2c26",
+      "size": 621
+    },
+    {
+      "path": "PNG/Default/treeSmall_greenAlt1.png",
+      "sha": "1be67cceb6a8185be0023f3730bc0a2f0af4f0ce",
+      "size": 745
+    },
+    {
+      "path": "PNG/Default/treeSmall_greenAlt2.png",
+      "sha": "0739058f413769bb2a02c9ad42bc4c860ac63aec",
+      "size": 863
+    },
+    {
+      "path": "PNG/Default/treeSmall_greenAlt3.png",
+      "sha": "d56803e23edeed7ba15f8aa90c71f76e9219a774",
+      "size": 620
+    },
+    {
+      "path": "PNG/Default/treeSmall_orange1.png",
+      "sha": "874da841f33a6428bb5e887d38429dcb5164ddf7",
+      "size": 745
+    },
+    {
+      "path": "PNG/Default/treeSmall_orange2.png",
+      "sha": "b9dddea7a0af8529c6011d527c935fb5befe5266",
+      "size": 782
+    },
+    {
+      "path": "PNG/Default/treeSmall_orange3.png",
+      "sha": "a22de2a2218990c63d4f3b9c58bb240a257a3072",
+      "size": 620
+    },
+    {
+      "path": "PNG/Default/treeSnow.png",
+      "sha": "639724a0c6269776d2cc024d4e12d6c13c53547f",
+      "size": 3324
+    },
+    {
+      "path": "Preview.png",
+      "sha": "7fb43fd2d5f3bf21aa6bc621c2c5c5898c395bd5",
+      "size": 44163
+    },
+    {
+      "path": "Sample.png",
+      "sha": "3745744ecea99ee846f1a0b607e223f57055ddd3",
+      "size": 34973
+    },
+    {
+      "path": "Spritesheet/spritesheet_default.png",
+      "sha": "622a8c50269dea10557a471ac1d8ad091fdc6cb4",
+      "size": 86748
+    },
+    {
+      "path": "Spritesheet/spritesheet_retina.png",
+      "sha": "794d4de439f9957951eaf09df441eedc6617623d",
+      "size": 190109
+    }
+  ],
+  "glitch": [
+    {
+      "path": "alchemy/essence_of_gandlevery/essence_of_gandlevery.png",
+      "sha": "b3997a83c535a691004a57333608f876e9fdf79e",
+      "size": 5398
+    },
+    {
+      "path": "alchemy/essence_of_hairball/essence_of_hairball.png",
+      "sha": "18ea31d9f4ec9013ca8c8ed5caa6d0b9f3675395",
+      "size": 5463
+    },
+    {
+      "path": "alchemy/essence_of_purple/essence_of_purple.png",
+      "sha": "ceafd8d18faf84e9e25041b5de9ffd42c806ad2c",
+      "size": 5707
+    },
+    {
+      "path": "alchemy/essence_of_rookswort/essence_of_rookswort.png",
+      "sha": "f064bce21b8c8684bb202b291243630f7ed02bf5",
+      "size": 5225
+    },
+    {
+      "path": "alchemy/essence_of_rubeweed/essence_of_rubeweed.png",
+      "sha": "6cfb254f4d7ba499259d1277eb97f1abd45936a0",
+      "size": 5508
+    },
+    {
+      "path": "alchemy/essence_of_silvertongue/essence_of_silvertongue.png",
+      "sha": "d1fd1b65fcd56a59ffb30b912a4f6434df1b5217",
+      "size": 5377
+    },
+    {
+      "path": "alchemy/essence_of_yellow_crumb/essence_of_yellow_crumb.png",
+      "sha": "2c9701f0f67cf4c9043f2c212077f1320b81aebb",
+      "size": 5193
+    },
+    {
+      "path": "alchemy/extremely_hallowed_shrine_powder/extremely_hallowed_shrine_powder.png",
+      "sha": "da1edd1a8c6609d445e32cc85b52a8ce6741eb39",
+      "size": 8188
+    },
+    {
+      "path": "alchemy/fairly_hallowed_shrine_powder/fairly_hallowed_shrine_powder.png",
+      "sha": "8db1cb6ed2555a4f61a304ef5f111e10f0259eaf",
+      "size": 2916
+    },
+    {
+      "path": "alchemy/fertilidust/fertilidust.png",
+      "sha": "72ad57a1535d8ec12dce2725bd790d6d307f8629",
+      "size": 8175
+    },
+    {
+      "path": "alchemy/fertilidust_lite/fertilidust_lite.png",
+      "sha": "02029556c900a59942fafe7ae5ec180e35d400f3",
+      "size": 6937
+    },
+    {
+      "path": "alchemy/juju_shoo_shoo_powder/juju_shoo_shoo_powder.png",
+      "sha": "5ddb5c3e855113fc4d812f6391b97dd0c00aa6bd",
+      "size": 3147
+    },
+    {
+      "path": "alchemy/krazy_salts/krazy_salts.png",
+      "sha": "313ac9b67c0aaf4d2763cce1096b2a9c21ac8a10",
+      "size": 13263
+    },
+    {
+      "path": "alchemy/no_no_powder/no_no_powder.png",
+      "sha": "c07f1be4232c51de46cefc685fbad29290f5878c",
+      "size": 3119
+    },
+    {
+      "path": "alchemy/potion_alphabet_sauce/potion_alphabet_sauce.png",
+      "sha": "49e5e459e82d525336b3b2eb2a9b965fc816b423",
+      "size": 16446
+    },
+    {
+      "path": "alchemy/potion_amorous_philtre/potion_amorous_philtre.png",
+      "sha": "f3a8de55f29737f4a88775f069421ee1f567e716",
+      "size": 6463
+    },
+    {
+      "path": "alchemy/potion_ancestral_spirits/potion_ancestral_spirits.png",
+      "sha": "68adaf117f5d2069d025bd4b45f5272dfa47e17e",
+      "size": 6265
+    },
+    {
+      "path": "alchemy/potion_animal_youth/potion_animal_youth.png",
+      "sha": "a56f04ad472710720f9e932297ed227692820a16",
+      "size": 6589
+    },
+    {
+      "path": "alchemy/potion_avatar_large/potion_avatar_large.png",
+      "sha": "79fb2558cb485a072ae1a2dd63898aed1c646d60",
+      "size": 128
+    },
+    {
+      "path": "alchemy/potion_avatar_mixup/potion_avatar_mixup.png",
+      "sha": "79fb2558cb485a072ae1a2dd63898aed1c646d60",
+      "size": 128
+    },
+    {
+      "path": "alchemy/potion_avatar_small/potion_avatar_small.png",
+      "sha": "79fb2558cb485a072ae1a2dd63898aed1c646d60",
+      "size": 128
+    },
+    {
+      "path": "alchemy/potion_charades/potion_charades.png",
+      "sha": "5216cca10fb948a1cad957451949bb98c8294d66",
+      "size": 6126
+    },
+    {
+      "path": "alchemy/potion_chris/potion_chris.png",
+      "sha": "0acca16d07b90664b56f587b297fe0125b6c58fe",
+      "size": 6929
+    },
+    {
+      "path": "alchemy/potion_draught_of_giant_amicability/potion_draught_of_giant_amicability.png",
+      "sha": "8a1d911fdae131f0a9f087eb4cb950a7fc709114",
+      "size": 6628
+    },
+    {
+      "path": "alchemy/potion_elixir_of_avarice/potion_elixir_of_avarice.png",
+      "sha": "132b936251a85912b89b016f043624dc48e9fae7",
+      "size": 6629
+    },
+    {
+      "path": "alchemy/potion_favor/potion_favor.png",
+      "sha": "8a1d911fdae131f0a9f087eb4cb950a7fc709114",
+      "size": 6628
+    },
+    {
+      "path": "alchemy/potion_garden_clear/potion_garden_clear.png",
+      "sha": "79fb2558cb485a072ae1a2dd63898aed1c646d60",
+      "size": 128
+    },
+    {
+      "path": "alchemy/potion_garden_fertilize/potion_garden_fertilize.png",
+      "sha": "79fb2558cb485a072ae1a2dd63898aed1c646d60",
+      "size": 128
+    },
+    {
+      "path": "alchemy/potion_garden_harvest/potion_garden_harvest.png",
+      "sha": "79fb2558cb485a072ae1a2dd63898aed1c646d60",
+      "size": 128
+    },
+    {
+      "path": "alchemy/potion_garden_plant/potion_garden_plant.png",
+      "sha": "79fb2558cb485a072ae1a2dd63898aed1c646d60",
+      "size": 128
+    },
+    {
+      "path": "alchemy/potion_garden_water/potion_garden_water.png",
+      "sha": "79fb2558cb485a072ae1a2dd63898aed1c646d60",
+      "size": 128
+    },
+    {
+      "path": "alchemy/potion_keycutter_tonic/potion_keycutter_tonic.png",
+      "sha": "17407cc852ece3bc037e5ab8e32e13eec14eeafa",
+      "size": 6648
+    },
+    {
+      "path": "alchemy/potion_rainbow_juice/potion_rainbow_juice.png",
+      "sha": "bc844db28693f53be826a90df534c83e7fb4440d",
+      "size": 6438
+    },
+    {
+      "path": "alchemy/potion_rocky_regeneration_solution/potion_rocky_regeneration_solution.png",
+      "sha": "952c2a651ed7f4e4863d5b14a8730fc0b22ac556",
+      "size": 6543
+    },
+    {
+      "path": "alchemy/potion_rook_balm/potion_rook_balm.png",
+      "sha": "e825e2c531b0d21d1f60f5730d612f946356f390",
+      "size": 6986
+    },
+    {
+      "path": "alchemy/potion_trantsformation_fluid/potion_trantsformation_fluid.png",
+      "sha": "0c36267e5351e6b5cc755c643a3bccf0b5021524",
+      "size": 5862
+    },
+    {
+      "path": "alchemy/potion_tree_poison/potion_tree_poison.png",
+      "sha": "8a47b83188c54b0f60abeaa85c0da49ee794926c",
+      "size": 7139
+    },
+    {
+      "path": "alchemy/potion_tree_poison_antidote/potion_tree_poison_antidote.png",
+      "sha": "386518258fa53569f2d49e804263e6f3fc535d64",
+      "size": 6688
+    },
+    {
+      "path": "alchemy/potion_xp/potion_xp.png",
+      "sha": "c303b267e77a1a1757f67c4690c48d69b4abf092",
+      "size": 2743
+    },
+    {
+      "path": "alchemy/powder_of_mild_fecundity/powder_of_mild_fecundity.png",
+      "sha": "171ffc8d5d5925b141062f6bdb5a7521162744a8",
+      "size": 5703
+    },
+    {
+      "path": "alchemy/powder_of_startling_fecundity/powder_of_startling_fecundity.png",
+      "sha": "28343169a94f5a45786a7acd509288d130c9ac6a",
+      "size": 3651
+    },
+    {
+      "path": "alchemy/sneezing_powder/sneezing_powder.png",
+      "sha": "3d506f74fc8b4fdca507bd59f7660d1d5bb038d1",
+      "size": 2957
+    },
+    {
+      "path": "alchemy/sparkle_powder/sparkle_powder.png",
+      "sha": "adb143920bd23f6c3bc015ad92a031ece084192b",
+      "size": 6162
+    },
+    {
+      "path": "alchemy/tree_poison/tree_poison.png",
+      "sha": "02ac99f68f335a798fb0905911b1e833b8b51f21",
+      "size": 13991
+    },
+    {
+      "path": "alchemy/tree_poison_antidote/tree_poison_antidote.png",
+      "sha": "f73c37ad7bbf9c9601d967e7d76b94d0894a5310",
+      "size": 6389
+    },
+    {
+      "path": "artifacts/artifact_butterfly_hair_clip/artifact_butterfly_hair_clip.png",
+      "sha": "76382a1826bce29a0cbe3952848bc8910d75acec",
+      "size": 10283
+    },
+    {
+      "path": "artifacts/artifact_chicken_brick/artifact_chicken_brick.png",
+      "sha": "40296ef1728d06b35bd2aafa215e56eec01056ce",
+      "size": 13427
+    },
+    {
+      "path": "artifacts/artifact_chicken_brick_piece1/artifact_chicken_brick_piece1.png",
+      "sha": "7eada030bc031916bcfa7a8b882a58270e441226",
+      "size": 4533
+    },
+    {
+      "path": "artifacts/artifact_chicken_brick_piece2/artifact_chicken_brick_piece2.png",
+      "sha": "7eada030bc031916bcfa7a8b882a58270e441226",
+      "size": 4533
+    },
+    {
+      "path": "artifacts/artifact_chicken_brick_piece3/artifact_chicken_brick_piece3.png",
+      "sha": "e7c95d60718e38f4fc49939e767d6ef4f7bbd1dd",
+      "size": 4097
+    },
+    {
+      "path": "artifacts/artifact_chicken_brick_piece4/artifact_chicken_brick_piece4.png",
+      "sha": "e800e8840a56ac95d86129f535fedefe4c4d976f",
+      "size": 2908
+    },
+    {
+      "path": "artifacts/artifact_chicken_brick_piece5/artifact_chicken_brick_piece5.png",
+      "sha": "0eec6460648d54c3d231631b991e54aadb233f24",
+      "size": 3887
+    },
+    {
+      "path": "artifacts/artifact_glove_metal_finger/artifact_glove_metal_finger.png",
+      "sha": "a7d06597053b4de175be5ccbd2fd7bdbc8a66fc0",
+      "size": 4828
+    },
+    {
+      "path": "artifacts/artifact_glove_metal_finger_piece1/artifact_glove_metal_finger_piece1.png",
+      "sha": "09ef856a96fd9f1f13ad8edd6c9db35eebf61789",
+      "size": 1816
+    },
+    {
+      "path": "artifacts/artifact_glove_metal_finger_piece2/artifact_glove_metal_finger_piece2.png",
+      "sha": "fa78fe1edce2b3c1231a4f03e8d1a49b2a5ed353",
+      "size": 3659
+    },
+    {
+      "path": "artifacts/artifact_glove_metal_finger_piece3/artifact_glove_metal_finger_piece3.png",
+      "sha": "54216e1a8700756a9f24af5b66a6f73fc22eaa5e",
+      "size": 2321
+    },
+    {
+      "path": "artifacts/artifact_magical_pendant/artifact_magical_pendant.png",
+      "sha": "0341d8950030f8b177b34fde99aedb2a8c315fbb",
+      "size": 5409
+    },
+    {
+      "path": "artifacts/artifact_magical_pendant_piece1/artifact_magical_pendant_piece1.png",
+      "sha": "32a375aebba1afa5d1988ddb15b264ad6fd62c57",
+      "size": 3108
+    },
+    {
+      "path": "artifacts/artifact_magical_pendant_piece2/artifact_magical_pendant_piece2.png",
+      "sha": "9d70ee8e3735f70e391c7b9c40eafbf78ce50411",
+      "size": 1798
+    },
+    {
+      "path": "artifacts/artifact_magical_pendant_piece3/artifact_magical_pendant_piece3.png",
+      "sha": "ee846f521fe5bf990c49ca184aa4708a82318141",
+      "size": 2123
+    },
+    {
+      "path": "artifacts/artifact_mirror_with_scribbles/artifact_mirror_with_scribbles.png",
+      "sha": "61786155f557d2d0c9ff622b4970eb7b3433f4bf",
+      "size": 18301
+    },
+    {
+      "path": "artifacts/artifact_mirror_with_scribbles_piece1/artifact_mirror_with_scribbles_piece1.png",
+      "sha": "7a7b9e2ccd31532a9743fb2d2bf0a6f766534712",
+      "size": 3262
+    },
+    {
+      "path": "artifacts/artifact_mirror_with_scribbles_piece2/artifact_mirror_with_scribbles_piece2.png",
+      "sha": "4d94a462924aa3eadd239286dd7658c9a7fb2736",
+      "size": 4508
+    },
+    {
+      "path": "artifacts/artifact_mirror_with_scribbles_piece3/artifact_mirror_with_scribbles_piece3.png",
+      "sha": "9603eb231e8fa134b0a84379277a20c006e04a63",
+      "size": 3220
+    },
+    {
+      "path": "artifacts/artifact_mirror_with_scribbles_piece4/artifact_mirror_with_scribbles_piece4.png",
+      "sha": "addd11327b2ad582ada811f3348807a81e2cd913",
+      "size": 2798
+    },
+    {
+      "path": "artifacts/artifact_mirror_with_scribbles_piece5/artifact_mirror_with_scribbles_piece5.png",
+      "sha": "0dbfcf3632dc8ddce9d0fa30670ee7475dc730c7",
+      "size": 3116
+    },
+    {
+      "path": "artifacts/artifact_mysterious_cube/artifact_mysterious_cube.png",
+      "sha": "7b3dbd2e81acc90aa97926955f9aa2372b0cc642",
+      "size": 15508
+    },
+    {
+      "path": "artifacts/artifact_mysterious_cube_piece1/artifact_mysterious_cube_piece1.png",
+      "sha": "7a34193ffc74ca816353648dcd59287b2939a268",
+      "size": 4262
+    },
+    {
+      "path": "artifacts/artifact_mysterious_cube_piece2/artifact_mysterious_cube_piece2.png",
+      "sha": "eabc972c46a8eab5637d026093f4e4018442211f",
+      "size": 6341
+    },
+    {
+      "path": "artifacts/artifact_mysterious_cube_piece3/artifact_mysterious_cube_piece3.png",
+      "sha": "2181b8dbf5377de9535960c065695212ad915249",
+      "size": 3647
+    },
+    {
+      "path": "artifacts/artifact_mysterious_cube_piece4/artifact_mysterious_cube_piece4.png",
+      "sha": "f4e3507dcf171f8fde9d4af599d15cec78ab4cf6",
+      "size": 4081
+    },
+    {
+      "path": "artifacts/artifact_mysterious_cube_piece5/artifact_mysterious_cube_piece5.png",
+      "sha": "da635a15435b145a5085e1aa60e4719282054c64",
+      "size": 5213
+    },
+    {
+      "path": "artifacts/artifact_necklace_amazonite/artifact_necklace_amazonite.png",
+      "sha": "57d25a1bc53370aefe2e2ff06785734cf6494754",
+      "size": 4748
+    },
+    {
+      "path": "artifacts/artifact_necklace_amazonite_piece/artifact_necklace_amazonite_piece.png",
+      "sha": "1e88e2f1086c21f2970331beec7016df7d3148bf",
+      "size": 1096
+    },
+    {
+      "path": "artifacts/artifact_necklace_imperial/artifact_necklace_imperial.png",
+      "sha": "29621ddef827d137460720972d495e9bd4300632",
+      "size": 6715
+    },
+    {
+      "path": "artifacts/artifact_necklace_imperial_piece/artifact_necklace_imperial_piece.png",
+      "sha": "36430860fe612c417fb273f91ff7c84e44c8e570",
+      "size": 1114
+    },
+    {
+      "path": "artifacts/artifact_necklace_onyx/artifact_necklace_onyx.png",
+      "sha": "9fb9d99abb392b6939b43fc4d1ca4c1d806c0cb4",
+      "size": 6438
+    },
+    {
+      "path": "artifacts/artifact_necklace_onyx_piece/artifact_necklace_onyx_piece.png",
+      "sha": "77628942e57f4acc748db220c6bd4afc778e7253",
+      "size": 815
+    },
+    {
+      "path": "artifacts/artifact_necklace_redtigereye/artifact_necklace_redtigereye.png",
+      "sha": "2e8ec1beaa8e69171cfb4d1c5a8f832c5085ea63",
+      "size": 3827
+    },
+    {
+      "path": "artifacts/artifact_necklace_redtigereye_piece/artifact_necklace_redtigereye_piece.png",
+      "sha": "4964bfb8870afcd2fd9e040bdfc6b6d676f6a05f",
+      "size": 1121
+    },
+    {
+      "path": "artifacts/artifact_necklace_rhyolite/artifact_necklace_rhyolite.png",
+      "sha": "98d0be5097657ed6b05e36fd70eb3b839e4c1ec3",
+      "size": 3058
+    },
+    {
+      "path": "artifacts/artifact_necklace_rhyolite_piece/artifact_necklace_rhyolite_piece.png",
+      "sha": "b82d08e31c80e03cab0f90889b963f1986ba6c01",
+      "size": 1217
+    },
+    {
+      "path": "artifacts/artifact_nose_of_china/artifact_nose_of_china.png",
+      "sha": "3e26b60c9fa5a56e1891c2875b13d9c69e4ba9a5",
+      "size": 2834
+    },
+    {
+      "path": "artifacts/artifact_nose_of_china_piece1/artifact_nose_of_china_piece1.png",
+      "sha": "0f22a71e10d41406c42152458969262bfed70b61",
+      "size": 1245
+    },
+    {
+      "path": "artifacts/artifact_nose_of_china_piece2/artifact_nose_of_china_piece2.png",
+      "sha": "c80e8c82b34c5588b08b85bfcb0d722e1682542a",
+      "size": 1928
+    },
+    {
+      "path": "artifacts/artifact_platinumium_spork/artifact_platinumium_spork.png",
+      "sha": "5dee8e1b48996c8545cc66c4b5bc8add39dbc41b",
+      "size": 2872
+    },
+    {
+      "path": "artifacts/artifact_platinumium_spork_piece1/artifact_platinumium_spork_piece1.png",
+      "sha": "f8336a3937d76d70f70485dbed35871611a7d6c7",
+      "size": 1276
+    },
+    {
+      "path": "artifacts/artifact_platinumium_spork_piece2/artifact_platinumium_spork_piece2.png",
+      "sha": "2627c628ddfdb50144b5d8502856908d3a6ddf1c",
+      "size": 1152
+    },
+    {
+      "path": "artifacts/artifact_torn_manuscript/artifact_torn_manuscript.png",
+      "sha": "3d7543e75c815c24ac520863a915c1fb094331f6",
+      "size": 11933
+    },
+    {
+      "path": "artifacts/artifact_torn_manuscript_piece1/artifact_torn_manuscript_piece1.png",
+      "sha": "35991f230c0d1170dc2c82a57c418ad7229c9ffa",
+      "size": 3192
+    },
+    {
+      "path": "artifacts/artifact_torn_manuscript_piece2/artifact_torn_manuscript_piece2.png",
+      "sha": "4e28ae4fcbe4c16325a786562caae8aa3018fa97",
+      "size": 2713
+    },
+    {
+      "path": "artifacts/artifact_torn_manuscript_piece3/artifact_torn_manuscript_piece3.png",
+      "sha": "8e613a99654ea9949f242f8089d182db192b35a3",
+      "size": 2255
+    },
+    {
+      "path": "artifacts/artifact_torn_manuscript_piece4/artifact_torn_manuscript_piece4.png",
+      "sha": "f8c1545615c522cbd8cb42b357901bffa083b004",
+      "size": 3258
+    },
+    {
+      "path": "artifacts/artifact_wooden_apple/artifact_wooden_apple.png",
+      "sha": "4a02c90d8992d5cae75685baca0422cdebd55c9d",
+      "size": 7573
+    },
+    {
+      "path": "artifacts/artifact_wooden_apple_piece1/artifact_wooden_apple_piece1.png",
+      "sha": "7dcba48f0b363d2e97b8794e7d912a3fe5f6b321",
+      "size": 5284
+    },
+    {
+      "path": "artifacts/artifact_wooden_apple_piece2/artifact_wooden_apple_piece2.png",
+      "sha": "45f314adf88c4f1dfdd643a45e23a1a38d27ae30",
+      "size": 3265
+    },
+    {
+      "path": "artifacts/artifact_wooden_apple_piece3/artifact_wooden_apple_piece3.png",
+      "sha": "b89d4723b5abb98d38d4a5ce2ecffc7cf98108c6",
+      "size": 3060
+    },
+    {
+      "path": "artifacts/artifact_wooden_apple_piece4/artifact_wooden_apple_piece4.png",
+      "sha": "7f2747151727c8fafb0f2b49ccec5a797b9b30c7",
+      "size": 2311
+    },
+    {
+      "path": "beans/bean_bean/bean_bean.png",
+      "sha": "c59c8eb9fa55c99ef90d8ac85544f1a4e8c72020",
+      "size": 7131
+    },
+    {
+      "path": "beans/bean_bubble/bean_bubble.png",
+      "sha": "8e72ea5174272fa83694e86a965f6e5b940770c4",
+      "size": 2075
+    },
+    {
+      "path": "beans/bean_egg/bean_egg.png",
+      "sha": "3d3781f8012029b5224b8759f4e05244cf8eb615",
+      "size": 1599
+    },
+    {
+      "path": "beans/bean_fruit/bean_fruit.png",
+      "sha": "f2cc4ba42a0eec5e0fd35ace1ae0f12dfa496ea1",
+      "size": 1368
+    },
+    {
+      "path": "beans/bean_gas/bean_gas.png",
+      "sha": "cf12d09e30b8b877505e6fb2acdd9d7a531bc9e0",
+      "size": 1446
+    },
+    {
+      "path": "beans/bean_spice/bean_spice.png",
+      "sha": "9c611b0e7bfd1089afad179db44b79d48c14497f",
+      "size": 7151
+    },
+    {
+      "path": "beans/bean_wood/bean_wood.png",
+      "sha": "274f8c980ea3287a249311c39099c4b9c49482d5",
+      "size": 1816
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_carved_1/pumpkin_carved_1.png",
+      "sha": "6de6c27db621bdd0b7ee5c0db96519d82eb2efe5",
+      "size": 10583
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_carved_2/pumpkin_carved_2.png",
+      "sha": "641652cc917d50637bbab1fea60e375e0ea685f2",
+      "size": 10292
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_carved_3/pumpkin_carved_3.png",
+      "sha": "db58784ce62ea47c2de874bcea6229d91b45dde7",
+      "size": 12033
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_carved_4/pumpkin_carved_4.png",
+      "sha": "990c8257caadd92e996c2f666f5c19126e089625",
+      "size": 13698
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_carved_5/pumpkin_carved_5.png",
+      "sha": "4fcc3f67ee7020fd22e6114220de1937e13fd981",
+      "size": 14998
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_lit_1/pumpkin_lit_1.png",
+      "sha": "8be4c620f71b43c81d0ea8ddf11a5896c1110f2f",
+      "size": 11311
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_lit_2/pumpkin_lit_2.png",
+      "sha": "2b75d3b5bafae2b5ffd365dfaf34952d8c40e97f",
+      "size": 12112
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_lit_3/pumpkin_lit_3.png",
+      "sha": "137ed0e924ba74681edf71ab68bc6938c4fa4e9d",
+      "size": 12871
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_lit_4/pumpkin_lit_4.png",
+      "sha": "befbc69e52eed0ca57ef34156dcf0df87f3739d3",
+      "size": 14500
+    },
+    {
+      "path": "carved_pumpkins/pumpkin_lit_5/pumpkin_lit_5.png",
+      "sha": "98da8bc51dce494db254c14e2576c889d7669df8",
+      "size": 15784
+    },
+    {
+      "path": "compounds/abbasidose/abbasidose.png",
+      "sha": "88d3288f68d0760281946dd760e14260ae021a60",
+      "size": 2609
+    },
+    {
+      "path": "compounds/alphose/alphose.png",
+      "sha": "5b0ae18e56e20710025f2135f070c87213240034",
+      "size": 3030
+    },
+    {
+      "path": "compounds/cosmox/cosmox.png",
+      "sha": "8b8e96bff7c52af9f52553e6846b79ab0e4b000f",
+      "size": 2905
+    },
+    {
+      "path": "compounds/diabolic_acid/diabolic_acid.png",
+      "sha": "ac1a24b3c386872d45522e22fc200dc57b2ab3ea",
+      "size": 1510
+    },
+    {
+      "path": "compounds/element_blue/element_blue.png",
+      "sha": "c3f7f8c50e7673a0b4b25f2ee115e4af39769340",
+      "size": 4700
+    },
+    {
+      "path": "compounds/element_green/element_green.png",
+      "sha": "8a5dde923ee58b875622e80e5a06cbd593fce5a5",
+      "size": 5282
+    },
+    {
+      "path": "compounds/element_red/element_red.png",
+      "sha": "6d75c70cfdd96b23f3c323192996e8bc452101b3",
+      "size": 5183
+    },
+    {
+      "path": "compounds/element_shiny/element_shiny.png",
+      "sha": "c77e9d558596db2113b08c0ae44305604d370cca",
+      "size": 5369
+    },
+    {
+      "path": "compounds/friendly_acid/friendly_acid.png",
+      "sha": "34578ac57df556f1540e63646c4b8710bbfb0a92",
+      "size": 2822
+    },
+    {
+      "path": "compounds/grendalinunin/grendalinunin.png",
+      "sha": "5b12cb121a77f935c9f007f1401f0dc2acf1b2ef",
+      "size": 3472
+    },
+    {
+      "path": "compounds/groddlene/groddlene.png",
+      "sha": "5e982cb431a2bc3e8ee3e9689264bcc591d370a1",
+      "size": 2204
+    },
+    {
+      "path": "compounds/humbabol/humbabol.png",
+      "sha": "15d749187b1d094fa2cf05a7cd7d3b65de9d4207",
+      "size": 2474
+    },
+    {
+      "path": "compounds/ixite/ixite.png",
+      "sha": "d1bf21ed5f859a3da47e0f6c4aa2fd61980621f9",
+      "size": 2264
+    },
+    {
+      "path": "compounds/lemene/lemene.png",
+      "sha": "bac1a1d6b0304b88383de51e72ed0df186582d5a",
+      "size": 2812
+    },
+    {
+      "path": "compounds/mabon/mabon.png",
+      "sha": "8c840e7619e81b5fe5806e759afc242391c8d66c",
+      "size": 3308
+    },
+    {
+      "path": "compounds/potoxin/potoxin.png",
+      "sha": "621a696cc480e681befc81e94b5a22a763affaf3",
+      "size": 3000
+    },
+    {
+      "path": "compounds/rubemycin/rubemycin.png",
+      "sha": "249dba460013c4ef0fcc79bd1b776170b838b253",
+      "size": 2859
+    },
+    {
+      "path": "compounds/spriggase/spriggase.png",
+      "sha": "12fd976be38566a20216b9e73ffedf301d2e01ab",
+      "size": 2979
+    },
+    {
+      "path": "compounds/tiite/tiite.png",
+      "sha": "17610321adc5766ac4f02234fec84cfffee9b288",
+      "size": 1051
+    },
+    {
+      "path": "compounds/zillene/zillene.png",
+      "sha": "89c4a40a09ea0a8a188b483ffe1c48c00d74440f",
+      "size": 2558
+    },
+    {
+      "path": "cubimals/cubimal_package/cubimal_package.png",
+      "sha": "77ee565cef372ebe40245566c8cadaa934614a3d",
+      "size": 4654
+    },
+    {
+      "path": "cubimals/cubimal_package_2/cubimal_package_2.png",
+      "sha": "087cf2558b11a8b8dfdddbf446e023098604e3ba",
+      "size": 4640
+    },
+    {
+      "path": "cubimals/npc_combat_cubimal/npc_combat_cubimal.png",
+      "sha": "609abf27ac35d9fe3d2f46f70bb66f3ce3367096",
+      "size": 6597
+    },
+    {
+      "path": "cubimals/npc_cubimal_batterfly/npc_cubimal_batterfly.png",
+      "sha": "82e95b3a43c4befdda7b078e9247a54eb649fa77",
+      "size": 6472
+    },
+    {
+      "path": "cubimals/npc_cubimal_bureaucrat/npc_cubimal_bureaucrat.png",
+      "sha": "ea918993cf22b3c3eef8fa4d8f04112cbac1a9c7",
+      "size": 4786
+    },
+    {
+      "path": "cubimals/npc_cubimal_butler/npc_cubimal_butler.png",
+      "sha": "6c5e4be2bb2f3fb13b7977d853f2306a640d183b",
+      "size": 5374
+    },
+    {
+      "path": "cubimals/npc_cubimal_butterfly/npc_cubimal_butterfly.png",
+      "sha": "356b3d6758d00d716afbec920dc490b361a83e3d",
+      "size": 6134
+    },
+    {
+      "path": "cubimals/npc_cubimal_cactus/npc_cubimal_cactus.png",
+      "sha": "29da460ae936c05906b9662727ded1f126e15855",
+      "size": 4142
+    },
+    {
+      "path": "cubimals/npc_cubimal_chick/npc_cubimal_chick.png",
+      "sha": "e69d2317622e9a3a9c6c8ba4bd8087d9b0c7fbae",
+      "size": 3966
+    },
+    {
+      "path": "cubimals/npc_cubimal_crab/npc_cubimal_crab.png",
+      "sha": "210bdc9f84fdb411e304e3a7f66e68aef41a4f75",
+      "size": 4637
+    },
+    {
+      "path": "cubimals/npc_cubimal_craftybot/npc_cubimal_craftybot.png",
+      "sha": "33325a5356d91e4d44645c791281f21d9e088d42",
+      "size": 5109
+    },
+    {
+      "path": "cubimals/npc_cubimal_deimaginator/npc_cubimal_deimaginator.png",
+      "sha": "86f1e009bd919b297623d4e2f4e9ac02cfff8d40",
+      "size": 4709
+    },
+    {
+      "path": "cubimals/npc_cubimal_dustbunny/npc_cubimal_dustbunny.png",
+      "sha": "25966aa7c3286251fb5a5d0314ca29634f3528be",
+      "size": 6590
+    },
+    {
+      "path": "cubimals/npc_cubimal_emobear/npc_cubimal_emobear.png",
+      "sha": "164ca34c00bb70be5ee7924918fce6579fe7a16a",
+      "size": 4701
+    },
+    {
+      "path": "cubimals/npc_cubimal_firebogstreetspirit/npc_cubimal_firebogstreetspirit.png",
+      "sha": "7429c00ceff0c7eba40bf1a03770fd940eb7d7b6",
+      "size": 6173
+    },
+    {
+      "path": "cubimals/npc_cubimal_firefly/npc_cubimal_firefly.png",
+      "sha": "3bbefdf88cb7340cc4b0085f0f309fe1f2ee09d6",
+      "size": 4343
+    },
+    {
+      "path": "cubimals/npc_cubimal_fox/npc_cubimal_fox.png",
+      "sha": "45dbc4ee86ebc84b0c599b5e40fb09b2e7217637",
+      "size": 3844
+    },
+    {
+      "path": "cubimals/npc_cubimal_foxranger/npc_cubimal_foxranger.png",
+      "sha": "c40be1d17c6d4b6591ef6d83f664f1ebeb0fbe14",
+      "size": 3395
+    },
+    {
+      "path": "cubimals/npc_cubimal_frog/npc_cubimal_frog.png",
+      "sha": "5bbaf67189f609216166a882800ce22d8d17ce66",
+      "size": 4762
+    },
+    {
+      "path": "cubimals/npc_cubimal_gardeningtoolsvendor/npc_cubimal_gardeningtoolsvendor.png",
+      "sha": "0b683b7b556db1a764c16e827ad35b600cf6499a",
+      "size": 5682
+    },
+    {
+      "path": "cubimals/npc_cubimal_gnome/npc_cubimal_gnome.png",
+      "sha": "dff3a1756471dd14cd0a22c9bd01d272dbc92a0b",
+      "size": 5112
+    },
+    {
+      "path": "cubimals/npc_cubimal_greeterbot/npc_cubimal_greeterbot.png",
+      "sha": "01cf9fba07882d143ecf8337eb449041582c5cb7",
+      "size": 3774
+    },
+    {
+      "path": "cubimals/npc_cubimal_groddlestreetspirit/npc_cubimal_groddlestreetspirit.png",
+      "sha": "cd8b6c866e6ced8ebc1ee2246703a383f7f9737c",
+      "size": 5183
+    },
+    {
+      "path": "cubimals/npc_cubimal_gwendolyn/npc_cubimal_gwendolyn.png",
+      "sha": "1d5088c268c4e47af6d4d6b5f791c63ba9e0e2ae",
+      "size": 5160
+    },
+    {
+      "path": "cubimals/npc_cubimal_helga/npc_cubimal_helga.png",
+      "sha": "a3987e1ae918e8f4e2281f6584e495330d2f31f7",
+      "size": 5265
+    },
+    {
+      "path": "cubimals/npc_cubimal_hellbartender/npc_cubimal_hellbartender.png",
+      "sha": "105bb1759fdc478d231734e81cc3ac8871e0cd51",
+      "size": 3994
+    },
+    {
+      "path": "cubimals/npc_cubimal_ilmenskiejones/npc_cubimal_ilmenskiejones.png",
+      "sha": "bfb954eb5333786ba71822e20ced298e675477b4",
+      "size": 5507
+    },
+    {
+      "path": "cubimals/npc_cubimal_juju/npc_cubimal_juju.png",
+      "sha": "3ad6ef1161d4224aa35aba9be2e6d0342337a1fd",
+      "size": 3861
+    },
+    {
+      "path": "cubimals/npc_cubimal_magicrock/npc_cubimal_magicrock.png",
+      "sha": "bad7007ac2a4c41aba2d62a2399d6159e6d5b838",
+      "size": 3358
+    },
+    {
+      "path": "cubimals/npc_cubimal_maintenancebot/npc_cubimal_maintenancebot.png",
+      "sha": "9c63a5c22ad02bbad41d1931bc982facd9b1ea22",
+      "size": 3406
+    },
+    {
+      "path": "cubimals/npc_cubimal_mealvendor/npc_cubimal_mealvendor.png",
+      "sha": "54086a036c374ff1b05634d0f4ad99c9d10defcf",
+      "size": 4614
+    },
+    {
+      "path": "cubimals/npc_cubimal_phantom/npc_cubimal_phantom.png",
+      "sha": "c95aeda05f6c03deeb3eb26202de0f9021c8948d",
+      "size": 6492
+    },
+    {
+      "path": "cubimals/npc_cubimal_piggy/npc_cubimal_piggy.png",
+      "sha": "a63538dd470c47c7dad6e785341fa2ea0d2e259b",
+      "size": 3532
+    },
+    {
+      "path": "cubimals/npc_cubimal_rook/npc_cubimal_rook.png",
+      "sha": "1ec70d90958e80b10067f1f1ca60ef7fdffb89b0",
+      "size": 4361
+    },
+    {
+      "path": "cubimals/npc_cubimal_rube/npc_cubimal_rube.png",
+      "sha": "1609b16f969d14f18d7c7583555d1bb14c27fe25",
+      "size": 4287
+    },
+    {
+      "path": "cubimals/npc_cubimal_scionofpurple/npc_cubimal_scionofpurple.png",
+      "sha": "609abf27ac35d9fe3d2f46f70bb66f3ce3367096",
+      "size": 6597
+    },
+    {
+      "path": "cubimals/npc_cubimal_senorfunpickle/npc_cubimal_senorfunpickle.png",
+      "sha": "ce0d162e5e5721186b4c657c4a50f329aa335e13",
+      "size": 6622
+    },
+    {
+      "path": "cubimals/npc_cubimal_sloth/npc_cubimal_sloth.png",
+      "sha": "5d46a32960d7d45393f67b140b67ec6ae083204a",
+      "size": 4228
+    },
+    {
+      "path": "cubimals/npc_cubimal_smuggler/npc_cubimal_smuggler.png",
+      "sha": "fa10097634c2199e4f24b3114e16b3e4e21dea1a",
+      "size": 4219
+    },
+    {
+      "path": "cubimals/npc_cubimal_snoconevendor/npc_cubimal_snoconevendor.png",
+      "sha": "ce68a314676a3eea7f0dd69fd6aa2eb4630fd58d",
+      "size": 3419
+    },
+    {
+      "path": "cubimals/npc_cubimal_squid/npc_cubimal_squid.png",
+      "sha": "5f3fb217fa0120630ea8699e6c810e94c95f3c38",
+      "size": 3417
+    },
+    {
+      "path": "cubimals/npc_cubimal_toolvendor/npc_cubimal_toolvendor.png",
+      "sha": "40547b8d9e58f262e1f9a53ac114811523364dea",
+      "size": 5921
+    },
+    {
+      "path": "cubimals/npc_cubimal_trisor/npc_cubimal_trisor.png",
+      "sha": "40c5f4cda297c67e4d781637308526bf2e1d1206",
+      "size": 3362
+    },
+    {
+      "path": "cubimals/npc_cubimal_unclefriendly/npc_cubimal_unclefriendly.png",
+      "sha": "027a9dd21588b53e00cbc5bd40e6d8fcc8212788",
+      "size": 4466
+    },
+    {
+      "path": "cubimals/npc_cubimal_uraliastreetspirit/npc_cubimal_uraliastreetspirit.png",
+      "sha": "bbfb028bad90ba52ef92c73e172a7eaefcfe50bb",
+      "size": 4901
+    },
+    {
+      "path": "cubimals/npc_cubimal_yeti/npc_cubimal_yeti.png",
+      "sha": "8ea0cae711a20af37a44241357dc8571676e07ee",
+      "size": 4786
+    },
+    {
+      "path": "drink/beer/beer.png",
+      "sha": "8f8b06df964779601642e2e4ee4fe8db9e8b202c",
+      "size": 4323
+    },
+    {
+      "path": "drink/bubble_tea/bubble_tea.png",
+      "sha": "df0d7b964b5c81f1ce65090e78d3b731ada0ebbe",
+      "size": 5727
+    },
+    {
+      "path": "drink/carrot_margarita/carrot_margarita.png",
+      "sha": "8599253dab5a0fe5233d3d68c6464ca7d1588d2f",
+      "size": 12089
+    },
+    {
+      "path": "drink/cloud_11_smoothie/cloud_11_smoothie.png",
+      "sha": "379de2116efff122c2d084272edd0e6650815846",
+      "size": 5005
+    },
+    {
+      "path": "drink/cloudberry_daiquiri/cloudberry_daiquiri.png",
+      "sha": "56fd417dff40983015efdcbe19b199eff883e6b7",
+      "size": 4636
+    },
+    {
+      "path": "drink/coffee/coffee.png",
+      "sha": "bac9c3b6c5f6e37b1ac6c38dbe11114a799977a8",
+      "size": 3026
+    },
+    {
+      "path": "drink/cosmapolitan/cosmapolitan.png",
+      "sha": "c7b2ac9478297dc072f988335600d1311c405f9e",
+      "size": 4018
+    },
+    {
+      "path": "drink/crabato_juice/crabato_juice.png",
+      "sha": "900daba8463e73126c5c54e680a189da74777536",
+      "size": 8339
+    },
+    {
+      "path": "drink/creamy_martini/creamy_martini.png",
+      "sha": "590eaca9e137e1c4bbe752c7f15ae73b7c5c891b",
+      "size": 4980
+    },
+    {
+      "path": "drink/earthshaker/earthshaker.png",
+      "sha": "bea331952ae03d2d74bc43a706ea5f03c8e6ee17",
+      "size": 4603
+    },
+    {
+      "path": "drink/exotic_juice/exotic_juice.png",
+      "sha": "18b129ffcadc9a05a20ad499f365da41e7ff488a",
+      "size": 9189
+    },
+    {
+      "path": "drink/face_smelter/face_smelter.png",
+      "sha": "32ec9b1322dd094255f8ce2e316353a919d01e44",
+      "size": 7396
+    },
+    {
+      "path": "drink/flaming_humbaba/flaming_humbaba.png",
+      "sha": "1e48b1b4a907eae9d73f217601d426bfb5873592",
+      "size": 5204
+    },
+    {
+      "path": "drink/fruity_juice/fruity_juice.png",
+      "sha": "f0bb2606a87168f65a0d2fb9e260afffdd8d4ff5",
+      "size": 7573
+    },
+    {
+      "path": "drink/goat_liquer/goat_liquer.png",
+      "sha": "d7c4038694ede9cd00feb6cd564ba35860c76eb9",
+      "size": 6462
+    },
+    {
+      "path": "drink/gurly_drink/gurly_drink.png",
+      "sha": "f16c79186127fd24bdac9b646fed62b6c5fc9380",
+      "size": 5108
+    },
+    {
+      "path": "drink/hooch/hooch.png",
+      "sha": "1b3cd93ccbdba43cbe144e609690721994d5b80c",
+      "size": 6807
+    },
+    {
+      "path": "drink/lemon_juice/lemon_juice.png",
+      "sha": "273dc0f055684e861b086bff69edd5f874bfef06",
+      "size": 5952
+    },
+    {
+      "path": "drink/mabbish_coffee/mabbish_coffee.png",
+      "sha": "3feaadb400507a89db4a81aaa843cf18aead5a66",
+      "size": 5513
+    },
+    {
+      "path": "drink/mega_healthy_veggie_juice/mega_healthy_veggie_juice.png",
+      "sha": "d236e3b370a34356769c38b84e4769d970f10c3f",
+      "size": 7890
+    },
+    {
+      "path": "drink/milk_butterfly/milk_butterfly.png",
+      "sha": "91203604b44b98446168a5936ce6d025c273f4e9",
+      "size": 5662
+    },
+    {
+      "path": "drink/milk_whale/milk_whale.png",
+      "sha": "67beb17d8162e4c5165c9d3614d55f54f1cd2531",
+      "size": 6376
+    },
+    {
+      "path": "drink/orange_juice/orange_juice.png",
+      "sha": "50c0425163005da4f4500a966ff0ad95a5bf5ef4",
+      "size": 7898
+    },
+    {
+      "path": "drink/pumpkin_ale/pumpkin_ale.png",
+      "sha": "886c3cb1944cb4663bcf963890b13a32a509acf4",
+      "size": 5385
+    },
+    {
+      "path": "drink/pungent_sunrise/pungent_sunrise.png",
+      "sha": "c1af095d92d9051fb780d38f481c516d2618f5a0",
+      "size": 4959
+    },
+    {
+      "path": "drink/savory_smoothie/savory_smoothie.png",
+      "sha": "2590a421941896fe550bba43be26fc6961ba88f0",
+      "size": 5112
+    },
+    {
+      "path": "drink/sheep_ass_vodka/sheep_ass_vodka.png",
+      "sha": "373d25a7629f1335133f8b558f99b240ce4f58fc",
+      "size": 7312
+    },
+    {
+      "path": "drink/slow_gin_fizz/slow_gin_fizz.png",
+      "sha": "6c4ffb429e1e727aae33adee121433c690f95d04",
+      "size": 5510
+    },
+    {
+      "path": "drink/spicy_grog/spicy_grog.png",
+      "sha": "54cf243875e89d1b362cabbb57bbef41b4227739",
+      "size": 7229
+    },
+    {
+      "path": "drink/tooberry_shake/tooberry_shake.png",
+      "sha": "e8ca0c2691a1245886126a025f9db53ea55a8e40",
+      "size": 5929
+    },
+    {
+      "path": "food/abbasid_ribs/abbasid_ribs.png",
+      "sha": "0bc66c6e5763dfdecef8d80a4d32dcdfb968c74e",
+      "size": 9782
+    },
+    {
+      "path": "food/apple/apple.png",
+      "sha": "83f64048aabf86336001023c0bf368caf5cb883a",
+      "size": 6874
+    },
+    {
+      "path": "food/applejack/applejack.png",
+      "sha": "cd141114f3b4d00b9263cbed25174804fd46ba0b",
+      "size": 7961
+    },
+    {
+      "path": "food/awesome_stew/awesome_stew.png",
+      "sha": "4fd545afb206a1ffe0f5f431ac0261999c058098",
+      "size": 9797
+    },
+    {
+      "path": "food/bacon/bacon.png",
+      "sha": "474325c81673c6c8f41179ccb672c64a9f91e161",
+      "size": 5877
+    },
+    {
+      "path": "food/banana/banana.png",
+      "sha": "e834e9567f5d8f5122479a5c06f16d92d0cae7fd",
+      "size": 8648
+    },
+    {
+      "path": "food/banana_no_names/banana_no_names.png",
+      "sha": "6baee2161b2be94d368005790aca43bd735d7307",
+      "size": 6378
+    },
+    {
+      "path": "food/basic_omelet/basic_omelet.png",
+      "sha": "0a19cabf1c614133a1d2804ada101deb920258f8",
+      "size": 8546
+    },
+    {
+      "path": "food/bean_plain/bean_plain.png",
+      "sha": "d7ca49974e78184a361659247038bb7287f6a05f",
+      "size": 1419
+    },
+    {
+      "path": "food/berry_bowl/berry_bowl.png",
+      "sha": "8451e46f60fd754480b5f5a53d2744e1a5fd49d0",
+      "size": 12737
+    },
+    {
+      "path": "food/best_bean_dip/best_bean_dip.png",
+      "sha": "0aaf9f7f833da415b6ed3b47f4b2c5af607f943a",
+      "size": 2892
+    },
+    {
+      "path": "food/big_salad/big_salad.png",
+      "sha": "7e521fdcc8a7638f543167bd0ef5af9a1d8ce7fa",
+      "size": 12929
+    },
+    {
+      "path": "food/billionaires_bacon/billionaires_bacon.png",
+      "sha": "acc3f22ba44ec39f0e37164ca4df79ba950d6365",
+      "size": 3116
+    },
+    {
+      "path": "food/birch_syrup/birch_syrup.png",
+      "sha": "69e68f794483355fdb1b0de8a73ed3b732ff44c6",
+      "size": 12135
+    },
+    {
+      "path": "food/blue_bubble/blue_bubble.png",
+      "sha": "dd5bf81fd993a14c2eef85c9534d38ae8acb4ca2",
+      "size": 4025
+    },
+    {
+      "path": "food/broccoli/broccoli.png",
+      "sha": "1c5a5b488108391e2a2315dbde6ea6d4a3cd7dc7",
+      "size": 6345
+    },
+    {
+      "path": "food/bubble_and_squeak/bubble_and_squeak.png",
+      "sha": "ff1c221d3d1ebccd3ca5c6b9f51f2998ff9c7f40",
+      "size": 5776
+    },
+    {
+      "path": "food/bun/bun.png",
+      "sha": "838e70fb6e49167de44a940020825e66c9cc0b88",
+      "size": 7532
+    },
+    {
+      "path": "food/bunch_of_grapes/bunch_of_grapes.png",
+      "sha": "63da590f89b9e0434ef3f44ad96084eb22858799",
+      "size": 10069
+    },
+    {
+      "path": "food/butterfly_butter/butterfly_butter.png",
+      "sha": "b3d1d27acc0045e030c3418e32bd2991959606b2",
+      "size": 3569
+    },
+    {
+      "path": "food/cabbage/cabbage.png",
+      "sha": "e60ce8260c2054f3c0c542677748503cff1ef64e",
+      "size": 9472
+    },
+    {
+      "path": "food/carrot/carrot.png",
+      "sha": "668571277faff94ec3464a8ec62e183b502b67b4",
+      "size": 8005
+    },
+    {
+      "path": "food/cedar_plank_salmon/cedar_plank_salmon.png",
+      "sha": "4f69196f6cc2a1d1d9565818293a965eb7a8e4c0",
+      "size": 5638
+    },
+    {
+      "path": "food/cheese/cheese.png",
+      "sha": "68535c9df80072a5f6cb5231b6934ff684e11b23",
+      "size": 7646
+    },
+    {
+      "path": "food/cheese_plate/cheese_plate.png",
+      "sha": "dd44766012d9270c2f6d1aa09f1a65b5e3fc3e73",
+      "size": 7601
+    },
+    {
+      "path": "food/cheese_stinky/cheese_stinky.png",
+      "sha": "71e0a70787c3827dc59d14b7de3855224a3863cc",
+      "size": 4253
+    },
+    {
+      "path": "food/cheese_very_stinky/cheese_very_stinky.png",
+      "sha": "0198876bad3492eb6e44098264a6bbb593fc976b",
+      "size": 4914
+    },
+    {
+      "path": "food/cheese_very_very_stinky/cheese_very_very_stinky.png",
+      "sha": "5ac7f0405a2444cfb2e82ddc787a1a2b1ee41ec2",
+      "size": 8021
+    },
+    {
+      "path": "food/cheezy_sammich/cheezy_sammich.png",
+      "sha": "247f42794450bcde287c1ca50ffda3e9f48ef617",
+      "size": 9162
+    },
+    {
+      "path": "food/cheezy_sauce/cheezy_sauce.png",
+      "sha": "feeeb73dfa875873b4a292e56cbc0e9347fd5171",
+      "size": 3876
+    },
+    {
+      "path": "food/cherry/cherry.png",
+      "sha": "87189b43e4c4f2fdc63a9a74f87b7d7158142366",
+      "size": 3266
+    },
+    {
+      "path": "food/chillybusting_chili/chillybusting_chili.png",
+      "sha": "74137049eb50f9315a4a9dec9493d99f4d4e8039",
+      "size": 9764
+    },
+    {
+      "path": "food/choice_crudites/choice_crudites.png",
+      "sha": "af0b7b7d2a7f3553ef19fdc386c91d0a3178809c",
+      "size": 10573
+    },
+    {
+      "path": "food/cloudberry/cloudberry.png",
+      "sha": "f558167f6d5f7f7e131e37b7599dad3e08e46846",
+      "size": 7971
+    },
+    {
+      "path": "food/cloudberry_jam/cloudberry_jam.png",
+      "sha": "519ccc265a069e19ae1fa06a67972c345e446cdd",
+      "size": 9598
+    },
+    {
+      "path": "food/cold_taco/cold_taco.png",
+      "sha": "011b9ec37c9ef5382268faa951b2dd4ed6ad7db6",
+      "size": 9604
+    },
+    {
+      "path": "food/common_crudites/common_crudites.png",
+      "sha": "c8efccc034c46ddd9d7b428e97736c810f04a17b",
+      "size": 7674
+    },
+    {
+      "path": "food/corn/corn.png",
+      "sha": "cdbbad899275960d91548d1b9ff1309ef9e59ed7",
+      "size": 9252
+    },
+    {
+      "path": "food/corn_off_the_cob/corn_off_the_cob.png",
+      "sha": "189489a2b03abfefce2a5072e8bd421cc6919d93",
+      "size": 6451
+    },
+    {
+      "path": "food/corny_fritter/corny_fritter.png",
+      "sha": "7162c026821b56f6afacdb19167c79f8042bac48",
+      "size": 7267
+    },
+    {
+      "path": "food/creamy_catsup/creamy_catsup.png",
+      "sha": "074048c7b517feccd5f7d39074fee55967f2e55f",
+      "size": 4217
+    },
+    {
+      "path": "food/cucumber/cucumber.png",
+      "sha": "e30c0ce45db04c0a795357cc48b12986dd8ed494",
+      "size": 2524
+    },
+    {
+      "path": "food/death_to_veg/death_to_veg.png",
+      "sha": "552bdcd541342be046f0e15ab59e596f180958c8",
+      "size": 5275
+    },
+    {
+      "path": "food/deluxe_sammich/deluxe_sammich.png",
+      "sha": "0a9223790c584878c34b60d188eb5489ac28618e",
+      "size": 8112
+    },
+    {
+      "path": "food/desssert_rub/desssert_rub.png",
+      "sha": "0e2ecfdfcd371f80531551927dd16e565fb5d57e",
+      "size": 2967
+    },
+    {
+      "path": "food/divine_crepes/divine_crepes.png",
+      "sha": "567f9186ea3e58eae2c27f5e0344527c5f7309ca",
+      "size": 6208
+    },
+    {
+      "path": "food/egg_plain/egg_plain.png",
+      "sha": "c8ebd25e41004c65a459fb8970b35c9ad63a9ef0",
+      "size": 7378
+    },
+    {
+      "path": "food/egg_soviet/egg_soviet.png",
+      "sha": "d42be4d83a3f44abc8b53e7e0ecc4173d856df97",
+      "size": 4877
+    },
+    {
+      "path": "food/egghunt_egg_1/egghunt_egg_1.png",
+      "sha": "61ef4939bd65f5d22ed313a05dbf0e202a87effa",
+      "size": 2436
+    },
+    {
+      "path": "food/egghunt_egg_2/egghunt_egg_2.png",
+      "sha": "3c38e61094a76d3c4f6a60121ffe6e1d08dddd1a",
+      "size": 2487
+    },
+    {
+      "path": "food/egghunt_egg_3/egghunt_egg_3.png",
+      "sha": "d2f7ffd72e7b2056843b1a787cc554d9593b1538",
+      "size": 3333
+    },
+    {
+      "path": "food/egghunt_egg_4/egghunt_egg_4.png",
+      "sha": "b60a6f03b67d58d16ecd5042fdd9f5173c5a371f",
+      "size": 3568
+    },
+    {
+      "path": "food/egghunt_egg_5/egghunt_egg_5.png",
+      "sha": "8bb80ab3a6a461321b3c134089b2bedf9cf7ec4f",
+      "size": 5016
+    },
+    {
+      "path": "food/eggy_scramble/eggy_scramble.png",
+      "sha": "8e50f555c0d5d3883e3f55ad7aaa88f132591494",
+      "size": 5262
+    },
+    {
+      "path": "food/exotic_fruit_salad/exotic_fruit_salad.png",
+      "sha": "6949bc968816966fe9a3e451dd02a27ee25a68e3",
+      "size": 8856
+    },
+    {
+      "path": "food/expensive_grilled_cheese/expensive_grilled_cheese.png",
+      "sha": "b6b714724a5b8b45bf3a013e85f226b664c7be50",
+      "size": 5705
+    },
+    {
+      "path": "food/fancy_cheese/fancy_cheese.png",
+      "sha": "fbbb9b6ccf3604cd2f267dc90530b5396b78d451",
+      "size": 4623
+    },
+    {
+      "path": "food/flour/flour.png",
+      "sha": "b42d2ef9c15bf0861bdb5d61a20ec298edb7461b",
+      "size": 9392
+    },
+    {
+      "path": "food/flummery/flummery.png",
+      "sha": "dacb55d9065d9b48159035057c50fe30aa398594",
+      "size": 9704
+    },
+    {
+      "path": "food/fortifying_gruel/fortifying_gruel.png",
+      "sha": "d621a3616c785790f0b50b88b7f93af3908dcc5d",
+      "size": 6953
+    },
+    {
+      "path": "food/fried_egg/fried_egg.png",
+      "sha": "7edc94312d90d41234b1f24fcd553e407faa6aba",
+      "size": 9443
+    },
+    {
+      "path": "food/fried_eggs/fried_eggs.png",
+      "sha": "7ba5b18b40438da1a50d5621ff3002d2b0502b56",
+      "size": 10261
+    },
+    {
+      "path": "food/fried_noodles/fried_noodles.png",
+      "sha": "82dcb8a0aed115fba9935a502277aa87021cee26",
+      "size": 11281
+    },
+    {
+      "path": "food/fried_rice/fried_rice.png",
+      "sha": "de7cd0751b51867b271f3da7308df3547075144b",
+      "size": 10646
+    },
+    {
+      "path": "food/frog_in_a_hole/frog_in_a_hole.png",
+      "sha": "9fec6dcc39463338628802ca0a34176f304a40f1",
+      "size": 4762
+    },
+    {
+      "path": "food/fruit_salad/fruit_salad.png",
+      "sha": "180ede56cce4346993c0705869a334131fe62ed2",
+      "size": 4903
+    },
+    {
+      "path": "food/gammas_pancakes/gammas_pancakes.png",
+      "sha": "f5c4da2a2b3f603bce3d1fa2901ad1ab8db3d75d",
+      "size": 6543
+    },
+    {
+      "path": "food/glitchepoix/glitchepoix.png",
+      "sha": "b69ead88a25b5551f70980fb3b7e53936149ae68",
+      "size": 4527
+    },
+    {
+      "path": "food/goat_arm_raw/goat_arm_raw.png",
+      "sha": "1da117d3b7e721ea800253a48a49dc842e24592e",
+      "size": 10983
+    },
+    {
+      "path": "food/goat_arse/goat_arse.png",
+      "sha": "269d4fd8d85466763a43105b848dff45ba79922b",
+      "size": 13537
+    },
+    {
+      "path": "food/goat_ear_fried/goat_ear_fried.png",
+      "sha": "a79194817351d67530e46b73e2bc7dbc7d96c46b",
+      "size": 3138
+    },
+    {
+      "path": "food/grain/grain.png",
+      "sha": "885c6d5eee5e0568ec6ffeb756c51f540c68fee4",
+      "size": 7170
+    },
+    {
+      "path": "food/greasy_frybread/greasy_frybread.png",
+      "sha": "2a318c6874bb53d731b513b0a63b2fee6e9b8c8b",
+      "size": 6616
+    },
+    {
+      "path": "food/green/green.png",
+      "sha": "c852bd96a02355d2ae75a0257e1c698bcba194eb",
+      "size": 5358
+    },
+    {
+      "path": "food/green_eggs/green_eggs.png",
+      "sha": "322458127baa0454721e18b1138dbb0c2873acc3",
+      "size": 2685
+    },
+    {
+      "path": "food/green_leaf/green_leaf.png",
+      "sha": "b3d1bcd4e1be956ad54fc10db9ffdabf391729db",
+      "size": 6699
+    },
+    {
+      "path": "food/grilled_cheese/grilled_cheese.png",
+      "sha": "ba84652f062b543585dd3bd19d2d416029e71fc4",
+      "size": 7371
+    },
+    {
+      "path": "food/guava_spotted/guava_spotted.png",
+      "sha": "72a3d67bc22eb81c386bf6931ebad86b83c9d6bc",
+      "size": 6692
+    },
+    {
+      "path": "food/guava_striped/guava_striped.png",
+      "sha": "3e37f3628f7067809704217e1e4a57f82992668b",
+      "size": 6430
+    },
+    {
+      "path": "food/hard_bubble/hard_bubble.png",
+      "sha": "cea1203bc9d7c51cbcb7ded3ce17f9da25b6709d",
+      "size": 4428
+    },
+    {
+      "path": "food/hash/hash.png",
+      "sha": "7d3334f6500d33ca7d7efff05b588cb7be8ee9be",
+      "size": 7734
+    },
+    {
+      "path": "food/hearty_groddle_sammich/hearty_groddle_sammich.png",
+      "sha": "767a6ec6a73cb85e3e76dd59d693432a15a54356",
+      "size": 10806
+    },
+    {
+      "path": "food/hearty_omelet/hearty_omelet.png",
+      "sha": "6e4a7d9d3417010fc87bdcf6b3d2d09bf78c08a7",
+      "size": 9914
+    },
+    {
+      "path": "food/heston_mash/heston_mash.png",
+      "sha": "c69b1c18d51050cf3060b24ed57d6ddad26454ce",
+      "size": 4590
+    },
+    {
+      "path": "food/honey/honey.png",
+      "sha": "441ac15c46977a01156b84101d8084fbc3112282",
+      "size": 6018
+    },
+    {
+      "path": "food/hot_n_fizzy_sauce/hot_n_fizzy_sauce.png",
+      "sha": "6d250103e9e188096f37c24197deb8dc9c322709",
+      "size": 6265
+    },
+    {
+      "path": "food/hot_potatoes/hot_potatoes.png",
+      "sha": "095bf8196db34e34b7d3561ecc67af836db0233e",
+      "size": 4411
+    },
+    {
+      "path": "food/hototot_rub/hototot_rub.png",
+      "sha": "a0615ff97016dcea37f5b49c449bd5ff7256989a",
+      "size": 2967
+    },
+    {
+      "path": "food/hungry_nachos/hungry_nachos.png",
+      "sha": "4acba40d83977530bfe2b259603c42e838e893e6",
+      "size": 5720
+    },
+    {
+      "path": "food/ice/ice.png",
+      "sha": "16684294943a5fa0bc5472071e72fefcb61aec71",
+      "size": 4295
+    },
+    {
+      "path": "food/ixstyle_braised_meat/ixstyle_braised_meat.png",
+      "sha": "50c1d9a2c458e0bbd3b35e07c6fcfbb49f5a93ed",
+      "size": 8745
+    },
+    {
+      "path": "food/jamon_bellota/jamon_bellota.png",
+      "sha": "7d49fde08d27be83a7513ff123536bb31b34fed0",
+      "size": 4944
+    },
+    {
+      "path": "food/juicy_carpaccio/juicy_carpaccio.png",
+      "sha": "f992be7cafb9166fbec7677cf6d79137278a8e5c",
+      "size": 7574
+    },
+    {
+      "path": "food/kaysadillah/kaysadillah.png",
+      "sha": "51b0fe5376acac35b7fc1a26fe5ab0e459424a98",
+      "size": 8226
+    },
+    {
+      "path": "food/kind_breakfurst_burrito/kind_breakfurst_burrito.png",
+      "sha": "8387726b8803b126cb8b4209e00336f6552943fc",
+      "size": 4390
+    },
+    {
+      "path": "food/kings_of_condiments/kings_of_condiments.png",
+      "sha": "4068ffd6e9060da0f8ce31d84e4a391b69404741",
+      "size": 2998
+    },
+    {
+      "path": "food/lazy_salad/lazy_salad.png",
+      "sha": "a11144c0aa6105abe08b866af0db24013ebb2b50",
+      "size": 5617
+    },
+    {
+      "path": "food/legumes_parisienne/legumes_parisienne.png",
+      "sha": "24e70c21bc11fac461e2b6ae9598ce3eb1b8c96d",
+      "size": 2801
+    },
+    {
+      "path": "food/lemburger/lemburger.png",
+      "sha": "7a07bfe16047eb5014b7b97423ad1b6c7fa4f44b",
+      "size": 9823
+    },
+    {
+      "path": "food/lemon/lemon.png",
+      "sha": "7466982d7228b670505f054617cb8017f6319b46",
+      "size": 5013
+    },
+    {
+      "path": "food/lotsa_lox/lotsa_lox.png",
+      "sha": "53dd03a7d23854650c5acbd40ff0e6760a9e62d4",
+      "size": 15830
+    },
+    {
+      "path": "food/luxury_tortellini/luxury_tortellini.png",
+      "sha": "20cdd7d9b52ea747f8dc54816fc52bae22d7bc5f",
+      "size": 5009
+    },
+    {
+      "path": "food/maburger_royale/maburger_royale.png",
+      "sha": "ab5847b196b936bc6caa333c67f67fc9b1583053",
+      "size": 3661
+    },
+    {
+      "path": "food/mangosteen/mangosteen.png",
+      "sha": "90f150bf3e074efc62fc522c909d4bd4e4d06517",
+      "size": 6256
+    },
+    {
+      "path": "food/meat/meat.png",
+      "sha": "b501c395ba39d56f48bf844e8031225d7b2840a3",
+      "size": 2987
+    },
+    {
+      "path": "food/meat_gumbo/meat_gumbo.png",
+      "sha": "8fc34e0125644025351a9d9a7bec13644bfcf986",
+      "size": 4270
+    },
+    {
+      "path": "food/meat_tetrazzini/meat_tetrazzini.png",
+      "sha": "92d6dfe76f8b3d48a824c6cc8e9ee2118ffa2517",
+      "size": 4552
+    },
+    {
+      "path": "food/messy_fry_up/messy_fry_up.png",
+      "sha": "f092735a865171f69428842750c7f0672d5c4530",
+      "size": 9236
+    },
+    {
+      "path": "food/mexicali_eggs/mexicali_eggs.png",
+      "sha": "f040401f37da26533822dd738d1aac52caea5fac",
+      "size": 8761
+    },
+    {
+      "path": "food/mild_sauce/mild_sauce.png",
+      "sha": "28b4f3b70152515e7ce2f333fd73213509688fec",
+      "size": 4195
+    },
+    {
+      "path": "food/mushroom/mushroom.png",
+      "sha": "f8899b77a674d55e2a5514cadaeb415459775a52",
+      "size": 5228
+    },
+    {
+      "path": "food/naraka_flame_rub/naraka_flame_rub.png",
+      "sha": "a0615ff97016dcea37f5b49c449bd5ff7256989a",
+      "size": 2967
+    },
+    {
+      "path": "food/oats/oats.png",
+      "sha": "d56d252f88959d24cc29ddff85c5026c51035faa",
+      "size": 2835
+    },
+    {
+      "path": "food/oaty_cake/oaty_cake.png",
+      "sha": "3d7ded58e864e39f1596c0e54ea79c26e805d842",
+      "size": 9785
+    },
+    {
+      "path": "food/obvious_panini/obvious_panini.png",
+      "sha": "0dbea48704ce0b083f8ea426fe4ea6d4c7dbb189",
+      "size": 8077
+    },
+    {
+      "path": "food/oily_dressing/oily_dressing.png",
+      "sha": "3246fb1aaea90bbcf19622139d459d1539a54574",
+      "size": 11610
+    },
+    {
+      "path": "food/olive_oil/olive_oil.png",
+      "sha": "86e9a8256dba172b694eb934ea285b8d8d9ad229",
+      "size": 9009
+    },
+    {
+      "path": "food/onion/onion.png",
+      "sha": "e5d52972c0ed252d6a79da2282496439e2a9a41d",
+      "size": 7290
+    },
+    {
+      "path": "food/onion_rings/onion_rings.png",
+      "sha": "1d761dae0497f44e8f8c238b14b1ffbe61eaa221",
+      "size": 12009
+    },
+    {
+      "path": "food/onion_sauce/onion_sauce.png",
+      "sha": "d761c0d412b1b51b2638fffd55d008d5a250a07f",
+      "size": 3661
+    },
+    {
+      "path": "food/orange/orange.png",
+      "sha": "18a55db747982f7cb3d93598832e1c0d4d44951c",
+      "size": 5867
+    },
+    {
+      "path": "food/oysters_mountain/oysters_mountain.png",
+      "sha": "e5f842aa1ad4e5e00768ae02d7e41e1bc966892f",
+      "size": 2922
+    },
+    {
+      "path": "food/oysters_ocean/oysters_ocean.png",
+      "sha": "1d0eca5adf33551ebcf8af26b446ff1cb259544d",
+      "size": 4752
+    },
+    {
+      "path": "food/oysters_prairie/oysters_prairie.png",
+      "sha": "350f0520d009c2059a286e305b2e869b67f0c113",
+      "size": 1874
+    },
+    {
+      "path": "food/pad_tii/pad_tii.png",
+      "sha": "a0c51570b005260f6da7680edef3f769150d912f",
+      "size": 6179
+    },
+    {
+      "path": "food/papl_upside_down_pizza/papl_upside_down_pizza.png",
+      "sha": "83174ee993befce1c5634aa953813afde9c59d04",
+      "size": 12801
+    },
+    {
+      "path": "food/parsnip/parsnip.png",
+      "sha": "e3206aeae69737571db724cff22bda45d918d2ca",
+      "size": 8476
+    },
+    {
+      "path": "food/pepitas/pepitas.png",
+      "sha": "ff2cbae4c8e60c7811dcdabd91c0abf1367b79fe",
+      "size": 3901
+    },
+    {
+      "path": "food/pi/pi.png",
+      "sha": "8ba2fea53a579e949af3a0291b91a258da551022",
+      "size": 9343
+    },
+    {
+      "path": "food/pickle/pickle.png",
+      "sha": "1e9269fcb3d4f96b3ba229b0f454ae1a39886d15",
+      "size": 5414
+    },
+    {
+      "path": "food/pineapple/pineapple.png",
+      "sha": "8de876de84a67d70c962740bcb523398ebdfc117",
+      "size": 18320
+    },
+    {
+      "path": "food/plain_bubble/plain_bubble.png",
+      "sha": "d14f6b736f98763b231a17ef98d5c42b0e892e92",
+      "size": 3950
+    },
+    {
+      "path": "food/plain_noodles/plain_noodles.png",
+      "sha": "674ad839dfdb15df5b25bb5b86d64239721ea5df",
+      "size": 11607
+    },
+    {
+      "path": "food/plank/plank.png",
+      "sha": "0c89a54a74c8c0d5e492547be40521c818ed6be0",
+      "size": 5074
+    },
+    {
+      "path": "food/plum/plum.png",
+      "sha": "620294f30b84b3a244f99aff8f6085628b04248f",
+      "size": 8775
+    },
+    {
+      "path": "food/potato/potato.png",
+      "sha": "62ef16d6b91abea0e903001a93cf2da5afaa9c23",
+      "size": 3152
+    },
+    {
+      "path": "food/potato_patty/potato_patty.png",
+      "sha": "f74e9054b023a22830d0deab14b17a5b1c6e70d0",
+      "size": 5148
+    },
+    {
+      "path": "food/potcorn/potcorn.png",
+      "sha": "7edd3748ef862f0139115be482623e89ebe4b21b",
+      "size": 7360
+    },
+    {
+      "path": "food/potians_feast/potians_feast.png",
+      "sha": "7abe7cd19454ad18fd79eb10a075ee19f764db05",
+      "size": 6290
+    },
+    {
+      "path": "food/pottine/pottine.png",
+      "sha": "7e03aa431aadd90766a5e2a7e3d66470a076f012",
+      "size": 5275
+    },
+    {
+      "path": "food/precious_potato_salad/precious_potato_salad.png",
+      "sha": "65e73d8859b577d7fe907452811137e311309f7e",
+      "size": 7340
+    },
+    {
+      "path": "food/proper_rice/proper_rice.png",
+      "sha": "d76b187305953f62671224800ceae318f47c77c2",
+      "size": 13232
+    },
+    {
+      "path": "food/pumpkin/pumpkin.png",
+      "sha": "c29b4f3db891b01f193aff03657f4e4458473fe8",
+      "size": 6794
+    },
+    {
+      "path": "food/pumpkin_pie/pumpkin_pie.png",
+      "sha": "d440b4223a345bd7fe4dbf0dc8386f82734dfafc",
+      "size": 5569
+    },
+    {
+      "path": "food/radish/radish.png",
+      "sha": "f19851b208641b10cce4d9e88c5aa50e4aa669b9",
+      "size": 6352
+    },
+    {
+      "path": "food/red/red.png",
+      "sha": "ecf60373ab896519ce32f5c98452e9185e0a47f3",
+      "size": 3072
+    },
+    {
+      "path": "food/rice/rice.png",
+      "sha": "71b13e4802c73f4f2139be8074cdc3f15b2e6887",
+      "size": 4033
+    },
+    {
+      "path": "food/rich_tagine/rich_tagine.png",
+      "sha": "df04f81946134bce2f7fd84eabb0b748e129c817",
+      "size": 9160
+    },
+    {
+      "path": "food/roux/roux.png",
+      "sha": "9b78efe85d882eed50100b4d4ed5041daec16d8c",
+      "size": 4269
+    },
+    {
+      "path": "food/salmon/salmon.png",
+      "sha": "44166a88dd38a143683fc34131fadbbcc0c01628",
+      "size": 6986
+    },
+    {
+      "path": "food/salmon_jaella/salmon_jaella.png",
+      "sha": "1574a155f23367341bb1c2d6cba8038c838523d7",
+      "size": 4963
+    },
+    {
+      "path": "food/sammich/sammich.png",
+      "sha": "214d645d1092e1f52b7834e0ff542ca21a60498b",
+      "size": 9475
+    },
+    {
+      "path": "food/scrumptious_frittata/scrumptious_frittata.png",
+      "sha": "05dbffd3aa6100f659c2be884dbdc954bd2d7c2d",
+      "size": 4404
+    },
+    {
+      "path": "food/secret_sauce/secret_sauce.png",
+      "sha": "d6886b853360628c002de92d0e9f208554ea2338",
+      "size": 4537
+    },
+    {
+      "path": "food/sesame_oil/sesame_oil.png",
+      "sha": "a22f9ca0dd012858f767778bbe06edac85765861",
+      "size": 2963
+    },
+    {
+      "path": "food/simple_bbq/simple_bbq.png",
+      "sha": "4a94670d12e69372a75090dc887ee9df4020bfcc",
+      "size": 6275
+    },
+    {
+      "path": "food/simple_slaw/simple_slaw.png",
+      "sha": "9019056a7d8ca6dc666a62540f221d41576a4ed2",
+      "size": 5443
+    },
+    {
+      "path": "food/snack_pack/snack_pack.png",
+      "sha": "d1e331a70813c0142ed560e989c4c10edc2dfaa2",
+      "size": 7617
+    },
+    {
+      "path": "food/sno_cone_blue/sno_cone_blue.png",
+      "sha": "30fb3fc9acb34309a8351407f3c96942b275e3f7",
+      "size": 5943
+    },
+    {
+      "path": "food/sno_cone_green/sno_cone_green.png",
+      "sha": "0868ec1a6adb56cff5980a9cf3ef543f272e3b05",
+      "size": 5930
+    },
+    {
+      "path": "food/sno_cone_orange/sno_cone_orange.png",
+      "sha": "6bf6e1f0422659ed0b589f852a06ddd369e542d8",
+      "size": 5790
+    },
+    {
+      "path": "food/sno_cone_purple/sno_cone_purple.png",
+      "sha": "84db7ee13f49391fcee5e85de41eff745ce63709",
+      "size": 5979
+    },
+    {
+      "path": "food/sno_cone_rainbow/sno_cone_rainbow.png",
+      "sha": "e88f2c16c8581b7a8ceeda0f004489d9109ca1cd",
+      "size": 10142
+    },
+    {
+      "path": "food/sno_cone_red/sno_cone_red.png",
+      "sha": "1e0d1647e50071e42d3e324d62a391c71431ae37",
+      "size": 5746
+    },
+    {
+      "path": "food/spicy_quesadilla/spicy_quesadilla.png",
+      "sha": "e7c05dbfe9f6ebb72b484cb39bd7ef2bbe7cebcd",
+      "size": 9559
+    },
+    {
+      "path": "food/spinach/spinach.png",
+      "sha": "ef4a271ec4d321b216ec6169c3c0074e7268a564",
+      "size": 8790
+    },
+    {
+      "path": "food/spinach_salad/spinach_salad.png",
+      "sha": "6c7676ecaee819a7f3466da2c611015bb4aeab76",
+      "size": 16612
+    },
+    {
+      "path": "food/stock_sauce/stock_sauce.png",
+      "sha": "0a794bfd93413bf116870d21e7c2646af07f3d15",
+      "size": 3197
+    },
+    {
+      "path": "food/strawberry/strawberry.png",
+      "sha": "b84d98cfcb48b8a2f3ab7c295880e259d5f4ff93",
+      "size": 2120
+    },
+    {
+      "path": "food/super_veggie_kebabs/super_veggie_kebabs.png",
+      "sha": "efb2b908f2db1091ea0fce4a4fef83635f24e04f",
+      "size": 12362
+    },
+    {
+      "path": "food/swank_zucchini_loaf/swank_zucchini_loaf.png",
+      "sha": "3d36f0a65f805c113b19d9a2824c5be9c67e5823",
+      "size": 6432
+    },
+    {
+      "path": "food/sweet_n_sour_sauce/sweet_n_sour_sauce.png",
+      "sha": "3c7e27bcdf1bd0e11602bba43fb0e3a4034424a6",
+      "size": 4652
+    },
+    {
+      "path": "food/swing_batter/swing_batter.png",
+      "sha": "d101e5548fd7907a98720944f4beda14c1f530d1",
+      "size": 2945
+    },
+    {
+      "path": "food/tangy_noodles/tangy_noodles.png",
+      "sha": "5134ebc5aa470a7a88f1ce43629435ad10ed431b",
+      "size": 11216
+    },
+    {
+      "path": "food/tangy_sauce/tangy_sauce.png",
+      "sha": "7d271e5d05c35b3400c8af38b5762c8e5d72b2f2",
+      "size": 9094
+    },
+    {
+      "path": "food/tasty_pasta/tasty_pasta.png",
+      "sha": "9f21984069926738d1c1c85bf203fdd72a567342",
+      "size": 10847
+    },
+    {
+      "path": "food/thimble_berry/thimble_berry.png",
+      "sha": "f98c18e3828fc315c0747be1bc1422f1a9bb461d",
+      "size": 8330
+    },
+    {
+      "path": "food/tiny_bubble/tiny_bubble.png",
+      "sha": "a8c691182118cb7ec4b739862e55ebdbaab239a0",
+      "size": 2559
+    },
+    {
+      "path": "food/tomato/tomato.png",
+      "sha": "6ed88479c67d36aaf60a5df1573a0243127b849e",
+      "size": 4734
+    },
+    {
+      "path": "food/tortilla/tortilla.png",
+      "sha": "52699f0b227dddf06cef38e65f9355fcd38375d7",
+      "size": 5205
+    },
+    {
+      "path": "food/trump_rub/trump_rub.png",
+      "sha": "2ec27baef7875a4dbb8e8dca5cafc8011211d36f",
+      "size": 2991
+    },
+    {
+      "path": "food/tuna_berry/tuna_berry.png",
+      "sha": "2c107668e080b570445ccc25ddba9b8870e59243",
+      "size": 9378
+    },
+    {
+      "path": "food/turnip/turnip.png",
+      "sha": "9743fdb96d5c35cea8ce95ffd36ee7ca7dc4ac60",
+      "size": 7459
+    },
+    {
+      "path": "food/urfu/urfu.png",
+      "sha": "779a8f526499c508ddbaae7c8c1fb5c990fb698a",
+      "size": 4823
+    },
+    {
+      "path": "food/vegmageddon/vegmageddon.png",
+      "sha": "6c07fa0db555667a8373799b8949dda5eeef8d39",
+      "size": 5710
+    },
+    {
+      "path": "food/waffles/waffles.png",
+      "sha": "6c2c3a11ccdb7de46da1ab3c6ad9236342b316b6",
+      "size": 4531
+    },
+    {
+      "path": "food/wavy_gravy/wavy_gravy.png",
+      "sha": "ae129f5a0bd0bdeae73ab487ff9cbd2badc6f417",
+      "size": 4500
+    },
+    {
+      "path": "food/whortleberry/whortleberry.png",
+      "sha": "0739fc9591ba73ecaa417053bb28962430688f29",
+      "size": 2474
+    },
+    {
+      "path": "food/whortleberry_jelly/whortleberry_jelly.png",
+      "sha": "3d601626db1d1fd44c01e64615d5b050960d1d2e",
+      "size": 5369
+    },
+    {
+      "path": "food/wicked_bolognese_sauce/wicked_bolognese_sauce.png",
+      "sha": "fb5efb06fa1100e33ab9d83d67045513f00f24c0",
+      "size": 4966
+    },
+    {
+      "path": "food/yummy_gruel/yummy_gruel.png",
+      "sha": "a8fda11932ac61e68f8f56a2e410fd34fc818173",
+      "size": 8064
+    },
+    {
+      "path": "food/zilloween_candy/birch_candy/birch_candy.png",
+      "sha": "80c617136921bc70cfcbaf134f4cf7a12ede72ab",
+      "size": 2508
+    },
+    {
+      "path": "food/zilloween_candy/carobish_treats/carobish_treats.png",
+      "sha": "734097810f36d4c72c4f79562dc0bee8b8859054",
+      "size": 2257
+    },
+    {
+      "path": "food/zilloween_candy/corn_syrup_squares/corn_syrup_squares.png",
+      "sha": "04cff331753e6caebcb174b69f39b69acfc67b5c",
+      "size": 3071
+    },
+    {
+      "path": "food/zucchini/zucchini.png",
+      "sha": "5fde474dbc1c171d8a7501b07435847f019f8eb3",
+      "size": 8024
+    },
+    {
+      "path": "furniture/bag_cabinet_alakol_4_4/bag_cabinet_alakol_4_4.png",
+      "sha": "38a9368e2a0e1951de50c0bae8109518c5cf305a",
+      "size": 11095
+    },
+    {
+      "path": "furniture/bag_cabinet_barrel/bag_cabinet_barrel.png",
+      "sha": "eff9470cf034c7216818ccd0b9eb1a2791f89124",
+      "size": 15651
+    },
+    {
+      "path": "furniture/bag_cabinet_bottletree_3_3/bag_cabinet_bottletree_3_3.png",
+      "sha": "abc08f6148cb2b9e51ba29e2d7c75901223c3f2c",
+      "size": 129616
+    },
+    {
+      "path": "furniture/bag_cabinet_crap_2_3/bag_cabinet_crap_2_3.png",
+      "sha": "2ee6329a59d512e93695a88c58cb6162a9c2bdaa",
+      "size": 39051
+    },
+    {
+      "path": "furniture/bag_cabinet_crap_3_3/bag_cabinet_crap_3_3.png",
+      "sha": "1a49b280b0253dd9340f5e97875670dea6353c6c",
+      "size": 51468
+    },
+    {
+      "path": "furniture/bag_cabinet_fancy_4_4/bag_cabinet_fancy_4_4.png",
+      "sha": "1232a9f58909df441cfc203d3c2be42a599cb5c9",
+      "size": 29537
+    },
+    {
+      "path": "furniture/bag_cabinet_heights_3_3/bag_cabinet_heights_3_3.png",
+      "sha": "dd7a64f97979abf30cdd350004e5c0aa67e47073",
+      "size": 67391
+    },
+    {
+      "path": "furniture/bag_cabinet_nice_3_4/bag_cabinet_nice_3_4.png",
+      "sha": "5104f1e394061e0a025580c90f8e2f97dc8c62b3",
+      "size": 40133
+    },
+    {
+      "path": "furniture/bag_cabinet_nice_4_4/bag_cabinet_nice_4_4.png",
+      "sha": "ec3a856036a2e2e6f152768c3982ce0666531c76",
+      "size": 108443
+    },
+    {
+      "path": "furniture/bag_cabinet_ok_2_3/bag_cabinet_ok_2_3.png",
+      "sha": "70e663affbe8e96737ed92adb97dd06fa6a8f903",
+      "size": 47533
+    },
+    {
+      "path": "furniture/bag_cabinet_ok_3_3/bag_cabinet_ok_3_3.png",
+      "sha": "e4c201ada402b4158cd942b77a804e82771a6886",
+      "size": 65786
+    },
+    {
+      "path": "furniture/bag_cabinet_ok_3_4/bag_cabinet_ok_3_4.png",
+      "sha": "adc4adc43b423e391498a59a75f3f7c2e0a715f5",
+      "size": 72044
+    },
+    {
+      "path": "furniture/bag_cabinet_ok_4_4/bag_cabinet_ok_4_4.png",
+      "sha": "7b78f706cf99c76c2868024bba20eca81bf40db7",
+      "size": 53396
+    },
+    {
+      "path": "furniture/bag_cabinet_treehouse_3_3/bag_cabinet_treehouse_3_3.png",
+      "sha": "5b71482dff749922cc7f4b6b6859477a38e7b1d0",
+      "size": 84269
+    },
+    {
+      "path": "furniture/bag_furniture_cabinet_base/bag_furniture_cabinet/bag_furniture_cabinet.png",
+      "sha": "b5b18381a0e0b76935b2a46c94a758a94a8e9bdd",
+      "size": 41451
+    },
+    {
+      "path": "furniture/bag_furniture_cabinet_base/bag_furniture_smallcabinet/bag_furniture_smallcabinet.png",
+      "sha": "ed1dd09a35bfe8570a6793267bbcba55b3867bbb",
+      "size": 22923
+    },
+    {
+      "path": "furniture/bag_furniture_cabinet_base/bag_furniture_wallcabinet/bag_furniture_wallcabinet.png",
+      "sha": "778b4c29576b824d7055533f2fe982bd723312d6",
+      "size": 24109
+    },
+    {
+      "path": "furniture/bag_trophycase_alakol/bag_trophycase_alakol.png",
+      "sha": "cb6787482c978aadea0021f0c4d76d93833458d3",
+      "size": 7534
+    },
+    {
+      "path": "furniture/bag_trophycase_bottletree/bag_trophycase_bottletree.png",
+      "sha": "c704f7a9c6722fb8a210b9dcb0f09b7e42c1296f",
+      "size": 32893
+    },
+    {
+      "path": "furniture/bag_trophycase_crap/bag_trophycase_crap.png",
+      "sha": "247a50bc501b77e454740d0ec208ea5c8c1067be",
+      "size": 11069
+    },
+    {
+      "path": "furniture/bag_trophycase_fancy/bag_trophycase_fancy.png",
+      "sha": "4fdacc721c2bb447e4d1b4243e39f2cb8cd4d191",
+      "size": 12735
+    },
+    {
+      "path": "furniture/bag_trophycase_heights/bag_trophycase_heights.png",
+      "sha": "b70c61345789e4c58d956545bb2b37e4f335514c",
+      "size": 24864
+    },
+    {
+      "path": "furniture/bag_trophycase_nice/bag_trophycase_nice.png",
+      "sha": "c209b0f29325e861d87c8fe87084998b2fee880b",
+      "size": 16156
+    },
+    {
+      "path": "furniture/bag_trophycase_ok/bag_trophycase_ok.png",
+      "sha": "7ecac03a634c00a1585f154ca3e69be4c3e999c2",
+      "size": 4884
+    },
+    {
+      "path": "furniture/bag_trophycase_treehouse/bag_trophycase_treehouse.png",
+      "sha": "8c64ed586ed6c0b2a989a0566f1e2af7f3b43fc0",
+      "size": 31228
+    },
+    {
+      "path": "furniture/furniture_base/bag_furniture_sdb/bag_furniture_sdb.png",
+      "sha": "c859d2b084a635e7b23345914298e0bd86035dae",
+      "size": 11896
+    },
+    {
+      "path": "furniture/furniture_base/furniture_armchair/furniture_armchair.png",
+      "sha": "cbcea5f601f8530dfe41d3e947527040085896b0",
+      "size": 23995
+    },
+    {
+      "path": "furniture/furniture_base/furniture_bed/furniture_bed.png",
+      "sha": "a4a7741f81b91a5319ea905de7cea44b433573d0",
+      "size": 24466
+    },
+    {
+      "path": "furniture/furniture_base/furniture_bench/furniture_bench.png",
+      "sha": "8a4e1c023bda36e1526290e6aa4ba123b28c5f3a",
+      "size": 12254
+    },
+    {
+      "path": "furniture/furniture_base/furniture_bookcase/furniture_bookcase.png",
+      "sha": "6e3602883e8ddb82ade0909075efcb2523be58e9",
+      "size": 22900
+    },
+    {
+      "path": "furniture/furniture_base/furniture_cabinet/furniture_cabinet.png",
+      "sha": "f4f5ed03e1d123f2077a4b8237af3eea5d116297",
+      "size": 32065
+    },
+    {
+      "path": "furniture/furniture_base/furniture_ceilingdeco/furniture_ceilingdeco.png",
+      "sha": "c96e859e1364cc2c4e251a90797838340dc45bd3",
+      "size": 2456
+    },
+    {
+      "path": "furniture/furniture_base/furniture_ceilinglamp/furniture_ceilinglamp.png",
+      "sha": "1b092abf4ccafea265f63162816aa2a485b9975b",
+      "size": 2453
+    },
+    {
+      "path": "furniture/furniture_base/furniture_chair/furniture_chair.png",
+      "sha": "bceef43cbd321bda4e822aaa962ddca0af939129",
+      "size": 17764
+    },
+    {
+      "path": "furniture/furniture_base/furniture_chassis/furniture_chassis.png",
+      "sha": "08e462a2ddf8c7a05c8302741ba173acb50820d7",
+      "size": 438739
+    },
+    {
+      "path": "furniture/furniture_base/furniture_coffeetable/furniture_coffeetable.png",
+      "sha": "7bc931c6609ab328a5be8cfeb1ffa5db1fc62816",
+      "size": 14024
+    },
+    {
+      "path": "furniture/furniture_base/furniture_counter/furniture_counter.png",
+      "sha": "bdb16fcf88e89f436ae5ddbcddd5a598b3dc375c",
+      "size": 12398
+    },
+    {
+      "path": "furniture/furniture_base/furniture_desk/furniture_desk.png",
+      "sha": "23495aceaad0097199438450050d418beeb8c38d",
+      "size": 16438
+    },
+    {
+      "path": "furniture/furniture_base/furniture_door/furniture_door.png",
+      "sha": "4952441d67c2e644193e3b216b7d1acc251bc255",
+      "size": 25318
+    },
+    {
+      "path": "furniture/furniture_base/furniture_fireplace/furniture_fireplace.png",
+      "sha": "5b9b44be39bdd1dd981eba91cd4331c137a31abc",
+      "size": 59129
+    },
+    {
+      "path": "furniture/furniture_base/furniture_floorlamp/furniture_floorlamp.png",
+      "sha": "49073f105ce579bd0ba1974b3a2adeecd0114252",
+      "size": 9119
+    },
+    {
+      "path": "furniture/furniture_base/furniture_lamp/furniture_lamp.png",
+      "sha": "6db8c51288e08d5cafd57ad4954a7f88faf952fc",
+      "size": 2662
+    },
+    {
+      "path": "furniture/furniture_base/furniture_largebackfloordeco/furniture_largebackfloordeco.png",
+      "sha": "5ccf596022a74d473431c739b2b9ddc42a47130f",
+      "size": 23354
+    },
+    {
+      "path": "furniture/furniture_base/furniture_largefrontfloordeco/furniture_largefrontfloordeco.png",
+      "sha": "997d1bb3141c58cf9014f62cb0fb1c016e1a196e",
+      "size": 21692
+    },
+    {
+      "path": "furniture/furniture_base/furniture_largetabledeco/furniture_largetabledeco.png",
+      "sha": "3ebf1c8386b5bdd78e5e7decb440fd130dbc1de2",
+      "size": 15428
+    },
+    {
+      "path": "furniture/furniture_base/furniture_largewalldeco/furniture_largewalldeco.png",
+      "sha": "b223da640a01ae7126c24d12ee0b4ad1b9377115",
+      "size": 13124
+    },
+    {
+      "path": "furniture/furniture_base/furniture_largewindow/furniture_largewindow.png",
+      "sha": "089aa9be1912b97de9989b6f533db5f40c128012",
+      "size": 13632
+    },
+    {
+      "path": "furniture/furniture_base/furniture_loveseat/furniture_loveseat.png",
+      "sha": "f311057dc19f57f65c539879e7e42dc22578119a",
+      "size": 16468
+    },
+    {
+      "path": "furniture/furniture_base/furniture_painting/furniture_painting.png",
+      "sha": "7bd283c0cdd81088a78e2d1a05bd5e4160bf9832",
+      "size": 14751
+    },
+    {
+      "path": "furniture/furniture_base/furniture_roomdeco/furniture_roomdeco.png",
+      "sha": "1d03c997460f8d616bec0c1ee9ec34b39af2acf9",
+      "size": 23353
+    },
+    {
+      "path": "furniture/furniture_base/furniture_rug/furniture_rug.png",
+      "sha": "831504c3a26efeb5a3e9614eb0566444cf37a93c",
+      "size": 41954
+    },
+    {
+      "path": "furniture/furniture_base/furniture_shelf/furniture_shelf.png",
+      "sha": "c829394a8fd0634b05e405a33a5f3fde576d595e",
+      "size": 8665
+    },
+    {
+      "path": "furniture/furniture_base/furniture_sidetable/furniture_sidetable.png",
+      "sha": "8d60a40baf5b7c96df5629ab8ba59c0f5ac7607d",
+      "size": 10978
+    },
+    {
+      "path": "furniture/furniture_base/furniture_smallbackfloordeco/furniture_smallbackfloordeco.png",
+      "sha": "caf563bd0a8d206a9e278001a0801c5266e93b93",
+      "size": 12013
+    },
+    {
+      "path": "furniture/furniture_base/furniture_smallfrontfloordeco/furniture_smallfrontfloordeco.png",
+      "sha": "9fdc347fdc4fba77f0f66c2171cf54b638c8c28b",
+      "size": 8990
+    },
+    {
+      "path": "furniture/furniture_base/furniture_smalltabledeco/furniture_smalltabledeco.png",
+      "sha": "13c75feddf1f7c8f8456d23f69cf90fefe6d1770",
+      "size": 8798
+    },
+    {
+      "path": "furniture/furniture_base/furniture_smallwalldeco/furniture_smallwalldeco.png",
+      "sha": "22359a0c33b8a798ae107af626796fe8a8a2a1c2",
+      "size": 8102
+    },
+    {
+      "path": "furniture/furniture_base/furniture_smallwindow/furniture_smallwindow.png",
+      "sha": "6bf67aab25f2c5808e750b7ad023d778a5777c80",
+      "size": 26232
+    },
+    {
+      "path": "furniture/furniture_base/furniture_snap_frame/furniture_snap_frame.png",
+      "sha": "994ccd9ef6e04575e676599e7713b5e8593ce05f",
+      "size": 1286
+    },
+    {
+      "path": "furniture/furniture_base/furniture_sofa/furniture_sofa.png",
+      "sha": "6a1e50e3dc367c8e1ae67d6abeaa6633ad7237ad",
+      "size": 22663
+    },
+    {
+      "path": "furniture/furniture_base/furniture_stool/furniture_stool.png",
+      "sha": "b9f234ee7fe1e78a1f0c2e1f3ec15b52b295c623",
+      "size": 10347
+    },
+    {
+      "path": "furniture/furniture_base/furniture_table/furniture_table.png",
+      "sha": "8b194739879dca2a2a0a1aae587d5c458437ef58",
+      "size": 27583
+    },
+    {
+      "path": "furniture/furniture_base/furniture_tabledeco/furniture_tabledeco.png",
+      "sha": "98ed98e99be68a7cfb070a115ae9a0b0200e6ce9",
+      "size": 9456
+    },
+    {
+      "path": "furniture/furniture_base/furniture_tablelamp/furniture_tablelamp.png",
+      "sha": "0d4aa671167146aac78feb4b9f0d9c6798b3587c",
+      "size": 3875
+    },
+    {
+      "path": "furniture/furniture_base/furniture_tower_chassis/furniture_tower_chassis.png",
+      "sha": "5b60c0f9679764e19490407a2918ea67391d2f44",
+      "size": 309968
+    },
+    {
+      "path": "furniture/furniture_base/furniture_walldeco/furniture_walldeco.png",
+      "sha": "22359a0c33b8a798ae107af626796fe8a8a2a1c2",
+      "size": 8102
+    },
+    {
+      "path": "furniture/furniture_base/furniture_walldecor/furniture_walldecor.png",
+      "sha": "22359a0c33b8a798ae107af626796fe8a8a2a1c2",
+      "size": 8102
+    },
+    {
+      "path": "furniture/furniture_base/furniture_walllamp/furniture_walllamp.png",
+      "sha": "41bd0f838498c2256b8f9da23f9466971cb40eb5",
+      "size": 5014
+    },
+    {
+      "path": "harvestable_resources/barnacle_pod/barnacle_pod.png",
+      "sha": "187065c83e86f7b98a6e898eca0b7d8fade76a07",
+      "size": 74847
+    },
+    {
+      "path": "harvestable_resources/dirt_pile/dirt_pile.png",
+      "sha": "32afbc268ac23f4e3e392470a780669e93ad5d69",
+      "size": 28665
+    },
+    {
+      "path": "harvestable_resources/garden/garden.png",
+      "sha": "517399a36ac059670566b5d16ee46ef507db36bb",
+      "size": 28362
+    },
+    {
+      "path": "harvestable_resources/gas/gas.png",
+      "sha": "d7b2b03f54315436345ab8444b7de1c84e74ce71",
+      "size": 6604
+    },
+    {
+      "path": "harvestable_resources/ice_knob/ice_knob.png",
+      "sha": "87dface6aca6a944b24257c099078026129f47e5",
+      "size": 2306
+    },
+    {
+      "path": "harvestable_resources/jellisac/jellisac.png",
+      "sha": "3cf3565167b5d58d28bf959c116b9af5b37be52e",
+      "size": 2077
+    },
+    {
+      "path": "harvestable_resources/jellisac_mound/jellisac_mound.png",
+      "sha": "8e3d958ac431ced47ba529956e8aa3175c636bdb",
+      "size": 68088
+    },
+    {
+      "path": "harvestable_resources/mortar_barnacle/mortar_barnacle.png",
+      "sha": "338932884e03f2b0c21d97258c905cb222df0e81",
+      "size": 4748
+    },
+    {
+      "path": "harvestable_resources/paper_tree/paper_tree.png",
+      "sha": "9653be25a89c036d86a6c530251a819be965ac8a",
+      "size": 58967
+    },
+    {
+      "path": "harvestable_resources/patch/patch.png",
+      "sha": "9176d9407ebf8edbba417c8962d8cd2122b72d98",
+      "size": 12527
+    },
+    {
+      "path": "harvestable_resources/patch/patch_dark/patch_dark.png",
+      "sha": "7fbb4348639ab6dabcc10b0840d7d3026df19096",
+      "size": 8228
+    },
+    {
+      "path": "harvestable_resources/patch_seedling/patch_seedling.png",
+      "sha": "8b4d89a9de83a7e4cc9d378c29977afa3b8bb9c5",
+      "size": 11002
+    },
+    {
+      "path": "harvestable_resources/peat_base/peat_1/peat_1.png",
+      "sha": "b7aea85be3dc5443885055121eed1e27ce6e39ab",
+      "size": 33005
+    },
+    {
+      "path": "harvestable_resources/peat_base/peat_2/peat_2.png",
+      "sha": "11dcf0e5f664d14fff5b44c97835f6d0f501de90",
+      "size": 27194
+    },
+    {
+      "path": "harvestable_resources/peat_base/peat_3/peat_3.png",
+      "sha": "d5d31fcf9930efc16a8f0fa5965422065ec88909",
+      "size": 29870
+    },
+    {
+      "path": "harvestable_resources/rock/rock.png",
+      "sha": "f340601a0450ed50ce3cfb9655d23d9b1d30d425",
+      "size": 9500
+    },
+    {
+      "path": "harvestable_resources/rock_beryl/rock_beryl_1/rock_beryl_1.png",
+      "sha": "ee324d1a2a3e3869ffdef417bd99950879f8c8c2",
+      "size": 21172
+    },
+    {
+      "path": "harvestable_resources/rock_beryl/rock_beryl_2/rock_beryl_2.png",
+      "sha": "612df77ad777a43452f1ae71edc13f5255eb8447",
+      "size": 21795
+    },
+    {
+      "path": "harvestable_resources/rock_beryl/rock_beryl_3/rock_beryl_3.png",
+      "sha": "20c99ed5792b86db5796da840f3defdd0c5de141",
+      "size": 24837
+    },
+    {
+      "path": "harvestable_resources/rock_dullite/rock_dullite_1/rock_dullite_1.png",
+      "sha": "bd36f693da73d1eeec9c610401debfeebbb3bd74",
+      "size": 23790
+    },
+    {
+      "path": "harvestable_resources/rock_dullite/rock_dullite_2/rock_dullite_2.png",
+      "sha": "15c4db4e8a145296cf6555bc533163a5ae2b12db",
+      "size": 22858
+    },
+    {
+      "path": "harvestable_resources/rock_dullite/rock_dullite_3/rock_dullite_3.png",
+      "sha": "d26c72c06bec9dba0fa9d6e9dd544ce2cd83fdbe",
+      "size": 20859
+    },
+    {
+      "path": "harvestable_resources/rock_metal/rock_metal_1/rock_metal_1.png",
+      "sha": "f0c4344f2114c9f9794bbe55fbe901bfa86f6c95",
+      "size": 39285
+    },
+    {
+      "path": "harvestable_resources/rock_metal/rock_metal_2/rock_metal_2.png",
+      "sha": "efd7396f5aaf4e7c7e3a10cc1e567832ecab4bf4",
+      "size": 46448
+    },
+    {
+      "path": "harvestable_resources/rock_metal/rock_metal_3/rock_metal_3.png",
+      "sha": "93203955dab84813862abf0412e09042ed2e25cd",
+      "size": 41979
+    },
+    {
+      "path": "harvestable_resources/rock_sparkly/rock_sparkly_1/rock_sparkly_1.png",
+      "sha": "dcdf79610603c1bc51e2a3e3d5492dd15be05e12",
+      "size": 41658
+    },
+    {
+      "path": "harvestable_resources/rock_sparkly/rock_sparkly_2/rock_sparkly_2.png",
+      "sha": "a9844104f048561667ff2230c4efbe2b95aa475d",
+      "size": 42045
+    },
+    {
+      "path": "harvestable_resources/rock_sparkly/rock_sparkly_3/rock_sparkly_3.png",
+      "sha": "8af634474512a01b675104cb19be52c6e4149a93",
+      "size": 50068
+    },
+    {
+      "path": "harvestable_resources/trant_bean_dead/trant_bean_dead.png",
+      "sha": "a71a23f155f0babdf42611215c29e1aba27b8963",
+      "size": 24182
+    },
+    {
+      "path": "harvestable_resources/trant_bubble_dead/trant_bubble_dead.png",
+      "sha": "fdb0948a2225d2fb7e50d2cf983990735865e814",
+      "size": 29365
+    },
+    {
+      "path": "harvestable_resources/trant_egg_dead/trant_egg_dead.png",
+      "sha": "2d1b64357ff270c724544d83a1994eb8f8d113ae",
+      "size": 30724
+    },
+    {
+      "path": "harvestable_resources/trant_fruit_dead/trant_fruit_dead.png",
+      "sha": "736f3a2a5b89cb00a2e71b63cc63be20c316eb32",
+      "size": 23664
+    },
+    {
+      "path": "harvestable_resources/trant_gas_dead/trant_gas_dead.png",
+      "sha": "0cc4137d95f65231be6b37a77912930f4411e737",
+      "size": 34660
+    },
+    {
+      "path": "harvestable_resources/trant_spice_dead/trant_spice_dead.png",
+      "sha": "240877066c37e322b010aefc6e196e52e22a1414",
+      "size": 26994
+    },
+    {
+      "path": "harvestable_resources/wood_tree/wood_tree.png",
+      "sha": "61e0d34354654a0eadc1eb18c4f0fd7d4fc2585a",
+      "size": 12026
+    },
+    {
+      "path": "harvestable_resources/wood_tree/wood_tree_enchanted/wood_tree_enchanted.png",
+      "sha": "32f39dda31ba4e63951b717e5bec7fa783d0d5f5",
+      "size": 12246
+    },
+    {
+      "path": "herbs/gandlevery/gandlevery.png",
+      "sha": "ef0068e8d6cecf2e19f850af545fe735635c352c",
+      "size": 6168
+    },
+    {
+      "path": "herbs/hairball_flower/hairball_flower.png",
+      "sha": "d78a4ae49cdd5453bf70e6e547a61a5a7ee8d522",
+      "size": 10120
+    },
+    {
+      "path": "herbs/purple_flower/purple_flower.png",
+      "sha": "d8681ef4fb3930b6ced6048f855bc497f49e3602",
+      "size": 4928
+    },
+    {
+      "path": "herbs/rookswort/rookswort.png",
+      "sha": "977830acbb5bd9d1cbfc848ba2b1484072ab3384",
+      "size": 7421
+    },
+    {
+      "path": "herbs/rubeweed/rubeweed.png",
+      "sha": "a04beab18c0ebd1f9cb73625a0c4afaf5b79f745",
+      "size": 8759
+    },
+    {
+      "path": "herbs/silvertongue/silvertongue.png",
+      "sha": "f9f446e4320f40b7c34da0983cab6e5eb1f9ffe4",
+      "size": 6006
+    },
+    {
+      "path": "herbs/yellow_crumb_flower/yellow_crumb_flower.png",
+      "sha": "cdc18e7608a8f08d2af9f9ffed35cd28c8707c3b",
+      "size": 5144
+    },
+    {
+      "path": "keys/door_key_1/door_key_1.png",
+      "sha": "4e7c6d0090c0ff9b1b0667244efbe0b6839c6f5f",
+      "size": 2363
+    },
+    {
+      "path": "keys/door_key_10/door_key_10.png",
+      "sha": "efcdce0651c35d0b7047ee5c8bddd7d8a5bc89c6",
+      "size": 2574
+    },
+    {
+      "path": "keys/door_key_11/door_key_11.png",
+      "sha": "439146325a608582f2e946306e71b94883672a7f",
+      "size": 1635
+    },
+    {
+      "path": "keys/door_key_12/door_key_12.png",
+      "sha": "96481510eae8c30afc6db96ec5e951fc05362072",
+      "size": 2398
+    },
+    {
+      "path": "keys/door_key_2/door_key_2.png",
+      "sha": "24bda944473dd40face31adfd8551405c932ab7d",
+      "size": 2704
+    },
+    {
+      "path": "keys/door_key_3/door_key_3.png",
+      "sha": "162fd185eb774eb092b16f44994e9d70bd29fa52",
+      "size": 1628
+    },
+    {
+      "path": "keys/door_key_4/door_key_4.png",
+      "sha": "594fbcb2f788472737f75aa145e103568f0a1244",
+      "size": 2265
+    },
+    {
+      "path": "keys/door_key_5/door_key_5.png",
+      "sha": "bdb9ae3c76ec852e3a4f1c5e8db4dfde608c53bf",
+      "size": 2358
+    },
+    {
+      "path": "keys/door_key_6/door_key_6.png",
+      "sha": "08fea66f27081e19e92f16b666e6d8304f182cc5",
+      "size": 2699
+    },
+    {
+      "path": "keys/door_key_7/door_key_7.png",
+      "sha": "bf046318d91f328bd437deb286d66223606b106b",
+      "size": 1619
+    },
+    {
+      "path": "keys/door_key_8/door_key_8.png",
+      "sha": "29c0455370cc3dac72577671ddab06ddb3624d5c",
+      "size": 2246
+    },
+    {
+      "path": "keys/door_key_9/door_key_9.png",
+      "sha": "2d46696c4c39951939dd83badfce6fc373c14ae6",
+      "size": 2291
+    },
+    {
+      "path": "misc/admin_widget/admin_widget.png",
+      "sha": "596cb70b89337b953306282c43732063a826d574",
+      "size": 34614
+    },
+    {
+      "path": "misc/apple_seed/apple_seed.png",
+      "sha": "60038183f2f61fb8956bab2873c8451a0f5948b0",
+      "size": 2133
+    },
+    {
+      "path": "misc/bag_bigger/bag_bigger.png",
+      "sha": "e544392c36768957a266a9bd8bc7b904137bf361",
+      "size": 13870
+    },
+    {
+      "path": "misc/bag_bigger/bag_bigger_blue/bag_bigger_blue.png",
+      "sha": "ab91f19dc7d66cfafce34c8c6c86aed553e5cacd",
+      "size": 14075
+    },
+    {
+      "path": "misc/bag_bigger/bag_bigger_gray/bag_bigger_gray.png",
+      "sha": "b5d925ebb607141c8ae7a88f3a54549347beb9fb",
+      "size": 13566
+    },
+    {
+      "path": "misc/bag_bigger/bag_bigger_green/bag_bigger_green.png",
+      "sha": "4ce0317bf06c72ba58c92fa54f1350420754e5f6",
+      "size": 9019
+    },
+    {
+      "path": "misc/bag_bigger/bag_bigger_pink/bag_bigger_pink.png",
+      "sha": "c8b7c0c8bf83761f864ca05ce83721e6531c52bf",
+      "size": 8992
+    },
+    {
+      "path": "misc/bag_generic/bag_alchemistry_kit/bag_alchemistry_kit.png",
+      "sha": "a9389e1ea2d05669a9bb0b8f0024407d82b21116",
+      "size": 10946
+    },
+    {
+      "path": "misc/bag_generic/bag_cubimal_case/bag_cubimal_case.png",
+      "sha": "898b615c0c8800d2f0514283259286d5b16000d9",
+      "size": 6976
+    },
+    {
+      "path": "misc/bag_generic/bag_elemental_pouch/bag_elemental_pouch.png",
+      "sha": "79df8f6a1b9fba660fc6c185ebd59e840297dc1b",
+      "size": 5416
+    },
+    {
+      "path": "misc/bag_generic/bag_generic.png",
+      "sha": "87723f81cbe81adbe16d966e4edf7b70608a1b76",
+      "size": 8089
+    },
+    {
+      "path": "misc/bag_generic/bag_generic_blue/bag_generic_blue.png",
+      "sha": "88de4d910c1de8c19d5c2227c3064de36436a8cf",
+      "size": 8283
+    },
+    {
+      "path": "misc/bag_generic/bag_generic_gray/bag_generic_gray.png",
+      "sha": "d90441bb4b180b90e510df9a3d7cecf039bef428",
+      "size": 8462
+    },
+    {
+      "path": "misc/bag_generic/bag_generic_green/bag_generic_green.png",
+      "sha": "f2ef127fb25854daf34e71a1702182d62fa95c82",
+      "size": 8272
+    },
+    {
+      "path": "misc/bag_generic/bag_generic_pink/bag_generic_pink.png",
+      "sha": "ff424a28c06a9c451e60b5fcc682718aca300435",
+      "size": 7485
+    },
+    {
+      "path": "misc/bag_generic/bag_gift_box/bag_gift_box.png",
+      "sha": "5b289c91513e5942c9a6638a327cd8cbc139611e",
+      "size": 9558
+    },
+    {
+      "path": "misc/bag_generic/bag_spicerack/bag_spicerack.png",
+      "sha": "e057448afc301c7b7d224dfb016a6a9b39863567",
+      "size": 8023
+    },
+    {
+      "path": "misc/bag_gift_box/bag_gift_box_wrapped/bag_gift_box_wrapped.png",
+      "sha": "04fb0c9c6069c3cf6262d5c574d21aecd4190fa4",
+      "size": 9184
+    },
+    {
+      "path": "misc/bag_greeter_badge/bag_greeter_badge.png",
+      "sha": "5e1a015efb1bcadd1f63dabcb9099954a41a2f7a",
+      "size": 11828
+    },
+    {
+      "path": "misc/bag_moving_box/bag_moving_box.png",
+      "sha": "69f613b1bb27d57d507ceb66f8fe3526c091b88f",
+      "size": 16663
+    },
+    {
+      "path": "misc/bag_notice_board/bag_notice_board.png",
+      "sha": "5f9bab6a7df01bdd31e360a59f39dd38558257ec",
+      "size": 124924
+    },
+    {
+      "path": "misc/bag_toolbox_base/bag_toolbox_chrome/bag_toolbox_chrome.png",
+      "sha": "b078bb5d7ffa1a657cdb463f2dcb4345fbf13042",
+      "size": 4818
+    },
+    {
+      "path": "misc/bag_toolbox_base/bag_toolbox_green/bag_toolbox_green.png",
+      "sha": "5e69a624bf001865194e339c7e698bff0b7a96a4",
+      "size": 5620
+    },
+    {
+      "path": "misc/bag_toolbox_base/bag_toolbox_red/bag_toolbox_red.png",
+      "sha": "8602dca5096e15eb2969e0842e7a34eefc3adf96",
+      "size": 5597
+    },
+    {
+      "path": "misc/ball/ball.png",
+      "sha": "77bc8eec78266692d4a98e3552aba66190456fb2",
+      "size": 3491
+    },
+    {
+      "path": "misc/barnacle/barnacle.png",
+      "sha": "6ac5e563ff4adf3e9f51f536edb2a6584c6e85de",
+      "size": 8549
+    },
+    {
+      "path": "misc/barnacle_talc/barnacle_talc.png",
+      "sha": "d46087820b2e120bbbfb9bebb9109dfa0986c503",
+      "size": 13007
+    },
+    {
+      "path": "misc/beachball/beachball.png",
+      "sha": "d6d4a090f3a827c097bd7598d2592f4a996b9eaf",
+      "size": 6601
+    },
+    {
+      "path": "misc/beam/beam.png",
+      "sha": "bc2ae54a8313e6d1a21e164cd87e76ebc762228a",
+      "size": 4615
+    },
+    {
+      "path": "misc/beryl/beryl.png",
+      "sha": "93ae88231b6ea255a74abbd732b8237ee3ed3edb",
+      "size": 4612
+    },
+    {
+      "path": "misc/board/board.png",
+      "sha": "c19c8141cbd64e7e957b3156486a65a2af19604e",
+      "size": 9858
+    },
+    {
+      "path": "misc/boot/boot.png",
+      "sha": "c369cbc544f7eaa9f51ef823e6ded97d03fa6df8",
+      "size": 5587
+    },
+    {
+      "path": "misc/brick/brick.png",
+      "sha": "50d1eef72af9f68551fbdd1db0431c1d2029b638",
+      "size": 11028
+    },
+    {
+      "path": "misc/bulb/bulb.png",
+      "sha": "09e9a250905544139438117e84ecefc140318415",
+      "size": 2353
+    },
+    {
+      "path": "misc/bunch_of_grapes_hell/bunch_of_grapes_hell.png",
+      "sha": "e8823603e3f9d7e104995e50f87e8561912cb203",
+      "size": 5716
+    },
+    {
+      "path": "misc/butler_box/butler_box.png",
+      "sha": "9bb019d9fb1ebe92286dd01718144c554fb01c42",
+      "size": 22258
+    },
+    {
+      "path": "misc/butterfly_egg/butterfly_egg.png",
+      "sha": "bf419eea4734fd3bd9ee0eabfa7a8d9c901ff30f",
+      "size": 3589
+    },
+    {
+      "path": "misc/butterfly_milker/butterfly_milker.png",
+      "sha": "1e476144b07349d8e8c73ed8bbb99f2295757e78",
+      "size": 10035
+    },
+    {
+      "path": "misc/camera/camera.png",
+      "sha": "b0e9d54a736fca25e391b1ea6a801976733ab018",
+      "size": 5149
+    },
+    {
+      "path": "misc/card_carrying_qualification/card_carrying_qualification.png",
+      "sha": "38e7b41519185ff850aa11a49b75a77562681f15",
+      "size": 6121
+    },
+    {
+      "path": "misc/chicken_egg/chicken_egg.png",
+      "sha": "c5febfff9a03520e2e05e551cdc341e1bc8b4088",
+      "size": 5644
+    },
+    {
+      "path": "misc/clickable_broadcaster/clickable_broadcaster.png",
+      "sha": "812baf6a63ad2d7e1d7bf49aeb529e1a210cf994",
+      "size": 136
+    },
+    {
+      "path": "misc/coin/coin.png",
+      "sha": "64b157fbcbd094eeae9f71fe864e11940ca8ca3f",
+      "size": 3292
+    },
+    {
+      "path": "misc/conch/conch.png",
+      "sha": "1efcb3c74a690444b51eb057bf2f638d487b0362",
+      "size": 7063
+    },
+    {
+      "path": "misc/contraband/contraband.png",
+      "sha": "e5f227cd09828e64b588192e6fb07c8b8cd35c53",
+      "size": 4658
+    },
+    {
+      "path": "misc/copper/copper.png",
+      "sha": "4fb2675eeb077aa2951e5cd1fb564a457b7b9b85",
+      "size": 3777
+    },
+    {
+      "path": "misc/cornucopia_crops/cornucopia_crops.png",
+      "sha": "922ee5ba597a5b2d0f4035a9aa1b21166cb94c1c",
+      "size": 25602
+    },
+    {
+      "path": "misc/cornucopia_herbs/cornucopia_herbs.png",
+      "sha": "1f5e70f8d03139c548bdc9c6d4434d25b331cfe7",
+      "size": 37842
+    },
+    {
+      "path": "misc/crabphones/crabphones.png",
+      "sha": "738f342d3f7937aedfb403d8178b3d603c9f59ed",
+      "size": 10511
+    },
+    {
+      "path": "misc/crown_game_lock/crown_game_lock.png",
+      "sha": "66bbf979dd410e4e7168a944fc77b53e9d556082",
+      "size": 2485
+    },
+    {
+      "path": "misc/crusher/crusher.png",
+      "sha": "579558413516f8ec24364c4f91be53f36a1b89f2",
+      "size": 24168
+    },
+    {
+      "path": "misc/crying_gas/crying_gas.png",
+      "sha": "0714d7f7b21b569bb271b90da94cb24abc98b626",
+      "size": 13110
+    },
+    {
+      "path": "misc/cup_of_water/cup_of_water.png",
+      "sha": "1fcef421e2bf4bc4d44883848fd12f5deaf4f315",
+      "size": 3617
+    },
+    {
+      "path": "misc/dcpu16/dcpu16.png",
+      "sha": "69686ac17465efbf32f51de22999f2bcf54c6fb4",
+      "size": 7082
+    },
+    {
+      "path": "misc/depression_button/depression_button.png",
+      "sha": "9bd9cdef10eafad33eac340e35293b3111ecda3f",
+      "size": 4606
+    },
+    {
+      "path": "misc/dice/dice.png",
+      "sha": "6057ef375170aa6c8ba197059f88faadf83acc89",
+      "size": 3041
+    },
+    {
+      "path": "misc/dice_12sided/dice_12sided.png",
+      "sha": "c9802feaff2ca09aa65a22b4f90e649427befd77",
+      "size": 18262
+    },
+    {
+      "path": "misc/doll/collectors_edition_2010_glitchmas_yeti/collectors_edition_2010_glitchmas_yeti.png",
+      "sha": "7bc8addde83f38daf66e9ebb2afeaf4e4b259153",
+      "size": 12919
+    },
+    {
+      "path": "misc/doll/doll_ayn_rand/doll_ayn_rand.png",
+      "sha": "1740b9f7c227f9f642b4a09e7f8d3340a0e13d5e",
+      "size": 11734
+    },
+    {
+      "path": "misc/doll/doll_nietzsche/doll_nietzsche.png",
+      "sha": "9c543b1e5602760bb6e0f06fc8e68a82053c5d9c",
+      "size": 13202
+    },
+    {
+      "path": "misc/doll/doll_wittgenstein/doll_wittgenstein.png",
+      "sha": "936c37bbe94ab05f0dcf2493a2b394a98f7556c7",
+      "size": 10284
+    },
+    {
+      "path": "misc/drink_ticket/drink_ticket.png",
+      "sha": "8125cf60f43fe261bc20e9f68fc470cc2316aaf8",
+      "size": 2899
+    },
+    {
+      "path": "misc/dullite/dullite.png",
+      "sha": "acf11bed58a2217cc41cb3e60bd757d945256b79",
+      "size": 2811
+    },
+    {
+      "path": "misc/durian/durian.png",
+      "sha": "9328b53ee971ce13deb110e93ff4f207ed9881cd",
+      "size": 15859
+    },
+    {
+      "path": "misc/dust_trap/dust_trap.png",
+      "sha": "21ecf7bed4128cc5081d8e6ffa7b1899c0773274",
+      "size": 11292
+    },
+    {
+      "path": "misc/earth/earth.png",
+      "sha": "1d3ad4ecffa1463743a522ea0c8310dbae92d09b",
+      "size": 5583
+    },
+    {
+      "path": "misc/egg_carton/egg_carton.png",
+      "sha": "23c4910696e3f7e18295e9b43ac319b20e1f4319",
+      "size": 8883
+    },
+    {
+      "path": "misc/emotional_bear/emotional_bear.png",
+      "sha": "a3515dffe752865b69682125909c4199449150d2",
+      "size": 2169
+    },
+    {
+      "path": "misc/firefly_jar/firefly_jar.png",
+      "sha": "9d8946d46070a5e3eeaa34e81c41d5125cf59827",
+      "size": 13731
+    },
+    {
+      "path": "misc/fortune/fortune.png",
+      "sha": "e8a3eeed67aa5a12952768587e0373f89e28ff47",
+      "size": 4844
+    },
+    {
+      "path": "misc/fortune_cookie/fortune_cookie.png",
+      "sha": "7a0b67fba10b2f2fea26ebc255776b6d51ecd492",
+      "size": 2685
+    },
+    {
+      "path": "misc/fox_bait/fox_bait.png",
+      "sha": "51b2436d1e6ecc93a57ec0b9b1fd996d6ce2d383",
+      "size": 8306
+    },
+    {
+      "path": "misc/fox_permit/fox_permit.png",
+      "sha": "33008c4da5de55651ef7223018f601af9cdce2c9",
+      "size": 5455
+    },
+    {
+      "path": "misc/fuel_cell/fuel_cell.png",
+      "sha": "3ef0042a023d17c45ca252c8ace4b383274abc65",
+      "size": 6393
+    },
+    {
+      "path": "misc/game_box/game_box.png",
+      "sha": "50b1b686acafb77fcf76c29a6c0fa7994d02d607",
+      "size": 9580
+    },
+    {
+      "path": "misc/game_crown/game_crown.png",
+      "sha": "51d5a8c9af24bf8ff97a88a19d9d3617a1b6aa9d",
+      "size": 7322
+    },
+    {
+      "path": "misc/game_teleporter_coinbox/game_teleporter_coinbox.png",
+      "sha": "acdd1be7c674c903f36a6e479211a387f43a22db",
+      "size": 6012
+    },
+    {
+      "path": "misc/gameshow_ticket/gameshow_ticket.png",
+      "sha": "84cd7c43fb67e349065ee91207c54ab67db36e5d",
+      "size": 2411
+    },
+    {
+      "path": "misc/gem_amber/gem_amber.png",
+      "sha": "ba798cddf4023be2aa917010faa63b66ae1c9249",
+      "size": 4468
+    },
+    {
+      "path": "misc/gem_diamond/gem_diamond.png",
+      "sha": "310e61866ae1fe1e2f133c55625b4c4e6a2bf7f4",
+      "size": 2946
+    },
+    {
+      "path": "misc/gem_moonstone/gem_moonstone.png",
+      "sha": "fce7d0db0c88e9526c9899456ddf05e958262316",
+      "size": 5595
+    },
+    {
+      "path": "misc/gem_ruby/gem_ruby.png",
+      "sha": "36e3806b697b8faebcdf490ddac074c35964878e",
+      "size": 3647
+    },
+    {
+      "path": "misc/gem_sapphire/gem_sapphire.png",
+      "sha": "87d9786bbbe00feda1a4a7a2edad8f42d73b9a7c",
+      "size": 3267
+    },
+    {
+      "path": "misc/general_building_permit/general_building_permit.png",
+      "sha": "bc8c85e1274ed0445a8297dcdd0308a5a9f591ce",
+      "size": 8111
+    },
+    {
+      "path": "misc/general_fabric/general_fabric.png",
+      "sha": "c0eab5d5f908909b60573e3f7591ebca786c7f70",
+      "size": 7839
+    },
+    {
+      "path": "misc/general_vapour/general_vapour.png",
+      "sha": "b8452cf562beaec0ed7b3c7f89643ccd5063f207",
+      "size": 6340
+    },
+    {
+      "path": "misc/girder/girder.png",
+      "sha": "3971e78b5adae5a21ab58f32aa823f48ec427aa9",
+      "size": 4680
+    },
+    {
+      "path": "misc/glitchmas_cracker/glitchmas_cracker.png",
+      "sha": "a9eb7e10595c263af94209c1887c52d648c887f8",
+      "size": 6590
+    },
+    {
+      "path": "misc/glitchmas_cracker_joke/glitchmas_cracker_factoid/glitchmas_cracker_factoid.png",
+      "sha": "ba49d2ade38744679077c549550cb052ad94f169",
+      "size": 2243
+    },
+    {
+      "path": "misc/glitchmas_present/glitchmas_present.png",
+      "sha": "9af71623a408ad512c320056da755e6f76025424",
+      "size": 7811
+    },
+    {
+      "path": "misc/goat_eye/goat_eye.png",
+      "sha": "9c8a8da436c6c2570569e90aff115471f86aacf8",
+      "size": 5542
+    },
+    {
+      "path": "misc/golgi_apparatus/golgi_apparatus.png",
+      "sha": "94cb7d2260c689d975864bbefdbc885e45745c39",
+      "size": 9657
+    },
+    {
+      "path": "misc/grade_a_earth_block/grade_a_earth_block.png",
+      "sha": "a3bc41c83131e99bf014d2b619982c24e6e8c313",
+      "size": 16047
+    },
+    {
+      "path": "misc/grade_aa_earth_block/grade_aa_earth_block.png",
+      "sha": "4dbd2d24f09770b1e14bdb440d82c719c4609802",
+      "size": 30899
+    },
+    {
+      "path": "misc/grade_aaa_earth_block/grade_aaa_earth_block.png",
+      "sha": "272a5604173baec455420aa43b78c34c7a1dda40",
+      "size": 14150
+    },
+    {
+      "path": "misc/grain_bushel/grain_bushel.png",
+      "sha": "58545718b628557e422bbcc71d6ac967a6a88a58",
+      "size": 39189
+    },
+    {
+      "path": "misc/graveside_marker/graveside_marker.png",
+      "sha": "c9fb1dca612557411177bad8acd1b7fc8ae82b60",
+      "size": 19821
+    },
+    {
+      "path": "misc/greeter_badge/greeter_badge.png",
+      "sha": "a844c39d53ae07ef293945cb2c0feff84aa45ffd",
+      "size": 33052
+    },
+    {
+      "path": "misc/greeter_stone/greeter_stone.png",
+      "sha": "925c003bef05fac6724464d2d39ebce77961c78a",
+      "size": 41690
+    },
+    {
+      "path": "misc/greeter_twig/greeter_twig.png",
+      "sha": "9b7a6a18b3db2d817c971ece990bf5b03e4a9d6a",
+      "size": 3465
+    },
+    {
+      "path": "misc/group_hall_lot_marker/group_hall_lot_marker.png",
+      "sha": "35091384dee79bb99bb8ce1f021ba204d24c0408",
+      "size": 53681
+    },
+    {
+      "path": "misc/guano/guano.png",
+      "sha": "9cdc1a554ebe3f9a0035f5f29c456e62eb146cb5",
+      "size": 2541
+    },
+    {
+      "path": "misc/heavy_gas/heavy_gas.png",
+      "sha": "4c529462fea47c227f54ee75516a270df07a563f",
+      "size": 6400
+    },
+    {
+      "path": "misc/helium/helium.png",
+      "sha": "d592b5c67ddce23c8d602fe00aad658764d9eaa8",
+      "size": 5275
+    },
+    {
+      "path": "misc/hi_overlay/hi_overlay.png",
+      "sha": "6e598fe2ec5ded71276b75d2491125e675897a66",
+      "size": 1166
+    },
+    {
+      "path": "misc/hogtied_piggy/hogtied_piggy.png",
+      "sha": "9e7a4824e030b18ad56788361affc77b2899027d",
+      "size": 5811
+    },
+    {
+      "path": "misc/homestreet_ticket/homestreet_ticket.png",
+      "sha": "8fcd6febffda6b0a88c1ee4ad7eb47fe70aa6de1",
+      "size": 7320
+    },
+    {
+      "path": "misc/homestreet_ticket_dispenser/homestreet_ticket_dispenser.png",
+      "sha": "e8be681b44e81512a7e338b0d58cc7cea32eb097",
+      "size": 13486
+    },
+    {
+      "path": "misc/invoking/invoking_beryl_rock/invoking_beryl_rock.png",
+      "sha": "5f22f8f32536bf8ce947609146a15bb0d9a57ef0",
+      "size": 3335
+    },
+    {
+      "path": "misc/invoking/invoking_dirt_pile/invoking_dirt_pile.png",
+      "sha": "f16db59c8ea1882c12b3d516046d8f64d14a725c",
+      "size": 110
+    },
+    {
+      "path": "misc/invoking/invoking_dullite_rock/invoking_dullite_rock.png",
+      "sha": "f7d65793b6273ba2426402a2701036ab73e3e967",
+      "size": 2653
+    },
+    {
+      "path": "misc/invoking/invoking_garden/invoking_garden.png",
+      "sha": "7aa6a2abb7b377c5365beb95701e5b41241f0a41",
+      "size": 38237
+    },
+    {
+      "path": "misc/invoking/invoking_herb_garden/invoking_herb_garden.png",
+      "sha": "3b819fb2a7c44b1c0daa88e79c5a501cf0979bae",
+      "size": 47279
+    },
+    {
+      "path": "misc/invoking/invoking_mailbox/invoking_mailbox.png",
+      "sha": "5858a5a29674fe3f1b7403b67441437018d1c38b",
+      "size": 7306
+    },
+    {
+      "path": "misc/invoking/invoking_metal_rock/invoking_metal_rock.png",
+      "sha": "0bc0233cd6672a52413ed0102c3be38c2ec2e31c",
+      "size": 2944
+    },
+    {
+      "path": "misc/invoking/invoking_mine/invoking_mine.png",
+      "sha": "c27488f695d8e76aedfd1874b55863240dc42f52",
+      "size": 7328
+    },
+    {
+      "path": "misc/invoking/invoking_patch/invoking_patch.png",
+      "sha": "f852bb0ad690dcf5e78ac6a6f4fa83cf07b6f271",
+      "size": 1490
+    },
+    {
+      "path": "misc/invoking/invoking_post/invoking_post.png",
+      "sha": "7fb0f5c5cbfeae5937aa07782145716a8c4ece07",
+      "size": 2664
+    },
+    {
+      "path": "misc/invoking/invoking_shrine/invoking_shrine.png",
+      "sha": "564b812fb42397fbe0bc72f1d5f8043a9e8daa8e",
+      "size": 13066
+    },
+    {
+      "path": "misc/invoking/invoking_sparkly_rock/invoking_sparkly_rock.png",
+      "sha": "29d86882f111235132763d45e42368b872b14c0f",
+      "size": 5247
+    },
+    {
+      "path": "misc/japadog_miso_mayo/japadog_miso_mayo.png",
+      "sha": "3fecd415ad8905330c69329eabc7a02c0e3c6817",
+      "size": 10215
+    },
+    {
+      "path": "misc/japadog_okonomi/japadog_okonomi.png",
+      "sha": "63e8a1d294564e319f571fe1836bc7bcd86faf31",
+      "size": 10567
+    },
+    {
+      "path": "misc/jellisac_clump/jellisac_clump.png",
+      "sha": "40c421de14017944219cceee122464fa7f503b31",
+      "size": 12690
+    },
+    {
+      "path": "misc/juicer/juicer.png",
+      "sha": "97bc8c1c76afefa2aa64d74dd7c2c4a63834757a",
+      "size": 15641
+    },
+    {
+      "path": "misc/juju_paperweight/juju_paperweight.png",
+      "sha": "12bc59259f439adb5c524e02cbc411890325585c",
+      "size": 8012
+    },
+    {
+      "path": "misc/juju_trowel/juju_trowel.png",
+      "sha": "3ecd118b5969ba8a0f5df7423837642ddacbc56b",
+      "size": 5137
+    },
+    {
+      "path": "misc/junked_tool_part/junked_tool_part.png",
+      "sha": "ace331f4725f89a4ad3fb5b7df89f30d6c04374d",
+      "size": 6318
+    },
+    {
+      "path": "misc/laughing_gas/laughing_gas.png",
+      "sha": "21abfccd4e868de5457b91811bf5c6fa913c6ad7",
+      "size": 6821
+    },
+    {
+      "path": "misc/legitimate_post/legitimate_post.png",
+      "sha": "cc0ccef674505739d47583504a76eb674b810e73",
+      "size": 8123
+    },
+    {
+      "path": "misc/light_beam/light_beam.png",
+      "sha": "54b4c69843a8095f2ec078adc8bbad8ec409aa34",
+      "size": 14195
+    },
+    {
+      "path": "misc/lips/lips.png",
+      "sha": "93b416bb897101ea64aecb83607521b6a8f67a38",
+      "size": 1964
+    },
+    {
+      "path": "misc/loam/loam.png",
+      "sha": "ecdcf3a8e3d0629646f431aaf98f8ca4696bf341",
+      "size": 5517
+    },
+    {
+      "path": "misc/magic_animal_stick/magic_butterfly_stick/magic_butterfly_stick.png",
+      "sha": "709a9c24f9d14e2828a6951cef5b657a1b1f8595",
+      "size": 19547
+    },
+    {
+      "path": "misc/magic_animal_stick/magic_chicken_stick/magic_chicken_stick.png",
+      "sha": "b6e97391c0f2388f9740e04c78ef90eefe5ecdfe",
+      "size": 21412
+    },
+    {
+      "path": "misc/magic_animal_stick/magic_pig_stick/magic_pig_stick.png",
+      "sha": "1a74d659ba02c560188417978e6d3c1c8dc9a55c",
+      "size": 20110
+    },
+    {
+      "path": "misc/mailbox_kit/mailbox_kit.png",
+      "sha": "fae9457acdd8a689650aa0c44bd18fe6562d2b23",
+      "size": 9922
+    },
+    {
+      "path": "misc/marker_qurazy/marker_qurazy.png",
+      "sha": "d592fb0cc978e592e28ff2749a156da024b1c84c",
+      "size": 2324
+    },
+    {
+      "path": "misc/meat_collector/meat_collector.png",
+      "sha": "6ff8bc93f8914392d7e720d5f02c822e9353f291",
+      "size": 7842
+    },
+    {
+      "path": "misc/mental_item_base/mental_abstraction/mental_abstraction.png",
+      "sha": "baf040f69c23bad5369a2166e783bd70fd8a5da6",
+      "size": 9159
+    },
+    {
+      "path": "misc/mental_item_base/mental_anxiety/mental_anxiety.png",
+      "sha": "7c96f285d0e396ceb7d58da31ba34171a71c6805",
+      "size": 8931
+    },
+    {
+      "path": "misc/mental_item_base/mental_apprehension/mental_apprehension.png",
+      "sha": "4d6b387e626c06f02e77261cae02ac95b89a4e66",
+      "size": 7850
+    },
+    {
+      "path": "misc/mental_item_base/mental_bummer/mental_bummer.png",
+      "sha": "b6ebad22e3aee9bcff9d8bd6eb39ed27ecca537c",
+      "size": 6020
+    },
+    {
+      "path": "misc/mental_item_base/mental_concept/mental_concept.png",
+      "sha": "92f16758f15add91ef5c4fda0a355aa64a15d5bf",
+      "size": 5887
+    },
+    {
+      "path": "misc/mental_item_base/mental_consideration/mental_consideration.png",
+      "sha": "4b5f066e81a8ea6c5662e277ff3494d3fed60c4d",
+      "size": 7652
+    },
+    {
+      "path": "misc/mental_item_base/mental_contemplation/mental_contemplation.png",
+      "sha": "697958a643e6414b60690e137e3aa3a349bfb1f1",
+      "size": 6920
+    },
+    {
+      "path": "misc/mental_item_base/mental_desire/mental_desire.png",
+      "sha": "c2975a457eb039f3e46d988dd48c1abbc8137692",
+      "size": 7631
+    },
+    {
+      "path": "misc/mental_item_base/mental_ennui/mental_ennui.png",
+      "sha": "d4f977328297e9c35007272ebe838310a6025d1d",
+      "size": 7525
+    },
+    {
+      "path": "misc/mental_item_base/mental_feeling/mental_feeling.png",
+      "sha": "4dcb3892f3b1db2b303d9dc15b7a6583c9b4e93b",
+      "size": 7426
+    },
+    {
+      "path": "misc/mental_item_base/mental_figment/mental_figment.png",
+      "sha": "6b8cba52ec8b7e3a05277875287e553891391bf7",
+      "size": 4138
+    },
+    {
+      "path": "misc/mental_item_base/mental_hope/mental_hope.png",
+      "sha": "d4ddca0097b232dbdb8b4b3ce5ada51e1912aa19",
+      "size": 5520
+    },
+    {
+      "path": "misc/mental_item_base/mental_ideal/mental_ideal.png",
+      "sha": "630e1f14e1fd477aef710bba045706cbedd68d53",
+      "size": 6481
+    },
+    {
+      "path": "misc/mental_item_base/mental_image/mental_image.png",
+      "sha": "2e63f12177fa1bad47d7c9ef56268104e3d35a1a",
+      "size": 8430
+    },
+    {
+      "path": "misc/mental_item_base/mental_inkling/mental_inkling.png",
+      "sha": "479acfb9a00d1a2cd865e1d2d0fda93f96f772ec",
+      "size": 5220
+    },
+    {
+      "path": "misc/mental_item_base/mental_meditation/mental_meditation.png",
+      "sha": "fbcd461ae787fce1764ddbd0592b66c4aed64cb1",
+      "size": 6746
+    },
+    {
+      "path": "misc/mental_item_base/mental_memory/mental_memory.png",
+      "sha": "529b207df945c29877b2a4b27185210620a6689d",
+      "size": 9057
+    },
+    {
+      "path": "misc/mental_item_base/mental_mirage/mental_mirage.png",
+      "sha": "c51a62619988b35e9d5219c376f101c6b4e2596b",
+      "size": 7621
+    },
+    {
+      "path": "misc/mental_item_base/mental_musing/mental_musing.png",
+      "sha": "a50b418e1c263f40d2550613faa3a0310c2d5bd2",
+      "size": 6109
+    },
+    {
+      "path": "misc/mental_item_base/mental_notion/mental_notion.png",
+      "sha": "b0104f4f95247b8b4be9ecd15f6a59befa3209d7",
+      "size": 6658
+    },
+    {
+      "path": "misc/mental_item_base/mental_perception/mental_perception.png",
+      "sha": "5e43f0b1870ef82d85250a28976a0fb2f33648e1",
+      "size": 7148
+    },
+    {
+      "path": "misc/mental_item_base/mental_reverie/mental_reverie.png",
+      "sha": "eca6ab103087d76c3c3fd5f7242b9ce488c8e712",
+      "size": 8051
+    },
+    {
+      "path": "misc/mental_item_base/mental_rumination/mental_rumination.png",
+      "sha": "3b183f7cc64b81b87b700fdc8576f285a62d813b",
+      "size": 6511
+    },
+    {
+      "path": "misc/mental_item_base/mental_theory/mental_theory.png",
+      "sha": "28ad09fcfdcb956a39c633bcbbf0a1b5e2efbf19",
+      "size": 10267
+    },
+    {
+      "path": "misc/mental_item_base/mental_thought/mental_thought.png",
+      "sha": "83cdaaf2df2fba4e222d93eadf0f76ed80eefe39",
+      "size": 7116
+    },
+    {
+      "path": "misc/mental_item_base/mental_worry/mental_worry.png",
+      "sha": "8847a2696c2198d1cc1ade5d15ac5e1325ce5607",
+      "size": 4630
+    },
+    {
+      "path": "misc/metal_post/metal_post.png",
+      "sha": "99e0be6ae481692f1f2ecd948c5996560bc591c5",
+      "size": 3319
+    },
+    {
+      "path": "misc/metal_rock/metal_rock.png",
+      "sha": "df44c4d6e2605ed45f0a15ac7a20ed87ff675911",
+      "size": 4212
+    },
+    {
+      "path": "misc/metal_rod/metal_rod.png",
+      "sha": "461f232e6e6cb2c33586ce7834a92893712d921a",
+      "size": 2143
+    },
+    {
+      "path": "misc/milk_platypus/milk_platypus.png",
+      "sha": "6086b9c84fe1f548b7780bb29c8e3857ab39676b",
+      "size": 9692
+    },
+    {
+      "path": "misc/milk_vole/milk_vole.png",
+      "sha": "fb40cf631d575cc6d3ace2534f68e18ea23be533",
+      "size": 9591
+    },
+    {
+      "path": "misc/molybdenum/molybdenum.png",
+      "sha": "602b4025e2a33873762beb7df994a1c99f61759e",
+      "size": 4210
+    },
+    {
+      "path": "misc/money_bag/money_bag.png",
+      "sha": "33b6930b582addd0d5bb4f1e548e68293eb6d72d",
+      "size": 13349
+    },
+    {
+      "path": "misc/moon/moon.png",
+      "sha": "fdf875de20b1809a08537688cf56542340347349",
+      "size": 8022
+    },
+    {
+      "path": "misc/mountain_lantern/mountain_lantern.png",
+      "sha": "e395900e1b79678c76db746ed5f3f21c707b1250",
+      "size": 5957
+    },
+    {
+      "path": "misc/newxp_chain/newxp_chain.png",
+      "sha": "b7fbf4c00a08c69eb122d160018a3a2833aa48f4",
+      "size": 16562
+    },
+    {
+      "path": "misc/note/glitchmas_card/glitchmas_card.png",
+      "sha": "b13c08c43bf8c5d357229b7e4aec120e467c6f38",
+      "size": 4009
+    },
+    {
+      "path": "misc/note/glitchmas_cracker_joke/glitchmas_cracker_joke.png",
+      "sha": "6669e5fe7448624230059c82d09261e897d89660",
+      "size": 2199
+    },
+    {
+      "path": "misc/note/note.png",
+      "sha": "121ff9dcfce4f5a29c5c98058c5f89803f01a8a2",
+      "size": 2643
+    },
+    {
+      "path": "misc/note/note_hint/note_hint.png",
+      "sha": "643591658d61668825521d17a67d46f9d71d2b5e",
+      "size": 3279
+    },
+    {
+      "path": "misc/note/note_manor_mystery/note_manor_mystery.png",
+      "sha": "121ff9dcfce4f5a29c5c98058c5f89803f01a8a2",
+      "size": 2643
+    },
+    {
+      "path": "misc/note/teleportation_script/teleportation_script.png",
+      "sha": "3aa0fcb7e0b4f02ce41787b077e2a5510ee23ee4",
+      "size": 5730
+    },
+    {
+      "path": "misc/note_pole/note_pole.png",
+      "sha": "a6e245276fffb9ed3b391c68b3a7e04869ae7351",
+      "size": 10266
+    },
+    {
+      "path": "misc/npc/game_teleporter/game_teleporter.png",
+      "sha": "a6005a69f2fddf2b53fa9ebe7fe7f5a87a252e98",
+      "size": 5531
+    },
+    {
+      "path": "misc/npc/lot_marker/lot_marker.png",
+      "sha": "3763e98f8f2861d53ac3b8caa2c7993c4602358f",
+      "size": 16113
+    },
+    {
+      "path": "misc/npc/npc_butterfly/npc_butterfly.png",
+      "sha": "0b196b7211b1018f92c3f8cc37165d9e4c47c6e3",
+      "size": 11966
+    },
+    {
+      "path": "misc/npc/npc_esquibeth_playback/npc_esquibeth_playback.png",
+      "sha": "e25c42a719fc5d33e86f4253a0fa708f55f310f5",
+      "size": 395
+    },
+    {
+      "path": "misc/npc/npc_firefly/npc_firefly.png",
+      "sha": "4954070e3721d4ae26f3ffa4d90f77844fdc6ac0",
+      "size": 2713
+    },
+    {
+      "path": "misc/npc/npc_garden_gnome/npc_garden_gnome.png",
+      "sha": "35557f12855c3733b3d0120293cb3934f66e3cc1",
+      "size": 21640
+    },
+    {
+      "path": "misc/npc/npc_mail_dispatcher/npc_mail_dispatcher.png",
+      "sha": "6f5b6e74eed65c8190812e627e4b05a2355e87a3",
+      "size": 41598
+    },
+    {
+      "path": "misc/npc/npc_mailbox/npc_mailbox.png",
+      "sha": "f9a2fcc18a3601f6b50c18e71bc5e4c53501dd5d",
+      "size": 18278
+    },
+    {
+      "path": "misc/npc/npc_obelisk/npc_obelisk.png",
+      "sha": "f268c17a9d4d37556ae1b256bfe8fead367b7b33",
+      "size": 36882
+    },
+    {
+      "path": "misc/npc/npc_spinning_wheel/npc_spinning_wheel.png",
+      "sha": "438c5ea841b33d21795d40e3e9c5b3684c854ac8",
+      "size": 2068
+    },
+    {
+      "path": "misc/npc/party_atm/party_atm.png",
+      "sha": "364f11be6c79613c2762f96c01880b1d2bb0bd94",
+      "size": 40990
+    },
+    {
+      "path": "misc/npc_letterblock_a/npc_letterblock_a.png",
+      "sha": "8ae2161b001297c013143c84294585cdf76cb13e",
+      "size": 17276
+    },
+    {
+      "path": "misc/npc_letterblock_b/npc_letterblock_b.png",
+      "sha": "b8bf150a555cae8b2bc64add57d4463130c6b6dd",
+      "size": 14494
+    },
+    {
+      "path": "misc/npc_letterblock_e/npc_letterblock_e.png",
+      "sha": "5f37755b46aa260d68a7c5d8ac0d87112776a6b4",
+      "size": 16395
+    },
+    {
+      "path": "misc/npc_letterblock_m/npc_letterblock_m.png",
+      "sha": "43244b83ae1b359d7e658e8bd1a3695020b8623d",
+      "size": 16069
+    },
+    {
+      "path": "misc/npc_letterblock_s/npc_letterblock_s.png",
+      "sha": "3f95940f695298ff43ca26d6eabeeb8fff9c5aa2",
+      "size": 16140
+    },
+    {
+      "path": "misc/npc_letterblock_t/npc_letterblock_t.png",
+      "sha": "51e0fdcfcfae64823ae3584bbe93f64397d615d6",
+      "size": 15123
+    },
+    {
+      "path": "misc/npc_mailbox/bag_butler/bag_butler.png",
+      "sha": "bd205e19535e1ca4ac0d6fcefc39733a71e8f160",
+      "size": 28177
+    },
+    {
+      "path": "misc/npc_swoonerfly/npc_swoonerfly.png",
+      "sha": "6b59786a681b6f207a2b52200eec87dcb8326b53",
+      "size": 11636
+    },
+    {
+      "path": "misc/ornament_xmas/ornament_xmas.png",
+      "sha": "bec4210dea101aaaa8f1c2a3d06600e6fb9f2ee4",
+      "size": 7353
+    },
+    {
+      "path": "misc/paper/paper.png",
+      "sha": "6f43eef75384113f19d7792ba668b76cd2e985f8",
+      "size": 3299
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_abysmal_thrill/paradise_ticket_abysmal_thrill.png",
+      "sha": "714b7fd365036ee9406c8ba683ddce195e22eff1",
+      "size": 6211
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_aerial_boost/paradise_ticket_aerial_boost.png",
+      "sha": "80505aa92a5a12f29411898a931786ab24a4de2d",
+      "size": 3632
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_arbor_hollow/paradise_ticket_arbor_hollow.png",
+      "sha": "c5a7bd60f5ae6fe5ef6a339bdd1df67a0ce90560",
+      "size": 2222
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_beam_me_down/paradise_ticket_beam_me_down.png",
+      "sha": "0ed9c3e7811fe95488584a7526eed1fc436693ae",
+      "size": 6487
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_bippity_bop/paradise_ticket_bippity_bop.png",
+      "sha": "7a248b100f6a3491cd4f0b2753f335c85a64f666",
+      "size": 6215
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_cloud_flight/paradise_ticket_cloud_flight.png",
+      "sha": "fc88a12b96aa48ad467298b087c60d72bc5573d5",
+      "size": 6152
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_cloud_rings/paradise_ticket_cloud_rings.png",
+      "sha": "b2f8744e6e8dcfa2c6617ead3bde27e753e69e0e",
+      "size": 6490
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_drafty_uplift/paradise_ticket_drafty_uplift.png",
+      "sha": "c88827c646bf0fff64cfb18a7ae04232ac07600d",
+      "size": 6207
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_mountain_scaling/paradise_ticket_mountain_scaling.png",
+      "sha": "cf5816655b1d7219306cab31f68fb4ce56d16ec8",
+      "size": 6653
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_radial_heights/paradise_ticket_radial_heights.png",
+      "sha": "9126a1c004f74ed25b9b78844efa124451fff529",
+      "size": 6837
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_sky_plunge/paradise_ticket_sky_plunge.png",
+      "sha": "8abb7368215e4c06bce3057caf66033a5bbf973c",
+      "size": 6142
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_slip_n_slide/paradise_ticket_slip_n_slide.png",
+      "sha": "1e7aadd8f808d843b7798b13755c8f4ecf78e0d3",
+      "size": 6509
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_starlit_night/paradise_ticket_starlit_night.png",
+      "sha": "1382c27b93d13ca61c096c55c74bcfe6dfc6337c",
+      "size": 6695
+    },
+    {
+      "path": "misc/paradise_ticket/paradise_ticket_updraft/paradise_ticket_updraft.png",
+      "sha": "d4e5886016c4709f9b150d5019c4c40e6841c5c9",
+      "size": 5874
+    },
+    {
+      "path": "misc/party_pack/party_pack.png",
+      "sha": "49a5a037867472ab209aa36816a685b63ef09e64",
+      "size": 10252
+    },
+    {
+      "path": "misc/peat/peat.png",
+      "sha": "f5ffc36e09cf41b9deeb2d9b969d34e10f034186",
+      "size": 6063
+    },
+    {
+      "path": "misc/pebble/pebble.png",
+      "sha": "7698641f9f8ca2bed573a630aac3116917d1890f",
+      "size": 3018
+    },
+    {
+      "path": "misc/pen/pen.png",
+      "sha": "59fe088800a8204ccf08b2d7042780b53117d9e4",
+      "size": 2287
+    },
+    {
+      "path": "misc/pet_rock/pet_rock.png",
+      "sha": "16f5a305d960af06449ec7f27e91e2b62a49217e",
+      "size": 7159
+    },
+    {
+      "path": "misc/petrified_rock_base/petrified_rock_large/petrified_rock_large.png",
+      "sha": "e39b05f5a2b0e86adaac71afa378e93a9b134ede",
+      "size": 9197
+    },
+    {
+      "path": "misc/petrified_rock_base/petrified_rock_medium/petrified_rock_medium.png",
+      "sha": "ea7bb9bc071610b3a8c31f7353bd3271e85cc563",
+      "size": 4095
+    },
+    {
+      "path": "misc/petrified_rock_base/petrified_rock_small/petrified_rock_small.png",
+      "sha": "97e6cf73616e62f5ba47d1abc0a6dd2719c5f1c7",
+      "size": 2536
+    },
+    {
+      "path": "misc/physics/anti_gravitys_rainbow/anti_gravitys_rainbow.png",
+      "sha": "9028529b8373b0d668f7c408b491ffbb21df0154",
+      "size": 31916
+    },
+    {
+      "path": "misc/physics/avatar_embiggenifier/avatar_embiggenifier.png",
+      "sha": "d6a4a18e9d18caa5218c4368147599b8cd8e087c",
+      "size": 48084
+    },
+    {
+      "path": "misc/physics/avatar_smallifier/avatar_smallifier.png",
+      "sha": "b6fd38d8d64dc1a05f98aa02db76b2e898e56c16",
+      "size": 49089
+    },
+    {
+      "path": "misc/pig_bait/pig_bait.png",
+      "sha": "17a4ab4f45eb5e6c1b903c6795322754d16e5583",
+      "size": 8479
+    },
+    {
+      "path": "misc/piggy_egg/piggy_egg.png",
+      "sha": "e224d349d0f8d43846d3dd5275dbbbaf3d3a2025",
+      "size": 5297
+    },
+    {
+      "path": "misc/piggy_feeder/piggy_feeder.png",
+      "sha": "d23e7059e3782cb98b9c674d5ba396c9846390b4",
+      "size": 19808
+    },
+    {
+      "path": "misc/pile_of_currants/pile_of_currants.png",
+      "sha": "8939a2d82bb2515cc777eba53cee0c0b71dc5e0a",
+      "size": 6479
+    },
+    {
+      "path": "misc/plain_crystal/plain_crystal.png",
+      "sha": "bab70e48fb82f6729743e4ef429c5112d4352d84",
+      "size": 6910
+    },
+    {
+      "path": "misc/plain_metal/plain_metal.png",
+      "sha": "d724a6d67ab6428dd4252da4513b683ac9970693",
+      "size": 3846
+    },
+    {
+      "path": "misc/plate_of_beans/plate_of_beans.png",
+      "sha": "48bfb06c63bed9931986b8f1e3c5e76963bb20b2",
+      "size": 4976
+    },
+    {
+      "path": "misc/play_cube/play_cube.png",
+      "sha": "e85b70f06e21dde3cf1444f7485a59f295fcbfc7",
+      "size": 6832
+    },
+    {
+      "path": "misc/plop/plop.png",
+      "sha": "31d49007600d93b9b1af3154d564f33705561c09",
+      "size": 2249
+    },
+    {
+      "path": "misc/portal/portal.png",
+      "sha": "23f013ce509cdb528cf8709715b4c94da3d1dd65",
+      "size": 44438
+    },
+    {
+      "path": "misc/prairie_oyster_pearl/prairie_oyster_pearl.png",
+      "sha": "fba028ed66aa2050e27fce0bf37ec5669204079f",
+      "size": 4304
+    },
+    {
+      "path": "misc/proto/proto_barnacle_pod/proto_barnacle_pod.png",
+      "sha": "4ba0d9268d3da6d7cc9731a4b0135da077f5c67a",
+      "size": 82187
+    },
+    {
+      "path": "misc/proto/proto_beryl_rock/proto_beryl_rock.png",
+      "sha": "8f2d954aacf359e387ffb2a7c020a032460eb6bb",
+      "size": 20651
+    },
+    {
+      "path": "misc/proto/proto_crop_garden_large/proto_crop_garden_large.png",
+      "sha": "9d36020c025a0b6a882eb4e82890c02d9681d7ae",
+      "size": 62894
+    },
+    {
+      "path": "misc/proto/proto_crop_garden_medium/proto_crop_garden_medium.png",
+      "sha": "80f183289aeb5057ad3a10b4d3ec56a652ec0eef",
+      "size": 40858
+    },
+    {
+      "path": "misc/proto/proto_crop_garden_small/proto_crop_garden_small.png",
+      "sha": "6cdcf2d77388ad79133bb89e0965fbe2039cb290",
+      "size": 26840
+    },
+    {
+      "path": "misc/proto/proto_dirt_pile/proto_dirt_pile.png",
+      "sha": "be1f7d9c852b75fc1cb8df1ecac5e5d1828bd8cc",
+      "size": 30387
+    },
+    {
+      "path": "misc/proto/proto_dullite_rock/proto_dullite_rock.png",
+      "sha": "214666948c09bfeaac6e81a50194c16f6f695f8a",
+      "size": 22304
+    },
+    {
+      "path": "misc/proto/proto_firefly_hive/proto_firefly_hive.png",
+      "sha": "bb13767ea6a790a6ff81d579dec393396e098e4f",
+      "size": 52104
+    },
+    {
+      "path": "misc/proto/proto_furniture_tower_chassis/proto_furniture_tower_chassis.png",
+      "sha": "714be6b7e49d19dc2998c19ae2f02d338e78c669",
+      "size": 57757
+    },
+    {
+      "path": "misc/proto/proto_garden/proto_garden.png",
+      "sha": "082648d6c5f822b7d95fa4db660654660fa9f187",
+      "size": 22321
+    },
+    {
+      "path": "misc/proto/proto_herb_garden_large/proto_herb_garden_large.png",
+      "sha": "b21901c5bbac9273a68b33e9d4e6c4c6e9a427e9",
+      "size": 67490
+    },
+    {
+      "path": "misc/proto/proto_herb_garden_medium/proto_herb_garden_medium.png",
+      "sha": "00e97f8a6664b5c1b70785e7ba7c8f6142ff94cd",
+      "size": 44584
+    },
+    {
+      "path": "misc/proto/proto_herb_garden_small/proto_herb_garden_small.png",
+      "sha": "fa54fb0f03a0a3dc5aab1ecc215ae363f74a8a8e",
+      "size": 31591
+    },
+    {
+      "path": "misc/proto/proto_jellisac_mound/proto_jellisac_mound.png",
+      "sha": "9437111d049d67f80378cda8f27d1e2dee9be7eb",
+      "size": 88837
+    },
+    {
+      "path": "misc/proto/proto_mailbox/proto_mailbox.png",
+      "sha": "7eed7f1061be82ea0bc43613d5f13b0685ac0829",
+      "size": 10415
+    },
+    {
+      "path": "misc/proto/proto_metal_rock/proto_metal_rock.png",
+      "sha": "b5cd677543444e7e67998f9e39bd9e5d99638fe1",
+      "size": 46891
+    },
+    {
+      "path": "misc/proto/proto_mine/proto_mine.png",
+      "sha": "eb36c70eef8f507714512b2fa25e08613777f52a",
+      "size": 30100
+    },
+    {
+      "path": "misc/proto/proto_patch/proto_patch.png",
+      "sha": "60fb7af36d724be80625276c9490aa10c524ea82",
+      "size": 10840
+    },
+    {
+      "path": "misc/proto/proto_peat/proto_peat.png",
+      "sha": "fd4bf0885bdc46b3677f23bea402a7149a0e40ec",
+      "size": 30888
+    },
+    {
+      "path": "misc/proto/proto_post/proto_post.png",
+      "sha": "39ef9096079813b2ff440ab0fd216d1eeac04396",
+      "size": 7800
+    },
+    {
+      "path": "misc/proto/proto_shrine_alph/proto_shrine_alph.png",
+      "sha": "2285edb8cf6399925a18b6a0c7d9c7b365bb7fbf",
+      "size": 22296
+    },
+    {
+      "path": "misc/proto/proto_shrine_cosma/proto_shrine_cosma.png",
+      "sha": "d2e2b4929be19efc7bc426bc5b5f25d245ff4735",
+      "size": 22109
+    },
+    {
+      "path": "misc/proto/proto_shrine_friendly/proto_shrine_friendly.png",
+      "sha": "c12840d67a4affa2433507ed3bf244d2f26423da",
+      "size": 22616
+    },
+    {
+      "path": "misc/proto/proto_shrine_grendaline/proto_shrine_grendaline.png",
+      "sha": "21accfe06d8aa7fd2dd910e0294cc259b0fe660e",
+      "size": 21516
+    },
+    {
+      "path": "misc/proto/proto_shrine_humbaba/proto_shrine_humbaba.png",
+      "sha": "5ceb85316ed98a0e0507ec844894ee58990b26dd",
+      "size": 22469
+    },
+    {
+      "path": "misc/proto/proto_shrine_lem/proto_shrine_lem.png",
+      "sha": "e1b534dbf50f5ff122a8f2b1e63b62eb30226df6",
+      "size": 23243
+    },
+    {
+      "path": "misc/proto/proto_shrine_mab/proto_shrine_mab.png",
+      "sha": "8a4390b607281a8aa9272876ce370912d3bc056a",
+      "size": 23153
+    },
+    {
+      "path": "misc/proto/proto_shrine_pot/proto_shrine_pot.png",
+      "sha": "5fd2244a37630f5ca5df6d4ccc148b3d19d84b5c",
+      "size": 21596
+    },
+    {
+      "path": "misc/proto/proto_shrine_spriggan/proto_shrine_spriggan.png",
+      "sha": "4158d2a9a9f15148ee1cbd8f53df1ad059422593",
+      "size": 23405
+    },
+    {
+      "path": "misc/proto/proto_shrine_tii/proto_shrine_tii.png",
+      "sha": "6e878ded0eb5ac3d1592657b1f8715d2d0fca01a",
+      "size": 21052
+    },
+    {
+      "path": "misc/proto/proto_shrine_zille/proto_shrine_zille.png",
+      "sha": "e1976053cb25cca0339a68d57926cbde2135264c",
+      "size": 24918
+    },
+    {
+      "path": "misc/proto/proto_sparkly_rock/proto_sparkly_rock.png",
+      "sha": "e34e29f14967eb883816dc7e11d0eb1ec51d6991",
+      "size": 41322
+    },
+    {
+      "path": "misc/quoin/quoin.png",
+      "sha": "d984daa243a5a0efa31d2efca179655372b873c3",
+      "size": 99
+    },
+    {
+      "path": "misc/race_ticket/race_ticket.png",
+      "sha": "8728b3ef3a991fb25075ee2abeed3362c1c4ea19",
+      "size": 8006
+    },
+    {
+      "path": "misc/race_ticket_dispenser/race_ticket_dispenser.png",
+      "sha": "18c015b7409c586dce7ca47d2c0019fc454ae706",
+      "size": 16857
+    },
+    {
+      "path": "misc/rook_head/rook_head.png",
+      "sha": "e62a19d26a7d25f6d64f62ee5a0565f21f84f947",
+      "size": 11199
+    },
+    {
+      "path": "misc/school_diploma/school_diploma.png",
+      "sha": "4f14dd8b62a7d1a68f929d542251ab02d480590e",
+      "size": 5629
+    },
+    {
+      "path": "misc/seed_small/seed_small.png",
+      "sha": "ec84851babe40b6e9e8e5a411abaea0a0e1afb7d",
+      "size": 2341
+    },
+    {
+      "path": "misc/seed_small_brown/seed_small_brown.png",
+      "sha": "687aacc53e369dd810a6eb4232646f0b70c39c80",
+      "size": 724
+    },
+    {
+      "path": "misc/sheep_red_wine/sheep_red_wine.png",
+      "sha": "8a9431d6df64449417e3890894a141e8db22e181",
+      "size": 5173
+    },
+    {
+      "path": "misc/sign_stake/gol_sign/gol_sign.png",
+      "sha": "9e46f2d4e906870b561ae221b1afe5499de997d8",
+      "size": 12274
+    },
+    {
+      "path": "misc/sign_stake/home_sign/home_sign.png",
+      "sha": "2cc15456954f4d47927d273a95f50e5ceb0a553a",
+      "size": 8843
+    },
+    {
+      "path": "misc/sign_stake/sign_stake.png",
+      "sha": "9e46f2d4e906870b561ae221b1afe5499de997d8",
+      "size": 12274
+    },
+    {
+      "path": "misc/signpost_base/signpost_base.png",
+      "sha": "ac0da146a036de11e0a795a9d71c44b6014a8f8e",
+      "size": 2891
+    },
+    {
+      "path": "misc/signpost_permit/signpost_permit.png",
+      "sha": "827ebebe26977de4710de4d5fc7a66e0722b7e1f",
+      "size": 8627
+    },
+    {
+      "path": "misc/sloth_knocker/sloth_knocker.png",
+      "sha": "a12a6b1c38f2f0a2369de98fa14b85758c892dd9",
+      "size": 5505
+    },
+    {
+      "path": "misc/small_worthless/small_worthless.png",
+      "sha": "301ee229f7e4c8e8ff7c57a43e730bb563525bdf",
+      "size": 2250
+    },
+    {
+      "path": "misc/smoothie/smoothie.png",
+      "sha": "9aadbc34fbeafc04bf614f0f099e4ee4457bcf21",
+      "size": 9434
+    },
+    {
+      "path": "misc/snail/snail.png",
+      "sha": "c1688cd1189a11e103bb8e77d4fc3be340c3eb9a",
+      "size": 2115
+    },
+    {
+      "path": "misc/sparkly/sparkly.png",
+      "sha": "56b040065798183b0ce0d8199cfdb3f1aa619763",
+      "size": 6108
+    },
+    {
+      "path": "misc/spawner/firefly_hive/firefly_hive.png",
+      "sha": "bb13767ea6a790a6ff81d579dec393396e098e4f",
+      "size": 52104
+    },
+    {
+      "path": "misc/special_item_that_only_beta_testers_get/special_item_that_only_beta_testers_get.png",
+      "sha": "8b0ad9a0e181db9a7d8edff0e2aced6414aeb7a4",
+      "size": 18222
+    },
+    {
+      "path": "misc/starfruit/starfruit.png",
+      "sha": "aa60af92b101b8c8d50ea4969e215ed1c5494d6d",
+      "size": 5289
+    },
+    {
+      "path": "misc/starfruit_seed/starfruit_seed.png",
+      "sha": "20ca5d6e358c97385818cff44f7b673cc59aaa5b",
+      "size": 1487
+    },
+    {
+      "path": "misc/still/still.png",
+      "sha": "fb3690ad03e2637e940c477d2cbdfdc795b33c08",
+      "size": 26131
+    },
+    {
+      "path": "misc/string/string.png",
+      "sha": "92657aa94b7f69aec633ba8bf195cdcca92c8895",
+      "size": 3535
+    },
+    {
+      "path": "misc/subway_gate/subway_gate.png",
+      "sha": "315baa20d9526013eb4693153d04e5f22d4c3a5b",
+      "size": 3583
+    },
+    {
+      "path": "misc/subway_map/subway_map.png",
+      "sha": "2b02ec50ab72566b349432d653c0526bbac33494",
+      "size": 23499
+    },
+    {
+      "path": "misc/swf_1/swf_1.png",
+      "sha": "5c3b6b1516b30ec78d0ffb68b5ae0d759dd48221",
+      "size": 4149
+    },
+    {
+      "path": "misc/swf_2/swf_2.png",
+      "sha": "e1b4a9be0565cd99afa0680cf7d00f7e42e30b18",
+      "size": 2361
+    },
+    {
+      "path": "misc/swf_3/swf_3.png",
+      "sha": "1a49f295a3c66bcc71b23283c9b7c9a0811e85f4",
+      "size": 2626
+    },
+    {
+      "path": "misc/teleportation_script/teleportation_script_imbued/teleportation_script_imbued.png",
+      "sha": "a523e782196ef9be0cec202104aac508697a35ef",
+      "size": 9745
+    },
+    {
+      "path": "misc/teleporter/teleporter_visible/teleporter_visible.png",
+      "sha": "a002670667de6745be5c8880d90c89e70d94f368",
+      "size": 871
+    },
+    {
+      "path": "misc/teleporter_button/teleporter_button.png",
+      "sha": "d334c4d429132047063169a47af190e306b38b56",
+      "size": 14260
+    },
+    {
+      "path": "misc/teleporter_visible/teleporter_ground/teleporter_ground.png",
+      "sha": "1555ab805dac6db3d6d224e01c2712a7f4ab0fd7",
+      "size": 88
+    },
+    {
+      "path": "misc/test_chassis/test_chassis.png",
+      "sha": "78c72c381ae622edac07d96c1391a795cbb65505",
+      "size": 562184
+    },
+    {
+      "path": "misc/test_item2/test_item2.png",
+      "sha": "6de1b789d4398660f57ae7afdc4337209b254d4f",
+      "size": 10797
+    },
+    {
+      "path": "misc/thread/thread.png",
+      "sha": "7a11a0bb141374d189e6e1de0f5d56509206a4bb",
+      "size": 1677
+    },
+    {
+      "path": "misc/tin/tin.png",
+      "sha": "78a40ed5da6cd803dc2ce9d0ec1c64b420dc7c87",
+      "size": 3324
+    },
+    {
+      "path": "misc/tower_expander/tower_expander.png",
+      "sha": "8f01e967c6a87433efc1e066541608da730ff879",
+      "size": 17545
+    },
+    {
+      "path": "misc/toy_star_1/toy_star_1.png",
+      "sha": "f289e0a50279a6342ff3a888949e26e0163d0fef",
+      "size": 1640
+    },
+    {
+      "path": "misc/toy_star_2/toy_star_2.png",
+      "sha": "9bf43cea77a137062ee866247e349174f88c5caa",
+      "size": 1740
+    },
+    {
+      "path": "misc/tree_xmas/tree_xmas.png",
+      "sha": "d36e71c6abee6a2b47f1457acb29c6c79d392345",
+      "size": 61000
+    },
+    {
+      "path": "misc/upgrade_card_craftybot_lesson/upgrade_card_craftybot_lesson.png",
+      "sha": "0bebb8f145c79e2f6cf8fd4ac9b7eca7421bffa9",
+      "size": 6926
+    },
+    {
+      "path": "misc/upgrade_card_instant_resurrection/upgrade_card_instant_resurrection.png",
+      "sha": "57adb6b90854ea46a8ce07d582c888671b5b06c9",
+      "size": 5342
+    },
+    {
+      "path": "misc/upgrade_card_reshuffle/upgrade_card_reshuffle.png",
+      "sha": "0e62090ff7c2f6ceea6f8365b1a31695cff53f5d",
+      "size": 6051
+    },
+    {
+      "path": "misc/visiting_stone/visiting_stone.png",
+      "sha": "c09203337321fa7e8a8771c1d66e9528bd5921ec",
+      "size": 36899
+    },
+    {
+      "path": "misc/wall_segment/wall_segment.png",
+      "sha": "6d29528c67f4d38eba368cd6cd37bbd11bccc881",
+      "size": 5393
+    },
+    {
+      "path": "misc/wall_switch/esquibeth_button/esquibeth_button.png",
+      "sha": "b01e56d9f39601498f686ffe6f6108923ccac4ea",
+      "size": 4876
+    },
+    {
+      "path": "misc/wall_switch/wall_button/wall_button.png",
+      "sha": "bbbd46c0279f5160361eac4366487d6336555bfc",
+      "size": 5601
+    },
+    {
+      "path": "misc/wall_switch/wall_switch.png",
+      "sha": "be97ab71e81ea893d5f2659cbd43ece5f178479b",
+      "size": 5781
+    },
+    {
+      "path": "misc/water_cooler/water_cooler.png",
+      "sha": "80f1bed0be58cd096124d629ac50e8338fa21313",
+      "size": 20203
+    },
+    {
+      "path": "misc/white_gas/white_gas.png",
+      "sha": "b2aa3df3c050a20cecfc3c6e0f5caf0d9e0bafd0",
+      "size": 6472
+    },
+    {
+      "path": "misc/wine_of_the_dead/wine_of_the_dead.png",
+      "sha": "6d3a605fb66546b6d0b224bad78b2f13abbc7d60",
+      "size": 4932
+    },
+    {
+      "path": "misc/wood_post/wood_post.png",
+      "sha": "cc0ccef674505739d47583504a76eb674b810e73",
+      "size": 8123
+    },
+    {
+      "path": "misc/your_papers/your_papers.png",
+      "sha": "1dee1df9234017f2497385d960fb2eeda8ed433a",
+      "size": 5024
+    },
+    {
+      "path": "musicblocks/musicblock_b_brown_01/musicblock_b_brown_01.png",
+      "sha": "8b0bb55c1791c603008a0727dfd5f114675ef266",
+      "size": 7232
+    },
+    {
+      "path": "musicblocks/musicblock_b_brown_02/musicblock_b_brown_02.png",
+      "sha": "52914858189176cd221968bd6ec8289137ada904",
+      "size": 7513
+    },
+    {
+      "path": "musicblocks/musicblock_b_brown_03/musicblock_b_brown_03.png",
+      "sha": "ae625315742b4841e5909d6c535a492fb600f41d",
+      "size": 7401
+    },
+    {
+      "path": "musicblocks/musicblock_b_brown_04/musicblock_b_brown_04.png",
+      "sha": "25477fb1ea601ec327a30336dfef4765adb3b291",
+      "size": 7495
+    },
+    {
+      "path": "musicblocks/musicblock_b_brown_05/musicblock_b_brown_05.png",
+      "sha": "cc46470513a7ed4423ffdb95f09902823b8a4259",
+      "size": 7481
+    },
+    {
+      "path": "musicblocks/musicblock_d_blue_01/musicblock_d_blue_01.png",
+      "sha": "4d64c1d940a40d86a3d414880015ad4e13d3ecfd",
+      "size": 6744
+    },
+    {
+      "path": "musicblocks/musicblock_d_blue_02/musicblock_d_blue_02.png",
+      "sha": "61ddd4ed57a2af3e74c086e179942c2f896133ed",
+      "size": 6975
+    },
+    {
+      "path": "musicblocks/musicblock_d_blue_03/musicblock_d_blue_03.png",
+      "sha": "407d2ca75871134f87f1986273f29612be598fd9",
+      "size": 6896
+    },
+    {
+      "path": "musicblocks/musicblock_d_blue_04/musicblock_d_blue_04.png",
+      "sha": "5625af6e52437860a71872cd7e304848230229fb",
+      "size": 6967
+    },
+    {
+      "path": "musicblocks/musicblock_d_blue_05/musicblock_d_blue_05.png",
+      "sha": "ef672539cab23af8e6bb1e1c939c91732c8f2227",
+      "size": 7013
+    },
+    {
+      "path": "musicblocks/musicblock_d_green_01/musicblock_d_green_01.png",
+      "sha": "a42e0384a61e091b155be2859b8e9d8974bee61e",
+      "size": 6825
+    },
+    {
+      "path": "musicblocks/musicblock_d_green_02/musicblock_d_green_02.png",
+      "sha": "d77bac98b132ba6d9ce0647b957fe74bd5c13634",
+      "size": 7045
+    },
+    {
+      "path": "musicblocks/musicblock_d_green_03/musicblock_d_green_03.png",
+      "sha": "1a16b24e04a6bd414d6f62cec6892aec24ef4073",
+      "size": 6963
+    },
+    {
+      "path": "musicblocks/musicblock_d_green_04/musicblock_d_green_04.png",
+      "sha": "24893c52ef1fa88f6cdcfefd8ce07f449ff08bfe",
+      "size": 7049
+    },
+    {
+      "path": "musicblocks/musicblock_d_green_05/musicblock_d_green_05.png",
+      "sha": "6851bf4d05e9140fb29ad95467401bcbe4ac1062",
+      "size": 7090
+    },
+    {
+      "path": "musicblocks/musicblock_d_red_01/musicblock_d_red_01.png",
+      "sha": "cdb2add47a1c8afd2f448d2070845e50c770054d",
+      "size": 6843
+    },
+    {
+      "path": "musicblocks/musicblock_d_red_02/musicblock_d_red_02.png",
+      "sha": "a09cd249b8d1943da8548cb8b2f49619bd031135",
+      "size": 7062
+    },
+    {
+      "path": "musicblocks/musicblock_d_red_03/musicblock_d_red_03.png",
+      "sha": "e4f825418c2d3d46158fa7b7032a1538654b48ad",
+      "size": 6980
+    },
+    {
+      "path": "musicblocks/musicblock_d_red_04/musicblock_d_red_04.png",
+      "sha": "8e0323de680bfcb29117823470a30e94a443332b",
+      "size": 7068
+    },
+    {
+      "path": "musicblocks/musicblock_d_red_05/musicblock_d_red_05.png",
+      "sha": "4b9eb144ecc6463429b1e9e9cb393c7ef34a6b9f",
+      "size": 7091
+    },
+    {
+      "path": "musicblocks/musicblock_goodnight_groddle/musicblock_goodnight_groddle.png",
+      "sha": "8ce1d0d744c655c6a25346c5877daee0be02249b",
+      "size": 8114
+    },
+    {
+      "path": "musicblocks/musicblock_sb_secret_01/musicblock_sb_secret_01.png",
+      "sha": "3b2f360fdd184b92931e288e46b4d67506463559",
+      "size": 8897
+    },
+    {
+      "path": "musicblocks/musicblock_trumpets/musicblock_trumpets.png",
+      "sha": "72ee2c70290c18e8caa15892bf7e31fcf156b450",
+      "size": 7661
+    },
+    {
+      "path": "musicblocks/musicblock_x_shiny_01/musicblock_x_shiny_01.png",
+      "sha": "2d44bd05b82f23ab50449679ce59afb1d83765dc",
+      "size": 6832
+    },
+    {
+      "path": "musicblocks/musicblock_x_shiny_02/musicblock_x_shiny_02.png",
+      "sha": "321b75403d5c54f8ea9b8b799192e445560b4ff5",
+      "size": 7057
+    },
+    {
+      "path": "musicblocks/musicblock_x_shiny_03/musicblock_x_shiny_03.png",
+      "sha": "b15421dfd27d8612b31344769a8d573cd0d607c2",
+      "size": 7003
+    },
+    {
+      "path": "musicblocks/musicblock_x_shiny_04/musicblock_x_shiny_04.png",
+      "sha": "ec159c7eef4737375c42018d0bc30197e26072df",
+      "size": 7071
+    },
+    {
+      "path": "musicblocks/musicblock_x_shiny_05/musicblock_x_shiny_05.png",
+      "sha": "fc2d92b79231724a0423adc0c90d90f214db705e",
+      "size": 7104
+    },
+    {
+      "path": "party_packs/party_pack/mountaineering_permit/mountaineering_permit.png",
+      "sha": "b65fcada9fae542440d5bcc1ed0ec52193792bd3",
+      "size": 5599
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_aquarius/party_pack_aquarius.png",
+      "sha": "c6fe67e8a3555132df7d129b95a60f9724ca9849",
+      "size": 9180
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_double_rainbow/party_pack_double_rainbow.png",
+      "sha": "d12dc357dd6d4ad5b6a88e5d635014d34c98198b",
+      "size": 11256
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_mazzala_gala/party_pack_mazzala_gala.png",
+      "sha": "4877f23b7f74f7bfb51408d30b6c28851fada84e",
+      "size": 10877
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_monster_bash/party_pack_monster_bash.png",
+      "sha": "43caa1e369d62e15bfe6fdc032cd5762aed607bd",
+      "size": 12101
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_nylon_phool/party_pack_nylon_phool.png",
+      "sha": "f3870fb373dac3d764f3f76bc03073a970afd3db",
+      "size": 12317
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_pitchen_lilliputt/party_pack_pitchen_lilliputt.png",
+      "sha": "2d261d8e060cb1f2b8de1607c629ce38197773a9",
+      "size": 11891
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_taster_winter_wingding/party_pack_taster_winter_wingding.png",
+      "sha": "7e0d5b4371a999fb23df7280115db0844516de27",
+      "size": 13093
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_toxic_moon/party_pack_toxic_moon.png",
+      "sha": "7b7f1be81db5e69e2d6d816e9721efa0ebe68091",
+      "size": 11858
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_val_holla/party_pack_val_holla.png",
+      "sha": "6e8289acc8592e501f48a7db4aa80d59dcda3c1d",
+      "size": 8556
+    },
+    {
+      "path": "party_packs/party_pack/party_pack_winter_wingding/party_pack_winter_wingding.png",
+      "sha": "a296cae2920cf8d61de3ff7ec8a52b6636674a23",
+      "size": 11816
+    },
+    {
+      "path": "party_packs/party_pack_aquarius/party_pack_taster_aquarius/party_pack_taster_aquarius.png",
+      "sha": "ce6de356ca92f6ef24348e2fe0e49ffbaf69f90a",
+      "size": 10062
+    },
+    {
+      "path": "party_packs/party_pack_double_rainbow/party_pack_taster_double_rainbow/party_pack_taster_double_rainbow.png",
+      "sha": "77fc106b8c41b2032b6f9c418da0cd7d950b219f",
+      "size": 14350
+    },
+    {
+      "path": "party_packs/party_pack_mazzala_gala/party_pack_taster_mazzala_gala/party_pack_taster_mazzala_gala.png",
+      "sha": "7fa389b3d2711efb552a17d7a0280a78e61fa007",
+      "size": 11848
+    },
+    {
+      "path": "party_packs/party_pack_nylon_phool/party_pack_taster_nylon_phool/party_pack_taster_nylon_phool.png",
+      "sha": "f81767f41e4bf626be61df9df36994c056b6cc30",
+      "size": 12414
+    },
+    {
+      "path": "party_packs/party_pack_pitchen_lilliputt/party_pack_taster_pitchen_lilliputt/party_pack_taster_pitchen_lilliputt.png",
+      "sha": "69d010daee2b47debbd5a0ca069cd658a8cb7b18",
+      "size": 12692
+    },
+    {
+      "path": "party_packs/party_pack_toxic_moon/party_pack_taster_toxic_moon/party_pack_taster_toxic_moon.png",
+      "sha": "dda3ede48c94ed447330b8ec5984f3ff71525b62",
+      "size": 12667
+    },
+    {
+      "path": "party_packs/party_pack_val_holla/party_pack_taster_val_holla/party_pack_taster_val_holla.png",
+      "sha": "0db3572f452782ac128ff9d83fc6470133311a3a",
+      "size": 12112
+    },
+    {
+      "path": "quest_items/club_house_picture/club_house_picture.png",
+      "sha": "c2673b0e72ceff8c71eade253fb139e3fba62db3",
+      "size": 62598
+    },
+    {
+      "path": "quest_items/conch_decoy/conch_decoy.png",
+      "sha": "c9524ed92424940ab27ea00aa3454129a8bf7739",
+      "size": 22913
+    },
+    {
+      "path": "quest_items/esquibeth_note_1/esquibeth_note_1.png",
+      "sha": "1b40da9a342e55497e2a56d8ef69e51a60b0977e",
+      "size": 2116
+    },
+    {
+      "path": "quest_items/esquibeth_note_2/esquibeth_note_2.png",
+      "sha": "715c3fc6e06d952f6fc1e0bccac941fedfda1852",
+      "size": 2220
+    },
+    {
+      "path": "quest_items/esquibeth_note_3/esquibeth_note_3.png",
+      "sha": "589cdb095355b34606fe8fc29439575472dcd149",
+      "size": 2256
+    },
+    {
+      "path": "quest_items/esquibeth_note_4/esquibeth_note_4.png",
+      "sha": "ec0f63920bb1fb9852f993c8c5f153d1e47aaf88",
+      "size": 2338
+    },
+    {
+      "path": "quest_items/esquibeth_note_5/esquibeth_note_5.png",
+      "sha": "9f23e1480545c11d22df6a6cc897e1bdd6b4de6e",
+      "size": 2380
+    },
+    {
+      "path": "quest_items/faded_heart/faded_heart.png",
+      "sha": "c0efe13dc9aad0b4ef8a0417d6233f33c86efe37",
+      "size": 2430
+    },
+    {
+      "path": "quest_items/firefly_whistle/firefly_whistle.png",
+      "sha": "1e7d7baf15f29a87a1c47de51eebedcaf3f309c6",
+      "size": 4895
+    },
+    {
+      "path": "quest_items/phantom_glitch/phantom_glitch.png",
+      "sha": "8d112df0b2b8ae4ad110566f9d517ad58bd8eb5b",
+      "size": 33128
+    },
+    {
+      "path": "quest_items/quest_req_icon_hellhole/quest_req_icon_hellhole.png",
+      "sha": "65538f933d9ceb9946a2395be064aaeabc5fc3b1",
+      "size": 36916
+    },
+    {
+      "path": "quest_items/quest_req_icon_letterblock/quest_req_icon_letterblock.png",
+      "sha": "b68de0af964001d02ce654f18733d650cf9afaed",
+      "size": 19260
+    },
+    {
+      "path": "quest_items/quest_req_icon_teleport/quest_req_icon_teleport.png",
+      "sha": "38239af228cd04ed7b79068721d1ddd6549d1cc8",
+      "size": 7211
+    },
+    {
+      "path": "quest_items/quest_req_icon_teleport_with_followers/quest_req_icon_teleport_with_followers.png",
+      "sha": "b114a9d92ed1fc4fd8cffe7ec3bc6a00d2f2c228",
+      "size": 24358
+    },
+    {
+      "path": "quest_items/rook_egg/rook_egg.png",
+      "sha": "bf8d92c4e1a26eaa4630033165dc7bc0916d6079",
+      "size": 45387
+    },
+    {
+      "path": "quest_items/rook_hall_focusing_orb/rook_hall_focusing_orb.png",
+      "sha": "66ffcef7d812437e018b8ae2edeff440429ac55c",
+      "size": 50616
+    },
+    {
+      "path": "quest_items/rook_hall_shrine_holofilm/rook_hall_shrine_holofilm.png",
+      "sha": "f4aa8e22a098a138a1af81ba8fd380cb33151e03",
+      "size": 75229
+    },
+    {
+      "path": "quest_items/rook_hall_speaker/rook_hall_speaker.png",
+      "sha": "23fdce54aec9b9d0a4ba305ca9e33f1c2d99b297",
+      "size": 17941
+    },
+    {
+      "path": "quest_items/whistle_stand_button/whistle_stand_button.png",
+      "sha": "94072dbd17372d48d929a2ddcfa970ecdb869d46",
+      "size": 39498
+    },
+    {
+      "path": "rare_items/antique_spigot/antique_spigot.png",
+      "sha": "901dd8f2a17ca25c0c4c5c5420ed4926307af68f",
+      "size": 6422
+    },
+    {
+      "path": "rare_items/limited_edition_imitation_grichmas_yeti/limited_edition_imitation_grichmas_yeti.png",
+      "sha": "f826d4b79e078860b9e8ab1ae8d6be10d6e51176",
+      "size": 13025
+    },
+    {
+      "path": "rare_items/million_currant_trophy/million_currant_trophy.png",
+      "sha": "6c109b8f0d1bc82137270ced4a2e26f0f1a21600",
+      "size": 7603
+    },
+    {
+      "path": "rare_items/npc_cubimal_factorydefect_chick/npc_cubimal_factorydefect_chick.png",
+      "sha": "3160bee3830bcebda8e104fdbc53e1b2e35e8bd2",
+      "size": 3988
+    },
+    {
+      "path": "rare_items/pareidolic_cosma_toast/pareidolic_cosma_toast.png",
+      "sha": "1c693d9a1b06ee9b07a461cb0af607f8b21ca5dc",
+      "size": 14333
+    },
+    {
+      "path": "rare_items/rube_potato/rube_potato.png",
+      "sha": "35fa2372ade0aeb427cad174e283043034dc49d5",
+      "size": 6535
+    },
+    {
+      "path": "rare_items/stoot_barfield_pullstring_doll/stoot_barfield_pullstring_doll.png",
+      "sha": "720801903140d31d49aa9055a686f04e95073b51",
+      "size": 14469
+    },
+    {
+      "path": "seeds/seed_broccoli/seed_broccoli.png",
+      "sha": "217cc8b1d4b217690ad3dd35e9742507cba625ff",
+      "size": 3195
+    },
+    {
+      "path": "seeds/seed_cabbage/seed_cabbage.png",
+      "sha": "6068f0a85043acbd50b26204f823173cd7cd177c",
+      "size": 3382
+    },
+    {
+      "path": "seeds/seed_carrot/seed_carrot.png",
+      "sha": "04933fca218c7b16bbaf921488126394a9df987e",
+      "size": 3263
+    },
+    {
+      "path": "seeds/seed_corn/seed_corn.png",
+      "sha": "3209539e69708c61f8db0fc9f9e875dd8d070596",
+      "size": 3343
+    },
+    {
+      "path": "seeds/seed_cucumber/seed_cucumber.png",
+      "sha": "f8bf907d96bfd662ab2f3dc96e4aa4e794261c05",
+      "size": 3046
+    },
+    {
+      "path": "seeds/seed_grain/seed_grain.png",
+      "sha": "07e7fc526214ca06619b9413a29f1c414898c72c",
+      "size": 3411
+    },
+    {
+      "path": "seeds/seed_green_leaf/seed_green_leaf.png",
+      "sha": "e97e07b664ea9a809288528d4bf0c89655596dd0",
+      "size": 3167
+    },
+    {
+      "path": "seeds/seed_onion/seed_onion.png",
+      "sha": "470c92c53da603d146e1637d6cc1a99c2bd2dfab",
+      "size": 3329
+    },
+    {
+      "path": "seeds/seed_parsnip/seed_parsnip.png",
+      "sha": "17e8bd1d8e6ffe20628b8e62b25146f3a7f2247f",
+      "size": 3314
+    },
+    {
+      "path": "seeds/seed_potato/seed_potato.png",
+      "sha": "24abbd82ab6f5c2a62a8f1b7ccf3cda2f899c183",
+      "size": 3229
+    },
+    {
+      "path": "seeds/seed_pumpkin/seed_pumpkin.png",
+      "sha": "c9ce5b689ed8377ed6dc6bb39aac9fff924467d5",
+      "size": 3418
+    },
+    {
+      "path": "seeds/seed_radish/seed_radish.png",
+      "sha": "41ba0b1ece62ea4ae9a09a51b20061da9ed2a9ff",
+      "size": 3398
+    },
+    {
+      "path": "seeds/seed_rice/seed_rice.png",
+      "sha": "09f7488ddf255733c2017113114a8888ffc36efa",
+      "size": 3080
+    },
+    {
+      "path": "seeds/seed_spinach/seed_spinach.png",
+      "sha": "24595427eb47b23050d91eab5186b17d43462662",
+      "size": 3651
+    },
+    {
+      "path": "seeds/seed_strawberry/seed_strawberry.png",
+      "sha": "1f56e29a7eefb6b321aece57c9751e63980be047",
+      "size": 3271
+    },
+    {
+      "path": "seeds/seed_tomato/seed_tomato.png",
+      "sha": "67e394ef3d8af2183cf6dd656508b867c042bfaa",
+      "size": 3015
+    },
+    {
+      "path": "seeds/seed_turnip/seed_turnip.png",
+      "sha": "d199aba967b5065007b8ce62f8c2b766e707bc78",
+      "size": 3446
+    },
+    {
+      "path": "seeds/seed_zucchini/seed_zucchini.png",
+      "sha": "f877c54727e47f06bd86519a2aaba92e12bb1ebc",
+      "size": 2885
+    },
+    {
+      "path": "spice/all_spice/all_spice.png",
+      "sha": "0cb7fdc70e7ad2f8e6145426b505701c55fc521a",
+      "size": 4791
+    },
+    {
+      "path": "spice/black_pepper/black_pepper.png",
+      "sha": "c8fa4f15b5e23ded97e3c42e5c2043490d5e18de",
+      "size": 4320
+    },
+    {
+      "path": "spice/camphor/camphor.png",
+      "sha": "1dea6b148f8341bdf00e74b0b51467ba468826dd",
+      "size": 4162
+    },
+    {
+      "path": "spice/cardamom/cardamom.png",
+      "sha": "348f70b9f83e7efe105dbef9c1706db4b8eccce3",
+      "size": 3601
+    },
+    {
+      "path": "spice/cinnamon/cinnamon.png",
+      "sha": "e198954e3ec28822968899fbab5943a7bb31e19d",
+      "size": 3365
+    },
+    {
+      "path": "spice/cumin/cumin.png",
+      "sha": "e7413fd9b06850d9b35236471b043b453c306082",
+      "size": 3698
+    },
+    {
+      "path": "spice/curry/curry.png",
+      "sha": "58565e8a6435de75aadacebcb045190d74452d69",
+      "size": 3435
+    },
+    {
+      "path": "spice/garlic/garlic.png",
+      "sha": "7088a6b7c6cb4a89d54b8ce25f01d8fe973d1ab0",
+      "size": 5678
+    },
+    {
+      "path": "spice/ginger/ginger.png",
+      "sha": "62ca83d7d5af9c0db276ad853c700f607b31ae85",
+      "size": 4714
+    },
+    {
+      "path": "spice/hot_pepper/hot_pepper.png",
+      "sha": "978f742cce13c13b025abc775cb2ae024d8c9419",
+      "size": 3219
+    },
+    {
+      "path": "spice/licorice/licorice.png",
+      "sha": "21fa1d166e2346839e6111ff368f3b3141ef4104",
+      "size": 1973
+    },
+    {
+      "path": "spice/mustard/mustard.png",
+      "sha": "ccf4946e9babbfc1815fcf7fe85bc34c3365b25c",
+      "size": 3337
+    },
+    {
+      "path": "spice/nutmeg/nutmeg.png",
+      "sha": "e63f66805d11fc7447f62d69d87f58dc23c75ca8",
+      "size": 5529
+    },
+    {
+      "path": "spice/older_spice/older_spice.png",
+      "sha": "45c1aebb4d319216f3cf849d11bc8918b668e468",
+      "size": 4755
+    },
+    {
+      "path": "spice/pinch_of_salt/pinch_of_salt.png",
+      "sha": "e7316c80a63aa93205c1049f26cbe3eec95d8e99",
+      "size": 6224
+    },
+    {
+      "path": "spice/saffron/saffron.png",
+      "sha": "8328b6980d111ddfec59f7886da4ea97ad84c9b3",
+      "size": 3540
+    },
+    {
+      "path": "spice/turmeric/turmeric.png",
+      "sha": "72a0b2324279d0f7fb1dae7994fcf7712f74de37",
+      "size": 3095
+    },
+    {
+      "path": "tools/blockmaker/blockmaker.png",
+      "sha": "c1355dbf6798dc1e17480fe71a6c553a65a4ca9d",
+      "size": 34008
+    },
+    {
+      "path": "tools/blockmaker_chassis/blockmaker_chassis.png",
+      "sha": "2b5f0a1a05d1bf4354a175ae2784ff81c8a26e9b",
+      "size": 10962
+    },
+    {
+      "path": "tools/blockmaker_engine/blockmaker_engine.png",
+      "sha": "9e90c9abce68ec6d2a99ebe2330d5e9c245af63a",
+      "size": 17866
+    },
+    {
+      "path": "tools/blockmaker_plates/blockmaker_plates.png",
+      "sha": "bfed53e2e5b3bd2f2f151036c7465458e958e4b4",
+      "size": 6886
+    },
+    {
+      "path": "tools/fuelmaker/fuelmaker.png",
+      "sha": "1eb7ca12f5f9a621fcb06897f9db7536feca7b93",
+      "size": 28813
+    },
+    {
+      "path": "tools/fuelmaker_case/fuelmaker_case.png",
+      "sha": "268bda07aa022cb72afea83b7728a14eb83ea700",
+      "size": 15325
+    },
+    {
+      "path": "tools/fuelmaker_core/fuelmaker_core.png",
+      "sha": "14f69fd56a81343c3361d44613de8cf473d0c2f2",
+      "size": 13766
+    },
+    {
+      "path": "tools/hatchet/class_axe/class_axe.png",
+      "sha": "0909eb7672fb385086289ff2dc94d9456cac04d9",
+      "size": 6746
+    },
+    {
+      "path": "tools/hoe/high_class_hoe/high_class_hoe.png",
+      "sha": "e6d0b9a67b15a160eac97a1e9bc86a3603acfbcf",
+      "size": 4378
+    },
+    {
+      "path": "tools/machine_stand/machine_stand.png",
+      "sha": "c5480a5f00cdbc84668f7549336bb77e0b6f5580",
+      "size": 29339
+    },
+    {
+      "path": "tools/metalmaker/metalmaker.png",
+      "sha": "d45ddf11068c259439847fdddc54e7286fcddc7c",
+      "size": 47691
+    },
+    {
+      "path": "tools/metalmaker_mechanism/metalmaker_mechanism.png",
+      "sha": "4f38daffce4816b04cd05dea1713b874db89b2c4",
+      "size": 12031
+    },
+    {
+      "path": "tools/metalmaker_tooler/metalmaker_tooler.png",
+      "sha": "47969c32c360255f4283b2ace206f1e90dcf2f5c",
+      "size": 21153
+    },
+    {
+      "path": "tools/ore_grinder/grand_ol_grinder/grand_ol_grinder.png",
+      "sha": "24fc0738015b90e64399061ae9abbc749f435061",
+      "size": 8047
+    },
+    {
+      "path": "tools/pick/fancy_pick/fancy_pick.png",
+      "sha": "9c68d0f38b747b9cd24bddad82989067752565e6",
+      "size": 4214
+    },
+    {
+      "path": "tools/scraper/super_scraper/super_scraper.png",
+      "sha": "174fb300180689cc6ed9926a02781bf7b8260d1f",
+      "size": 3264
+    },
+    {
+      "path": "tools/shovel/ace_of_spades/ace_of_spades.png",
+      "sha": "84aeafb27b91a5369d115f20046c3e283b19c882",
+      "size": 6915
+    },
+    {
+      "path": "tools/spindle/splendid_spindle/splendid_spindle.png",
+      "sha": "9b2bee56867da81523adb669cc2a48d196732740",
+      "size": 3867
+    },
+    {
+      "path": "tools/tool_base/alchemical_tongs/alchemical_tongs.png",
+      "sha": "b19faa4cb06ed53900897756c8403dc03759ee36",
+      "size": 2170
+    },
+    {
+      "path": "tools/tool_base/awesome_pot/awesome_pot.png",
+      "sha": "39afb836e0165ae2abd28d264efad961473a3c57",
+      "size": 5337
+    },
+    {
+      "path": "tools/tool_base/beaker/beaker.png",
+      "sha": "d1000b1fb2706fbd3d4cf0ed56724720e35af89c",
+      "size": 6622
+    },
+    {
+      "path": "tools/tool_base/bean_seasoner/bean_seasoner.png",
+      "sha": "a51d4d7b8a7f274bcca93ac0261124e2984ff70d",
+      "size": 5638
+    },
+    {
+      "path": "tools/tool_base/blender/blender.png",
+      "sha": "a9131d82c69d773c76c568d086cb1d786e1d1cc4",
+      "size": 17338
+    },
+    {
+      "path": "tools/tool_base/bubble_tuner/bubble_tuner.png",
+      "sha": "ecb687fce55086f1f62c57fb57d4fefcd95ce162",
+      "size": 6591
+    },
+    {
+      "path": "tools/tool_base/butterfly_lotion/butterfly_lotion.png",
+      "sha": "eb801acc4f0de0dd8f127c90ab30bddb8818ce2c",
+      "size": 4350
+    },
+    {
+      "path": "tools/tool_base/butterfly_net/butterfly_net.png",
+      "sha": "11bdfcee6a80bd1fe0f1b2ed7016412d9b63a1fb",
+      "size": 11133
+    },
+    {
+      "path": "tools/tool_base/cauldron/cauldron.png",
+      "sha": "315c386ed87c047de55b560836600bea7f19ea30",
+      "size": 16694
+    },
+    {
+      "path": "tools/tool_base/cocktail_shaker/cocktail_shaker.png",
+      "sha": "55e1025f33697979dde770fb967f23c07b093b2f",
+      "size": 13978
+    },
+    {
+      "path": "tools/tool_base/construction_tool/construction_tool.png",
+      "sha": "9e497815142e32613d949ea41a56fcf0d11c2cd7",
+      "size": 9000
+    },
+    {
+      "path": "tools/tool_base/crystallizer/crystallizer.png",
+      "sha": "11efeb7113a10e47939df52eaa69275361822045",
+      "size": 12567
+    },
+    {
+      "path": "tools/tool_base/dusty_stick/dusty_stick.png",
+      "sha": "6e69ac71efc58557325025b8453b7589f866ac2c",
+      "size": 10027
+    },
+    {
+      "path": "tools/tool_base/egg_seasoner/egg_seasoner.png",
+      "sha": "54d4053d3efeea114e9e463a17c67a535e08030a",
+      "size": 5106
+    },
+    {
+      "path": "tools/tool_base/focusing_orb/focusing_orb.png",
+      "sha": "15b479b4b2da2d67398ec5a7a392fa16b9e22c2c",
+      "size": 9610
+    },
+    {
+      "path": "tools/tool_base/fox_brush/fox_brush.png",
+      "sha": "68b894dee1f89c3345a821e59198afc5b38d137e",
+      "size": 8531
+    },
+    {
+      "path": "tools/tool_base/fruit_changing_machine/fruit_changing_machine.png",
+      "sha": "3dbff8d65bca02cbea14d6dc18389de7b087fc13",
+      "size": 8488
+    },
+    {
+      "path": "tools/tool_base/frying_pan/frying_pan.png",
+      "sha": "c1c0d4c790f1a02b2671ccfa2d7c8ad1f14cb377",
+      "size": 18159
+    },
+    {
+      "path": "tools/tool_base/gassifier/gassifier.png",
+      "sha": "a8ad7d95af45a1573a230af1681d752b22d2d789",
+      "size": 7770
+    },
+    {
+      "path": "tools/tool_base/hatchet/hatchet.png",
+      "sha": "3ae697ae31848325c88a38047dec652e6738b4f1",
+      "size": 5426
+    },
+    {
+      "path": "tools/tool_base/hoe/hoe.png",
+      "sha": "ae44b17280379c94b4b4d58ed5cde66c3ea513b0",
+      "size": 3443
+    },
+    {
+      "path": "tools/tool_base/knife_and_board/knife_and_board.png",
+      "sha": "43c772eb11d2bfd0a75ebcb50ad0b699836a3ee6",
+      "size": 7789
+    },
+    {
+      "path": "tools/tool_base/loomer/loomer.png",
+      "sha": "e87e89df16ff4499e7e958c1e35ad7dd2dc7aa7c",
+      "size": 9606
+    },
+    {
+      "path": "tools/tool_base/mike_tyson_grill/mike_tyson_grill.png",
+      "sha": "da4f6542853578b613134ae0139ad8a7b2ded4e5",
+      "size": 7293
+    },
+    {
+      "path": "tools/tool_base/mortar_and_pestle/mortar_and_pestle.png",
+      "sha": "44784c164b4fe58f59edffd7d79700536c9f1696",
+      "size": 7570
+    },
+    {
+      "path": "tools/tool_base/ore_grinder/ore_grinder.png",
+      "sha": "d0fb1744e7b7730d9c7eeb3de6b90d74e7541b68",
+      "size": 5510
+    },
+    {
+      "path": "tools/tool_base/pick/pick.png",
+      "sha": "5975f4ec4799e077245c2e330bfdecb66f5b4715",
+      "size": 3094
+    },
+    {
+      "path": "tools/tool_base/quill/quill.png",
+      "sha": "eef0a9752b8175263de8412ad4f9593a5e201519",
+      "size": 4810
+    },
+    {
+      "path": "tools/tool_base/random_kindness/random_kindness.png",
+      "sha": "5ae251bbd7baaa2b791384fdcc2166db2b926882",
+      "size": 7401
+    },
+    {
+      "path": "tools/tool_base/saucepan/saucepan.png",
+      "sha": "383a62899d4a937568eb2a5f1a4a6da42b4ad4f2",
+      "size": 4475
+    },
+    {
+      "path": "tools/tool_base/scraper/scraper.png",
+      "sha": "4ea80b6d2b28345e4b9ab1f79d653ca3c798b93f",
+      "size": 3259
+    },
+    {
+      "path": "tools/tool_base/shovel/shovel.png",
+      "sha": "fdbacc7ab4e8eff2ceb7673b840052fc5e28f3e0",
+      "size": 4538
+    },
+    {
+      "path": "tools/tool_base/smelter/smelter.png",
+      "sha": "27e2ee2251330932b1cb7f823c27571a49b3c27b",
+      "size": 15257
+    },
+    {
+      "path": "tools/tool_base/spice_mill/spice_mill.png",
+      "sha": "0b1c3ac586020a81790f2af58039a107fe42835c",
+      "size": 6931
+    },
+    {
+      "path": "tools/tool_base/spigot/spigot.png",
+      "sha": "61acf6a65a43f1a9c2b4c704a0b26424bc64b8d9",
+      "size": 5085
+    },
+    {
+      "path": "tools/tool_base/spindle/spindle.png",
+      "sha": "4e860d64153d0d55764cd9ecbffa1e9095c0524b",
+      "size": 2627
+    },
+    {
+      "path": "tools/tool_base/test_tube/test_tube.png",
+      "sha": "a8d16b8a269fe162cb3132e9558a963fd2380295",
+      "size": 2201
+    },
+    {
+      "path": "tools/tool_base/tincturing_kit/tincturing_kit.png",
+      "sha": "3a9848c53333c8b509e31864e4e1ad2127c277de",
+      "size": 10015
+    },
+    {
+      "path": "tools/tool_base/tinkertool/tinkertool.png",
+      "sha": "8c76ce9e8b764f27edcf7c2de8980f7e2a3c8917",
+      "size": 5628
+    },
+    {
+      "path": "tools/tool_base/watering_can/watering_can.png",
+      "sha": "87b9906e451bed36bbd2dee30bcea970347d696c",
+      "size": 7155
+    },
+    {
+      "path": "tools/watering_can/irrigator_9000/irrigator_9000.png",
+      "sha": "86e36c97d6ddb843046b5198d38cafd0b7d14c1e",
+      "size": 5673
+    },
+    {
+      "path": "tools/woodworker/woodworker.png",
+      "sha": "97da78ecc2caacb085bf70520d3e0f42bb2a20e2",
+      "size": 42342
+    },
+    {
+      "path": "tools/woodworker_chassis/woodworker_chassis.png",
+      "sha": "64b718e2dbf72d5de9e1940f8cffb29657ae55a3",
+      "size": 30612
+    },
+    {
+      "path": "tools/woodworker_fuser/woodworker_fuser.png",
+      "sha": "fbcafd3b87143270e26bc2ace3291cab9c18006c",
+      "size": 11754
+    }
+  ]
+}

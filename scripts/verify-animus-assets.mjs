@@ -1,0 +1,5 @@
+import fs from 'node:fs';import assert from 'node:assert/strict';
+const c=JSON.parse(fs.readFileSync('assets/animus/catalog.json'));
+assert(c.entries.length>1100);assert(c.entries.filter(e=>e.category==='face').length>=15);assert(c.entries.some(e=>e.category==='background'));assert.equal(new Set(c.entries.map(e=>e.id)).size,c.entries.length);
+for(const name of ['animus-starter-kenney','animus-theme-greek-harbour']){const p=JSON.parse(fs.readFileSync(`plugins/${name}/dist/plugin.json`)),ts=JSON.parse(p.text).tiddlers;const samples=Object.values(ts).filter(t=>t.tags==='$:/tags/AniMus/Template');assert.equal(samples.length,1);const scene=JSON.parse(samples[0].text);assert(scene.parts.length>20);for(const part of scene.parts){for(const v of [part,...part.variants||[]])if(v.asset)assert(ts[v.asset],`Missing image ${v.asset}`);}const tagged=Object.values(ts).filter(t=>t.tags==='$:/tags/AniMus/Asset');assert(tagged.length>5);for(const t of tagged)for(const a of JSON.parse(t.text).assets)assert(ts[a.title]);console.log(name,tagged.length,'materials,',scene.parts.length,'template parts');}
+console.log('Catalogue:',c.entries.length,'entries');

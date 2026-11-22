@@ -122,6 +122,7 @@ function mount(o){
  var viewActions=el(doc,'div','huw-musical-menu-section',undefined,viewMenu.panel);
  var workshopActions=el(doc,'div','huw-musical-menu-section',undefined,workshopsMenu.panel);
  var inspectorOpen=false,mode=o.previewPreference||"split",focus=false,puppet=Puppet.mount(o),lastTap=null,suppressedStageTap=null;
+ var assetLibrary=null;
  var narration=Narration.mount(o),scoreWorkshop=ScoreWorkshop.mount(o),sceneWorkshop=SceneWorkshop.mount(o);
  var manuscript=Manuscript.mount(Object.assign({},o,{openNarration:function(details){narration.open(details);},openFace:o.openFace||openFace}));
  var transformMode='',figureRoot='',cameraName='A',latestPart='',cancelGesture=null;
@@ -272,6 +273,7 @@ function mount(o){
  cameraButton.title=da?'Vis og redigér kameraets udsnit på scenen':ui('Edit camera viewport directly on the stage');
  var manuscriptButton=button(workshopActions,"huw-musical-manuscript-button",da?"Manuskript":ui("Script"),function(){openManuscript();});
  manuscriptButton.title=da?"Manuskriptværksted: Replikker, undertekster, scenenoter":ui("Script workshop: dialogue, subtitles, scene notes");
+ button(workshopActions,'huw-musical-assets-button',da?'Materialer':ui('Materials'),function(){if(!assetLibrary)assetLibrary=require('$:/plugins/huwiki/musical/asset-library.js').mount(o);assetLibrary.open();});
  button(workshopActions,'huw-musical-scenes-button',da?'Scener':ui('Scenes'),function(){sceneWorkshop.open();});
  button(workshopActions,'huw-musical-draw-button',da?'Tegn SVG':ui('Draw SVG'),function(){sceneWorkshop.draw();});
  button(workshopActions,'huw-musical-score-button',da?'Musik':ui('Music'),function(){scoreWorkshop.open(o.scoreTitle(),{clip:o.activeScoreClip()});});
@@ -923,7 +925,7 @@ function mount(o){
   dispose:function(){disposed=true;closeMenu(false);var cancelFrame=doc.defaultView&&doc.defaultView.cancelAnimationFrame;
    if(cancelFrame){if(previewRefreshFrame)cancelFrame.call(doc.defaultView,previewRefreshFrame);if(handlesRefreshFrame)cancelFrame.call(doc.defaultView,handlesRefreshFrame);}previewRefreshFrame=handlesRefreshFrame=0;
    cancelBlankTap();stageCanvas.removeEventListener('pointerdown',startBlankTap);if(cancelGesture)cancelGesture();previewZoom.dispose();fullscreenFallback=false;if(stagePanel)stagePanel.classList.remove('huw-musical-stage--expanded');doc.removeEventListener('fullscreenchange',syncStageFullscreen);if(doc.fullscreenElement===stagePanel&&doc.exitFullscreen)try{Promise.resolve(doc.exitFullscreen()).catch(function(){});}catch(_closed){}
-  facePanel.dispose();figurePanel.dispose();workshop.remove();workshopAnchor.remove();host.classList.remove('huw-musical--workshop-open');narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);
+  facePanel.dispose();figurePanel.dispose();workshop.remove();workshopAnchor.remove();host.classList.remove('huw-musical--workshop-open');narration.dispose();scoreWorkshop.dispose();sceneWorkshop.dispose();if(assetLibrary)assetLibrary.dispose();if(manuscript.dispose)manuscript.dispose();if(handles&&handles.parentNode)handles.parentNode.removeChild(handles);
   host.removeEventListener("keydown",keyboard);
   host.removeEventListener('keydown',escapeSelection,true);
   svg.removeEventListener("pointerdown",pointerDown);

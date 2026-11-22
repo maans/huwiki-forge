@@ -42,6 +42,7 @@ function attach(o){
  var ui=Language.translator(o.wiki);
  var displayName=o.displayName||function(value){return value;};
  var doc=o.doc,film=o.film,m=ensureMusical(film),inner=o.view.clips&&o.view.clips[0]&&o.view.clips[0].view,source=inner&&inner.scene;
+ var layerPanel=null;
  var da=isDanish(o.wiki);
  var L=da?Object.assign({},translations.da):ui.labels(Object.assign({},translations.en));
  L.addSong=da?"Tilføj musiknummer":ui("Add complete song");
@@ -986,6 +987,7 @@ function attach(o){
     title.onclick=function(){populateObjects();picker.focus();};
     title.ondblclick=function(ev){ev.preventDefault();ev.stopPropagation();populateObjects();picker.focus();};
     populateObjects();
+    var layersButton=el(doc,'button','huw-musical-layers-button',da?'Lag ↕':ui('Layers ↕'),lane);layersButton.type='button';layersButton.onclick=function(ev){ev.stopPropagation();if(!layerPanel)layerPanel=require('$:/plugins/huwiki/musical/layer-order.js').mount(Object.assign({},o,{position:function(){return playhead;},onSelect:selectFigure}));layerPanel.open();};
    }else if(t.kind==="captions"){
     captionCues.forEach(function(cue,index){
      var b=el(doc,"button","huw-musical-caption-clip",displayName(String(cue.part.text||cue.text)),lane);b.type="button";
@@ -1416,7 +1418,7 @@ function attach(o){
   getCaptionCues:function(){return captionCues.slice();},
   isJointMove:isJointMove,getPartPivot:getPartPivot,
   resolvePartScene:function(id){return sceneForPart(id,o.view,0);},
-  dispose:function(){if(effectLibrary)effectLibrary.close();clearPreviewVisibility();if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};
+  dispose:function(){if(layerPanel)layerPanel.dispose();if(effectLibrary)effectLibrary.close();clearPreviewVisibility();if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};
 }
 exports.attach=attach;exports.ensureMusical=ensureMusical;exports.interpolate=interpolate;
 })();
