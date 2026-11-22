@@ -112,7 +112,7 @@
         "name": "AniMus Forge I · Editor (beta)",
         "description": "AniMus production tools: layered SVG and drawn animation, ABC notation, recorded voices, scene timeline and Site view.",
         "author": "HUWiki Forge",
-        "version": "0.13.0-beta.21-groups.1",
+        "version": "0.13.1-beta.1",
         "plugin-type": "plugin",
         "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/abc",
         "requires-reload": "yes",
