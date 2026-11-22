@@ -45,6 +45,21 @@
     },
     {
       "fields": {
+        "title": "$:/plugins/huwiki/animus-theme-greek-harbour",
+        "type": "application/json",
+        "name": "AniMus · Den græske havn",
+        "description": "Hand-painted harbour, ship and Theseus characters / Håndmalet havn, skib og Theseus-figurer",
+        "author": "HUWiki Forge",
+        "version": "0.1.0",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/musical",
+        "requires-reload": "yes",
+        "license": "Mixed; per-element provenance"
+      },
+      "path": "../../plugins/animus-theme-greek-harbour/dist/plugin.json"
+    },
+    {
+      "fields": {
         "title": "$:/plugins/huwiki/animus-example-fyrtoejet",
         "type": "application/json",
         "name": "AniMus · Fyrtøjet",
@@ -58,6 +73,21 @@
         "core-version": ">=5.4.1"
       },
       "path": "../../plugins/animus-example-fyrtoejet/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/animus-starter-kenney",
+        "type": "application/json",
+        "name": "AniMus · Kenney Starter",
+        "description": "Six articulated characters, scenery and individual props / Seks ledopdelte figurer, kulisser og rekvisitter",
+        "author": "HUWiki Forge",
+        "version": "0.1.0",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/musical",
+        "requires-reload": "yes",
+        "license": "Mixed; per-element provenance"
+      },
+      "path": "../../plugins/animus-starter-kenney/dist/plugin.json"
     },
     {
       "fields": {
@@ -82,7 +112,7 @@
         "name": "AniMus Forge I · Editor (beta)",
         "description": "AniMus production tools: layered SVG and drawn animation, ABC notation, recorded voices, scene timeline and Site view.",
         "author": "HUWiki Forge",
-        "version": "0.13.0-beta.20-audio.5",
+        "version": "0.13.0-beta.21-assets.1",
         "plugin-type": "plugin",
         "dependents": "$:/plugins/huwiki/cutout $:/plugins/huwiki/abc",
         "requires-reload": "yes",
