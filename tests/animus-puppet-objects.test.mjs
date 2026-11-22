@@ -193,14 +193,19 @@ test('deleting a shoulder removes its descendants only after saving',()=>{
 
 test('placing the shoulder above the body moves its subtree and preserves animated joints',()=>{
  const root={id:'actor',type:'group'},arm={id:'shoulder',parent:'actor',type:'group'},hand={...plain(horse),id:'hand',parent:'shoulder'},body={id:'body',parent:'actor',type:'circle'},head={id:'head',parent:'actor',type:'circle'};
- const h=harness({scenes:{Scene:scene([root,arm,hand,body,head])},id:'shoulder'});
+ const table={id:'table',type:'rect'},plank={id:'plank',type:'rect'};
+ const h=harness({scenes:{Scene:scene([table,root,arm,hand,body,head,plank])},id:'shoulder'});
  change(field(h,'Lag (1 = bagest)'),2);
  assert.deepEqual(h.records,h.initial);
  const saved=h.save().parts;
+ assert.deepEqual(saved.filter(p=>!p.parent),[table,root,plank]);
  assert.deepEqual(saved.filter(p=>p.parent==='actor'),[body,arm,head]);
  assert.deepEqual(saved.find(p=>p.id==='hand'),hand);
  const nodes=h.view.clips[0].view.nodes;
  assert.equal(nodes.hand.el.parentNode,nodes.shoulder.el);
+ const stage=Array.from(nodes.actor.el.parentNode.children);
+ assert.ok(stage.indexOf(nodes.table.el)<stage.indexOf(nodes.actor.el));
+ assert.ok(stage.indexOf(nodes.actor.el)<stage.indexOf(nodes.plank.el));
  const drawn=Array.from(nodes.actor.el.children);
  assert.ok(drawn.indexOf(nodes.shoulder.el)>drawn.indexOf(nodes.body.el));
 });

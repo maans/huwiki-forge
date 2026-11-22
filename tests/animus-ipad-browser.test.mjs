@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
 import {chooseToolbarItem} from './helpers/animus-toolbar.mjs';
 import {serveDemo} from './helpers/animus-demo-server.mjs';
 
@@ -155,4 +156,41 @@ test('Turn Around stays editable after touch, mouse, backward seeks and playback
  assert.equal(await audio.locator('.huw-narration-record-controls button:visible').count(),2,'selecting a take exposes re-record');
  await audio.getByRole('button',{name:'Annuller',exact:true}).tap();
  assert.deepEqual(errors,[]);
+});
+
+test('a cropped limb paints the same pixels on the stage and in the puppet workshop',
+ {skip:process.env.ANIMUS_WEBKIT_TESTS!=='1',timeout:30000},async t=>{
+ const {webkit,devices}=await import('playwright-core');
+ const browser=await webkit.launch();
+ t.after(()=>browser.close());
+ const page=await browser.newPage(devices['iPad Pro 11 landscape']);
+ const styles=await readFile(new URL('../plugins/musical/src/styles.css',import.meta.url),'utf8');
+ function puppet(id){
+  return `<svg width="80" height="80" viewBox="0 0 80 80">
+   <defs><g id="${id}"><rect width="10" height="10" fill="red"/>
+    <rect y="10" width="10" height="10" fill="lime"/></g></defs>
+   <rect width="80" height="80" fill="blue"/>
+   <g data-cutout-id="shoulder"><svg x="10" y="10" width="10" height="10" overflow="hidden" viewBox="0 0 10 10">
+    <use href="#${id}"/></svg>
+    <g data-cutout-id="elbow"><svg x="30" y="10" width="10" height="10" overflow="hidden" viewBox="0 10 10 10">
+     <use href="#${id}"/></svg></g></g></svg>`;
+ }
+ await page.setContent(`<meta name="viewport" content="width=device-width,initial-scale=1"><style>${styles}
+ .probe{position:relative!important;inset:auto!important;width:80px!important;height:80px!important;
+ min-width:80px!important;min-height:80px!important;margin:0!important;border:0!important;padding:0!important}
+ </style><div class="huw-musical--workspace"><div class="huw-musical-canvas probe">${puppet('stage-source')}</div></div>
+ <div class="huw-puppet-workshop probe"><div class="huw-puppet-canvas probe">${puppet('workshop-source')}</div></div>`);
+ for(const selector of ['.huw-musical-canvas','.huw-puppet-canvas']){
+  const screenshot=await page.locator(selector+' > svg').screenshot({scale:'css'});
+  const pixels=await page.evaluate(async data=>{
+   const image=new Image();
+   image.src='data:image/png;base64,'+data;
+   await image.decode();
+   const canvas=document.createElement('canvas');
+   canvas.width=image.width;canvas.height=image.height;
+   const context=canvas.getContext('2d');context.drawImage(image,0,0);
+   return [[15,15],[15,25],[35,15],[35,5]].map(([x,y])=>Array.from(context.getImageData(x,y,1,1).data));
+  },screenshot.toString('base64'));
+  assert.deepEqual(pixels,[[255,0,0,255],[0,0,255,255],[0,255,0,255],[0,0,255,255]],selector);
+ }
 });
