@@ -13,7 +13,29 @@ function valid(e){return !!(e&&typeof e.id==='string'&&/^[a-z0-9][a-z0-9/-]{0,20
 function read(wiki,title){try{return JSON.parse(wiki.getTiddlerText(title,''));}catch(_bad){return null;}}
 function localEntries(wiki){return (wiki.filterTiddlers?wiki.filterTiddlers('[all[tiddlers+shadows]tag['+TAG+']]'):(wiki.getTiddlersWithTag(TAG)||[])).map(function(t){return read(wiki,t);}).filter(valid);}
 function entries(wiki,remote){var all={},cached=remote||read(wiki,CACHE)||{};(cached.entries||[]).filter(valid).forEach(function(e){all[e.id]=e;});localEntries(wiki).forEach(function(e){all[e.id]=e;});return Object.keys(all).map(function(id){return all[id];});}
-function search(items,query,category,collection){var words=normal(query).split(/\s+/).filter(Boolean);return items.filter(function(e){if(category&&e.category!==category&&!(category==='figure'&&e.category==='cutout'))return false;if(collection&&e.collection!==collection)return false;var hay=normal([e.name,e.nameDa,e.category,e.collection,e.author,e.keywords,e.faceKind].join(' '));var tokens=hay.split(/[^a-z0-9]+/);return words.every(function(w){return tokens.some(function(t){return t.indexOf(w)===0||aliases[w]&&t.indexOf(aliases[w])===0;});});});}
+function alternate(groups){
+ var result=[],active=Array.from(groups.values(),function(items){return {items:items,index:0};});
+ while(active.length){
+  active=active.filter(function(group){result.push(group.items[group.index++]);return group.index<group.items.length;});
+ }
+ return result;
+}
+function browseOrder(items){
+ var categories=new Map();
+ items.forEach(function(item){
+  var type=item.category==='cutout'?'figure':item.category;
+  if(!categories.has(type))categories.set(type,new Map());
+  var collections=categories.get(type);
+  if(!collections.has(item.collection))collections.set(item.collection,[]);
+  collections.get(item.collection).push(item);
+ });
+ var ordered=new Map();
+ ['figure','prop','scenery','background','face','sound'].concat(Array.from(categories.keys())).forEach(function(type){
+  if(categories.has(type)&&!ordered.has(type))ordered.set(type,alternate(categories.get(type)));
+ });
+ return alternate(ordered);
+}
+function search(items,query,category,collection){var words=normal(query).split(/\s+/).filter(Boolean);var hits=items.filter(function(e){if(category&&e.category!==category&&!(category==='figure'&&e.category==='cutout'))return false;if(collection&&e.collection!==collection)return false;var hay=normal([e.name,e.nameDa,e.category,e.collection,e.author,e.keywords,e.faceKind].join(' '));var tokens=hay.split(/[^a-z0-9]+/);return words.every(function(w){return tokens.some(function(t){return t.indexOf(w)===0||aliases[w]&&t.indexOf(aliases[w])===0;});});});return category?hits:browseOrder(hits);}
 function write(wiki,fields){wiki.addTiddler(new $tw.Tiddler(fields));}
 function imageData(bytes){if(bytes.length<24||[137,80,78,71,13,10,26,10].some(function(v,i){return bytes[i]!==v;}))throw Error('Expected a PNG image');var view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),w=view.getUint32(16),h=view.getUint32(20);if(!w||!h||w*h>40000000)throw Error('Image dimensions are too large');var chunks=[];for(var i=0;i<bytes.length;i+=8192)chunks.push(String.fromCharCode.apply(null,bytes.subarray(i,i+8192)));return {text:btoa(chunks.join('')),width:w,height:h};}
 function safeUrl(s){return /^https:\/\/(?:forge\.xn--mns-ula\.dk|raw\.githubusercontent\.com)\//.test(String(s));}
