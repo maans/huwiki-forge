@@ -25,7 +25,7 @@ const pathPrefixes=[
  new URL("../../plugins/",location.href).pathname,
  new URL("../../themes/",location.href).pathname
 ];
-const registryPromise=fetch(listingUrl.href,{cache:"no-cache",credentials:"omit"})
+function loadRegistry(){return fetch(listingUrl.href,{cache:"no-cache",credentials:"omit"})
  .then(response=>{if(!response.ok)throw Error("Registry HTTP "+response.status);return response.json();})
  .then(reg=>{
    if(reg.schemaVersion!==1||!Array.isArray(reg.items))throw Error("Invalid registry");
@@ -43,6 +43,8 @@ const registryPromise=fetch(listingUrl.href,{cache:"no-cache",credentials:"omit"
    if(counter)counter.textContent=String(entries.size)+" available packages";
    return entries;
  });
+}
+let registryPromise=loadRegistry();
 function respond(event,request,code,body,type){
  if(!event.source||typeof event.source.postMessage!=="function")return;
  // file:// TiddlyWikis have an opaque ("null") origin; they cannot be named
@@ -58,6 +60,7 @@ window.addEventListener("message",async function(event){
  const request=event.data;
  const requested=String(request.url||"");
  try{
+   if(requested==="recipes/library/tiddlers.json")registryPromise=loadRegistry();
    const registry=await registryPromise;
    if(requested==="recipes/library/tiddlers.json"){
      respond(event,request,200,JSON.stringify([...registry.values()].map(item=>item.fields)));
