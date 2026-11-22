@@ -213,6 +213,30 @@
         "TiddlyWiki Jingle",
         "TiddlyWiki Jingle – Følgeafspiller"
       ]
+    },
+    {
+      "id": "animus-starter-kenney",
+      "kind": "plugin-collection",
+      "category": "AniMus",
+      "label_da": "AniMus · Kenney-startpakke",
+      "label_en": "AniMus · Kenney starter pack",
+      "source": "../plugins/animus-starter-kenney/dist/plugin.json",
+      "version": "0.1.0",
+      "requires": [
+        "$:/plugins/huwiki/musical"
+      ]
+    },
+    {
+      "id": "animus-theme-greek-harbour",
+      "kind": "plugin-collection",
+      "category": "AniMus",
+      "label_da": "AniMus · Den græske havn",
+      "label_en": "AniMus · The Greek Harbour",
+      "source": "../plugins/animus-theme-greek-harbour/dist/plugin.json",
+      "version": "0.1.0",
+      "requires": [
+        "$:/plugins/huwiki/musical"
+      ]
     }
   ]
 }

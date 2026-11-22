@@ -39,6 +39,18 @@ jobs:
           node --test tests/animus-asset-library.test.mjs tests/animus-layer-order.test.mjs tests/animus-production.test.mjs tests/animus-figure-panel.test.mjs
       - name: Verify complete catalogues and starter templates
         run: node scripts/verify-animus-assets.mjs
+      - name: Install isolated browser test runtime
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+          npx playwright-core install chromium
+      - name: Test starter scenes, material search and layer dragging in the browser
+        run: node scripts/animus-materials-browser-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: animus-materials-browser
+          path: test-results/animus-materials
+          retention-days: 7
       - name: Persist generated material files on the feature branch
         run: |
           git config user.name 'github-actions[bot]'

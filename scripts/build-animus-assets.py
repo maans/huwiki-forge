@@ -97,7 +97,7 @@ def greek_entries(folder):
 def rgs_entries(archive):
  from PIL import Image
  z=zipfile.ZipFile(archive);groups={}
- for name in sorted(z.namelist()):
+ for name in sorted(z.namelist(),key=lambda n:(not bool(re.search(r'(?:^|/)idle[_/]',n,re.I)),n)):
   if not name.lower().endswith('.png'):continue
   match=re.search(r'(?:^|/)((?:Eyes?|Mouth)[ _-]*\d+)(?:/|[ _-])',name,re.I)
   if match:

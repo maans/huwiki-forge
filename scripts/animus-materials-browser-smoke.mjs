@@ -1,0 +1,45 @@
+import assert from 'node:assert/strict';
+import {createServer} from 'node:http';
+import {readFile,mkdir,writeFile} from 'node:fs/promises';
+import {createRequire} from 'node:module';
+import {assembleHtml} from '../assembler/assemble.mjs';
+const require=createRequire(import.meta.url),runtime=process.env.PLAYWRIGHT_MODULE||'playwright-core';
+const {chromium}=require(runtime),root=new URL('../',import.meta.url),out=new URL('../test-results/animus-materials/',import.meta.url);
+await mkdir(out,{recursive:true});
+const read=path=>readFile(new URL(path,root),'utf8');
+const packages=await Promise.all(['cutout','abc','musical','animus-starter-kenney','animus-theme-greek-harbour'].map(async n=>JSON.parse(await read('plugins/'+n+'/dist/plugin.json'))));
+const templateTitle='$:/plugins/huwiki/animus-starter-kenney/template',templateStore=JSON.parse(packages[3].text).tiddlers;
+const html=assembleHtml(await read('core/empty.html'),packages.concat([{title:'$:/DefaultTiddlers',text:'Material test'},{title:'Material test',text:'<$animus-new-project/>'},{title:'$:/language',text:'$:/languages/en-GB'}]));
+let server,startUrl;if(process.env.ANIMUS_FILE_TEST){const file=new URL('fixture.html',out);await writeFile(file,html);startUrl=file.href;server={close(){}};}else{server=createServer((req,res)=>{res.setHeader('Content-Type','text/html');res.end(html);});await new Promise(r=>server.listen(0,'127.0.0.1',r));startUrl='http://127.0.0.1:'+server.address().port;}
+let browser;const errors=[];try{
+ browser=await chromium.launch({headless:true,...(process.env.CHROME_BIN?{executablePath:process.env.CHROME_BIN}:{})});
+ const page=await browser.newPage({viewport:{width:1280,height:900}});page.on('pageerror',e=>errors.push(e.message));
+ const catalogue=JSON.parse(await read('assets/animus/catalog.json'));
+ await page.route('https://forge.xn--mns-ula.dk/assets/animus/catalog.json',r=>r.fulfill({contentType:'application/json',body:JSON.stringify(catalogue)}));
+ await page.goto(startUrl);await page.getByRole('combobox',{name:'Starting scene',exact:true}).waitFor();
+ const before=await page.evaluate(t=>$tw.wiki.getTiddlerText(t),templateTitle);
+ await page.getByRole('combobox',{name:'Starting scene',exact:true}).selectOption(templateTitle);
+ await page.getByRole('textbox',{name:'Name of your show',exact:true}).fill('My starter animation');await page.getByRole('button',{name:'+ New show',exact:true}).click();
+ const editor=page.locator('.huw-musical--workspace').last();await editor.waitFor();await editor.locator('.huw-musical-layers-button').waitFor();
+ const created=await page.evaluate(()=>{const f=$tw.wiki.getTiddler('My starter animation').fields;return {stage:JSON.parse($tw.wiki.getTiddlerText(f['animus-scene'])).scenes[0].source};});
+ assert.equal(await page.evaluate(t=>$tw.wiki.getTiddlerText(t),templateTitle),before,'template stays unchanged');
+ console.log('PASS template creates an independent editable animation');
+ await editor.locator('.huw-musical-layers-button').click();const layers=editor.locator('.huw-layer-panel');await layers.waitFor();
+ let ids=await layers.locator('[data-layer-id]').evaluateAll(rows=>rows.map(x=>x.dataset.layerId));assert(ids.length>5);
+ const first=ids[0],second=ids[1],snapshot=await page.evaluate(t=>JSON.parse($tw.wiki.getTiddlerText(t)),created.stage);
+ await layers.locator('.huwrep-order-row').nth(1).locator('.huwrep-order-handle').focus();await page.keyboard.press('ArrowUp');
+ let next=await layers.locator('[data-layer-id]').evaluateAll(rows=>rows.map(x=>x.dataset.layerId));assert.equal(next[0],second);assert.equal(next[1],first);
+ let saved=await page.evaluate(t=>JSON.parse($tw.wiki.getTiddlerText(t)),created.stage);assert.deepEqual(saved.parts.filter(p=>!p.parent).map(p=>p.id).reverse(),next);assert.deepEqual(Object.fromEntries(snapshot.parts.map(p=>[p.id,p.keys])),Object.fromEntries(saved.parts.map(p=>[p.id,p.keys])));
+ console.log('PASS keyboard layer move saves order and preserves poses');
+ const handle=layers.locator('.huwrep-order-row').nth(0).locator('.huwrep-order-handle'),target=layers.locator('.huwrep-order-row').nth(2);const a=await handle.boundingBox(),b=await target.boundingBox();await page.mouse.move(a.x+a.width/2,a.y+a.height/2);await page.mouse.down();await page.mouse.move(b.x+40,b.y+b.height-2,{steps:12});await page.mouse.up();
+ const dragged=await layers.locator('[data-layer-id]').evaluateAll(rows=>rows.map(x=>x.dataset.layerId));assert.notDeepEqual(dragged,next);console.log('PASS repertoire-style pointer drag changes stage depth');
+ await layers.getByRole('button',{name:'Close',exact:true}).click();
+ await editor.locator('[data-menu=workshops]').click();await editor.locator('.huw-musical-assets-button').click();const materials=editor.locator('.huw-asset-library');await materials.waitFor();
+ await materials.getByRole('combobox',{name:'Category',exact:true}).selectOption('background');await page.waitForFunction(()=>document.querySelector('.huw-asset-grid')?.textContent.includes('background'));
+ const cards=await materials.locator('.huw-asset-card').count();assert(cards>0&&cards<=24);
+ await materials.getByRole('combobox',{name:'Category',exact:true}).selectOption('figure');await materials.getByRole('searchbox').fill('Female adventurer');const card=materials.locator('.huw-asset-card').filter({hasText:'Female adventurer'});await card.getByRole('button',{name:'Get and insert',exact:true}).click();await materials.waitFor({state:'detached'});
+ await page.locator('.huw-musical--workspace').last().waitFor();saved=await page.evaluate(t=>JSON.parse($tw.wiki.getTiddlerText(t)),created.stage);assert(saved.parts.length>snapshot.parts.length);
+ console.log('PASS materials filters include whole backgrounds and import a single reusable puppet offline');
+ await page.screenshot({path:new URL('editor.png',out).pathname});assert.deepEqual(errors,[]);console.log('PASS no browser runtime errors');
+ await writeFile(new URL('result.json',out),JSON.stringify({checks:5,errors},null,2));
+}finally{if(browser)await browser.close();server.close();}

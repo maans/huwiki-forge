@@ -962,6 +962,7 @@ function attach(o){
     });
     lane.style.minHeight=effectExpanded[t.id]?Math.max(32,ends.length*27+5)+"px":"30px";
    }else if(t.kind==="object-browser"){
+    lane.classList.add("huw-musical-object-lane");
     // This single compact lane is a fast selector for *untracked* props and
     // scenery as well as puppets. It does not create 40 extra timeline rows.
     function activeRoots(v,depth){if(!v||depth>16)return [];
