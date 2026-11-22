@@ -25,7 +25,21 @@ function render(doc,wiki,host,entry,parts,Engine){
  var art=doc.createElementNS(NS,'g');view.svg.appendChild(art);
  scene.parts.filter(function(p){return !p.parent||!view.nodes[p.parent];}).forEach(function(p){if(view.nodes[p.id])art.appendChild(view.nodes[p.id].el);});
  host.textContent='';host.appendChild(view.svg);
- var box=art.getBBox();if(!Number.isFinite(box.width)||!Number.isFinite(box.height)||box.width<=0||box.height<=0)throw Error('Empty preview');
+ // An atlas crop is a nested SVG. getBBox() alone includes the hidden
+ // remainder of its source sheet in some browsers, so use its viewport.
+ var frame=art.getCTM().inverse(),points=[];
+ Object.keys(view.nodes).forEach(function(id){var node=view.nodes[id],shape=node.shape,box;
+  if(node.part.type==='group')return;
+  if(node.part.type==='image')box={x:Number(shape.getAttribute('x')),y:Number(shape.getAttribute('y')),width:Number(shape.getAttribute('width')),height:Number(shape.getAttribute('height'))};
+  else box=shape.getBBox();
+  if(!box||!Number.isFinite(box.width)||!Number.isFinite(box.height)||box.width<=0||box.height<=0)return;
+  var matrix=frame.multiply(node.el.getCTM());
+  [[box.x,box.y],[box.x+box.width,box.y],[box.x+box.width,box.y+box.height],[box.x,box.y+box.height]].forEach(function(c){var p=view.svg.createSVGPoint();p.x=c[0];p.y=c[1];points.push(p.matrixTransform(matrix));});
+ });
+ if(!points.length)throw Error('Empty preview');
+ var xs=points.map(function(p){return p.x;}),ys=points.map(function(p){return p.y;}),x=Math.min.apply(null,xs),y=Math.min.apply(null,ys);
+ var box={x:x,y:y,width:Math.max.apply(null,xs)-x,height:Math.max.apply(null,ys)-y};
+ if(!box.width||!box.height)throw Error('Empty preview');
  var padding=Math.max(box.width,box.height)*.07;
  view.svg.setAttribute('viewBox',[box.x-padding,box.y-padding,box.width+2*padding,box.height+2*padding].join(' '));
  view.svg.setAttribute('preserveAspectRatio','xMidYMid meet');view.svg.setAttribute('aria-hidden','true');view.svg.setAttribute('focusable','false');

@@ -16,10 +16,11 @@ test('composite preview shows body and head together and preserves the authored 
 });
 test('cropped image previews use the authored crop, rather than the entire source atlas',()=>{
  const doc=svgDocument(),host=doc.createElement('div'),create=doc.createElementNS;
- doc.createElementNS=(ns,tag)=>{const node=create(ns,tag);if(tag==='svg')node.getBBox=()=>({x:Number(node.getAttribute('x')||0),y:Number(node.getAttribute('y')||0),width:Number(node.getAttribute('width')||0),height:Number(node.getAttribute('height')||0)});return node;};
+ doc.createElementNS=(ns,tag)=>{const node=create(ns,tag);if(tag==='svg')node.getBBox=()=>({x:0,y:0,width:400,height:500});return node;};
  const part={id:'eye',type:'image',asset:'atlas',geo:{x:0,y:0,w:20,h:10,crop:{x:30,y:40,w:20,h:10,sourceWidth:400,sourceHeight:500}}};
  const view=Preview.render(doc,wiki,host,{assets:[{id:'atlas',url:'https://forge.xn--mns-ula.dk/atlas.png'}]},[part],Engine);
  assert.equal(view.nodes.eye.shape.getAttribute('viewBox'),'30 40 20 10');
+ const [,,width,height]=view.svg.getAttribute('viewBox').split(' ').map(Number);assert(width<30);assert(height<20);
  assert.equal(view.imageContext.defs.firstChild.getAttribute('href'),'https://forge.xn--mns-ula.dk/atlas.png');
 });
 test('local composite artwork is resolved from every dependency, without changing the wiki',()=>{
