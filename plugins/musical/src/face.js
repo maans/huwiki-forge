@@ -57,7 +57,7 @@ function actorRoot(map,part){var current=part,found=part,seen={};while(current&&
  }return found;}
 function anatomy(scene){var cached=anatomies.get(scene),parts=scene.parts||[];if(cached&&cached.parts===parts&&cached.length===parts.length)return cached;
  var map=Object.create(null),faces=[],seen=Object.create(null);parts.forEach(function(part){map[part.id]=part;});
- parts.forEach(function(part){if(!mouthKind(part))return;var root=actorRoot(map,part);if(seen[root.id])return;seen[root.id]=true;
+ parts.forEach(function(part){if(!mouthKind(part)&&part.facialRole!=="authoredEyes")return;var root=actorRoot(map,part);if(seen[root.id])return;seen[root.id]=true;
   var head=part,ancestor=part,visited={};while(ancestor&&!visited[ancestor.id]){visited[ancestor.id]=true;if(headPart(ancestor)){head=ancestor;break;}if(ancestor.id===root.id)break;ancestor=map[ancestor.parent];}
   if(head===part){head=parts.find(function(candidate){return headPart(candidate)&&beneath(map,candidate.id,root.id);})||map[part.parent]||part;}
   var facial={eyes:[],pupils:[],brows:[],lids:[],surfaces:[],open:"",closed:""};

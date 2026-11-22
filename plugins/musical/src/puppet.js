@@ -169,8 +169,66 @@ function mount(o){
   var midX=r(dx/2),midY=r(dy/2),child={id:newId,name:(p.name||p.id)+(da?" · underdel":ui(" · lower")),type:"path",parent:p.id,pivot:{x:0,y:0},geo:{d:"M0 0 L"+midX+" "+midY},stroke:p.stroke||"#17202f",strokeWidth:p.strokeWidth||5,fill:"none",rig:true,keys:[{t:0,x:midX,y:midY,r:0,sx:1,sy:1,opacity:1}]};
   p.geo.d="M0 0 L"+midX+" "+midY;parts.splice(parts.indexOf(p)+1,0,child);selected=newId;writable();renderAll();
  }
+ function faceArtwork(head){
+  if(head.type!=="image"||!/(?:^|[^a-z])(head|hoved)(?:$|[^a-z])/i.test(head.name||head.id))return;
+  var section=el(doc,"details","huw-puppet-face-art",undefined,inspector);
+  section.open=true;
+  el(doc,"summary","",da?"Opret ansigtsdele":ui("Create facial parts"),section);
+  var say=function(daText,enText){return da?daText:ui(enText);};
+  var Face=require("$:/plugins/huwiki/musical/face.js");
+  var face=Face.resolve({parts:parts},head.id);
+  var options=el(doc,"select","",undefined,section);
+  function channel(role,label,existing){
+   if(existing&&!parts.some(function(p){return p.parent===head.id&&p.facialRole===role;}))return;
+   el(doc,"option","",label,options).value=role;
+  }
+  channel("authoredMouth",say("Mund","Mouth"),face&&(face.parts.open||face.parts.closed));
+  channel("authoredEyes",say("Øjne","Eyes"),face&&face.parts.eyes.length);
+  if(!options.options.length){section.remove();return;}
+  options.setAttribute("aria-label",say("Ansigtsdel","Facial part"));
+  var choices=el(doc,"select","",undefined,section);
+  choices.setAttribute("aria-label",say("Variant","Variant"));
+  var box=imageInfo(head),canvas=el(doc,"canvas","",undefined,section);
+  canvas.width=Math.min(768,Math.max(96,Math.round(480*Math.min(1,box.w/box.h))));
+  canvas.height=Math.max(1,Math.min(768,Math.round(canvas.width*box.h/box.w)));
+  var active=Engine.state(head,previewTime).variantId;
+  var picture=(head.variants||[]).find(function(v){return v.id===active;})||(head.variants||[])[0]||head;
+  canvas.style.cssText="display:block;width:100%;max-width:360px;height:auto;touch-action:none;background-size:100% 100%;background-repeat:no-repeat";
+  canvas.style.backgroundImage="url("+JSON.stringify(Engine.imageHref(o.wiki,picture))+")";
+  el(doc,"p","huw-puppet-hint",say("Mal først over den gamle mund eller øjnene med hudfarven. Tegn derefter det nye udtryk.","Paint over the original mouth or eyes with the skin colour, then draw the new expression."),section);
+  var color=input(say("Penselfarve","Brush colour"),"#eab184","color",function(){},section);
+  var width=input(say("Penselbredde","Brush width"),12,"number",function(){},section);width.min=1;width.max=120;
+  var ctx=null,pen=null,painted=false;
+  function paint(e,start){
+   var rect=canvas.getBoundingClientRect(),x=(e.clientX-rect.left)*canvas.width/rect.width,y=(e.clientY-rect.top)*canvas.height/rect.height;
+   ctx=canvas.getContext("2d");ctx.lineWidth=Math.max(1,Math.min(120,Number(width.value)||1));ctx.strokeStyle=ctx.fillStyle=color.value;ctx.lineCap="round";
+   ctx.beginPath();if(start){ctx.arc(x,y,ctx.lineWidth/2,0,2*Math.PI);ctx.fill();}else{ctx.moveTo(pen.x,pen.y);ctx.lineTo(x,y);ctx.stroke();}
+   pen={id:e.pointerId,x:x,y:y};painted=true;
+  }
+  canvas.onpointerdown=function(e){if(pen)return;e.preventDefault();canvas.setPointerCapture(e.pointerId);paint(e,true);};
+  canvas.onpointermove=function(e){if(pen&&pen.id===e.pointerId)paint(e,false);};
+  canvas.onlostpointercapture=function(){pen=null;};
+  function clear(){if(ctx)ctx.clearRect(0,0,canvas.width,canvas.height);painted=false;}
+  function refreshChoices(){choices.textContent="";(options.value==="authoredMouth"?Face.SOUNDS:Face.EYES.filter(function(v){return v.id!=="auto"&&v.id!=="blink";})).forEach(function(v){el(doc,"option","",da?v.label:v.en,choices).value=v.id;});clear();}
+  options.onchange=refreshChoices;choices.onchange=clear;refreshChoices();
+  button(section,say("Ryd tegning","Clear drawing"),clear);
+  button(section,say("Brug tegning","Use drawing"),function(){
+   if(!painted)return;
+   var role=options.value,mouth=role==="authoredMouth",part=parts.find(function(p){return p.parent===head.id&&p.facialRole===role;});
+   if(!part){
+    var original={id:"original",name:say("Original","Original"),imageData:"data:image/svg+xml;charset=utf-8,"+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1"/>')};
+    part={id:Model.id(mouth?"mouth":"eyes"),name:mouth?"Mouth open":"Eyes",parent:head.id,facialRole:role,type:"image",geo:box,pivot:{x:0,y:0},keys:[{t:0,x:0,y:0,r:0,sx:1,sy:1,opacity:1}],variants:[original],variantId:"original"};parts.push(part);
+   }
+   var id=choices.value,variant={id:id,name:choices.options[choices.selectedIndex].textContent,imageData:canvas.toDataURL("image/png")};
+   if(mouth)variant.viseme=id;
+   var index=part.variants.findIndex(function(v){return v.id===id;});
+   if(index<0)part.variants.push(variant);else part.variants[index]=variant;
+   writable();renderTree();renderPreview();msg.textContent=say("Tegningen er tilføjet. Vælg Gem og tilbage.","Drawing added. Choose Save and back.");
+  });
+ }
  function renderInspector(){if(!inspector)return;inspector.textContent="";var p=selectedNode();if(!p){el(doc,"p","huw-puppet-hint",clip?L.choose:da?"Vælg objektet eller en af dets dele i visningen eller listen.":ui("Select the object or one of its parts in the preview or list."),inspector);return;}
   el(doc,"h3","",p.name||p.id,inspector);
+  faceArtwork(p);
   input(L.name,p.name||p.id,"text",function(v){p.name=v;writable();renderTree();renderInspector();});
   var parentLabel=el(doc,"label","huw-puppet-field",undefined,inspector);el(doc,"span","",L.parent,parentLabel);var select=el(doc,"select","",undefined,parentLabel);
   var opt=el(doc,"option","",clip?L.none:da?"Intet overordnet objekt":ui("No parent object"),select);opt.value="";
@@ -257,7 +315,7 @@ function mount(o){
    if(savedClip){savedClip.motion=savedClip.motion||{};changedParts.forEach(function(p){if(!savedClip.motion[p.id]){var key=Object.assign({},partBase(p)),tail=Object.assign({},key,{t:n(savedClip.beatsPerLoop,8)});savedClip.motion[p.id]=[key,tail];}});}}
   var stageTitle=activeStageTitle||o.stageTitle,prior=o.wiki.getTiddler(stageTitle);if(!prior){msg.textContent="CutOut scene not found";return false;}
   var body=JSON.stringify(source);o.markOwnWrite(stageTitle,body);o.wiki.addTiddler(new $tw.Tiddler(prior,{title:stageTitle,text:body}));
-  if(changedParts.length){var filmPrior=o.wiki.getTiddler(o.sceneTitle),filmBody=JSON.stringify(film);if(filmPrior){o.markOwnWrite(o.sceneTitle,filmBody);o.wiki.addTiddler(new $tw.Tiddler(filmPrior,{title:o.sceneTitle,text:filmBody}));}}
+  if(changedParts.length&&clip&&stageTitle!==o.sceneTitle){var filmPrior=o.wiki.getTiddler(o.sceneTitle),filmBody=JSON.stringify(film);if(filmPrior){o.markOwnWrite(o.sceneTitle,filmBody);o.wiki.addTiddler(new $tw.Tiddler(filmPrior,{title:o.sceneTitle,text:filmBody}));}}
   if(libraryRequested){var title=o.wiki.generateNewTitle((clip&&clip.name||"Musical")+(da?" – dukke":ui(" – puppet")));
    Model.write(o.wiki,title,{version:1,kind:"puppet",name:clip&&clip.name||L.title,width:800,height:450,duration:4,background:"transparent",parts:clone(parts)},"puppet");}
   rebuildStage();o.editor.redraw();dirty=false;exit();return true;

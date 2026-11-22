@@ -140,7 +140,8 @@ function mount(o){
  var workshopTabs=el(doc,'div','huw-musical-workshop-tabs',undefined,workshopTop);
  workshopTabs.setAttribute('role','group');workshopTabs.setAttribute('aria-label',da?'Vælg værksted':ui('Choose workshop'));
  var bodyTab=button(workshopTabs,'',da?'Figur':ui('Character'),function(){returnToFigure();});bodyTab.dataset.workshopMode='figure';
- var faceTab=button(workshopTabs,'',da?'Ansigt':ui('Face'),function(){showFaceWorkshop(workshopPart,'expression');});faceTab.dataset.workshopMode='face';
+ var faceTab=button(workshopTabs,'',da?'Ansigt':ui('Face'),function(){if(faceContextFor(workshopPart))showFaceWorkshop(workshopPart,'expression');else if(editableFaceHead(workshopPart))openAppearance(workshopPart);});faceTab.dataset.workshopMode='face';
+ var editFaceArt=button(workshopTabs,'',da?'Tegn ansigtsdele':ui('Draw facial parts'),function(){var context=faceContextFor(workshopPart);openAppearance(context.headId);});
  clearButton(workshopTop);
  var workshopClose=button(workshopTop,'huw-musical-workshop-close','×',function(){hideWorkshop();host.focus({preventScroll:true});});
  workshopClose.setAttribute('aria-label',da?'Luk værksted':ui('Close workshop'));
@@ -169,6 +170,11 @@ function mount(o){
   var source=editor.resolvePartScene&&editor.resolvePartScene(id),actor=source&&Puppet.rootFor(id,source,o.film);
   return actor&&actor!==id?editor.faceContext(actor):null;
  }
+ function editableFaceHead(id){
+  var scene=id&&editor.resolvePartScene&&editor.resolvePartScene(id);
+  var part=scene&&(scene.parts||[]).find(function(item){return item.id===id;});
+  return part&&part.type==="image"&&/(?:^|[^a-z])(head|hoved)(?:$|[^a-z])/i.test(part.name||part.id);
+ }
  function syncWorkshop(){
   var visible=!!workshopMode&&!exportSuspended&&!disposed;workshop.hidden=!visible;
   workshop.dataset.animusWorkshop=workshopMode;host.classList.toggle('huw-musical--workshop-open',visible);
@@ -176,7 +182,9 @@ function mount(o){
   workshop.dataset.workshopKind=object?'object':workshopMode;
   bodyTab.textContent=object?(da?'Objekt':ui('Object')):(da?'Figur':ui('Character'));faceTab.hidden=!!object;
   bodyTab.setAttribute('aria-pressed',String(workshopMode==='figure'));faceTab.setAttribute('aria-pressed',String(workshopMode==='face'));
-  faceTab.disabled=!faceContextFor(workshopPart);
+  faceTab.disabled=!faceContextFor(workshopPart)&&!editableFaceHead(workshopPart);
+  var face=workshopMode==="face"&&faceContextFor(workshopPart);
+  editFaceArt.hidden=!face||!editableFaceHead(face.headId);
  }
  function showFigureWorkshop(id){
   if(!id||disposed)return false;
