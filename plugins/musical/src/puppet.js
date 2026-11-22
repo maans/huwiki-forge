@@ -164,17 +164,23 @@ function mount(o){
   }
   var root=lookup(activeRoot);if(root)row(root,0,1);
  }
- function layerField(part){
+ function layerField(part,advanced){
   var siblings=parts.filter(function(p){return p.parent===part.parent;});
   var current=siblings.indexOf(part);
-  var control=input(da?"Lag (1 = bagest)":ui("Layer (1 = back)"),current+1,"number",function(value){
+  function placeAt(value){
    if(!Number.isInteger(value)||value<1||value>siblings.length){control.value=String(current+1);return;}
    if(value===current+1)return;
    siblings.splice(current,1);siblings.splice(value-1,0,part);
    var index=0;
    parts=parts.map(function(p){return p.parent===part.parent?siblings[index++]:p;});
    writable();renderAll();
-  });
+  }
+  var control=input(da?"Lag (1 = bagest)":ui("Layer (1 = back)"),current+1,"number",placeAt,advanced);
+  if(siblings.length>1){
+   var moves=el(doc,"div","huw-puppet-presets",undefined,inspector);
+   button(moves,da?"Flyt bagud":ui("Move backward"),function(){placeAt(current);}).disabled=current===0;
+   button(moves,da?"Flyt fremad":ui("Move forward"),function(){placeAt(current+2);}).disabled=current===siblings.length-1;
+  }
   control.min=1;control.max=siblings.length;control.step=1;control.disabled=siblings.length===1;
  }
  function input(label,value,type,onchange,host){var wrapper=el(doc,"label","huw-puppet-field",undefined,host||inspector);el(doc,"span","",label,wrapper);
@@ -285,10 +291,14 @@ function mount(o){
    writable();renderTree();renderPreview();updateGuide();msg.textContent=say("Tegningen er tilføjet. Vælg Gem og tilbage.","Drawing added. Choose Save and back.");
   });
  }
+ var advancedOpen=false,turnMode=false;
  function renderInspector(){if(!inspector)return;inspector.textContent="";var p=selectedNode();if(!p){el(doc,"p","huw-puppet-hint",clip?L.choose:da?"Vælg objektet eller en af dets dele i visningen eller listen.":ui("Select the object or one of its parts in the preview or list."),inspector);return;}
   el(doc,"h3","",p.name||p.id,inspector);
+  var advanced=el(doc,"details","huw-puppet-advanced",undefined,inspector);
+  advanced.open=advancedOpen;advanced.ontoggle=function(){if(advanced.parentNode===inspector)advancedOpen=advanced.open;};
+  el(doc,"summary","",da?"Præcise mål og drejepunkt":ui("Precise values and pivot"),advanced);
   if(p.id!==activeRoot){
-   layerField(p);
+   layerField(p,advanced);
    var branch=descendants(parts,p.id);
    button(inspector,da?"Kopiér del":ui("Duplicate part"),function(){
     var ids=new Map();
@@ -325,10 +335,11 @@ function mount(o){
   select.onchange=function(){var last=p.parent||"";p.parent=select.value;if(Model.validate({parts:parts}).length){p.parent=last;msg.textContent=L.bad;select.value=last;return;}writable();renderAll();};
   var k=Engine.state(p,previewTime);
   [["x","X"],["y","Y"],["r",L.rot],["sx","Scale X"],["sy","Scale Y"]].forEach(function(item){
-   var field=item[0];input(item[1],r(n(k[field],field[0]==="s"?1:0)),"number",function(v){if(!Number.isFinite(v)||((field==="sx"||field==="sy")&&Math.abs(v)<=.01))return;applyKeys(p,field,v,previewTime);writable();renderPreview();renderInspector();});
+   var field=item[0];input(item[1],r(n(k[field],field[0]==="s"?1:0)),"number",function(v){if(!Number.isFinite(v)||((field==="sx"||field==="sy")&&Math.abs(v)<=.01))return;applyKeys(p,field,v,previewTime);writable();renderPreview();renderInspector();},advanced);
   });
-  el(doc,"strong","huw-puppet-section-title",L.pivot,inspector);
-  [["x","X"],["y","Y"]].forEach(function(item){input(item[1],n((p.pivot||{})[item[0]],0),"number",function(v){if(!Number.isFinite(v))return;p.pivot=p.pivot||{};p.pivot[item[0]]=v;writable();renderPreview();renderInspector();});});
+  el(doc,"strong","huw-puppet-section-title",L.pivot,advanced);
+  [["x","X"],["y","Y"]].forEach(function(item){input(item[1],n((p.pivot||{})[item[0]],0),"number",function(v){if(!Number.isFinite(v))return;p.pivot=p.pivot||{};p.pivot[item[0]]=v;writable();renderPreview();renderInspector();},advanced);});
+  inspector.appendChild(advanced);
   var visual=appearancePart(p),appearanceTitle=el(doc,"strong","huw-puppet-section-title",L.replace,inspector);appearanceTitle.dataset.puppetAppearanceTarget=visual.id;
   if(visual.type!=="group"&&visual.type!=="image"){
    [["fill",da?"Fyldfarve":ui("Fill color"),"#f0b457",da?"Uden fyld":ui("No fill")],["stroke",da?"Stregfarve":ui("Stroke color"),"#243549",da?"Uden streg":ui("No stroke")]].forEach(function(item){
@@ -375,6 +386,10 @@ function mount(o){
      // The existing whole-object wrapper remains onstage. Reuse its handle
      // so the editor's next paint does not wrap and transform the root twice.
      if(whole&&old.el.parentNode===whole)replacement._musicalWholeWrapper=whole;
+     // Cropped limbs reference images by fragment ID. Carry their definitions
+     // with this replacement so repeat edits retire the old definitions too.
+     var defs=next.svg.firstChild;
+     if(defs&&defs.localName==="defs")replacement.appendChild(defs);
      old.el.parentNode.replaceChild(replacement,old.el);
     }
     Object.keys(originalIds).forEach(function(id){delete current.nodes[id];});
@@ -426,7 +441,12 @@ function mount(o){
   button(bar,L.save,save).classList.add("huw-puppet-save");
   var layout=el(doc,"div","huw-puppet-layout",undefined,overlay);
   var left=el(doc,"aside","huw-puppet-sidebar",undefined,layout);el(doc,"h3","",clip?L.tree:da?"Objektets dele":ui("Object parts"),left);tree=el(doc,"div","huw-puppet-tree",undefined,left);
-  var center=el(doc,"main","huw-puppet-center",undefined,layout);canvas=el(doc,"div","huw-puppet-canvas",undefined,center);
+  var center=el(doc,"main","huw-puppet-center",undefined,layout);
+  var modes=el(doc,"div","huw-puppet-presets",undefined,center);
+  function mode(rotate){turnMode=rotate;moveTool.setAttribute("aria-pressed",String(!rotate));turnTool.setAttribute("aria-pressed",String(rotate));moveTool.disabled=!rotate;turnTool.disabled=rotate;}
+  var moveTool=button(modes,da?"Flyt del":ui("Move part"),function(){mode(false);});
+  var turnTool=button(modes,da?"Drej del":ui("Rotate part"),function(){mode(true);});mode(false);
+  canvas=el(doc,"div","huw-puppet-canvas",undefined,center);
   el(doc,"p","huw-puppet-hint",clip?L.hint:da?"Redigér objektets udseende og dele. Placering og drejning her ændrer hele animationsforløbet. Ændringer gemmes med Gem.":ui("Edit the object's appearance and parts. Position and rotation here adjust the whole animation path. Changes are saved with Save."),center);
   previewNotice=el(doc,"p","huw-puppet-hint huw-puppet-preview-notice","",center);previewNotice.hidden=true;previewNotice.setAttribute("role","status");
   var right=el(doc,"aside","huw-puppet-inspector",undefined,layout);el(doc,"h2","",L.settings,right);
@@ -459,9 +479,11 @@ function mount(o){
    var parent=target.parentNode,ctm=parent&&parent.getScreenCTM&&parent.getScreenCTM();if(!ctm)return;
    var point=preview.svg.createSVGPoint();function coords(ev){point.x=ev.clientX;point.y=ev.clientY;return point.matrixTransform(ctm.inverse());}
    var start=coords(e),before=clone(p),old=Engine.state(p,previewTime),startX=n(old.x,0),startY=n(old.y,0),startPX=n((p.pivot||{}).x,0),startPY=n((p.pivot||{}).y,0),isJoint=e.target.hasAttribute&&e.target.hasAttribute("data-cutout-joint"),moved=false,finished=false;
+   var startAngle=Math.atan2(start.y-startY,start.x-startX);
    if(target.setPointerCapture)target.setPointerCapture(e.pointerId);
    function move(ev){if(ev.pointerId!==e.pointerId)return;var at=coords(ev),dx=at.x-start.x,dy=at.y-start.y;if(!moved&&Math.hypot(dx,dy)<2)return;moved=true;
-    if(isJoint){p.pivot=p.pivot||{};p.pivot.x=r(startPX+dx);p.pivot.y=r(startPY+dy);}
+    if(turnMode){var angle=Math.atan2(at.y-startY,at.x-startX)-startAngle;applyKeys(p,"r",n(old.r,0)+Math.atan2(Math.sin(angle),Math.cos(angle))*180/Math.PI,previewTime);}
+    else if(isJoint){p.pivot=p.pivot||{};p.pivot.x=r(startPX+dx);p.pivot.y=r(startPY+dy);}
     else{applyKeys(p,"x",startX+dx,previewTime);applyKeys(p,"y",startY+dy,previewTime);}
     paintPreview();
    }

@@ -226,3 +226,24 @@ test('duplicate, mirror and reparent support multiple undo and redo steps before
  assert.deepEqual(saved.find(p=>p.id===copy).keys.map(k=>k.sx),[-1,-2]);
  assert.deepEqual(saved.find(p=>p.parent===copy).keys,hand.keys);
 });
+
+test('saving a Kenney-style cropped limb keeps the sprite on stage through repeated edits',()=>{
+ const root={id:'actor',type:'group'},arm={id:'arm',name:'Arm',parent:'actor',type:'image',imageData:'data:image/png;base64,AAAA',geo:{x:-10,y:0,w:20,h:20,crop:{x:0,y:0,w:10,h:10,sourceWidth:10,sourceHeight:20}},keys:[{t:0,x:20,y:20}]};
+ const h=harness({scenes:{Scene:scene([root,arm])},id:'arm'});
+ for(const angle of [15,30]){
+  change(field(h,'Drejning'),angle);h.save();
+  const stage=h.view.clips[0].view.nodes.arm,ref=stage.shape.firstChild.getAttribute('href');
+  assert.ok(h.view.svg.querySelector('[id="'+ref.slice(1)+'"]'),'the source referenced by the cropped limb must be mounted in the stage SVG');
+  assert.equal(stage.part.keys[0].r,angle);h.api.open('arm');
+ }
+});
+
+test('turning a limb by dragging rotates around its joint and supports undo',()=>{
+ const root={id:'actor',type:'group'},arm={id:'arm',type:'rect',parent:'actor',keys:[{t:0,x:0,y:0,r:0}]};
+ const h=harness({scenes:{Scene:scene([root,arm])},id:'arm'});
+ h.overlay.querySelectorAll('button').find(b=>b.textContent==='Drej del').click();
+ const target=h.node('arm');target.firstChild.dispatch('pointerdown',{pointerId:3,clientX:20,clientY:0});
+ target.dispatch('pointermove',{pointerId:3,clientX:0,clientY:20});target.dispatch('pointerup',{pointerId:3,clientX:0,clientY:20});
+ assert.equal(Number(field(h,'Drejning').value),90);h.overlay.querySelector('.huw-puppet-undo').click();
+ assert.equal(Number(field(h,'Drejning').value),0);
+});
