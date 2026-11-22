@@ -30,6 +30,7 @@ Projects.prototype.render=function(parent,next){this.parentDomNode=parent;this.c
  this._localize=function(){
   ui=Language.translator(self.wiki);
   var da=isDanish(self.wiki);
+  picker.setAttribute('aria-label',da?'Startscene':'Starting scene');blank.textContent=da?'Tom scene':'Blank stage';
   input.placeholder=da?'Navn på din forestilling':ui('Name of your show');
   input.setAttribute('aria-label',input.placeholder);
   button.textContent=templateTitle?(da?'Brug som ny animation':ui('Use as new animation')):(da?'+ Ny forestilling':ui('+ New show'));

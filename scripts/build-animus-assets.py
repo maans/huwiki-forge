@@ -143,6 +143,8 @@ def package(name,title,entries,scene_name):
    if not parent:
     if e['category']=='figure':part['keys']=[pose(260+figure_index*230,470)];figure_index+=1
     elif e['category']=='prop':part['keys']=[pose(500,320)]
+   if e['collection']=='kenney-toon' and part.get('name','').startswith('Elbow front'):
+    first=part['keys'][0];part['keys']=[{**first,'t':t,'r':angle} for t,angle in [(0,0),(4,-35),(8,0),(12,-35),(16,0)]]
    scene['parts'].append(part)
  template=prefix+'/template';tiddlers[template]=dict(title=template,type='application/json',tags='$:/tags/AniMus/Template',**{'cutout-project':'yes','cutout-id':scene['id'],'animus-template-name':title},text=json.dumps(scene,ensure_ascii=False))
  # Keep the entry gallery native to TiddlyWiki; adding to a scene uses the shared picker.
