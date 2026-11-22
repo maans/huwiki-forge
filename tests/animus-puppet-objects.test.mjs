@@ -258,7 +258,16 @@ test('workshop-only fitted joints bind artwork and produce editable travelling s
  const body={id:'body',parent:'doll',type:'rect',geo:{x:-50,y:-90,w:100,h:190}};
  const h=harness({scenes:{Scene:scene([root,body])},id:'body',withEditor:true,time:0});
  const button=(host,title)=>{const b=host.querySelectorAll('button').find(b=>b.textContent===title);assert.ok(b,title);return b;};
- button(h.overlay,'Vis skelet').click();
+ const canvas=h.canvas.firstChild;
+ const toggle=button(h.overlay,'Vis skelet');
+ toggle.click();
+ assert.equal(h.canvas.firstChild,canvas);
+ assert.equal(toggle.textContent,'Skjul skelet');
+ assert.equal(h.canvas.querySelectorAll('[data-rig-joint]').length,15);
+ toggle.click();
+ assert.equal(toggle.textContent,'Vis skelet');
+ assert.equal(h.canvas.querySelectorAll('[data-rig-joint]').length,0);
+ toggle.click();
  const handle=h.canvas.querySelector('[data-rig-joint="handR"]');assert.ok(handle);
  handle.dispatch('pointerdown');h.canvas.dispatch('pointermove',{clientX:120,clientY:150});h.canvas.dispatch('pointerup');
  button(h.overlay,'Sæt fast på skelet').click();

@@ -126,6 +126,11 @@ function mount(o){
   function up(ev){if(ev.pointerId===pointer)finish(true);}function cancel(ev){if(!ev||ev.pointerId===pointer)finish(false);}
   cancelInteraction=cancel;canvas.addEventListener("pointermove",drag);canvas.addEventListener("pointerup",up);canvas.addEventListener("pointercancel",cancel);canvas.addEventListener("lostpointercapture",cancel);
  }
+ function setRigVisible(visible){
+  rigVisible=visible;
+  rigToggle.setAttribute("aria-pressed",String(visible));
+  rigToggle.textContent=visible?(da?"Skjul skelet":"Hide skeleton"):(da?"Vis skelet":"Show skeleton");
+ }
  function toggleRig(){
   var root=rigRoot();if(!root.animusRig){
    var bb=preview.nodes[root.id].el.getBBox();if(!bb.width||!bb.height)return;
@@ -142,7 +147,7 @@ function mount(o){
      var foot=tip.matrixTransform(toRoot.multiply(preview.nodes[item.part.id].el.getScreenCTM()));root.animusRig["foot"+(i?"L":"R")]={x:foot.x,y:foot.y};}
    });});writable();
   }
-  rigVisible=!rigVisible;bindTarget="";rigToggle.setAttribute("aria-pressed",String(rigVisible));renderAll();
+  bindTarget="";setRigVisible(!rigVisible);drawRig();renderInspector();
  }
  function reconnect(p,id){
   try{skeleton().reparent(parts,p,id,previewTime);}catch(err){msg.textContent=da?"Forbindelsen kan ikke bevare delens form ved denne skalering.":"This connection cannot preserve the current shape.";return false;}
@@ -356,12 +361,12 @@ function mount(o){
   el(doc,"summary","",da?"Præcise mål og drejepunkt":ui("Precise values and pivot"),advanced);
   if(p.id!==activeRoot){
    layerField(p,advanced);
-   button(inspector,da?"Sæt fast på en del":"Attach to a part",function(){attachPart=p.id;bindTarget="";rigVisible=false;rigToggle.setAttribute("aria-pressed","false");drawRig();msg.textContent=da?"Tryk på den del, der skal bære den valgte del.":"Tap the part that should carry the selected part.";});
+   button(inspector,da?"Sæt fast på en del":"Attach to a part",function(){attachPart=p.id;bindTarget="";setRigVisible(false);drawRig();msg.textContent=da?"Tryk på den del, der skal bære den valgte del.":"Tap the part that should carry the selected part.";});
 
    if(rigRoot().animusRig){
     var joint=skeleton().joints.find(function(j){return j[0]===p.animusJoint;});
     if(joint)el(doc,"span","",joint[da?4:5],inspector);
-    button(inspector,da?"Sæt fast på skelet":"Attach to skeleton",function(){rigVisible=true;rigToggle.setAttribute("aria-pressed","true");bindTarget=p.id;attachPart="";drawRig();msg.textContent=da?"Tryk på det led, delen skal følge.":"Tap the joint this part should follow.";});
+    button(inspector,da?"Sæt fast på skelet":"Attach to skeleton",function(){setRigVisible(true);bindTarget=p.id;attachPart="";drawRig();msg.textContent=da?"Tryk på det led, delen skal følge.":"Tap the joint this part should follow.";});
    }
    if(p.parent!==activeRoot||p.animusJoint)button(inspector,da?"Løsn del":"Detach part",function(){
     if(p.parent!==activeRoot&&!reconnect(p,activeRoot))return;
@@ -552,7 +557,7 @@ function mount(o){
   var modes=el(doc,"div","huw-puppet-presets",undefined,center);
   function mode(rotate){turnMode=rotate;moveTool.setAttribute("aria-pressed",String(!rotate));turnTool.setAttribute("aria-pressed",String(rotate));moveTool.disabled=!rotate;turnTool.disabled=rotate;}
   var moveTool=button(modes,da?"Flyt del":ui("Move part"),function(){mode(false);});
-  rigVisible=false;bindTarget="";attachPart="";rigToggle=button(modes,da?"Vis skelet":"Show skeleton",toggleRig);rigToggle.setAttribute("aria-pressed","false");
+  bindTarget="";attachPart="";rigToggle=button(modes,"",toggleRig);setRigVisible(false);
   var turnTool=button(modes,da?"Drej del":ui("Rotate part"),function(){mode(true);});mode(false);
   canvas=el(doc,"div","huw-puppet-canvas",undefined,center);
   el(doc,"p","huw-puppet-hint",clip?L.hint:da?"Redigér objektets udseende og dele. Placering og drejning her ændrer hele animationsforløbet. Ændringer gemmes med Gem.":ui("Edit the object's appearance and parts. Position and rotation here adjust the whole animation path. Changes are saved with Save."),center);
