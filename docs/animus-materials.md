@@ -30,3 +30,17 @@ Startpakkerne **Kenney Starter** og **Den græske havn** indeholder hver en redi
 Version `0.13.0-beta.21-assets.1` passed 652 portable source tests (nine environment-specific tests skipped), catalogue/package integrity checks, and browser acceptance for template copying, keyboard/pointer layer movement, whole-background filtering and individual puppet import. The catalogue contains 1,142 entries in five collections.
 
 Verified workflow: https://github.com/maans/huwiki-forge/actions/runs/45018044262
+
+## Folded tracks and independent productions
+
+The timeline shows complete root figures and props in front-to-back order. Expand a root to create its face, scene motion and child-part rows, and expand a limb to reveal its own children. Reorder root handles to change paint order while retaining their complete SVG wrappers and all local animation keys. `Layers ↕` is also available in the fixed timeline toolbar. The recordings lane initially renders one SVG overview; individual editing controls exist only when expanded.
+
+The AniMus Edition is a small workshop with a blank/ Kenney template selector. The Greek harbour starter and the four full productions open separate demo wikis through ordinary links. They do not import their data into an existing project. The Forge homepage shows the main AniMus card; the original Turn Around and Theseus demo URLs remain valid.
+
+Production material metadata is indexed separately from the complete shows. Selecting one item downloads its model and image dependencies. Pictures use small gallery previews. The audio category contains individually downloadable CC0 Kenney recordings, with provenance and duration, and places them on the existing audio effects lane. Speech recordings, songs, ABC scores and built-in MIDI effects are not catalogued as downloadable sound files.
+
+## Foldbare spor og særskilte forestillinger
+
+Tidslinjen viser hele figurer og rekvisitter, forrest øverst. Fold en række ud for at redigere ansigt, bevægelse og kropsdele. Træk i grebet for at flytte hele gruppen mellem lagene, eller brug `Lag ↕` ved tidslinjen. Indtaling og lydfiler er sammenfoldet fra starten; redigerbare klip bygges først, når sporet åbnes.
+
+AniMus starter som et enkelt værksted. Kortene til de store forestillinger åbner hver sin wiki. Materialebiblioteket henter derimod én valgt figur, rekvisit, baggrund eller audiolydeffekt ad gangen. Taleoptagelser, sange og musiknumre er ikke med i kataloget; MIDI-effekterne er fortsat indbygget i AniMus.

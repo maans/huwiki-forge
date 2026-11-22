@@ -15,13 +15,14 @@ let browser,page;const errors=[];try{
  browser=await chromium.launch({headless:true,...(process.env.CHROME_BIN?{executablePath:process.env.CHROME_BIN}:{})});
  page=await browser.newPage({viewport:{width:1280,height:900}});page.on('pageerror',e=>errors.push(e.message));
  const catalogue=JSON.parse(await read('assets/animus/catalog.json'));
+ await page.route('https://forge.xn--mns-ula.dk/assets/animus/**',async route=>{const path=new URL(route.request().url()).pathname.slice(1);try{await route.fulfill({contentType:path.endsWith('.wav')?'audio/wav':path.endsWith('.json')?'application/json':'image/png',headers:{'access-control-allow-origin':'*'},body:await readFile(new URL(path,root))});}catch{await route.abort();}});
  await page.route('https://forge.xn--mns-ula.dk/assets/animus/catalog.json',r=>r.fulfill({contentType:'application/json',headers:{'access-control-allow-origin':'*'},body:JSON.stringify(catalogue)}));
  await page.goto(startUrl);await page.getByRole('combobox',{name:'Starting scene',exact:true}).waitFor();
  const before=await page.evaluate(t=>$tw.wiki.getTiddlerText(t),templateTitle);
  await page.getByRole('combobox',{name:'Starting scene',exact:true}).selectOption(templateTitle);
  await page.getByRole('textbox',{name:'Name of your show',exact:true}).fill('My starter animation');await page.getByRole('button',{name:'+ New show',exact:true}).click();
  const editor=page.locator('.huw-musical--workspace').last();await editor.waitFor();await editor.locator('.huw-musical-timeline-toolbar .huw-musical-layers-button').waitFor();
- const created=await page.evaluate(()=>{const f=$tw.wiki.getTiddler('My starter animation').fields;return {stage:JSON.parse($tw.wiki.getTiddlerText(f['animus-scene'])).scenes[0].source};});
+ const created=await page.evaluate(()=>{const f=$tw.wiki.getTiddler('My starter animation').fields;return {film:f['animus-scene'],stage:JSON.parse($tw.wiki.getTiddlerText(f['animus-scene'])).scenes[0].source};});
  assert.equal(await page.evaluate(t=>$tw.wiki.getTiddlerText(t),templateTitle),before,'template stays unchanged');
  console.log('PASS template creates an independent editable animation');
  const groupRows=editor.locator('.huw-musical-tracks [data-layer-id]');assert(await groupRows.count()>5);
@@ -50,6 +51,14 @@ let browser,page;const errors=[];try{
  await materials.getByRole('combobox',{name:'Category',exact:true}).selectOption('figure');await materials.getByRole('searchbox').fill('Female adventurer');const card=materials.locator('.huw-asset-card').filter({hasText:'Female adventurer'});await card.getByRole('button',{name:'Get and insert',exact:true}).click();await materials.waitFor({state:'detached'});
  await page.locator('.huw-musical--workspace').last().waitFor();saved=await page.evaluate(t=>JSON.parse($tw.wiki.getTiddlerText(t)),created.stage);assert(saved.parts.length>snapshot.parts.length);
  console.log('PASS materials filters include whole backgrounds and import a single reusable puppet offline');
+ await editor.locator('[data-menu=workshops]').click();await editor.locator('.huw-musical-assets-button').click();await materials.waitFor();
+ await materials.getByRole('combobox',{name:'Category',exact:true}).selectOption('sound');
+ const sound=materials.locator('.huw-asset-card').filter({hasText:'Wood creak'}).first();await sound.getByRole('button',{name:'▶ Listen',exact:true}).click();
+ await sound.getByRole('button',{name:'Get and insert',exact:true}).click();await materials.waitFor({state:'detached'});
+ const audioResult=await page.evaluate(t=>{const film=JSON.parse($tw.wiki.getTiddlerText(t)),c=film.musical.audioClips.at(-1);return {clip:c,media:$tw.wiki.getTiddler(c.asset).fields};},created.film);
+ assert.equal(audioResult.clip.kind,'effects');assert.equal(audioResult.media.type,'audio/wav');assert(audioResult.media.text.length>44);
+ const audioRow=editor.locator('[data-track-id="audio-lane"]');assert.equal(await audioRow.locator('.huw-musical-recorded-clip').count(),0);
+ console.log('PASS real audio effect preview and single-file import, stored for offline playback');
  await page.screenshot({path:new URL('editor.png',out).pathname});assert.deepEqual(errors,[]);console.log('PASS no browser runtime errors');
- await writeFile(new URL('result.json',out),JSON.stringify({checks:5,errors},null,2));
+ await writeFile(new URL('result.json',out),JSON.stringify({checks:7,errors},null,2));
 }catch(error){if(page){await page.screenshot({path:new URL('failure.png',out).pathname}).catch(()=>{});console.error('PAGE:',(await page.locator('body').innerText()).slice(0,5000));console.error('ERRORS:',JSON.stringify(errors));}throw error;}finally{if(browser)await browser.close();server.close();}
