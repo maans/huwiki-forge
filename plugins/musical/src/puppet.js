@@ -137,11 +137,29 @@ function mount(o){
   if(!previewFrame)fitPreview();else setPreviewFrame();
  }
  function renderTree(){if(!tree)return;tree.textContent="";
-  var byId={};parts.forEach(function(p){byId[p.id]=p;});
-  parts.forEach(function(p){var depth=0,up=p.parent,visited={};while(up&&byId[up]&&!visited[up]){depth++;visited[up]=true;up=byId[up].parent;}
-   var b=el(doc,"button","huw-puppet-part",p.name||p.id,tree);b.type="button";b.style.paddingLeft=(12+Math.min(7,depth)*14)+"px";
+  var children=new Map();
+  parts.forEach(function(p){if(!children.has(p.parent))children.set(p.parent,[]);children.get(p.parent).push(p);});
+  function row(p,depth,rank){
+   var b=el(doc,"button","huw-puppet-part",(depth?rank+" · ":"")+(p.name||p.id),tree);
+   b.type="button";b.style.paddingLeft=(12+Math.min(7,depth)*14)+"px";
    b.title=p.id;b.dataset.partId=p.id;b.classList.toggle("is-active",selected===p.id);b.onclick=function(){choose(p.id);};
-  });}
+   (children.get(p.id)||[]).forEach(function(child,index){row(child,depth+1,index+1);});
+  }
+  var root=lookup(activeRoot);if(root)row(root,0,1);
+ }
+ function layerField(part){
+  var siblings=parts.filter(function(p){return p.parent===part.parent;});
+  var current=siblings.indexOf(part);
+  var control=input(da?"Lag (1 = bagest)":ui("Layer (1 = back)"),current+1,"number",function(value){
+   if(!Number.isInteger(value)||value<1||value>siblings.length){control.value=String(current+1);return;}
+   if(value===current+1)return;
+   siblings.splice(current,1);siblings.splice(value-1,0,part);
+   var index=0;
+   parts=parts.map(function(p){return p.parent===part.parent?siblings[index++]:p;});
+   writable();renderAll();
+  });
+  control.min=1;control.max=siblings.length;control.step=1;control.disabled=siblings.length===1;
+ }
  function input(label,value,type,onchange,host){var wrapper=el(doc,"label","huw-puppet-field",undefined,host||inspector);el(doc,"span","",label,wrapper);
   var field=el(doc,"input","",undefined,wrapper);field.type=type;if(type==="checkbox")field.checked=!!value;else field.value=value===undefined?"":String(value);
   field.onchange=function(){onchange(type==="checkbox"?field.checked:type==="number"?Number(field.value):field.value);};return field;}
@@ -253,6 +271,7 @@ function mount(o){
  function renderInspector(){if(!inspector)return;inspector.textContent="";var p=selectedNode();if(!p){el(doc,"p","huw-puppet-hint",clip?L.choose:da?"Vælg objektet eller en af dets dele i visningen eller listen.":ui("Select the object or one of its parts in the preview or list."),inspector);return;}
   el(doc,"h3","",p.name||p.id,inspector);
   if(p.id!==activeRoot){
+   layerField(p);
    var branch=descendants(parts,p.id);
    var label=da?"Slet del":ui("Delete part");
    if(branch.length>1)label+=da?" med underdele ("+branch.length+")":" ("+branch.length+")";

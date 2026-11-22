@@ -190,3 +190,17 @@ test('deleting a shoulder removes its descendants only after saving',()=>{
  assert.deepEqual(h.save().parts,[root,other]);
  for(const id of ['shoulder','elbow','hand'])assert.equal(h.view.clips[0].view.nodes[id],undefined);
 });
+
+test('placing the shoulder above the body moves its subtree and preserves animated joints',()=>{
+ const root={id:'actor',type:'group'},arm={id:'shoulder',parent:'actor',type:'group'},hand={...plain(horse),id:'hand',parent:'shoulder'},body={id:'body',parent:'actor',type:'circle'},head={id:'head',parent:'actor',type:'circle'};
+ const h=harness({scenes:{Scene:scene([root,arm,hand,body,head])},id:'shoulder'});
+ change(field(h,'Lag (1 = bagest)'),2);
+ assert.deepEqual(h.records,h.initial);
+ const saved=h.save().parts;
+ assert.deepEqual(saved.filter(p=>p.parent==='actor'),[body,arm,head]);
+ assert.deepEqual(saved.find(p=>p.id==='hand'),hand);
+ const nodes=h.view.clips[0].view.nodes;
+ assert.equal(nodes.hand.el.parentNode,nodes.shoulder.el);
+ const drawn=Array.from(nodes.actor.el.children);
+ assert.ok(drawn.indexOf(nodes.shoulder.el)>drawn.indexOf(nodes.body.el));
+});
