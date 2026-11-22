@@ -194,3 +194,33 @@ test('a cropped limb paints the same pixels on the stage and in the puppet works
   assert.deepEqual(pixels,[[255,0,0,255],[0,0,255,255],[0,255,0,255],[0,0,255,255]],selector);
  }
 });
+
+test('a fitted workshop preview leaves the skeleton button reachable by touch in split view',
+ {skip:process.env.ANIMUS_WEBKIT_TESTS!=='1',timeout:30000},async t=>{
+ const {webkit,devices}=await import('playwright-core');
+ const browser=await webkit.launch();
+ t.after(()=>browser.close());
+ const page=await browser.newPage(devices['iPad Pro 11 landscape']);
+ const styles=await readFile(new URL('../plugins/musical/src/styles.css',import.meta.url),'utf8');
+ // The stage-sized transparent background extends above a zoomed-in viewBox.
+ await page.setContent(`<meta name="viewport" content="width=device-width,initial-scale=1">
+ <style>${styles}.huw-puppet-center{width:min(94vw,550px);height:580px}</style>
+ <div class="huw-puppet-workshop"><main class="huw-puppet-center">
+ <div class="huw-puppet-presets"><button>Flyt del</button><button>Vis skelet</button><button>Drej del</button></div>
+ <div class="huw-puppet-canvas"><svg viewBox="377 141 246 351">
+ <rect width="800" height="450" fill="transparent"/><circle cx="490" cy="350" r="50"/></svg></div>
+ </main></div>`);
+ const button=page.getByRole('button',{name:'Vis skelet'});
+ await button.evaluate(b=>b.addEventListener('click',()=>b.dataset.clicked='yes'));
+ for(const width of [700,1100]){
+  await page.setViewportSize({width,height:850});
+  await button.evaluate(b=>delete b.dataset.clicked);
+  const receivesTap=await button.evaluate(b=>{
+   const r=b.getBoundingClientRect();
+   return document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)===b;
+  });
+  assert.ok(receivesTap,'the SVG must not cover the toolbar at width '+width);
+  await button.tap();
+  assert.equal(await button.getAttribute('data-clicked'),'yes');
+ }
+});

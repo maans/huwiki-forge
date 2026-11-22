@@ -8,7 +8,7 @@ import {Matrix,svgDocument} from './helpers/svg-test-dom.mjs';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 const cutout=JSON.parse(JSON.parse(await read('plugins/cutout/dist/plugin.json')).text).tiddlers;
 const directEditSource=await read('plugins/cutout/src/direct-edit.js');
-const sources=Object.fromEntries(await Promise.all(['playlist','motion','sfx','editor','puppet','track-preview','effects-library'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
+const sources=Object.fromEntries(await Promise.all(['playlist','motion','sfx','editor','puppet','track-preview','effects-library','skeleton'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
 const plain=value=>JSON.parse(JSON.stringify(value));
 class Tiddler {constructor(...items){this.fields=Object.assign({},...items.filter(Boolean).map(i=>i.fields||i));}}
 function wiki(initial){const records=plain(initial),writes=[];return {records,writes,getTiddler:title=>records[title]?new Tiddler(records[title]):null,getTiddlerText:(title,fallback='')=>records[title]?.text??fallback,getTiddlers:()=>Object.keys(records),each(fn){for(const [title,fields] of Object.entries(records))fn(new Tiddler(fields),title);},addTiddler(t){records[t.fields.title]=plain(t.fields);writes.push(t.fields.title);},getModificationFields:()=>({}),generateNewTitle:title=>title};}
@@ -245,3 +245,40 @@ test('film-part appearance editing stays on the film even when scene sources reu
  const saved=JSON.parse(h.w.records.Film.text).parts.find(part=>part.id==='film-text');assert.equal(saved.fill,'#aabbcc');assert.equal(saved.text,'Updated whole film');assert.equal(h.w.records.First.text,firstBefore);assert.equal(h.w.records.Second.text,secondBefore);assert.deepEqual(h.w.writes,['Film','Film']);assert.equal(h.time,12);
 });
 
+
+test('fit a three-cycle walk between figure keys, open the block and retime it without losing placement',()=>{
+ const records=editorHarness().w.records,stage=JSON.parse(records.Scene.text),film=JSON.parse(records.Film.text);
+ const rig=modules().load('$:/plugins/huwiki/musical/skeleton.js');
+ stage.parts[0].animusRig=rig.template({x:-30,y:-100,width:60,height:100});
+ stage.parts.find(p=>p.id==='arm').animusJoint='shoulderL';
+ film.musical.figureTransforms={actor:{keys:[pose(0),pose(3.06,{x:130})]}};
+ records.Scene.text=JSON.stringify(stage);records.Film.text=JSON.stringify(film);
+ const h=editorHarness(records),button=name=>h.host.querySelectorAll('button').find(b=>b.textContent===name);
+ h.options.seek(0);h.editor.selectFigure('actor');
+ const group=h.host.querySelector('.huw-musical-rig-controls'),selects=group.querySelectorAll('select');
+ selects[3].value='3';selects[3].dispatch('change');
+ assert.equal(Number(group.querySelector('input').value),3.3);
+ button('Fit to next keyframe').click();
+ assert.equal(Number(group.querySelector('input').value),3.06);assert.equal(selects[1].value,'0');
+ button('Insert at playhead').click();
+ const root=()=>JSON.parse(h.w.records.Scene.text).parts[0];
+ close(root().animusMoves[0].end,3.06);
+ assert.equal(root().keys.length,97);
+ assert.ok(Math.abs(root().keys.at(-1).x-root().keys[0].x)<.00001);
+ let selection;h.options.onSelect=(track,open)=>{selection={track,open};};
+ h.host.querySelector('[data-track-id="figure:actor"] .huw-musical-lane').dispatch('contextmenu');
+ assert.equal(selection.open,true);assert.equal(selection.track.part,'actor');
+ const lane=()=>h.host.querySelector('[data-track-id="figure:actor"] .huw-musical-lane');
+ let pending;
+ h.doc.defaultView.setTimeout=callback=>{pending=callback;return 1;};
+ h.doc.defaultView.clearTimeout=()=>{pending=null;};
+ selection=null;lane().dispatch('pointerdown',{pointerType:'touch'});
+ lane().dispatch('pointermove',{clientX:25});assert.equal(pending,null);assert.equal(selection,null);
+ lane().dispatch('pointerdown',{pointerType:'touch'});pending();assert.equal(selection.open,true);
+ const block=h.host.querySelector('[data-track-id="figure:actor"] .huw-musical-motion-clip');
+ block.click();assert.equal(selection.open,true);
+ const edit=h.host.querySelector('.huw-musical-rig-controls');
+ edit.querySelector('input').value='4';button('Save duration').click();
+ assert.equal(root().animusMoves[0].end,4);close(root().keys.at(-1).t,4);
+ assert.deepEqual(plain(h.data.musical.figureTransforms.actor.keys),film.musical.figureTransforms.actor.keys);
+});

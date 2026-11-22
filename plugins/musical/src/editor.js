@@ -352,7 +352,7 @@ function attach(o){
   if(t.kind==="sfx"&&o.onFxChange)o.onFxChange(m.sfx);
   if(t.kind==='audio'&&o.onAudioChange)o.onAudioChange(m.audioClips);
  }
- function choose(id,key){choice={id:id,key:key};var t=track();
+ function choose(id,key,properties,moveId){choice={id:id,key:key,moveId:moveId};var t=track();
   if(t&&t.kind==='figure')ensureFigureTrack(t.part);
   var active=currentStage(),id=t&&(t.kind==='face'?t.actorId:t.kind==='animation'?t.target:t.part),seen={};
   if(id&&t.kind!=='figure'){var p=(active.scene.parts||[]).find(function(p){return p.id===id;});
@@ -361,7 +361,7 @@ function attach(o){
   }
   if(t.kind==="animation")expandedClipId=t.id;
   if(t.kind==="motion"||t.kind==="accent")expandedClipId="animation:"+t.clipId;
-  draw();if(o.onSelect)o.onSelect(track());}
+  draw();if(o.onSelect)o.onSelect(track(),properties);}
  function clearSelection(){var hadSelection=!!choice.id;choice={id:"",key:-1};if(detailReturn){detailReturn.id="";detailReturn.key=-1;}draw();if(o.onSelect)o.onSelect(null);return hadSelection;}
  function selected(){var t=track();return !t?null:t.kind==="captions"?captionCues[choice.key]:t.kind==="song"?m.songs[t.index]:t.kind==='audio'?m.audioClips[t.index]:t.kind==="animation"?animation(t):keys(t)[choice.key];}
  function faceContext(id){
@@ -679,6 +679,39 @@ function attach(o){
    block.onpointerup=function(){finish(false);};block.onpointercancel=function(){finish(true);};
   };
  }
+ // Remember a completed hold across the redraw that replaces the pressed row.
+ var heldPointer=false,cancelHold=null;
+ rows.addEventListener("click",function(event){
+  if(heldPointer){heldPointer=false;event.preventDefault();event.stopPropagation();}
+ },true);
+ rows.addEventListener("pointerdown",function(){heldPointer=false;},true);
+ function installPropertyGesture(row,open){
+  var controls="input,select,.huwrep-order-handle,.huw-musical-group-fold,.huw-musical-preview-toggle";
+  row.oncontextmenu=function(event){
+   if(event.target.closest(controls))return;
+   event.preventDefault();event.stopPropagation();
+   if(cancelHold)cancelHold();
+   if(!heldPointer)open(event.target);
+  };
+  row.onpointerdown=function(event){
+   if(cancelHold)cancelHold();
+   if(event.button!==0||event.target.closest(controls))return;
+   if(event.target.closest("button")&&!event.target.closest("[data-rig-move]"))return;
+   var target=event.target,x=event.clientX,y=event.clientY;
+   var timer=doc.defaultView.setTimeout(function(){
+    cancel();if(row.isConnected){heldPointer=true;open(target);}
+   },550);
+   function cancel(){
+    doc.defaultView.clearTimeout(timer);
+    ["pointerup","pointercancel","pointerleave"].forEach(function(type){row.removeEventListener(type,cancel);});
+    row.removeEventListener("pointermove",move);cancelHold=null;
+   }
+   function move(e){if(Math.hypot(e.clientX-x,e.clientY-y)>7)cancel();}
+   cancelHold=cancel;
+   ["pointerup","pointercancel","pointerleave"].forEach(function(type){row.addEventListener(type,cancel);});
+   row.addEventListener("pointermove",move);
+  };
+ }
  function rigControls(t){
   var ctx=partContext(t.part,o.view,playhead,[],true,0),root=ctx&&ctx.view.nodes[t.part].part;
   if(!root||!root.animusRig||!ctx.active)return;
@@ -693,17 +726,44 @@ function attach(o){
   var tempo=dropdown("Tempo",[["1",da?"Normalt":"Normal"],["0.75",da?"Langsomt":"Slow"],["1.5",da?"Hurtigt":"Fast"]]);
   var count=dropdown(da?"Gentagelser":"Repeats",[1,2,3,4,6,8].map(function(v){return [v,v];}));
   var track={kind:scene===film?"film-part":"part",part:t.part};
+  var durationLabel=el(doc,"label","",da?"Samlet varighed (sek.) ":"Total duration (sec) ",group);
+  var duration=el(doc,"input","huw-rig-duration",undefined,durationLabel);
+  duration.type="number";duration.min=".01";duration.step="any";
+  var clockRate=ctx.path.reduce(function(rate,edge){return rate*num(edge.settings.speed,1);},1);
+  function presetDuration(){
+   duration.value=String(round(Number(count.value)*rig.cycles[kind.value][2]/Number(tempo.value)/clockRate));
+  }
+  // Use the authored figure transform for travel between two positions.
+  // The rig then supplies the gait without moving the figure a second time.
+  var fit=el(doc,"button","",da?"Til næste kontrolpunkt":"Fit to next keyframe",group);fit.type="button";
+  function nextKey(){return keys(t).find(function(key){return key.t>playhead+1e-6;});}
+  fit.onclick=function(){
+   var next=nextKey();
+   if(!next){status.textContent=da?"Der skal være et senere kontrolpunkt på figurens spor.":"Add a later keyframe on the figure track.";return;}
+   duration.value=String(round(next.t-playhead));dir.value="0";removePreview();
+  };
+  presetDuration();
+  function motionRate(){
+   var seconds=Number(duration.value);
+   if(!Number.isFinite(seconds)||seconds<.01||!(clockRate>0)){
+    status.textContent=da?"Vælg en positiv varighed i en fremadgående scene.":"Choose a positive duration in a forward-playing scene.";
+    return 0;
+   }
+   return Number(count.value)*rig.cycles[kind.value][2]/(seconds*clockRate);
+  }
   var tryButton=el(doc,"button","",da?"Prøv bevægelsen":"Preview motion",group);tryButton.type="button";
   var sampleView=el(doc,"div","huw-rig-motion-preview",undefined,group);
   function removePreview(){sampleView.textContent="";}
-  kind.onchange=dir.onchange=tempo.onchange=count.onchange=removePreview;
+  kind.onchange=tempo.onchange=count.onchange=function(){presetDuration();removePreview();};
+  dir.onchange=duration.oninput=removePreview;
   tryButton.onclick=function(){
    removePreview();var ids=new Set([root.id]),members=[root];
    for(var i=0;i<members.length;i++)scene.parts.forEach(function(p){if(p.parent===members[i].id&&!ids.has(p.id)){ids.add(p.id);members.push(p);}});
    var now=partContext(t.part,o.view,playhead,[],true,0);if(!now||!now.active)return;
    var copy=members.map(function(p){return Object.assign({},p,{keys:[Object.assign({t:0},Engine.state(p,now.time))]});});
-   var span=rig.cycles[kind.value][2]/Number(tempo.value),data;
-   try{data=rig.sequence(copy,copy[0],0,kind.value,dir.value==="-1"?-1:1,1,span+.001,dir.value==="0",Number(tempo.value));}
+   var rate=motionRate();if(!rate)return;
+   var span=rig.cycles[kind.value][2]/rate,data;
+   try{data=rig.sequence(copy,copy[0],0,kind.value,dir.value==="-1"?-1:1,1,span+.001,dir.value==="0",rate);}
    catch(err){status.textContent=da?"Kontrollér leddene og sæt kropsdelene fast på skelettet.":"Check the joints and attach artwork to the rig.";return;}
    data.forEach(function(keys,p){p.keys=keys;});
    var view=Engine.build(doc,o.wiki,{version:1,width:scene.width,height:scene.height,duration:span,parts:copy,background:"transparent"},false);
@@ -717,8 +777,11 @@ function attach(o){
   var add=el(doc,"button","",da?"Indsæt ved tidsmarkøren":"Insert at playhead",group);add.type="button";
   add.onclick=function(){
    var now=partContext(t.part,o.view,playhead,[],true,0);if(!now||now.view!==ctx.view||!now.active)return;
-   var at=now.time,type=kind.value,cycles=Number(count.value),data;
-   try{data=rig.sequence(scene.parts,root,at,type,dir.value==="-1"?-1:1,cycles,scene.duration,dir.value==="0",Number(tempo.value));}
+   var at=now.time,type=kind.value,cycles=Number(count.value),rate=motionRate(),data;
+   if(!rate)return;
+   var localEnd=at+cycles*rig.cycles[type][2]/rate;
+   if(!withinScene(now,playhead,localEnd,Number(duration.value)))return;
+   try{data=rig.sequence(scene.parts,root,at,type,dir.value==="-1"?-1:1,cycles,scene.duration,dir.value==="0",rate);}
    catch(err){var reasons={duration:da?"Bevægelsen går ud over scenens slutning.":"Movement extends past the scene.",unbound:da?"Sæt først en kropsdel fast på skelettet i dukkeværkstedet.":"Attach artwork to the skeleton first.",overlap:da?"Der er allerede nøglebilleder her. Vælg et ledigt tidsrum.":"This range contains keyframes. Choose a free range."};status.textContent=reasons[err.message]||(da?"Denne skalering kan ikke bevares.":"Cannot preserve this scale.");return;}
    var id="rig-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7),prior={};
    data.forEach(function(keys,p){
@@ -727,9 +790,47 @@ function attach(o){
     if(at>0&&!old.some(function(k){return k.t<=at;}))keys.unshift(Object.assign({t:0},Engine.state(p,0)));
     p.keys=keep.concat(keys.map(function(k){return Object.assign({},k,{animusMove:id});})).sort(function(a,b){return a.t-b.t;});
    });
-   (root.animusMoves||(root.animusMoves=[])).push({id:id,type:type,start:at,end:at+cycles*rig.cycles[type][2]/Number(tempo.value),prior:prior});
+   (root.animusMoves||(root.animusMoves=[])).push({id:id,type:type,start:at,end:localEnd,prior:prior});
    save(track);draw();o.repaint();
   };
+  function withinScene(now,start,end,seconds){
+   // Sample just inside the endpoint: at the cut itself the next act may be active.
+   var margin=Math.min(.00001,seconds/2);
+   var last=partContext(t.part,o.view,start+seconds-margin,[],true,0);
+   if(!last||!last.active||last.view!==now.view||end>scene.duration+1e-6||
+      start+seconds>film.duration+.00001||Math.abs(last.time-(end-margin*clockRate))>.001){
+    status.textContent=da?"Bevægelsen går ud over scenens slutning.":"Movement extends past the scene.";
+    return false;
+   }
+   return true;
+  }
+  var picked=(root.animusMoves||[]).find(function(move){return move.id===choice.moveId;});
+  if(picked){
+   var edit=el(doc,"fieldset","huw-musical-rig-controls",undefined,inspector);
+   inspector.insertBefore(edit,group);
+   el(doc,"legend","",rig.cycles[picked.type][da?0:1],edit);
+   var label=el(doc,"label","",da?"Klippets varighed (sek.) ":"Clip duration (sec) ",edit);
+   var input=el(doc,"input","huw-rig-duration",undefined,label);
+   input.type="number";input.min=".01";input.step="any";input.value=String(round((picked.end-picked.start)/clockRate));
+   var apply=el(doc,"button","",da?"Gem varighed":"Save duration",edit);apply.type="button";
+   apply.onclick=function(){
+    var seconds=Number(input.value),oldSpan=picked.end-picked.start,newSpan=seconds*clockRate;
+    if(!Number.isFinite(seconds)||seconds<.01||!(oldSpan>0&&newSpan>0)){input.focus();return;}
+    var end=picked.start+newSpan,start=toFilm(picked.start,track);
+    if(!withinScene(ctx,start,end,seconds))return;
+    var affected=scene.parts.filter(function(part){return Object.prototype.hasOwnProperty.call(picked.prior,part.id);});
+    var occupied=affected.some(function(part){return (part.keys||[]).some(function(key){
+     return key.animusMove!==picked.id&&key.t>picked.start+1e-6&&key.t<=Math.max(picked.end,end)+1e-6;
+    });});
+    if(occupied||(root.animusMoves||[]).some(function(other){return other!==picked&&other.start<end+1e-6&&other.end>picked.start+1e-6;})){
+     status.textContent=da?"Der er allerede nøglebilleder her. Vælg et ledigt tidsrum.":"This range contains keyframes. Choose a free range.";return;
+    }
+    affected.forEach(function(part){part.keys.forEach(function(key){
+     if(key.animusMove===picked.id)key.t=picked.start+(key.t-picked.start)*newSpan/oldSpan;
+    });part.keys.sort(function(a,b){return a.t-b.t;});});
+    picked.end=end;save(track);draw();o.repaint();
+   };
+  }
   var moves=root.animusMoves||[],last=moves[moves.length-1];
   if(last){var undo=el(doc,"button","",(da?"Fjern seneste bevægelse":"Remove last movement")+" · "+rig.cycles[last.type][da?0:1],group);undo.type="button";
    undo.onclick=function(){scene.parts.forEach(function(p){if(!Object.prototype.hasOwnProperty.call(last.prior,p.id))return;p.keys=(p.keys||[]).filter(function(k){return k.animusMove!==last.id;}).concat(last.prior[p.id]).sort(function(a,b){return a.t-b.t;});});moves.pop();save(track);draw();o.repaint();};}
@@ -808,7 +909,7 @@ function attach(o){
   add.type=del.type="button";add.onclick=function(){newPoint(t,playhead);};
   del.disabled=!k||(t.kind==="motion"&&(choice.key===0||choice.key===keys(t).length-1));del.onclick=function(){removePoint(t);};
   if(!k){el(doc,"p","",L.empty,inspector);return;}
-  formNumber(k,t.kind==="motion"?(da?"Slag i løkken":ui("Beat in loop")):L.time,
+  formNumber(k,t.kind==="motion"?(da?"Slag i løkken":ui("Beat in loop")):(da?"Kontrolpunktets tid (sek.)":ui("Keyframe time (sec)")),
    "t",t.kind==="motion"?.25:.05,0,t.kind==="motion"?num(animation(t).beatsPerLoop,8):film.duration);
   if(t.kind==="motion"){
    formNumber(k,L.x,"x",1,-10000,10000);formNumber(k,L.y,"y",1,-10000,10000);formNumber(k,L.r,"r",1,-3600,3600);
@@ -1035,6 +1136,16 @@ function attach(o){
    if(t.foldable)foldButton(title,t,t.foldKey,t.expanded,function(){groupExpanded[t.foldKey]=!groupExpanded[t.foldKey];});
    if(t.layerRoot){var handle=el(doc,'button','huwrep-order-handle','⠿',title);handle.type='button';handle.setAttribute('aria-label',(da?'Flyt lag: ':ui('Move layer: '))+t.name);handle.title=da?'Træk op for at flytte frem, ned for at flytte bagud':ui('Drag up to bring forward, down to send back');title.insertBefore(handle,title.firstChild);handle.onclick=function(e){e.stopPropagation();};}
    var lane=el(doc,"div","huw-musical-lane",undefined,row);
+   if(map[t.id]||t.kind==="figure"){
+    function openProperties(target){
+     var clip=target.closest("[data-rig-move]"),point=target.closest("[data-key-index]");
+     var index=point?Number(point.dataset.keyIndex):choice.id===t.id?choice.key:0;
+     if(clip)o.seek(Number(clip.dataset.start));
+     choose(t.id,index,true,clip&&clip.dataset.rigMove);
+    }
+    installPropertyGesture(row,openProperties);
+
+   }
    if(t.kind==="figure"){
     var rigStage=currentStage(),scenePart=rigStage.nodes&&rigStage.nodes[t.part]&&rigStage.nodes[t.part].part;
     (scenePart&&scenePart.animusMoves||[]).forEach(function(move){
@@ -1043,7 +1154,8 @@ function attach(o){
      var start=toFilm(move.start,keyTrack),end=toFilm(move.end,keyTrack);
      var block=el(doc,"button","huw-musical-motion-clip",names[da?0:1],lane);
      block.type="button";block.style.left=100*start/axis+"%";block.style.width=100*Math.max(0,end-start)/axis+"%";
-     block.onclick=function(ev){ev.stopPropagation();o.seek(start);choose(t.id,0);};
+     block.dataset.rigMove=move.id;block.dataset.start=String(start);
+     block.onclick=function(ev){ev.stopPropagation();o.seek(start);choose(t.id,0,true,move.id);};
     });
    }
    lane.onclick=function(ev){
@@ -1278,7 +1390,7 @@ function attach(o){
     }
     keys(t).forEach(function(k,index){
      var point=el(doc,"button","huw-musical-key",undefined,lane);point.type="button";
-     point.style.left=(100*toFilm(k.t,t)/axis)+"%";
+     point.dataset.keyIndex=String(index);point.style.left=(100*toFilm(k.t,t)/axis)+"%";
      point.title=(k.label?k.label+" · ":"")+t.name+" · "+round(k.t)+"s";point.setAttribute("aria-label",point.title);
      if(t.kind==='face'){point.classList.add('huw-musical-face-key');point.dataset.faceActor=t.actorId;point.title=t.name+' · '+round(k.t)+'s · '+faceKeyLabel(k);point.setAttribute('aria-label',point.title);}
      if(t.kind==="cut"){point.classList.add("huw-musical-cut-point");point.textContent=k.camera||"A";}
@@ -1545,7 +1657,7 @@ function attach(o){
   getCaptionCues:function(){return captionCues.slice();},
   isJointMove:isJointMove,getPartPivot:getPartPivot,
   resolvePartScene:function(id){return sceneForPart(id,o.view,0);},
-  dispose:function(){if(disposeLayerDrag)disposeLayerDrag();if(layerPanel)layerPanel.dispose();if(effectLibrary)effectLibrary.close();clearPreviewVisibility();if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};
+  dispose:function(){if(cancelHold)cancelHold();if(disposeLayerDrag)disposeLayerDrag();if(layerPanel)layerPanel.dispose();if(effectLibrary)effectLibrary.close();clearPreviewVisibility();if(overlay.parentNode)overlay.parentNode.removeChild(overlay);}};
 }
 exports.attach=attach;exports.ensureMusical=ensureMusical;exports.interpolate=interpolate;
 })();

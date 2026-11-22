@@ -509,10 +509,10 @@
 .huw-puppet-workshop .huw-puppet-part{width:100%;text-align:left;border:0;min-height:24px;padding-top:5px;padding-bottom:5px;border-radius:4px;background:transparent;color:#c9d6e5;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .huw-puppet-workshop .huw-puppet-part.is-active{background:#315a75;color:#fff9e5;border-left:3px solid #f0bd68}
 .huw-puppet-workshop .huw-puppet-center{display:flex;flex-direction:column;min-height:0;overflow:hidden;background:radial-gradient(circle at 50% 42%,#243347,#101a29 70%);padding:12px;align-items:stretch;justify-content:center}
-.huw-puppet-workshop .huw-puppet-canvas{min-height:0;flex:1;display:flex;align-items:center;justify-content:center;touch-action:none}
+.huw-puppet-workshop .huw-puppet-canvas{min-height:0;flex:1;overflow:hidden;display:flex;align-items:center;justify-content:center;touch-action:none}
 .huw-puppet-workshop[data-workshop-kind="object"] .huw-puppet-canvas{border:1px solid #91a7b6;border-radius:9px;background-color:#f8fafb;background-image:linear-gradient(45deg,#e5eaee 25%,transparent 25%),linear-gradient(-45deg,#e5eaee 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#e5eaee 75%),linear-gradient(-45deg,transparent 75%,#e5eaee 75%);background-size:24px 24px;background-position:0 0,0 12px,12px -12px,-12px 0}
 .huw-puppet-workshop[data-workshop-kind="object"] .huw-puppet-canvas > svg{background:transparent!important}
-.huw-puppet-workshop .huw-puppet-canvas > svg{display:block;width:100%;height:100%;max-width:100%;max-height:100%;touch-action:none;cursor:crosshair;overflow:visible}
+.huw-puppet-workshop .huw-puppet-canvas > svg{display:block;width:100%;height:100%;max-width:100%;max-height:100%;touch-action:none;cursor:crosshair;overflow:hidden}
 .huw-puppet-workshop .huw-puppet-canvas .huw-cutout-part{cursor:grab}
 .huw-puppet-workshop .huw-puppet-canvas .huw-cutout-part:active{cursor:grabbing}
 .huw-puppet-workshop .huw-puppet-canvas .huw-cutout-joint{visibility:hidden;fill:#ffda76;stroke:#113047;stroke-width:3;pointer-events:all;cursor:move}
