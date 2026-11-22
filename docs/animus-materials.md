@@ -24,3 +24,9 @@ The four external sources are CC0. Mirrored images use pinned Git revisions. RGS
 Startpakkerne **Kenney Starter** og **Den græske havn** indeholder hver en redigerbar prøvescene. Vælg den ved oprettelse af en ny forestilling, eller vælg **Brug som ny animation** på pakkens startside. Din animation oprettes som en selvstændig kopi.
 
 Åbn **Lag ↕** ved editorens objektvælger. Forrest vises øverst. Træk i håndtaget, brug piletaster, eller klik op/ned. Hele figuren med alle kropsdele flyttes samlet. Træk-og-slip bygger på repertoirelistens løsning og ruller kun selve laglisten.
+
+## Release validation · 2026-11-22
+
+Version `0.13.0-beta.21-assets.1` passed 652 portable source tests (nine environment-specific tests skipped), catalogue/package integrity checks, and browser acceptance for template copying, keyboard/pointer layer movement, whole-background filtering and individual puppet import. The catalogue contains 1,142 entries in five collections.
+
+Verified workflow: https://github.com/maans/huwiki-forge/actions/runs/45018044262
