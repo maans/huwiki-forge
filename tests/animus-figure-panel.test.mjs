@@ -358,3 +358,25 @@ test('a different part focuses automatically and a direct pointer gesture never 
  const focused=h.preview.getAttribute('viewBox');h.dock.querySelector('[data-figure-fit-selected]').click();assert.equal(h.preview.getAttribute('viewBox'),focused);
  assert.deepEqual(h.writes,[]);
 });
+
+
+test('timeline starts with whole objects, lazily unfolds their real hierarchy, and leaves scene data intact',()=>{
+ const h=harness(),before=JSON.stringify(h.data),source=h.records.Second.text;
+ const actor=()=>h.host.querySelector('[data-layer-id="prisoner"]');assert.ok(actor());
+ assert.equal(actor().querySelector('.huw-musical-group-fold').getAttribute('aria-expanded'),'false');
+ assert.equal(h.host.querySelector('[data-track-id="part:prisoner-head"]'),null);
+ actor().querySelector('.huw-musical-group-fold').click();
+ assert.ok(h.host.querySelector('[data-track-id="face:prisoner"]'));
+ const head=()=>h.host.querySelector('[data-track-id="part:prisoner-head"]');assert.ok(head());
+ assert.equal(h.host.querySelector('[data-track-id="part:prisoner-eyes"]'),null);
+ head().querySelector('.huw-musical-group-fold').click();assert.ok(h.host.querySelector('[data-track-id="part:prisoner-eyes"]'));
+ actor().querySelector('.huw-musical-group-fold').click();assert.equal(head(),null);
+ assert.equal(JSON.stringify(h.data),before);assert.equal(h.records.Second.text,source);assert.equal(h.writes.length,0);
+});
+test('folded recordings use one overview and create editable clip nodes only while expanded',()=>{
+ const h=harness();h.data.musical.audioClips=Array.from({length:180},(_,i)=>({id:'take-'+i,start:i/20,duration:2,name:'Take '+i}));h.editor.redraw();
+ const row=()=>h.host.querySelector('[data-track-id="audio-lane"]');
+ assert.equal(row().querySelectorAll('.huw-musical-recorded-clip').length,0);assert.ok(row().querySelector('.huw-musical-audio-overview'));
+ row().querySelector('.huw-musical-group-fold').click();assert.equal(row().querySelectorAll('.huw-musical-recorded-clip').length,180);
+ row().querySelector('.huw-musical-group-fold').click();assert.equal(row().querySelectorAll('.huw-musical-recorded-clip').length,0);assert.equal(h.writes.length,0);
+});

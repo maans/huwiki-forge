@@ -1,0 +1,53 @@
+name: AniMus grouped timeline and workshop
+on:
+  push:
+    branches: [feat/animus-groups-workshop-20261122]
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  verify-and-build:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 18
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci --ignore-scripts
+      - name: Build scene corrections and searchable production materials
+        run: |
+          node scripts/fix-theseus-prop-layers.mjs
+          node scripts/index-animus-productions.mjs
+          node scripts/build-animus.mjs
+          node scripts/build-forge-plugin-library.mjs
+          node scripts/build-forge-home.mjs
+          node scripts/build-forge-home.mjs --check
+          node scripts/build-animus.mjs --check
+      - name: Complete portable source suite
+        shell: bash
+        run: |
+          files=(tests/*.test.mjs)
+          selected=()
+          for file in "${files[@]}"; do
+            if [[ "$file" != "tests/forgeshare.test.mjs" ]]; then selected+=("$file"); fi
+          done
+          node --test --test-reporter=spec "${selected[@]}" > /tmp/animus-tests.log 2>&1 || { tail -n 140 /tmp/animus-tests.log; exit 1; }
+          tail -n 12 /tmp/animus-tests.log
+      - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - run: npx playwright-core install chromium
+      - name: Browser tests for groups, layers, templates and material imports
+        run: node scripts/animus-materials-browser-smoke.mjs
+      - name: Preserve validated builds
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/animus editions/theseus-ship/tiddlers/production-pages-*.json plugins/musical/dist/plugin.json library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
+          git diff --cached --quiet || git commit -m 'Build grouped AniMus editor, separate show cards and reusable production materials'
+          git push origin HEAD:${{ github.ref_name }}
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: animus-group-browser
+          path: test-results/animus-materials/
+          retention-days: 7

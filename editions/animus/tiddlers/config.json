@@ -5,7 +5,7 @@
   },
   {
     "title": "$:/SiteSubtitle",
-    "text": "<%if [{$:/language}split[/]last[]lowercase[]split[-]first[]split[_]first[]match[da]] %>Fyrtøjet · Tændstikorkestret · Fælles redigering<%else%>The Tinderbox · The Stick Orchestra · Shared editor<%endif%>"
+    "text": "<%if [{$:/language}split[/]last[]lowercase[]split[-]first[]match[da]] %>Dit animationsværksted<%else%>Your animation workshop<%endif%>"
   },
   {
     "title": "$:/theme",

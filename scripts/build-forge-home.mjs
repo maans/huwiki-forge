@@ -15,6 +15,7 @@ export async function editionIndex(){
  const catalog=JSON.parse(await readFile(path.join(root,"catalog/editions.json"),"utf8"));
  return catalog.editions.map(e=>({
   title:"$:/huwiki/forge/edition/"+e.id,tags:"$:/huwiki/forge/edition",text:"",
+  "home-hidden":e.home?.hidden?"yes":"no",
   "edition-id":e.id,name:e.name,status:e.status,version:e.version||"",order:e.home?.order||e.id,
   "build-url":"https://forge.måns.dk/assembler/?edition="+encodeURIComponent(e.id),
   "build-url-da":"https://forge.måns.dk/assembler/?edition="+encodeURIComponent(e.id)+"&lang=da",

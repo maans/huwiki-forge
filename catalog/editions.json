@@ -118,15 +118,15 @@
     {
       "id": "animus",
       "name": "AniMus Forge I (beta)",
-      "version": "0.13.0-beta.21-assets.1",
+      "version": "0.13.0-beta.21-groups.1",
       "status": "test",
       "manifest": "../editions/animus/manifest.json",
-      "description": "Experimental unified animation, music and theatre workshop for TiddlyWiki. The Fyrtøjet and Tændstikorkestret examples share one editor.",
+      "description": "Start your own animation from a blank scene or a starter template. Open complete example productions separately.",
       "home": {
-        "headingDa": "AniMus Forge I – animation og teater",
-        "headingEn": "AniMus Forge I – Animation & Theatre",
-        "descriptionDa": "Redigér animation, musik og undertekster på egne spor. Skjul elementer under arbejdet, zoom til figurer og kropsdele, og eksportér video og lydfiler.",
-        "descriptionEn": "Edit animation, music and captions on separate tracks. Hide elements while editing, zoom to characters and body parts, and export video and audio files.",
+        "headingDa": "AniMus – dit animationsværksted",
+        "headingEn": "AniMus – your animation workshop",
+        "descriptionDa": "Start med en tom scene eller en startpakke. Åbn de færdige forestillinger fra værkstedets galleri.",
+        "descriptionEn": "Start with a blank stage or a starter template. Open complete productions separately from the workshop gallery.",
         "noteDa": "Meget tidlig beta: motor og eksempler kan ændres uden garanti for dine data. iPad-lyd er ikke godkendt. Forslag og fejlmeldinger er velkomne på Talk og GitHub.",
         "noteEn": "Very early beta: core and examples may change without preserving your edits. iPad audio is unverified. Feedback welcome on Talk and GitHub.",
         "order": "02.4"
@@ -146,7 +146,8 @@
         "descriptionEn": "An AI-generated animation made with AniMus: Plato’s cave as a musical. Watch and edit the performance, then download video, audio tracks and captions.",
         "noteDa": "Engelsk lyd og lip-sync med 103 danske eller engelske undertekster. 14 scener, ABC-partiturer og indlejrede lydoptagelser.",
         "noteEn": "English audio and lip-sync with 103 captions in Danish or English. 14 scenes, ABC scores and embedded audio.",
-        "order": "02.41"
+        "order": "02.41",
+        "hidden": true
       }
     },
     {
@@ -163,7 +164,8 @@
         "descriptionEn": "A fourteen-scene musical with Mara, Pip and Ione about the ship, its timber and what we carry forward.",
         "noteDa": "Dansk og engelsk tale · to sange på hvert sprog · redigér i AniMus.",
         "noteEn": "Danish and English dialogue · two songs in each language · editable in AniMus.",
-        "order": "02.42"
+        "order": "02.42",
+        "hidden": true
       }
     },
     {
@@ -205,20 +207,19 @@
     },
     {
       "id": "demo",
-      "name": "TiddlyWiki + Forge Plugin Library",
-      "description": "Standard TiddlyWiki with Forge Plugin Library configured for installing plugins.",
+      "name": "Demo Edition",
+      "description": "Minimal test af TiddlyWiki-plugin og før-boot-indlæsning.",
       "status": "test",
       "manifest": "../editions/demo/manifest.json",
       "home": {
-        "headingDa": "Standard-TiddlyWiki med Forge Plugin Library",
-        "headingEn": "Standard TiddlyWiki with Forge Plugin Library",
-        "descriptionDa": "En almindelig TiddlyWiki med Forge Plugin Library tilføjet. Vælg og installer selv de plugins, du vil bruge.",
-        "descriptionEn": "A standard TiddlyWiki with Forge Plugin Library added. Choose and install the plugins you want to use.",
-        "noteDa": "Redigér og gem som i TiddlyWiki. Installation af plugins fra biblioteket kræver internet.",
-        "noteEn": "Edit and save as usual in TiddlyWiki. Installing plugins from the library requires internet access.",
+        "headingDa": "Prøv en enkel wiki",
+        "headingEn": "Try a simple wiki",
+        "descriptionDa": "En lille wiki til at prøve Forge, redigering og lokal gemning.",
+        "descriptionEn": "A small wiki for trying Forge, editing and local saving.",
+        "noteDa": "Minimal testudgave.",
+        "noteEn": "Minimal test edition.",
         "order": "05"
-      },
-      "version": "0.0.2"
+      }
     },
     {
       "id": "cutout",
@@ -269,6 +270,45 @@
         "noteDa": "Testudgave. Google Sites, prøveordre til privat Sheets-ark og offentlig Funnel afprøvet på computer. Fysisk mobiltest udestår.",
         "noteEn": "Test edition. Google Sites, a test order into a private Sheet and public Funnel verified on desktop. Physical mobile testing remains pending.",
         "order": "09"
+      }
+    },
+    {
+      "id": "animus-orchestra",
+      "name": "The Stick Orchestra",
+      "version": "0.13.0-beta.21-groups.1",
+      "status": "test",
+      "manifest": "../editions/animus-orchestra/manifest.json",
+      "description": "The Stick Orchestra in a separate AniMus wiki.",
+      "home": {
+        "hidden": true,
+        "headingDa": "Tændstikorkestret",
+        "headingEn": "The Stick Orchestra"
+      }
+    },
+    {
+      "id": "animus-tinderbox",
+      "name": "The Tinderbox",
+      "version": "0.13.0-beta.21-groups.1",
+      "status": "test",
+      "manifest": "../editions/animus-tinderbox/manifest.json",
+      "description": "The Tinderbox in a separate AniMus wiki.",
+      "home": {
+        "hidden": true,
+        "headingDa": "Fyrtøjet",
+        "headingEn": "The Tinderbox"
+      }
+    },
+    {
+      "id": "animus-harbour",
+      "name": "Greek harbour starter",
+      "version": "0.13.0-beta.21-groups.1",
+      "status": "test",
+      "manifest": "../editions/animus-harbour/manifest.json",
+      "description": "Greek harbour starter in a separate AniMus wiki.",
+      "home": {
+        "hidden": true,
+        "headingDa": "Græsk havn · Startscene",
+        "headingEn": "Greek harbour starter"
       }
     }
   ],
