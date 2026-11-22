@@ -3,6 +3,10 @@ on:
   push:
     branches: [feat/animus-material-library-20261122]
     paths:
+      - catalog/editions.json
+      - catalog/assembler-i18n.json
+      - editions/animus/manifest.json
+      - tests/animus-ipad-browser.test.mjs
       - scripts/build-animus-assets.py
       - scripts/prepare-animus-assets.py
       - scripts/animus-source-index.json

@@ -205,19 +205,20 @@
     },
     {
       "id": "demo",
-      "name": "Demo Edition",
-      "description": "Minimal test af TiddlyWiki-plugin og før-boot-indlæsning.",
+      "name": "TiddlyWiki + Forge Plugin Library",
+      "description": "Standard TiddlyWiki with Forge Plugin Library configured for installing plugins.",
       "status": "test",
       "manifest": "../editions/demo/manifest.json",
       "home": {
-        "headingDa": "Prøv en enkel wiki",
-        "headingEn": "Try a simple wiki",
-        "descriptionDa": "En lille wiki til at prøve Forge, redigering og lokal gemning.",
-        "descriptionEn": "A small wiki for trying Forge, editing and local saving.",
-        "noteDa": "Minimal testudgave.",
-        "noteEn": "Minimal test edition.",
+        "headingDa": "Standard-TiddlyWiki med Forge Plugin Library",
+        "headingEn": "Standard TiddlyWiki with Forge Plugin Library",
+        "descriptionDa": "En almindelig TiddlyWiki med Forge Plugin Library tilføjet. Vælg og installer selv de plugins, du vil bruge.",
+        "descriptionEn": "A standard TiddlyWiki with Forge Plugin Library added. Choose and install the plugins you want to use.",
+        "noteDa": "Redigér og gem som i TiddlyWiki. Installation af plugins fra biblioteket kræver internet.",
+        "noteEn": "Edit and save as usual in TiddlyWiki. Installing plugins from the library requires internet access.",
         "order": "05"
-      }
+      },
+      "version": "0.0.2"
     },
     {
       "id": "cutout",
