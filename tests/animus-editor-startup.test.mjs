@@ -45,7 +45,7 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
  Sound.prototype.sync=function(){effectsSynced++;};Sound.prototype.quiet=function(){effectsQuieted++;};
  const shared={performance:{now:()=>now}};
  function localModule(name){const exports={};runInNewContext(read('plugins/musical/src/'+name+'.js'),{exports,...shared});return exports;}
- const controller={load(){},setTune(){audioPreparations++;return pendingAudio.promise;},pause(){},destroy(){}};
+ const controller={isLoaded:false,go(){this.isLoaded=true;return Promise.resolve();},play(){this.isStarted=true;return Promise.resolve();},load(){},setTune(){audioPreparations++;return pendingAudio.promise;},pause(){},destroy(){}};
  const context={state:'suspended',resume:()=>pendingAudio.promise};
  const ABC={renderAbc:()=>{notationRenders++;return [{getTotalTime:()=>notatedSeconds,noteTimings:[]}];},
   synth:{supportsAudio:()=>audioPending,activeAudioContext(){contextRequests++;return context;},SynthController:function(){}}};
@@ -75,13 +75,13 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
   '$:/plugins/huwiki/musical/narration.js':localModule('narration-player'),
   '$:/plugins/huwiki/musical/lipsync.js':{apply(){},invalidate(){},reset(){}}
  };
- const exports={};runInNewContext(widgetSource,{exports,...shared,$tw:{rootWidget:{}},window:doc.defaultView,
+ const exports={};runInNewContext(widgetSource,{exports,setTimeout,clearTimeout,...shared,$tw:{rootWidget:{}},window:doc.defaultView,
   require(name){if(name===languageTitle)return language;if(!deps[name])throw Error('Unavailable test module: '+name);return deps[name];},
   requestAnimationFrame(callback){const id=++nextFrame;frames.set(id,callback);return id;},
   cancelAnimationFrame:id=>frames.delete(id)});
  const widget=new exports['musical-stage']({}, {document:doc,wiki});widget.render(doc.body,null);
  const range=widget.host.querySelector('.huw-musical-range'),play=widget.host.querySelector('.huw-musical-play');
- return {widget,range,play,painted,scene,audios,exportOptions,preview,
+ return {widget,range,play,painted,scene,audios,exportOptions,preview,finishAudio:()=>pendingAudio.resolve(),
   previewChange(changes){Object.assign(preview,changes);editorOptions.onPreviewChange();editorOptions.repaint();},
    previewMode(mode){widget.host.dataset.previewMode=mode;if(mode!=='stage')workspaceOptions.refreshScore();},
   seek(time){range.value=String(time);range.dispatch('input');},
@@ -115,14 +115,15 @@ test('asynchronous notation completion keeps a user seek and the selected score 
  assert.match(f.widget.host.querySelector('.huw-musical-time').textContent,/^1:00 \/ 8:01$/);
 });
 
-test('ordinary audible ABC still sets its performed duration and pending audio preparation does not stop the picture clock',async()=>{
+test('ordinary audible ABC still sets its performed duration and the first measure waits for instrument preparation',async()=>{
  const f=fixture({songs:[{id:'audible',score:'Score',start:0,duration:16,muted:false}],notatedSeconds:530,audioPending:true});
  await f.load();assert.equal(f.duration,530);assert.equal(f.widget._songStates[0].clip.duration,530);
  f.play.click();
  assert.equal(f.contextRequests,1,'the play gesture unlocks the shared ABC audio context synchronously');
  assert.equal(f.audioPreparations,0,'SoundFont preparation starts after the gesture, without blocking its clock');
  await f.flush();
- assert.equal(f.widget.host.dataset.playing,'true');assert.equal(f.audioPreparations,1);
+ assert.equal(f.audioPreparations,1);f.advance(3000);assert.equal(Number(f.range.value),0);
+ f.finishAudio();await new Promise(resolve=>setImmediate(resolve));assert.equal(f.widget.host.dataset.playing,'true');
  f.advance(1000);
  assert.equal(f.painted.at(-1),1);
  assert.equal(f.widget.host.dataset.cameraTime,'1.00');

@@ -542,7 +542,7 @@ Musical.prototype.render=function(parent,next){
  }
  function seek(seconds){
   seconds=Math.max(0,Math.min(duration,Number(seconds)||0));
-  generation++;var running=timeline.running;sfx.seek(seconds);voice.seek(seconds);
+  generation++;preparing=false;var running=timeline.running;sfx.seek(seconds);voice.seek(seconds);
   songs.forEach(function(song){song.starting=false;if(seconds<song.clip.start+song.clip.duration-.05)song.finished=false;});
   timeline.seek(seconds);
   songs.forEach(function(song,index){
@@ -555,7 +555,7 @@ Musical.prototype.render=function(parent,next){
   applyGains(seconds,true);
  }
  function stopAll(){
-  generation++;stopping=true;timeline.running=false;setPlaying(false);sfx.seek(0);voice.pause();voice.seek(0);
+  generation++;preparing=false;stopping=true;timeline.running=false;setPlaying(false);sfx.seek(0);voice.pause();voice.seek(0);
   songs.forEach(function(song){
    song.starting=false;song.finished=false;song.gain=0;song.appliedGain=-1;
    if(song.controller)Playback.stopOne(song.controller);
@@ -566,7 +566,8 @@ Musical.prototype.render=function(parent,next){
  stop.onclick=stopAll;
  session={huwikiStop:stopAll};
  play.onclick=function(){
-  if(!ready||preparing)return;
+  if(!ready)return;
+  if(preparing){generation++;preparing=false;state.textContent=L.ready;return;}
   if(timeline.running){pauseAll();return;}
   if(timeline.value()>=duration-.01)seek(0);
   var stamp=++generation;
@@ -576,12 +577,29 @@ Musical.prototype.render=function(parent,next){
   if(hasMusic)retryFailedAudio();
   sfx.seek(timeline.value()-.02);
   preparing=true;state.textContent=L.loading;
-  // Start the theatrical clock immediately. Missing or offline SoundFonts
-  // must not block scene animation, camera, light, or curtains.
-  preparing=false;Playback.start(session);
-  timeline.play();setPlaying(true);applyGains(timeline.value(),true);
-  state.textContent=hasMusic?(audioActivated?L.loading:L.noAudio):L.ready;
-  syncAudio(timeline.value());
+  function startClock(){
+   if(!alive()||generation!==stamp)return;
+   preparing=false;Playback.start(session);
+   timeline.play();setPlaying(true);applyGains(timeline.value(),true);
+   state.textContent=hasMusic?(audioActivated?L.loading:L.noAudio):L.ready;
+   syncAudio(timeline.value());
+  }
+  var pending=[];
+  if(audioActivated&&soundReady){
+   clips.forEach(function(clip,index){
+    if(!audibleClip(clip)||!Playlist.isActive(clip,timeline.value()))return;
+    prepareSong(index);
+    if(songs[index].pending)pending.push(songs[index].pending);
+   });
+  }
+  if(!pending.length){startClock();return;}
+  // Hold the selected frame during normal instrument loading. An unreachable
+  // sample server must still allow the stage to play without sound.
+  var fallback=setTimeout(startClock,8000);
+  Promise.allSettled(pending).then(function(){
+   clearTimeout(fallback);
+   if(preparing)startClock();
+  });
  };
  // Native sliders can emit several inputs before Safari paints. Show the
  // last position of each frame, and commit the release even outside the range.
