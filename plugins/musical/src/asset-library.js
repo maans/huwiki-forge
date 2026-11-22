@@ -1,0 +1,78 @@
+/*\
+title: $:/plugins/huwiki/musical/asset-library.js
+type: application/javascript
+module-type: library
+\*/
+(function(){
+'use strict';
+var TAG='$:/tags/AniMus/Asset',CACHE='$:/AniMus/AssetCatalog',PREFIX='$:/AniMus/Library/',URL='https://forge.xn--mns-ula.dk/assets/animus/catalog.json';
+var aliases={skov:'forest',orken:'desert',oerken:'desert',sol:'sun',mane:'moon',trae:'tree',hus:'house',huse:'house',bjerge:'mountain',bjerg:'mountain',hegn:'fence',baggrund:'background',baggrunde:'background',kulisse:'scenery',kulisser:'scenery',figur:'figure',figurer:'figure',dukke:'puppet',rekvisit:'prop',rekvisitter:'prop',mad:'food',vaerktoj:'tools',aeble:'apple',oejne:'eyes',ojne:'eyes',mund:'mouth',ansigt:'face',havn:'harbour',skib:'ship',graesk:'greek',kvinde:'female',mand:'male'};
+function copy(v){return JSON.parse(JSON.stringify(v));}
+function normal(s){return String(s||'').toLowerCase().replace(/æ/g,'ae').replace(/ø/g,'o').normalize('NFD').replace(/[\u0300-\u036f]/g,'');}
+function valid(e){return !!(e&&typeof e.id==='string'&&/^[a-z0-9][a-z0-9/-]{0,200}$/.test(e.id)&&typeof e.name==='string'&&['figure','cutout','prop','scenery','background','face'].indexOf(e.category)>=0&&Array.isArray(e.assets)&&e.assets.length>0&&e.assets.length<100&&/^https:\/\//.test(e.source||''));}
+function read(wiki,title){try{return JSON.parse(wiki.getTiddlerText(title,''));}catch(_bad){return null;}}
+function localEntries(wiki){return (wiki.filterTiddlers?wiki.filterTiddlers('[all[tiddlers+shadows]tag['+TAG+']]'):(wiki.getTiddlersWithTag(TAG)||[])).map(function(t){return read(wiki,t);}).filter(valid);}
+function entries(wiki,remote){var all={},cached=remote||read(wiki,CACHE)||{};(cached.entries||[]).filter(valid).forEach(function(e){all[e.id]=e;});localEntries(wiki).forEach(function(e){all[e.id]=e;});return Object.keys(all).map(function(id){return all[id];});}
+function search(items,query,category,collection){var words=normal(query).split(/\s+/).filter(Boolean);return items.filter(function(e){if(category&&e.category!==category&&!(category==='figure'&&e.category==='cutout'))return false;if(collection&&e.collection!==collection)return false;var hay=normal([e.name,e.category,e.collection,e.author,e.keywords,e.faceKind].join(' '));var tokens=hay.split(/[^a-z0-9]+/);return words.every(function(w){return tokens.some(function(t){return t.indexOf(w)===0||aliases[w]&&t.indexOf(aliases[w])===0;});});});}
+function write(wiki,fields){wiki.addTiddler(new $tw.Tiddler(fields));}
+function imageData(bytes){if(bytes.length<24||[137,80,78,71,13,10,26,10].some(function(v,i){return bytes[i]!==v;}))throw Error('Expected a PNG image');var view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength),w=view.getUint32(16),h=view.getUint32(20);if(!w||!h||w*h>40000000)throw Error('Image dimensions are too large');var chunks=[];for(var i=0;i<bytes.length;i+=8192)chunks.push(String.fromCharCode.apply(null,bytes.subarray(i,i+8192)));return {text:btoa(chunks.join('')),width:w,height:h};}
+function safeUrl(s){return /^https:\/\/(?:forge\.xn--mns-ula\.dk|raw\.githubusercontent\.com)\//.test(String(s));}
+async function download(a,fetcher,signal){if(!safeUrl(a.url))throw Error('Unsupported image source');var r=await fetcher(a.url,{credentials:'omit',signal:signal});if(!r.ok)throw Error('Image download failed: '+r.status);var length=Number(r.headers&&r.headers.get('content-length'));if(length>20000000)throw Error('Image exceeds 20 MB');var bytes=new Uint8Array(await r.arrayBuffer());if(bytes.length>20000000)throw Error('Image exceeds 20 MB');if(a.sha256&&typeof crypto!=='undefined'&&crypto.subtle){var digest=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));if(Array.from(digest).map(function(v){return v.toString(16).padStart(2,'0');}).join('')!==a.sha256)throw Error('Image checksum mismatch');}return imageData(bytes);}
+async function importEntry(wiki,entry,opts){
+ opts=opts||{};if(!valid(entry))throw Error('Invalid catalogue entry');var saved=read(wiki,PREFIX+'items/'+entry.id);if(valid(saved))entry=saved;var next=copy(entry),pending=[];
+ for(var i=0;i<next.assets.length;i++){
+  var a=next.assets[i],old=a.title&&wiki.getTiddler(a.title);
+  if(old&&old.fields.type==='image/png'&&old.fields.text&&!old.fields._canonical_uri)continue;
+  var title=PREFIX+'media/'+a.id,prior=wiki.getTiddler(title);if(prior&&prior.fields['animus-source-id']!==next.id)title=wiki.generateNewTitle(title);
+  var data=await download(a,opts.fetcher||fetch,opts.signal);a.title=title;a.width=data.width;a.height=data.height;
+  pending.push({title:title,type:'image/png',text:data.text,'animus-source-id':next.id,'animus-source-url':a.url,'animus-author':next.author,'animus-license':next.license,'animus-license-url':next.licenseUrl||'','animus-source':next.source});
+ }
+ // Commit only after every dependency has arrived. A cancelled download leaves
+ // neither a partial puppet nor a half-populated library entry.
+ if(opts.signal&&opts.signal.aborted)throw Error('Cancelled');pending.forEach(function(f){write(wiki,f);});write(wiki,{title:PREFIX+'items/'+next.id,type:'application/json',tags:TAG,text:JSON.stringify(next)});return next;
+}
+function key(x,y){return {t:0,x:x||0,y:y||0,r:0,sx:1,sy:1,opacity:1,easing:'linear'};}
+var serial=0;
+function place(scene,entry,options){
+ options=options||{};if(!valid(entry))throw Error('Invalid library entry');var target=copy(scene),width=Number(target.width)||960,height=Number(target.height)||540;
+ var prefix='material-'+Date.now().toString(36)+'-'+(++serial)+'-',assets={},idMap={},parts;entry.assets.forEach(function(a){if(!a.title)throw Error('Image has not been downloaded');assets[a.id]=a;});
+ var parent=entry.category==='background'?null:options.parent||null;if(parent&&!(target.parts||[]).some(function(p){return p.id===parent;}))throw Error('Attachment point no longer exists');
+ if(entry.parts&&entry.parts.length){parts=copy(entry.parts);parts.forEach(function(p){idMap[p.id]=prefix+p.id;});parts.forEach(function(p){var old=p.id;p.id=idMap[p.id];p.parent=p.parent?idMap[p.parent]:parent;if(p.actorId)p.actorId=idMap[p.actorId]||p.actorId;[p].concat(p.variants||[]).forEach(function(v){if(v.asset){if(!assets[v.asset])throw Error('Missing image dependency');v.asset=assets[v.asset].title;delete v.assetId;}});if(!entry.parts.find(function(q){return q.id===old;}).parent){p.keys=[key(parent?0:width/2,parent?0:height*.88)];if(entry.category==='background'||entry.category==='scenery'){p.keys=[key()];p.keys[0].sx=width/960;p.keys[0].sy=height/540;}else if(entry.category==='figure'){p.keys[0].sx=p.keys[0].sy=Math.min(1,height*.55/(entry.height||300));}}});}
+ else{var a=entry.assets[0],w=a.width||100,h=a.height||100,scale=parent&&entry.category==='face'?Math.min(64/w,38/h):Math.min(width*.25/w,height*.3/h),x=parent?0:width/2,y=parent?0:height*.7;
+  if(entry.category==='background'){scale=Math.max(width/w,height/h);x=(width-w*scale)/2;y=(height-h*scale)/2;}
+  var grip=entry.grip||{x:.5,y:1},g={x:-w*scale*grip.x,y:-h*scale*grip.y,w:w*scale,h:h*scale};if(entry.category==='background'){g.x=g.y=0;}
+  parts=[{id:prefix+'image',name:entry.name,type:'image',parent:parent,pivot:{x:0,y:0},asset:a.title,geo:g,keys:[key(x,y)],'animus-category':entry.category}];
+ }
+ parts.forEach(function(p){p['animus-library-id']=entry.id;});target.parts=target.parts||[];
+ if(entry.category==='background')target.parts=parts.concat(target.parts);else if(entry.category==='scenery'){var split=0;while(split<target.parts.length&&(target.parts[split]['animus-category']==='background'||target.parts[split]['animus-library-id']&&/harbour$/.test(target.parts[split]['animus-library-id'])))split++;target.parts.splice.apply(target.parts,[split,0].concat(parts));}else target.parts=target.parts.concat(parts);
+ if(target.parts.length>300)throw Error('This scene already has too many parts. Add a new scene.');
+ return {scene:target,root:parts[0].id};
+}
+function activeScene(o){var view=o.view,time=o.position(),Engine=require('$:/plugins/huwiki/cutout/engine.js');for(var i=0;i<16&&view.clips&&view.clips.length;i++){var at=Engine.clipAt(view.scene.scenes||[],time),clip=view.clips[at.index];if(!clip||!clip.view)break;time=Engine.localTime(at.time,clip.duration,clip.settings);view=clip.view;}return view.scene;}
+function el(doc,tag,cls,text,parent){var e=doc.createElement(tag);if(cls)e.className=cls;if(text!==undefined)e.textContent=text;if(parent)parent.appendChild(e);return e;}
+function collectionName(id,da){return ({'kenney-toon':da?'Kenney · Figurer':'Kenney · Characters','kenney-backgrounds':da?'Kenney · Baggrunde og kulisser':'Kenney · Backgrounds and scenery','rgs-faces':da?'RGS Dev · Ansigtsdele':'RGS Dev · Face parts','glitch-items':da?'Glitch · Rekvisitter og cutouts':'Glitch · Props and cutouts','greek-harbour':da?'AniMus · Den græske havn':'AniMus · The Greek Harbour'})[id]||id;}
+function mount(o){var Language=require('$:/plugins/huwiki/musical/language.js'),da=Language.isDanish(o.wiki),popup=null,abort=null,disposed=false,returnFocus=null,all=[],page=0,remote=null;
+ function close(){if(abort)abort.abort();abort=null;if(popup)popup.remove();popup=null;if(returnFocus&&returnFocus.focus)returnFocus.focus({preventScroll:true});}
+ function open(){if(popup)return;returnFocus=o.doc.activeElement;o.pause();var target=activeScene(o),original=target&&target._title&&o.wiki.getTiddlerText(target._title,'');if(!target||!original)return false;
+  var doc=o.doc;popup=el(doc,'section','huw-asset-library',undefined,o.host);popup.setAttribute('role','dialog');popup.setAttribute('aria-modal','true');popup.setAttribute('aria-label',da?'Materialer':'Materials');popup.tabIndex=-1;
+  var top=el(doc,'header','',undefined,popup);el(doc,'strong','',da?'Materialer':'Materials',top);var exit=el(doc,'button','',da?'Luk':'Close',top);exit.onclick=close;
+  var controls=el(doc,'div','huw-asset-controls',undefined,popup),query=el(doc,'input','',undefined,controls);query.type='search';query.placeholder=da?'Søg i samlingerne…':'Search collections…';query.setAttribute('aria-label',query.placeholder);
+  var categories=el(doc,'select','',undefined,controls);categories.setAttribute('aria-label',da?'Kategori':'Category');[['',da?'Alle materialer':'All materials'],['figure',da?'Figurer / cutouts':'Characters / cutouts'],['prop',da?'Rekvisitter':'Props'],['scenery',da?'Kulissedele':'Scenery pieces'],['background',da?'Baggrundsbilleder':'Background images'],['face',da?'Ansigtsdele':'Face parts']].forEach(function(a){var opt=el(doc,'option','',a[1],categories);opt.value=a[0];});
+  var collections=el(doc,'select','',undefined,controls);collections.setAttribute('aria-label',da?'Samling':'Collection');
+  var attachLabel=el(doc,'label','huw-asset-attach',da?'Fastgør til: ':'Attach to: ',popup),attach=el(doc,'select','',undefined,attachLabel);attach.setAttribute('aria-label',da?'Fastgør til':'Attach to');var stageOpt=el(doc,'option','',da?'Scenen':'Stage',attach);stageOpt.value='';(target.parts||[]).filter(function(p){return /hand|hånd|head|hoved/i.test(p.name+' '+p.id);}).forEach(function(p){var opt=el(doc,'option','',p.name||p.id,attach);opt.value=p.id;});
+  var status=el(doc,'output','huw-asset-status','',popup);status.setAttribute('aria-live','polite');var grid=el(doc,'div','huw-asset-grid',undefined,popup),nav=el(doc,'footer','',undefined,popup);var prev=el(doc,'button','',da?'Forrige':'Previous',nav),count=el(doc,'span','','',nav),next=el(doc,'button','',da?'Næste':'Next',nav);
+  var current=popup,busy=false;
+  function live(){return !disposed&&popup===current;}
+  function render(){if(!live())return;var hits=search(all,query.value,categories.value,collections.value),pages=Math.max(1,Math.ceil(hits.length/24));page=Math.min(page,pages-1);grid.textContent='';count.textContent=hits.length+' · '+(page+1)+' / '+pages;prev.disabled=page===0;next.disabled=page===pages-1;attachLabel.hidden=categories.value==='background';
+   hits.slice(page*24,page*24+24).forEach(function(e){var card=el(doc,'article','huw-asset-card',undefined,grid),img=el(doc,'img','',undefined,card);img.loading='lazy';img.alt='';var local=e.assets[0]&&e.assets[0].title&&o.wiki.getTiddler(e.assets[0].title);img.src=local?'data:image/png;base64,'+local.fields.text:e.preview||e.assets[0].url;el(doc,'strong','',e.name,card);el(doc,'small','',collectionName(e.collection,da)+' · '+e.license,card);var source=el(doc,'a','',da?'Kilde':'Source',card);source.href=e.source;source.target='_blank';source.rel='noopener noreferrer';var add=el(doc,'button','',da?'Hent og indsæt':'Get and insert',card);add.disabled=busy;add.onclick=async function(){if(busy)return;busy=true;abort=new AbortController();var importTimer=doc.defaultView.setTimeout(function(){if(abort)abort.abort();},30000);status.textContent=da?'Henter…':'Downloading…';render();try{var imported=await importEntry(o.wiki,e,{signal:abort.signal});if(!live())return;if(o.wiki.getTiddlerText(target._title,'')!==original)throw Error(da?'Scenen er ændret. Luk og åbn materialerne igen.':'The scene changed. Close and reopen Materials.');var result=place(target,imported,{parent:attach.value}),text=JSON.stringify(result.scene),old=o.wiki.getTiddler(target._title);o.markOwnWrite(target._title,text);o.wiki.addTiddler(new $tw.Tiddler(old,{text:text}));close();o.reload();}catch(error){if(live())status.textContent=error.name==='AbortError'?(da?'Hentning afbrudt':'Download cancelled'):error.message;}finally{doc.defaultView.clearTimeout(importTimer);busy=false;if(live())render();}};});
+  }
+  function refresh(){var selected=collections.value;all=entries(o.wiki,remote);collections.textContent='';var opt=el(doc,'option','',da?'Alle samlinger':'All collections',collections);opt.value='';Array.from(new Set(all.map(function(e){return e.collection;}))).sort().forEach(function(c){var op=el(doc,'option','',collectionName(c,da),collections);op.value=c;});collections.value=selected;render();}
+  query.oninput=function(){page=0;render();};[categories,collections].forEach(function(input){input.onchange=function(){page=0;render();};});prev.onclick=function(){page--;render();};next.onclick=function(){page++;render();};popup.addEventListener('keydown',function(e){e.stopPropagation();if(e.key==='Escape'){e.preventDefault();close();}if(e.key==='Tab'){var nodes=Array.from(current.querySelectorAll('button:enabled,input,select,a[href]')).filter(function(n){return n.getClientRects().length;});if(e.shiftKey&&doc.activeElement===nodes[0]){e.preventDefault();nodes[nodes.length-1].focus();}else if(!e.shiftKey&&doc.activeElement===nodes[nodes.length-1]){e.preventDefault();nodes[0].focus();}}});refresh();query.focus();
+  // One small metadata request; image requests are limited to visible previews
+  // and the dependencies of the single item the user chooses.
+  var controller=new AbortController(),timer=doc.defaultView.setTimeout(function(){controller.abort();},20000);abort=controller;fetch(URL,{credentials:'omit',signal:controller.signal}).then(function(r){if(!r.ok)throw Error('Catalogue unavailable');return r.json();}).then(function(data){if(!live()||!data||!Array.isArray(data.entries))return;remote={schemaVersion:1,entries:data.entries.filter(valid)};write(o.wiki,{title:CACHE,type:'application/json',text:JSON.stringify(remote)});refresh();}).catch(function(){if(live()&&!busy)status.textContent=da?'Offline: viser gemte materialer.':'Offline: showing saved materials.';}).finally(function(){doc.defaultView.clearTimeout(timer);});return true;
+ }
+ return {open:open,close:close,dispose:function(){disposed=true;close();}};
+}
+exports.search=search;exports.entries=entries;exports.importEntry=importEntry;exports.place=place;exports.mount=mount;exports.TAG=TAG;
+})();

@@ -1,0 +1,77 @@
+name: AniMus materials and starter scenes
+on:
+  push:
+    branches: [feat/animus-material-library-20261122]
+    paths:
+      - catalog/editions.json
+      - catalog/assembler-i18n.json
+      - editions/animus/manifest.json
+      - tests/animus-ipad-browser.test.mjs
+      - scripts/build-animus-assets.py
+      - scripts/prepare-animus-assets.py
+      - scripts/animus-source-index.json
+      - plugins/musical/src/asset-library.js
+      - plugins/musical/src/layer-order.js
+      - plugins/musical/src/projects.js
+      - .github/workflows/animus-materials.yml
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  prepare-and-test:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install PNG crop library
+        run: python -m pip install Pillow==11.3.0
+      - name: Build searchable catalogue and both starter packs
+        run: python scripts/prepare-animus-assets.py
+      - name: Build the shared editor and native Forge Plugin Library
+        run: |
+          node scripts/build-animus.mjs
+          node scripts/build-forge-plugin-library.mjs
+          node scripts/build-forge-home.mjs
+          node scripts/build-forge-home.mjs --check
+          node scripts/build-animus.mjs --check
+          node --test tests/animus-asset-library.test.mjs tests/animus-layer-order.test.mjs tests/animus-production.test.mjs tests/animus-figure-panel.test.mjs
+      - name: Verify complete catalogues and starter templates
+        run: node scripts/verify-animus-assets.mjs
+      - name: Run complete portable source regression suite
+        shell: bash
+        run: |
+          npm ci --ignore-scripts
+          files=(tests/*.test.mjs)
+          selected=()
+          for file in "${files[@]}"; do
+            if [[ "$file" != "tests/forgeshare.test.mjs" ]]; then selected+=("$file"); fi
+          done
+          node --test --test-reporter=spec "${selected[@]}" > /tmp/animus-source-tests.log 2>&1 || { tail -n 180 /tmp/animus-source-tests.log; exit 1; }
+          tail -n 12 /tmp/animus-source-tests.log
+      - name: Install isolated browser test runtime
+        run: |
+          npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+          npx playwright-core install chromium
+      - name: Test starter scenes, material search and layer dragging in the browser
+        run: node scripts/animus-materials-browser-smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: animus-materials-browser
+          path: test-results/animus-materials
+          retention-days: 7
+      - name: Persist generated material files on the feature branch
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add assets/animus plugins/animus-starter-kenney plugins/animus-theme-greek-harbour plugins/musical/dist/plugin.json library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json
+          git diff --cached --quiet || git commit -m 'Build reviewed AniMus material catalogue and reusable starter scenes'
+          git push origin HEAD:${{ github.ref_name }}
