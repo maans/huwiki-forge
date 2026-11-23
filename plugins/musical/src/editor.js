@@ -745,7 +745,7 @@ function attach(o){
    if(!next){status.textContent=da?"Der skal være et senere kontrolpunkt på figurens spor.":"Add a later keyframe on the figure track.";return;}
    duration.value=String(round(next.t-playhead));removePreview();
   };
-  var timingOptions=el(doc,"details","huw-motion-timing",group);
+  var timingOptions=el(doc,"details","huw-motion-timing",undefined,group);
   el(doc,"summary","",da?"Flere tidsvalg":"More timing options",timingOptions);
   timingOptions.appendChild(tempo.parentNode);timingOptions.appendChild(fit);
   presetDuration();
