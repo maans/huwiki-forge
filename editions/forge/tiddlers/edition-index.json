@@ -132,6 +132,28 @@
     "note-en": "Beta · new fullscreen reader; physical iPad testing pending. Check notation and repeats."
   },
   {
+    "title": "$:/huwiki/forge/edition/akustisk-elektrisk-repertoire",
+    "tags": "$:/huwiki/forge/edition",
+    "text": "",
+    "home-hidden": "no",
+    "edition-id": "akustisk-elektrisk-repertoire",
+    "name": "Akustisk-Elektrisk Repertoire",
+    "status": "test",
+    "version": "0.1.0",
+    "order": "02.21",
+    "build-url": "https://forge.måns.dk/assembler/?edition=akustisk-elektrisk-repertoire",
+    "build-url-da": "https://forge.måns.dk/assembler/?edition=akustisk-elektrisk-repertoire&lang=da",
+    "build-url-en": "https://forge.måns.dk/assembler/?edition=akustisk-elektrisk-repertoire&lang=en",
+    "demo-url-da": "https://forge.måns.dk/demo/?edition=akustisk-elektrisk-repertoire&lang=da",
+    "demo-url-en": "https://forge.måns.dk/demo/?edition=akustisk-elektrisk-repertoire&lang=en",
+    "heading-da": "Akustisk-Elektrisk Repertoire",
+    "heading-en": "Akustisk-Elektrisk Repertoire",
+    "description-da": "Fire melodier fra balkanduoens repertoire med koncertnoder, capogreb og stemmer til sopran- og sopraninosaxofon.",
+    "description-en": "Four Balkan duo tunes with concert scores, capo charts, and parts for soprano and sopranino saxophone.",
+    "note-da": "Čik, čik · Majčin čoček · To sekunder · Dobar Bubnjar",
+    "note-en": "Čik, čik · Majčin čoček · To sekunder · Dobar Bubnjar"
+  },
+  {
     "title": "$:/huwiki/forge/edition/animus",
     "tags": "$:/huwiki/forge/edition",
     "text": "",

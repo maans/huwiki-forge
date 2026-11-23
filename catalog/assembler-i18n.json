@@ -163,6 +163,16 @@
         "name": "Greek harbour starter",
         "description": "Opens in a separate AniMus wiki."
       }
+    },
+    "akustisk-elektrisk-repertoire": {
+      "da": {
+        "name": "Akustisk-Elektrisk Repertoire",
+        "description": "Fire melodier fra balkanduoens repertoire med koncertnoder, capogreb og stemmer til sopran- og sopraninosaxofon."
+      },
+      "en": {
+        "name": "Akustisk-Elektrisk Repertoire",
+        "description": "Four Balkan duo tunes with concert scores, capo charts, and parts for soprano and sopranino saxophone."
+      }
     }
   },
   "packages": {
