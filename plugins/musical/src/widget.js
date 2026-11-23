@@ -165,7 +165,14 @@ Musical.prototype.render=function(parent,next){
  var time=node(doc,"input","huw-musical-range",undefined,transport);
  time.type="range";time.min="0";time.max=String(Playlist.total(clips));time.step=".01";
  time.value="0";time.setAttribute("aria-label",L.timeline);
+ var dial=node(doc,"div","huw-musical-jog",undefined,transport);
+ dial.tabIndex=0;dial.setAttribute("role","slider");dial.setAttribute("aria-orientation","vertical");dial.setAttribute("aria-valuemin","0");
+ var jogHint=da?"Drej på hjulet, eller træk op og ned på tidstallet. Træk ud til siden for at finjustere.":"Turn the wheel, or drag the time up and down. Move sideways for finer control.";
+ dial.title=jogHint;dial.setAttribute("aria-description",jogHint);
+ dial.setAttribute("aria-label",da?"Finjustér tiden":"Fine-adjust time");
  var clock=node(doc,"output","huw-musical-time","0:00",transport);
+ clock.title=jogHint;
+ node(doc,"span","huw-musical-jog-help",jogHint,transport);
  var speed=node(doc,"select","huw-musical-speed",undefined,transport);
  speed.setAttribute("aria-label",L.tempo);
  [["75","75 %"],["100","100 %"],["125","125 %"]].forEach(function(row){
@@ -488,10 +495,19 @@ Musical.prototype.render=function(parent,next){
   if(scrubTime==null&&Number(time.value)!==t)time.value=String(t);
   var clockLabel=timeLabel(t,!timeline||!timeline.running)+" / "+timeLabel(duration);
   if(clock.textContent!==clockLabel)clock.textContent=clockLabel;
+  if(!timeline||!timeline.running){
+   dial.setAttribute("aria-valuenow",String(Math.round(t*100)/100));dial.setAttribute("aria-valuemax",String(duration));
+   dial.setAttribute("aria-valuetext",timeLabel(t,true));
+   dial.style.setProperty("--jog-turn",String(t*360)+"deg");
+  }
   host.dataset.cameraTime=visualTime.toFixed(2);
  }
  timeline=new Timeline(duration,paint);
  this._timeline=timeline;
+ var disposeJog=require("$:/plugins/huwiki/musical/fine-time.js").mount(dial,clock,{
+  position:function(){return timeline.value();},duration:function(){return duration;},
+  pause:function(){if(timeline.running)pauseAll();},seek:seek
+ });
  function frame(){
   self._frame=0;if(!alive()||!timeline.running)return;
   paint(timeline.value());
@@ -639,6 +655,7 @@ Musical.prototype.render=function(parent,next){
   if(wasRunning){timeline.play();setPlaying(true);syncAudio(position);}
  });
  this._shutdown=function(){
+  disposeJog();
   if(scrubFrame)cancelAnimationFrame(scrubFrame);
   doc.removeEventListener("pointerup",endScrub);doc.removeEventListener("pointercancel",endScrub);
   self._dead=true;generation++;stopFrames();if(self._videoExporter)self._videoExporter.dispose();sfx.dispose();voice.dispose();LipSync.reset(view);clearNotes();if(workspace)workspace.dispose();if(editor)editor.dispose();
@@ -712,7 +729,7 @@ Musical.prototype.render=function(parent,next){
   onAudioChange:function(updated){scene.musical.audioClips=updated;refreshCueScores();voice.setClips(updated);lipOptions.audioClips=updated;LipSync.invalidate(view);duration=fullDuration();timeline.duration=duration;time.max=String(duration);if(editor)editor.redraw();paint(timeline.value());},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},repaint:function(){paint(timeline.value());},
   openFace:openFace,
-  layout:layout,transport:transport,play:play,view:view,editor:editor,
+  layout:layout,transport:transport,timeRange:time,play:play,view:view,editor:editor,
   refreshScore:function(){showSong(timeline.value());},
   seek:seek,position:function(){return timeline.value();},
   pause:function(){if(timeline.running)pauseAll();},

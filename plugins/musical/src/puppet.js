@@ -250,17 +250,57 @@ function mount(o){
   field.onchange=function(){onchange(type==="checkbox"?field.checked:type==="number"?Number(field.value):field.value);};return field;}
  function button(host,label,onClick){var b=el(doc,"button","huw-puppet-action",label,host);b.type="button";b.onclick=onClick;return b;}
  function appearance(to,from){var generated=to.svgLayerIds||{};Object.keys(generated).forEach(function(id){parts=parts.filter(function(p){return p.id!==generated[id];});});delete to.svgDrawing;delete to.svgLayerIds;["type","geo","fill","stroke","strokeWidth","rig","text","fontSize","align","weight","fontFamily","variants","variantId","asset","assetId","imageData","src"].forEach(function(k){delete to[k];if(from[k]!==undefined)to[k]=clone(from[k]);});}
+ function artBounds(p){
+  if(p.svgDrawing)return clone(p.svgDrawing.bounds);
+  var bounds=imageInfo(p);
+  if(p.type==="image")return bounds;
+  var node=preview&&preview.nodes[p.id],shape=node&&node.shape;
+  try{var bb=shape&&shape.getBBox();if(bb&&bb.width>0&&bb.height>0)return {x:r(bb.x),y:r(bb.y),w:r(bb.width),h:r(bb.height)};}catch(_unmounted){}
+  return bounds;
+ }
+ function replaceImage(p,replacement){
+  var bounds=artBounds(p),variants=clone(p.variants||[]),active=Engine.state(p,previewTime).variantId;
+  var index=variants.findIndex(function(v){return v.id===active;});if(index<0&&variants.length)index=0;
+  var item=Object.assign({},replacement,{id:index>=0?variants[index].id:Model.id("variant")});
+  // The renderer builds a sprite viewport from the part-level crop. Keep
+  // the other variants on their original atlas when one image is swapped.
+  var oldCrop=p.geo&&p.geo.crop;
+  if(oldCrop||item.crop){
+   var full={x:0,y:0,w:bounds.w,h:bounds.h,sourceWidth:bounds.w,sourceHeight:bounds.h};
+   bounds.crop=clone(oldCrop||full);item.crop=item.crop||full;
+  }
+  if(index>=0)variants[index]=item;else variants.push(item);
+  appearance(p,{type:"image",geo:bounds,variants:variants,variantId:p.variantId||item.id});
+  writable();renderAll();
+ }
+ function quickArtwork(p){
+  if(p.type==="group"&&!p.svgDrawing)return;
+  var actions=el(doc,"div","huw-puppet-presets",undefined,inspector),picker=el(doc,"div","huw-puppet-parts",undefined,inspector);
+  picker.hidden=true;
+  button(actions,da?"Vælg fra Materialer":"Choose from Materials",function(){
+   picker.hidden=!picker.hidden;if(picker.hidden||picker.firstChild)return;
+   require("$:/plugins/huwiki/musical/part-materials.js").show(doc,o.wiki,picker,p,da,function(item){
+    replaceImage(p,{asset:item.asset,name:item.name,crop:item.crop});
+   });
+  });
+  button(actions,da?"Tegn del":"Draw part",function(){
+   var svg=optionalSvgLayers();if(!svg)return;
+   var models=require("$:/plugins/huwiki/cutout/svg-model.js");
+   var active=Engine.state(p,previewTime).variantId,v=(p.variants||[]).find(function(v){return v.id===active;})||(p.variants||[])[0];
+   var fields=v&&v.asset&&o.wiki.getTiddler(v.asset),model=v&&v.partDrawing;
+   if(!model&&fields&&fields.fields["animus-svg-model"])model=JSON.parse(fields.fields["animus-svg-model"]);
+   drawing=svg.open({doc:doc,wiki:o.wiki,host:overlay,part:p,da:da,still:true,initialModel:model||models.create(artBounds(p),p.name),duration:1,
+    onClose:function(){drawing=null;},onSave:function(layers,settings){
+     var result=svg.svgOf(doc,settings.model,0);
+     replaceImage(p,{name:settings.name||p.name,imageData:"data:image/svg+xml;charset=utf-8,"+encodeURIComponent(result.svg),
+      partDrawing:settings.model,saveAsMaterial:settings.reuse});return true;
+    }});
+  });
+ }
  function selectImage(file){if(!file)return;var allowed=/^image\/(png|jpeg|webp|svg\+xml)$/i;
   if(!allowed.test(file.type)||file.size>8*1024*1024){msg.textContent=da?"Vælg SVG, PNG, JPEG eller WebP under 8 MB.":ui("Choose an SVG, PNG, JPEG or WebP under 8 MB.");return;}
   var target=appearancePart(selectedNode()),targetId=target&&target.id,targetOverlay=overlay;
-  function use(data){var p=lookup(targetId);if(!overlay||overlay!==targetOverlay||!p)return;
-   var bounds=imageInfo(p),node=preview&&preview.nodes[p.id],shape=node&&node.shape;
-   try{var bb=shape&&shape.getBBox();if(bb&&bb.width>0&&bb.height>0)bounds={x:r(bb.x),y:r(bb.y),w:r(bb.width),h:r(bb.height)};}catch(_unmounted){}
-   var variants=clone(p.variants||[]),active=Engine.state(p,previewTime).variantId,index=variants.findIndex(function(v){return v.id===active;});if(index<0&&variants.length)index=0;
-   // Keep the active variant ID so existing timed variant keys continue to
-   // display the replacement without changing animation timing or poses.
-   var v={id:index>=0?variants[index].id:Model.id("variant"),name:file.name,imageData:data};if(index>=0)variants[index]=v;else variants.push(v);
-   appearance(p,{type:"image",geo:bounds,variants:variants,variantId:p.variantId||v.id});writable();renderPreview();renderInspector();}
+  function use(data){var p=lookup(targetId);if(overlay&&overlay===targetOverlay&&p)replaceImage(p,{name:file.name,imageData:data});}
   if(file.type==="image/svg+xml")file.text().then(function(s){validateSvg(s);use("data:image/svg+xml;charset=utf-8,"+encodeURIComponent(s));}).catch(function(err){msg.textContent=err.message;});
   else{var reader=new FileReader();reader.onload=function(){use(reader.result);};reader.onerror=function(){msg.textContent=String(reader.error);};reader.readAsDataURL(file);}
  }
@@ -356,6 +396,7 @@ function mount(o){
  var advancedOpen=false,turnMode=false;
  function renderInspector(){if(!inspector)return;inspector.textContent="";var p=selectedNode();if(!p){el(doc,"p","huw-puppet-hint",clip?L.choose:da?"Vælg objektet eller en af dets dele i visningen eller listen.":ui("Select the object or one of its parts in the preview or list."),inspector);return;}
   el(doc,"h3","",p.name||p.id,inspector);
+  quickArtwork(appearancePart(p));
   var advanced=el(doc,"details","huw-puppet-advanced",undefined,inspector);
   advanced.open=advancedOpen;advanced.ontoggle=function(){if(advanced.parentNode===inspector)advancedOpen=advanced.open;};
   el(doc,"summary","",da?"Præcise mål og drejepunkt":ui("Precise values and pivot"),advanced);
@@ -484,7 +525,17 @@ function mount(o){
  function renderAll(){renderPreview();renderTree();renderInspector();}
  function installAssets(){parts.forEach(function(p){(p.variants||[]).forEach(function(v){if(!v.imageData)return;
    var id=Model.id("asset"),title="CutOut/Assets/"+id,raw=v.imageData,match=/^data:(image\/(?:svg\+xml|png|jpeg|webp))/.exec(raw);
-   if(!match)throw Error("Unsupported image");o.wiki.addTiddler(new $tw.Tiddler({title:title,type:match[1],"cutout-id":id,caption:v.name||p.name||"Billede",tags:["CutOut Assets"],text:raw}));
+   if(!match)throw Error("Unsupported image");var fields={title:title,type:match[1],"cutout-id":id,caption:v.name||p.name||"Billede",tags:["CutOut Assets"],text:raw};
+   if(v.partDrawing){
+    fields.text=decodeURIComponent(raw.slice(raw.indexOf(",")+1));fields["animus-svg-model"]=JSON.stringify(v.partDrawing);
+    if(v.saveAsMaterial){
+     var name=fields.caption,entry={id:"drawing-"+id,name:name,source:"local",category:"cutout",collection:"my-parts",
+      assets:[{id:id,title:title,mime:"image/svg+xml",width:v.partDrawing.bounds.w,height:v.partDrawing.bounds.h}]};
+     o.wiki.addTiddler(new $tw.Tiddler({title:"$:/AniMus/Library/items/"+entry.id,type:"application/json",tags:["$:/tags/AniMus/Asset"],text:JSON.stringify(entry)}));
+    }
+    delete v.partDrawing;delete v.saveAsMaterial;
+   }
+   o.wiki.addTiddler(new $tw.Tiddler(fields));
    v.asset=title;v.assetId=id;delete v.imageData;
   });});}
  function rebuildStage(){

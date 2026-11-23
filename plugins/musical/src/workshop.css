@@ -24,3 +24,7 @@
  .huw-musical-workshop-top>strong{font-size:12px}
  .huw-musical-workshop-top button{min-width:64px;padding:8px 10px}
 }
+.huw-part-choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:4px;max-height:15rem;overflow:auto}
+.huw-part-choices button{display:flex;align-items:center;flex-direction:column;overflow-wrap:anywhere}
+.huw-part-choices svg{width:48px;height:48px;overflow:hidden}
+.huw-svg-frames-section[hidden]{display:none}

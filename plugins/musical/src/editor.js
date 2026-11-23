@@ -714,8 +714,9 @@ function attach(o){
  }
  function rigControls(t){
   var ctx=partContext(t.part,o.view,playhead,[],true,0),root=ctx&&ctx.view.nodes[t.part].part;
-  if(!root||!root.animusRig||!ctx.active)return;
+  if(!root||!ctx.active)return;
   var rig=require("$:/plugins/huwiki/musical/skeleton.js"),scene=ctx.view.scene;
+  if(!rig.fittedRig(scene.parts,root))return;
   var group=el(doc,"fieldset","huw-musical-rig-controls",undefined,inspector);el(doc,"legend","",da?"Bevægelsesbibliotek":"Motion library",group);
   function dropdown(name,options){
    var label=el(doc,"label","",name+" ",group),select=el(doc,"select","",undefined,label);
@@ -725,6 +726,10 @@ function attach(o){
   var dir=dropdown(da?"Retning":"Direction",[["1",da?"Mod højre":"Right"],["-1",da?"Mod venstre":"Left"],["0",da?"På stedet":"In place"]]);
   var tempo=dropdown("Tempo",[["1",da?"Normalt":"Normal"],["0.75",da?"Langsomt":"Slow"],["1.5",da?"Hurtigt":"Fast"]]);
   var count=dropdown(da?"Gentagelser":"Repeats",[1,2,3,4,6,8].map(function(v){return [v,v];}));
+  var props=scene.parts.filter(function(p){return !p.parent&&(p["animus-category"]==="prop"||/^glitch-/.test(p.id));});
+  var propMenu=dropdown(da?"Rekvisit":"Prop",[["",da?"Kun bevægelsen":"Gesture only"]].concat(props.map(function(p){return [p.id,p.name||p.id];})));
+  propMenu.parentNode.hidden=true;
+  function propChoice(){return kind.value==="pickup"&&props.find(function(p){return p.id===propMenu.value;})||null;}
   var track={kind:scene===film?"film-part":"part",part:t.part};
   var durationLabel=el(doc,"label","",da?"Samlet varighed (sek.) ":"Total duration (sec) ",group);
   var duration=el(doc,"input","huw-rig-duration",undefined,durationLabel);
@@ -740,6 +745,9 @@ function attach(o){
    if(!next){status.textContent=da?"Der skal være et senere kontrolpunkt på figurens spor.":"Add a later keyframe on the figure track.";return;}
    duration.value=String(round(next.t-playhead));removePreview();
   };
+  var timingOptions=el(doc,"details","huw-motion-timing",group);
+  el(doc,"summary","",da?"Flere tidsvalg":"More timing options",timingOptions);
+  timingOptions.appendChild(tempo.parentNode);timingOptions.appendChild(fit);
   presetDuration();
   function motionRate(){
    var seconds=Number(duration.value);
@@ -751,18 +759,19 @@ function attach(o){
   }
   var tryButton=el(doc,"button","",da?"Prøv bevægelsen":"Preview motion",group);tryButton.type="button";
   var sampleView=el(doc,"div","huw-rig-motion-preview",undefined,group);
-  function removePreview(){sampleView.textContent="";}
-  kind.onchange=tempo.onchange=count.onchange=function(){presetDuration();removePreview();};
-  dir.onchange=duration.oninput=removePreview;
+  function removePreview(){sampleView.textContent="";if(replace)replace.hidden=true;}
+  kind.onchange=tempo.onchange=count.onchange=function(){propMenu.parentNode.hidden=kind.value!=="pickup"||!props.length;presetDuration();removePreview();};
+  dir.onchange=propMenu.onchange=duration.oninput=removePreview;
   tryButton.onclick=function(){
    removePreview();var ids=new Set([root.id]),members=[root];
    for(var i=0;i<members.length;i++)scene.parts.forEach(function(p){if(p.parent===members[i].id&&!ids.has(p.id)){ids.add(p.id);members.push(p);}});
    var now=partContext(t.part,o.view,playhead,[],true,0);if(!now||!now.active)return;
+   var prop=propChoice();if(prop)members.push(prop);
    var copy=members.map(function(p){return Object.assign({},p,{keys:[Object.assign({t:0},Engine.state(p,now.time))]});});
    var rate=motionRate();if(!rate)return;
    var span=rig.cycles[kind.value][2]/rate,data;
-   try{data=rig.sequence(copy,copy[0],0,kind.value,dir.value==="-1"?-1:1,1,span+.001,dir.value==="0",rate);}
-   catch(err){status.textContent=da?"Kontrollér leddene og sæt kropsdelene fast på skelettet.":"Check the joints and attach artwork to the rig.";return;}
+   try{data=rig.sequence(copy,copy[0],0,kind.value,dir.value==="-1"?-1:1,1,span+.001,dir.value==="0",rate,prop?copy[copy.length-1]:null);}
+   catch(err){if(err.message==="reach"){status.textContent=reachMessage();return;}status.textContent=da?"Kontrollér leddene og sæt kropsdelene fast på skelettet.":"Check the joints and attach artwork to the rig.";return;}
    data.forEach(function(keys,p){p.keys=keys;});
    var view=Engine.build(doc,o.wiki,{version:1,width:scene.width,height:scene.height,duration:span,parts:copy,background:"transparent"},false);
    sampleView.appendChild(view.svg);var bounds=[],node=view.nodes[root.id].el;
@@ -772,19 +781,32 @@ function attach(o){
    var frameBox=view.svg.getAttribute("viewBox"),first=null;function tick(stamp){if(!group.contains(view.svg)||!inspector.contains(group))return;if(first===null)first=stamp;var elapsed=(stamp-first)/1000;Engine.paint(view,Math.min(span,elapsed));view.svg.setAttribute("viewBox",frameBox);if(elapsed<span)doc.defaultView.requestAnimationFrame(tick);}
    doc.defaultView.requestAnimationFrame(tick);
   };
+  function reachMessage(){return da?"Flyt rekvisitten hen til den hånd, der skal samle den op.":"Move the prop within reach of the picking hand."; }
   var add=el(doc,"button","",da?"Indsæt ved tidsmarkøren":"Insert at playhead",group);add.type="button";
-  add.onclick=function(){
+  var replace=el(doc,"button","",da?"Brug bevægelsen her":"Use movement here",group);
+  replace.type="button";replace.hidden=true;
+  add.onclick=function(){insert(false);};replace.onclick=function(){insert(true);};
+  function insert(coverKeys){
+   replace.hidden=true;
    var now=partContext(t.part,o.view,playhead,[],true,0);if(!now||now.view!==ctx.view||!now.active)return;
    var at=now.time,type=kind.value,cycles=Number(count.value),rate=motionRate(),data;
    if(!rate)return;
    var localEnd=at+cycles*rig.cycles[type][2]/rate;
    if(!withinScene(now,playhead,localEnd,Number(duration.value)))return;
-   try{data=rig.sequence(scene.parts,root,at,type,dir.value==="-1"?-1:1,cycles,scene.duration,dir.value==="0",rate);}
-   catch(err){var reasons={duration:da?"Bevægelsen går ud over scenens slutning.":"Movement extends past the scene.",unbound:da?"Sæt først en kropsdel fast på skelettet i dukkeværkstedet.":"Attach artwork to the skeleton first.",overlap:da?"Der er allerede nøglebilleder her. Vælg et ledigt tidsrum.":"This range contains keyframes. Choose a free range."};status.textContent=reasons[err.message]||(da?"Denne skalering kan ikke bevares.":"Cannot preserve this scale.");return;}
+   try{data=rig.sequence(scene.parts,root,at,type,dir.value==="-1"?-1:1,cycles,scene.duration,dir.value==="0",rate,propChoice(),coverKeys);}
+   catch(err){
+    if(err.message==="overlap"&&!coverKeys){
+     try{rig.sequence(scene.parts,root,at,type,dir.value==="-1"?-1:1,cycles,scene.duration,dir.value==="0",rate,propChoice(),true);}
+     catch(conflict){status.textContent=conflict.message==="reach"?reachMessage():(da?"Vælg tid uden for det andet klip.":"Choose a time outside the other clip.");return;}
+     replace.hidden=false;status.textContent=da?"Her er allerede en bevægelse. Brug den nye her, eller vælg et andet tidspunkt.":"There is motion here already. Use the new movement here or choose another time.";return;
+    }
+    var reasons={reach:reachMessage(),duration:da?"Bevægelsen går ud over scenens slutning.":"Movement extends past the scene.",unbound:da?"Sæt først en kropsdel fast på skelettet i dukkeværkstedet.":"Attach artwork to the skeleton first.",overlap:da?"Der er allerede nøglebilleder her. Vælg et ledigt tidsrum.":"This range contains keyframes. Choose a free range."};status.textContent=reasons[err.message]||(da?"Denne skalering kan ikke bevares.":"Cannot preserve this scale.");return;}
    var id="rig-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7),prior={};
    data.forEach(function(keys,p){
-    var old=p.keys||[];prior[p.id]=old.filter(function(k){return Math.abs(k.t-at)<1e-8;});
-    var keep=old.filter(function(k){return Math.abs(k.t-at)>=1e-8;});
+    var old=p.keys||[];
+    function covered(k){return Math.abs(k.t-at)<1e-8||coverKeys&&k.t>at&&k.t<=localEnd+1e-6;}
+    prior[p.id]=old.filter(covered);
+    var keep=old.filter(function(k){return !covered(k);});
     if(at>0&&!old.some(function(k){return k.t<=at;}))keys.unshift(Object.assign({t:0},Engine.state(p,0)));
     p.keys=keep.concat(keys.map(function(k){return Object.assign({},k,{animusMove:id});})).sort(function(a,b){return a.t-b.t;});
    });
@@ -826,6 +848,11 @@ function attach(o){
     affected.forEach(function(part){part.keys.forEach(function(key){
      if(key.animusMove===picked.id)key.t=picked.start+(key.t-picked.start)*newSpan/oldSpan;
     });part.keys.sort(function(a,b){return a.t-b.t;});});
+    affected.forEach(function(part){
+     var restore=picked.prior[part.id].filter(function(key){return key.t>end+1e-6;});
+     if(restore.length){part.keys=part.keys.concat(restore).sort(function(a,b){return a.t-b.t;});
+      picked.prior[part.id]=picked.prior[part.id].filter(function(key){return key.t<=end+1e-6;});}
+    });
     picked.end=end;save(track);draw();o.repaint();
    };
   }
