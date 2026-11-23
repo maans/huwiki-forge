@@ -50,6 +50,7 @@ function fixture({songs=film.musical.songs,notatedSeconds=110,audioPending=false
  const ABC={renderAbc:()=>{notationRenders++;return [{getTotalTime:()=>notatedSeconds,noteTimings:[]}];},
   synth:{supportsAudio:()=>audioPending,activeAudioContext(){contextRequests++;return context;},SynthController:function(){}}};
  const deps={
+  "$:/plugins/huwiki/musical/fine-time.js":localModule("fine-time"),
   '$:/core/modules/widgets/widget.js':{widget:Widget},
   '$:/plugins/huwiki/cutout/engine.js':{
    readScene:()=>scene,build:()=>({scene,svg:doc.createElement('svg'),nodes:{},clips:[]}),

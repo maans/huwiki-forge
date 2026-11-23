@@ -6,7 +6,7 @@ import {runInNewContext} from 'node:vm';
 import {SvgNode,svgDocument} from './helpers/svg-test-dom.mjs';
 
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
-const sources=Object.fromEntries(await Promise.all(['cue-score','widget','sync','playlist','puppet','figure-panel','face','lipsync'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
+const sources=Object.fromEntries(await Promise.all(['fine-time','cue-score','widget','sync','playlist','puppet','figure-panel','face','lipsync'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
 const cutout=JSON.parse(JSON.parse(await read('plugins/cutout/dist/plugin.json')).text).tiddlers;
 SvgNode.prototype.getAttributeNames=function(){return [...new Set([...Object.keys(this.attributes),...(this.className?['class']:[])])];};
 SvgNode.prototype.cloneNode=function(deep){const node=new SvgNode(this.localName,this.ownerDocument);for(const name of this.getAttributeNames())node.setAttribute(name,this.getAttribute(name));node._text=this._text;node.nodeType=this.nodeType;Object.assign(node.style,this.style);if(deep)for(const child of this.children)node.appendChild(child.cloneNode(true));return node;};

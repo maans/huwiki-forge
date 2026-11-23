@@ -579,11 +579,14 @@ function mount(o){
   if(narration.isOpen()||scoreWorkshop.isOpen())return;
   if(manuscript.isOpen()){if(e.key==="Escape"){e.preventDefault();manuscript.close();}return;}
   if(puppet.isOpen())return;
-  if(e.altKey||e.ctrlKey||e.metaKey||editingField(e.target))return;
+  var timeArrow=e.target===o.timeRange&&(e.key==="ArrowRight"||e.key==="ArrowLeft");
+  if(e.altKey||e.ctrlKey||e.metaKey||(!timeArrow&&editingField(e.target)))return;
   if(e.code==="Space"&&e.target.tagName!=="BUTTON"){
    e.preventDefault();o.play.click();
   }else if(e.key==="ArrowRight"||e.key==="ArrowLeft"){
-   e.preventDefault();o.seek(o.position()+(e.key==="ArrowRight"?1:-1)*(e.shiftKey?1:.1));
+   e.preventDefault();o.pause();
+   var timing=require("$:/plugins/huwiki/musical/fine-time.js");
+   o.seek(timing.nudge(o.position(),e.key==="ArrowRight"?1:-1,e.shiftKey));
   }else if(e.key==="Delete"||e.key==="Backspace"){
    e.preventDefault();editor.removeKeyframe();
   }else if(e.key.toLowerCase()==="k"){

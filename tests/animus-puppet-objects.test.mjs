@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
 import {runInNewContext} from 'node:vm';
+import {drawingDocument} from './helpers/drawing-document.mjs';
 import {svgDocument} from './helpers/svg-test-dom.mjs';
 
 const root=new URL('../',import.meta.url),plain=value=>JSON.parse(JSON.stringify(value));
@@ -12,15 +13,20 @@ const horse=JSON.parse(production.find(t=>t.title==='Turn Around · 01 · The Wh
 class Tiddler {constructor(...values){this.fields=Object.assign({},...values.map(value=>value?.fields||value));}}
 class Reader {readAsDataURL(file){this.result=file.data;if(file.defer)file.defer(()=>this.onload());else this.onload();}}
 function scene(parts){return {version:1,kind:'scene',width:1600,height:900,duration:26,parts:plain(parts)};}
-function harness({scenes={Scene:scene([horse])},sequence=[{source:'Scene',duration:26}],filmParts=[],time=1,id='shadow-horse',figureTransforms={},withEditor=false}={}){
+function harness({scenes={Scene:scene([horse])},sequence=[{source:'Scene',duration:26}],filmParts=[],time=1,id='shadow-horse',figureTransforms={},withEditor=false,makeDoc=svgDocument,assets={}}={}){
  const film={version:1,kind:'theatre',width:1600,height:900,duration:sequence.reduce((sum,c)=>sum+c.duration,0)||26,parts:plain(filmParts),scenes:sequence,musical:{animationClips:[],figureTransforms:plain(figureTransforms)}};
  const records=Object.fromEntries(Object.entries({...scenes,Film:film}).map(([title,data])=>[title,{title,type:'application/json',text:JSON.stringify(data)}])),writes=[];
+ Object.assign(records,assets);
   records['$:/language']={title:'$:/language',text:'$:/languages/da-DK'};
  const initial=plain(records),wiki={getTiddlerText:(title,fallback='')=>records[title]?.text??fallback,getTiddler:title=>records[title]&&new Tiddler(records[title]),
-  addTiddler(tiddler){records[tiddler.fields.title]=plain(tiddler.fields);writes.push(tiddler.fields.title);},each(callback){Object.entries(records).forEach(([title,fields])=>callback(new Tiddler(fields),title));},getTiddlers:()=>Object.keys(records),getModificationFields:()=>({}),generateNewTitle:title=>title};
- const cache={};function load(id){if(cache[id])return cache[id];const exports={};cache[id]=exports;const musical=/^\$:\/plugins\/huwiki\/musical\/([^/]+)\.js$/.exec(id),code=musical?(musical[1]==='puppet'?puppetSource:readFileSync(new URL('plugins/musical/src/'+musical[1]+'.js',root),'utf8')):bundle[id]?.text;if(!code)throw Error('Missing '+id);
+  addTiddler(tiddler){records[tiddler.fields.title]=plain(tiddler.fields);writes.push(tiddler.fields.title);},each(callback){Object.entries(records).forEach(([title,fields])=>callback(new Tiddler(fields),title));},getTiddlersWithTag:tag=>Object.keys(records).filter(t=>(records[t].tags||[]).includes(tag)),getTiddlers:()=>Object.keys(records),getModificationFields:()=>({}),generateNewTitle:title=>title};
+ const cache={};function load(id){if(cache[id])return cache[id];const exports={};cache[id]=exports;
+  if(makeDoc===drawingDocument&&(id.endsWith('/svg-model.js')||id.endsWith('/svg-layers.js'))){
+   runInNewContext(readFileSync(new URL('plugins/musical/src/'+id.split('/').pop(),root),'utf8'),{exports,require:load});return exports;
+  }
+  const musical=/^\$:\/plugins\/huwiki\/musical\/([^/]+)\.js$/.exec(id),code=musical?(musical[1]==='puppet'?puppetSource:readFileSync(new URL('plugins/musical/src/'+musical[1]+'.js',root),'utf8')):bundle[id]?.text;if(!code)throw Error('Missing '+id);
   runInNewContext(code,{exports,require:load,$tw:{Tiddler},FileReader:Reader});return exports;}
- const engine=load('$:/plugins/huwiki/cutout/engine.js'),puppet=load('$:/plugins/huwiki/musical/puppet.js'),doc=svgDocument(),host=doc.createElement('main');doc.body.appendChild(host);
+ const engine=load('$:/plugins/huwiki/cutout/engine.js'),puppet=load('$:/plugins/huwiki/musical/puppet.js'),doc=makeDoc(),host=doc.createElement('main');doc.body.appendChild(host);
  const view=engine.build(doc,wiki,film,false);host.appendChild(view.svg);let editor=null;
  function repaint(){engine.paint(view,time);if(editor)editor.paint(time);}
  const options={doc,wiki,host,view,film,sceneTitle:'Film',stageTitle:'Scene',scoreTitle:'Score',position:()=>time,pause(){},isPlaying:()=>false,duration:()=>film.duration,beatClock:()=>({at:t=>t*2}),seek(t){time=t;repaint();},repaint,markOwnWrite(){}};
@@ -269,7 +275,9 @@ test('workshop-only fitted joints bind artwork and produce editable travelling s
  assert.equal(h.canvas.querySelectorAll('[data-rig-joint]').length,0);
  toggle.click();
  const handle=h.canvas.querySelector('[data-rig-joint="handR"]');assert.ok(handle);
- handle.dispatch('pointerdown');h.canvas.dispatch('pointermove',{clientX:120,clientY:150});h.canvas.dispatch('pointerup');
+ handle.dispatch('pointerdown');h.canvas.dispatch('pointermove',{clientX:120,clientY:150});
+ assert.match(h.canvas.querySelector('[data-rig-label]').textContent,/hånd/i);
+ h.canvas.dispatch('pointerup');assert.equal(h.canvas.querySelector('[data-rig-label]'),null);
  button(h.overlay,'Sæt fast på skelet').click();
  h.canvas.querySelector('[data-rig-joint="chest"]').dispatch('pointerdown');
  const saved=h.save();assert.equal(saved.parts[1].animusJoint,'chest');assert.ok(saved.parts[0].animusRig);
@@ -279,4 +287,45 @@ test('workshop-only fitted joints bind artwork and produce editable travelling s
  assert.ok(h.host.querySelector('.huw-musical-motion-clip'));
  button(h.host,'Fjern seneste bevægelse · Gang').click();
  src=JSON.parse(h.records.Scene.text);assert.deepEqual(src.parts[0].keys,root.keys);
+});
+
+test('a drawn Kenney hand saves with its joint and keys and can be chosen for another hand',()=>{
+ const pack=JSON.parse(readFileSync(new URL('plugins/animus-starter-kenney/dist/plugin.json',root)));
+ const assets=JSON.parse(pack.text).tiddlers,scene=JSON.parse(assets['$:/plugins/huwiki/animus-starter-kenney/template'].text);
+ const hand=scene.parts.find(p=>p.id.includes('female-person-front-hand')),other=scene.parts.find(p=>p.id.includes('female-adventurer-front-hand'));
+ const h=harness({scenes:{Scene:scene},id:hand.id,assets,makeDoc:drawingDocument});
+ const button=(node,label)=>{const b=node.querySelectorAll('button').find(x=>x.textContent===label);assert.ok(b,label);return b;};
+ button(h.overlay,'Tegn del').click();
+ const drawing=h.host.querySelector('.huw-svg-workshop'),canvas=drawing.querySelector('.huw-svg-canvas');
+ const name=drawing.querySelector('.huw-svg-header input');name.value='Testhånd';
+ canvas.dispatch('pointerdown',{clientX:1,clientY:2});canvas.dispatch('pointerup',{clientX:5,clientY:6});
+ button(drawing,'Gem tegning').click();assert.equal(drawing.isConnected,false);
+ const saved=h.save(),updated=saved.parts.find(p=>p.id===hand.id);
+ assert.deepEqual(updated.keys,hand.keys);assert.deepEqual(updated.pivot,hand.pivot);assert.equal(updated.parent,hand.parent);
+ const title=updated.variants[0].asset;assert.match(h.records[title].text,/<path/);
+ h.api.open(other.id);button(h.overlay,'Vælg fra Materialer').click();
+ const picker=h.overlay.querySelector('.huw-puppet-parts'),search=picker.querySelector('input');
+ search.value='Testhånd';search.dispatch('input');button(picker,'Testhånd').click();
+ const replaced=h.save().parts.find(p=>p.id===other.id);
+ assert.equal(replaced.variants[0].asset,title);assert.deepEqual(replaced.keys,other.keys);assert.equal(replaced.parent,other.parent);
+});
+
+test('three cartwheels can temporarily cover starter elbow keys on one puppet',()=>{
+ const pack=JSON.parse(readFileSync(new URL('plugins/animus-starter-kenney/dist/plugin.json',root)));
+ const assets=JSON.parse(pack.text).tiddlers,scene=JSON.parse(assets['$:/plugins/huwiki/animus-starter-kenney/template'].text);
+ const actor=scene.parts.find(p=>!p.parent&&p.id.includes('female-person'));
+ const h=harness({scenes:{Scene:scene},id:actor.id,withEditor:true,assets,time:0});
+ h.api.close();h.editor.selectFigure(actor.id);
+ const controls=h.host.querySelector('.huw-musical-rig-controls'),selects=controls.querySelectorAll('select');
+ const choose=(value)=>{const select=selects.find(s=>s.querySelectorAll('option').some(o=>o.value===value));assert.ok(select,value);change(select,value);};
+ choose('wheel');choose('-1');choose('3');
+ const button=label=>h.host.querySelectorAll('button').find(b=>b.textContent===label);
+ button('Indsæt ved tidsmarkøren').click();
+ const confirm=button('Brug bevægelsen her');assert.equal(confirm.hidden,false);confirm.click();
+ let after=JSON.parse(h.records.Scene.text).parts;
+ const moved=after.find(p=>p.id===actor.id);assert.equal(moved.animusMoves[0].end,4.5);assert.ok(moved.keys.at(-1).x<actor.keys[0].x);
+ const other=p=>p.id.includes('female-adventurer');
+ assert.deepEqual(after.filter(other),scene.parts.filter(other));
+ button('Fjern seneste bevægelse · Vejrmølle').click();after=JSON.parse(h.records.Scene.text).parts;
+ for(const part of scene.parts)assert.deepEqual(after.find(p=>p.id===part.id).keys,part.keys);
 });

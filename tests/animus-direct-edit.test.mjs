@@ -246,6 +246,9 @@ test('film-part appearance editing stays on the film even when scene sources reu
 });
 
 
+function motionSelect(group,label){
+ return group.querySelectorAll('label').find(node=>node.textContent.startsWith(label+' ')).querySelector('select');
+}
 function rigMotionRecords(end){
  const records=editorHarness().w.records,stage=JSON.parse(records.Scene.text),film=JSON.parse(records.Film.text);
  const rig=modules().load('$:/plugins/huwiki/musical/skeleton.js');
@@ -261,7 +264,7 @@ test('fit a three-cycle walk between figure keys, open the block and retime it w
  const h=editorHarness(records),button=name=>h.host.querySelectorAll('button').find(b=>b.textContent===name);
  h.options.seek(0);h.editor.selectFigure('actor');
  const group=h.host.querySelector('.huw-musical-rig-controls'),selects=group.querySelectorAll('select');
- selects[3].value='3';selects[3].dispatch('change');
+ const repeats=motionSelect(group,'Repeats');repeats.value='3';repeats.dispatch('change');
  selects[1].value='0';
  assert.equal(Number(group.querySelector('input').value),3.3);
  button('Fit to next keyframe').click();
@@ -299,7 +302,7 @@ test('fitting three cartwheels to the next keyframe preserves the chosen travel 
   h.options.seek(0);
   h.editor.selectFigure('actor');
   const group=h.host.querySelector('.huw-musical-rig-controls');
-  const [movement,travel,,repeats]=group.querySelectorAll('select');
+  const [movement,travel,repeats]=['Movement','Direction','Repeats'].map(label=>motionSelect(group,label));
   const button=name=>group.querySelectorAll('button').find(b=>b.textContent===name);
   movement.value='wheel';movement.dispatch('change');
   travel.value=direction;travel.dispatch('change');

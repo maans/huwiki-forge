@@ -764,3 +764,12 @@
 .huw-musical-fx-picker summary{cursor:pointer}.huw-musical-fx-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(82px,1fr));gap:4px;margin:.4em 0;min-width:min(270px,100%)}
 .huw-musical-fx-grid button{display:flex;align-items:center;gap:.35em;padding:.35em;border:1px solid #cadcda;border-radius:4px}
 .huw-musical--workspace .huw-musical-track:is([data-track-id="sfx"],[data-track-id="audio-lane"]){height:auto}
+
+.huw-musical-jog{width:44px;height:44px;flex:0 0 44px;display:grid;place-items:center;touch-action:none;user-select:none;-webkit-user-select:none;cursor:ns-resize}
+.huw-musical-jog::before{content:"";width:30px;height:30px;transform:rotate(var(--jog-turn,0deg));border-radius:50%;border:2px solid #587289;background:radial-gradient(circle at 51% 24%,#ffe29a 0 3px,transparent 4px),repeating-conic-gradient(#617589 0deg 3deg,transparent 3deg 30deg) border-box,#273949;box-shadow:inset 0 0 0 3px #243443}
+.huw-musical-jog:focus-visible{outline:2px solid currentColor;border-radius:50%}
+
+.huw-musical-transport{position:relative}
+.huw-musical-transport .huw-musical-time{touch-action:none;user-select:none;-webkit-user-select:none;cursor:ns-resize;min-height:44px;display:inline-flex;align-items:center;font-variant-numeric:tabular-nums}
+.huw-musical-jog-help{display:none}
+.huw-musical-jog:focus~.huw-musical-jog-help{display:block;position:absolute;bottom:100%;left:4px;right:4px;padding:.4em .7em;z-index:5;pointer-events:none;background:#203040;color:white;text-align:center;font-size:.85em}

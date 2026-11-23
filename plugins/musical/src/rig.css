@@ -11,3 +11,5 @@ type: text/css
 
 .huw-musical-rig-controls .huw-rig-duration{width:6em}
 .huw-musical-lane,.huw-musical-lane-title{-webkit-touch-callout:none}
+
+.huw-musical-rig-controls button[hidden],.huw-musical-rig-controls label[hidden]{display:none}
