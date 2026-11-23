@@ -19,6 +19,11 @@ await new Promise(r=>server.listen(0,'127.0.0.1',r));
 const base=process.env.FORGE_HOME_URL||`http://127.0.0.1:${server.address().port}/`;
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',headless:true});
 try {
+ async function checkCardPresentation(page){
+  const home=page.locator('.forge-home'),cards=home.locator('.forge-card');
+  assert.doesNotMatch(await home.innerText(),/\bbeta\b|testudgave|test release|test editions|known limitations|kendte begrænsninger/i);
+  assert.equal(await cards.count(),await cards.locator('.forge-card-icon[aria-hidden="true"] svg path[d]').count());
+ }
  for(const [locale,expected]of [['da-DK','da-DK'],['da','da-DK'],['en-US','en-GB'],['de-DE','en-GB']]){const languageContext=await browser.newContext({locale});const probe=await languageContext.newPage();await probe.goto(base);await probe.locator('.forge-home').waitFor();assert.equal(await probe.evaluate(()=>$tw.wiki.getTiddlerText('$:/language')),'$:/languages/'+expected);assert.equal(await probe.evaluate(()=>$tw.wiki.getTiddlerText('$:/language/SideBar/Open/Caption')),expected==='da-DK'?'Åbne':'Open');assert.equal(await probe.evaluate(()=>$tw.wiki.getTiddlerText('$:/language/Buttons/ControlPanel/Caption')),expected==='da-DK'?'Kontrolpanel':'control panel');await languageContext.close();}
  console.log('PASS browser-language startup before the native language switcher starts, Danish variants and English fallback');
  const context=await browser.newContext({locale:'en-US',acceptDownloads:true,viewport:{width:1440,height:1000}});
@@ -42,7 +47,8 @@ try {
  }
  const guide=await readFile(path.join(root,'downloads/forgeshare/HOWTO.md'),'utf8');
  assert.ok(guide.includes('0.1.19')&&guide.includes('Flere oplysninger')&&guide.includes('Open Anyway'),'HOWTO covers the version, Windows and Mac first-run approval');
- assert.equal(await page.locator('[data-edition="ai"]').getByRole('heading',{name:'AI conversations, tasks and your models'}).count(),1);
+ await checkCardPresentation(page);
+ await page.locator('[data-edition="demo"]').getByRole('heading',{name:'Standard TiddlyWiki with Forge Plugin Library'}).waitFor();
  const catalog=JSON.parse(await readFile(path.join(root,'catalog/editions.json'),'utf8'));
  const visibleEditions=catalog.editions.filter(edition=>!edition.home?.hidden);
  for(const edition of catalog.editions.filter(edition=>edition.home?.hidden))assert.equal(await page.locator(`[data-edition="${edition.id}"]`).count(),0,'Show cards belong in AniMus');
@@ -90,6 +96,8 @@ try {
  await languages.selectOption('$:/languages/da-DK');
  await page.getByRole('heading',{name:'Form din næste wiki.',exact:true}).waitFor();
  assert.equal((await page.locator('.forge-card-action').first().innerText()).replace(/\s+/g,' '),'Tilpas og hent ↗');
+ await checkCardPresentation(page);
+ await page.locator('[data-edition="demo"]').getByRole('heading',{name:'Standard-TiddlyWiki med Forge Plugin Library'}).waitFor();
  assert.ok((await page.locator('.tc-site-subtitle').innerText()).includes('Skab din egen'));
  assert.equal(await toolsTab.isVisible(),false,'Danish Tools hidden in reading mode');
  await languages.selectOption('$:/languages/en-GB');
