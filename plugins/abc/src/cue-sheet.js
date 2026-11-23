@@ -120,11 +120,53 @@ function chordSystem(d,voices,chart,range,info,s){
  }
  return svg;
 }
+// The harmony belongs to the score. Anchor it to the top printed voice by
+// musical onset, even when the original chord was written on another staff.
+function placeHarmony(staff,measures,chart,style,includeHeld){
+ var start=measures[0].start,last=measures[measures.length-1],end=last.start+last.duration;
+ var tick=time=>Math.round(time*1e7),atStart=tick(start),atEnd=tick(end);
+ var changes=chart.chords.filter(c=>tick(c.time)>=atStart&&tick(c.time)<atEnd);
+ if(includeHeld&&atStart&&(!changes.length||tick(changes[0].time)>atStart)){
+  var held=chart.chords.filter(c=>tick(c.time)<atStart).pop();
+  if(held)changes.unshift({time:start,name:held.name});
+ }
+ var anchors=new Map();
+ staff.voices[0].forEach(function(e){
+  if(e.el_type==="note"&&e.duration>0)anchors.set(tick(chart.noteTimes[e.startChar]),e);
+ });
+ var between=new Map();
+ changes.forEach(function(c){
+  var time=tick(c.time),anchor=anchors.get(time);
+  var symbol={name:style==="jazz"?jazz(c.name):c.name,position:"default"};
+  if(anchor){
+   anchor.chord=(anchor.chord||[]).concat(symbol);
+   anchor.positioning=Object.assign({},anchor.positioning,{chordPosition:"above"});
+  }else{
+   if(!between.has(time))between.set(time,[]);
+   between.get(time).push(symbol);
+  }
+ });
+ if(!between.size)return;
+ // A change inside a held note needs its own horizontal position. Timed
+ // invisible rests on the same staff leave the printed melody and ties intact.
+ var overlay=[],times=Array.from(between.keys()),next=0;
+ measures.forEach(function(m){
+  var from=tick(m.start),to=tick(m.start+m.duration);
+  function spacer(until){
+   if(until>from)overlay.push({el_type:"note",rest:{type:"invisible"},duration:(until-from)/1e7,chord:between.get(from)});
+   from=until;
+  }
+  while(next<times.length&&times[next]<to)spacer(times[next++]);
+  spacer(to);
+  overlay.push({el_type:"bar",type:"bar_invisible"});
+ });
+ staff.voices.push(overlay);
+}
 function render(host,source,info,s){
  host.replaceChildren();
  var selected=s.voices,profile=instruments[s.part];
  var steps=s.part==="source"?0:offset(source)+(profile?profile.semitones:s.customSteps);
- var ranges=systemRanges(info,s),systems=[],written="",model,chart,attachments=[];
+ var ranges=systemRanges(info,s),systems=[],written="",model,chart;
  if(!ranges.length)return {systems:[],written:""};
  ABC.renderAbc(host,source,{visualTranspose:steps,oneSvgPerLine:true,staffwidth:650,stretchlast:0,
   paddingtop:2,paddingbottom:4,paddingleft:3,paddingright:3,add_classes:true,responsive:"resize",
@@ -136,8 +178,8 @@ function render(host,source,info,s){
    var key=first?.header.key;
    if(key&&key.root&&key.root!=="none")written=key.root+(key.acc||"")+(key.mode||"");
    var lines=[];
-   ranges.forEach(function(range){
-    var staves=[],visibleChords=new Set();
+   ranges.forEach(function(range,lineIndex){
+    var staves=[];
     selected.forEach(function(slot){
      var voice=model[slot],ms=voice?.measures.slice(range.start,range.end);
      if(!ms?.length)return;
@@ -147,7 +189,7 @@ function render(host,source,info,s){
      if(selected.length>1)staff.title=[info.voices[slot].name||String(slot+1)];else delete staff.title;
      ms.forEach(function(m,j){
       var index=range.start+j;
-      if(!j&&!m.events.some(e=>e.el_type==="bar"&&e===m.events[0])){
+      if(!j&&!m.events.slice(0,m.events.findIndex(e=>e.el_type==="note")).some(e=>e.el_type==="bar")){
        var boundary=barAt(model,index);
        if(boundary.left||boundary.ending)events.push({el_type:"bar",type:boundary.left?"bar_left_repeat":"bar_thin",startEnding:boundary.ending||undefined});
       }
@@ -161,20 +203,18 @@ function render(host,source,info,s){
         if(edge.left||edge.right)e.type=edge.left&&edge.right?"bar_dbl_repeat":edge.left?"bar_left_repeat":"bar_right_repeat";
         if(edge.ending&&!e.startEnding)e.startEnding=edge.ending;
        }
-       if(e.chord)e.chord=e.chord.filter(c=>chordSymbol(c)?s.mode==="with":s.formLabels||!formName({chord:[c]})).map(function(c){
-        if(!chordSymbol(c))return c;
-        visibleChords.add((index+1)+"|"+orig.startChar+"|"+c.name);return s.style==="jazz"?Object.assign({},c,{name:jazz(c.name)}):c;
-       });
+       if(e.chord)e.chord=e.chord.filter(c=>!chordSymbol(c)&&(s.formLabels||!formName({chord:[c]})));
        events.push(e);
       });
      });
-     staff.voices=[events];staves.push(staff);
+     staff.voices=[events];
+     if(!staves.length&&s.mode==="with"){
+      var newExcerpt=!lineIndex||ranges[lineIndex-1].end!==range.start;
+      placeHarmony(staff,ms,chart,s.style,newExcerpt);
+     }
+     staves.push(staff);
     });
-    if(staves.length&&s.mode!=="only"){
-     var missing=s.mode==="with"&&chart.chords.some(c=>c.measure>range.start&&c.measure<=range.end&&!visibleChords.has(c.measure+"|"+c.startChar+"|"+c.name));
-     if(missing)staves.forEach(staff=>staff.voices[0].forEach(e=>{if(e.chord)e.chord=e.chord.filter(c=>!chordSymbol(c));}));
-     lines.push({staff:staves});attachments.push(missing?range:null);
-    }
+    if(staves.length&&s.mode!=="only")lines.push({staff:staves});
    });
    tune.metaText={};tune.metaTextInfo={};tune.lines=lines;
   }});
@@ -182,12 +222,7 @@ function render(host,source,info,s){
   host.replaceChildren();if(!chart.chords.length)throw Error(s.en?"This score has no chord symbols. Choose notes or uncheck it.":"Noden har ingen becifringer. Vælg noder, eller fjern fluebenet ved nummeret.");
   ranges.forEach(function(r){var svg=chordSystem(host.ownerDocument,model,chart,r,info,s);host.appendChild(svg);systems.push(svg);});
  }else{
-  Array.from(host.querySelectorAll("svg")).filter(svg=>svg.viewBox.baseVal.height>0).forEach(function(svg,i){
-   systems.push(svg);if(attachments[i]){
-    var extra=chordSystem(host.ownerDocument,model,chart,attachments[i],info,s);
-    svg.parentNode.insertBefore(extra,svg.nextSibling);systems.push(extra);
-   }
-  });
+  systems=Array.from(host.querySelectorAll("svg")).filter(svg=>svg.viewBox.baseVal.height>0);
  }
  return {systems:systems,written:written};
 }
