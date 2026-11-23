@@ -7,6 +7,7 @@ export function sameOriginUrl(reference,base,prefixes){
  if(url.origin!==origin||!['http:','https:'].includes(url.protocol)||!prefixes.some(p=>url.pathname.startsWith(p)))throw Error('Package outside Forge: '+reference);
  return url.href;
 }
+export function resolveEditionId(choices,id){return choices.editions.find(e=>e.id===id||(e.aliases||[]).includes(id))?.id||id;}
 export async function readJson(url,fetcher=fetch){const r=await fetcher(url);if(!r.ok)throw Error('HTTP '+r.status+': '+url);return r.json();}
 export async function loadChoices(base,fetcher=fetch){
  const root=new URL('../',base);const registryUrl=new URL('library/plugins/registry.json',root).href;
@@ -140,6 +141,7 @@ Find plugins and their guides in the [[Control Panel|$:/ControlPanel]]. F takes 
 </$list>`};
 export async function composeWiki({choices,editionId='',packageTitles=[],excludedPackageTitles=[],contentIds=[],excludedContentIds=[],theme='',name='',language='en-GB'},fetcher=fetch){
  if(!['en-GB','da-DK'].includes(language))throw Error('Unsupported language');
+ editionId=resolveEditionId(choices,editionId);
  const chosenContent=contentIds.map(id=>{const c=choices.content.find(m=>m.id===id);if(!c)throw Error('Unknown material: '+id);return c;});
  let manifest={id:'custom',plugins:[]},tiddlers=[];
  if(editionId){

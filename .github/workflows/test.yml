@@ -26,7 +26,7 @@ jobs:
           for file in "${files[@]}"; do
             if [[ "$file" != "tests/forgeshare.test.mjs" ]]; then selected+=("$file"); fi
           done
-          node --test "${selected[@]}"
+          node --test --test-reporter=spec "${selected[@]}"
       - name: Complete tested release suite (main)
         if: github.event_name == 'push'
         run: npm test

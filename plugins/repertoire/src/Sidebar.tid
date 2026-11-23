@@ -1,0 +1,14 @@
+title: $:/plugins/huwiki/repertoire/Sidebar
+type: text/vnd.tiddlywiki
+tags: $:/tags/SideBar
+caption: Repertoire
+
+<%if [{$:/language}prefix[$:/languages/da]] %>
+[[Repertoireværksted|HUWiki Repertoire – Start]]
+
+[[Nodebog|Repertoire – Nodebog]] · [[Stiknoder og stemmer|Repertoire – Stiknoder]]
+<%else%>
+[[Repertoire workshop|HUWiki Repertoire – Start]]
+
+[[Tune book|Repertoire – Nodebog]] · [[Cue sheets and parts|Repertoire – Cue sheets and parts]]
+<%endif%>

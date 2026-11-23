@@ -6,7 +6,7 @@ on:
     paths:
       - 'plugins/abc/**'
       - 'plugins/repertoire/**'
-      - 'editions/silva-ethno-repertoire/**'
+      - 'editions/silba-atno-repertoire/**'
       - 'tests/abc-reader-*.test.mjs'
       - 'tests/abc-ipad-lite-editor.test.mjs'
       - 'tests/repertoire-*.test.mjs'
@@ -64,3 +64,4 @@ jobs:
           path: test-results/abc-reader-edit/
           if-no-files-found: ignore
           retention-days: 7
+

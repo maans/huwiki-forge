@@ -1,6 +1,12 @@
 # HUWiki Repertoire · første udviklingsversion
 
-Et selvstændigt TiddlyWiki 5-plugin, som fungerer uden ABC-plugin og udnytter ABC, når de eksisterende noder åbnes.
+A TiddlyWiki 5 repertoire plugin. ABC Music is installed automatically as its shared notation and print engine. Scores remain in their original tiddlers.
+
+## Cue sheets and parts / Stiknoder og stemmer
+
+Open **Cue sheets and parts** from the Repertoire sidebar, workshop or tune book print menu. The current set list is selected automatically. Choose an excerpt, full piece or named sections; select voices, transposing instruments and chord symbols, then use **Print / PDF**. Set-list key, tempo and playing instructions are applied without changing the original score.
+
+Åbn **Stiknoder og stemmer** fra Repertoire-fanen, værkstedet eller nodebogens udskriftsmenu. Den aktuelle sætliste følger med. Vælg udsnit, hele numre eller formdele, stemmer, instrument og becifringer, og brug **Udskriv / PDF**. Toneart, tempo og spilleaftaler følger sætlisten uden at ændre originalnoderne.
 
 ## Struktur
 

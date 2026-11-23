@@ -1,0 +1,36 @@
+name: Repertoire cue sheets and PDF
+on:
+  pull_request:
+    paths:
+      - 'plugins/repertoire/**'
+      - 'assembler/**'
+      - 'editions/silba-atno-repertoire/**'
+      - 'scripts/repertoire-cues-browser-smoke.mjs'
+      - 'tests/repertoire-cues.test.mjs'
+      - '.github/workflows/repertoire-cues.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'plugins/repertoire/src/**'
+      - 'plugins/repertoire/plugin-info.json'
+      - '.github/workflows/repertoire-cues.yml'
+permissions:
+  contents: read
+jobs:
+  cues:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - run: node scripts/build-abc-ui.mjs
+      - run: node scripts/build-repertoire-plugin.mjs --check
+      - run: node scripts/build-forge-plugin-library.mjs
+      - run: node --test tests/repertoire-cues.test.mjs tests/repertoire-edition.test.mjs tests/abc-cue-print.test.mjs
+      - run: node scripts/assemble-silba-etno-repertoire.mjs
+      - run: node scripts/repertoire-cues-browser-smoke.mjs
+        env:
+          CHROME_BIN: /usr/bin/google-chrome

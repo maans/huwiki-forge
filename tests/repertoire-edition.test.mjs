@@ -27,11 +27,11 @@ function makeWiki(){
  return {model:context.exports,wiki,Tiddler};
 }
 
-test("Repertoire package is independent of the ABC plugin",async()=>{
+test("Repertoire installs its shared ABC print engine automatically",async()=>{
  assert.equal(pkg.title,"$:/plugins/huwiki/repertoire");
  assert.equal(pkg.version,JSON.parse(await readFile(new URL("../plugins/repertoire/plugin-info.json",import.meta.url),"utf8")).version);
  assert.equal(pkg["plugin-type"],"plugin");
- assert.equal(pkg.dependents,undefined);
+ assert.equal(pkg.dependents,"$:/plugins/huwiki/abc");
  assert.equal(tiddlers["$:/plugins/huwiki/repertoire/widget.js"]["module-type"],"widget");
  assert.match(tiddlers["HUWiki Repertoire – Start"].text,/<\$huwiki-repertoire\/>/);
 });
@@ -110,14 +110,14 @@ test("ABC K and Q headers seed the fields without mutating the original score",(
 });
 
 test("SilbaÄtno score headers preserve relative minor vs key signatures and tempo beat values",async()=>{
- const scores=JSON.parse(await readFile(path.join(root,"editions/silva-ethno-repertoire/tiddlers/repertoire.json"),"utf8"));
+ const scores=JSON.parse(await readFile(path.join(root,"editions/silba-atno-repertoire/tiddlers/repertoire.json"),"utf8"));
  const {model,wiki,Tiddler}=makeWiki(),orch=model.orchestra(wiki,"SilbaÄtno");
  const pick=title=>scores.find(x=>x.title.includes(title));
  const samples=[pick("Brudmarch från Jämtland"),pick("Ålidhems höjder"),pick("Cupria Express")];
  const items=samples.map(song=>{wiki.addTiddler(new Tiddler(song));return model.addItem(wiki,orch,song.title).title;});
  assert.deepEqual({...model.sourceAgreement(wiki,items[0])},{key:"Gm",tempo:"1/4=100"});
  assert.deepEqual({...model.sourceAgreement(wiki,items[1])},{key:"Gm",tempo:"1/2=70"});
- assert.deepEqual({...model.sourceAgreement(wiki,items[2])},{key:"Ab",tempo:"1/4=100"});
+ assert.deepEqual({...model.sourceAgreement(wiki,items[2])},{key:"Fm",tempo:"1/4=100"});
 });
 
 test("Repertoire sorting supports pointer and keyboard with TiddlyWiki drag-highlight classes",()=>{
@@ -191,7 +191,7 @@ test("reordering does not mutate the orchestra repertoire",()=>{
 });
 
 test("SilbaÄtno importer keeps technical conversion diagnostics in the report, not the score article",async()=>{
- const base=path.join(root,"editions/silva-ethno-repertoire");
+ const base=path.join(root,"editions/silba-atno-repertoire");
  const scores=JSON.parse(await readFile(path.join(base,"tiddlers/repertoire.json"),"utf8"));
  const report=JSON.parse(await readFile(path.join(base,"conversion-report.json"),"utf8"));
  const converter=await readFile(path.join(root,"scripts/build-silba-etno-repertoire.mjs"),"utf8");
@@ -206,7 +206,7 @@ test("SilbaÄtno importer keeps technical conversion diagnostics in the report, 
 });
 
 test("SilbaÄtno Edition links all 17 scores and leaves their ABC bodies untouched",async()=>{
- const folder=path.join(root,"editions/silva-ethno-repertoire");
+ const folder=path.join(root,"editions/silba-atno-repertoire");
  const manifest=JSON.parse(await readFile(path.join(folder,"manifest.json"),"utf8"));
  const sources=JSON.parse(await readFile(path.join(folder,"tiddlers/repertoire.json"),"utf8"));
  const workspace=JSON.parse(await readFile(path.join(folder,"tiddlers/repertoire-workspace.json"),"utf8"));
@@ -259,7 +259,7 @@ test("Nodebogen adapts page pairs to iPad rotation and crosses song boundaries",
 });
 
 test("The built SilbaÄtno manifest retains all 17 scores and Repertoire Nodebog plugin",async()=>{
- const file=JSON.parse(await readFile(path.join(root,"editions/silva-ethno-repertoire/manifest.json"),"utf8"));
+ const file=JSON.parse(await readFile(path.join(root,"editions/silba-atno-repertoire/manifest.json"),"utf8"));
  assert.ok(file.plugins.includes("../../plugins/repertoire/dist/plugin.json"));
  assert.equal(file.tiddlers.filter(x=>x==="tiddlers/repertoire-workspace.json").length,1);
 });
@@ -289,7 +289,7 @@ test("Music Minus One uses the ABC mixer as a temporary overlay without rewritin
  assert.doesNotMatch(book,/listBox\.open=false/,"no long unfolding button grid");
 });
 test("SilbaÄtno heading and icon actions respond to the actual wiki article width",async()=>{
- const config=JSON.parse(await readFile(path.join(root,"editions/silva-ethno-repertoire/tiddlers/config.json"),"utf8"));
+ const config=JSON.parse(await readFile(path.join(root,"editions/silba-atno-repertoire/tiddlers/config.json"),"utf8"));
  const home=config.find(x=>x.title==="SilbaÄtno Repertoire – Oversigt");
  const sheet=config.find(x=>x.title==="$:/silbaatno/repertoire/home.css");
  assert.ok(home&&sheet);
@@ -308,7 +308,7 @@ test("SilbaÄtno heading and icon actions respond to the actual wiki article wid
 });
 
 test("SilbaÄtno homepage links straight to the setlist book",async()=>{
- const config=JSON.parse(await readFile(path.join(root,"editions/silva-ethno-repertoire/tiddlers/config.json"),"utf8"));
+ const config=JSON.parse(await readFile(path.join(root,"editions/silba-atno-repertoire/tiddlers/config.json"),"utf8"));
  const home=config.find(x=>x.title==="SilbaÄtno Repertoire – Oversigt");
  assert.ok(home);
  assert.match(home.text,/<\$link to="Repertoire – Nodebog" class="silba-primary silba-action" tooltip="Åbn nodebogen">/);
@@ -408,7 +408,7 @@ test("PDF Publisher fills free space beneath scores and creates an overflow page
 
 
 test("SilbaÄtno statistic cards open auto-generated native TiddlyWiki lists",async()=>{
- const base=path.join(root,"editions/silva-ethno-repertoire");
+ const base=path.join(root,"editions/silba-atno-repertoire");
  const config=JSON.parse(await readFile(path.join(base,"tiddlers/config.json"),"utf8"));
  const manifest=JSON.parse(await readFile(path.join(base,"manifest.json"),"utf8"));
  const scores=JSON.parse(await readFile(path.join(base,"tiddlers/repertoire.json"),"utf8"));
@@ -445,7 +445,7 @@ test("SilbaÄtno statistic cards open auto-generated native TiddlyWiki lists",as
 
 
 test("SitePublisher uses a generated 17-title list, independently of the gross-list dashboard",async()=>{
- const base=path.join(root,"editions/silva-ethno-repertoire");
+ const base=path.join(root,"editions/silba-atno-repertoire");
  const listFile=JSON.parse(await readFile(path.join(base,"tiddlers/site-export-list.json"),"utf8"));
  const manifest=JSON.parse(await readFile(path.join(base,"manifest.json"),"utf8"));
  const scores=JSON.parse(await readFile(path.join(base,"tiddlers/repertoire.json"),"utf8"));
@@ -461,7 +461,7 @@ test("SitePublisher uses a generated 17-title list, independently of the gross-l
 
 
 test("Oh verden is a playable slow 4/4 Balkan ABC chord chart, not a WikiText code block",async()=>{
- const base=path.join(root,"editions/silva-ethno-repertoire/tiddlers");
+ const base=path.join(root,"editions/silba-atno-repertoire/tiddlers");
  const source=JSON.parse(await readFile(path.join(base,"songs.json"),"utf8")).find(t=>t.title==="SilbaÄtno · Oh verden");
  const sheet=JSON.parse(await readFile(path.join(base,"pending.json"),"utf8")).find(t=>t.title==="SilbaÄtno · Oh verden");
  const item=JSON.parse(await readFile(path.join(base,"repertoire-workspace.json"),"utf8"))

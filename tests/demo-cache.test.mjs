@@ -29,7 +29,7 @@ test("a stale browser-cached Repertoire package cannot conflict with a fresh For
  assert.ok(start>=0&&end>start,"locate the actual browser fetch policy");
  const calls=[];
  const host="https://forge.xn--mns-ula.dk";
- const location={href:host+"/demo/?edition=silva-ethno-repertoire",origin:host};
+ const location={href:host+"/demo/?edition=silba-atno-repertoire",origin:host};
  const outdated={title:"$:/plugins/huwiki/repertoire",version:"0.1.3-beta.1"};
  const newest={title:outdated.title,version:"0.1.3-beta.2"};
  const registry={items:[{fields:{title:outdated.title,version:newest.version}}]};

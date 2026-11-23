@@ -104,13 +104,13 @@
         "description": "AI-genereret animation skabt med AniMus. Se en engelsk musical over Platons hule, og redigér lydoptagelser, musik og animation i din egen wiki."
       }
     },
-    "silva-ethno-repertoire": {
+    "silba-atno-repertoire": {
       "da": {
-        "name": "SilbaÄtno Repertoire",
+        "name": "Silba Ätno Repertoire",
         "description": "17 redigerbare nodeark i én samlet nodepult med afspilning og repertoireoverblik."
       },
       "en": {
-        "name": "SilbaÄtno Repertoire",
+        "name": "Silba Ätno Repertoire",
         "description": "17 editable scores in one music-stand view with playback and a repertoire overview."
       }
     },

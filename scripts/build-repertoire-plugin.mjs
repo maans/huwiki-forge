@@ -22,6 +22,17 @@ for(const file of (await readdir(path.join(directory,'src'))).filter(name=>name.
   throw Error('Invalid module header in '+file);
  payload.tiddlers[title]={...payload.tiddlers[title],title,type:'application/javascript','module-type':moduleType,text:src};
 }
+// Version the entry pages and sidebar alongside the JavaScript modules.
+for(const name of (await readdir(path.join(directory,"src"))).filter(n=>n.endsWith(".tid")).sort()){
+ const source=await readFile(path.join(directory,"src",name),"utf8"),split=source.indexOf("\n\n");
+ if(split<0)throw Error("Missing tiddler header: "+name);
+ const fields=Object.fromEntries(source.slice(0,split).split("\n").map(line=>{
+  const at=line.indexOf(":");if(at<1)throw Error("Invalid header: "+name);
+  return [line.slice(0,at),line.slice(at+1).trim()];
+ }));
+ if(!fields.title)throw Error("Missing title: "+name);
+ payload.tiddlers[fields.title]={...fields,text:source.slice(split+2)};
+}
 // Keep the Repertoire stylesheet in source control as well as the plugin package.
 const stylesheetTitle="$:/plugins/huwiki/repertoire/styles.css";
 if(!payload.tiddlers[stylesheetTitle])throw Error("Missing Repertoire stylesheet");

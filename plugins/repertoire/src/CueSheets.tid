@@ -1,0 +1,12 @@
+title: Repertoire – Stiknoder
+type: text/vnd.tiddlywiki
+
+! Stiknoder og stemmer
+
+Vælg en sætliste eller hele repertoiret, og vælg derefter takter, stemmer, instrumenter og becifringer. Brug Udskriv / PDF til at udskrive eller gemme arket.
+
+<%if [[$:/plugins/huwiki/abc/cue-widget.js]get[module-type]match[widget]] %>
+<$huwiki-abc-cues setlist={{$:/temp/huwiki/repertoire/active-setlist}}/>
+<%else%>
+Installer eller opdater ABC Musik fra Forge Plugin Library for at udskrive stiknoder.
+<%endif%>

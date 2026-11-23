@@ -15,7 +15,7 @@
     "text": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" width=\"26\" height=\"26\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M8 17V6l12-3v12M8 9l12-3M8 17c0 1.8-1.6 3.2-3.5 3.2S2 19.2 2 18s1.5-2.5 3.4-2.5c1 0 2 .3 2.6.7m12-1.2c0 1.8-1.5 3.2-3.5 3.2S14 17.2 14 16s1.6-2.5 3.5-2.5c1 0 1.9.2 2.5.7\"/></svg>"
   },
   {
-    "title": "$:/huwiki/forge/card-icon/silva-ethno-repertoire",
+    "title": "$:/huwiki/forge/card-icon/silba-atno-repertoire",
     "type": "text/vnd.tiddlywiki",
     "text": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 24 24\" width=\"26\" height=\"26\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.6\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\" focusable=\"false\"><path d=\"M4 4h16l2 10H2L4 4Zm8 10v5m-5 3 5-3 5 3M7 7h3m4 0h3m-10.5 3h3m4.5 0h3\"/></svg>"
   },
