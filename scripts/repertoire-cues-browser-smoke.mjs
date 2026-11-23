@@ -11,7 +11,7 @@ try{
  await page.route('**/*',route=>route.request().url().startsWith('file:')?route.continue():route.abort());
  await page.goto(pathToFileURL(path.join(root,'editions/silba-atno-repertoire/index.html')).href);
  await page.locator('.silba-home').waitFor();
- await page.locator('.silba-actions').getByText('Åbn repertoireværksted',{exact:true}).click();
+ await page.locator('.silba-actions').getByRole('link',{name:'Åbn repertoireværksted',exact:true}).click();
  const workshop=page.locator('.huwrep');
  await workshop.getByRole('button',{name:'Stiknoder og stemmer',exact:true}).click();
  const cues=page.locator('[data-tiddler-title="Repertoire – Stiknoder"] .huwabc-cues');
