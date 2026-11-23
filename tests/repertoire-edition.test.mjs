@@ -27,9 +27,9 @@ function makeWiki(){
  return {model:context.exports,wiki,Tiddler};
 }
 
-test("Repertoire package is independent of the ABC plugin",()=>{
+test("Repertoire package is independent of the ABC plugin",async()=>{
  assert.equal(pkg.title,"$:/plugins/huwiki/repertoire");
- assert.equal(pkg.version,"0.1.4-beta.6");
+ assert.equal(pkg.version,JSON.parse(await readFile(new URL("../plugins/repertoire/plugin-info.json",import.meta.url),"utf8")).version);
  assert.equal(pkg["plugin-type"],"plugin");
  assert.equal(pkg.dependents,undefined);
  assert.equal(tiddlers["$:/plugins/huwiki/repertoire/widget.js"]["module-type"],"widget");

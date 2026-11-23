@@ -20,7 +20,7 @@ test("public demos fetch registry and frequently updated Edition packages withou
  // Both halves of the version comparison MUST be from the same release.
  assert.ok(source.includes("const isRepertoirePlugin="));
  assert.ok(source.includes("||isAbcAudioPlugin||isRepertoirePlugin||isSitePublisherPlugin"));
- assert.match(pageHtml,/\.\/demo\.mjs\?v=repertoire-cache-sync-20261120/);
+ assert.match(pageHtml,/\.\/demo\.mjs\?v=score-print-20261123/);
 });
 
 test("a stale browser-cached Repertoire package cannot conflict with a fresh Forge registry",async()=>{

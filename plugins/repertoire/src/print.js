@@ -47,5 +47,10 @@ function open(wiki,setlistTitle,widget,options){
   return {titles:titles,summary:summaryTitle,order:orderTitle,instrumentId:instrumentId};
  }catch(error){return {error:"Udgivelse kunne ikke åbnes: "+(error&&error.message||error)};}
 }
+exports.cueLabel=function(wiki){return wiki.getTiddlerText("$:/language","").startsWith("$:/languages/da")?"Stiknoder og stemmer":"Cue sheets and parts";};
+exports.cues=function(wiki,setlist,widget){
+ wiki.setText("$:/temp/huwiki/abc/cue-selection","text",undefined,setlist);
+ widget.navigate(exports.cueLabel(wiki)==="Cue sheets and parts"?"Cue sheets and parts":"Stiknoder");
+};
 exports.open=open;
 })();

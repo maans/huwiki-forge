@@ -1,0 +1,22 @@
+title: $:/plugins/huwiki/abc/CueStyle
+type: text/css
+tags: $:/tags/Stylesheet
+
+.huwabc-cues .huwabc-cue-tools,.huwabc-cues .huwabc-cue-controls{display:flex;align-items:center;flex-wrap:wrap;gap:.45em 1em}
+.huwabc-cues .huwabc-cue-tools select{max-width:100%}
+.huwabc-cues .huwabc-cue-controls label{font-size:.88em}
+.huwabc-cues .huwabc-cue-controls input{width:4em}
+.huwabc-cues .huwabc-cue-row{border-top:1px solid #aab2bb;margin-top:1em}
+.huwabc-cues .huwabc-cue-music{max-width:42em;background:white;color:#17212a;margin:.7em 0}
+.huwabc-cues fieldset{min-width:0;display:flex;align-items:center;flex-wrap:wrap;gap:.55em 1em;border:1px solid #cdd5d8;border-radius:.45em;padding:.55em .8em .75em;margin:.7em 0}
+.huwabc-cues legend{font-weight:650;color:#374851;padding:0 .35em}
+.huwabc-cues label{display:inline-flex;align-items:center;gap:.25em;max-width:100%}
+.huwabc-cues select,.huwabc-cues input{max-width:100%;min-height:2em;font:inherit}
+.huwabc-cues input[type=checkbox]{width:1.1em;min-height:0;accent-color:#245d72}
+.huwabc-cues .huwabc-cue-print{border:0;border-radius:.4em;padding:.5em 1em;background:#1e526a;color:white;font-weight:650}
+.huwabc-cues .huwabc-cue-print:disabled{opacity:.55}
+.huwabc-cues .huwabc-cue-controls fieldset{margin:0}
+.huwabc-cues .huwabc-cue-meta{font-size:.88em;color:#46565c}
+.huwabc-cues .huwabc-cue-agreements{margin:.5em 0;font-size:.9em}
+.huwabc-cues .huwabc-cue-agreements label{display:flex;align-items:baseline;gap:.45em;margin:.3em 0}
+.huwabc-cues .huwabc-cue-music svg{display:block;max-width:100%}

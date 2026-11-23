@@ -107,6 +107,10 @@ function sourceAgreement(wiki,itemTitle){
   if(q&&!tempo)tempo=q[1];
   if(k){key=(k[1].match(/^\S+/)||[])[0]||"";break;}
  }
+ if(/^%%MIDI\s+transpose\s/m.test(abc)){
+  var live=require("$:/plugins/huwiki/repertoire/live-score.js"),offset=live.soundingOffset(abc);
+  if(offset)return {key:live.shiftKey(key,offset),writtenKey:key,tempo:tempo};
+ }
  return {key:key,tempo:tempo};
 }
 function baseline(wiki,itemTitle){

@@ -413,6 +413,10 @@ ABCWidget.prototype.draw=function(){
     if(!self._pager||!self._pager.openPrintPreview(jazzFont.css(),InstrumentView.printLabel(self.wiki)))
       showStatus("Der er endnu ingen noder at udskrive.",true);
   }));
+  actions.appendChild(button(I18n.language(self.wiki)==="en"?"Cue sheets and parts":"Stiknoder og stemmer",function(){
+    self.wiki.setText("$:/temp/huwiki/abc/cue-selection","text",undefined,self.title);
+    self.dispatchEvent({type:"tm-navigate",navigateTo:I18n.language(self.wiki)==="en"?"Cue sheets and parts":"Stiknoder",navigateFromNode:self,navigateFromTitle:self.title});
+  }));
   actions.appendChild(button("MIDI",function(){
     if(!ABC||!ABC.synth||!ABC.synth.getMidiFile){showStatus("MIDI er ikke klar endnu.",true);return;}
     try{var midi=ABC.synth.getMidiFile(accompaniment.prepare(ABC,ABC.parseOnly(working)[0],working,accompControls.config(),false,t.fields).tune,{midiOutputType:"binary"});

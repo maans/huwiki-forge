@@ -36,7 +36,7 @@ function shortSheetName(wiki,itemTitle){
 }
 function keyField(doc,value){
  var wrap=el(doc,"label","huwrep-field huwrep-key-field");
- wrap.appendChild(el(doc,"span","","Toneart"));
+ wrap.appendChild(el(doc,"span","","Klingende toneart (klang C)"));
  var input=el(doc,"select","huwrep-input");
  var keys=["C","Cm","C#","C#m","Db","Dbm","D","Dm","Eb","Ebm","E","Em","F","Fm","F#","F#m","Gb","Gbm","G","Gm","Ab","Abm","A","Am","Bb","Bbm","B","Bm"];
  if(value&&keys.indexOf(value)<0)keys.unshift(value);
@@ -158,6 +158,7 @@ Repertoire.prototype.draw=function(){
    var result=Printing.open(wiki,self.setlistTitle,self,{scores:true,site:true,instrumentId:publishInstrument.value});
    if(result&&result.error)self.alert(result.error);
   }));
+ if(wiki.getTiddler("$:/plugins/huwiki/abc/cue-widget.js"))setPanel.appendChild(button(doc,Printing.cueLabel(wiki),function(){Printing.cues(wiki,self.setlistTitle,self);}));
   setPanel.appendChild(button(doc,"Udskriv sætliste / PDF",function(){
    var result=Printing.open(wiki,self.setlistTitle,self,{scores:false});
    if(result&&result.error)self.alert(result.error);
@@ -226,7 +227,7 @@ Repertoire.prototype.draw=function(){
  editorPanel.appendChild(el(doc,"div","huwrep-editor-position","NUMMER "+(activeIndex+1)+" AF "+list.length));
  editorPanel.appendChild(el(doc,"h4","huwrep-editor-title",shortSheetName(wiki,this.activeItem)));
  var effective=model.effective(wiki,setTitle,this.activeItem),original=model.sourceAgreement(wiki,this.activeItem);
- var originalLabel=[original.key?"ABC K:"+original.key:"Ingen ABC-toneart",original.tempo?"Q:"+original.tempo:"Intet ABC-tempo"].join(" · ");
+ var originalLabel=[original.writtenKey?"Skrevet "+original.writtenKey+" · Klang C "+original.key:original.key?"ABC K:"+original.key:"Ingen ABC-toneart",original.tempo?"Q:"+original.tempo:"Intet ABC-tempo"].join(" · ");
  editorPanel.appendChild(el(doc,"p","huwrep-source-hint","Oprindelige noder: "+originalLabel));
  var tempoCurrent=tempoParts(effective.tempo),tempoOriginal=tempoParts(original.tempo);
  var beat=tempoCurrent.unit||tempoOriginal.unit;
