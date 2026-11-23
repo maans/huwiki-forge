@@ -424,13 +424,14 @@
         "title": "$:/plugins/huwiki/repertoire",
         "type": "application/json",
         "name": "Repertoire",
-        "description": "Repertoire med stabil StoryView-lignende rækkefølgesortering, lokal touch-rulning, live transponering og tempo",
+        "description": "Repertoire, nodebog, stiknoder, stemmer og PDF / Repertoire, tune book, cue sheets, parts and PDF",
         "author": "HUWiki",
-        "version": "0.1.5",
+        "version": "0.1.6",
         "plugin-type": "plugin",
         "stability": "experimental",
         "license": "MIT",
-        "core-version": ">=5.4.1"
+        "core-version": ">=5.4.1",
+        "dependents": "$:/plugins/huwiki/abc"
       },
       "path": "../../plugins/repertoire/dist/plugin.json"
     },

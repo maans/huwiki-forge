@@ -13,7 +13,7 @@ import {execFileSync} from "node:child_process";
 import {DOMParser} from "@xmldom/xmldom";
 const require=createRequire(import.meta.url);
 const root=path.resolve(import.meta.dirname,"..");
-const base=path.join(root,"editions/silva-ethno-repertoire");
+const base=path.join(root,"editions/silba-atno-repertoire");
 const plugin=JSON.parse(await readFile(path.join(root,"plugins/musescore-import/dist/plugin.json"),"utf8"));
 const pluginTiddlers=JSON.parse(plugin.text).tiddlers;
 const converterSource=pluginTiddlers["$:/plugins/huwiki/musescore-import/converter.js"].text;
@@ -142,3 +142,4 @@ await writeFile(reportFile,JSON.stringify({
 // The designed homepage and stylesheet are source-controlled in tiddlers/config.json.
 // Do not overwrite the correct WikiText/HTML layout during conversion.
 console.log("SilbaÄtno Repertoire: 17 editable ABC scores generated");
+

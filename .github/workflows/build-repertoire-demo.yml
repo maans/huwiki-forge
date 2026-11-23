@@ -17,12 +17,14 @@ on:
       - 'plugins/repertoire/plugin-info.json'
       - 'scripts/build-repertoire-plugin.mjs'
       - 'tests/repertoire-edition.test.mjs'
+      - 'tests/repertoire-cues.test.mjs'
+      - 'scripts/repertoire-cues-browser-smoke.mjs'
       - 'scripts/repertoire-browser-smoke.mjs'
       - 'scripts/abc-reader-browser-smoke.mjs'
       - 'scripts/abc-reader-browser-smoke.mjs'
-      - 'editions/silva-ethno-repertoire/manifest.json'
-      - 'editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json'
-      - 'editions/silva-ethno-repertoire/tiddlers/config.json'
+      - 'editions/silba-atno-repertoire/manifest.json'
+      - 'editions/silba-atno-repertoire/tiddlers/repertoire-workspace.json'
+      - 'editions/silba-atno-repertoire/tiddlers/config.json'
       - 'scripts/assemble-silba-etno-repertoire.mjs'
       - '.github/workflows/build-repertoire-demo.yml'
   workflow_dispatch:
@@ -51,7 +53,7 @@ jobs:
       - name: Synchronize native Forge plugin registry
         run: node scripts/build-forge-plugin-library.mjs
       - name: Verify orchestra, setlist and iPad book navigation
-        run: node --test tests/repertoire-edition.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-chord-overview.test.mjs
+        run: node --test tests/repertoire-cues.test.mjs tests/abc-cue-print.test.mjs tests/repertoire-edition.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-chord-overview.test.mjs
       - name: Assemble interactive Repertoire demo with original ABC scores
         run: node scripts/assemble-silba-etno-repertoire.mjs
       - name: Install browser controller for iPad reader acceptance
@@ -60,6 +62,10 @@ jobs:
         env:
           CHROME_BIN: /usr/bin/google-chrome
         run: node scripts/repertoire-browser-smoke.mjs
+      - name: Print all 18 pieces through the shared Repertoire cue entry
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+        run: node scripts/repertoire-cues-browser-smoke.mjs
       - name: Check ABC Vis/Øv fullscreen reading against the same live score
         env:
           CHROME_BIN: /usr/bin/google-chrome
@@ -69,7 +75,7 @@ jobs:
           node --input-type=module -e "
           import fs from 'node:fs';
           import assert from 'node:assert/strict';
-          const name='editions/silva-ethno-repertoire/index.html';
+          const name='editions/silba-atno-repertoire/index.html';
           const html=fs.readFileSync(name,'utf8');
           for(const token of [
             'Repertoire – Nodebog',
@@ -81,7 +87,7 @@ jobs:
             'Repertoire/Saetlister/'
           ])assert.ok(html.includes(token),token+' missing from public HTML');
           assert.ok(Buffer.byteLength(html)>3_000_000,'wiki HTML unexpectedly small');
-          const m=JSON.parse(fs.readFileSync('editions/silva-ethno-repertoire/tiddlers/repertoire-workspace.json','utf8'));
+          const m=JSON.parse(fs.readFileSync('editions/silba-atno-repertoire/tiddlers/repertoire-workspace.json','utf8'));
           assert.equal(m.filter(t=>t['repertoire-kind']==='orchestra-item').length,18);
           console.log('Repertoire demo has 17 original ABC scores plus the Oh verden chord sheet, linked from the workshop');
           "
@@ -94,7 +100,7 @@ jobs:
           # The ABC package is published by its own workflow. Keep this job
           # focused on the assembled demo so concurrent builds can rebase.
           git restore -- plugins/abc/dist/plugin.json
-          git add -- plugins/repertoire/dist/plugin.json library/plugins/registry.json editions/silva-ethno-repertoire/index.html
+          git add -- plugins/repertoire/dist/plugin.json library/plugins/registry.json editions/silba-atno-repertoire/index.html
           if ! git diff --cached --quiet; then
             git commit -m "build(repertoire): publish interactive 17-score Nodebog demo"
             git fetch origin main

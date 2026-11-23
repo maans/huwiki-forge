@@ -3,7 +3,7 @@
  * The generated TiddlyWiki remains editable and can be saved with its native saver.
  */
 import {assembleHtml,loadOfficialCore} from '../assembler/assemble.mjs';
-import {loadChoices,composeWiki} from '../assembler/compose.mjs';
+import {loadChoices,composeWiki,resolveEditionId} from '../assembler/compose.mjs';
 
 const params=new URL(location.href).searchParams;
 const explicit=params.get('lang')?.toLowerCase();
@@ -50,10 +50,11 @@ const fetchFreshEditionManifest=(resource,options)=>{
 
 let blobUrl;
 async function start(){
- const editionId=params.get('edition')||'';
+ let editionId=params.get('edition')||'';
  // Fetch the same catalog and compose with the same defaults as Assembler:
  // no extra packages, materials, theme override or user-provided title.
  const choices=await loadChoices(new URL('../assembler/',location.href).href,fetchFreshEditionManifest);
+ editionId=resolveEditionId(choices,editionId);
  const edition=choices.editions.find(e=>e.id===editionId);
  if(!edition)throw Error(da?'Ukendt Edition. Vælg en Edition på Forge-forsiden.':'Unknown Edition. Choose an Edition on the Forge homepage.');
  $('name').textContent=edition.display?.[lang]?.name||edition.name;

@@ -158,7 +158,7 @@ Repertoire.prototype.draw=function(){
    var result=Printing.open(wiki,self.setlistTitle,self,{scores:true,site:true,instrumentId:publishInstrument.value});
    if(result&&result.error)self.alert(result.error);
   }));
- if(wiki.getTiddler("$:/plugins/huwiki/abc/cue-widget.js"))setPanel.appendChild(button(doc,Printing.cueLabel(wiki),function(){Printing.cues(wiki,self.setlistTitle,self);}));
+ setPanel.appendChild(button(doc,Printing.cueLabel(wiki),function(){Printing.cues(wiki,self.setlistTitle,self);}));
   setPanel.appendChild(button(doc,"Udskriv sætliste / PDF",function(){
    var result=Printing.open(wiki,self.setlistTitle,self,{scores:false});
    if(result&&result.error)self.alert(result.error);

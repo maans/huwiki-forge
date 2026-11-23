@@ -50,7 +50,8 @@ function open(wiki,setlistTitle,widget,options){
 exports.cueLabel=function(wiki){return wiki.getTiddlerText("$:/language","").startsWith("$:/languages/da")?"Stiknoder og stemmer":"Cue sheets and parts";};
 exports.cues=function(wiki,setlist,widget){
  wiki.setText("$:/temp/huwiki/abc/cue-selection","text",undefined,setlist);
- widget.navigate(exports.cueLabel(wiki)==="Cue sheets and parts"?"Cue sheets and parts":"Stiknoder");
+ wiki.setText("$:/temp/huwiki/repertoire/active-setlist","text",undefined,setlist);
+ widget.navigate(exports.cueLabel(wiki)==="Cue sheets and parts"?"Repertoire – Cue sheets and parts":"Repertoire – Stiknoder");
 };
 exports.open=open;
 })();

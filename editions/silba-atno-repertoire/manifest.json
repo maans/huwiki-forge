@@ -1,8 +1,8 @@
 {
   "schemaVersion": 1,
-  "id": "silva-ethno-repertoire",
-  "name": "SilbaÄtno Repertoire",
-  "version": "0.1.4-beta.3",
+  "id": "silba-atno-repertoire",
+  "name": "Silba Ätno Repertoire",
+  "version": "0.1.6",
   "coreVersion": "5.4.1",
   "tiddlers": [
     "tiddlers/config.json",

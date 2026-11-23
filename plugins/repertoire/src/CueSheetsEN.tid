@@ -1,0 +1,12 @@
+title: Repertoire – Cue sheets and parts
+type: text/vnd.tiddlywiki
+
+! Cue sheets and parts
+
+Choose a set list or the full repertoire, then select bars, voices, instruments and chord symbols. Use Print / PDF to print or save the sheet.
+
+<%if [[$:/plugins/huwiki/abc/cue-widget.js]get[module-type]match[widget]] %>
+<$huwiki-abc-cues setlist={{$:/temp/huwiki/repertoire/active-setlist}}/>
+<%else%>
+Install or update ABC Music from Forge Plugin Library to print cue sheets.
+<%endif%>

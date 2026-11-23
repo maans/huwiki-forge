@@ -4,7 +4,7 @@ import path from "node:path";
 import {pathToFileURL} from "node:url";
 import {chromium} from "playwright-core";
 const root=path.resolve(import.meta.dirname,"..");
-const folder=path.join(root,"editions/silva-ethno-repertoire");
+const folder=path.join(root,"editions/silba-atno-repertoire");
 const browser=await chromium.launch({
  executablePath:process.env.CHROME_BIN||"/usr/bin/google-chrome",
  headless:true,args:["--no-sandbox","--disable-dev-shm-usage"]
@@ -54,7 +54,7 @@ try {
  await mkdir(path.dirname(sitePath),{recursive:true});
  await download.saveAs(sitePath);
  let html=await readFile(sitePath,"utf8");
- if(!html.includes("SilbaÄtno Repertoire"))throw Error("Site title missing");
+ if(!html.includes("Silba Ätno Repertoire"))throw Error("Site title missing");
  const entries=JSON.parse(await readFile(path.join(folder,"tiddlers/repertoire.json"),"utf8"));
  const check=html.match(/<script[^>]*id=["\']publisher-data["\'][^>]*>([\s\S]*?)<\/script>/i);
  if(!check)throw Error("SitePublisher export has no publisher data");

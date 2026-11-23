@@ -1,0 +1,30 @@
+import assert from 'node:assert/strict';
+import {chromium} from 'playwright-core';
+import {pathToFileURL} from 'node:url';
+import path from 'node:path';
+const root=path.resolve(import.meta.dirname,'..');
+const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
+try{
+ const page=await browser.newPage({viewport:{width:1180,height:820}});
+ page.setDefaultTimeout(120000);
+ const errors=[];page.on('pageerror',e=>errors.push(e.message));
+ await page.route('**/*',route=>route.request().url().startsWith('file:')?route.continue():route.abort());
+ await page.goto(pathToFileURL(path.join(root,'editions/silba-atno-repertoire/index.html')).href);
+ await page.locator('.silba-home').waitFor();
+ await page.locator('.silba-actions').getByText('Åbn repertoireværksted',{exact:true}).click();
+ const workshop=page.locator('.huwrep');
+ await workshop.getByRole('button',{name:'Stiknoder og stemmer',exact:true}).click();
+ const cues=page.locator('[data-tiddler-title="Repertoire – Stiknoder"] .huwabc-cues');
+ await cues.waitFor();
+ assert.equal(await cues.locator('.huwabc-cue-row').count(),18);
+ await cues.getByRole('button',{name:'Udskriv / PDF',exact:true}).click();
+ const preview=page.locator('.huwabc-print-overlay');await preview.waitFor();
+ assert.ok(await preview.locator('.huwabc-page').count()>0);
+ await preview.getByText('PDF klar! Brug Gem PDF.',{exact:true}).waitFor();
+ const pdf=await preview.getByRole('link',{name:'Gem PDF',exact:true}).getAttribute('href');
+ assert.ok(pdf?.startsWith('blob:'));
+ const header=await page.evaluate(async url=>new TextDecoder().decode((await (await fetch(url)).arrayBuffer()).slice(0,8)),pdf);
+ assert.ok(header.startsWith('%PDF-1.4'));
+ assert.deepEqual(errors,[]);
+ console.log('Silba Ätno: shared Repertoire entry rendered all 18 pieces and generated a real PDF');
+}finally{await browser.close();}

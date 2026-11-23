@@ -116,7 +116,8 @@ async function updateDescription(){
 async function init(){
  choices=await loadChoices(location.href);editions=choices.editions;
  select.replaceChildren(new Option(words.blank,''));for(const e of editions)select.add(new Option(localName(e),e.id));
- const requested=new URL(location.href).searchParams.get("edition");
+ const incoming=new URL(location.href).searchParams.get("edition");
+ const requested=editions.find(e=>e.id===incoming||(e.aliases||[]).includes(incoming))?.id;
  if(requested&&editions.some(item=>item.id===requested))select.value=requested;
  $('theme').add(new Option(words.keep,''));
  for(const p of choices.packages){

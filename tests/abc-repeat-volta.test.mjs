@@ -7,7 +7,7 @@ import {runInNewContext} from "node:vm";
 const root=path.resolve(import.meta.dirname,"..");
 const source=await readFile(path.join(root,"plugins/abc/src/repeat-plan.js"),"utf8");
 const exports={};runInNewContext(source,{exports});
-const songs=JSON.parse(await readFile(path.join(root,"editions/silva-ethno-repertoire/tiddlers/repertoire.json"),"utf8"));
+const songs=JSON.parse(await readFile(path.join(root,"editions/silba-atno-repertoire/tiddlers/repertoire.json"),"utf8"));
 const dalarne=songs.find(song=>song["silba-musescore-file"]==="laat-fraan-dalarna-cbb.mscz");
 
 // The real score contains 19 written measures: A with two one-bar endings,

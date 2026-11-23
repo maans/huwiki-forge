@@ -9,7 +9,7 @@ import path from "node:path";
 import {pathToFileURL} from "node:url";
 import {chromium} from "playwright-core";
 const root=path.resolve(import.meta.dirname,"..");
-const url=pathToFileURL(path.join(root,"editions/silva-ethno-repertoire/index.html")).href;
+const url=pathToFileURL(path.join(root,"editions/silba-atno-repertoire/index.html")).href;
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||"/usr/bin/google-chrome",
  headless:true,args:["--no-sandbox","--disable-dev-shm-usage"]});
 try{
