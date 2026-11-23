@@ -329,3 +329,74 @@ test('three cartwheels can temporarily cover starter elbow keys on one puppet',(
  button('Fjern seneste bevægelse · Vejrmølle').click();after=JSON.parse(h.records.Scene.text).parts;
  for(const part of scene.parts)assert.deepEqual(after.find(p=>p.id===part.id).keys,part.keys);
 });
+
+test('timeline clips use their actual span, append at the cursor, move between Kenney actors and cancel atomically',()=>{
+ const pack=JSON.parse(readFileSync(new URL('plugins/animus-starter-kenney/dist/plugin.json',root)));
+ const assets=JSON.parse(pack.text).tiddlers,stage=JSON.parse(assets['$:/plugins/huwiki/animus-starter-kenney/template'].text);
+ const actors=stage.parts.filter(p=>!p.parent&&p.id.includes('female')).map(p=>p.id);
+ const h=harness({scenes:{Scene:stage},withEditor:true,id:actors[0],assets,time:0});
+ h.api.close();h.editor.selectFigure(actors[0]);
+ const button=label=>h.host.querySelectorAll('button').find(b=>b.textContent===label);
+ function insert(type,seconds){
+  const group=h.host.querySelector('.huw-musical-rig-controls'),menu=group.querySelectorAll('select').find(s=>s.querySelectorAll('option').some(o=>o.value===type));
+  change(menu,type);group.querySelector('.huw-rig-duration').value=String(seconds);
+  button('Indsæt ved tidsmarkøren').click();
+  if(button('Brug bevægelsen her')?.hidden===false)button('Brug bevægelsen her').click();
+ }
+ const scene=()=>JSON.parse(h.records.Scene.text);
+ const moves=id=>scene().parts.find(p=>p.id===id).animusMoves||[];
+ const row=id=>h.host.querySelector('[data-track-id="figure:'+id+'"]');
+ const block=id=>h.host.querySelector('[data-rig-move="'+id+'"]');
+ insert('walk',1.5);insert('wave',2);
+ let [walk,wave]=moves(actors[0]);assert.equal(walk.start,0);assert.equal(walk.end,1.5);assert.equal(wave.start,1.5);assert.equal(wave.end,3.5);
+ assert.ok(Math.abs(parseFloat(block(wave.id).style.width)/parseFloat(block(walk.id).style.width)-2/1.5)<1e-8);
+ function drag(id,from,to,seconds,cancel=false){
+  const width=1000,axis=h.film.duration,fromLane=row(from).querySelector('.huw-musical-lane'),targetLane=row(to).querySelector('.huw-musical-lane');
+  for(const l of [fromLane,targetLane])l.getBoundingClientRect=()=>({left:0,width});
+  h.doc.elementFromPoint=()=>targetLane;
+  const b=block(id),x=(+b.dataset.start+.25)*width/axis,x2=(seconds+.25)*width/axis;
+  b.dispatch('pointerdown',{pointerType:'touch',clientX:x,clientY:20});
+  b.dispatch('pointermove',{pointerType:'touch',clientX:x2,clientY:65});
+  b.dispatch(cancel?'pointercancel':'pointerup',{pointerType:'touch',clientX:x2,clientY:65});
+ }
+ const before=h.records.Scene.text;
+ drag(walk.id,actors[0],actors[1],4,true);assert.equal(h.records.Scene.text,before);
+ drag(walk.id,actors[0],actors[0],2);assert.equal(h.records.Scene.text,before,'overlapping drop has no writes');
+ drag(walk.id,actors[0],actors[1],4);
+ assert.deepEqual(moves(actors[0]).map(m=>[m.id,m.start,m.end]),[[wave.id,1.5,3.5]]);
+ assert.deepEqual(moves(actors[1]).map(m=>[m.id,m.start,m.end]),[[walk.id,4,5.5]]);
+ const target=scene().parts.find(p=>p.id===actors[1]),original=stage.parts.find(p=>p.id===target.id);
+ assert.equal(target.keys.find(k=>k.animusMove===walk.id).x,original.keys[0].x);
+ drag(wave.id,actors[0],actors[1],5.5);
+ assert.equal(moves(actors[1]).length,2);
+ const beforeMove=moves(actors[1]).find(m=>m.id===walk.id);drag(walk.id,actors[1],actors[1],9);
+ const after=moves(actors[1]).find(m=>m.id===walk.id);assert.equal(after.start,9);assert.equal(after.end-after.start,beforeMove.end-beforeMove.start);
+ block(walk.id).click();button('Fjern dette klip · Gang').click();
+ block(wave.id).click();button('Fjern dette klip · Vink').click();
+ for(const p of scene().parts)assert.deepEqual(p.keys,stage.parts.find(old=>old.id===p.id).keys,p.id);
+});
+
+test('a saved 0.15 cartwheel transfers its three leftward revolutions to an independently positioned puppet',()=>{
+ const pack=JSON.parse(readFileSync(new URL('plugins/animus-starter-kenney/dist/plugin.json',root)));
+ const assets=JSON.parse(pack.text).tiddlers,stage=JSON.parse(assets['$:/plugins/huwiki/animus-starter-kenney/template'].text);
+ const [a,b]=stage.parts.filter(p=>!p.parent&&p.id.includes('female'));
+ const start=harness({scenes:{Scene:stage},withEditor:true,id:a.id,assets,time:0});
+ start.api.close();start.editor.selectFigure(a.id);
+ const group=start.host.querySelector('.huw-musical-rig-controls'),selects=group.querySelectorAll('select');
+ for(const value of ['wheel','-1','3'])change(selects.find(s=>s.querySelectorAll('option').some(o=>o.value===value)),value);
+ const button=(scope,label)=>scope.querySelectorAll('button').find(x=>x.textContent===label);
+ button(group,'Indsæt ved tidsmarkøren').click();button(group,'Brug bevægelsen her').click();
+ const saved=JSON.parse(start.records.Scene.text),original=saved.parts.find(p=>p.id===a.id).animusMoves[0];
+ delete original.recipe;
+ const h=harness({scenes:{Scene:saved},withEditor:true,id:a.id,assets,time:0});h.api.close();
+ h.host.querySelector('[data-rig-move]').click();
+ const edit=h.host.querySelector('.huw-musical-rig-controls');
+ edit.querySelector('.huw-activity-target').value=b.id;edit.querySelector('.huw-activity-start').value='5';
+ button(edit,'Flyt klip').click();
+ const after=JSON.parse(h.records.Scene.text),target=after.parts.find(p=>p.id===b.id),source=after.parts.find(p=>p.id===a.id);
+ assert.deepEqual(source.keys,a.keys);assert.equal(source.animusMoves.length,0);
+ const m=target.animusMoves[0],keys=target.keys.filter(k=>k.animusMove===m.id);
+ assert.equal(m.id,original.id);assert.equal(m.recipe.repeats,3);assert.equal(m.recipe.dir,-1);
+ assert.equal(keys[0].x,b.keys[0].x);assert.ok(keys.at(-1).x<keys[0].x);
+ assert.ok(Math.abs(Math.abs(keys.at(-1).r-keys[0].r)-1080)<.001);assert.equal(keys.at(-1).t,9.5);
+});

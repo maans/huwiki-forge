@@ -8,7 +8,7 @@ import {Matrix,svgDocument} from './helpers/svg-test-dom.mjs';
 const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
 const cutout=JSON.parse(JSON.parse(await read('plugins/cutout/dist/plugin.json')).text).tiddlers;
 const directEditSource=await read('plugins/cutout/src/direct-edit.js');
-const sources=Object.fromEntries(await Promise.all(['playlist','motion','sfx','editor','puppet','track-preview','effects-library','skeleton'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
+const sources=Object.fromEntries(await Promise.all(['playlist','motion','sfx','editor','puppet','track-preview','effects-library','skeleton','movement-clips'].map(async name=>[name,await read('plugins/musical/src/'+name+'.js')])));
 const plain=value=>JSON.parse(JSON.stringify(value));
 class Tiddler {constructor(...items){this.fields=Object.assign({},...items.filter(Boolean).map(i=>i.fields||i));}}
 function wiki(initial){const records=plain(initial),writes=[];return {records,writes,getTiddler:title=>records[title]?new Tiddler(records[title]):null,getTiddlerText:(title,fallback='')=>records[title]?.text??fallback,getTiddlers:()=>Object.keys(records),each(fn){for(const [title,fields] of Object.entries(records))fn(new Tiddler(fields),title);},addTiddler(t){records[t.fields.title]=plain(t.fields);writes.push(t.fields.title);},getModificationFields:()=>({}),generateNewTitle:title=>title};}
