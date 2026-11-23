@@ -275,7 +275,9 @@ test('workshop-only fitted joints bind artwork and produce editable travelling s
  assert.equal(h.canvas.querySelectorAll('[data-rig-joint]').length,0);
  toggle.click();
  const handle=h.canvas.querySelector('[data-rig-joint="handR"]');assert.ok(handle);
- handle.dispatch('pointerdown');h.canvas.dispatch('pointermove',{clientX:120,clientY:150});h.canvas.dispatch('pointerup');
+ handle.dispatch('pointerdown');h.canvas.dispatch('pointermove',{clientX:120,clientY:150});
+ assert.match(h.canvas.querySelector('[data-rig-label]').textContent,/hånd/i);
+ h.canvas.dispatch('pointerup');assert.equal(h.canvas.querySelector('[data-rig-label]'),null);
  button(h.overlay,'Sæt fast på skelet').click();
  h.canvas.querySelector('[data-rig-joint="chest"]').dispatch('pointerdown');
  const saved=h.save();assert.equal(saved.parts[1].animusJoint,'chest');assert.ok(saved.parts[0].animusRig);

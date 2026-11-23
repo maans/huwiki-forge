@@ -98,7 +98,7 @@ function mount(o){
  function setPreviewFrame(){
   if(preview&&preview.svg&&previewFrame)preview.svg.setAttribute('viewBox',previewFrame.join(' '));
  }
- var attachPart="",rigVisible=false,bindTarget="",rigLayer=null,rigToggle;
+ var attachPart="",rigVisible=false,bindTarget="",rigLayer=null,rigToggle,activeJoint="";
  function rigRoot(){return lookup(activeRoot);}
  function drawRig(){
   if(rigLayer){rigLayer.remove();rigLayer=null;}
@@ -114,15 +114,21 @@ function mount(o){
   skeleton().joints.forEach(function(j){var a=positions[j[0]],hit=mark("circle",{cx:a.x,cy:a.y,r:size*1.65,fill:"transparent","data-rig-joint":j[0]});
    var dot=mark("circle",{cx:a.x,cy:a.y,r:size*.7,fill:bindTarget?"#ffe58d":"#f1ffff",stroke:"#125368","stroke-width":size*.35,"pointer-events":"none"});
    var title=doc.createElementNS(NS,"title");title.textContent=j[da?4:5];hit.appendChild(title);});
+  if(activeJoint&&positions[activeJoint]){
+   var at=positions[activeJoint],joint=skeleton().joints.find(function(j){return j[0]===activeJoint;});
+   var label=mark("text",{x:at.x,y:at.y-size*2.4,"text-anchor":"middle","font-size":size*2.4,
+    "font-weight":"bold",fill:"#fff",stroke:"#18364a","stroke-width":size*.6,"paint-order":"stroke","pointer-events":"none","data-rig-label":activeJoint});
+   label.textContent=joint[da?4:5];
+  }
  }
  function startJoint(e,id){
   e.preventDefault();var root=rigRoot(),points=root.animusRig;
   if(bindTarget){var part=lookup(bindTarget);if(part){part.animusJoint=id;writable();}bindTarget="";renderAll();return;}
   var inverse=preview.nodes[root.id].el.getScreenCTM().inverse(),original=clone(points[id]),pointer=e.pointerId;
-  canvas.setPointerCapture(pointer);
+  canvas.setPointerCapture(pointer);activeJoint=id;drawRig();
   function drag(ev){if(ev.pointerId!==pointer)return;var pt=preview.svg.createSVGPoint();pt.x=ev.clientX;pt.y=ev.clientY;var q=pt.matrixTransform(inverse);points[id]={x:q.x,y:q.y};drawRig();}
   function finish(commit){canvas.removeEventListener("pointermove",drag);canvas.removeEventListener("pointerup",up);canvas.removeEventListener("pointercancel",cancel);canvas.removeEventListener("lostpointercapture",cancel);cancelInteraction=null;
-   if(canvas.hasPointerCapture(pointer))canvas.releasePointerCapture(pointer);if(commit)writable();else points[id]=original;drawRig();}
+   if(canvas.hasPointerCapture(pointer))canvas.releasePointerCapture(pointer);if(commit)writable();else points[id]=original;activeJoint="";drawRig();}
   function up(ev){if(ev.pointerId===pointer)finish(true);}function cancel(ev){if(!ev||ev.pointerId===pointer)finish(false);}
   cancelInteraction=cancel;canvas.addEventListener("pointermove",drag);canvas.addEventListener("pointerup",up);canvas.addEventListener("pointercancel",cancel);canvas.addEventListener("lostpointercapture",cancel);
  }
