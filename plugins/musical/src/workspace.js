@@ -470,7 +470,8 @@ function mount(o){
  if(oldHeader)oldHeader.classList.add("huw-musical-legacy-heading");
  if(oldHelp)oldHelp.classList.add("huw-musical-legacy-help");
  function updateInspectorHeading(){var t=editor.getSelection&&editor.getSelection();
-  var kind=t&&t.kind,name=kind==='figure'?(da?'Hele objekt':ui('Whole object')):
+  var kind=t&&t.kind,name=kind==='figure'&&inspector&&inspector.querySelector('.huw-activity-editor')?(da?'Aktivitet':ui('Activity')):
+   kind==='figure'?(da?'Hele objekt':ui('Whole object')):
    kind==='animation'?(da?'Animationsklip':ui('Animation clip')):
    kind==='song'?(da?'Musikklip':ui('Music clip')):
    kind==='camera'?(da?'Kamera':ui('Camera')):

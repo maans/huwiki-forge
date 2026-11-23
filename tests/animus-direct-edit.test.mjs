@@ -287,7 +287,7 @@ test('fit a three-cycle walk between figure keys, open the block and retime it w
  const block=h.host.querySelector('[data-track-id="figure:actor"] .huw-musical-motion-clip');
  block.click();assert.equal(selection.open,true);
  const edit=h.host.querySelector('.huw-musical-rig-controls');
- edit.querySelector('input').value='4';button('Save duration').click();
+ edit.querySelector('.huw-rig-duration').value='4';button('Save changes').click();
  assert.equal(root().animusMoves[0].end,4);close(root().keys.at(-1).t,4);
  assert.deepEqual(plain(h.data.musical.figureTransforms.actor.keys),film.musical.figureTransforms.actor.keys);
 });

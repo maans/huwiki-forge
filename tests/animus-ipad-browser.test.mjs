@@ -266,9 +266,22 @@ test('Kenney activity blocks follow the time ruler and drag between figures in i
  assert.equal(await from.locator('[data-rig-move]').count(),1);
  assert.equal(await transferred.getAttribute('data-start'),'0');
  assert.ok(Math.abs((await transferred.boundingBox()).width-a.width)<1);
+ await transferred.tap();
+ const edit=editor.locator('.huw-activity-editor');
+ const movement=edit.locator('select').filter({has:page.locator('option[value="wheel"]')});
+ assert.equal(await movement.inputValue(),'wheel');
+ assert.equal(await edit.locator('.huw-rig-duration').inputValue(),'4.5');
+ assert.equal(await editor.getByRole('button',{name:'Insert at playhead',exact:true}).count(),0);
+ await movement.selectOption('jump');
+ await edit.locator('select').filter({has:page.locator('option[value="-1"]')}).selectOption('-1');
+ await edit.locator('select').filter({has:page.locator('option[value="8"]')}).selectOption('3');
+ await edit.getByRole('button',{name:'Save changes',exact:true}).tap();
+ assert.equal(await transferred.innerText(),'Jump');
  const saved=await page.evaluate(()=>{
   const film=JSON.parse($tw.wiki.getTiddlerText($tw.wiki.getTiddler('Two figures').fields['animus-scene']));
   return JSON.parse($tw.wiki.getTiddlerText(film.scenes[0].source));
  });
- assert.equal(saved.parts.find(p=>p.id===targetId).animusMoves[0].end,4.5);
+ const clips=saved.parts.find(p=>p.id===targetId).animusMoves;
+ assert.equal(clips.length,1);assert.equal(clips[0].id,id);assert.equal(clips[0].type,'jump');
+ assert.equal(clips[0].recipe.dir,-1);assert.equal(clips[0].recipe.repeats,3);assert.equal(clips[0].end,4.5);
 });
