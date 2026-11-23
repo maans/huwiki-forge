@@ -428,10 +428,10 @@
         "author": "HUWiki",
         "version": "0.1.6",
         "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/abc",
         "stability": "experimental",
         "license": "MIT",
-        "core-version": ">=5.4.1",
-        "dependents": "$:/plugins/huwiki/abc"
+        "core-version": ">=5.4.1"
       },
       "path": "../../plugins/repertoire/dist/plugin.json"
     },
