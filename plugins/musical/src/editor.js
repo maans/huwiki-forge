@@ -646,7 +646,7 @@ function attach(o){
   var handle=el(doc,"span","huw-musical-fx-trim","",block);
   handle.title=da?"Træk for at ændre varighed":ui("Drag to change duration");
   function paint(){
-   block.style.left=(100*k[field]/axis)+"%";block.style.width=collapsed?"24px":(100*num(k.duration,1)/axis)+"%";
+   block.style.left=(100*k[field]/axis)+"%";block.style.width=(100*num(k.duration,1)/axis)+"%";
    block.title=name+" · "+round(k[field])+" s · "+round(num(k.duration,1))+" s";block.setAttribute("aria-label",block.title);
   }
   paint();if(id===choice.id&&(recorded||index===choice.key))block.classList.add("is-selected");
@@ -710,6 +710,119 @@ function attach(o){
    cancelHold=cancel;
    ["pointerup","pointercancel","pointerleave"].forEach(function(type){row.addEventListener(type,cancel);});
    row.addEventListener("pointermove",move);
+  };
+ }
+ function movementError(error){
+  var messages={
+   occupied:da?"Der ligger allerede en aktivitet her.":"Another activity is already here.",
+   overlap:da?"Her er allerede nøglebilleder.":"There are already keyframes here.",
+   unbound:da?"Vælg et figurspor med et skelet.":"Choose a figure track with a skeleton.",
+   duration:da?"Hele aktiviteten skal ligge i scenen.":"The whole activity must fit inside the scene.",
+   reach:da?"Flyt rekvisitten inden for dukkens rækkevidde.":"Move the prop within reach of the puppet.",
+   changed:da?"Scenen er ændret. Åbn editoren igen.":"The scene changed. Reopen the editor.",
+   samples:da?"Klippet mangler bevægelsespunkter.":"Motion samples are missing from this clip."
+  };
+  return messages[error.message]||(da?"Bevægelsen passer ikke til denne figur.":"This movement does not fit this figure.");
+ }
+ function movementInterval(view,partId,start,seconds){
+  if(!Number.isFinite(start)||!Number.isFinite(seconds)||start<0||seconds<.01||start+seconds>film.duration+.00001)throw Error("duration");
+  var now=partContext(partId,o.view,start,[],true,0),margin=Math.min(.00001,seconds/2);
+  var last=partContext(partId,o.view,start+seconds-margin,[],true,0);
+  if(!now||!last||!now.active||!last.active||now.view!==view||last.view!==view)throw Error("duration");
+  var rate=now.path.reduce(function(r,edge){return r*num(edge.settings.speed,1);},1);
+  var end=now.time+rate*seconds;
+  if(!(rate>0)||Math.abs(last.time-(end-margin*rate))>.001||end>view.scene.duration+.00001)throw Error("duration");
+  return {start:now.time,end:end};
+ }
+ function writeMovement(view,original,request){
+  var scene=view.scene,title=scene._title||(scene===film?o.sceneTitle:o.stageTitle),old=o.wiki.getTiddler(title);
+  if(!old||o.wiki.getTiddlerText(title,'')!==original)throw Error("changed");
+  var model=require("$:/plugins/huwiki/musical/movement-clips.js");
+  model.edit(scene,request);
+  // A source scene can appear several times in the same show.
+  var byId=new Map(scene.parts.map(function(p){return [p.id,p];}));
+  function sync(v){
+   if(v!==view&&v.scene._title===title)v.scene.parts.forEach(function(p){
+    var updated=byId.get(p.id);if(updated){p.keys=updated.keys;if(updated.animusMoves)p.animusMoves=updated.animusMoves;}
+   });
+   (v.clips||[]).forEach(function(c){if(c.view)sync(c.view);});
+   Object.keys(v.nodes||{}).forEach(function(id){if(v.nodes[id].nested)sync(v.nodes[id].nested);});
+  }
+  sync(o.view);
+  var json=JSON.stringify(scene);o.markOwnWrite(title,json);o.wiki.addTiddler(new $tw.Tiddler(old,{title:title,text:json}));
+  status.textContent=L.saved;
+ }
+ function moveActivity(view,original,sourceId,move,targetId,start,seconds){
+  try{
+   var span=movementInterval(view,targetId,start,seconds);
+   writeMovement(view,original,Object.assign(span,{sourceId:sourceId,targetId:targetId,id:move.id}));
+  }catch(error){status.textContent=movementError(error);return false;}
+  o.seek(start);choose('figure:'+targetId,0,true,move.id);o.repaint();return true;
+ }
+ function drawActivity(lane,view,original,t,move,axis){
+  var rig=require("$:/plugins/huwiki/musical/skeleton.js"),names=rig.cycles[move.type];if(!names)return;
+  var track={kind:view.scene===film?"film-part":"part",part:t.part},start=toFilm(move.start,track),end=toFilm(move.end,track),seconds=end-start;
+  if(seconds<=0)return;
+  var block=el(doc,"button","huw-musical-motion-clip",undefined,lane);block.type="button";
+  el(doc,"span","",names[da?0:1],block);block.dataset.rigMove=move.id;block.dataset.start=String(start);
+  block.classList.toggle("is-selected",choice.moveId===move.id);
+  block.title=names[da?0:1]+" · "+round(start)+"–"+round(end)+" s ("+round(seconds)+" s)";
+  block.setAttribute("aria-label",block.title);
+  function position(node,at){node.style.left=100*at/axis+"%";node.style.width=100*seconds/axis+"%";}
+  position(block,start);
+  var suppressClick=false;
+  block.onclick=function(e){e.stopPropagation();if(suppressClick){suppressClick=false;return;}o.seek(start);choose(t.id,0,true,move.id);};
+  block.onpointerdown=function(e){
+   if(e.button!==0||e.isPrimary===false||block.hasPointerCapture&&block.hasPointerCapture(e.pointerId))return;
+   e.stopPropagation();suppressClick=false;
+   if(o.pause)o.pause();
+   var rect=lane.getBoundingClientRect(),offset=(e.clientX-rect.left)*axis/Math.max(1,rect.width)-start;
+   var pointer=e.pointerId,x=e.clientX,y=e.clientY,ghost=null,destination=null,at=start;
+   var compatible=new Map(),clips=require("$:/plugins/huwiki/musical/movement-clips.js");
+   block.setPointerCapture(pointer);
+   function drag(ev){
+    if(ev.pointerId!==pointer||!ghost&&Math.hypot(ev.clientX-x,ev.clientY-y)<4)return;
+    if(!ghost){ghost=el(doc,"span","huw-musical-motion-clip huw-activity-ghost",names[da?0:1],lane);ghost.setAttribute("aria-hidden","true");}
+    var hit=doc.elementFromPoint(ev.clientX,ev.clientY),row=hit&&hit.closest("[data-layer-id]"),targetLane=row&&row.querySelector(".huw-musical-lane");
+    destination=null;ghost.hidden=true;
+    if(!targetLane||!rows.contains(row))return;
+    var p=view.nodes[row.dataset.layerId],box=targetLane.getBoundingClientRect();
+    if(!p||ev.clientX<box.left)return;
+    if(!compatible.has(p.part.id))compatible.set(p.part.id,!!rig.fittedRig(view.scene.parts,p.part));
+    if(!compatible.get(p.part.id))return;
+    var fraction=(ev.clientX-box.left)/Math.max(1,box.width);
+    at=round(lim(fraction*axis-offset,0,Math.max(0,axis-seconds)));
+    if(Math.abs(ev.clientX-x)<2&&targetLane.getBoundingClientRect().left===rect.left)at=start;
+    else{
+     var nearest=Math.min(.20,6*axis/Math.max(1,box.width));
+     (p.part.animusMoves||[]).forEach(function(other){
+      if(other.id===move.id)return;
+      [toFilm(other.end,Object.assign({},track,{part:p.part.id})),toFilm(other.start,Object.assign({},track,{part:p.part.id}))-seconds].forEach(function(edge){
+       var d=Math.abs(edge-(fraction*axis-offset));if(edge>=0&&d<nearest){at=edge;nearest=d;}
+      });
+     });
+    }
+    destination=p.part.id;
+    if(ghost.parentNode!==targetLane)targetLane.appendChild(ghost);ghost.hidden=false;
+    position(ghost,at);
+    var invalid=false;
+    try{var span=movementInterval(view,destination,at,seconds);invalid=clips.overlaps(p.part.animusMoves||[],move.id,span.start,span.end);}
+    catch(_outside){invalid=true;}
+    ghost.classList.toggle("is-invalid",invalid);
+   }
+   function finish(ev,cancel){
+    if(ev.pointerId!==pointer)return;
+    if(!cancel)drag(ev);
+    block.onpointermove=block.onpointerup=block.onpointercancel=block.onlostpointercapture=null;
+    if(block.hasPointerCapture(pointer))block.releasePointerCapture(pointer);
+    if(!ghost)return;
+    ghost.remove();suppressClick=true;ev.stopPropagation();ev.preventDefault();
+    if(cancel)return;
+    if(!destination){status.textContent=movementError(Error("unbound"));return;}
+    if(destination!==t.part||Math.abs(at-start)>.00001)moveActivity(view,original,t.part,move,destination,at,seconds);
+   }
+   block.onpointermove=drag;block.onpointerup=function(ev){finish(ev,false);};
+   block.onpointercancel=block.onlostpointercapture=function(ev){finish(ev,true);};
   };
  }
  function rigControls(t){
@@ -781,48 +894,26 @@ function attach(o){
    var frameBox=view.svg.getAttribute("viewBox"),first=null;function tick(stamp){if(!group.contains(view.svg)||!inspector.contains(group))return;if(first===null)first=stamp;var elapsed=(stamp-first)/1000;Engine.paint(view,Math.min(span,elapsed));view.svg.setAttribute("viewBox",frameBox);if(elapsed<span)doc.defaultView.requestAnimationFrame(tick);}
    doc.defaultView.requestAnimationFrame(tick);
   };
-  function reachMessage(){return da?"Flyt rekvisitten hen til den hånd, der skal samle den op.":"Move the prop within reach of the picking hand."; }
+  function reachMessage(){return movementError(Error("reach"));}
+  var original=o.wiki.getTiddlerText(scene._title||(scene===film?o.sceneTitle:o.stageTitle),'');
   var add=el(doc,"button","",da?"Indsæt ved tidsmarkøren":"Insert at playhead",group);add.type="button";
-  var replace=el(doc,"button","",da?"Brug bevægelsen her":"Use movement here",group);
-  replace.type="button";replace.hidden=true;
+  var replace=el(doc,"button","",da?"Brug bevægelsen her":"Use movement here",group);replace.type="button";replace.hidden=true;
   add.onclick=function(){insert(false);};replace.onclick=function(){insert(true);};
   function insert(coverKeys){
    replace.hidden=true;
-   var now=partContext(t.part,o.view,playhead,[],true,0);if(!now||now.view!==ctx.view||!now.active)return;
-   var at=now.time,type=kind.value,cycles=Number(count.value),rate=motionRate(),data;
-   if(!rate)return;
-   var localEnd=at+cycles*rig.cycles[type][2]/rate;
-   if(!withinScene(now,playhead,localEnd,Number(duration.value)))return;
-   try{data=rig.sequence(scene.parts,root,at,type,dir.value==="-1"?-1:1,cycles,scene.duration,dir.value==="0",rate,propChoice(),coverKeys);}
-   catch(err){
-    if(err.message==="overlap"&&!coverKeys){
-     try{rig.sequence(scene.parts,root,at,type,dir.value==="-1"?-1:1,cycles,scene.duration,dir.value==="0",rate,propChoice(),true);}
-     catch(conflict){status.textContent=conflict.message==="reach"?reachMessage():(da?"Vælg tid uden for det andet klip.":"Choose a time outside the other clip.");return;}
-     replace.hidden=false;status.textContent=da?"Her er allerede en bevægelse. Brug den nye her, eller vælg et andet tidspunkt.":"There is motion here already. Use the new movement here or choose another time.";return;
-    }
-    var reasons={reach:reachMessage(),duration:da?"Bevægelsen går ud over scenens slutning.":"Movement extends past the scene.",unbound:da?"Sæt først en kropsdel fast på skelettet i dukkeværkstedet.":"Attach artwork to the skeleton first.",overlap:da?"Der er allerede nøglebilleder her. Vælg et ledigt tidsrum.":"This range contains keyframes. Choose a free range."};status.textContent=reasons[err.message]||(da?"Denne skalering kan ikke bevares.":"Cannot preserve this scale.");return;}
-   var id="rig-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,7),prior={};
-   data.forEach(function(keys,p){
-    var old=p.keys||[];
-    function covered(k){return Math.abs(k.t-at)<1e-8||coverKeys&&k.t>at&&k.t<=localEnd+1e-6;}
-    prior[p.id]=old.filter(covered);
-    var keep=old.filter(function(k){return !covered(k);});
-    if(at>0&&!old.some(function(k){return k.t<=at;}))keys.unshift(Object.assign({t:0},Engine.state(p,0)));
-    p.keys=keep.concat(keys.map(function(k){return Object.assign({},k,{animusMove:id});})).sort(function(a,b){return a.t-b.t;});
-   });
-   (root.animusMoves||(root.animusMoves=[])).push({id:id,type:type,start:at,end:localEnd,prior:prior});
-   save(track);draw();o.repaint();
-  };
-  function withinScene(now,start,end,seconds){
-   // Sample just inside the endpoint: at the cut itself the next act may be active.
-   var margin=Math.min(.00001,seconds/2);
-   var last=partContext(t.part,o.view,start+seconds-margin,[],true,0);
-   if(!last||!last.active||last.view!==now.view||end>scene.duration+1e-6||
-      start+seconds>film.duration+.00001||Math.abs(last.time-(end-margin*clockRate))>.001){
-    status.textContent=da?"Bevægelsen går ud over scenens slutning.":"Movement extends past the scene.";
-    return false;
+   var seconds=Number(duration.value),prop=propChoice(),at=playhead;
+   try{
+    var span=movementInterval(ctx.view,t.part,at,seconds);
+    writeMovement(ctx.view,original,Object.assign(span,{id:"rig-"+Date.now().toString(36)+"-"+Math.random().toString(36).slice(2,8),
+     sourceId:root.id,targetId:root.id,type:kind.value,recipe:{dir:Number(dir.value),repeats:Number(count.value),propId:prop&&prop.id},coverKeys:coverKeys}));
+   }catch(error){
+    if(error.message==="overlap"&&!coverKeys)replace.hidden=false;
+    status.textContent=movementError(error);return;
    }
-   return true;
+   choice.moveId=null;
+   var following=partContext(t.part,o.view,at+seconds,[],true,0);
+   if(following&&following.active&&following.view===ctx.view)o.seek(at+seconds);
+   draw();o.repaint();
   }
   var picked=(root.animusMoves||[]).find(function(move){return move.id===choice.moveId;});
   if(picked){
@@ -834,31 +925,28 @@ function attach(o){
    input.type="number";input.min=".01";input.step="any";input.value=String(round((picked.end-picked.start)/clockRate));
    var apply=el(doc,"button","",da?"Gem varighed":"Save duration",edit);apply.type="button";
    apply.onclick=function(){
-    var seconds=Number(input.value),oldSpan=picked.end-picked.start,newSpan=seconds*clockRate;
-    if(!Number.isFinite(seconds)||seconds<.01||!(oldSpan>0&&newSpan>0)){input.focus();return;}
-    var end=picked.start+newSpan,start=toFilm(picked.start,track);
-    if(!withinScene(ctx,start,end,seconds))return;
-    var affected=scene.parts.filter(function(part){return Object.prototype.hasOwnProperty.call(picked.prior,part.id);});
-    var occupied=affected.some(function(part){return (part.keys||[]).some(function(key){
-     return key.animusMove!==picked.id&&key.t>picked.start+1e-6&&key.t<=Math.max(picked.end,end)+1e-6;
-    });});
-    if(occupied||(root.animusMoves||[]).some(function(other){return other!==picked&&other.start<end+1e-6&&other.end>picked.start+1e-6;})){
-     status.textContent=da?"Der er allerede nøglebilleder her. Vælg et ledigt tidsrum.":"This range contains keyframes. Choose a free range.";return;
-    }
-    affected.forEach(function(part){part.keys.forEach(function(key){
-     if(key.animusMove===picked.id)key.t=picked.start+(key.t-picked.start)*newSpan/oldSpan;
-    });part.keys.sort(function(a,b){return a.t-b.t;});});
-    affected.forEach(function(part){
-     var restore=picked.prior[part.id].filter(function(key){return key.t>end+1e-6;});
-     if(restore.length){part.keys=part.keys.concat(restore).sort(function(a,b){return a.t-b.t;});
-      picked.prior[part.id]=picked.prior[part.id].filter(function(key){return key.t<=end+1e-6;});}
-    });
-    picked.end=end;save(track);draw();o.repaint();
+    moveActivity(ctx.view,original,root.id,picked,root.id,toFilm(picked.start,track),Number(input.value));
+   };
+   var start=el(doc,"label","",da?"Start (sek.) ":"Start (sec) ",edit);
+   var when=el(doc,"input","huw-activity-start",undefined,start);when.type="number";when.step=".01";when.min="0";when.value=String(round(toFilm(picked.start,track)));
+   var labelTarget=el(doc,"label","",da?"Figur ":"Figure ",edit),dest=el(doc,"select","huw-activity-target",undefined,labelTarget);
+   scene.parts.filter(function(p){return !p.parent&&rig.fittedRig(scene.parts,p);}).forEach(function(p){el(doc,"option","",p.name||p.id,dest).value=p.id;});
+   dest.value=root.id;
+   var relocate=el(doc,"button","",da?"Flyt klip":"Move clip",edit);relocate.type="button";
+   relocate.onclick=function(){moveActivity(ctx.view,original,root.id,picked,dest.value,Number(when.value),Number(input.value));};
+   var next=el(doc,"button","",da?"Tilføj efter klippet":"Add after clip",edit);next.type="button";
+   next.onclick=function(){o.seek(toFilm(picked.end,track));choose(t.id,0,true);};
+  }
+  var moves=root.animusMoves||[],toRemove=picked||moves[moves.length-1];
+  if(toRemove){
+   var caption=picked?(da?"Fjern dette klip":"Remove this clip"):(da?"Fjern seneste bevægelse":"Remove last movement");
+   var undo=el(doc,"button","",caption+" · "+rig.cycles[toRemove.type][da?0:1],picked?edit:group);undo.type="button";
+   undo.onclick=function(){
+    try{writeMovement(ctx.view,original,{sourceId:root.id,remove:true,id:toRemove.id});}
+    catch(error){status.textContent=movementError(error);return;}
+    choice.moveId=null;draw();o.repaint();
    };
   }
-  var moves=root.animusMoves||[],last=moves[moves.length-1];
-  if(last){var undo=el(doc,"button","",(da?"Fjern seneste bevægelse":"Remove last movement")+" · "+rig.cycles[last.type][da?0:1],group);undo.type="button";
-   undo.onclick=function(){scene.parts.forEach(function(p){if(!Object.prototype.hasOwnProperty.call(last.prior,p.id))return;p.keys=(p.keys||[]).filter(function(k){return k.animusMove!==last.id;}).concat(last.prior[p.id]).sort(function(a,b){return a.t-b.t;});});moves.pop();save(track);draw();o.repaint();};}
  }
  function drawForm(){inspector.textContent="";var t=track(),k=selected();
   if(!t){el(doc,'p','huw-musical-inspector-help',da?'Ingen markering. Vælg en figur, kropsdel eller et spor.':ui('Nothing selected. Choose a character, body part or track.'),inspector);return;}
@@ -1121,7 +1209,7 @@ function attach(o){
    var rect=ruleLane.getBoundingClientRect(),fraction=lim((ev.clientX-rect.left)/Math.max(1,rect.width),0,1);
    o.seek(toAudio(fraction*axis));
   };
-  var active=currentStage(),sceneText=o.wiki.getTiddlerText(active.scene._title,'');groupScene=active.scene;var visual=stageTracks(active),layerIds=visual.filter(function(t){return t.layerRoot;}).map(function(t){return t.part;});
+  var active=currentStage(),sceneText=o.wiki.getTiddlerText(active.scene._title||(active.scene===film?o.sceneTitle:o.stageTitle),'');groupScene=active.scene;var visual=stageTracks(active),layerIds=visual.filter(function(t){return t.layerRoot;}).map(function(t){return t.part;});
   var all=tracks.filter(function(t){return t.kind==='scene-range'||t.kind==='object-browser';}).concat(visual)
    .concat(tracks.filter(function(t){return ['song','scene-range','object-browser','figure','part','face','animation'].indexOf(t.kind)<0&&!(t.kind==='film-part'&&active.scene===film);}))
    .concat(musicLanes()).filter(function(t){return filter==='all'||group(t)===filter;});
@@ -1173,15 +1261,7 @@ function attach(o){
    }
    if(t.kind==="figure"){
     var rigStage=currentStage(),scenePart=rigStage.nodes&&rigStage.nodes[t.part]&&rigStage.nodes[t.part].part;
-    (scenePart&&scenePart.animusMoves||[]).forEach(function(move){
-     var names=require("$:/plugins/huwiki/musical/skeleton.js").cycles[move.type];if(!names)return;
-     var keyTrack={kind:rigStage.scene===film?"film-part":"part",part:t.part};
-     var start=toFilm(move.start,keyTrack),end=toFilm(move.end,keyTrack);
-     var block=el(doc,"button","huw-musical-motion-clip",names[da?0:1],lane);
-     block.type="button";block.style.left=100*start/axis+"%";block.style.width=100*Math.max(0,end-start)/axis+"%";
-     block.dataset.rigMove=move.id;block.dataset.start=String(start);
-     block.onclick=function(ev){ev.stopPropagation();o.seek(start);choose(t.id,0,true,move.id);};
-    });
+    (scenePart&&scenePart.animusMoves||[]).forEach(function(move){drawActivity(lane,rigStage,sceneText,t,move,axis);});
    }
    lane.onclick=function(ev){
     if(ev.target.closest&&ev.target.closest(".huw-musical-key,.huw-musical-song-clip,.huw-musical-fx-clip,.huw-musical-caption-clip"))return;

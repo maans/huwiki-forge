@@ -224,3 +224,51 @@ test('a fitted workshop preview leaves the skeleton button reachable by touch in
   assert.equal(await button.getAttribute('data-clicked'),'yes');
  }
 });
+
+test('Kenney activity blocks follow the time ruler and drag between figures in iPad WebKit',
+ {skip:process.env.ANIMUS_WEBKIT_TESTS!=='1',timeout:90000},async t=>{
+ const {webkit,devices}=await import('playwright-core');
+ const {assembleHtml}=await import('../assembler/assemble.mjs');
+ const read=path=>readFile(new URL('../'+path,import.meta.url),'utf8');
+ const packages=await Promise.all(['cutout','abc','musical','animus-starter-kenney'].map(async n=>JSON.parse(await read('plugins/'+n+'/dist/plugin.json'))));
+ const html=assembleHtml(await read('core/empty.html'),packages.concat([
+  {title:'$:/DefaultTiddlers',text:'[[Activity test]]'},{title:'Activity test',text:'<$animus-new-project/>'},{title:'$:/language',text:'$:/languages/en-GB'}]));
+ const browser=await webkit.launch();t.after(()=>browser.close());
+ const page=await browser.newPage(devices['iPad Pro 11 landscape']);
+ await page.route('http://animus.test/',route=>route.fulfill({contentType:'text/html',body:html}));
+ await page.goto('http://animus.test/');
+ await page.getByRole('combobox',{name:'Starting scene',exact:true}).selectOption('$:/plugins/huwiki/animus-starter-kenney/template');
+ await page.getByRole('textbox',{name:'Name of your show',exact:true}).fill('Two figures');
+ await page.getByRole('button',{name:'+ New show',exact:true}).click();
+ const editor=page.locator('.huw-musical--workspace').last();
+ const rows=editor.locator('[data-layer-id*="female-"][data-layer-id$="-actor"]');
+ assert.equal(await rows.count(),2);
+ const from=rows.first(),to=rows.nth(1),targetId=await to.getAttribute('data-layer-id');
+ await from.locator('.huw-musical-lane-title').click({button:'right'});
+ const form=editor.locator('.huw-musical-rig-controls').last();
+ await form.locator('select').filter({has:page.locator('option[value="wheel"]')}).selectOption('wheel');
+ await form.locator('input.huw-rig-duration').fill('4.5');
+ await form.getByRole('button',{name:'Insert at playhead',exact:true}).click();
+ const cover=form.getByRole('button',{name:'Use movement here',exact:true});if(await cover.isVisible())await cover.click();
+ const block=from.locator('[data-rig-move]');await block.waitFor();const id=await block.getAttribute('data-rig-move');
+ await form.locator('select').filter({has:page.locator('option[value="wave"]')}).selectOption('wave');
+ await form.locator('input.huw-rig-duration').fill('1.5');
+ await form.getByRole('button',{name:'Insert at playhead',exact:true}).click();
+ const blocks=from.locator('[data-rig-move]');await blocks.nth(1).waitFor();
+ const a=await blocks.first().boundingBox(),b=await blocks.nth(1).boundingBox();
+ assert.ok(Math.abs(a.width-3*b.width)<1,'4.5 seconds is three times the width of 1.5 seconds');
+ assert.ok(Math.abs(a.x+a.width-b.x)<1,'the clips meet on the real timeline');
+ const toLane=to.locator('.huw-musical-lane');await toLane.scrollIntoViewIfNeeded();
+ const first=from.locator('[data-rig-move="'+id+'"]'),box=await first.boundingBox(),dest=await toLane.boundingBox();
+ const x=box.x+box.width*.72,y=box.y+box.height*.55;
+ await page.mouse.move(x,y);await page.mouse.down();await page.mouse.move(x,dest.y+dest.height/2,{steps:12});await page.mouse.up();
+ const transferred=to.locator('[data-rig-move="'+id+'"]');await transferred.waitFor();
+ assert.equal(await from.locator('[data-rig-move]').count(),1);
+ assert.equal(await transferred.getAttribute('data-start'),'0');
+ assert.ok(Math.abs((await transferred.boundingBox()).width-a.width)<1);
+ const saved=await page.evaluate(()=>{
+  const film=JSON.parse($tw.wiki.getTiddlerText($tw.wiki.getTiddler('Two figures').fields['animus-scene']));
+  return JSON.parse($tw.wiki.getTiddlerText(film.scenes[0].source));
+ });
+ assert.equal(saved.parts.find(p=>p.id===targetId).animusMoves[0].end,4.5);
+});
