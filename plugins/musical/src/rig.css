@@ -25,3 +25,7 @@ type: text/css
 .huw-musical .huw-activity-ghost[hidden]{display:none}
 .huw-musical .huw-musical-motion-clip[data-rig-move].is-selected{box-shadow:inset 0 0 0 2px #ffd48a}
 .huw-musical-rig-controls .huw-activity-start{width:6em}
+
+.huw-activity-editor .huw-activity-save{display:block;font-weight:700;background:#26647b;color:white}
+.huw-activity-editor .huw-activity-feedback:not(:empty){display:block;margin:.4rem}
+.huw-musical-select-object-title{touch-action:manipulation}

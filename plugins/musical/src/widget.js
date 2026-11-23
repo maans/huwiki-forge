@@ -712,7 +712,8 @@ Musical.prototype.render=function(parent,next){
   onFxChange:function(cues){scene.musical.sfx=cues;refreshCueScores();sfx.cues=cues;if(timeline.running)sfx.seek(timeline.value());paint(timeline.value());},
   previewFx:function(cue){pauseAll();sfx.quiet();sfx.unlock();sfx.fire(cue);},
   stopPreviewFx:function(){sfx.quiet();},
-  onSelect:function(t,properties){if(workspace)workspace.selectTrack(t,properties);},
+  onSelect:function(t,properties,fromTitle){if(workspace)workspace.selectTrack(t,properties,fromTitle);},
+  onEditPuppet:function(id){if(workspace)workspace.openObject(id);},
   markOwnWrite:function(title,body){self._ownWritten[title]=body;},
   reload:function(){Promise.resolve().then(function(){if(alive())self.refreshSelf();});}
  });

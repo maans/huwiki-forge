@@ -15,7 +15,7 @@ function overlaps(moves,id,start,end){
 exports.overlaps=overlaps;
 
 // Before 0.16 only the sampled motion was saved. Identify its library
-// settings against the original actor before retargeting to another rig.
+// settings from the original actor before editing or retargeting.
 function legacyRecipe(parts,owner,clip,samples){
  const rootKeys=samples.get(owner.id);
  if(!rootKeys||rootKeys.length<2)throw Error("samples");
@@ -46,6 +46,31 @@ function legacyRecipe(parts,owner,clip,samples){
  return best;
 }
 
+// The last sample of an adjacent clip can live in the next clip's undo data.
+const inferredSettings=new WeakMap();
+exports.settings=function(parts,owner,clip){
+ if(clip.recipe)return clip.recipe;
+ if(inferredSettings.has(clip))return inferredSettings.get(clip);
+ const samples=new Map();
+ function collect(partId,keys){
+  for(const k of keys||[]){
+   if(k.animusMove!==clip.id||!inside(k.t,clip.start,clip.end))continue;
+   if(!samples.has(partId))samples.set(partId,[]);
+   samples.get(partId).push(k);
+  }
+ }
+ for(const p of parts){
+  collect(p.id,p.keys);
+  for(const other of p.animusMoves||[]){
+   for(const [partId,prior] of Object.entries(other.prior||{}))collect(partId,prior);
+  }
+ }
+ for(const keys of samples.values())keys.sort(order);
+ const recipe=legacyRecipe(parts,owner,clip,samples);
+ inferredSettings.set(clip,recipe);
+ return recipe;
+};
+
 // Preserve authored tweaks when a sampled clip stays on the same body. Anchor
 // the delta of each local joint to the pose at its new starting time.
 function rebase(keys,part,clip,previous){
@@ -68,7 +93,7 @@ exports.edit=function(scene,request){
  const owners=new Set([source,target].filter(Boolean));
  if(!source||(!request.remove&&(!target||!Rig.fittedRig(scene.parts,target))))throw Error("unbound");
  const selected=(source.animusMoves||[]).find(m=>m.id===id);
- if(!selected&&!request.recipe)throw Error("missing");
+ if(!selected&&(request.update||!request.recipe))throw Error("missing");
  if(!request.remove){
   if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end>scene.duration+epsilon)throw Error("duration");
   if(overlaps(target.animusMoves||[],id,start,end))throw Error("occupied");
@@ -105,14 +130,18 @@ exports.edit=function(scene,request){
  }
  if(!request.remove){
   edited.owner=target;Object.assign(edited.clip,{start,end});
-  if(source!==target&&!edited.clip.recipe)edited.clip.recipe=legacyRecipe(scene.parts,source,selected,edited.samples);
+  if(request.recipe){
+   edited.clip.type=request.type;edited.clip.recipe=request.recipe;
+  }else if(source!==target&&!edited.clip.recipe){
+   edited.clip.recipe=exports.settings(scene.parts,source,selected);
+  }
  }
  const pending=items.filter(item=>item!==edited||!request.remove);
  function apply(item){
   const {clip,owner,previous,samples}=item,actor=draft.get(owner.id);
   const hasProp=Array.from(samples.keys()).some(key=>key!==owner.id&&!draft.get(key)?.parent);
   let data;
-  if(!previous||item===edited&&owner!==source||hasProp){
+  if(!previous||item===edited&&(owner!==source||request.recipe)||hasProp){
    const recipe=clip.recipe||legacyRecipe(scene.parts,owner,previous,samples);
    const prop=recipe.propId&&draft.get(recipe.propId);
    if(recipe.propId&&!prop)throw Error("reach");
