@@ -90,7 +90,7 @@ function summary(){
 async function updateDescription(){
  const token=++revision;loading=true;button.disabled=true;
  const edition=editions.find(item=>item.id===select.value);
- $('description').textContent=edition?((da?edition.home?.descriptionDa:edition.home?.descriptionEn)||edition.description)+' · '+((da?edition.home?.noteDa:edition.home?.noteEn)||''):words.blank;
+ $('description').textContent=edition?((da?edition.home?.descriptionDa:edition.home?.descriptionEn)||edition.description):words.blank;
  const loaded=edition?await loadEdition(edition.manifestUrl):{tiddlers:[]};if(token!==revision)return;
  loading=false;
  included=loaded.tiddlers.filter(t=>t['plugin-type']).map(t=>t.title);

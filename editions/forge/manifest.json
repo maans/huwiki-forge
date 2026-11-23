@@ -9,6 +9,7 @@
     "tiddlers/seed.json",
     "../shared/jingle.json",
     "../shared/libraries.json",
+    "tiddlers/card-icons.json",
     "tiddlers/edition-index.json",
     "tiddlers/design.json",
     "tiddlers/reader.json",

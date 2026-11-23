@@ -15,6 +15,9 @@ export async function editionIndex(){
  const catalog=JSON.parse(await readFile(path.join(root,"catalog/editions.json"),"utf8"));
  return catalog.editions.map(e=>({
   title:"$:/huwiki/forge/edition/"+e.id,tags:"$:/huwiki/forge/edition",text:"",
+  "card-icon":"$:/huwiki/forge/card-icon/"+e.id,
+  "label-da":e.home?.labelDa||e.name,
+  "label-en":e.home?.labelEn||e.name,
   "home-hidden":e.home?.hidden?"yes":"no",
   "edition-id":e.id,name:e.name,status:e.status,version:e.version||"",order:e.home?.order||e.id,
   "build-url":"https://forge.måns.dk/assembler/?edition="+encodeURIComponent(e.id),
@@ -23,8 +26,7 @@ export async function editionIndex(){
   "demo-url-da":"https://forge.måns.dk/demo/?edition="+encodeURIComponent(e.id)+"&lang=da",
   "demo-url-en":"https://forge.måns.dk/demo/?edition="+encodeURIComponent(e.id)+"&lang=en",
   "heading-da":e.home?.headingDa||e.name,"heading-en":e.home?.headingEn||e.name,
-  "description-da":e.home?.descriptionDa||e.description,"description-en":e.home?.descriptionEn||e.description,
-  "note-da":e.home?.noteDa||"Testudgave; browseraccept udestår.","note-en":e.home?.noteEn||"Test release; browser acceptance pending."
+  "description-da":e.home?.descriptionDa||e.description,"description-en":e.home?.descriptionEn||e.description
  }));
 }
 // Featured plugins use the existing native library registry, never a second catalog.

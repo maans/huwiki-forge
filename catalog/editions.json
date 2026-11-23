@@ -9,29 +9,27 @@
       "manifest": "../editions/forge/manifest.json",
       "version": "0.1.1-test.3",
       "home": {
-        "headingDa": "Tag denne forside med dig",
-        "headingEn": "Keep your own copy of this page",
-        "descriptionDa": "Forge-forsiden med en interaktiv Jingle og redigerbare noder.",
-        "descriptionEn": "Forge landing wiki with an interactive Jingle and editable music notation.",
-        "noteDa": "Biblioteker og nye downloads kræver internet.",
-        "noteEn": "Libraries and new downloads require internet access.",
-        "order": "06"
+        "headingDa": "Gør Forge-forsiden til din egen",
+        "headingEn": "Make the Forge homepage your own",
+        "descriptionDa": "Gem din egen kopi af forsiden, skriv velkomsten om, og prøv at ændre noderne i Forge-jinglen.",
+        "descriptionEn": "Save your own copy of this page, rewrite the welcome message and try changing the notes in the Forge jingle.",
+        "order": "06",
+        "labelDa": "TiddlyWiki Forge",
+        "labelEn": "TiddlyWiki Forge"
       }
     },
     {
       "id": "graph",
-      "name": "Graph Edition (beta)",
+      "name": "Graph Edition",
       "version": "0.2.1-beta.1",
       "status": "test",
       "manifest": "../editions/graph/manifest.json",
       "description": "Graph Edition using native TW5-Graph add-node/add-edge toolbar buttons and compact contextual editing for relations and appearance.",
       "home": {
-        "headingDa": "Graph Edition – interaktive videnskort",
-        "headingEn": "Graph Edition – interactive knowledge maps",
-        "descriptionDa": "Brug de originale Add Node og Add Edge-knapper i grafen, og klik på en node for at ændre udseende. Ingen permanent konfigurator.",
-        "descriptionEn": "Use the original Add Node and Add Edge buttons in the graph, and click a node to change its appearance. No persistent editor.",
-        "noteDa": "Beta: Et lille panel åbnes kun ved node, forbindelse eller udseende. Både mus og touch-simulering testet; fysisk iPad-test mangler.",
-        "noteEn": "Beta: A compact panel opens only when editing a node, edge or appearance. Mouse and simulated touch tested; physical iPad check pending.",
+        "headingDa": "Tegn et kort over dine idéer",
+        "headingEn": "Map your ideas",
+        "descriptionDa": "Forbind personer, emner og noter på et kort. Følg en forbindelse, eller åbn en note direkte fra kortet.",
+        "descriptionEn": "Connect people, topics and notes on a map. Follow a connection or open a note directly from the map.",
         "order": "01.5"
       }
     },
@@ -43,18 +41,16 @@
       "manifest": "../editions/hupedia/manifest.json",
       "version": "0.2.4-test.1",
       "home": {
-        "headingDa": "Artikler, kilder og overblik",
-        "headingEn": "Articles, sources and knowledge",
-        "descriptionDa": "Saml artikler, faktabokse og kilder i dit eget opslagsværk.",
-        "descriptionEn": "Build your own reference library of articles, fact boxes and sources.",
-        "noteDa": "Artikelvisning og sprog er stadig under afprøvning.",
-        "noteEn": "Article display and language support are still being tested.",
+        "headingDa": "Byg dit eget opslagsværk",
+        "headingEn": "Build your own encyclopedia",
+        "descriptionDa": "Skriv artikler med faktabokse og kilder. Knyt beslægtede emner sammen, så læseren kan gå på opdagelse.",
+        "descriptionEn": "Write articles with fact boxes and sources. Link related topics so readers can explore one article from another.",
         "order": "01"
       }
     },
     {
       "id": "tegne",
-      "name": "Tegne Edition (test)",
+      "name": "Tegne Edition",
       "version": "0.1.2-test.1",
       "description": "Offline Excalidraw drawing studio with editable SVG scenes, SitePublisher and bilingual UI; large self-contained file; browser test pending",
       "status": "test",
@@ -63,18 +59,17 @@
         "site-publisher"
       ],
       "home": {
-        "headingDa": "Tegninger og skitser",
-        "headingEn": "Drawings and sketches",
-        "descriptionDa": "Tegn med Excalidraw, gem redigerbare scener og udgiv som HTML.",
-        "descriptionEn": "Draw with Excalidraw, keep editable scenes and publish to HTML.",
-        "noteDa": "Stor HTML-fil. Mac- og iPad-accept udestår.",
-        "noteEn": "Large HTML file. Mac and iPad acceptance is pending.",
-        "order": "03"
+        "headingDa": "Skitsér en idé",
+        "headingEn": "Sketch an idea",
+        "descriptionDa": "Tegn en skitse eller et diagram med Excalidraw. Gem tegningen i wikien, og tegn videre, når idéen ændrer sig.",
+        "descriptionEn": "Draw a sketch or diagram with Excalidraw. Save it in your wiki and keep drawing as the idea develops.",
+        "order": "03",
+        "labelEn": "Drawing Edition"
       }
     },
     {
       "id": "music",
-      "name": "Musik Edition (test)",
+      "name": "Musik Edition",
       "description": "ABC notation with editable score, responsive three-tab mini mixer (Voices, Accompaniment, Chords), live playback controls, TinySynth offline fallback, MuseScore import and teaching collections",
       "status": "test",
       "manifest": "../editions/music/manifest.json",
@@ -85,13 +80,12 @@
         "musescore-import"
       ],
       "home": {
-        "headingDa": "Noder, afspilning og undervisning",
-        "headingEn": "Notation, playback and teaching",
-        "descriptionDa": "Skriv ABC-noder, importer fra MuseScore, og afspil TiddlyWiki Jingle med flytbar mixer og akkorder, der følger musikken.",
-        "descriptionEn": "Write ABC notation, import from MuseScore, and play the TiddlyWiki Jingle with a detachable mixer and follow-along chord chart.",
-        "noteDa": "ABC 0.3.38-test.4 · tre mixerfaner · diskret akkordzoom −/+ · TinySynth offline-reserve.",
-        "noteEn": "ABC 0.3.38-test.4 · three mixer tabs · discreet chord zoom −/+ · offline TinySynth backup.",
-        "order": "02"
+        "headingDa": "Skriv og spil noder",
+        "headingEn": "Write and play music",
+        "descriptionDa": "Skriv noder i ABC, eller hent dem fra MuseScore. Spil melodien, og følg noder og akkorder undervejs.",
+        "descriptionEn": "Write a tune in ABC or import a score from MuseScore. Play it back and follow the notes and chords.",
+        "order": "02",
+        "labelEn": "Music Edition"
       }
     },
     {
@@ -106,13 +100,13 @@
         "musescore-import"
       ],
       "home": {
-        "headingDa": "SilbaÄtno Repertoire",
-        "headingEn": "SilbaÄtno Repertoire",
-        "descriptionDa": "Åbn direkte i en fuldskærmsnodebog med én/to sider, søgbar nummerliste, øvetilstand og gennemgående bladring mellem melodier.",
-        "descriptionEn": "Open a full-screen music book with one/two pages, searchable setlist, practice mode and seamless turning between tunes.",
-        "noteDa": "Beta · ny fuldskærmsvisning – fysisk iPad-test mangler; kontrollér notation og gentagelser.",
-        "noteEn": "Beta · new fullscreen reader; physical iPad testing pending. Check notation and repeats.",
-        "order": "02.2"
+        "headingDa": "Spil efter orkestrets nodebog",
+        "headingEn": "Play from the band’s tune book",
+        "descriptionDa": "Find en melodi fra Silba Ätnos repertoire, øv din stemme, eller bladr gennem sætlisten, mens I spiller.",
+        "descriptionEn": "Find a tune from Silba Ätno’s repertoire, practise your part or turn through the set list as the band plays.",
+        "order": "02.2",
+        "labelDa": "Silba Ätno Repertoire",
+        "labelEn": "Silba Ätno Repertoire"
       }
     },
     {
@@ -127,29 +121,25 @@
         "musescore-import"
       ],
       "home": {
-        "headingDa": "Akustisk-Elektrisk Repertoire",
-        "headingEn": "Akustisk-Elektrisk Repertoire",
-        "descriptionDa": "Fire melodier fra balkanduoens repertoire med koncertnoder, capogreb og stemmer til sopran- og sopraninosaxofon.",
-        "descriptionEn": "Four Balkan duo tunes with concert scores, capo charts, and parts for soprano and sopranino saxophone.",
-        "noteDa": "Čik, čik · Majčin čoček · To sekunder · Dobar Bubnjar",
-        "noteEn": "Čik, čik · Majčin čoček · To sekunder · Dobar Bubnjar",
+        "headingDa": "Spil balkanmusik som duo",
+        "headingEn": "Play Balkan music as a duo",
+        "descriptionDa": "Spil fire melodier fra duoens repertoire med noder i klingende toneart, greb til capo og stemmer til sopran- og sopraninosax.",
+        "descriptionEn": "Play four tunes from the duo’s repertoire with concert-pitch scores, capo chord shapes and parts for soprano and sopranino sax.",
         "order": "02.21"
       }
     },
     {
       "id": "animus",
-      "name": "AniMus Forge I (beta)",
+      "name": "AniMus Forge I",
       "version": "0.13.0-beta.21-groups.1",
       "status": "test",
       "manifest": "../editions/animus/manifest.json",
       "description": "Start your own animation from a blank scene or a starter template. Open complete example productions separately.",
       "home": {
-        "headingDa": "AniMus – dit animationsværksted",
-        "headingEn": "AniMus – your animation workshop",
-        "descriptionDa": "Start med en tom scene eller en startpakke. Åbn de færdige forestillinger fra værkstedets galleri.",
-        "descriptionEn": "Start with a blank stage or a starter template. Open complete productions separately from the workshop gallery.",
-        "noteDa": "Meget tidlig beta: motor og eksempler kan ændres uden garanti for dine data. iPad-lyd er ikke godkendt. Forslag og fejlmeldinger er velkomne på Talk og GitHub.",
-        "noteEn": "Very early beta: core and examples may change without preserving your edits. iPad audio is unverified. Feedback welcome on Talk and GitHub.",
+        "headingDa": "Skab en animationsfilm",
+        "headingEn": "Make an animated film",
+        "descriptionDa": "Vælg en startscene, eller byg din egen. Giv figurerne bevægelse og replikker, og sæt musik til handlingen.",
+        "descriptionEn": "Pick a starter scene or build your own. Bring characters to life with movement and dialogue, then add music.",
         "order": "02.4"
       }
     },
@@ -161,12 +151,10 @@
       "manifest": "../editions/turn-around/manifest.json",
       "description": "An AI-generated musical animation made with AniMus. Explore Plato’s cave, then edit the audio recordings, music, characters, camera and animation.",
       "home": {
-        "headingDa": "En AniMus-musical, du kan arbejde videre med",
-        "headingEn": "An AniMus musical to watch and remake",
-        "descriptionDa": "AI-genereret animation skabt med AniMus: Platons hule som musical. Se og redigér forestillingen, og hent video, lydspor og undertekster.",
-        "descriptionEn": "An AI-generated animation made with AniMus: Plato’s cave as a musical. Watch and edit the performance, then download video, audio tracks and captions.",
-        "noteDa": "Engelsk lyd og lip-sync med 103 danske eller engelske undertekster. 14 scener, ABC-partiturer og indlejrede lydoptagelser.",
-        "noteEn": "English audio and lip-sync with 103 captions in Danish or English. 14 scenes, ABC scores and embedded audio.",
+        "headingDa": "Oplev Platons hule som musical",
+        "headingEn": "Explore Plato’s cave as a musical",
+        "descriptionDa": "Se den animerede forestilling, og prøv selv at ændre kamera, figurer eller musik i en scene.",
+        "descriptionEn": "Watch the animated musical, then try changing the camera, characters or music in a scene of your choice.",
         "order": "02.41",
         "hidden": true
       }
@@ -179,36 +167,32 @@
       "manifest": "../editions/theseus-ship/manifest.json",
       "description": "A fourteen-scene musical with Mara, Pip and Ione, in Danish and English.",
       "home": {
-        "headingDa": "Theseus’ skib",
-        "headingEn": "The Ship of Theseus",
-        "descriptionDa": "En musical i 14 scener med Mara, Pip og Ione om skibet, træet og det, vi bærer videre.",
-        "descriptionEn": "A fourteen-scene musical with Mara, Pip and Ione about the ship, its timber and what we carry forward.",
-        "noteDa": "Dansk og engelsk tale · to sange på hvert sprog · redigér i AniMus.",
-        "noteEn": "Danish and English dialogue · two songs in each language · editable in AniMus.",
+        "headingDa": "Hvornår er skibet det samme?",
+        "headingEn": "When is it still the same ship?",
+        "descriptionDa": "Følg Mara, Pip og Ione i en musical om Theseus’ skib. Åbn scenerne, og redigér din egen udgave.",
+        "descriptionEn": "Follow Mara, Pip and Ione through a musical about the ship of Theseus. Open the scenes and edit your own version.",
         "order": "02.42",
         "hidden": true
       }
     },
     {
       "id": "ai",
-      "name": "AI Edition (test)",
+      "name": "AI Edition",
       "description": "AI Forge 0.4.2 with OpenAI, Claude and Google Gemini, local LM Studio/Ollama, approved ForgeShare Vault and screenshot analysis.",
       "status": "test",
       "manifest": "../editions/ai/manifest.json",
       "version": "0.4.2",
       "home": {
-        "headingDa": "Samtaler, AI-opgaver og dine egne modeller",
-        "headingEn": "AI conversations, tasks and your models",
-        "descriptionDa": "Brug OpenAI, Claude, Gemini eller en lokal AI-model via LM Studio/Ollama. ForgeShare er valgfri.",
-        "descriptionEn": "Use OpenAI, Claude, Gemini or local models via LM Studio/Ollama. ForgeShare is optional.",
-        "noteDa": "Testudgave: Gemini via ForgeShare kræver hjælperen 0.1.19 til Mac, Windows eller Linux og godkendelse. Direkte cloud-kald kan blokeres af CORS.",
-        "noteEn": "Test release: Gemini via ForgeShare needs the 0.1.19 helper for Mac, Windows or Linux and approval. Direct browser cloud requests may be blocked by CORS.",
+        "headingDa": "Arbejd med en AI i din wiki",
+        "headingEn": "Work with AI in your wiki",
+        "descriptionDa": "Stil spørgsmål, få hjælp til et udkast, eller tal om et billede. Vælg en onlinetjeneste eller din egen lokale model.",
+        "descriptionEn": "Ask questions, work on a draft or discuss an image. Choose an online service or use a model on your computer.",
         "order": "02.5"
       }
     },
     {
       "id": "hupin",
-      "name": "HUPin Edition (test)",
+      "name": "HUPin Edition",
       "description": "Interactive pins on images and SVG; optional PasteUp and online map integrations. English UI migration pending / Klikbare billeder og SVG",
       "status": "test",
       "manifest": "../editions/hupin/manifest.json",
@@ -217,79 +201,72 @@
         "hupin"
       ],
       "home": {
-        "headingDa": "Klikbare billeder og kort",
-        "headingEn": "Clickable images and maps",
-        "descriptionDa": "Sæt klikbare punkter på billeder og SVG og forbind dem med dine tekster.",
-        "descriptionEn": "Add clickable hotspots to images and SVG and connect them to your notes.",
-        "noteDa": "Engelsk brugerflade er endnu ikke færdig.",
-        "noteEn": "The English interface is not yet complete.",
+        "headingDa": "Gør billeder og kort klikbare",
+        "headingEn": "Make pictures and maps clickable",
+        "descriptionDa": "Sæt nåle på et kort eller et billede. Lad hver nål åbne en tekst om det, man ser.",
+        "descriptionEn": "Place pins on a map or picture. Let each pin open a note about the place or detail it marks.",
         "order": "04"
       }
     },
     {
       "id": "demo",
-      "name": "Demo Edition",
-      "description": "Minimal test af TiddlyWiki-plugin og før-boot-indlæsning.",
+      "name": "TiddlyWiki + Forge Plugin Library",
+      "description": "Standard TiddlyWiki with Forge Plugin Library configured for installing plugins.",
       "status": "test",
       "manifest": "../editions/demo/manifest.json",
       "home": {
-        "headingDa": "Prøv en enkel wiki",
-        "headingEn": "Try a simple wiki",
-        "descriptionDa": "En lille wiki til at prøve Forge, redigering og lokal gemning.",
-        "descriptionEn": "A small wiki for trying Forge, editing and local saving.",
-        "noteDa": "Minimal testudgave.",
-        "noteEn": "Minimal test edition.",
-        "order": "05"
-      }
+        "headingDa": "Standard-TiddlyWiki med Forge Plugin Library",
+        "headingEn": "Standard TiddlyWiki with Forge Plugin Library",
+        "descriptionDa": "En almindelig TiddlyWiki med Forge Plugin Library tilføjet. Vælg og installer selv de plugins, du vil bruge.",
+        "descriptionEn": "A standard TiddlyWiki with Forge Plugin Library added. Choose and install the plugins you want to use.",
+        "order": "05",
+        "labelDa": "Grundwiki",
+        "labelEn": "Starter wiki"
+      },
+      "version": "0.0.2"
     },
     {
       "id": "cutout",
-      "name": "CutOut Edition (test)",
+      "name": "CutOut Edition",
       "version": "0.6.2-test.4",
       "status": "test",
       "manifest": "../editions/cutout/manifest.json",
       "description": "Original CutOut workshop, examples, Excalidraw drawing bridge, scenes, theatre, PasteUp and Slideshow; local export and native Dansk/English",
       "home": {
-        "headingDa": "Dukker, scener og animation",
-        "headingEn": "Puppets, scenes and animation",
-        "descriptionDa": "Byg dukker, tegn dele og skab animationer, scener og forestillinger. De oprindelige eksempler følger med.",
-        "descriptionEn": "Build puppets, draw parts and create animations, scenes and performances. Includes the original examples.",
-        "noteDa": "Afprøvet i Chrome på computer. Mobil/touch er endnu ikke accepteret.",
-        "noteEn": "Tested in desktop Chrome. Mobile/touch acceptance is pending.",
+        "headingDa": "Byg en dukke af løse dele",
+        "headingEn": "Build a cutout puppet",
+        "descriptionDa": "Tegn hoved, krop og lemmer, og sæt dem sammen til en dukke. Flyt delene, og spil en scene.",
+        "descriptionEn": "Draw a head, body and limbs, then assemble them into a puppet. Move the pieces to act out a scene.",
         "order": "07"
       }
     },
     {
       "id": "slideshow",
-      "name": "Slideshow Edition (test)",
+      "name": "Slideshow Edition",
       "version": "0.8.39-test.1",
       "status": "test",
       "manifest": "../editions/slideshow/manifest.json",
       "description": "Original Slideshow and PasteUp, seven example stories, local document import, PDF, interactive sites and editable wiki backup; native Dansk/English",
       "home": {
-        "headingDa": "Fortællinger, slides og plakater",
-        "headingEn": "Stories, slides and posters",
-        "descriptionDa": "Giv dine tiddlere en scene. Brug PasteUp, syv fortællinger og lokal dokumentimport som begyndelse.",
-        "descriptionEn": "Give your tiddlers a stage. Start with PasteUp, seven stories or a locally imported document.",
-        "noteDa": "Visuel Office-import kræver valgfri lokal LibreOffice-hjælper eller en PDF. Mobil/touch udestår.",
-        "noteEn": "Visual Office import uses an optional local LibreOffice helper or a PDF. Mobile/touch testing is pending.",
+        "headingDa": "Fortæl med billeder og tekst",
+        "headingEn": "Tell a story in pictures and words",
+        "descriptionDa": "Sæt billeder og tekst fra din wiki sammen til en præsentation eller plakat. Vis den på skærmen, eller gem en PDF.",
+        "descriptionEn": "Arrange pictures and text from your wiki into a presentation or poster. Show it on screen or save a PDF.",
         "order": "08"
       }
     },
     {
       "id": "shop",
-      "name": "Shop Edition (test)",
+      "name": "Shop Edition",
       "version": "0.2.0-test.3",
       "status": "test",
       "manifest": "../editions/shop/manifest.json",
       "description": "Nine original Shop templates, offline customer-site export and a manual Forms/Sheets, Google Sites and Funnel setup guide",
       "home": {
-        "headingDa": "Din egen butik, trin for trin",
-        "headingEn": "Your own shop, step by step",
-        "descriptionDa": "Lav et Shop Site og følg opsætningen af formular, ordreark og udgivelse. Ni skabeloner følger med.",
-        "descriptionEn": "Create a Shop Site and follow the form, order sheet and publishing setup. Includes nine templates.",
-        "noteDa": "Testudgave. Google Sites, prøveordre til privat Sheets-ark og offentlig Funnel afprøvet på computer. Fysisk mobiltest udestår.",
-        "noteEn": "Test edition. Google Sites, a test order into a private Sheet and public Funnel verified on desktop. Physical mobile testing remains pending.",
+        "headingDa": "Lav et butiksvindue på nettet",
+        "headingEn": "Create an online shop window",
+        "descriptionDa": "Vælg en skabelon, vis dine varer, og tilføj en bestillingsformular, så kunderne kan sende dig deres ordre.",
+        "descriptionEn": "Choose a template, display your products and add an order form so customers can send their orders to you.",
         "order": "09"
       }
     },
@@ -302,8 +279,10 @@
       "description": "The Stick Orchestra in a separate AniMus wiki.",
       "home": {
         "hidden": true,
-        "headingDa": "Tændstikorkestret",
-        "headingEn": "The Stick Orchestra"
+        "headingDa": "Dirigér et tændstikorkester",
+        "headingEn": "Conduct a stick orchestra",
+        "descriptionDa": "Se tændstikfigurerne spille sammen, og åbn scenen for at ændre musikernes bevægelser i takt med musikken.",
+        "descriptionEn": "Watch the stick figures play together, then open the scene to change how the musicians move to the music."
       }
     },
     {
@@ -315,8 +294,10 @@
       "description": "The Tinderbox in a separate AniMus wiki.",
       "home": {
         "hidden": true,
-        "headingDa": "Fyrtøjet",
-        "headingEn": "The Tinderbox"
+        "headingDa": "Sæt Fyrtøjet på scenen",
+        "headingEn": "Stage The Tinderbox",
+        "descriptionDa": "Se eventyret som animeret forestilling. Åbn en scene, og prøv din egen iscenesættelse med figurer og musik.",
+        "descriptionEn": "Watch the fairy tale as an animated show. Open a scene and try staging it yourself with characters and music."
       }
     },
     {
@@ -328,8 +309,10 @@
       "description": "Greek harbour starter in a separate AniMus wiki.",
       "home": {
         "hidden": true,
-        "headingDa": "Græsk havn · Startscene",
-        "headingEn": "Greek harbour starter"
+        "headingDa": "Fortæl en historie i havnen",
+        "headingEn": "Tell a story in the harbour",
+        "descriptionDa": "Brug den græske havn som kulisse. Vælg dine figurer, og giv dem deres første bevægelser på scenen.",
+        "descriptionEn": "Use the Greek harbour as your backdrop. Choose your characters and give them their first movements on stage."
       }
     }
   ],

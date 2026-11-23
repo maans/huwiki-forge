@@ -9,8 +9,18 @@ test('Public Forge and downloadable Edition cards match the same catalog and sou
  const cards=await editionIndex();assert.deepEqual(JSON.parse(await read('editions/forge/tiddlers/edition-index.json')),cards);
  const catalog=JSON.parse(await read('catalog/editions.json'));
  assert.deepEqual(cards.map(c=>c['edition-id']),catalog.editions.map(e=>e.id));
- for(const c of cards){assert.equal(c.status,catalog.editions.find(e=>e.id===c['edition-id']).status);assert.ok(c['note-da']);assert.ok(c['note-en']);}
  const saved=readSavedTiddlers(await read('index.html'));
+ for(const card of cards){
+  assert.ok(saved.has(card['card-icon']),card['edition-id']+' must have a card icon');
+  for(const lang of ['da','en']){
+   const copy=['label','heading','description'].map(field=>card[field+'-'+lang]);
+   assert.ok(copy.every(Boolean));
+   assert.doesNotMatch(copy.join(' '),/\bbeta\b|testudgave|test release|known limitations|kendte begrænsninger/i);
+  }
+ }
+ const standard=cards.find(c=>c['edition-id']==='demo');
+ assert.equal(standard['heading-da'],'Standard-TiddlyWiki med Forge Plugin Library');
+ assert.equal(standard['heading-en'],'Standard TiddlyWiki with Forge Plugin Library');
  assert.equal(saved.get('$:/languages/da-DK')['plugin-type'],'language');
  assert.ok(saved.has('$:/config/HUWikiPluginLibrary'));
  assert.ok(saved.has('HUWiki Community'));

@@ -20,18 +20,18 @@
     },
     "tegne": {
       "da": {
-        "name": "Tegne Edition (test)"
+        "name": "Tegne Edition"
       },
       "en": {
-        "name": "Drawing Edition (test)"
+        "name": "Drawing Edition"
       }
     },
     "music": {
       "da": {
-        "name": "Musik Edition (test)"
+        "name": "Musik Edition"
       },
       "en": {
-        "name": "Music Edition (test)"
+        "name": "Music Edition"
       }
     },
     "animus": {
@@ -46,18 +46,18 @@
     },
     "ai": {
       "da": {
-        "name": "AI Edition (test)"
+        "name": "AI Edition"
       },
       "en": {
-        "name": "AI Edition (test)"
+        "name": "AI Edition"
       }
     },
     "hupin": {
       "da": {
-        "name": "HUPin Edition (test)"
+        "name": "HUPin Edition"
       },
       "en": {
-        "name": "HUPin Edition (test)"
+        "name": "HUPin Edition"
       }
     },
     "demo": {
@@ -72,26 +72,26 @@
     },
     "cutout": {
       "da": {
-        "name": "CutOut Edition (test)"
+        "name": "CutOut Edition"
       },
       "en": {
-        "name": "CutOut Edition (test)"
+        "name": "CutOut Edition"
       }
     },
     "slideshow": {
       "da": {
-        "name": "Slideshow Edition (test)"
+        "name": "Slideshow Edition"
       },
       "en": {
-        "name": "Slideshow Edition (test)"
+        "name": "Slideshow Edition"
       }
     },
     "shop": {
       "da": {
-        "name": "Shop Edition (test)"
+        "name": "Shop Edition"
       },
       "en": {
-        "name": "Shop Edition (test)"
+        "name": "Shop Edition"
       }
     },
     "turn-around": {
@@ -116,11 +116,11 @@
     },
     "graph": {
       "da": {
-        "name": "Graph Edition (beta)",
+        "name": "Graph Edition",
         "description": "Videnskort med to originale grafknapper og små redigeringspaneler, som kun vises ved behov."
       },
       "en": {
-        "name": "Graph Edition (beta)",
+        "name": "Graph Edition",
         "description": "Knowledge maps with two original graph buttons and small contextual editors, hidden by default."
       }
     },

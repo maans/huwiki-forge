@@ -66,7 +66,7 @@ try{
  assert.doesNotMatch(await enImport.locator('p').innerText(),/DA:|EN:/);
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/theatre"] + strong').innerText(),'Theatre');
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/music"] ~ small').innerText(),'Optional · not selected');
- assert.equal(await drawing.locator('#edition option[value="tegne"]').innerText(),'Drawing Edition (test)');
+ assert.equal(await drawing.locator('#edition option[value="tegne"]').innerText(),'Drawing Edition');
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/hupedia"]').isChecked(),true,'Bundled HUPedia starts checked');
  assert.equal(await drawing.locator('input[value="$:/plugins/huwiki/hupedia"]').isEnabled(),true,'Bundled plugins can be deselected');
  await drawing.locator('input[value="tegne-examples"]').check();

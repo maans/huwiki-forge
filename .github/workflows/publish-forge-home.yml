@@ -7,6 +7,7 @@ on:
       - editions/forge/manifest.json
       - editions/forge/tiddlers/seed.json
       - editions/forge/tiddlers/design.json
+      - editions/forge/tiddlers/card-icons.json
       - 'plugins/**/dist/plugin.json'
       - 'themes/**/dist/theme.json'
       - editions/shared/libraries.json
