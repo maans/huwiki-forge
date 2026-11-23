@@ -124,6 +124,8 @@ def package(name,title,entries,scene_name):
   ti=prefix+'/items/'+e['id'];tiddlers[ti]=dict(title=ti,type='application/json',tags=TAG,text=json.dumps(e,ensure_ascii=False))
  # A small editable template, with independent instance IDs and local images.
  selected=[e for e in packed if e['category']!='figure']+[e for e in packed if e['category']=='figure'][:3 if 'greek' in name else 2]
+ if name=='animus-starter-kenney':
+  selected=[e for e in selected if e['category']!='prop']
  order={'background':0,'prop':1,'scenery':2,'figure':3,'cutout':3,'face':4};selected.sort(key=lambda e:order[e['category']])
  scene=dict(version=1,id=name+'-sample',kind='animation',name=title,width=960,height=540,duration=16,background='#dce7e1',parts=[])
  figure_index=0
@@ -149,7 +151,7 @@ def package(name,title,entries,scene_name):
  template=prefix+'/template';tiddlers[template]=dict(title=template,type='application/json',tags='$:/tags/AniMus/Template',**{'cutout-project':'yes','cutout-id':scene['id'],'animus-template-name':title},text=json.dumps(scene,ensure_ascii=False))
  # Keep the entry gallery native to TiddlyWiki; adding to a scene uses the shared picker.
  page=title;tiddlers[page]=dict(title=page,tags='AniMus',text='<$animus-new-project template="'+template+'"/>')
- info=dict(title=prefix,name=title,description=scene_name,author='HUWiki Forge',version=('0.1.1' if name=='animus-starter-kenney' else '0.1.0'),type='application/json',**{'plugin-type':'plugin','requires-reload':'yes','dependents':'$:/plugins/huwiki/musical','license':'Mixed; per-element provenance'})
+ info=dict(title=prefix,name=title,description=scene_name,author='HUWiki Forge',version=('0.1.2' if name=='animus-starter-kenney' else '0.1.0'),type='application/json',**{'plugin-type':'plugin','requires-reload':'yes','dependents':'$:/plugins/huwiki/musical','license':'Mixed; per-element provenance'})
  save_json(ROOT/'plugins'/name/'dist/plugin.json',{**info,'text':json.dumps({'tiddlers':tiddlers},ensure_ascii=False,separators=(',',':'))})
 
 def main():
