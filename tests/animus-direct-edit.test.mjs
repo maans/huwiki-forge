@@ -322,3 +322,16 @@ test('fitting three cartwheels to the next keyframe preserves the chosen travel 
   else assert.ok((last.x-first.x)*Number(direction)>1);
  }
 });
+
+test('figure track names select without seeking and open the correct puppet on a second click after redraw',()=>{
+ const h=editorHarness(),opened=[],selections=[];
+ h.options.onEditPuppet=id=>opened.push(id);
+ h.options.onSelect=(track,properties,fromTitle)=>selections.push([track.id,properties,fromTitle]);
+ h.options.seek(8);h.clip.duration=3;
+ const title=id=>h.host.querySelector('[data-track-id="figure:'+id+'"] .huw-musical-lane-title');
+ const tap=id=>title(id).querySelector('.huw-musical-track-name').dispatch('click',{detail:1,clientX:80,clientY:20});
+ tap('actor');assert.deepEqual(selections.at(-1),['figure:actor',false,true]);assert.deepEqual(opened,[]);assert.equal(h.time,8);
+ tap('other');assert.deepEqual(opened,[]);tap('other');assert.deepEqual(opened,['other']);
+ title('actor').dispatch('keydown',{key:' '});assert.equal(h.editor.getSelection().part,'actor');
+ title('actor').dispatch('keydown',{key:'Enter'});assert.deepEqual(opened,['other','actor']);
+});

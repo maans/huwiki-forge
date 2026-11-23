@@ -1268,10 +1268,8 @@ function attach(o){
     if(candidate)choose("song:"+candidate.id,0);
    }else{
     choose(t.id,0,false,null,selectableObject);
-    // If the track belongs to another act/scene, navigate to its own clip.
-    // Otherwise the object is correctly selected but not currently on stage,
-    // which makes its dashed frame appear broken to the user.
-    var targetClip=t.kind==='animation'?animation(t):t.kind==='figure'?m.animationClips.find(function(c){return c.target===t.part;}):null;
+    // A figure row belongs to the visible scene. Keep its current time.
+    var targetClip=t.kind==='animation'?animation(t):null;
     if(targetClip){var range=clipRange(targetClip);
      if(playhead<range.start||playhead>=range.end)o.seek(Math.min(range.end-.01,range.start+.05));
     }
@@ -1303,7 +1301,10 @@ function attach(o){
     title.onkeydown=function(ev){
      if(ev.target!==title||ev.key!=="Enter"&&ev.key!==" ")return;
      ev.preventDefault();lastTitleTap=null;
-     if(ev.key==="Enter"&&hasWorkshop)openTrackWorkshop();else selectTrackTitle();
+     if(ev.key==="Enter"&&hasWorkshop){openTrackWorkshop();return;}
+     selectTrackTitle();
+     var selectedRow=rows.querySelector(".huw-musical-track.is-selected");
+     if(selectedRow){var name=selectedRow.querySelector(".huw-musical-lane-title");if(name)name.focus({preventScroll:true});}
     };
    }
    addPreviewControl(title,row,t);
