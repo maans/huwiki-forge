@@ -11,6 +11,8 @@ try{
  await page.route('**/*',route=>route.request().url().startsWith('file:')?route.continue():route.abort());
  await page.goto(pathToFileURL(path.join(root,'editions/silba-atno-repertoire/index.html')).href);
  await page.locator('.silba-home').waitFor();
+ // The saved demo follows the host wiki language; select the language this acceptance path exercises.
+ await page.evaluate(()=>$tw.wiki.setText('$:/language','text',undefined,'$:/languages/da-DK'));
  await page.locator('.silba-actions').getByRole('link',{name:'Åbn repertoireværksted',exact:true}).click();
  const workshop=page.locator('.huwrep');
  await workshop.getByRole('button',{name:'Stiknoder og stemmer',exact:true}).click();
