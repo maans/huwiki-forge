@@ -354,6 +354,7 @@ Book.prototype.draw=function(){
   var result=Printing.open(wiki,self.setlistTitle,self,{scores:scores,instrumentId:printInstrument.value});
   if(result&&result.error&&self._win&&self._win.alert)self._win.alert(result.error);
  }
+ if(wiki.getTiddler("$:/plugins/huwiki/abc/cue-widget.js"))printActions.appendChild(btn(doc,Printing.cueLabel(wiki),function(){printMenu.open=false;host.classList.remove("huwrep-book-fullscreen");Printing.cues(wiki,self.setlistTitle,self);}));
  printActions.appendChild(btn(doc,"Sætliste og aftaler",function(){openPrint(false);}));
  printActions.appendChild(btn(doc,"Hele nodebogen med noder",function(){openPrint(true);},"huwrep-primary"));
  printMenu.appendChild(printActions);toolbar.appendChild(printMenu);

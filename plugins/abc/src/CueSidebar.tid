@@ -1,0 +1,16 @@
+title: $:/plugins/huwiki/abc/Sidebar
+type: text/vnd.tiddlywiki
+tags: $:/tags/SideBar
+caption: <%if [{$:/language}regexp[da]is[tiddler]get[plugin-type]match[language]] %>ABC Musik<%else%>ABC Music<%endif%>
+description: Noder og rytmer
+
+<%if [{$:/language}regexp[da]is[tiddler]get[plugin-type]match[language]] %>
+[[Musik Edition|HUWiki Musik – Start]] · [[ABC-nodeværksted|HUWiki ABC – Nodeværksted]]
+
+[[Stiknoder og stemmer|Stiknoder]] · [[Søg i nodesamlinger|HUWiki ABC – Søg i samlinger]]
+<%else%>
+[[Music Edition|HUWiki Musik – Start]] · [[ABC score workshop|HUWiki ABC – Nodeværksted]]
+[[Cue sheets and parts]] · [[Search score collections|HUWiki ABC – Søg i samlinger]]
+<%endif%>
+
+{{$:/plugins/huwiki/abc/Lessons}}

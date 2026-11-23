@@ -16,19 +16,7 @@ const root=path.resolve(import.meta.dirname,"..");
 const base=path.join(root,"editions/silva-ethno-repertoire");
 const plugin=JSON.parse(await readFile(path.join(root,"plugins/musescore-import/dist/plugin.json"),"utf8"));
 const pluginTiddlers=JSON.parse(plugin.text).tiddlers;
-let converterSource=pluginTiddlers["$:/plugins/huwiki/musescore-import/converter.js"].text;
-// Preserve a voice with only rests or chord symbols; do not drop it merely
-// because the rendered note count is zero.
-converterSource=converterSource.replace(
- /if\(count\|\|v===0\)voices\.push\(/g,
- "if(count||v===0||measures.some(function(m){return (m.voices[v]||[]).some(function(e){return e.kind==='harmony'||e.kind==='rest';});}))voices.push("
-);
-// MuseScore 2.x sometimes places Chord/Rest directly under Measure, without a voice wrapper.
-// Reuse the same parser but let that measure act as its implicit first voice.
-const oldMeasure="els(m,\'voice\').forEach(function(v){result.voices.push(museVoice(v,result,model));});return result;";
-const newMeasure="var layers=els(m,\'voice\');if(!layers.length)layers=[m];layers.forEach(function(v){result.voices.push(museVoice(v,result,model));});return result;";
-if(!converterSource.includes(oldMeasure))throw Error("Importer compatibility patch target missing");
-converterSource=converterSource.replace(oldMeasure,newMeasure);
+const converterSource=pluginTiddlers["$:/plugins/huwiki/musescore-import/converter.js"].text;
 const doc=new DOMParser().parseFromString("<root><child/></root>","application/xml");
 const elementProto=Object.getPrototypeOf(doc.documentElement);
 if(!("firstElementChild" in elementProto))Object.defineProperty(elementProto,"firstElementChild",{get(){

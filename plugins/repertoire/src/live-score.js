@@ -24,6 +24,28 @@ function stepsBetween(sourceKey,targetKey){
  if(!from||!to)throw new Error("Tonearten kan ikke transponeres automatisk.");
  var n=(to.pc-from.pc+12)%12;return n>6?n-12:n;
 }
+// A global ABC MIDI transposition records the difference between the written
+// part and sounding pitch. Keep arrangement keys in concert pitch throughout.
+function soundingOffset(source){
+ var head=String(source||"").split(/^\s*K:/m)[0];
+ var values=Array.from(head.matchAll(/^%%MIDI\s+transpose\s+([+-]?\d+)[ \t]*(?:%[^\n]*)?$/gmi));
+ return values.length?Number(values[values.length-1][1]):0;
+}
+function shiftKey(key,steps){
+ if(!steps||steps%12===0)return key;
+ var parsed=/^([A-Ga-g])([b#]?)(.*)$/.exec(key);
+ if(!parsed)return key;
+ var suffix=parsed[3],mode=suffix.toLowerCase();
+ var modes={"":0,maj:0,major:0,ion:0,ionian:0,m:3,min:3,minor:3,aeo:3,aeolian:3,
+  dor:-2,dorian:-2,phr:-4,phrygian:-4,lyd:-5,lydian:-5,mix:5,mixolydian:5,loc:1,locrian:1};
+ if(!Object.prototype.hasOwnProperty.call(modes,mode))return key;
+ var tonic=PITCH[parsed[1].toUpperCase()]+(parsed[2]==="#"?1:parsed[2]==="b"?-1:0);
+ var pc=((tonic+steps)%12+12)%12,major=(pc+modes[mode]+12)%12;
+ var names=(major===1||major===3||major===5||major===8||major===10)?
+  ["C","Db","D","Eb","E","F","Gb","G","Ab","A","Bb","B"]:
+  ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+ return names[pc]+suffix;
+}
 function putHeader(source,letter,value){
  var pattern=new RegExp("^(\\s*"+letter+":)\\s*[^\\r\\n]*$","m");
  if(pattern.test(source))return source.replace(pattern,function(_,prefix){return prefix+value;});
@@ -36,7 +58,9 @@ function putHeader(source,letter,value){
 function apply(ABC,source,agreement){
  var original=String(source||""),requested=agreement||{},keyName=header(original,"K").split(/\s+/)[0];
  if(!keyName)return {source:original,transposed:false,tempoChanged:false};
- var wanted=String(requested.key||keyName).trim();
+ var offset=soundingOffset(original),concertKey=shiftKey(keyName,offset);
+ var target=String(requested.key||concertKey).trim();
+ var wanted=target===concertKey?keyName:shiftKey(target,-offset);
  var semitones=wanted===keyName?0:stepsBetween(keyName,wanted);
  var out=semitones?(Transpose||(Transpose=require("$:/plugins/huwiki/abc/transpose.js"))).apply(ABC,original,semitones):original;
  if(wanted!==keyName){
@@ -47,6 +71,7 @@ function apply(ABC,source,agreement){
  if(targetTempo&&targetTempo!==originalTempo)out=putHeader(out,"Q",targetTempo);
  return {source:out,transposed:!!semitones,keyChanged:wanted!==keyName,tempoChanged:targetTempo!==originalTempo};
 }
+exports.shiftKey=shiftKey;exports.soundingOffset=soundingOffset;
 exports.keyOf=keyOf;
 exports.stepsBetween=stepsBetween;
 exports.apply=apply;
