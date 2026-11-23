@@ -484,7 +484,7 @@ function mount(o){
   host.classList.toggle("huw-musical--inspector-open",inspectorOpen);
   inspectorButton.setAttribute("aria-pressed",String(inspectorOpen));
  }
- function selection(t,properties){
+ function selection(t,properties,fromTitle){
   // The timeline and stage are two views of the *same* selected object.
   // Selecting a row title, its keyframe or its animation clip must display
   // the corresponding dashed frame without aiming at a tiny stage shape.
@@ -493,24 +493,24 @@ function mount(o){
   if(!t){clearSelection(true);return;}
   // Choosing another key of the object being inspected should keep its
   // numeric controls available, including the inspector's Add key button.
-  var keepInspector=inspectorOpen&&workshopMode==='figure'&&workshopPart===t.part;
+  var keepInspector=inspectorOpen&&(fromTitle||workshopMode==='figure'&&workshopPart===t.part);
   selectionCleared=false;
   // Choosing a timeline key or object rebuilds its controls. Restore lost
   // keyboard focus so Escape still reaches this editor after that click.
   var focused=doc.activeElement;if(!focused||focused===doc.body||!focused.isConnected)host.focus({preventScroll:true});
   Array.prototype.forEach.call(o.view.svg.querySelectorAll('.huw-musical-selected-element'),function(node){node.classList.remove('huw-musical-selected-element');});
   updateEditButtons();
-  if(properties&&workshopMode)hideWorkshop();
+  if((properties||fromTitle)&&workshopMode)hideWorkshop();
   if(t&&t.kind==='face'){
    figureRoot=t.part;latestPart=t.part;transformMode='parts';showStageForTool();o.pause();editor.setCameraEdit(false);
-   if(!routingWorkshop&&!properties)showFaceWorkshop(t.part);updateToolButtons();setInspector(!!properties);refreshHandles();return;
+   if(!routingWorkshop&&!properties&&!fromTitle)showFaceWorkshop(t.part);updateToolButtons();setInspector(!!properties||!!fromTitle&&keepInspector);refreshHandles();return;
   }
   // A stage gesture opens the workshop only after pointer-up. Changing layout
   // during pointer-down would move the SVG under a finger while dragging.
-  if(!properties&&!selectingOnStage&&!routingWorkshop){var partId=t&&['part','film-part','motion','figure'].indexOf(t.kind)>=0?t.part:null;if(partId)showPartWorkshop(partId);else hideWorkshop();}
+  if(!fromTitle&&!properties&&!selectingOnStage&&!routingWorkshop){var partId=t&&['part','film-part','motion','figure'].indexOf(t.kind)>=0?t.part:null;if(partId)showPartWorkshop(partId);else hideWorkshop();}
   if(transformMode==='parts'||(editor.inClipDetail&&editor.inClipDetail()&&t&&t.kind==='motion')){
    if(t&&['part','film-part','motion'].indexOf(t.kind)>=0){figureRoot=t.part;latestPart=t.part;transformMode='parts';o.pause();editor.setCameraEdit(false);}
-   if(t&&['part','film-part','motion','animation'].indexOf(t.kind)>=0){updateToolButtons();setInspector(keepInspector||!workshopMode);refreshHandles();return;}
+   if(t&&['part','film-part','motion','animation'].indexOf(t.kind)>=0){updateToolButtons();setInspector(keepInspector||!fromTitle&&!workshopMode);refreshHandles();return;}
   }
   if(!(editor.inClipDetail&&editor.inClipDetail())){
    var id=t&&(t.kind==='animation'?t.target:(t.kind==='figure'||t.kind==='part'||t.kind==='film-part')?t.part:null);
@@ -534,7 +534,7 @@ function mount(o){
     transformMode='';figureRoot='';editor.setCameraEdit(false);
    }
   }
-  updateToolButtons();setInspector(keepInspector||!workshopMode);refreshHandles();
+  updateToolButtons();setInspector(keepInspector||!fromTitle&&!workshopMode);refreshHandles();
  }
  // Adjustable divider keeps the preview and timeline visible together.
  var grip=el(doc,"div","huw-musical-layout-resize");

@@ -244,6 +244,17 @@ test('Kenney activity blocks follow the time ruler and drag between figures in i
  const rows=editor.locator('[data-layer-id*="female-"][data-layer-id$="-actor"]');
  assert.equal(await rows.count(),2);
  const from=rows.first(),to=rows.nth(1),targetId=await to.getAttribute('data-layer-id');
+ const firstName=from.locator('.huw-musical-track-name'),secondName=to.locator('.huw-musical-track-name');
+ const workshop=editor.locator('.huw-puppet-workshop');
+ await secondName.tap();
+ assert.ok(await to.evaluate(row=>row.classList.contains('is-selected')));
+ assert.equal(await workshop.count(),0);assert.equal(await editor.locator('.huw-musical-figure-panel').isVisible(),false);
+ await firstName.scrollIntoViewIfNeeded();
+ const nameBounds=await firstName.boundingBox(),nameX=Math.round(nameBounds.x+nameBounds.width/2),nameY=Math.round(nameBounds.y+nameBounds.height/2);
+ await page.touchscreen.tap(nameX,nameY);await page.touchscreen.tap(nameX,nameY);
+ await workshop.waitFor();assert.equal(await workshop.count(),1);
+ await workshop.locator('.huw-puppet-cancel').tap();
+ await secondName.dblclick();await workshop.waitFor();await workshop.locator('.huw-puppet-cancel').click();
  await from.locator('.huw-musical-lane-title').click({button:'right'});
  const form=editor.locator('.huw-musical-rig-controls').last();
  await form.locator('select').filter({has:page.locator('option[value="wheel"]')}).selectOption('wheel');

@@ -74,7 +74,7 @@ function attach(o){
  var clipMeta=el(doc,"span","huw-musical-clip-editor-meta","",clipHeading);
  var rows=el(doc,"div","huw-musical-tracks",undefined,root),inspector=el(doc,"div","huw-musical-inspector",undefined,root),status=el(doc,"output","huw-musical-edited-status","",root);
  var preview=TrackPreview.create(),previewControls=[],previewHidden=[],captionCues=TrackPreview.captions(o.view,Engine);
- var cameraEditActive=false,playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1,expandedClipId="",detailClipId="",detailReturn=null,lastClipTap=null;
+ var cameraEditActive=false,playhead=0,choice={id:"song:"+m.songs[0].id,key:0},playheads=[],filter="all",zoom=1,expandedClipId="",detailClipId="",detailReturn=null,lastClipTap=null,lastTitleTap=null;
  var tracks=[{id:"song",kind:"song",name:L.song},{id:"scenes",kind:"scene-range",name:da?"Akter og scener":ui("Acts and scenes")},
   {id:"scene-objects",kind:"object-browser",name:da?"Objekter i scenen":ui("Objects in scene")},
   {id:"captions",kind:"captions",name:da?"Undertekster":ui("Captions")},
@@ -352,7 +352,7 @@ function attach(o){
   if(t.kind==="sfx"&&o.onFxChange)o.onFxChange(m.sfx);
   if(t.kind==='audio'&&o.onAudioChange)o.onAudioChange(m.audioClips);
  }
- function choose(id,key,properties,moveId){choice={id:id,key:key,moveId:moveId};var t=track();
+ function choose(id,key,properties,moveId,fromTitle){if(!fromTitle)lastTitleTap=null;choice={id:id,key:key,moveId:moveId};var t=track();
   if(t&&t.kind==='figure')ensureFigureTrack(t.part);
   var active=currentStage(),id=t&&(t.kind==='face'?t.actorId:t.kind==='animation'?t.target:t.part),seen={};
   if(id&&t.kind!=='figure'){var p=(active.scene.parts||[]).find(function(p){return p.id===id;});
@@ -361,10 +361,10 @@ function attach(o){
   }
   if(t.kind==="animation")expandedClipId=t.id;
   if(t.kind==="motion"||t.kind==="accent")expandedClipId="animation:"+t.clipId;
-  draw();if(o.onSelect)o.onSelect(track(),properties);
+  draw();if(o.onSelect)o.onSelect(track(),properties,fromTitle);
   if(properties&&moveId){var drawer=inspector.closest('.huw-musical-inspector-drawer');if(drawer)drawer.scrollTop=0;}
  }
- function clearSelection(){var hadSelection=!!choice.id;choice={id:"",key:-1};if(detailReturn){detailReturn.id="";detailReturn.key=-1;}draw();if(o.onSelect)o.onSelect(null);return hadSelection;}
+ function clearSelection(){lastTitleTap=null;var hadSelection=!!choice.id;choice={id:"",key:-1};if(detailReturn){detailReturn.id="";detailReturn.key=-1;}draw();if(o.onSelect)o.onSelect(null);return hadSelection;}
  function selected(){var t=track();return !t?null:t.kind==="captions"?captionCues[choice.key]:t.kind==="song"?m.songs[t.index]:t.kind==='audio'?m.audioClips[t.index]:t.kind==="animation"?animation(t):keys(t)[choice.key];}
  function faceContext(id){
   var api=facial(),located=id&&partContext(id,o.view,playhead,[],true,0);
@@ -1257,16 +1257,17 @@ function attach(o){
    if(t.id===choice.id||(t.kind==="song-lane"&&m.songs.some(function(s){return s.lane===t.lane&&choice.id==="song:"+s.id;})))row.classList.add("is-selected");
    var title=el(doc,"div","huw-musical-lane-title",t.name,row);
    var selectableObject=!!(t.kind==="figure"||t.kind==="animation"||t.kind==="part"||t.kind==="film-part"||t.kind==="camera"||t.kind==='face');
+   var puppetTrack=t.kind==="figure"||t.kind==="part"||t.kind==="film-part";
    if(selectableObject){title.setAttribute('role','button');title.setAttribute('tabindex','0');
     title.setAttribute('aria-label',(da?'Markér på scenen: ':ui('Select on stage: '))+t.name);
-    title.title=da?'Klik eller dobbeltklik for at markere objektet på scenen':ui('Click or double-click to select the object on stage');
+    title.title=puppetTrack?(da?'Klik for at vælge sporet. Dobbeltklik for at åbne dukkeværkstedet.':ui('Click to select the track. Double-click to open the puppet workshop.')):(da?'Vælg sporet':ui('Select track'));
     title.classList.add('huw-musical-select-object-title');
    }
    function selectTrackTitle(){if(t.kind==='figure')ensureFigureTrack(t.part);if(t.kind==="song-lane"){
     var candidate=m.songs.find(function(s){return s.lane===t.lane&&playhead>=s.start&&playhead<s.start+s.duration;})||m.songs.find(function(s){return s.lane===t.lane;});
     if(candidate)choose("song:"+candidate.id,0);
    }else{
-    choose(t.id,0);
+    choose(t.id,0,false,null,selectableObject);
     // If the track belongs to another act/scene, navigate to its own clip.
     // Otherwise the object is correctly selected but not currently on stage,
     // which makes its dashed frame appear broken to the user.
@@ -1275,10 +1276,35 @@ function attach(o){
      if(playhead<range.start||playhead>=range.end)o.seek(Math.min(range.end-.01,range.start+.05));
     }
    }}
-   title.onclick=selectTrackTitle;
+   function openTrackWorkshop(){
+    lastTitleTap=null;
+    if(choice.id!==t.id)selectTrackTitle();
+    if(puppetTrack&&o.onEditPuppet)o.onEditPuppet(t.part);
+    if(t.kind==="face"&&o.onEditFace)o.onEditFace({actorId:t.actorId,time:playhead});
+   }
+   var hasWorkshop=puppetTrack||t.kind==="face";
+   title.onclick=function(ev){
+    if(ev.target.closest("button,input,select"))return;
+    if(hasWorkshop&&ev.detail!==0){
+     var now=Date.now(),prior=lastTitleTap;
+     // A selection redraws all rows. Match the second click to the same track.
+     if(prior&&prior.id===t.id&&now-prior.time<450&&Math.hypot(ev.clientX-prior.x,ev.clientY-prior.y)<24){
+      openTrackWorkshop();return;
+     }
+     lastTitleTap={id:t.id,time:now,x:ev.clientX,y:ev.clientY};
+    }
+    selectTrackTitle();
+   };
    if(selectableObject){
-    title.ondblclick=function(ev){ev.preventDefault();ev.stopPropagation();selectTrackTitle();};
-    title.onkeydown=function(ev){if(ev.key==='Enter'||ev.key===' '){ev.preventDefault();selectTrackTitle();}};
+    title.ondblclick=function(ev){
+     if(ev.target.closest("button,input,select"))return;
+     ev.preventDefault();ev.stopPropagation();if(hasWorkshop&&lastTitleTap)openTrackWorkshop();
+    };
+    title.onkeydown=function(ev){
+     if(ev.target!==title||ev.key!=="Enter"&&ev.key!==" ")return;
+     ev.preventDefault();lastTitleTap=null;
+     if(ev.key==="Enter"&&hasWorkshop)openTrackWorkshop();else selectTrackTitle();
+    };
    }
    addPreviewControl(title,row,t);
    if(t.foldable)foldButton(title,t,t.foldKey,t.expanded,function(){groupExpanded[t.foldKey]=!groupExpanded[t.foldKey];});

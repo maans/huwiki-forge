@@ -28,3 +28,4 @@ type: text/css
 
 .huw-activity-editor .huw-activity-save{display:block;font-weight:700;background:#26647b;color:white}
 .huw-activity-editor .huw-activity-feedback:not(:empty){display:block;margin:.4rem}
+.huw-musical-select-object-title{touch-action:manipulation}
