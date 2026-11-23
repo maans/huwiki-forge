@@ -3,7 +3,7 @@
  * The generated TiddlyWiki remains editable and can be saved with its native saver.
  */
 import {assembleHtml,loadOfficialCore} from '../assembler/assemble.mjs';
-import {loadChoices,composeWiki,resolveEditionId} from '../assembler/compose.mjs';
+import {loadChoices,composeWiki,resolveEditionId} from '../assembler/compose.mjs?v=repertoire-016';
 
 const params=new URL(location.href).searchParams;
 const explicit=params.get('lang')?.toLowerCase();

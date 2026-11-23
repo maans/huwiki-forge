@@ -1,5 +1,5 @@
 import {assembleHtml,loadOfficialCore,loadEdition} from './assemble.mjs';
-import {loadChoices,resolvePackages,reconcilePackageSelection,composeWiki} from './compose.mjs';
+import {loadChoices,resolvePackages,reconcilePackageSelection,composeWiki} from './compose.mjs?v=repertoire-016';
 const query=new URL(location.href).searchParams;
 const requestedLanguage=query.get('lang')?.toLowerCase();
 // A link from the public TiddlyWiki carries its chosen language. Otherwise use
