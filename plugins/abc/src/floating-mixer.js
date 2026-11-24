@@ -196,6 +196,14 @@ module-type: library
       x = Math.max(4,Math.min(win.innerWidth-335,r.left));
       y = Math.max(4,Math.min(win.innerHeight-330,r.bottom+7));
     }
+    function revealDocked(anchor) {
+      if(closed||!visibleRequested||floating)return;
+      var r=panel.getBoundingClientRect();
+      if(!sidebarVisible()||r.width<=0||r.height<=0||r.left<0||r.top<0||r.right>win.innerWidth||r.bottom>win.innerHeight){
+        if(anchor)positionFromAnchor(anchor);else positionFromSidebar();
+        layout(true);clamp();
+      }
+    }
     function show(opts) {
       opts = opts || {};
       if (closed) return;
@@ -203,6 +211,10 @@ module-type: library
       visibleRequested = true;
       if (!floating && (!sidebarVisible() || opts.floating)) layout(true);
       else syncVisibility();
+      // WebKit can finish responsive sidebar layout after the tap. Verify the
+      // panel itself, both now and after that layout, rather than its container.
+      revealDocked(opts.anchor);
+      win.requestAnimationFrame(function(){revealDocked(opts.anchor);});
       if (floating) {clamp();panel.style.zIndex = '10100';}
     }
     function hide() { if (closed) return;visibleRequested = false;syncVisibility(); }
