@@ -19,6 +19,9 @@ jobs:
   stage:
     if: github.ref == 'refs/heads/fix/shared-score-titles-ipad-mixer'
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      options: --ipc=host
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +31,8 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1 @xmldom/xmldom@0.9.8
-      - run: npx playwright install --with-deps webkit chromium
+      - name: Use the pinned browsers already installed in the test image
+        run: node --input-type=module -e "import {chromium} from 'playwright'; console.log('CHROME_BIN='+chromium.executablePath())" >> "$GITHUB_ENV"
       - name: Rebuild shared pieces, plugin, registry, homepage and repertoire
         run: |
           node scripts/build-abc-ui.mjs
@@ -47,8 +51,6 @@ jobs:
           ABC_READER_BROWSER: chromium
         run: node scripts/abc-mixer-visibility-browser-smoke.mjs
       - name: Verify normal repertoire, cue/PDF entry and Purim page layout
-        env:
-          CHROME_BIN: /usr/bin/google-chrome
         run: |
           node scripts/repertoire-browser-smoke.mjs
           node scripts/repertoire-cues-browser-smoke.mjs
