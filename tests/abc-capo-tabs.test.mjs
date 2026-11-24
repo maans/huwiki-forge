@@ -79,3 +79,67 @@ test('TAB clefs, capo and repeats keep concert audio and note seeking across rea
   }
  }
 });
+
+test('Banjo melody uses the long strings and stopped fifth-string chords use physical fret numbers',()=>{
+ const {view,tabs}=environment();view.setTab('banjo5');
+ for(const capo of [0,2,5,8]){
+  view.setCapo(capo);const c=tabs.view({}).config;
+  const offsets=c.notes.map((_,i)=>tabs.capoForString(c,i));
+  const positions=pitches=>tabs.fingering(pitches.map(n=>n+c.viewTranspose),c.notes,capo,offsets,true);
+  for(const midi of [67,68,69,72,76,81])assert.notEqual(positions([midi])[0].str,4);
+  const longOpen=c.notes.slice(1).map(n=>n-c.viewTranspose+capo);
+  for(const [midi,physicalFret] of [[67,0],[68,6],[69,7]]){
+   // The four other pitches occupy the four long strings at their lowest frets.
+   const chord=positions([...longOpen,midi]);
+   const short=chord.find(n=>n.str===4);
+   assert.ok(short);
+   if(capo===0)assert.equal(short.num,physicalFret);
+   assert.ok(short.num===0||short.num>5);
+   assert.equal(67+(short.num===0?0:short.num-5),[...longOpen,midi][short.index]);
+  }
+ }
+});
+test('Guitar reads written E5 as open E4, including a staff already marked treble-8',()=>{
+ const {abc,notation,tabs}=environment();
+ const config=Object.assign(tabs.clean({preset:'guitar'}),{lowerOctave:true});
+ for(const clef of ['treble','treble-8']){
+  const tune=abc.parseOnly('X:1\nL:1/4\nK:C clef='+clef+'\ne4 |')[0];
+  const staff=tune.lines[0].staff[0],note=staff.voices[0].find(e=>e.pitches).pitches[0];
+  const before=note.pitch;notation.project(abc,tune,config,true);
+  assert.equal(note.pitch,before);
+  assert.equal(notation.shift(staff.clef),-12);
+  assert.equal(note.name,'e');
+  const position=tabs.fingering([76+notation.shift(staff.clef)],config.notes,0)[0];
+  assert.equal(position.str,0);assert.equal(position.num,0);
+ }
+});
+
+test('Purim Niggun is playable on the four long banjo strings at concert pitch',async()=>{
+ const {abc,tabs}=environment();
+ const scores=JSON.parse(await readFile(new URL('../editions/silba-atno-repertoire/tiddlers/repertoire.json',import.meta.url),'utf8'));
+ const source=scores.find(s=>s.title.endsWith('Purim Niggun'))['abc-source'];
+ const pitches=abc.parseOnly(source)[0].setUpAudio({chordsOff:true}).tracks[0].filter(e=>e.cmd==='note').map(e=>e.pitch);
+ const open=tabs.clean({preset:'banjo5',tuning:tabs.presets.banjo5.tuning}).notes;
+ assert.ok(pitches.length>100);
+ for(const pitch of pitches){
+  const pos=tabs.fingering([pitch],open,0,null,true)[0];
+  assert.ok(pos.str<4);assert.equal(open[4-pos.str]+pos.num,pitch);
+ }
+});
+
+test('Optional lower registers preserve tunings, lower heard notes once and leave the bass and backing in place',()=>{
+ const {abc,accompaniment,notation,tabs,view}=environment();
+ for(const kind of ['guitar','tenorbanjo','irishbanjo','banjo5'])for(const clef of ['treble','treble-8']){
+  const source='X:1\nM:4/4\nL:1/4\n%%score (1) (2)\nV:1 clef='+clef+'\nV:2 clef=bass\nK:C\n[V:1] |: "C"{d}e g e2 :|\n[V:2] |: C,4 :|';
+  view.setTab(kind+'-low');const c=tabs.view({}).config;
+  assert.equal(c.preset,kind);assert.equal(c.tuning,tabs.presets[kind].tuning);
+  const tune=abc.parseOnly(source)[0];notation.project(abc,tune,c,true);
+  const settings={enabled:true,style:'pop',bass:'pulse',chords:'offbeat',drums:'pop'};
+  function audio(t){return accompaniment.prepare(abc,t,source,settings,false,{}).tune.setUpAudio({});}
+  const normal=audio(abc.parseOnly(source)[0]),actual=audio(tune);
+  assert.deepEqual(actual.tracks[0].filter(e=>e.cmd==='note').map(e=>e.pitch),
+   normal.tracks[0].filter(e=>e.cmd==='note').map(e=>e.pitch-(clef==='treble'?12:0)));
+  assert.equal(JSON.stringify(actual.tracks.slice(1)),JSON.stringify(normal.tracks.slice(1)));
+  view.setTab(kind);assert.equal(tabs.view({}).config.lowerOctave,false);
+ }
+});

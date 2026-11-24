@@ -41,9 +41,19 @@ try{
    for(const d of digits){
     assert.ok(Number.isInteger(d.fret)&&d.fret>=0&&d.fret<=24,JSON.stringify({preset,fret,d}));
     const index=tuning[preset].length-d.string,offset=preset==='banjo5'&&index===0?0:fret;
+    if(preset==='banjo5')assert.notEqual(d.string,5,'this melody fits the four long strings');
     assert.equal(tuning[preset][index]+offset+d.fret,d.midi,JSON.stringify({preset,fret,d}));
    }
    assert.equal(await score.locator('svg').count(),svgCount,'TAB/capo must retain concert system breaks');
+  }
+ }
+ for(const preset of ['guitar','tenorbanjo','irishbanjo','banjo5']){
+  await capo.selectOption('0');await tab.selectOption(preset+'-low');
+  const digits=await tabs();
+  assert.deepEqual(digits.map(d=>d.midi),Array(4).fill([64,65,67,69,71,69,67,64,62,64,65,67,64]).flat());
+  for(const d of digits){
+   assert.ok(preset!=='banjo5'||d.string!==5);
+   assert.equal(tuning[preset][tuning[preset].length-d.string]+d.fret,d.midi);
   }
  }
  // Wind view must not leak written transposition into fret numbering.

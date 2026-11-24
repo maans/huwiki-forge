@@ -5,6 +5,7 @@ module-type: library
 \*/
 (function(){
 'use strict';
+var notation=require('$:/plugins/huwiki/abc/notation.js');
 var jazz=require('$:/plugins/huwiki/abc/jazz-engine.js');
 var balkan7=require('$:/plugins/huwiki/abc/balkan7.js');
 var meterMap=require('$:/plugins/huwiki/abc/meter-map.js');
@@ -178,6 +179,11 @@ function prepare(ABC,tune,source,config,live,fields){
  var c=resolve(config,source,fields);if(live){c.enabled=true;c.bassVolume=c.chordVolume=c.drumVolume=100;}var repeatPlan=repeatPlanModule.build(ABC,source,c.repeatCounts),raw=strip(ABC.parseOnly(source)[0]);repeatPlayback.install(raw,repeatPlan);var meta=info(raw,source,fields),rawBase=raw.setUpAudio({chordsOff:true}),baseCount=rawBase.tracks.length,backings=[];
  // Notated voices remain independent of the accompaniment switch. A selected
  // score bass replaces generated bass; its original timing and pitches survive.
+ var melodySource=raw;
+ if(tune._huwabcLowerTreble){
+  melodySource=notation.lowerTreble(strip(ABC.parseOnly(source)[0]));
+  repeatPlayback.install(melodySource,repeatPlan);
+ }
  var missingBass=c.bassSource.indexOf('voice:')===0&&voiceRouting.selectedBass(c,baseCount)<0;
  if(c.bassSource!=='style')c.bass='off';
  var styleName=c.style==='auto'?c.detectedStyle:c.style;
@@ -252,7 +258,7 @@ function prepare(ABC,tune,source,config,live,fields){
  strip(tune);repeatPlayback.install(tune,repeatPlan);var original=tune.setUpAudio;
  Object.defineProperty(tune,'_huwabcArrangementBase',{value:original,writable:true,configurable:true});
  delete tune.noteTimings;
- tune.setUpAudio=function(options){var audioOptions=Object.assign({},options,{chordsOff:true,drum:'',drumIntro:0}),sequence=tune._huwabcNotationProjected||tune.visualTranspose?concertAudio(tune,raw,audioOptions):original.call(tune,audioOptions),base=voiceRouting.apply(sequence,c,live),used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
+ tune.setUpAudio=function(options){var audioOptions=Object.assign({},options,{chordsOff:true,drum:'',drumIntro:0}),sequence=tune._huwabcNotationProjected||tune.visualTranspose?concertAudio(tune,melodySource,audioOptions):original.call(tune,audioOptions),base=voiceRouting.apply(sequence,c,live),used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
   backings.forEach(function(part){var channel=9;if(part.instrument!==128){for(channel=0;channel<16&&used.has(channel);channel++);if(channel===16)throw new Error('Der er ikke flere ledige MIDI-kanaler til akkompagnement.');used.add(channel);}var track=[{cmd:'text',type:'name',text:part.name},{cmd:'program',channel:channel,instrument:part.instrument}].concat(part.notes.map(function(n){return Object.assign({},n,{instrument:part.instrument});}));track.huwabcPart={Bas:'bassVolume',Akkorder:'chordVolume','Slagtøj':'drumVolume',Metronom:'metronomeVolume'}[part.name];base.tracks.push(track);});return base;};
  return {tune:tune,message:[missingBass?'Den valgte basstemme findes ikke længere. Vælg bassens kilde igen.':'',c.enabled&&styleName==='ungrouped-11'?'Vælg en 11/8-stil eller angiv grupperingen i M:-feltet.':(c.enabled||c.metronome)?meta.message:''].filter(Boolean).join(' '),parts:backings,form:analysis,detectedStyle:styleName,timeline:timeline,bars:arrangedBars,warnings:(timeline?timeline.warnings:[]).concat(repeatPlan.warnings),repeatPlan:repeatPlan};
 }

@@ -28,10 +28,16 @@ profile('piccolo','C piccolo','C · piccolo','C · piccolo',-12);
 profile('bassflute','C bas','C · basfløjte','C · bass flute',12);
 var order=Object.keys(profiles);
 var strings=[['guitar','Guitar','Guitar'],['ukulele','Ukulele · low G','Ukulele · low G'],['tenorbanjo','Tenorbanjo · CGDA','Tenor banjo · CGDA'],['irishbanjo','Tenorbanjo · GDAE','Tenor banjo · GDAE'],['mandolin','Mandolin','Mandolin'],['banjo5','5-strenget banjo · gDGBD','5-string banjo · gDGBD'],['charango','Charango · GCEAE','Charango · GCEAE']];
+var registerInstruments=['guitar','tenorbanjo','irishbanjo','banjo5'];
+var stringOptions=[];
+strings.forEach(function(s){
+ stringOptions.push(s);
+ if(registerInstruments.includes(s[0]))stringOptions.push([s[0]+'-low',s[1]+' · oktav ned',s[2]+' · octave down']);
+});
 function current(){return Object.assign({},profiles[active],{semitones:profiles[active].semitones-(preferences.capo||0),capo:preferences.capo,tab:preferences.tab});}
 function notifyAll(){subscribers.slice().forEach(function(fn){fn();});}
 function setCapo(value){value=Number(value);if(!Number.isInteger(value)||value<0||value>8||preferences.capo===value)return false;preferences.capo=value;notifyAll();return true;}
-function setTab(value){if(value!=='off'&&!strings.some(function(s){return s[0]===value;})||preferences.tab===value)return false;preferences.tab=value;notifyAll();return true;}
+function setTab(value){if(value!=='off'&&!stringOptions.some(function(s){return s[0]===value;})||preferences.tab===value)return false;preferences.tab=value;notifyAll();return true;}
 function language(wiki){try{return I18n.language(wiki)==='en'?'en':'da';}catch(ignore){return 'da';}}
 function label(profile,lang,kind){return profile[(kind==='print'?'print':'label')+(lang==='en'?'En':'Da')];}
 function change(id){if(!profiles[id]||id===active)return false;active=id;notifyAll();return true;}
@@ -51,13 +57,13 @@ function mount(host,options){
  host.appendChild(group);
  function sync(){
   var english=lang()==='en',name=english?'Written notes':'Noder';
-  legend.textContent=name+':';group.setAttribute('aria-label',english?'Instrument notation (audio stays at concert pitch)':'Instrumentnoder (lyden forbliver i klingende C)');
+  legend.textContent=name+':';group.setAttribute('aria-label',english?'Instrument notation':'Instrumentnoder');
   instrument.textContent='';capo.textContent='';tab.textContent='';
   order.forEach(function(id){option(instrument,id,id===active?profiles[id].button:label(profiles[id],lang()));});
   option(capo,0,english?'Capo · off':'Capo · fra');
   for(var fret=1;fret<=8;fret++)option(capo,fret,'Capo '+fret);
   option(tab,'off',english?'Tab · off':'Tab · fra');
-  strings.forEach(function(s){option(tab,s[0],'Tab · '+s[english?2:1]);});
+  stringOptions.forEach(function(s){option(tab,s[0],'Tab · '+s[english?2:1]);});
   instrument.value=active;capo.value=String(preferences.capo||0);tab.value=preferences.tab||'off';
   instrument.title=label(profiles[active],lang());
   instrument.style.width=Math.max(72,Math.min(170,profiles[active].button.length*8+38))+'px';
@@ -66,7 +72,7 @@ function mount(host,options){
   instrument.setAttribute('aria-label',english?'Written instrument':'Instrumentnoder');
   tab.setAttribute('aria-label',english?'Tablature instrument':'Tabulaturinstrument');
   [instrument,capo,tab].forEach(function(n){n.setAttribute('data-active',String(n.value!=='c'&&n.value!=='0'&&n.value!=='off'));});
-  hint.textContent=english?'Audio: concert pitch · ABC unchanged':'Lyd: klingende C · ABC uændret';
+  hint.textContent=/-low$/.test(preferences.tab)?(english?'Treble melody sounds one octave lower':'Melodien i G-nøgle klinger en oktav dybere'):english?'Audio: concert pitch · ABC unchanged':'Lyd: klingende C · ABC uændret';
  }
  function notify(){sync();if(options.onChange)options.onChange(current());}
  subscribers.push(notify);sync();
@@ -93,5 +99,5 @@ exports.notationStatus=function(wiki,concert,written){
  parts.push((en?'Notes: ':'Noder: ')+b,(en?'Sounds: ':'Klinger: ')+a);
  return parts.join(' · ');
 };
-exports.printLabel=function(wiki){return (active==='c'&&preferences.capo?(language(wiki)==='en'?'Capo shapes':'Capogreb'):label(current(),language(wiki),'print'))+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+strings.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
+exports.printLabel=function(wiki){return (active==='c'&&preferences.capo?(language(wiki)==='en'?'Capo shapes':'Capogreb'):label(current(),language(wiki),'print'))+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+stringOptions.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
 })();

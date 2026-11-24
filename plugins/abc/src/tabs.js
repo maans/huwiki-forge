@@ -36,7 +36,11 @@ function read(fields){var c;try{c=JSON.parse(fields['abc-tabs-config']||'null');
  if(c&&c.notation==='source'&&!c.notationExplicit)c.notation='auto';try{return clean(c||{preset:'guitar',tuning:presets.guitar.tuning,notation:'auto'});}catch(_){return clean({preset:'guitar',tuning:presets.guitar.tuning,notation:'auto'});}}
 function view(fields){
  var c=read(fields),v=InstrumentView.current(),enabled=fields['abc-tabs']==='yes';
- if(v.tab!==null){enabled=v.tab!=='off';if(enabled){c=clean(Object.assign({},c,{preset:v.tab,tuning:presets[v.tab].tuning,notation:'auto'}));}}
+ if(v.tab!==null){enabled=v.tab!=='off';if(enabled){
+  var preset=v.tab.replace(/-low$/,'');
+  c=clean(Object.assign({},c,{preset:preset,tuning:presets[preset].tuning,notation:'auto'}));
+  c.lowerOctave=preset!==v.tab;
+ }}
  if(v.capo!==null)c.capo=v.capo;
  // ABCJS receives written pitches. Shift the open strings by the same amount
  // so TAB is calculated from concert pitches and the capo is subtracted once.
@@ -58,28 +62,82 @@ function options(abc,source,enabled,c){
  var label=(presets[c.preset]?presets[c.preset].label:'Egen stemning')+' · '+c.tuning+(c.capo?' · capo '+c.capo:'');
  return {options:Array.from({length:count},function(){return {instrument:instrument,tuning:engineNotes.map(function(n){return model.sourceMidi(n,false).replace(/^=/,'');}),capo:c.capo,suppress:true,label:''};}),message:''};
 }
-// ABCJS 6.7.2 can assign two chord tones to one string. Resolve only invalid
-// voicings, then move the rendered digits with their source/pitch association.
-function fingering(pitches,opens,capo,offsets){
+// The short fifth string sounds open at the fifth fret. A stopped note
+// is labelled with its physical fret, independently of the long strings' capo.
+function fingering(pitches,opens,capo,offsets,shortFifth){
  var best=null,bestCost=Infinity,chosen=[];
  if(pitches.length>opens.length)return null;
- function search(i,used){
-  if(i===pitches.length){var frets=chosen.map(function(n){return n.num;}),cost=Math.max.apply(null,frets)*10+frets.reduce(function(a,b){return a+b;},0);if(cost<bestCost){bestCost=cost;best=chosen.slice();}return;}
+ function search(i,used,maxFret,sum,dronePenalty){
+  if(i===pitches.length){
+   var cost=dronePenalty+maxFret*10+sum;
+   if(cost<bestCost){bestCost=cost;best=chosen.slice();}
+   return;
+  }
   for(var string=0;string<opens.length;string++){
    if(used&(1<<string))continue;
    var fret=pitches[i]-opens[string]-(offsets?offsets[string]:capo);
-   if(!Number.isFinite(fret)||fret<0||fret>24)continue;
-   chosen.push({index:i,str:opens.length-1-string,num:fret});search(i+1,used|(1<<string));chosen.pop();
+   if(!Number.isInteger(fret)||fret<0)continue;
+   var drone=shortFifth&&string===0;
+   if(drone&&fret>0)fret+=5;
+   if(fret>24)continue;
+   // Use the four long strings for melody. Allow an open drone in
+   // chords and a stopped drone when a chord otherwise cannot be voiced.
+   var penalty=drone&&(pitches.length===1||fret>0)?1000:0;
+   chosen.push({index:i,str:opens.length-1-string,num:fret});
+   search(i+1,used|(1<<string),Math.max(maxFret,fret),sum+fret,dronePenalty+penalty);
+   chosen.pop();
   }
  }
- search(0,0);return best;
+ search(0,0,0,0,0);return best;
 }
-function finish(tune,c){var uncertain=false;
- (tune&&tune.lines||[]).forEach(function(line){(line.staff||[]).filter(function(s){return s.clef&&s.clef.type==='TAB';}).forEach(function(staff){(staff.voices||[]).forEach(function(voice){voice.forEach(function(ev){if(!ev.notes||!ev.abselem)return;var children=ev.abselem.children.filter(function(ch){return ch.type==='tabNumber'&&!ch.isGrace;}),pitches=ev.notes.map(function(n){var p=model.pitch(n.pitch);return p?model.midi(p.d,p.acc==='='?0:p.acc[0]==='^'?p.acc.length:p.acc[0]==='_'?-p.acc.length:0):NaN;});if(children.length!==pitches.length)return;
- var valid=ev.notes.every(function(n,i){var index=c.notes.length-1-n.str;return index>=0&&index<c.notes.length&&Number.isFinite(Number(n.num))&&Number(n.num)>=0&&Number(n.num)<=24&&pitches[i]===c.notes[index]+capoForString(c,index)+Number(n.num);})&&new Set(ev.notes.map(function(n){return n.str;})).size===ev.notes.length;
- var positions=valid?ev.notes:fingering(pitches,c.notes,c.capo,c.notes.map(function(_,i){return capoForString(c,i);} ));if(!positions){uncertain=true;positions=ev.notes.map(function(n,i){return {str:Math.min(i,c.notes.length-1),num:'?'};});}
- children.forEach(function(ch,i){var node=ch.graphelem,pos=positions[i];if(!node||!pos)return;var nextPitch=5.6+(c.notes.length-1-pos.str)*3,dy=-(nextPitch-ch.pitch)*3.875;if(Math.abs(dy)>.01)node.setAttribute('transform','translate(0,'+dy+')');ch.pitch=nextPitch;ch.c=pos.num;ev.notes[i].str=pos.str;ev.notes[i].num=pos.num;node.textContent=pos.num;node.dataset.huwabcTabSource=ev.startChar;node.dataset.huwabcTabIndex=i;node.dataset.huwabcTabMidi=pitches[i]-(c.viewTranspose||0);node.dataset.huwabcTabString=pos.str+1;node.setAttribute('aria-label','Streng '+(pos.str+1)+', bånd '+pos.num);});
- });});});});return uncertain?'Tabs: ? betyder, at tonen eller akkorden ikke har en beregnet placering inden for 24 bånd.':'';}
+function finish(tune,c){
+ var uncertain=false,shortFifth=c.preset==='banjo5';
+ var offsets=c.notes.map(function(_,i){return capoForString(c,i);});
+ function place(ev,children){
+  if(children.length!==ev.notes.length)return;
+  var pitches=ev.notes.map(function(n){
+   var p=model.pitch(n.pitch);
+   return p?model.midi(p.d,p.acc==='='?0:p.acc[0]==='^'?p.acc.length:p.acc[0]==='_'?-p.acc.length:0):NaN;
+  });
+  var valid=!shortFifth&&ev.notes.every(function(n,i){
+   var index=c.notes.length-1-n.str,fret=Number(n.num);
+   return index>=0&&index<c.notes.length&&Number.isInteger(fret)&&fret>=0&&fret<=24&&pitches[i]===c.notes[index]+offsets[index]+fret;
+  })&&new Set(ev.notes.map(function(n){return n.str;})).size===ev.notes.length;
+  var positions=valid?ev.notes:fingering(pitches,c.notes,c.capo,offsets,shortFifth);
+  if(!positions){
+   uncertain=true;
+   positions=ev.notes.map(function(n,i){return {str:Math.min(i,c.notes.length-1),num:'?'};});
+  }
+  children.forEach(function(ch,i){
+   var node=ch.graphelem,pos=positions[i];if(!node||!pos)return;
+   var nextPitch=5.6+(c.notes.length-1-pos.str)*3,dy=-(nextPitch-ch.pitch)*3.875;
+   if(Math.abs(dy)>.01)node.setAttribute('transform','translate(0,'+dy+')');
+   ch.pitch=nextPitch;ch.c=pos.num;ev.notes[i].str=pos.str;ev.notes[i].num=pos.num;
+   node.textContent=pos.num;
+   node.dataset.huwabcTabSource=ev.startChar;node.dataset.huwabcTabIndex=i;
+   node.dataset.huwabcTabMidi=pitches[i]-(c.viewTranspose||0);node.dataset.huwabcTabString=pos.str+1;
+   node.setAttribute('aria-label','Streng '+(pos.str+1)+', bånd '+pos.num);
+  });
+ }
+ (tune&&tune.lines||[]).forEach(function(line){
+  (line.staff||[]).filter(function(s){return s.clef&&s.clef.type==='TAB';}).forEach(function(staff){
+   (staff.voices||[]).forEach(function(voice){
+    var graceEvents=[];
+    voice.forEach(function(ev){
+     if(ev.grace){graceEvents.push(ev);return;}
+     if(ev.notes&&ev.abselem){
+      var digits=ev.abselem.children.filter(function(ch){return ch.type==='tabNumber';});
+      var graces=digits.filter(function(ch){return ch.isGrace;});
+      if(graces.length===graceEvents.length)graces.forEach(function(ch,i){place(graceEvents[i],[ch]);});
+      place(ev,digits.filter(function(ch){return !ch.isGrace;}));
+     }
+     graceEvents=[];
+    });
+   });
+  });
+ });
+ return uncertain?'Tabs: ? betyder, at tonen eller akkorden ikke har en beregnet placering inden for 24 bånd.':'';
+}
 function E(tag,text){var e=document.createElement(tag);if(text!==undefined)e.textContent=text;return e;}
 function mount(parent,fields,onChange,opened){
  var config=read(fields),enabled=fields['abc-tabs']==='yes',available=true,showNotes=fields['abc-show-notes']!=='no'||!enabled;
@@ -91,9 +149,9 @@ function mount(parent,fields,onChange,opened){
  var count=E('select');count.className='huwabc-select';[4,5,6].forEach(function(n){var o=E('option',String(n));o.value=n;count.appendChild(o);});count.value=config.notes.length;field('Antal strenge / kor',count);
  var tuning=E('input');tuning.className='huwabc-input';tuning.type='text';tuning.value=config.tuning;field('Åbne strenge · fra nederste tablinje til øverste',tuning);
  var capo=E('input');capo.className='huwabc-input';capo.type='number';capo.min=0;capo.max=12;capo.step=1;capo.value=config.capo;field('Capo · bånd',capo);
- details.appendChild(E('p','Tonenavne med oktav, fx E2. B er internationalt B (dansk H). En mandolins dobbelte strenge deler en tablinje. Ukulele bruger low G. 5-strenget banjo har høj g-drone på den korte 5. streng; capo flytter kun de fire lange strenge. Charango vises som fem kor (E-oktavparret deler tablinje, beregnet fra den dybe E4).'));
+ details.appendChild(E('p','Tonenavne med oktav, fx E2. B er internationalt B (dansk H). En mandolins dobbelte strenge deler en tablinje. Ukulele bruger low G. 5-strenget banjo har en kort g-drone fra 5. bånd. Åben streng vises som 0, og grebne toner bruger det fysiske båndnummer. Melodien bruger normalt de fire lange strenge, som også følger capo. Charango vises som fem kor (E-oktavparret deler tablinje, beregnet fra den dybe E4).'));
  var notationSelect=E('select');notationSelect.className='huwabc-select';[['auto','Instrumentets notation'],['guitar','Guitar · G-nøgle med 8 under'],['bass','Bas · F-nøgle med 8 under'],['source','ABC-kildens notation']].forEach(function(pair){var o=E('option',pair[1]);o.value=pair[0];notationSelect.appendChild(o);});notationSelect.value=config.notation;field('Nodevisning',notationSelect);notationSelect.addEventListener('change',function(){config.notationExplicit=true;update();});
- details.appendChild(E('p','Standard: Når TAB vises, bruges instrumentets notation: guitar med oktaveret G-nøgle (8 under) og korrekt klingende tonehøjde. Når TAB skjules, genskabes ABC-kildens notation. Vælg ABC-kildens notation for at slå dette fra. Kildeteksten ændres aldrig.'));
+ details.appendChild(E('p','Standard: Når TAB vises, bruges instrumentets notation: Vælg »oktav ned« i tabulaturinstrumentet for at spille en almindelig diskantmelodi en oktav dybere på guitar eller banjo. En eksisterende G-nøgle med 8 under tælles kun én gang. Når TAB skjules, genskabes ABC-kildens notation. Vælg ABC-kildens notation for at slå dette fra. Kildeteksten ændres aldrig.'));
  var rhythmToggle=E('input');rhythmToggle.type='checkbox';rhythmToggle.style.cssText='width:18px;align-self:flex-start;margin:5px 0';rhythmToggle.checked=config.rhythm;field('Nodehalse og rytme',rhythmToggle);rhythmToggle.addEventListener('change',update);details.appendChild(E('p','Viser en rytmelinje under tabs med nodehalse, bjælker, pauser og punkteringer.'));
  var error=E('div');error.className='huwabc-error';error.setAttribute('role','status');details.appendChild(error);box.appendChild(details);parent.appendChild(box);
  function emit(){onChange({'abc-tabs':enabled?'yes':'no','abc-tabs-config':stored(config),'abc-show-notes':showNotes?'yes':'no'},details.open);}
