@@ -11,14 +11,16 @@ const plugin=JSON.parse(await readFile(path.join(root,'plugins/abc/dist/plugin.j
 const da=JSON.parse(await readFile(path.join(root,'languages/da-DK/plugin.json'),'utf8'));
 const file=path.join(dir,'fixture.html');
 await writeFile(file,assembleHtml(await readFile(path.join(root,'core/empty.html'),'utf8'),[plugin,da,
- {title:'$:/language',text:'$:/languages/da-DK'},{title:'$:/DefaultTiddlers',text:song.title},song
+ {title:'$:/language',text:'$:/languages/da-DK'},{title:'$:/DefaultTiddlers',text:'[['+song.title+']]'},song
 ]));
 const {chromium}=await import('playwright-core');
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 try{
  const page=await browser.newPage({viewport:{width:1180,height:1050}});page.setDefaultTimeout(30000);
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- await page.goto(pathToFileURL(file).href);await page.locator('.huwabc-paper svg').first().waitFor();
+ await page.goto(pathToFileURL(file).href);
+ try{await page.locator('.huwabc-paper svg').first().waitFor();}
+ catch(e){console.log('Purim boot diagnostics',JSON.stringify({errors,body:await page.locator('body').innerText()}));throw e;}
  const state=await page.evaluate(()=>{
   const song=$tw.wiki.getTiddler('SilbaÄtno · Purim Niggun'),source=song.fields['abc-source'];
   const ABC=$tw.modules.execute('$:/plugins/huwiki/abc/vendor/abcjs.js'),sheet=$tw.modules.execute('$:/plugins/huwiki/abc/sheet-layout.js');
@@ -42,7 +44,7 @@ try{
  assert.ok(state.rows.every(row=>!(row.length===2&&row[0].ending&&row.every(m=>m.ending===row[0].ending))),'no whole system for one two-bar ending');
  assert.equal(state.source,song['abc-source']);
  await page.screenshot({path:path.join(dir,'purim-normal.png'),fullPage:true});
- await page.getByRole('button',{name:/^(Avanceret visning|Advanced view)$/}).click();
+ await page.locator('.huwabc-view-toggle').click();
  await page.getByRole('button',{name:/^(PDF \/ Udskriv|PDF \/ Print)$/}).click();
  await page.locator('.huwabc-print-overlay').waitFor();
  assert.equal(await page.locator('.huwabc-print-overlay .huwabc-page').count(),1);
