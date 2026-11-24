@@ -9,7 +9,8 @@ const dir=path.join(root,'test-results/capo-tabs');await mkdir(dir,{recursive:tr
 const source=['X:1','T:Capo and TAB acceptance','M:4/4','L:1/4','K:C',
  ...Array(4).fill('"C"e f g a | "F"b a g e | "G"d e f g | "C"e4 |')].join('\n');
 const pkg=JSON.parse(await readFile(path.join(root,'plugins/abc/dist/plugin.json'),'utf8'));
-const fixture=assembleHtml(await readFile(path.join(root,'core/empty.html'),'utf8'),[pkg,
+const danish=JSON.parse(await readFile(path.join(root,'languages/da-DK/plugin.json'),'utf8'));
+const fixture=assembleHtml(await readFile(path.join(root,'core/empty.html'),'utf8'),[pkg,danish,
  {title:'$:/DefaultTiddlers',text:'Acceptance'},
  {title:'$:/language',text:'$:/languages/da-DK'},
  {title:'Test score','abc-source':source,'abc-accompaniment':'{"melody":true,"bass":"off","chords":"off","drums":"off"}'},
@@ -36,6 +37,7 @@ try{
   for(const fret of [0,1,2,5,8]){
    await capo.selectOption(String(fret));await score.locator('[data-huwabc-tab-midi]').first().waitFor();
    const digits=await tabs();assert.ok(digits.length>30,preset+' capo '+fret+' missing notes');
+   assert.deepEqual(digits.map(d=>d.midi),Array(4).fill([76,77,79,81,83,81,79,76,74,76,77,79,76]).flat(),preset+' capo '+fret+' changed the melody');
    for(const d of digits){
     assert.ok(Number.isInteger(d.fret)&&d.fret>=0&&d.fret<=24,JSON.stringify({preset,fret,d}));
     const index=tuning[preset].length-d.string,offset=preset==='banjo5'&&index===0?0:fret;
@@ -62,4 +64,5 @@ try{
  assert.deepEqual(errors,[]);
  await page.screenshot({path:path.join(dir,'controls.png'),fullPage:false});
  console.log('Three controls; seven tunings, capo 0/1/2/5/8, physical fret/pitch mapping, unchanged systems and real PDF: passed');
-}finally{await browser.close();}
+}catch(error){console.error(await pageDiagnostics());throw error;}finally{await browser.close();}
+async function pageDiagnostics(){const pages=browser.contexts().flatMap(c=>c.pages());for(const p of pages){await p.screenshot({path:path.join(dir,'failure.png')}).catch(()=>{});return (await p.locator('body').innerText()).slice(-6000);}return '';}

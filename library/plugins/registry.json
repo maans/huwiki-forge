@@ -9,7 +9,7 @@
         "name": "ABC Musik",
         "description": "ABC Musik – Normal visning som standard, Avanceret som tilvalg, sidetal kun i Nodepult",
         "author": "HUWiki",
-        "version": "0.3.41",
+        "version": "0.3.42",
         "plugin-type": "plugin",
         "stability": "experimental",
         "license": "MIT",
