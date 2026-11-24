@@ -29,7 +29,7 @@ try{
   const balanced=$tw.modules.execute('$:/plugins/huwiki/abc/balanced-layout.js');
   const original=ABC.parseOnly(source)[0],raw=original.deline({lineBreaks:false})[0].staff[0].voices[0];
   const metrics=ABC.tuneMetrics(source,{staffwidth:720,jazzchords:true,format:{gchordfont:'Helvetica 18 bold'}})[0].sections[0];
-  const plan=balanced.plan(raw,metrics.measureWidths,metrics.left,{pickup:true,parts:true});
+  const plan=balanced.plan(raw,metrics.measureWidths,metrics.left,{pickup:true,parts:song.fields['abc-parts-new-line']!=='no'});
   const rows=tune.lines.filter(l=>l.staff).map(l=>balanced.measures(l.staff[0].voices[0],false).map(b=>({ending:b.ending,notes:b.notes})));
   const paper=document.querySelector('.huwabc-paper');
   return {settings,metrics,plan,rows,pickup:original.getPickupLength(),pages:Number(paper.dataset.pageCount),source,

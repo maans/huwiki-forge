@@ -32,7 +32,7 @@ function measures(voice,pickup){
 }
 function plan(voice,widths,left,settings){
  settings=settings||{};
- var bars=measures(voice,settings.pickup),limit=(720-Math.max(0,Number(left)||0))/1.45;
+ var bars=measures(voice,settings.pickup),limit=(720-Math.max(0,Number(left)||0))/1.15;
  if(!bars.length||limit<80||!Array.isArray(widths)||bars.some(function(b){return b.unclosed||b.end>=widths.length;}))return null;
  var sum=[0];
  for(var i=0;i<bars.length;i++){

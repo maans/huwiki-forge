@@ -291,7 +291,8 @@
     "huwiki-import-range": "1-21",
     "huwiki-import-original-instruments": "Piano",
     "silba-abc-voices": "1",
-    "silba-abc-notes": "102"
+    "silba-abc-notes": "102",
+    "abc-parts-new-line": "no"
   },
   {
     "title": "SilbaÄtno · Arabsko Kolo (Dm)",
