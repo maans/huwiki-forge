@@ -26,6 +26,10 @@ try{
    },state);
    await button.tap();
    const panel=page.locator('.huwabc-mini-mixer');await panel.waitFor();
+   await page.waitForFunction(size=>{
+    const panel=document.querySelector('.huwabc-mini-mixer');if(!panel||panel.hidden)return false;
+    const r=panel.getBoundingClientRect();return r.width>0&&r.height>0&&r.left>=0&&r.top>=0&&r.right<=size.width+2&&r.bottom<=size.height+2;
+   },size,{timeout:5000});
    const rect=await panel.boundingBox();assert.ok(rect&&rect.x>=0&&rect.y>=0&&rect.x+rect.width<=size.width+2&&rect.y+rect.height<=size.height+2,JSON.stringify({engineName,size,state,rect}));
    assert.equal(await button.getAttribute('aria-expanded'),'true');
    await panel.getByRole('tab',{name:/^(Stemmer|Voices)$/}).tap();
