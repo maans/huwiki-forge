@@ -6,9 +6,11 @@ module-type: library
 (function(){
 'use strict';
 var model=require('$:/plugins/huwiki/abc/editor-model.js');
+var Spelling=require('$:/plugins/huwiki/abc/minor-spelling.js');
 function shift(clef){if(clef&&clef.transpose)return Number(clef.transpose);return clef&&/-8/.test(clef.type)?-12:clef&&/\+8/.test(clef.type)?12:0;}
 function target(c){if(c.notation==='source')return null;if(c.notation==='guitar')return 'treble-8';if(c.notation==='bass')return 'bass-8';if(['guitar','dropd','dadgad','openg'].includes(c.preset)||c.notes.length===6)return 'treble-8';if(['bass','bass5'].includes(c.preset))return 'bass-8';if(['mandolin','ukulele','violin','tenorbanjo','irishbanjo','banjo5','charango'].includes(c.preset))return 'treble';return null;}
 function project(abc,tune,c,active){
+ Spelling.apply(tune);
  var type=active&&target(c);if(!type)return;
  tune._huwabcNotationProjected=true;
  var template=abc.parseOnly('X:1\nK:C clef='+type+'\nC')[0].lines[0].staff[0].clef;

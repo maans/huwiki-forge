@@ -6,7 +6,8 @@ import {runInNewContext} from 'node:vm';
 const root=new URL('../',import.meta.url);
 const load=path=>readFile(new URL(path,root),'utf8');
 const source=await load('plugins/abc/src/transposed-layout.js');
-const {options,referenceBreaks}=(()=>{const exports={};runInNewContext(source,{exports});return exports;})();
+const volta={};runInNewContext(await load('plugins/abc/src/volta-layout.js'),{exports:volta});
+const {options,referenceBreaks}=(()=>{const exports={};runInNewContext(source,{exports,require:()=>volta});return exports;})();
 function host(){
  const parent={children:[],ownerDocument:{createElement(){return {style:{},parentNode:null};}},appendChild(child){this.children.push(child);child.parentNode=this;},removeChild(child){this.children.splice(this.children.indexOf(child),1);child.parentNode=null;}};
  return parent;
@@ -76,3 +77,4 @@ test('published ABC plugin uses the source notation-only layout helper',async()=
  assert.match(widgetSource,/TransposedLayout\.options\(ABC,host,displayed/);
  assert.match(widgetSource,/visualTranspose:InstrumentView\.current\(\)\.semitones/);
 });
+
