@@ -69,9 +69,9 @@ try{
  const pendingEntry=page.locator('.tc-tiddler-frame[data-tiddler-title="SilbaÄtno – Bruttoliste"] .silba-track-list li').filter({hasText:"Oh verden"});
  assert.equal(await pendingEntry.count(),1,"The full gross list must include an editable placeholder for Oh verden");
  await pendingEntry.locator("a.silba-track-link").click();
- await page.locator('.tc-tiddler-frame[data-tiddler-title="SilbaÄtno · Oh verden"]').waitFor();
+ await page.locator('.tc-tiddler-frame[data-tiddler-title="Oh verden"]').waitFor();
  // Oh verden must render in ABC Musik with its chord-only player, not as a pre/code section.
- const ohScore=page.locator('.huwabc-standalone[data-huwabc-title="SilbaÄtno · Oh verden"]').first();
+ const ohScore=page.locator('.huwabc-standalone[data-huwabc-title="Oh verden"]').first();
  await ohScore.waitFor();
  await ohScore.locator(".huwabc-chord-overview-row").first().waitFor({state:"visible"});
  assert.equal(await ohScore.locator(".huwrep-chord-line").count(),0,"No WikiText code block");
@@ -120,7 +120,7 @@ try{
  assert.equal(await ohScore.locator(".huwabc-chord-overview-chord[data-huwabc-source-char]").count(),12,
   "Every chord can select its playback position");
  const chart=await page.evaluate(()=>{
-  const f=$tw.wiki.getTiddler("SilbaÄtno · Oh verden").fields;
+  const f=$tw.wiki.getTiddler("Oh verden").fields;
   const ABC=$tw.modules.execute("$:/plugins/huwiki/abc/vendor/abcjs.js");
   const data=$tw.modules.execute("$:/plugins/huwiki/abc/chord-chart.js").extract(ABC,f["abc-source"]);
   const Acc=$tw.modules.execute("$:/plugins/huwiki/abc/accompaniment.js");
@@ -150,7 +150,7 @@ try{
  const volta=await page.evaluate(()=>{
   const ABC=$tw.modules.execute("$:/plugins/huwiki/abc/vendor/abcjs.js");
   const planner=$tw.modules.execute("$:/plugins/huwiki/abc/repeat-plan.js");
-  const source=$tw.wiki.getTiddler("SilbaÄtno · Låt från Dalarne").fields["abc-source"];
+  const source=$tw.wiki.getTiddler("Låt från Dalarne").fields["abc-source"];
   const p=planner.build(ABC,source,{});
   return {active:p.active,order:p.order.map(n=>n+1),sections:p.sections.map(s=>[s.start,s.end])};
  });
@@ -162,11 +162,11 @@ try{
  ],"ABCJS must play the 32 written bars of Dalarne in the correct repeated order");
  // A standalone score from an older import may still store abc-view:full.
  // Opening it must nonetheless start in the quiet, reversible minimal view.
- const oldScoreTitle="SilbaÄtno · Låt från Dalarne";
+ const oldScoreTitle="Låt från Dalarne";
  const previouslySaved=await page.evaluate(id=>$tw.wiki.getTiddler(id).fields["abc-view"],oldScoreTitle);
  assert.equal(previouslySaved,"full","Fixture is an older advanced-view import");
  await page.locator(".silba-home").getByRole("link",{name:"Låt från Dalarne"}).click();
- const standalone=page.locator('.huwabc-standalone[data-huwabc-title="SilbaÄtno · Låt från Dalarne"]').first();
+ const standalone=page.locator('.huwabc-standalone[data-huwabc-title="Låt från Dalarne"]').first();
  await standalone.waitFor();
  assert.ok(await standalone.evaluate(node=>node.classList.contains("huwabc-minimal")),
   "Ordinary ABC scores should open in minimal view");
@@ -180,13 +180,13 @@ try{
  await advanced.click();
  await page.waitForFunction(()=>
   [...document.querySelectorAll(".huwabc-standalone")].some(node=>
-   node.getAttribute("data-huwabc-title")==="SilbaÄtno · Låt från Dalarne"&&!node.classList.contains("huwabc-minimal")));
+   node.getAttribute("data-huwabc-title")==="Låt från Dalarne"&&!node.classList.contains("huwabc-minimal")));
  assert.equal((await standalone.locator(".huwabc-view-toggle").innerText()).trim(),
   advancedLabel==="Advanced view"?"Normal view":"Normal visning");
  assert.equal(await page.evaluate(id=>$tw.wiki.getTiddler(id).fields["abc-view"],oldScoreTitle),
   previouslySaved,"The display-only toggle must not rewrite the music");
  await page.locator(".silba-home").getByRole("link",{name:"Brudmarch från Jämtland"}).click();
- const nextStandalone=page.locator('.huwabc-standalone[data-huwabc-title="SilbaÄtno · Brudmarch från Jämtland"]').first();
+ const nextStandalone=page.locator('.huwabc-standalone[data-huwabc-title="Brudmarch från Jämtland"]').first();
  await nextStandalone.waitFor();
  assert.ok(await nextStandalone.evaluate(node=>node.classList.contains("huwabc-minimal")),
   "Each newly opened score must independently start minimal");
@@ -213,7 +213,7 @@ try{
  assert.equal(await keyInput.inputValue(),"Gm","K:Gm seeds the current key");
  assert.equal(await tempoInput.inputValue(),"100","Q:1/4=100 seeds the visible tempo");
  assert.ok((await page.locator(".huwrep-tempo-field .huwrep-field-help").innerText()).includes("fjerdedelsnode"));
- const brudmarchTitle="SilbaÄtno · Brudmarch från Jämtland";
+ const brudmarchTitle="Brudmarch från Jämtland";
  const uneditedScore=await page.evaluate(title=>$tw.wiki.getTiddler(title).fields["abc-source"],brudmarchTitle);
  await keyInput.selectOption("Dm");
  await tempoInput.fill("118");
@@ -344,7 +344,7 @@ try{
  await matches.first().click();
  await page.waitForFunction(()=>
   document.querySelector(".huwrep-book-heading h2")?.textContent?.includes("Cupria Express"));
- const title="SilbaÄtno · Cupria Express (Fm)";
+ const title="Cupria Express (Fm)";
  const original=await page.evaluate(t=>$tw.wiki.getTiddler(t).fields["abc-accompaniment"],title);
  // The practice panel is a floating overlay only when the musician chooses Øv.
  await book.locator(".huwabc-reader-menu").click();

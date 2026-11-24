@@ -12,9 +12,8 @@ module-type: library
   var positions = new WeakMap();
 
 
-  // Orchestra prefixes are useful for identifying original tiddlers, but not
-  // when a musician is choosing among multiple mixers in the sidebar.
-  // Only abbreviate confirmed orchestra titles; other titles with " · " stay whole.
+  // Compatibility for older wikis with orchestra-prefixed source titles.
+  // Shared library pieces use their own titles; other separators stay whole.
   function displayMusicTitle(wiki,fullTitle) {
     var full=String(fullTitle||""),separator=" · ",at=full.indexOf(separator);
     if(at<1)return full;
@@ -41,7 +40,7 @@ module-type: library
     function node(tag, cls, value) { var e = doc.createElement(tag); if (cls) e.className = cls; if (value !== undefined) e.textContent = value; return e; }
     var musicTitle=String(options.title||word('Mixer','Mixer'));
     var caption=displayMusicTitle(wiki,musicTitle);
-    // Persist layout by the complete source ID to avoid colliding with another orchestra.
+    // Persist layout by the complete source ID, independently of its caption.
     var storeKey='huwabc-mini-mixer-layout-v3-'+musicTitle;
     function safeState() { try { return JSON.parse(win.sessionStorage.getItem(storeKey) || 'null'); } catch (_) { return null; } }
     function saveState() { try { win.sessionStorage.setItem(storeKey, JSON.stringify({floating:floating,x:x,y:y,collapsed:collapsed})); } catch (_) {} }
@@ -145,8 +144,13 @@ module-type: library
       if (!canDock) return false;
       var state = wiki && wiki.getTiddlerText && wiki.getTiddlerText('$:/state/sidebar','yes');
       if (/^(?:no|hide|hidden|closed)$/i.test(String(state))) return false;
-      // TW retains sidebar DOM even when hidden. A collapsed sidebar has this button.
-      return !doc.querySelector('.tc-show-sidebar-btn');
+      // Responsive TiddlyWiki keeps sidebar DOM even when it is below the
+      // story or scrolled out of sight. Dock presence is not visible space.
+      if(doc.querySelector('.tc-show-sidebar-btn'))return false;
+      var target=dockHeader||sidebar,rect=target.getBoundingClientRect();
+      var style=win.getComputedStyle(target);
+      return style.display!=='none'&&style.visibility!=='hidden'&&rect.width>0&&rect.height>0&&
+        rect.right>24&&rect.left<win.innerWidth-24&&rect.bottom>0&&rect.bottom<win.innerHeight-40;
     }
     var lastReportedVisible;
     function isVisible() { return !closed && visibleRequested && (floating || sidebarVisible()); }
@@ -458,7 +462,7 @@ module-type: library
     function onWikiChange(changes) {
       if (changes && changes['$:/state/sidebar']) syncVisibility();
     }
-    function onResize(){if (floating) clamp();else syncVisibility();}
+    function onResize(){if (floating) clamp();else if(visibleRequested&&!sidebarVisible())layout(true);else syncVisibility();}
     function destroy() {
       if (closed) return;
       endDrag();positions.set(doc,{floating:floating,x:x,y:y});

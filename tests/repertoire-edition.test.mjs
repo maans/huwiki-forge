@@ -228,7 +228,7 @@ test("SilbaÄtno Edition links all 17 scores and leaves their ABC bodies untouch
  const records=workspace.filter(t=>t["repertoire-kind"]==="orchestra-item");
  assert.equal(records.length,18);
  const expectedTitles=sources.map(t=>t.title);
- expectedTitles.splice(4,0,"SilbaÄtno · Oh verden");
+ expectedTitles.splice(4,0,"Oh verden");
  assert.deepEqual(records.map(t=>t["music-title"]),expectedTitles);
  assert.ok(workspace.every(t=>!Object.hasOwn(t,"abc-source")));
  const set=workspace.find(t=>t["repertoire-kind"]==="setlist");
@@ -451,7 +451,7 @@ test("SilbaÄtno statistic cards open auto-generated native TiddlyWiki lists",as
  assert.ok(home.text.includes("<$count filter="));
  assert.equal((home.text.match(/class="silba-track-list"/g)||[]).length,3);
  assert.doesNotMatch(home.text,/<li>/,"Homepage lists must be data-driven rather than hardcoded");
- assert.ok(template.text.includes("removeprefix[SilbaÄtno · "));
+ assert.ok(template.text.includes('<$view field="title"/>'));
  assert.match(template.text,/Afventer nodeark/);
 });
 
@@ -474,8 +474,8 @@ test("SitePublisher uses a generated 17-title list, independently of the gross-l
 
 test("Oh verden is a playable slow 4/4 Balkan ABC chord chart, not a WikiText code block",async()=>{
  const base=path.join(root,"editions/silba-atno-repertoire/tiddlers");
- const source=JSON.parse(await readFile(path.join(base,"songs.json"),"utf8")).find(t=>t.title==="SilbaÄtno · Oh verden");
- const sheet=JSON.parse(await readFile(path.join(base,"pending.json"),"utf8")).find(t=>t.title==="SilbaÄtno · Oh verden");
+ const source=JSON.parse(await readFile(path.join(base,"songs.json"),"utf8")).find(t=>t.title==="Oh verden");
+ const sheet=JSON.parse(await readFile(path.join(base,"pending.json"),"utf8")).find(t=>t.title==="Oh verden");
  const item=JSON.parse(await readFile(path.join(base,"repertoire-workspace.json"),"utf8"))
   .find(t=>t["repertoire-kind"]==="orchestra-item"&&t["music-title"]===sheet?.title);
  assert.ok(source&&sheet&&item);

@@ -52,7 +52,7 @@ for(const song of ready){
  if(model.duplicate&&model.duplicate.confidence>=90&&model.duplicate.start>1){
   last=model.duplicate.start-1;duplicateRemoved=true;
  }
- const heading=song.title.replace(/^SilbaÄtno · /,"");
+ const heading=song.title;
  const rendered=converter.renderABC(model,selected,1,last,{title:heading,barsPerLine:4});
  // The one-bar second ending of Dalarne A must read beside its first ending.
  // Keep the following B repeat on its own line. This changes engraving only:
