@@ -19,6 +19,9 @@ jobs:
   stage:
     if: github.ref == 'refs/heads/fix/shared-score-titles-ipad-mixer'
     runs-on: ubuntu-24.04
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.1-noble
+      options: --ipc=host
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -28,11 +31,11 @@ jobs:
         with:
           node-version: 22
       - run: npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1 @xmldom/xmldom@0.9.8
-      - run: npx playwright install --with-deps webkit chromium
-      - name: Rebuild shared pieces, plugin, registry, homepage and repertoire
+      - name: Use the pinned browsers already installed in the test image
+        run: node --input-type=module -e "import {chromium} from 'playwright'; console.log('CHROME_BIN='+chromium.executablePath())" >> "$GITHUB_ENV"
+      - name: Build shared plugin, registry, homepage and verified repertoire
         run: |
           node scripts/build-abc-ui.mjs
-          node scripts/build-silba-etno-repertoire.mjs
           node scripts/build-forge-plugin-library.mjs
           node scripts/build-forge-home.mjs
           node scripts/assemble-silba-etno-repertoire.mjs
@@ -47,8 +50,6 @@ jobs:
           ABC_READER_BROWSER: chromium
         run: node scripts/abc-mixer-visibility-browser-smoke.mjs
       - name: Verify normal repertoire, cue/PDF entry and Purim page layout
-        env:
-          CHROME_BIN: /usr/bin/google-chrome
         run: |
           node scripts/repertoire-browser-smoke.mjs
           node scripts/repertoire-cues-browser-smoke.mjs
@@ -63,6 +64,7 @@ jobs:
           retention-days: 7
       - name: Commit tested generated files to this branch
         run: |
+          git config --global --add safe.directory "$GITHUB_WORKSPACE"
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add plugins/abc/dist/plugin.json library/plugins/registry.json index.html editions/silba-atno-repertoire/index.html editions/silba-atno-repertoire/tiddlers/repertoire.json editions/silba-atno-repertoire/conversion-report.json
