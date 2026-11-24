@@ -17,7 +17,7 @@ var profiles={
  ebalto:{id:'ebalto',button:'E♭ alto',labelDa:'E♭ · altsaxofon',labelEn:'E♭ · alto saxophone',printDa:'E♭ · altsaxofon',printEn:'E♭ · alto saxophone',semitones:9}
 };
 function profile(id,button,da,en,semitones){profiles[id]={id:id,button:button,labelDa:da,labelEn:en,printDa:da,printEn:en,semitones:semitones};}
-profile('bbwind','B♭','B♭ · trompet / klarinet','B♭ · trumpet / clarinet',2);
+profile('bbwind','B♭ kl./tp.','B♭ · trompet / klarinet','B♭ · trumpet / clarinet',2);
 profile('tenor','B♭ tenor','B♭ · tenorsax / basklarinet','B♭ · tenor sax / bass clarinet',14);
 profile('baritone','E♭ bari','E♭ · barytonsax','E♭ · baritone sax',21);
 profile('horn','F','F · horn / engelskhorn','F · horn / cor anglais',7);
@@ -53,12 +53,16 @@ function mount(host,options){
   var english=lang()==='en',name=english?'Written notes':'Noder';
   legend.textContent=name+':';group.setAttribute('aria-label',english?'Instrument notation (audio stays at concert pitch)':'Instrumentnoder (lyden forbliver i klingende C)');
   instrument.textContent='';capo.textContent='';tab.textContent='';
-  order.forEach(function(id){option(instrument,id,id==='c'?'C':label(profiles[id],lang()));});
+  order.forEach(function(id){option(instrument,id,id===active?profiles[id].button:label(profiles[id],lang()));});
   option(capo,0,english?'Capo · off':'Capo · fra');
   for(var fret=1;fret<=8;fret++)option(capo,fret,'Capo '+fret);
   option(tab,'off',english?'Tab · off':'Tab · fra');
   strings.forEach(function(s){option(tab,s[0],'Tab · '+s[english?2:1]);});
   instrument.value=active;capo.value=String(preferences.capo||0);tab.value=preferences.tab||'off';
+  instrument.title=label(profiles[active],lang());
+  instrument.style.width=Math.max(72,Math.min(170,profiles[active].button.length*8+38))+'px';
+  capo.style.width='112px';
+  tab.style.width=(preferences.tab&&preferences.tab!=='off'?Math.min(245,Math.max(150,tab.options[tab.selectedIndex].textContent.length*7+35)):96)+'px';
   instrument.setAttribute('aria-label',english?'Written instrument':'Instrumentnoder');
   tab.setAttribute('aria-label',english?'Tablature instrument':'Tabulaturinstrument');
   [instrument,capo,tab].forEach(function(n){n.setAttribute('data-active',String(n.value!=='c'&&n.value!=='0'&&n.value!=='off'));});
@@ -80,5 +84,5 @@ function observe(callback){
 exports.observe=observe;exports.setCapo=setCapo;exports.setTab=setTab;
 exports.current=current;exports.change=change;exports.mount=mount;exports.soundingPitches=soundingPitches;
 exports.profiles=profiles;
-exports.printLabel=function(wiki){return label(current(),language(wiki),'print')+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+strings.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
+exports.printLabel=function(wiki){return (active==='c'&&preferences.capo?(language(wiki)==='en'?'Capo shapes':'Capogreb'):label(current(),language(wiki),'print'))+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+strings.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
 })();
