@@ -284,7 +284,7 @@
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Purim Niggun\nC:Trad. klezmer\nM:4/4\nL:1/8\nQ:1/4=80\nK:F\nG |: [P:A]\"C\"c3 c/e/\"Bbm\" _d3 d/f/ | \"C\"e3 g fe _dc | [1 g2 e2\"Bbm\" _dc df | \"C\"e6 z G :|\n[2 g2 e2\"Bbm\" _dc dB | \"C\"c6 z2 |: [P:B]\"C\"Cc cc c3 c | \"Bbm\"Bc _dc B_A GF |\n\"C\"G2 E2\"Bbm\" _DC DB, | [1\"C\"C8 :| [2\"C\"C4 z C FG |: [P:C]\"Fm\"_A4- AA GF |\n\"C\"G4- GC EF | G4- GC _A/G/F/E/ | \"Fm\"F4-\"C\" FC FG | \"Fm\"_A4 (3:2:3AGF (3:2:3E_DC |\n\"Bbm\"B,4 B4 | (3:2:3B_AG (3:2:3AGF (3:2:3EFG (3:2:3FE_D | [1\"C\"C4 z C FG :| [2\"C\"C6 z G |\n",
     "abc-view": "full",
-    "abc-bars-per-line": "4",
+    "abc-bars-per-line": "balanced",
     "abc-accompaniment": "{\"enabled\":true,\"metronome\":false,\"style\":\"folk\",\"bassSource\":\"style\",\"bass\":\"alternating\",\"chords\":\"folk\",\"drums\":\"folk\",\"melodyInstrument\":\"source\",\"melodyVolume\":100,\"bassVolume\":50,\"chordVolume\":45,\"drumVolume\":40,\"droneEnabled\":false,\"variation\":20}",
     "huwiki-import-source": "purim-niggun-cbb.mscz",
     "huwiki-import-format": "mscx",

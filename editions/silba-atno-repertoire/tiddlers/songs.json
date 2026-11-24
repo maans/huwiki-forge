@@ -158,7 +158,8 @@
     "silba-section": "usikre",
     "silba-musescore-file": "purim-niggun-cbb.mscz",
     "silba-musescore-date": "2024-08-08",
-    "silba-import-state": "fundet-ikke-importeret"
+    "silba-import-state": "fundet-ikke-importeret",
+    "abc-bars-per-line": "balanced"
   },
   {
     "title": "SilbaÄtno · Hjul og Stejle nr. 6 – Bulgarsk Horo (G)",
