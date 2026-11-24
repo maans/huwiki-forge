@@ -1,0 +1,10 @@
+title: $:/plugins/huwiki/abc/instrument-controls.css
+type: text/css
+tags: $:/tags/Stylesheet
+
+.huwabc-instrument-group .huwabc-instrument-buttons{display:flex;flex-wrap:wrap;gap:6px;border:0;background:transparent;overflow:visible;max-width:100%;}
+.huwabc-instrument-group .huwabc-instrument-select{width:auto;min-width:72px;max-width:min(245px,100%);min-height:36px;margin:0;padding:6px 25px 6px 11px;border:1px solid #9fc3b5;border-radius:8px;background-color:#fff;color:#285c51;font:600 14px/1.35 system-ui,sans-serif;cursor:pointer;box-sizing:border-box;}
+.huwabc-instrument-group .huwabc-instrument-select[data-active="true"]{background-color:#286f5d;color:#fff;}
+.huwabc-instrument-group .huwabc-instrument-select:focus-visible{outline:2px solid #2a8670;outline-offset:2px;}
+@media(max-width:520px){.huwabc-instrument-group .huwabc-instrument-select{max-width:190px;font-size:13px;}.huwabc-instrument-legend{flex-basis:100%;}}
+@media print{.huwabc-instrument-bar{display:none!important;}}

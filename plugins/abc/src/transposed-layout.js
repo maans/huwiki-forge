@@ -39,7 +39,8 @@ function referenceBreaks(tune){
 // instruments. No ABC source, sounding pitches, or playback settings change.
 function options(ABC,host,source,original){
  var transposition=Number(original&&original.visualTranspose)||0;
- if(!transposition||!original.wrap||original.lineBreaks||!ABC||typeof ABC.renderAbc!=="function"||!host)return original;
+ var hasTabs=original&&original.tablature&&original.tablature.length;
+ if((!transposition&&!hasTabs)||!original.wrap||original.lineBreaks||!ABC||typeof ABC.renderAbc!=="function"||!host)return original;
  var doc=host.ownerDocument||(typeof document!=="undefined"?document:null);
  if(!doc||!doc.createElement||!host.appendChild)return original;
  var sample=doc.createElement("div");
@@ -51,6 +52,8 @@ function options(ABC,host,source,original){
  try{
   var baseline=Object.assign({},original,{visualTranspose:0});
   delete baseline.clickListener;
+  baseline.tablature=[];
+  if(hasTabs)baseline.afterParsing=function(tune){if(original.afterParsing)original.afterParsing(tune);delete tune.tablatures;};
   var rendered=ABC.renderAbc(sample,source,baseline);
   var reference=referenceBreaks(rendered&&rendered[0]);
   if(!reference)return original;

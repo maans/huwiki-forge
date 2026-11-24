@@ -366,7 +366,8 @@ ABCWidget.prototype.draw=function(){
       var jazzChords=chordStyle!=="standard";
       var displayed=Display.presentation(text);
       if(!self.editing&&self.getAttribute('preview')!=='yes')displayed=I18n.localizedSource(displayed,t.fields,I18n.language(self.wiki));
-      var tabOptions=tabs.options(ABC,displayed,tabControls.enabled(),tabControls.config());
+      var tabView=tabs.view(self.wiki.getTiddler(self.title).fields),tabConfig=tabView.config;
+      var tabOptions=tabs.options(ABC,displayed,tabView.enabled,tabConfig);
       tabControls.availability(tabOptions.options.length>0);
       var useJazz=self.wiki.getTiddler(self.title).fields['abc-font']==='petaluma';var result=jazzFont.render(ABC,useJazz,function(){return ABC.renderAbc(into,displayed,TransposedLayout.options(ABC,host,displayed,Object.assign({visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options,clickListener:function(abcElem,tuneNo,classes,analysis,drag,event){
           if(event&&event.target&&event.target.closest&&event.target.closest('.abcjs-chord,[data-huwabc-tab-source]'))return;
@@ -377,10 +378,10 @@ ABCWidget.prototype.draw=function(){
           if(pitches.length){pianoDetails.open=true;ensurePiano();pianoFollow.explain(pitches,I18n.language(self.wiki)==='da'?'Valgte toner':'Selected notes');if(audio.classList.contains('huwabc-playing'))floatingPiano.show(analysis&&analysis.selectableElement||event&&event.target);}
           cueStart(abcElem.startChar,analysis&&analysis.selectableElement||event&&event.target,abcElem.currentTrackMilliseconds);
           auditionNotes(abcElem.midiPitches).catch(function(e){showStatus('Nodelyd: '+e.message,true);});
-         },afterParsing:function(tune){sheetLayout.prepare(tune,self.wiki.getTiddler(self.title).fields,displayed);tune.formatting.staffsep=tabControls.config().rhythm?145:90;if(tabControls.config().rhythm)tune.formatting.sysstaffsep=120;tabs.notation.project(ABC,tune,tabControls.config(),tabControls.notationActive());if(tabOptions.options.length)tune.tablatures=ABC.parseOnly(displayed,{tablature:tabOptions.options})[0].tablatures;},responsive:"resize",staffwidth:720,scale:layout==="kompakt"?0.88:1,jazzchords:jazzChords,format:jazzFont.formatFonts(useJazz,{stretchlast:true,gchordfont:useJazz?"PetalumaScript 20":jazzChords?"Helvetica 18 bold":"Helvetica 16"}),add_classes:true,oneSvgPerLine:true,expandToWidest:true,wrap:{minSpacing:1.5,maxSpacing:2.8,preferredMeasuresPerLine:layout==="jazz"?4:3}},sheetLayout.options(ABC,displayed,self.wiki.getTiddler(self.title).fields))));});
+         },afterParsing:function(tune){sheetLayout.prepare(tune,self.wiki.getTiddler(self.title).fields,displayed);tune.formatting.staffsep=tabConfig.rhythm?145:90;if(tabConfig.rhythm)tune.formatting.sysstaffsep=120;tabs.notation.project(ABC,tune,tabConfig,tabView.enabled);if(tabOptions.options.length)tune.tablatures=ABC.parseOnly(displayed,{visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options})[0].tablatures;},responsive:"resize",staffwidth:720,scale:layout==="kompakt"?0.88:1,jazzchords:jazzChords,format:jazzFont.formatFonts(useJazz,{stretchlast:true,gchordfont:useJazz?"PetalumaScript 20":jazzChords?"Helvetica 18 bold":"Helvetica 16"}),add_classes:true,oneSvgPerLine:true,expandToWidest:true,wrap:{minSpacing:1.5,maxSpacing:2.8,preferredMeasuresPerLine:layout==="jazz"?4:3}},sheetLayout.options(ABC,displayed,self.wiki.getTiddler(self.title).fields))));});
       if(!result || !result.length){showStatus("Kunne ikke danne noder. Kontrollér ABC-teksten.",true);return null;}
-      var tabWarning=tabOptions.options.length?tabs.finish(result[0],tabControls.config()):'';
-      if(tabOptions.options.length&&!tabControls.showNotes())tabs.only(into,result[0]);if(tabOptions.options.length)tabs.rhythm(into,result[0],tabControls.config());
+      var tabWarning=tabOptions.options.length?tabs.finish(result[0],tabConfig):'';
+      if(tabOptions.options.length&&!tabControls.showNotes())tabs.only(into,result[0]);if(tabOptions.options.length)tabs.rhythm(into,result[0],tabConfig);
       if(into===score&&self._pager){self._pager.layout(result[0],self.wiki.getTiddler(self.title).fields);if(self._reader)self._reader.update();}
       var warnings=result[0]&&result[0].warnings;
       if(warnings&&warnings.length)showStatus("ABCJS: "+warnings.slice(0,2).join(" · "),true);
