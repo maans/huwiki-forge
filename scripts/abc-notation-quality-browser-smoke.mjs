@@ -40,6 +40,9 @@ try{
   assert.equal(state.error,undefined,state.error);assert.equal(state.source,source);
   assert.equal(state.leading,written);assert.equal(state.tonicAccidental,'');
   assert.ok(state.firstLine>=0&&state.secondLine>=0);assert.equal(state.secondLine,state.firstLine,'the two short endings must share one system');
+  const endingRows=await page.locator('.huwabc-paper svg').evaluateAll(svgs=>svgs.map(svg=>Array.from(svg.querySelectorAll('.abcjs-ending'),e=>e.textContent.trim())));
+  const row1=endingRows.findIndex(labels=>labels.includes('1')),row2=endingRows.findIndex(labels=>labels.includes('2'));
+  assert.ok(row1>=0&&row2>=0);assert.equal(row1,row2,'the printed 1 and 2 labels must also share one system');
   assert.equal(state.shown,state.concert,'harmonic spelling must not alter the concert arrangement');
   await page.getByRole('button',{name:'PDF / Udskriv',exact:true}).click();
   await page.getByRole('link',{name:'Gem PDF',exact:true}).waitFor({timeout:90000});
