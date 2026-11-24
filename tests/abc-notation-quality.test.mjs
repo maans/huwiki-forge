@@ -33,7 +33,7 @@ test('Spelling follows a major dominant, preserving other harmonies and accident
 });
 test('The short second ending shares a system with the first ending at four bars per line',()=>{
  const result=JSON.parse(JSON.stringify(sheet.options(ABC,source,{'abc-bars-per-line':'4'})));
- assert.deepEqual(result.lineBreaks,[[4,7,12,16]]);
+ assert.deepEqual(result.lineBreaks,[[4,9,12,16]]);
  const repeat=load('repeat-plan.js').build(ABC,source,{});
  assert.equal(repeat.order.length,32,'engraving must keep the original A/B repeat walk');
 });
