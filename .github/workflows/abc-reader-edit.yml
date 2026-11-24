@@ -14,6 +14,7 @@ on:
       - 'scripts/build-repertoire-plugin.mjs'
       - 'scripts/assemble-silba-etno-repertoire.mjs'
       - 'scripts/abc-reader-edit-browser-smoke.mjs'
+      - 'scripts/abc-mixer-visibility-browser-smoke.mjs'
       - '.github/workflows/abc-reader-edit.yml'
   workflow_dispatch:
 permissions:
@@ -56,12 +57,18 @@ jobs:
         env:
           ABC_READER_BROWSER: ${{ matrix.browser }}
         run: node scripts/abc-reader-edit-browser-smoke.mjs
+      - name: Open normal-view mixer on iPad with visible, scrolled and hidden sidebars
+        env:
+          ABC_READER_BROWSER: ${{ matrix.browser }}
+        run: node scripts/abc-mixer-visibility-browser-smoke.mjs
       - name: Keep bounded diagnostics, screenshots and native traces
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: abc-reader-edit-${{ matrix.browser }}
-          path: test-results/abc-reader-edit/
+          path: |
+            test-results/abc-reader-edit/
+            test-results/mixer-visibility/
           if-no-files-found: ignore
           retention-days: 7
 

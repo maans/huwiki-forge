@@ -21,7 +21,7 @@ const engineName=process.env.ABC_READER_BROWSER||"webkit";
 const engine={webkit,chromium}[engineName];
 assert.ok(engine,"ABC_READER_BROWSER must be webkit or chromium");
 const url=process.env.ABC_READER_EDIT_URL||pathToFileURL(path.join(root,
- "editions/silva-ethno-repertoire/index.html")).href;
+ "editions/silba-atno-repertoire/index.html")).href;
 const resultsRoot=path.join(root,"test-results/abc-reader-edit",engineName);
 await mkdir(resultsRoot,{recursive:true});
 const ipad=devices["iPad Pro 11"];
@@ -155,7 +155,7 @@ try{
    const dalarneRepeat=await page.evaluate(()=>{
     const ABC=$tw.modules.execute("$:/plugins/huwiki/abc/vendor/abcjs.js");
     const planner=$tw.modules.execute("$:/plugins/huwiki/abc/repeat-plan.js");
-    const source=$tw.wiki.getTiddler("SilbaÄtno · Låt från Dalarne").fields["abc-source"];
+    const source=$tw.wiki.getTiddler("Låt från Dalarne").fields["abc-source"];
     const plan=planner.build(ABC,source,{});
     return {active:plan.active,order:plan.order,sections:plan.sections.map(s=>[s.start,s.end])};
    });

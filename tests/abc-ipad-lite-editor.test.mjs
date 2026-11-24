@@ -8,7 +8,7 @@ const root=path.resolve(import.meta.dirname,"..");
 const code=await readFile(path.join(root,"plugins/abc/src/edit-widget.js"),"utf8");
 const css=await readFile(path.join(root,"plugins/abc/src/CompactEditor.tid"),"utf8");
 const draftTitle="Draft of 'Brudmarch'";
-const songTitle="SilbaÄtno · Brudmarch från Jämtland";
+const songTitle="Brudmarch från Jämtland";
 const focusTitle="$:/temp/huwiki/abc/edit-focus";
 
 function element(tag){

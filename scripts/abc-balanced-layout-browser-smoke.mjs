@@ -22,7 +22,7 @@ try{
  try{await page.locator('.huwabc-paper svg').first().waitFor();}
  catch(e){console.log('Purim boot diagnostics',JSON.stringify({errors,body:await page.locator('body').innerText()}));throw e;}
  const state=await page.evaluate(()=>{
-  const song=$tw.wiki.getTiddler('SilbaÄtno · Purim Niggun'),source=song.fields['abc-source'];
+  const song=$tw.wiki.getTiddler('Purim Niggun'),source=song.fields['abc-source'];
   const ABC=$tw.modules.execute('$:/plugins/huwiki/abc/vendor/abcjs.js'),sheet=$tw.modules.execute('$:/plugins/huwiki/abc/sheet-layout.js');
   const settings=sheet.options(ABC,source,song.fields);
   const tune=ABC.parseOnly(source,settings)[0];sheet.prepare(tune,song.fields,source);
