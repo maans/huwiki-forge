@@ -6,7 +6,9 @@ on:
     paths:
       - 'plugins/abc/**'
       - 'scripts/abc-capo-tabs-browser-smoke.mjs'
+      - 'scripts/abc-notation-quality-browser-smoke.mjs'
       - 'tests/abc-capo-tabs.test.mjs'
+      - 'tests/abc-notation-quality.test.mjs'
       - '.github/workflows/abc-capo-tabs.yml'
 permissions:
   contents: read
@@ -24,9 +26,13 @@ jobs:
           node-version: 22
       - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
       - run: node scripts/build-abc-ui.mjs
-      - run: node --test tests/abc-capo-tabs.test.mjs tests/abc-transposed-layout.test.mjs tests/abc-cue-print.test.mjs tests/abc-normal-clean.test.mjs tests/abc-default-minimal.test.mjs tests/abc-reader-mode.test.mjs
+      - run: node --test tests/abc-capo-tabs.test.mjs tests/abc-notation-quality.test.mjs tests/abc-transposed-layout.test.mjs tests/abc-cue-print.test.mjs tests/abc-normal-clean.test.mjs tests/abc-default-minimal.test.mjs tests/abc-reader-mode.test.mjs
       - name: Verify physical fret mapping, stable systems and real PDF in Chrome
         run: node scripts/abc-capo-tabs-browser-smoke.mjs
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+      - name: Verify Dalarne minor spelling and paired short voltas in screen and PDF
+        run: node scripts/abc-notation-quality-browser-smoke.mjs
         env:
           CHROME_BIN: /usr/bin/google-chrome
       - name: Preserve acceptance screenshot
@@ -34,5 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: abc-capo-tabs
-          path: test-results/capo-tabs/
+          path: |
+            test-results/capo-tabs/
+            test-results/notation-quality/
           retention-days: 7
