@@ -117,6 +117,7 @@ Reader.prototype.create=function(){
  this.panel.appendChild(modes);
  var options=node(doc,"div","huwabc-reader-options");
  var pages=node(doc,"label","huwabc-reader-field");
+ this.pageField=pages;
  pages.appendChild(node(doc,"span","","Visning"));
  this.pageChoice=node(doc,"select","huwabc-reader-page-choice");
  [["auto","Automatisk"],["single","Én side"],["spread","To sider"]].forEach(function(pair){
@@ -237,9 +238,13 @@ Reader.prototype.turn=function(delta){
 Reader.prototype.update=function(){
  var pager=this.getPager(),info=pager&&pager.info&&pager.info();
  if(info&&Number(info.count)){
+  var single=Number(info.count)===1;
+  this.pageField.hidden=single;this.status.hidden=single;this.edges.hidden=!this.active||single&&!this.book;
   this.status.textContent="Side "+(info.page||1)+" af "+info.count;
-  this.prev.disabled=pageAction(info,-1)==="unready";
-  this.next.disabled=pageAction(info,1)==="unready";
+  this.prev.disabled=pageAction(info,-1)==="unready"||!this.book&&pageAction(info,-1)==="boundary";
+  this.next.disabled=pageAction(info,1)==="unready"||!this.book&&pageAction(info,1)==="boundary";
+  this.prev.setAttribute('aria-label',single&&this.book?'Forrige nummer':'Forrige nodeside');
+  this.next.setAttribute('aria-label',single&&this.book?'Næste nummer':'Næste nodeside');
  }else{
   this.status.textContent="Indlæser sider …";
   this.prev.disabled=true;this.next.disabled=true;
@@ -301,7 +306,8 @@ Reader.prototype.updateScale=function(){
   var width=Math.max(paperWidth||viewport.scrollWidth,bounds.width>shell.clientWidth?bounds.width:0,1);
   var height=Math.max(paperHeight||viewport.scrollHeight,1);
   var availableWidth=Math.max(1,shell.clientWidth-16);
-  var availableHeight=Math.max(1,shell.clientHeight-16);
+  var caption=shell.querySelector('.huwabc-notation-status');
+  var availableHeight=Math.max(1,shell.clientHeight-16-(caption&&!caption.hidden?caption.offsetHeight:0));
   var choice=this.fitMode||"fit";
   var ratio=choice==="original"?1:choice==="width"?availableWidth/width:Math.min(availableWidth/width,availableHeight/height);
   // Avoid pathological magnification of tiny or not-yet-rendered scores.

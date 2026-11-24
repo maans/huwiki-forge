@@ -202,6 +202,7 @@ Book.prototype.updateMode=function(){
  var mode=Layout.mode(this.preference,width,height),selector;
  var pager=this.pager();
  if(!pager)return;
+ this.host.classList.toggle('huwrep-book-one-page',pager.info().count===1);
  selector=pager.element.querySelector(".huwabc-page-select");
  if(selector&&selector.value!==mode){
   selector.value=mode;
@@ -326,10 +327,10 @@ Book.prototype.draw=function(){
  var self=this,doc=this.document,wiki=this.wiki,host=this.host;
  if(!host||this._editReturn)return;
  this.disposeScore();host.textContent="";
- var sets=model.orchestras(wiki).flatMap(function(o){return model.setlists(wiki,o.fields.title);});
+ var sets=model.collections(wiki);
  if(!sets.some(function(s){return s.fields.title===self.setlistTitle;}))
   this.setlistTitle=sets.length?sets[0].fields.title:"";
- var set=wiki.getTiddler(this.setlistTitle),all=set?model.entries(wiki,this.setlistTitle):[];
+ var set=model.collection(wiki,this.setlistTitle),all=set?model.entries(wiki,this.setlistTitle):[];
  if(all.indexOf(this.activeItem)<0)this.activeItem=all.length?all[0]:"";
  var index=all.indexOf(this.activeItem);
  var toolbar=el(doc,"header","huwrep-book-header");host.appendChild(toolbar);
@@ -505,12 +506,12 @@ Book.prototype.draw=function(){
   if(source)stage.appendChild(btn(doc,"Åbn melodien",function(){self.navigate(source.fields.title);}));
  }
  var footer=el(doc,"footer","huwrep-book-footer");host.appendChild(footer);
- var prev=btn(doc,"‹ Forrige side / nummer",function(){self.turn(-1);});
- var next=btn(doc,"Næste side / nummer ›",function(){self.turn(1);});
+ var prev=btn(doc,"‹ Forrige side / nummer",function(){self.turn(-1);},'huwrep-book-page-turn');
+ var next=btn(doc,"Næste side / nummer ›",function(){self.turn(1);},'huwrep-book-page-turn');
  var songPrev=btn(doc,"⇤ Forrige nummer",function(){if(index>0)self.selectItem(all[index-1],false);});
  var songNext=btn(doc,"Næste nummer ⇥",function(){if(index<all.length-1)self.selectItem(all[index+1],false);});
  songPrev.disabled=index===0;songNext.disabled=index===all.length-1;
- this._pageStatus=el(doc,"span","huwrep-muted","Sidevisning følger iPadens skærmretning");
+ this._pageStatus=el(doc,"span","huwrep-muted huwrep-book-page-status","Sidevisning følger iPadens skærmretning");
  footer.append(songPrev,prev,this._pageStatus,next,songNext);
  this.updateMode();
 };

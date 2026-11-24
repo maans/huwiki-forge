@@ -10,6 +10,7 @@ module-type: library
 // and the running timing callbacks must retain their original DOM references.
 var I18n=require('$:/plugins/huwiki/abc/i18n.js');
 var PrintExport=require('$:/plugins/huwiki/abc/print-export.js');
+var InstrumentView=require('$:/plugins/huwiki/abc/instrument-view.js');
 var serial=0,activeDesk=null;
 function geometry(fields){
  fields=fields||{};
@@ -102,6 +103,8 @@ function mount(root,opts){
  var shell=E('section','huwabc-page-shell'+(opts.editor?' huwabc-page-editor':'')),bar=E('div','huwabc-page-toolbar'),viewport=E('div','huwabc-page-viewport'),nav=E('nav','huwabc-page-nav');
  shell.id=uid;shell.setAttribute('aria-label',tr('Nodevisning','Score view'));nav.setAttribute('aria-label',tr('Nodesider','Score pages'));
  root.parentNode.insertBefore(shell,root);shell.appendChild(bar);viewport.appendChild(root);shell.appendChild(viewport);shell.appendChild(nav);
+ var notationStatus=E('div','huwabc-notation-status');notationStatus.hidden=true;notationStatus.setAttribute('role','status');
+ notationStatus.setAttribute('aria-label',tr('Transponeret nodevisning','Transposed notation'));shell.insertBefore(notationStatus,viewport);
  root.classList.add('huwabc-paginated');root.id=root.id||uid+'-paper';
  var viewLabel=E('label','huwabc-page-choice'),views=E('select','huwabc-page-select');
  viewLabel.appendChild(E('span','',tr('Visning','View')));
@@ -153,7 +156,7 @@ function mount(root,opts){
  var transport=null,transportMark=null,deskOldMode=null,deskOldZoom=null,oldOverflow='',oldFocus=null,oldScroll=0;
  function requestedCount(){return {spread:2,three:3,four:4}[mode]||1;}
  function isPaged(){return mode!=='stack'&&mode!=='flow';}
- function countShown(){return Math.min(requestedCount(),Math.max(1,Math.floor((viewport.clientWidth+12)/332)));}
+ function countShown(){return Math.min(requestedCount(),Math.max(1,pages.length),Math.max(1,Math.floor((viewport.clientWidth+12)/332)));}
  function remember(){save('pageIndex',pageIndex);var a=anchor();if(a&&Number.isInteger(a.event))save('pageAnchor',a.event);}
  function anchor(){
   var record=records.find(function(r){return r.ordinal===selectedOrdinal&&r.page===activePage;})||records.find(function(r){return r.page===activePage;});
@@ -180,7 +183,9 @@ function mount(root,opts){
   var last=Math.min(pages.length-1,pageIndex+countShown()-1),stack=mode==='stack'||mode==='flow';
   pages.forEach(function(p,i){p.element.hidden=!stack&&(i<pageIndex||i>last);});
   paintActive();prev.disabled=pageIndex===0;next.disabled=pageIndex+countShown()>=pages.length;
-  dots.hidden=pages.length>9;jump.hidden=pages.length<=9;nav.hidden=pages.length<=1&&!desk;
+  dots.hidden=pages.length<=1||pages.length>9;jump.hidden=pages.length<=9;nav.hidden=pages.length<=1;
+  viewLabel.hidden=pages.length<=1&&!opts.editor;
+  transportSlot.hidden=desk&&pages.length<=1&&!transport;
   followButton.hidden=!!opts.editor||opts.audio===false||pages.length<=1;
   resize();previewAhead();
  }
@@ -226,6 +231,8 @@ function mount(root,opts){
   if(closed)return;
   var saved=layoutSerial?anchor():{event:initialAnchor,page:initialPage};
   manualScrollUntil=0;tune=nextTune||tune;fields=nextFields||fields;g=geometry(fields);blocks=[];svgIndex=new WeakMap();
+  notationStatus.textContent=tune&&typeof tune.getKeySignature==='function'?InstrumentView.notationStatus(opts.wiki,tune._huwabcConcertKey,tune.getKeySignature()):'';
+  notationStatus.hidden=!!opts.editor||!notationStatus.textContent;
   var svgs=Array.from(root.querySelectorAll('svg')).filter(function(s){return !s.ownerSVGElement;});
   svgs.forEach(function(svg){
    var vb=svg.viewBox.baseVal;if(!(vb.width>0&&vb.height>=0))return;
