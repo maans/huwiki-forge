@@ -53,7 +53,7 @@ function collect(tune) {
  function flush(v){if(!v.active||v.active.duration<=EPS)return;
   v.active.index=v.measures.length;v.active.start=v.clock;v.clock+=v.active.duration;v.measures.push(v.active);v.active=null;
  }
- (tune.lines||[]).forEach(function(line){(line.staff||[]).forEach(function(staff,si){if(staff.isTabStaff)return;(staff.voices||[]).forEach(function(events,vi){
+ (tune.lines||[]).forEach(function(line){(line.staff||[]).forEach(function(staff,si){if(staff.isTabStaff||staff.clef&&staff.clef.type==='TAB')return;(staff.voices||[]).forEach(function(events,vi){
   var v=voiceFor(si,vi);v.header=header(staff,v.header);
   events.forEach(function(e){
    if(e.el_type==='bar'){
