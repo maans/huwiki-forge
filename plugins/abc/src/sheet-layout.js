@@ -7,6 +7,12 @@ module-type: library
 "use strict";
 var Engraving=require("$:/plugins/huwiki/abc/engraving-rules.js");
 var VoltaLayout=require("$:/plugins/huwiki/abc/volta-layout.js");
+var BalancedLayout=require("$:/plugins/huwiki/abc/balanced-layout.js");
+var I18n=require("$:/plugins/huwiki/abc/i18n.js");
+var balancedHelp='Sidevisning og PDF bruger samme opsætning. Balanceret måler takternes bredde, fordeler hele fraser og volter og undgår korte, tomme linjer. Et nodesystem med alle stemmer og TAB holdes samlet. En optakt tæller ikke med i takter pr. linje.';
+I18n.dictionary['Balanceret · fraser og volter']='Balanced · phrases and endings';
+I18n.dictionary[balancedHelp]='Screen pages and PDF share the same layout. Balanced measures bar widths, keeps phrases and endings together, and avoids short, empty systems. All voices and TAB stay together. A pickup does not count towards measures per system.';
+var metricCache=[];
 function value(n,allowed){return allowed.indexOf(Number(n))>=0?Number(n):0;}
 function read(fields){return {bars:value(fields['abc-bars-per-line'],[2,3,4,6,8]),lines:value(fields['abc-lines-per-page'],[2,3,4,6,8])};}
 // ABCJS supplies the duration of an anacrusis via getPickupLength(). The
@@ -65,6 +71,7 @@ function lineBreaksForVoice(voice,perLine,pickup,primaryLength){
   return VoltaLayout.balance(voice,breaks);
 }
 function options(ABC,source,fields){
+  if(fields['abc-bars-per-line']==='balanced')return balancedOptions(ABC,source,fields);
   var settings=read(fields);if(!settings.bars)return {};
   var tune=ABC.parseOnly(source)[0];if(!tune)return {};
   var pickup=hasPickup(tune),seenFirstSection=false;
@@ -78,6 +85,25 @@ function options(ABC,source,fields){
   });
   return {lineBreaks:breaks,wrap:null};
 }
+function balancedOptions(ABC,source,fields){
+ if(!ABC||typeof ABC.tuneMetrics!=='function')return {};
+ var key=source+'\n'+(fields['abc-font']||'')+'\n'+(fields['abc-chords-style']||'');
+ try{
+  var cached=metricCache.find(function(c){return c.key===key;}),metrics;
+  if(cached)metrics=cached.metrics;
+  else {
+   var jazz=fields['abc-font']==='petaluma';
+   var result=ABC.tuneMetrics(source,{staffwidth:720,jazzchords:fields['abc-chords-style']!=='standard',format:{gchordfont:jazz?'PetalumaScript 20':'Helvetica 18 bold'}});
+   metrics=result&&result[0]&&result[0].sections;
+   if(!metrics)return {};
+   metricCache.push({key:key,metrics:metrics});if(metricCache.length>8)metricCache.shift();
+  }
+  var tune=ABC.parseOnly(source)[0],sections=tune.deline({lineBreaks:false}).filter(function(l){return l.staff;}),pickup=hasPickup(tune);
+  if(sections.length!==metrics.length)return {};
+  var breaks=sections.map(function(l,i){var plan=BalancedLayout.plan(l.staff[0].voices[0],metrics[i].measureWidths,metrics[i].left,{pickup:pickup&&i===0,parts:Engraving.partLines(fields)});return plan&&plan.breaks;});
+  return breaks.some(function(b){return !b;})?{}:{lineBreaks:breaks,wrap:null};
+ }catch(_error){return {};}
+}
 function mount(parent,fields,onChange){
   var details=document.createElement('details');details.className='huwabc-sheet-settings';details.setAttribute('data-huwabc-panel','sheet');var controls={};
   var title=document.createElement('summary');title.textContent='Nodeopsætning · takter og sider';details.appendChild(title);
@@ -85,7 +111,7 @@ function mount(parent,fields,onChange){
   [['Takter pr. linje','abc-bars-per-line'],['Højst nodesystemer pr. side','abc-lines-per-page']].forEach(function(pair){
     var label=document.createElement('label');label.textContent=pair[0];
     var input=document.createElement('select');input.className='huwabc-select';
-    [0,2,3,4,6,8].forEach(function(n){var opt=document.createElement('option');opt.value=n;opt.textContent=n?String(n):'Automatisk';input.appendChild(opt);});
+    (pair[1]==='abc-bars-per-line'?[0,'balanced',2,3,4,6,8]:[0,2,3,4,6,8]).forEach(function(n){var opt=document.createElement('option');opt.value=n;opt.textContent=n==='balanced'?'Balanceret · fraser og volter':n?String(n):'Automatisk';input.appendChild(opt);});
     controls[pair[1]]=input;input.value=fields[pair[1]]||0;label.appendChild(input);grid.appendChild(label);
     input.onchange=function(){var next={};next[pair[1]]=input.value;onChange(next);};
   });
@@ -100,12 +126,12 @@ function mount(parent,fields,onChange){
   controls['abc-font']=input;input.value=fields['abc-font']||'standard';label.appendChild(input);grid.appendChild(label);
   input.onchange=function(){onChange({'abc-font':input.value});};
   var sectionLabel=document.createElement('label');sectionLabel.className='huwabc-section-break-option';
-  var sectionCheck=document.createElement('input');sectionCheck.type='checkbox';sectionCheck.checked=fields['abc-parts-new-line']!=='no';
+  var sectionCheck=document.createElement('input');sectionCheck.type='checkbox';sectionCheck.checked=Engraving.partLines(fields);
   sectionCheck.setAttribute('aria-label','Formdele på ny linje');sectionLabel.appendChild(sectionCheck);sectionLabel.appendChild(document.createTextNode(' Formdele på ny linje'));grid.appendChild(sectionLabel);
   sectionCheck.addEventListener('change',function(){onChange({'abc-parts-new-line':sectionCheck.checked?'yes':'no'});});
   var help=document.createElement('p');
-  help.textContent='Sidevisning og PDF bruger samme opsætning. Et nodesystem med alle stemmer og TAB holdes samlet. Automatisk fordeler efter den faktiske højde; et valgt antal er et maksimum. En optakt tæller ikke med i takter pr. linje.';
-  details.appendChild(help);parent.appendChild(details);details.update=function(next){sectionCheck.checked=next['abc-parts-new-line']!=='no';Object.keys(controls).forEach(function(k){controls[k].value=next[k]||(k==='abc-font'?'standard':k==='abc-paper-size'?'A4':k==='abc-page-margin'?'14':0);});};return details;
+  help.textContent=balancedHelp;
+  details.appendChild(help);parent.appendChild(details);details.update=function(next){sectionCheck.checked=Engraving.partLines(next);Object.keys(controls).forEach(function(k){controls[k].value=next[k]||(k==='abc-font'?'standard':k==='abc-paper-size'?'A4':k==='abc-page-margin'?'14':0);});};return details;
 }
 exports.prepare=Engraving.prepare;exports.read=read;exports.options=options;exports.mount=mount;
 // Pure functions also exported for regression testing.

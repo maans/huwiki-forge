@@ -88,7 +88,7 @@ for(const song of ready){
   "tags":"ABC SilbaÄtno SilbaÄtnoTrack",
   "abc-source":rendered.abc,
   "abc-view":"full",
-  "abc-bars-per-line":"4",
+  "abc-bars-per-line":song["abc-bars-per-line"]||"4",
   "abc-accompaniment":JSON.stringify(accompaniment),
   "huwiki-import-source":name,
   "huwiki-import-format":"mscx",

@@ -42,6 +42,10 @@ jobs:
           node scripts/repertoire-browser-smoke.mjs
         env:
           CHROME_BIN: /usr/bin/google-chrome
+      - name: Verify measured Purim layout and intact two-bar endings on one page
+        run: node scripts/abc-balanced-layout-browser-smoke.mjs
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
       - name: Preserve acceptance screenshot
         if: always()
         uses: actions/upload-artifact@v4
@@ -50,4 +54,5 @@ jobs:
           path: |
             test-results/capo-tabs/
             test-results/notation-quality/
+            test-results/balanced-layout/
           retention-days: 7
