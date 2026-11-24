@@ -161,6 +161,19 @@ function patterns(meta,c){var n=meta.n,compound=meta.meter.den===8,step=compound
   layer(42,function(i){return i%2===0||i===3||i===7;},function(){return .32;});
  }
  return {bass:bass.join(''),chord:chord.join(''),drums:layers};}
+// Instrument clefs and capo alter only engraving. Copy the concert audio's
+// timing/pitch annotations onto the corresponding displayed notes for seeking.
+function concertAudio(tune,raw,options){
+ var audio=raw.setUpAudio(options),played=repeatPlanModule.collect(raw),shown=repeatPlanModule.collect(tune);
+ var timing=['currentTrackWholeNotes','currentTrackMilliseconds','midiPitches','midiGraceNotePitches'];
+ function notes(voice){return voice.measures.flatMap(function(m){return m.events.filter(function(e){return e.el_type==='note';});});}
+ shown.voices.forEach(function(voice,index){
+  if(!played.voices[index])return;
+  var from=notes(played.voices[index]),to=notes(voice);if(from.length!==to.length)return;
+  to.forEach(function(event,i){timing.forEach(function(key){delete event[key];if(from[i][key]!==undefined)event[key]=from[i][key];});});
+ });
+ return audio;
+}
 function prepare(ABC,tune,source,config,live,fields){
  var c=resolve(config,source,fields);if(live){c.enabled=true;c.bassVolume=c.chordVolume=c.drumVolume=100;}var repeatPlan=repeatPlanModule.build(ABC,source,c.repeatCounts),raw=strip(ABC.parseOnly(source)[0]);repeatPlayback.install(raw,repeatPlan);var meta=info(raw,source,fields),rawBase=raw.setUpAudio({chordsOff:true}),baseCount=rawBase.tracks.length,backings=[];
  // Notated voices remain independent of the accompaniment switch. A selected
@@ -239,7 +252,7 @@ function prepare(ABC,tune,source,config,live,fields){
  strip(tune);repeatPlayback.install(tune,repeatPlan);var original=tune.setUpAudio;
  Object.defineProperty(tune,'_huwabcArrangementBase',{value:original,writable:true,configurable:true});
  delete tune.noteTimings;
- tune.setUpAudio=function(options){var base=voiceRouting.apply(original.call(tune,Object.assign({},options,{chordsOff:true,drum:'',drumIntro:0})),c,live),used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
+ tune.setUpAudio=function(options){var audioOptions=Object.assign({},options,{chordsOff:true,drum:'',drumIntro:0}),sequence=tune._huwabcNotationProjected||tune.visualTranspose?concertAudio(tune,raw,audioOptions):original.call(tune,audioOptions),base=voiceRouting.apply(sequence,c,live),used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
   backings.forEach(function(part){var channel=9;if(part.instrument!==128){for(channel=0;channel<16&&used.has(channel);channel++);if(channel===16)throw new Error('Der er ikke flere ledige MIDI-kanaler til akkompagnement.');used.add(channel);}var track=[{cmd:'text',type:'name',text:part.name},{cmd:'program',channel:channel,instrument:part.instrument}].concat(part.notes.map(function(n){return Object.assign({},n,{instrument:part.instrument});}));track.huwabcPart={Bas:'bassVolume',Akkorder:'chordVolume','Slagtøj':'drumVolume',Metronom:'metronomeVolume'}[part.name];base.tracks.push(track);});return base;};
  return {tune:tune,message:[missingBass?'Den valgte basstemme findes ikke længere. Vælg bassens kilde igen.':'',c.enabled&&styleName==='ungrouped-11'?'Vælg en 11/8-stil eller angiv grupperingen i M:-feltet.':(c.enabled||c.metronome)?meta.message:''].filter(Boolean).join(' '),parts:backings,form:analysis,detectedStyle:styleName,timeline:timeline,bars:arrangedBars,warnings:(timeline?timeline.warnings:[]).concat(repeatPlan.warnings),repeatPlan:repeatPlan};
 }

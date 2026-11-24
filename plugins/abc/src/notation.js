@@ -10,6 +10,7 @@ function shift(clef){if(clef&&clef.transpose)return Number(clef.transpose);retur
 function target(c){if(c.notation==='source')return null;if(c.notation==='guitar')return 'treble-8';if(c.notation==='bass')return 'bass-8';if(['guitar','dropd','dadgad','openg'].includes(c.preset)||c.notes.length===6)return 'treble-8';if(['bass','bass5'].includes(c.preset))return 'bass-8';if(['mandolin','ukulele','violin','tenorbanjo','irishbanjo','banjo5','charango'].includes(c.preset))return 'treble';return null;}
 function project(abc,tune,c,active){
  var type=active&&target(c);if(!type)return;
+ tune._huwabcNotationProjected=true;
  var template=abc.parseOnly('X:1\nK:C clef='+type+'\nC')[0].lines[0].staff[0].clef;
  var desired=shift(template),cache={};
  function keyFor(key){if(!key)return key;var k=(key.root||'C')+(key.acc||'')+(key.mode||'');if(!cache[k]){var t=abc.parseOnly('X:1\nK:'+k+' clef='+type+'\nC')[0];cache[k]=t.lines[0].staff[0].key;}return Object.assign({},key,{accidentals:cache[k].accidentals.map(function(a){return Object.assign({},a);})});}

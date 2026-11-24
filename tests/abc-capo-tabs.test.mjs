@@ -11,7 +11,7 @@ function environment(){
   const module={exports};runInNewContext(entries[prefix+name].text,{exports,module,window:{},require:id=>load(id.slice(prefix.length))});
   return cache[name]=module.exports;
  }
- return {view:load('instrument-view.js'),tabs:load('tabs.js'),abc:load('vendor/abcjs.js'),notation:load('notation.js')};
+ return {view:load('instrument-view.js'),tabs:load('tabs.js'),abc:load('vendor/abcjs.js'),notation:load('notation.js'),accompaniment:load('accompaniment.js'),planner:load('repeat-plan.js')};
 }
 test('Capo and wind notation combine without changing the original ABC or MIDI pitches',()=>{
  const {view,abc}=environment(),source='X:1\nT:Capo test\nM:4/4\nL:1/4\nK:D\n"D"D E F G | A B c d |';
@@ -54,5 +54,28 @@ test('Physical string assignment supports reentrant banjo and charango without c
 test('Shared distribution contains all versioned reading, TAB and engraving modules',async()=>{
  for(const name of ['instrument-view.js','tabs.js','notation.js','transposed-layout.js','minimal-player.js','score-widget.js']){
   assert.equal(entries[prefix+name].text,await readFile(new URL('../plugins/abc/src/'+name,import.meta.url),'utf8'));
+ }
+});
+
+test('TAB clefs, capo and repeats keep concert audio and note seeking across real score voices',async()=>{
+ const songs=JSON.parse(await readFile(new URL('../editions/silba-atno-repertoire/tiddlers/repertoire.json',import.meta.url),'utf8'));
+ const real=songs.find(s=>s.title.includes('Brudmarch'))['abc-source'];
+ const polyphonic='X:1\nM:4/4\nL:1/4\n%%score (1) (2)\nV:1 clef=treble\nV:2 clef=bass\nK:C\n[V:1] |: e f g a | [1 b a g e :| [2 d e f g |\n[V:2] |: C, D, E, F, | [1 G, F, E, C, :| [2 D, E, F, G, |';
+ const {view,tabs,abc,notation,accompaniment,planner}=environment();
+ const config={style:'custom',enabled:false,bass:'off',chords:'off',drums:'off'};
+ function audio(tune,source){accompaniment.prepare(abc,tune,source,config,false,{});return JSON.stringify(tune.setUpAudio({chordsOff:true}));}
+ for(const source of [real,polyphonic,polyphonic.replaceAll('|:','|').replaceAll(':|','|').replaceAll('[1','').replaceAll('[2','')]){
+  const baseline=audio(abc.parseOnly(source)[0],source),count=planner.collect(abc.parseOnly(source)[0]).voices.length;
+  for(const preset of ['guitar','ukulele','tenorbanjo','irishbanjo','mandolin','banjo5','charango'])for(const instrument of ['c','tenor'])for(const capo of [0,2,8]){
+   view.change(instrument);view.setCapo(capo);view.setTab(preset);
+   const tune=abc.parseOnly(source,{visualTranspose:view.current().semitones})[0];
+   notation.project(abc,tune,tabs.view({}).config,true);
+   // ABCJS appends AST TAB staves with clef.type=TAB, without isTabStaff.
+   tune.lines.forEach(l=>{if(l.staff)l.staff=l.staff.flatMap(s=>[s,{clef:{type:'TAB'},voices:[[]]}]);});
+   assert.equal(planner.collect(tune).voices.length,count);
+   assert.equal(audio(tune,source),baseline,preset+' '+instrument+' capo '+capo);
+   const notes=planner.collect(tune).voices.flatMap(v=>v.measures.flatMap(m=>m.events.filter(e=>e.el_type==='note'&&e.pitches)));
+   assert.ok(notes.every(n=>n.midiPitches&&n.currentTrackMilliseconds!==undefined),'displayed notes retain concert pitches and seek times');
+  }
  }
 });
