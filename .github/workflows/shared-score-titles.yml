@@ -33,10 +33,9 @@ jobs:
       - run: npm install --no-save --no-package-lock --ignore-scripts playwright@1.56.1 @xmldom/xmldom@0.9.8
       - name: Use the pinned browsers already installed in the test image
         run: node --input-type=module -e "import {chromium} from 'playwright'; console.log('CHROME_BIN='+chromium.executablePath())" >> "$GITHUB_ENV"
-      - name: Rebuild shared pieces, plugin, registry, homepage and repertoire
+      - name: Build shared plugin, registry, homepage and verified repertoire
         run: |
           node scripts/build-abc-ui.mjs
-          node scripts/build-silba-etno-repertoire.mjs
           node scripts/build-forge-plugin-library.mjs
           node scripts/build-forge-home.mjs
           node scripts/assemble-silba-etno-repertoire.mjs
