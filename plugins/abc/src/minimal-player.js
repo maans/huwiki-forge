@@ -17,6 +17,7 @@ var JazzFont=require('$:/plugins/huwiki/abc/jazz-font.js');
 var SheetLayout=require('$:/plugins/huwiki/abc/sheet-layout.js');
 var Display=require('$:/plugins/huwiki/abc/display-source.js');
 var InstrumentView=require('$:/plugins/huwiki/abc/instrument-view.js');
+var TransposedLayout=require('$:/plugins/huwiki/abc/transposed-layout.js');
 var Shortcuts=require('$:/plugins/huwiki/abc/keyboard-shortcuts.js');
 var StartPosition=require('$:/plugins/huwiki/abc/start-position.js');
 var ChordKeys=require('$:/plugins/huwiki/abc/chord-keys.js');
@@ -253,13 +254,13 @@ exports.mount=function(host,options){
  }
  function render(){
   if(chordOverview){chordOverview.destroy();chordOverview=null;}
-  var tabConfig=Tabs.read(fields),tabEnabled=fields['abc-tabs']==='yes',displayed=Display.presentation(source);
+  var tabView=Tabs.view(fields),tabConfig=tabView.config,tabEnabled=tabView.enabled,displayed=Display.presentation(source);
   var tabOptions=Tabs.options(ABC,displayed,tabEnabled,tabConfig),layout=fields['abc-layout']||'standard';
   var chordStyle=fields['abc-chords-style']||(options.wiki&&options.wiki.getTiddlerText?options.wiki.getTiddlerText('$:/config/huwiki/abc/chords-style','jazz'):'jazz');
   var jazzChords=chordStyle!=='standard',useJazz=fields['abc-font']==='petaluma';
    box.classList.toggle('huwabc-jazz-font',useJazz);
   // Respect explicit bars-per-line in chord charts as well as ordinary notation.
-  var results=JazzFont.render(ABC,useJazz,function(){return ABC.renderAbc(paper,displayed,Object.assign({
+  var results=JazzFont.render(ABC,useJazz,function(){return ABC.renderAbc(paper,displayed,TransposedLayout.options(ABC,box,displayed,Object.assign({
    visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options,responsive:'resize',staffwidth:720,scale:layout==='kompakt'?.88:1,jazzchords:jazzChords,
    format:JazzFont.formatFonts(useJazz,{stretchlast:true,gchordfont:useJazz?'PetalumaScript 20':jazzChords?'Helvetica 18 bold':'Helvetica 16'}),
    oneSvgPerLine:!!pager||!!viewport||showOverview,expandToWidest:true,add_classes:true,selectTypes:options.audio===false?false:undefined,selectionColor:'currentColor',clickListener:options.audio===false?undefined:noteClicked,
@@ -268,7 +269,7 @@ exports.mount=function(host,options){
     SheetLayout.prepare(tune,fields,displayed);
     tune.formatting=tune.formatting||{};tune.formatting.staffsep=tabConfig.rhythm?145:90;if(tabConfig.rhythm)tune.formatting.sysstaffsep=120;
     Tabs.notation.project(ABC,tune,tabConfig,tabEnabled);
-    if(tabOptions.options.length)tune.tablatures=ABC.parseOnly(displayed,{tablature:tabOptions.options})[0].tablatures;
+    if(tabOptions.options.length)tune.tablatures=ABC.parseOnly(displayed,{visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options})[0].tablatures;
     if(options.showTitle!==true){
      // Header/footer prose is presentation. Keep tempo, in-staff lyrics,
      // voice labels and every musical event unchanged.
@@ -276,7 +277,7 @@ exports.mount=function(host,options){
      (tune.lines||[]).forEach(function(line){if(line.subtitle!==undefined)delete line.subtitle;});
     }
    }
-  },viewport&&!(options.followChordsOnly&&fields["abc-bars-per-line"])?{}:SheetLayout.options(ABC,displayed,fields)));});
+  },viewport&&!(options.followChordsOnly&&fields["abc-bars-per-line"])?{}:SheetLayout.options(ABC,displayed,fields))));});
   if(!results||!results[0])throw new Error('Kunne ikke danne noder. Kontrollér ABC-teksten.');
   visual=results[0];
   var warning=tabOptions.options.length?Tabs.finish(visual,tabConfig):'';

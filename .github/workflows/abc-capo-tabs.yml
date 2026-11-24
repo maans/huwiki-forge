@@ -1,0 +1,38 @@
+name: ABC capo, wind notation and TAB
+on:
+  push:
+    branches: [feat/abc-capo-tab-controls]
+  pull_request:
+    paths:
+      - 'plugins/abc/**'
+      - 'scripts/abc-capo-tabs-browser-smoke.mjs'
+      - 'tests/abc-capo-tabs.test.mjs'
+      - '.github/workflows/abc-capo-tabs.yml'
+permissions:
+  contents: read
+concurrency:
+  group: abc-capo-tabs-${{ github.head_ref || github.ref_name }}
+  cancel-in-progress: true
+jobs:
+  notation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - run: node scripts/build-abc-ui.mjs
+      - run: node --test tests/abc-capo-tabs.test.mjs tests/abc-transposed-layout.test.mjs tests/abc-cue-print.test.mjs tests/abc-normal-clean.test.mjs tests/abc-default-minimal.test.mjs tests/abc-reader-mode.test.mjs
+      - name: Verify physical fret mapping, stable systems and real PDF in Chrome
+        run: node scripts/abc-capo-tabs-browser-smoke.mjs
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+      - name: Preserve acceptance screenshot
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: abc-capo-tabs
+          path: test-results/capo-tabs/
+          retention-days: 7
