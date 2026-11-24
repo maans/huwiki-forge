@@ -378,6 +378,7 @@ try{
   "No Repertoire runtime errors: "+errors.join("; "));
  // Whole-orchestra reading uses the original repertoire, without creating a set.
  await book.locator('.huwabc-reader-menu').click();
+ assert.equal(await practice.isVisible(),false,'the practice overlay must yield to the reading menu');
  await book.locator('.huwabc-reader-close').click();
  const choices=book.locator('.huwrep-book-select');
  const allOption=await choices.locator('option').evaluateAll(options=>options.find(o=>o.textContent.endsWith('Hele repertoiret'))?.value);

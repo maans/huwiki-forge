@@ -16,4 +16,5 @@ tags: $:/tags/Stylesheet
 .huwabc-reader-active>.huwabc-page-shell>.huwabc-notation-status{padding:8px 112px 4px 14px;text-align:left;}
 .huwabc-page-choice[hidden],.huwabc-page-nav[hidden],.huwabc-page-dots[hidden],.huwabc-page-transport[hidden],.huwabc-reader-field[hidden],.huwabc-reader-counter[hidden]{display:none!important;}
 .huwabc-reader-options:has(>.huwabc-reader-field[hidden]){grid-template-columns:1fr;}
+.huwrep-book.huwrep-reader-practice:has(.huwabc-reader-controls-open)>.huwrep-book-practice{display:none!important;}
 @media print{.huwabc-notation-status{display:none!important;}}
