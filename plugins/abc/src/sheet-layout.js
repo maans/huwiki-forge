@@ -100,7 +100,7 @@ function balancedOptions(ABC,source,fields){
   }
   var tune=ABC.parseOnly(source)[0],sections=tune.deline({lineBreaks:false}).filter(function(l){return l.staff;}),pickup=hasPickup(tune);
   if(sections.length!==metrics.length)return {};
-  var breaks=sections.map(function(l,i){var plan=BalancedLayout.plan(l.staff[0].voices[0],metrics[i].measureWidths,metrics[i].left,{pickup:pickup&&i===0,parts:fields['abc-parts-new-line']!=='no'});return plan&&plan.breaks;});
+  var breaks=sections.map(function(l,i){var plan=BalancedLayout.plan(l.staff[0].voices[0],metrics[i].measureWidths,metrics[i].left,{pickup:pickup&&i===0,parts:Engraving.partLines(fields)});return plan&&plan.breaks;});
   return breaks.some(function(b){return !b;})?{}:{lineBreaks:breaks,wrap:null};
  }catch(_error){return {};}
 }
@@ -126,12 +126,12 @@ function mount(parent,fields,onChange){
   controls['abc-font']=input;input.value=fields['abc-font']||'standard';label.appendChild(input);grid.appendChild(label);
   input.onchange=function(){onChange({'abc-font':input.value});};
   var sectionLabel=document.createElement('label');sectionLabel.className='huwabc-section-break-option';
-  var sectionCheck=document.createElement('input');sectionCheck.type='checkbox';sectionCheck.checked=fields['abc-parts-new-line']!=='no';
+  var sectionCheck=document.createElement('input');sectionCheck.type='checkbox';sectionCheck.checked=Engraving.partLines(fields);
   sectionCheck.setAttribute('aria-label','Formdele på ny linje');sectionLabel.appendChild(sectionCheck);sectionLabel.appendChild(document.createTextNode(' Formdele på ny linje'));grid.appendChild(sectionLabel);
   sectionCheck.addEventListener('change',function(){onChange({'abc-parts-new-line':sectionCheck.checked?'yes':'no'});});
   var help=document.createElement('p');
   help.textContent=balancedHelp;
-  details.appendChild(help);parent.appendChild(details);details.update=function(next){sectionCheck.checked=next['abc-parts-new-line']!=='no';Object.keys(controls).forEach(function(k){controls[k].value=next[k]||(k==='abc-font'?'standard':k==='abc-paper-size'?'A4':k==='abc-page-margin'?'14':0);});};return details;
+  details.appendChild(help);parent.appendChild(details);details.update=function(next){sectionCheck.checked=Engraving.partLines(next);Object.keys(controls).forEach(function(k){controls[k].value=next[k]||(k==='abc-font'?'standard':k==='abc-paper-size'?'A4':k==='abc-page-margin'?'14':0);});};return details;
 }
 exports.prepare=Engraving.prepare;exports.read=read;exports.options=options;exports.mount=mount;
 // Pure functions also exported for regression testing.

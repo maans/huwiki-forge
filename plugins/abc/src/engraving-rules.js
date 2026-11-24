@@ -75,9 +75,10 @@ function combineBars(voice){
   voice.splice(i-1,2,merged);i--;
  }
 }
+function partLines(fields){return !fields||fields['abc-parts-new-line']==='yes'||fields['abc-parts-new-line']!=='no'&&fields['abc-bars-per-line']!=='balanced';}
 function prepare(tune,fields,source){
  if(!tune||!Array.isArray(tune.lines))return tune;
- var lines=tune.lines,force=!fields||fields['abc-parts-new-line']!=='no';
+ var lines=tune.lines,force=partLines(fields);
  // The first part label often follows the pickup's opening repeat. It marks
  // the beginning of the tune, not a request for a system containing only the
  // pickup. Keep the actual note, duration and repeat position unchanged.
@@ -106,5 +107,5 @@ function prepare(tune,fields,source){
   s.voices.forEach(combineBars);
  });firstSystem=false;});return tune;
 }
-exports.prepare=prepare;exports.part=part;exports.times=times;exports.combineBars=combineBars;exports.splitSystem=splitSystem;
+exports.prepare=prepare;exports.part=part;exports.times=times;exports.combineBars=combineBars;exports.splitSystem=splitSystem;exports.partLines=partLines;
 })();

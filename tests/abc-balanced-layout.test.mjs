@@ -50,3 +50,8 @@ test('Purim planning handles all 20 full measures, pickup, tuplets and A/B/C bou
 test('balanced layout and pickup fix are shipped from source',async()=>{
  for(const name of ['balanced-layout.js','engraving-rules.js'])assert.equal(entries[prefix+name].text,await readFile(new URL('plugins/abc/src/'+name,root),'utf8'));
 });
+test('balanced layout flows through part labels by default and retains an explicit line-break choice',()=>{
+ assert.equal(engraving.partLines({'abc-bars-per-line':'balanced'}),false);
+ assert.equal(engraving.partLines({'abc-bars-per-line':'balanced','abc-parts-new-line':'yes'}),true);
+ assert.equal(engraving.partLines({'abc-bars-per-line':'4'}),true);
+});
