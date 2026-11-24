@@ -6,7 +6,9 @@ const pkg=JSON.parse(await readFile(new URL('../plugins/abc/dist/plugin.json',im
 const entries=JSON.parse(pkg.text).tiddlers;
 const vendor=entries['$:/plugins/huwiki/abc/vendor/abcjs.js']?.text;
 const helper=entries['$:/plugins/huwiki/abc/transposed-layout.js']?.text;
-assert.ok(vendor && helper,'The actual released ABCJS and layout helper must be present');
+const voltaId='$:/plugins/huwiki/abc/volta-layout.js';
+const voltaSource=entries[voltaId]?.text;
+assert.ok(vendor && helper && voltaSource,'The released ABCJS and both layout modules must be present');
 const bars=[
   'C D E F G A B c|','c B A G F E D C|','E2 G2 c2 e2|',
   'g f e d c B A G|','^F G =F E D C B A|','_B c d e f g a b|',
@@ -19,8 +21,12 @@ try{
  const page=await browser.newPage({viewport:{width:1240,height:900}});
  await page.setContent('<div id="host"><div id="concert"></div><div id="bb"></div><div id="eb"></div></div>');
  await page.addScriptTag({content:vendor});
- const result=await page.evaluate(({source,helper})=>{
-  const api={};new Function('exports',helper)(api);
+ const result=await page.evaluate(({source,helper,voltaId,voltaSource})=>{
+  const volta={};new Function('exports',voltaSource)(volta);
+  const api={};new Function('exports','require',helper)(api,id=>{
+   if(id===voltaId)return volta;
+   throw new Error('Missing test dependency: '+id);
+  });
   const ABC=window.ABCJS,host=document.querySelector('#host');
   const opts={staffwidth:720,responsive:'resize',oneSvgPerLine:true,expandToWidest:true,
     wrap:{minSpacing:1.5,maxSpacing:2.8,preferredMeasuresPerLine:3},format:{stretchlast:true}};
@@ -36,7 +42,7 @@ try{
   return {concert:{breaks:concert.lineBreaks||null,lines:document.querySelectorAll('#concert svg').length,
      warning:(concert.warnings||[]).slice(0,2)},bb,eb,
      hiddenReferenceLeftBehind:!!host.querySelector('.huwabc-concert-layout-reference')};
- },{source,helper});
+ },{source,helper,voltaId,voltaSource});
  assert.ok(result.concert.lines>2,JSON.stringify(result));
  assert.ok(Array.isArray(result.concert.breaks),JSON.stringify(result));
  for(const key of ['bb','eb']){
