@@ -35,6 +35,13 @@ jobs:
         run: node scripts/abc-notation-quality-browser-smoke.mjs
         env:
           CHROME_BIN: /usr/bin/google-chrome
+      - name: Assemble and verify whole-repertoire reading and cross-tune navigation
+        run: |
+          node scripts/build-repertoire-plugin.mjs
+          node scripts/assemble-silba-etno-repertoire.mjs
+          node scripts/repertoire-browser-smoke.mjs
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
       - name: Preserve acceptance screenshot
         if: always()
         uses: actions/upload-artifact@v4

@@ -280,6 +280,7 @@ exports.mount=function(host,options){
   },viewport&&!(options.followChordsOnly&&fields["abc-bars-per-line"])?{}:SheetLayout.options(ABC,displayed,fields))));});
   if(!results||!results[0])throw new Error('Kunne ikke danne noder. Kontrollér ABC-teksten.');
   visual=results[0];
+  visual._huwabcConcertKey=ABC.parseOnly(source)[0].getKeySignature();
   var warning=tabOptions.options.length?Tabs.finish(visual,tabConfig):'';
   if(tabOptions.options.length&&fields['abc-show-notes']==='no')Tabs.only(paper,visual);
   if(tabOptions.options.length)Tabs.rhythm(paper,visual,tabConfig);

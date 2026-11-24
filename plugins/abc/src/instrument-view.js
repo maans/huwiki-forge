@@ -84,5 +84,14 @@ function observe(callback){
 exports.observe=observe;exports.setCapo=setCapo;exports.setTab=setTab;
 exports.current=current;exports.change=change;exports.mount=mount;exports.soundingPitches=soundingPitches;
 exports.profiles=profiles;
+function keyName(k){return k&&k.root?k.root+(k.acc||'').replace(/#/g,'♯').replace(/b/g,'♭')+(k.mode==='m'?'m':k.mode?' '+k.mode:''):'';}
+exports.notationStatus=function(wiki,concert,written){
+ var v=current(),a=keyName(concert),b=keyName(written);if(!v.semitones||!a||!b)return '';
+ var parts=[],en=language(wiki)==='en';
+ if(active!=='c')parts.push(profiles[active].button);
+ if(v.capo)parts.push('Capo '+v.capo);
+ parts.push((en?'Notes: ':'Noder: ')+b,(en?'Sounds: ':'Klinger: ')+a);
+ return parts.join(' · ');
+};
 exports.printLabel=function(wiki){return (active==='c'&&preferences.capo?(language(wiki)==='en'?'Capo shapes':'Capogreb'):label(current(),language(wiki),'print'))+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+strings.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
 })();

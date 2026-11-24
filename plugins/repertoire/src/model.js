@@ -79,7 +79,19 @@ function createSetlist(wiki,orchestraTitle,name){
   name:name,list:"","repertoire-overrides":"{}",text:""});
  return title;
 }
-function entries(wiki,setlistTitle){return wiki.getTiddlerList(setlistTitle,"list")||[];}
+// An orchestra is also a read-only collection of its entire repertoire.
+// No synthetic setlist or duplicate music tiddlers are stored in the wiki.
+function collection(wiki,title){
+ var t=wiki.getTiddler(title);if(!t)return null;
+ if(t.fields[KIND]!=="orchestra")return t;
+ return {fields:Object.assign({},t.fields,{name:"Hele repertoiret","orchestra-title":title})};
+}
+function collections(wiki){return orchestras(wiki).flatMap(function(o){return setlists(wiki,o.fields.title).concat([collection(wiki,o.fields.title)]);});}
+function entries(wiki,setlistTitle){
+ var t=wiki.getTiddler(setlistTitle);
+ if(t&&t.fields[KIND]==="orchestra")return items(wiki,setlistTitle).map(function(item){return item.fields.title;});
+ return wiki.getTiddlerList(setlistTitle,"list")||[];
+}
 function setEntries(wiki,setlistTitle,titles){
  var list=wiki.getTiddler(setlistTitle);if(!list||list.fields[KIND]!=="setlist")throw Error("Sætlisten findes ikke.");
  var allowed=Object.create(null);
@@ -165,6 +177,7 @@ exports.importTitles=importTitles;
 exports.setlists=setlists;
 exports.createSetlist=createSetlist;
 exports.entries=entries;
+exports.collection=collection;exports.collections=collections;
 exports.setEntries=setEntries;
 exports.addEntry=addEntry;
 exports.sourceAgreement=sourceAgreement;

@@ -8,3 +8,12 @@ tags: $:/tags/Stylesheet
 .huwabc-instrument-group .huwabc-instrument-select:focus-visible{outline:2px solid #2a8670;outline-offset:2px;}
 @media(max-width:520px){.huwabc-instrument-group .huwabc-instrument-select{max-width:190px;font-size:13px;}.huwabc-instrument-legend{flex-basis:100%;}}
 @media print{.huwabc-instrument-bar{display:none!important;}}
+
+/* One quiet reading-only caption; no additional buttons or score copies. */
+.huwabc-notation-status{display:none;flex:none;box-sizing:border-box;padding:3px 12px;color:#586b61;background:transparent;font:500 11px/1.4 system-ui,sans-serif;text-align:center;}
+.huwabc-page-is-desk>.huwabc-notation-status:not([hidden]),
+.huwabc-reader-active>.huwabc-page-shell>.huwabc-notation-status:not([hidden]){display:block;}
+.huwabc-reader-active>.huwabc-page-shell>.huwabc-notation-status{padding:8px 112px 4px 14px;text-align:left;}
+.huwabc-page-choice[hidden],.huwabc-page-nav[hidden],.huwabc-page-dots[hidden],.huwabc-page-transport[hidden],.huwabc-reader-field[hidden],.huwabc-reader-counter[hidden]{display:none!important;}
+.huwabc-reader-options:has(>.huwabc-reader-field[hidden]){grid-template-columns:1fr;}
+@media print{.huwabc-notation-status{display:none!important;}}

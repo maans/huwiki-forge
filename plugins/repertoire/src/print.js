@@ -13,7 +13,7 @@ function shortTitle(title,orchestra){var prefix=String(orchestra||"").trim()+" �
 function wikiLink(number,name,title){return "[["+number+". "+clean(name).replace(/[|\[\]]/g," ")+"|"+String(title).replace(/[|\[\]]/g," ")+"]]";}
 function open(wiki,setlistTitle,widget,options){
  options=options||{};
- var set=wiki.getTiddler(setlistTitle);
+ var set=model.collection(wiki,setlistTitle);
  if(!set)return {error:"Vælg først en sætliste."};
  if(!widget||typeof widget.dispatchEvent!=="function")return {error:"Udgivelse kræver det åbne repertoire."};
  var site=!!options.site,scores=!!options.scores,publisher=site?"$:/plugins/huwiki/site-publisher":"$:/plugins/huwiki/print-article";

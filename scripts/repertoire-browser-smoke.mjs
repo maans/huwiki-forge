@@ -376,6 +376,27 @@ try{
  await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-page-select")?.value==="spread");
  assert.ok(!errors.some(e=>/huwiki-repertoire-book|repertoire\/book-widget|Repertoire/.test(e)),
   "No Repertoire runtime errors: "+errors.join("; "));
+ // Whole-orchestra reading uses the original repertoire, without creating a set.
+ await book.locator('.huwabc-reader-menu').click();
+ await book.locator('.huwabc-reader-close').click();
+ const choices=book.locator('.huwrep-book-select');
+ const allOption=await choices.locator('option').evaluateAll(options=>options.find(o=>o.textContent.endsWith('Hele repertoiret'))?.value);
+ assert.ok(allOption,'every orchestra offers its whole repertoire');
+ const originals=await page.evaluate(()=>JSON.stringify($tw.wiki.filterTiddlers('[has[abc-source]]').map(t=>[t,$tw.wiki.getTiddler(t).fields['abc-source']])));
+ await choices.selectOption(allOption);
+ await page.waitForFunction(()=>document.querySelector('.huwrep-book-heading span')?.textContent.includes('/ 18'));
+ await book.locator('.huwabc-open-reader').click();
+ await book.locator('.huwabc-reader-list').click();
+ await book.locator('.huwrep-book-list-search').fill('Låt från Dalarne');
+ await book.locator('.huwrep-book-list-items button:visible').click();
+ await page.waitForFunction(()=>document.querySelector('.huwrep-book-heading h2')?.textContent.includes('Låt från Dalarne'));
+ await page.waitForFunction(()=>document.querySelector('.huwrep-book')?.classList.contains('huwrep-book-one-page'));
+ assert.equal(await book.locator('.huwabc-reader-next').isVisible(),true,'collection navigation remains useful on a one-page tune');
+ await book.locator('.huwabc-reader-next').click();
+ await page.waitForFunction(()=>!document.querySelector('.huwrep-book-heading h2')?.textContent.includes('Låt från Dalarne'));
+ await book.locator('.huwabc-reader-prev').click();
+ await page.waitForFunction(()=>document.querySelector('.huwrep-book-heading h2')?.textContent.includes('Låt från Dalarne'));
+ assert.equal(await page.evaluate(()=>JSON.stringify($tw.wiki.filterTiddlers('[has[abc-source]]').map(t=>[t,$tw.wiki.getTiddler(t).fields['abc-source']]))),originals);
  console.log("Repertoire browser acceptance: direct Nodebog, searchable drawer, Music Minus One, metronome, one/two-page rotation");
  await context.close();
 }finally{await browser.close();}

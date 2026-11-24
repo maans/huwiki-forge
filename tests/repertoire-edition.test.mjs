@@ -27,6 +27,18 @@ function makeWiki(){
  return {model:context.exports,wiki,Tiddler};
 }
 
+test('The whole repertoire is a live reading collection without storing another setlist',()=>{
+ const {wiki,model,Tiddler}=makeWiki();
+ const orchestra=model.orchestra(wiki,'Silba Ätno');
+ for(const title of ['Tune B','Tune A']){model.addPiece(wiki,title);model.addItem(wiki,orchestra,title);}
+ const set=model.createSetlist(wiki,orchestra,'Koncert');model.addEntry(wiki,set,model.items(wiki,orchestra)[0].fields.title);
+ const before=JSON.stringify(wiki.allTitles().map(t=>wiki.getTiddler(t).fields));
+ assert.equal(model.collection(wiki,orchestra).fields.name,'Hele repertoiret');
+ assert.equal(model.collections(wiki).length,2);
+ assert.equal(model.entries(wiki,orchestra).length,2);assert.equal(model.entries(wiki,set).length,1);
+ assert.equal(JSON.stringify(wiki.allTitles().map(t=>wiki.getTiddler(t).fields)),before);
+});
+
 test("Repertoire installs its shared ABC print engine automatically",async()=>{
  assert.equal(pkg.title,"$:/plugins/huwiki/repertoire");
  assert.equal(pkg.version,JSON.parse(await readFile(new URL("../plugins/repertoire/plugin-info.json",import.meta.url),"utf8")).version);

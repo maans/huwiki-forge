@@ -45,3 +45,11 @@ test('A multi-bar second ending keeps its existing system breaks',()=>{
 test('Both notation rules are shipped from their versioned sources',async()=>{
  for(const name of ['minor-spelling.js','volta-layout.js','sheet-layout.js'])assert.equal(entries[prefix+name].text,await readFile(new URL('plugins/abc/src/'+name,root),'utf8'));
 });
+test('Music-stand caption distinguishes written and concert keys only when they differ',()=>{
+ const view=load('instrument-view.js'),concert={root:'F',acc:'#',mode:'m'},written={root:'D',acc:'',mode:'m'};
+ view.change('c');view.setCapo(4);
+ assert.equal(view.notationStatus(null,concert,written),'Capo 4 · Noder: Dm · Klinger: F♯m');
+ view.setCapo(0);assert.equal(view.notationStatus(null,concert,concert),'');
+ view.change('bb');assert.match(view.notationStatus(null,{root:'C',mode:''},{root:'D',mode:''}),/^B♭ · Noder: D · Klinger: C$/);
+ view.change('c');
+});
