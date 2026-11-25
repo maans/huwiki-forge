@@ -23,7 +23,7 @@ try{
   assert.equal(await archive.locator('h2').count(),0,'archive heading should not be repeated');
   assert.equal(await archive.locator('.huwabc-suggestion').count(),6);
   assert.equal(await archive.locator('.huwabc-search-save').isVisible(),false,'empty selection stays hidden');
-  const openLabel=await page.locator('.tc-sidebar-lists').innerText();
+  const openLabel=await page.locator('.tc-sidebar-tabs').innerText();
   assert.ok(openLabel.includes(title),'sidebar uses the friendly archive title');
   assert.ok(!openLabel.includes('/browse'),'sidebar never exposes the internal browse path');
   const frame=archive.locator('xpath=ancestor::*[contains(concat(" ",normalize-space(@class)," ")," tc-tiddler-frame ")]');
