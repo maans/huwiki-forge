@@ -33,7 +33,7 @@ try{
  assert.equal(await actions.locator(".silba-action-label").count(),5,"Icon links retain accessible names");
  const archiveAction=actions.filter({hasText:"Nodearkiv"});
  assert.equal(await archiveAction.count(),1,"The source archive has one recognizable hero action");
- assert.equal(decodeURIComponent((await archiveAction.getAttribute("href")).slice(1)),"$:/plugins/huwiki/musescore-bank-silba-atno/browse",
+ assert.equal(decodeURIComponent((await archiveAction.getAttribute("href")).slice(1)),"Nodearkiv · Silba Ätno",
   "Nodearkiv links to Silba Ätno’s installed catalogue");
  for(const width of [1000,800,690,520,360]){
   await page.locator(".silba-home").evaluate((node,w)=>node.style.width=w+"px",width);

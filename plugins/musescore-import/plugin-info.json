@@ -1,4 +1,4 @@
 {
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "DA: MuseScore/MusicXML → ABC med nodearkiv, stemmevalg, node-preview og TiddlyWiki-import. EN: Import MuseScore/MusicXML from source catalogues with voice selection, score preview and native import review."
 }

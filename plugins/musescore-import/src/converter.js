@@ -114,6 +114,10 @@ function museVoice(v,measure,model){var out=[],beam=0,beamActive=false,tuplet=nu
   if(tag==='Tempo'){var q=num(n,'tempo',null);if(q){var syms=els(xp(n,'text'),'sym').map(function(e){return e.textContent});var note=syms.some(function(s){return /Half/i.test(s);})?'1/2':syms.some(function(s){return /Eighth/i.test(s);})?'1/8':'1/4';var dotted=syms.some(function(s){return /AugmentationDot/i.test(s)});var nlen=note==='1/2'?.5:note==='1/8'?.125:.25;if(dotted){nlen*=1.5;note=note==='1/4'?'3/8':note==='1/8'?'3/16':'3/4';}out.push({kind:'tempo',value:note+'='+Math.round(q*60*.25/nlen)});}continue;}
   if(tag==='Harmony'){var t=el(n,'harmonyInfo')||n;var h=harmony(num(t,'root',null),tx(t,'name',''));var bass=num(t,'base',num(t,'bass',null));if(bass!==null&&bass>=0&&h)h+='/'+harmony(bass,'');
    if(h)out.push({kind:'harmony',value:h,at:cursor});continue;}
+  if(tag==='RepeatMeasure'||tag==='MeasureRepeat'){
+   out.push({kind:'measure-repeat',bars:num(n,'subtype',1)});
+   cursor+=ratio(tx(n,'duration'),meterFraction(measure.meter)||1);continue;
+  }
   if(tag==='RehearsalMark'){var txt=cleanTitle(tx(n,'text'));if(txt)out.push({kind:'part',value:txt});continue;}
   if(tag==='location'){
    var fractions=ratio(tx(n,'fractions'),null);
@@ -131,6 +135,26 @@ function museVoice(v,measure,model){var out=[],beam=0,beamActive=false,tuplet=nu
  }
  return out;
 }
+// MuseScore's one-bar repeat sign stands for the previous bar's notes,
+// not an empty measure. Resolve in score order so consecutive signs work.
+// Keep the destination bar's harmonies, marks and score-level changes.
+function expandMuseMeasureRepeats(measures,model){
+ measures.forEach(function(measure,index){
+  measure.voices=measure.voices.map(function(events,voice){
+   var expanded=[];
+   events.forEach(function(event){
+    if(event.kind!=='measure-repeat'){expanded.push(event);return;}
+    var previous=index>0?measures[index-1].voices[voice]:null;
+    var music=(previous||[]).filter(function(item){return item.kind==='note'||item.kind==='rest';});
+    if(event.bars!==1||!music.length){
+     markWarn(model,'Taktgentagelsen i takt '+(index+1)+' kan ikke udvides; kontrollér originalens gentagelsestegn.');return;
+    }
+    music.forEach(function(item){expanded.push(JSON.parse(JSON.stringify(item)));});
+   });
+   return expanded;
+  });
+ });
+}
 function parseMuse(raw,filename){var root=xml(raw),score=root.localName==='Score'?root:el(root,'Score');if(!score)throw Error('Ikke en MuseScore MSCX-fil.');
  var model={format:'mscx',name:filename,version:tx(root,'programVersion'),title:'',composer:'',warnings:[],staves:[],totalMeasures:0};
  for(var a=0;a<els(score,'metaTag').length;a++){var t=els(score,'metaTag')[a];if(t.getAttribute('name')==='composer')model.composer=cleanTitle(t.textContent);if(t.getAttribute('name')==='workTitle')model.title=cleanTitle(t.textContent);}
@@ -141,6 +165,7 @@ function parseMuse(raw,filename){var root=xml(raw),score=root.localName==='Score
    Array.from(m.getElementsByTagName('Spanner')).forEach(function(sp){if(sp.getAttribute('type')==='Volta'){var v=tx(sp,'Volta/endings',tx(sp,'Volta/beginText',''));if(v)result.endingStart=String(v).replace(/[^0-9,\-]/g,'');}});
    var layers=els(m,'voice');if(!layers.length)layers=[m];
    layers.forEach(function(v){result.voices.push(museVoice(v,result,model));});staffMeter=result.meter;return result;});
+  expandMuseMeasureRepeats(measures,model);
   var staffFirstClef=null;for(var ci=0;ci<measures.length&&!staffFirstClef;ci++){for(var cj=0;cj<measures[ci].voices.length&&!staffFirstClef;cj++){var ce=measures[ci].voices[cj].find(function(e){return e.kind==='clef';});if(ce)staffFirstClef=ce.value;}}if(staffFirstClef)info.clef=staffFirstClef;
   var maxVoices=Math.max(1,measures.reduce(function(n,m){return Math.max(n,m.voices.length);},0));
   var voices=[];for(var v=0;v<maxVoices;v++){var count=measures.reduce(function(sum,m){return sum+(m.voices[v]||[]).filter(function(e){return e.kind==='note';}).length;},0);if(count||v===0||measures.some(m=>(m.voices[v]||[]).some(e=>e.kind==='harmony'||e.kind==='rest')))voices.push({id:id+':'+v,index:v,label:(info.name||('Stemme '+(idx+1)))+(maxVoices>1?' · stemme '+(v+1):''),count:count,clef:info.clef});}

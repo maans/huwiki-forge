@@ -290,7 +290,9 @@ ImportWidget.prototype.createAbcFields=function(model,state,sourceText){
  if(title.indexOf('$:/')===0)title='Importeret '+title;
  var originals=[];
  model.staves.forEach(function(st){if(st.name&&st.voices.some(function(v){return state.selected.indexOf(v.id)>=0;})&&originals.indexOf(st.name)<0)originals.push(st.name);});
- var fields={title:title,text:tr('Importeret fra ')+model.name+'\n\n'+tr('Redigér musikken med ABC-editoren.'),tags:['ABC','Musik'],type:'text/vnd.tiddlywiki','abc-source':sourceText,'huwiki-import-source':model.name,'huwiki-import-format':model.format,'huwiki-import-staves':state.selected.join(','),'huwiki-import-original-instruments':originals.join(' / '),'huwiki-import-range':state.start+'-'+state.end,'abc-bars-per-line':String(state.barsPerLine||4)};
+ // Keep the reviewed measures-per-line layout after import. Part labels stay
+ // visible, and the reader's section-break option can still be enabled later.
+ var fields={title:title,text:tr('Importeret fra ')+model.name+'\n\n'+tr('Redigér musikken med ABC-editoren.'),tags:['ABC','Musik'],type:'text/vnd.tiddlywiki','abc-source':sourceText,'huwiki-import-source':model.name,'huwiki-import-format':model.format,'huwiki-import-staves':state.selected.join(','),'huwiki-import-original-instruments':originals.join(' / '),'huwiki-import-range':state.start+'-'+state.end,'abc-bars-per-line':String(state.barsPerLine||4),'abc-parts-new-line':'no'};
  ['abc-origin-library','abc-origin-entry','abc-origin-sha256','abc-origin-url','abc-collection','huwiki-source-date','huwiki-source-contributor'].forEach(function(key){if(model.catalogueProvenance&&typeof model.catalogueProvenance[key]==='string')fields[key]=model.catalogueProvenance[key];});
  return fields;
 };

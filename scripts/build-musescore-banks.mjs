@@ -17,11 +17,12 @@ for(const id of ['akustisk-elektrisk','silba-atno']){
   if(createHash('sha256').update(bytes).digest('hex')!==entry.sha256||bytes.length!==entry.bytes)throw Error('Source integrity failure: '+entry.sourceFile);
  }
  for(const [family,counts] of families)if(counts[1]!==1)throw Error('One preferred source required: '+family);
- const title=info.title+'/index',browse=info.title+'/browse',titleFilter=info.title+'/title-filter',titleTemplate=info.title+'/title',payload={tiddlers:{
+ const title=info.title+'/index',browse=info.title+'/browse',page='Nodearkiv · '+index.name,titleFilter=info.title+'/title-filter',titleTemplate=info.title+'/title',payload={tiddlers:{
   [title]:{title,tags:'$:/tags/MuseScoreCatalogue',type:'application/json',text:JSON.stringify(index)},
-  [browse]:{title:browse,caption:'Nodearkiv',type:'text/vnd.tiddlywiki',text:'<$huwiki-abc-search source="bank:'+id+'"/>'},
-  [titleFilter]:{title:titleFilter,tags:'$:/tags/ViewTemplateTitleFilter','list-before':'$:/config/ViewTemplateTitleFilters/system',text:'[match['+browse+']then['+titleTemplate+']]'},
-  [titleTemplate]:{title:titleTemplate,type:'text/vnd.tiddlywiki',text:'\\whitespace trim\n<h2 class="tc-title"><$view field="caption" format="text"/></h2>\n'}
+  [browse]:{title:browse,caption:'Nodearkiv',type:'text/vnd.tiddlywiki',text:'<$transclude $tiddler="'+page+'"/>'},
+  [page]:{title:page,caption:'Nodearkiv',type:'text/vnd.tiddlywiki',text:'<$huwiki-abc-search source="bank:'+id+'"/>'},
+  [titleFilter]:{title:titleFilter,tags:'$:/tags/ViewTemplateTitleFilter','list-before':'$:/config/ViewTemplateTitleFilters/system',text:'[match['+browse+']then['+titleTemplate+']] [match['+page+']then['+titleTemplate+']]'},
+  [titleTemplate]:{title:titleTemplate,type:'text/vnd.tiddlywiki',text:'\\whitespace trim\n<h2 class="tc-title huwabc-archive-title" style="font-size:1.5rem;line-height:1.25;margin:0"><$view field="caption" format="text"/></h2>\n'}
  }};
  const text=JSON.stringify({...info,text:JSON.stringify(payload)},null,2)+'\n',target=new URL('plugins/musescore-bank-'+id+'/dist/plugin.json',root);
  if(check){if(await readFile(target,'utf8')!==text)throw Error('Stale bank plugin '+id);}else await writeFile(target,text);

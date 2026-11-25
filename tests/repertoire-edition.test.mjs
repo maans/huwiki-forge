@@ -317,7 +317,7 @@ test("SilbaÄtno heading and icon actions respond to the actual wiki article wid
  assert.equal((home.text.match(/class="silba-(?:primary|secondary) silba-action"/g)||[]).length,5);
  assert.equal((home.text.match(/class="silba-action-label"/g)||[]).length,5);
  assert.equal((home.text.match(/<svg viewBox=/g)||[]).length,5);
- assert.match(home.text,/<\$link to="\$:\/plugins\/huwiki\/musescore-bank-silba-atno\/browse" class="silba-secondary silba-action" tooltip="Søg i nodearkivet">[\s\S]*?<span class="silba-action-label">Nodearkiv<\/span><\/\$link>/,
+ assert.match(home.text,/<\$link to="Nodearkiv · Silba Ätno" class="silba-secondary silba-action" tooltip="Søg i nodearkivet">[\s\S]*?<span class="silba-action-label">Nodearkiv<\/span><\/\$link>/,
   "the archive action opens this orchestra's installed source catalogue and has a visible label");
 });
 
