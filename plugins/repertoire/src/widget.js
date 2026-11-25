@@ -9,6 +9,7 @@ var Widget=require("$:/core/modules/widgets/widget.js").widget;
 var model=require("$:/plugins/huwiki/repertoire/model.js");
 var Printing=require("$:/plugins/huwiki/repertoire/print.js");
 var Reorder=require("$:/plugins/huwiki/repertoire/reorder.js");
+var scoreQueuesByWiki=new WeakMap();
 function el(doc,tag,cls,text) {
  var n=doc.createElement(tag);if(cls)n.className=cls;
  if(text!==undefined)n.textContent=String(text);return n;
@@ -73,6 +74,110 @@ Repertoire.prototype.navigate=function(title){
  this.dispatchEvent({type:"tm-navigate",navigateTo:title,
   navigateFromTitle:this.getVariable("currentTiddler"),navigateFromNode:this,
   navigateSuppressNavigation:false});
+};
+Repertoire.prototype.addScorePicker=function(panel,orch,setTitle){
+ var self=this,doc=this.document,wiki=this.wiki;
+ var Banks,Importer;
+ try{
+  Banks=require("$:/plugins/huwiki/abc/musescore-bank.js");
+  Importer=require("$:/plugins/huwiki/musescore-import/widget.js")["huwiki-ms-import"];
+ }catch(error){return;}
+ if(!Importer||!Importer.prototype.openCatalogueFiles)return;
+ this.scoreQueues=scoreQueuesByWiki.get(wiki)||new Map();
+ scoreQueuesByWiki.set(wiki,this.scoreQueues);
+ var queue=this.scoreQueues.get(setTitle)||new Map();
+ this.scoreQueues.set(setTitle,queue);
+ var search=labelled(doc,"Find nummer","","input");
+ search.input.type="search";
+ search.input.autocomplete="off";
+ var results=el(doc,"div","huwrep-inline"),chosen=el(doc,"div","huwrep-inline");
+ var status=el(doc,"p","huwrep-muted"),preview=el(doc,"div","");
+ status.setAttribute("role","status");
+ var catalogues=Banks.list(wiki),indexes=null,loading=null;
+ var songs=model.songs(wiki).filter(function(song){
+  return typeof song.fields["abc-source"]==="string"||song.fields.type==="text/vnd.abc";
+ });
+ function renderQueue(){
+  chosen.textContent="";
+  queue.forEach(function(item,key){
+   chosen.appendChild(button(doc,item.entry.title+" ×",function(){queue.delete(key);renderQueue();}));
+  });
+  run.disabled=!queue.size;
+  run.hidden=!queue.size;
+  run.textContent="Importér valgte noder ("+Math.min(queue.size,20)+")";
+ }
+ var run=button(doc,"",async function(){
+  if(run.disabled)return;
+  run.disabled=true;
+  status.textContent="Henter de valgte nodefiler …";
+  var files=[],errors=[];
+  for(var item of Array.from(queue.values()).slice(0,20)){
+   try{
+    var file=await Banks.file(item.entry);
+    files.push({file:file,title:item.entry.title,provenance:Banks.provenance(item.bank,item.entry)});
+   }catch(error){errors.push(item.entry.title+": "+error.message);}
+  }
+  if(!preview.isConnected)return;
+  try{
+   if(files.length){
+    preview.textContent="";
+    var importer=new Importer({type:"huwiki-ms-import",attributes:{}},{wiki:wiki,parentWidget:self,document:doc});
+    importer.render(preview,null);
+    await importer.openCatalogueFiles(files);
+   }
+   status.textContent=errors.join(" · ");
+  }catch(error){status.textContent=errors.concat(error.message).join(" · ");}
+  renderQueue();
+ },"huwrep-primary");
+ panel.append(search.wrap,results,chosen,run,status,preview);
+ renderQueue();
+ function complete(){
+  var query=Banks.normalize(search.input.value).trim();
+  results.textContent="";
+  if(query.length<2)return;
+  if(!loading){
+   loading=Promise.allSettled(catalogues.map(function(bank){return Banks.index(bank.id,wiki);}));
+   loading.then(function(loaded){
+    indexes=loaded;
+    if(search.input.isConnected)complete();
+   });
+  }
+  var matches=songs.filter(function(song){return Banks.normalize(song.fields.title).includes(query);});
+  matches.slice(0,8).forEach(function(song){
+   results.appendChild(button(doc,song.fields.title+" · Wiki",function(){
+    self.activeItem=model.addItem(wiki,orch,song.fields.title).title;
+    model.addEntry(wiki,setTitle,self.activeItem);
+    self.draw();
+    if(self.scoreSearch)self.scoreSearch.focus();
+   }));
+  });
+  var count=matches.length;
+  (indexes||[]).forEach(function(index,i){
+   if(index.status!=="fulfilled")return;
+   Banks.filter(index.value,query).forEach(function(group){
+    group.matched.filter(function(entry){return /^(mscz|mscx|musicxml|mxl)$/.test(entry.format);}).forEach(function(entry){
+     if(count>=12)return;
+     var bank=catalogues[i],key=bank.id+":"+entry.id;
+     var alreadyImported=songs.some(function(song){
+      return song.fields["abc-origin-library"]==="musescore-bank:"+bank.id&&song.fields["abc-origin-entry"]===entry.id;
+     });
+     if(queue.has(key)||alreadyImported)return;
+     count++;
+     var label=entry.title+" · "+bank.name+[entry.arrangement,entry.date].filter(Boolean).map(function(part){return " · "+part;}).join("");
+     results.appendChild(button(doc,label,function(){
+      queue.set(key,{bank:bank,entry:entry});
+      search.input.value="";
+      results.textContent="";
+      renderQueue();
+      search.input.focus();
+     }));
+    });
+   });
+  });
+  if(!results.children.length)results.appendChild(el(doc,"span","huwrep-muted",!indexes?"Søger i Nodearkivet …":"Ingen forslag"));
+ }
+ this.scoreSearch=search.input;
+ search.input.addEventListener("input",complete);
 };
 Repertoire.prototype.draw=function(){
  var self=this,doc=this.document,host=this.host,wiki=this.wiki;
@@ -208,6 +313,7 @@ Repertoire.prototype.draw=function(){
  if(!setTitle)return;
  var stand=el(doc,"div","huwrep-panel huwrep-stand");host.appendChild(stand);
  stand.appendChild(el(doc,"h3","","Aktuel sætliste · "+list.length+" numre"));
+ this.addScorePicker(stand,orch,setTitle);
  if(!list.length){
   stand.appendChild(el(doc,"p","huwrep-muted","Tilføj numre fra repertoiret ovenfor."));
   if(known.length)stand.appendChild(button(doc,"Tilføj alle",function(){
@@ -327,6 +433,27 @@ Repertoire.prototype.draw=function(){
 };
 Repertoire.prototype.refresh=function(changedTiddlers){
  var keys=Object.keys(changedTiddlers||{}),pending=this._ownReorder;
+ if(this.scoreQueues){
+  var wiki=this.wiki,imported=new Map();
+  keys.forEach(function(title){
+   var t=wiki.getTiddler(title),fields=t&&t.fields;
+   if(fields&&fields["abc-source"]&&fields["abc-origin-entry"]){
+    imported.set(fields["abc-origin-library"]+":"+fields["abc-origin-entry"],title);
+   }
+  });
+  this.scoreQueues.forEach(function(queue,setTitle){
+   var set=wiki.getTiddler(setTitle);
+   if(!set||!imported.size)return;
+   var additions=[];
+   queue.forEach(function(item,key){
+    var title=imported.get("musescore-bank:"+key);
+    if(!title)return;
+    additions.push(model.addItem(wiki,set.fields["orchestra-title"],title).title);
+    queue.delete(key);
+   });
+   if(additions.length)model.setEntries(wiki,setTitle,model.entries(wiki,setTitle).concat(additions));
+  });
+ }
  // Reorder has already updated the existing rows; ignore only this exact
  // internal list write. Other edits or external changes must refresh normally.
  if(pending&&keys.length===1&&keys[0]===pending.title){
@@ -335,7 +462,12 @@ Repertoire.prototype.refresh=function(changedTiddlers){
  }
  if(pending&&keys.indexOf(pending.title)>=0)this._ownReorder=null;
  var affected=keys.some(function(title){return title.indexOf("Repertoire/")===0;});
- if(affected){this.refreshSelf();return true;}
+ if(affected){
+  var keepFocus=this.document.activeElement===this.scoreSearch;
+  this.refreshSelf();
+  if(keepFocus&&this.scoreSearch)this.scoreSearch.focus();
+  return true;
+ }
  return false;
 };
 exports["huwiki-repertoire"]=Repertoire;
