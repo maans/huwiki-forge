@@ -3,12 +3,12 @@
   "name": "ABC Musik",
   "title": "$:/plugins/huwiki/abc",
   "stability": "experimental",
-  "description": "ABC Musik – Normal visning som standard, Avanceret som tilvalg, sidetal kun i Nodepult",
+  "description": "ABC Musik · søg i originale MuseScore-nodearkiver og vælg før forhåndsvisning og import",
   "plugin-type": "plugin",
   "license": "MIT",
   "type": "application/json",
-  "version": "0.3.50",
+  "version": "0.3.51",
   "author": "HUWiki",
-  "revision": "8",
-  "modified": "20261124070000000"
+  "revision": "9",
+  "modified": "20261125010000000"
 }
