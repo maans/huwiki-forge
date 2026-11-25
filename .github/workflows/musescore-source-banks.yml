@@ -35,6 +35,7 @@ jobs:
       - name: Verify original sources and importer packages
         run: |
           node scripts/build-musescore-banks.mjs --check
+          node scripts/build-musescore-import.mjs
           node scripts/build-musescore-import.mjs --check
       - name: Assemble matching public packages and wikis
         run: |
@@ -53,7 +54,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- plugins/abc/dist/plugin.json library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json editions/akustisk-elektrisk-repertoire/index.html editions/silba-atno-repertoire/index.html
+          git add -- plugins/musescore-import/dist/plugin.json plugins/abc/dist/plugin.json library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json editions/akustisk-elektrisk-repertoire/index.html editions/silba-atno-repertoire/index.html
           if ! git diff --cached --quiet; then
             git commit -m 'build: assemble verified MuseScore node archives and repertoire wikis'
             git push origin "HEAD:${GITHUB_REF_NAME}"

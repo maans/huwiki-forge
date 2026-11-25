@@ -170,7 +170,12 @@ ImportWidget.prototype.readModel=async function(file){
    if(!eligible.length)throw Error('Ingen '+(ext==='mscz'?'MSCX':'MusicXML')+'-fil fundet inde i arkivet.');
    if(ext==='mxl'||ext==='mscz'){
      var m=names.find(function(x){return /^META-INF\/container\.xml$/i.test(x);});
-     if(m){var container=await zipped.file(m).async('string');var found=container.match(/full-path\s*=\s*["']([^"']+)["']/);if(found&&zipped.file(found[1]))eligible=[found[1]];}
+     if(m){
+       var container=await zipped.file(m).async('string'),roots=/full-path\s*=\s*["']([^"']+)["']/g,found;
+       // MuseScore 4 can list a style before the score; container order must
+       // only choose between the score files already accepted above.
+       while((found=roots.exec(container))){if(eligible.indexOf(found[1])>=0){eligible=[found[1]];break;}}
+     }
    }
    var entry=zipped.file(eligible[0]);if(entry._data&&entry._data.uncompressedSize>MAX_XML)throw Error('Indholdet er for stort (over 18 MB).');
    raw=await entry.async('string');
