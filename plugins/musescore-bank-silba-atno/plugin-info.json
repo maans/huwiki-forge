@@ -4,7 +4,7 @@
   "name": "Silba Ätno · Nodearkiv",
   "description": "Silba Ätno · søgbart katalog over originale MuseScore-filer / searchable original score catalogue",
   "author": "HUWiki Forge",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "plugin-type": "plugin",
   "dependents": "$:/plugins/huwiki/abc $:/plugins/huwiki/musescore-import",
   "requires-reload": "yes",

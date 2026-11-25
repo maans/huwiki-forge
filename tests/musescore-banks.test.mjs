@@ -43,7 +43,14 @@ test('a selected original is fetched alone and checked against its recorded hash
 test('the archives contain originals and metadata, with one preferred version and no hidden ABC imports',async()=>{
  for(const id of ['akustisk-elektrisk','silba-atno']){
   const index=id==='akustisk-elektrisk'?ae:silba,pkg=await json('plugins/musescore-bank-'+id+'/dist/plugin.json'),payload=JSON.parse(pkg.text);
-  assert.equal(Object.keys(payload.tiddlers).length,2);assert.ok(!pkg.text.includes('abc-source'));assert.match(payload.tiddlers[pkg.title+'/browse'].text,/huwiki-abc-search source="bank:/);
+  assert.equal(Object.keys(payload.tiddlers).length,4);assert.ok(!pkg.text.includes('abc-source'));assert.match(payload.tiddlers[pkg.title+'/browse'].text,/huwiki-abc-search source="bank:/);
+  assert.equal(pkg.version,'0.1.1');
+  assert.equal(payload.tiddlers[pkg.title+'/browse'].caption,'Nodearkiv');
+  const titleFilter=payload.tiddlers[pkg.title+'/title-filter'],titleTemplate=payload.tiddlers[pkg.title+'/title'];
+  assert.equal(titleFilter.tags,'$:/tags/ViewTemplateTitleFilter');
+  assert.equal(titleFilter['list-before'],'$:/config/ViewTemplateTitleFilters/system');
+  assert.equal(titleFilter.text,'[match['+pkg.title+'/browse]then['+pkg.title+'/title]]','only this archive receives the friendly title');
+  assert.match(titleTemplate.text,/<h2 class="tc-title"><\$view field="caption" format="text"\/><\/h2>/);
   for(const group of bankHarness().filter(index,'')){assert.equal(group.versions.filter(v=>v.preferred).length,1);const dates=group.versions.map(v=>v.date).sort().reverse();assert.equal(group.preferred.date,dates[0]);}
   assert.ok(index.entries.every(e=>e.format!=='pdf'));assert.ok(!bankHarness().filter(index,'Those Who Were').length);
  }
