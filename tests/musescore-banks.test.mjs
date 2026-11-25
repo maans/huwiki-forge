@@ -71,7 +71,43 @@ test('closing a catalogue preview invalidates an in-flight source parse',async()
  const loading=widget.openCatalogueFiles([{file:{name:'a.mscz'}}]);widget.onDestroy();release({staves:[],totalMeasures:0});assert.equal(await loading,false);assert.equal(widget.stage,undefined);
 });
 test('the maintained importer widget is bundled verbatim',async()=>{
- const pkg=await json('plugins/musescore-import/dist/plugin.json'),payload=JSON.parse(pkg.text);assert.equal(payload.tiddlers[pkg.title+'/widget.js'].text,widgetSource);assert.equal(pkg.version,'0.1.7');
+ const pkg=await json('plugins/musescore-import/dist/plugin.json'),payload=JSON.parse(pkg.text);assert.equal(payload.tiddlers[pkg.title+'/widget.js'].text,widgetSource);assert.equal(pkg.version,'0.1.8');
+});
+
+function archiveImporterHarness(contents){
+ const exports={},reads=[],parsed=[];
+ class Widget{initialise(tree,options){this.wiki=options.wiki;}}
+ const files=Object.fromEntries(Object.entries(contents).map(([name,text])=>[name,{dir:false,async:async()=>{reads.push(name);return text;}}]));
+ const zipped={files,file:name=>files[name]};
+ const converter={parseMuse:(text,name)=>{parsed.push({kind:'muse',text,name});return {title:'Muse score'};},parseMusicXML:(text,name)=>{parsed.push({kind:'musicxml',text,name});return {title:'MusicXML score'};}};
+ runInNewContext(widgetSource,{exports,WeakMap,require:name=>name==='$:/core/modules/widgets/widget.js'?{widget:Widget}:name.endsWith('/jszip.js')?{loadAsync:async()=>zipped}:name.endsWith('/converter.js')?converter:{}});
+ return {widget:new exports['huwiki-ms-import']({}, {wiki:{}}),reads,parsed};
+}
+test('MuseScore 4 container style roots do not replace the MSCX score',async()=>{
+ const {widget,reads,parsed}=archiveImporterHarness({
+  'other.mscx':'unused score',
+  'score_style.mss':'style settings',
+  'Pictures/cover.png':'cover image',
+  'om-dagen.mscx':'selected MuseScore notation',
+  'META-INF/container.xml':'<container><rootfiles><rootfile full-path="score_style.mss"/><rootfile full-path="Pictures/cover.png"/><rootfile full-path="om-dagen.mscx"/></rootfiles></container>'
+ });
+ const model=await widget.readModel({name:'om-dagen.mscz',size:100,arrayBuffer:async()=>new ArrayBuffer(0)});
+ assert.equal(model.name,'om-dagen.mscz');
+ assert.deepEqual(reads,['META-INF/container.xml','om-dagen.mscx']);
+ assert.deepEqual(parsed,[{kind:'muse',text:'selected MuseScore notation',name:'om-dagen.mscz'}]);
+});
+test('MusicXML container metadata roots are ignored before selecting the declared score',async()=>{
+ const {widget,reads,parsed}=archiveImporterHarness({
+  'other.xml':'unused score',
+  'META-INF/metadata.xml':'archive metadata',
+  'score_style.mss':'style settings',
+  'scores/main.musicxml':'selected MusicXML notation',
+  'META-INF/container.xml':"<container><rootfiles><rootfile full-path='META-INF/metadata.xml'/><rootfile full-path='score_style.mss'/><rootfile full-path='scores/main.musicxml'/></rootfiles></container>"
+ });
+ const model=await widget.readModel({name:'score.mxl',size:100,arrayBuffer:async()=>new ArrayBuffer(0)});
+ assert.equal(model.name,'score.mxl');
+ assert.deepEqual(reads,['META-INF/container.xml','scores/main.musicxml']);
+ assert.deepEqual(parsed,[{kind:'musicxml',text:'selected MusicXML notation',name:'score.mxl'}]);
 });
 
 test('both repertoire homepages expose their own installed archive',async()=>{
