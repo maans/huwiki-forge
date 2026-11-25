@@ -43,14 +43,18 @@ test('a selected original is fetched alone and checked against its recorded hash
 test('the archives contain originals and metadata, with one preferred version and no hidden ABC imports',async()=>{
  for(const id of ['akustisk-elektrisk','silba-atno']){
   const index=id==='akustisk-elektrisk'?ae:silba,pkg=await json('plugins/musescore-bank-'+id+'/dist/plugin.json'),payload=JSON.parse(pkg.text);
-  assert.equal(Object.keys(payload.tiddlers).length,4);assert.ok(!pkg.text.includes('abc-source'));assert.match(payload.tiddlers[pkg.title+'/browse'].text,/huwiki-abc-search source="bank:/);
-  assert.equal(pkg.version,'0.1.1');
+  const page='Nodearkiv · '+index.name;
+  assert.equal(Object.keys(payload.tiddlers).length,5);assert.ok(!pkg.text.includes('abc-source'));assert.match(payload.tiddlers[page].text,/huwiki-abc-search source="bank:/);
+  assert.equal(payload.tiddlers[pkg.title+'/browse'].text,'<$transclude $tiddler="'+page+'"/>','old archive links still resolve to the friendly page');
+  assert.equal(payload.tiddlers[page].caption,'Nodearkiv');
+  assert.equal(pkg.version,'0.1.2');
   assert.equal(payload.tiddlers[pkg.title+'/browse'].caption,'Nodearkiv');
   const titleFilter=payload.tiddlers[pkg.title+'/title-filter'],titleTemplate=payload.tiddlers[pkg.title+'/title'];
   assert.equal(titleFilter.tags,'$:/tags/ViewTemplateTitleFilter');
   assert.equal(titleFilter['list-before'],'$:/config/ViewTemplateTitleFilters/system');
-  assert.equal(titleFilter.text,'[match['+pkg.title+'/browse]then['+pkg.title+'/title]]','only this archive receives the friendly title');
-  assert.match(titleTemplate.text,/<h2 class="tc-title"><\$view field="caption" format="text"\/><\/h2>/);
+  assert.equal(titleFilter.text,'[match['+pkg.title+'/browse]then['+pkg.title+'/title]] [match['+page+']then['+pkg.title+'/title]]','only the archive page and its compatibility alias receive the compact title');
+  assert.match(titleTemplate.text,/<h2 class="tc-title huwabc-archive-title"[^>]*><\$view field="caption" format="text"\/><\/h2>/);
+  assert.match(titleTemplate.text,/font-size:1\.5rem/);
   for(const group of bankHarness().filter(index,'')){assert.equal(group.versions.filter(v=>v.preferred).length,1);const dates=group.versions.map(v=>v.date).sort().reverse();assert.equal(group.preferred.date,dates[0]);}
   assert.ok(index.entries.every(e=>e.format!=='pdf'));assert.ok(!bankHarness().filter(index,'Those Who Were').length);
  }
@@ -78,7 +82,7 @@ test('closing a catalogue preview invalidates an in-flight source parse',async()
  const loading=widget.openCatalogueFiles([{file:{name:'a.mscz'}}]);widget.onDestroy();release({staves:[],totalMeasures:0});assert.equal(await loading,false);assert.equal(widget.stage,undefined);
 });
 test('the maintained importer widget is bundled verbatim',async()=>{
- const pkg=await json('plugins/musescore-import/dist/plugin.json'),payload=JSON.parse(pkg.text);assert.equal(payload.tiddlers[pkg.title+'/widget.js'].text,widgetSource);assert.equal(pkg.version,'0.1.8');
+ const pkg=await json('plugins/musescore-import/dist/plugin.json'),payload=JSON.parse(pkg.text);assert.equal(payload.tiddlers[pkg.title+'/widget.js'].text,widgetSource);assert.equal(pkg.version,'0.1.9');
 });
 
 function archiveImporterHarness(contents){
@@ -121,7 +125,9 @@ test('both repertoire homepages expose their own installed archive',async()=>{
  for(const [id,home] of [['akustisk-elektrisk','Akustisk-Elektrisk · Kaffepausen'],['silba-atno','SilbaÄtno Repertoire – Oversigt']]){
   const config=await json('editions/'+id+'-repertoire/tiddlers/config.json');
   const page=config.find(t=>t.title===home);assert.ok(page,'repertoire homepage must exist');
-  assert.ok(page.text.includes('to="$:/plugins/huwiki/musescore-bank-'+id+'/browse"'),'homepage links to its own catalogue');
+  const catalogue=await json('catalog/musescore/'+id+'.json');
+  assert.ok(page.text.includes('to="Nodearkiv · '+catalogue.name+'"'),'homepage opens a readable title in the Open sidebar');
+  assert.ok(!page.text.includes('musescore-bank-'+id+'/browse'),'homepage does not expose the internal path');
   assert.match(page.text,/Nodearkiv/,'archive entry is visible and recognizable');
   const manifest=await json('editions/'+id+'-repertoire/manifest.json');
   assert.ok(JSON.stringify(manifest).includes('plugins/musescore-bank-'+id+'/dist/plugin.json'),'linked archive is installed');

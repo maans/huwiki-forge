@@ -23,18 +23,21 @@ Search.prototype=new Widget();
 Search.prototype.render=function(parent,next){
  this.parentDomNode=parent;this.computeAttributes();var self=this;
  var host=this.host=el('section','huwabc-search');parent.insertBefore(host,next);this.domNodes.push(host);
- host.appendChild(el('h2','','Find musik · ABC-biblioteker'));
- host.appendChild(el('p','huwabc-muted',bankText(this.wiki,'Søg i ABC-samlinger eller i Akustisk Elektrisks og Silba Ätnos originale MuseScore-nodearkiver. Vælg numre ud fra oplysningerne, og kontrollér noderne før import.','Search ABC collections or the original MuseScore archives for Akustisk Elektrisk and Silba Ätno. Choose tunes using their metadata and review the score before importing.')));
+ var initial=this.getAttribute('source','session');
+ if(initial.indexOf('bank:')!==0)host.appendChild(el('h2','',bankText(this.wiki,'Find musik','Find music')));
+ host.appendChild(el('p','huwabc-search-intro',bankText(this.wiki,'Find originalnoder, sammenlign versioner og vælg de stemmer, du vil bruge.','Find original scores, compare versions and choose the parts you need.')));
  var form=el('form','huwabc-search-form');
  var source=this.source=el('select','huwabc-select');source.setAttribute('aria-label','Musikbibliotek');
  [['session','The Session'],['ian','Ian Hayden · jazzstandards'],['balkan','Balkan, Klezmer & Østeuropa · JamBuddy'],['abcnotation','ABCnotation.com']].forEach(function(pair){var op=el('option','',pair[1]);op.value=pair[0];source.appendChild(op);});
  banks.list(this.wiki).forEach(function(bank){var op=el('option','',bank.name+' · MuseScore');op.value='bank:'+bank.id;source.appendChild(op);});
- var initial=this.getAttribute('source','session');if(Array.from(source.options).some(function(op){return op.value===initial;}))source.value=initial;
+ if(Array.from(source.options).some(function(op){return op.value===initial;}))source.value=initial;
  var q=this.query=el('input','huwabc-input');q.type='search';q.placeholder='Søg på titel, fx Kesh';q.setAttribute('aria-label','Søg efter melodititel');q.maxLength=150;
  var type=this.type=el('select','huwabc-select');type.setAttribute('aria-label','Meloditype');var all=el('option','','Alle typer');all.value='';type.appendChild(all);
  Object.keys(data.meters).sort().forEach(function(k){var o=el('option','',k);o.value=k;type.appendChild(o);});
- var go=el('button','huwabc-btn huwabc-primary','Søg');go.type='submit';form.append(source,q,type,go);host.appendChild(form);
- this.overview=el('section','huwabc-search-info');host.appendChild(this.overview);
+ var libraryField=el('label','huwabc-library-field');libraryField.append(el('span','',bankText(this.wiki,'Samling','Collection')),source);
+ var typeField=this.typeField=el('label','huwabc-type-field');typeField.append(el('span','','Meloditype'),type);
+ var queryRow=el('div','huwabc-search-query'),go=el('button','huwabc-btn huwabc-primary','Søg');go.type='submit';queryRow.append(q,go);form.append(libraryField,typeField,queryRow);host.appendChild(form);
+ this.overview=el('section','huwabc-collection-overview');host.appendChild(this.overview);
  this.bankCart=el('div','huwabc-search-save');this.bankCart.hidden=true;
  this.bankImport=button('',function(){self.loadBankItems(Object.keys(self.bankSelection).map(function(k){return self.bankSelection[k];}));});
  this.bankClear=button(bankText(this.wiki,'Ryd valg','Clear selection'),function(){self.bankSelection={};self.updateBankSelection();if(self.source.value.indexOf('bank:')===0)self.searchBank();});
@@ -54,6 +57,7 @@ Search.prototype.get=async function(kind,path){
  finally{clearTimeout(timeout);if(self.pending[kind]===controller)delete self.pending[kind];}
 };
 Search.prototype.search=async function(page){
+ if(this.host)this.host.classList.add('huwabc-has-results');
  if(this.source.value.indexOf('bank:')===0)return this.searchBank(page||1);
  if(this.source.value==='ian')return this.searchIan();
  if(this.source.value==='balkan')return this.searchBalkan();
@@ -110,18 +114,19 @@ Search.prototype.sourceChanged=function(){
  if(this.pending.search)this.pending.search.abort();if(this.pending.detail)this.pending.detail.abort();
  this.seq.search=(this.seq.search||0)+1;this.seq.detail=(this.seq.detail||0)+1;
  this.searchEpoch=(this.searchEpoch||0)+1;
- this.type.hidden=which!=='session';this.type.disabled=which!=='session';
+ this.type.hidden=which!=='session';this.type.disabled=which!=='session';if(this.typeField)this.typeField.hidden=which!=='session';
  this.query.placeholder=which==='session'?'Søg på titel, fx Kesh':which==='ian'?'Søg på jazzstandard, fx Just Friends':which==='balkan'?'Søg på Balkanmelodi, fx Pajdusko':'Søg på ABCnotation, fx Autumn Leaves';
  this.results.textContent='';this.info.textContent='';this.status.textContent=which==='ian'?'Søg i Ian Haydens jazzsamling. Kataloget indlæses fra GitHub.':which==='balkan'?'Søg i JamBuddys Balkanindeks (Balkan, klezmer og østeuropæiske melodier). Importér én melodi ad gangen med kildeangivelse.':which==='abcnotation'?'Søg på ABCnotation.com og indsæt ABC-teksten fra den valgte melodi.':'Søg i The Sessions offentlige melodisamling.';
- if(which.indexOf('bank:')===0){this.query.placeholder=bankText(this.wiki,'Titel, komponist, instrument, toneart eller taktart','Title, composer, instrument, key or meter');this.status.textContent=bankText(this.wiki,'Søg i nodearkivet. En tom søgning viser alle numre. Originalfiler hentes først, når du vælger forhåndsvisning.','Search the source archive. Leave the query empty to list all tunes. Originals are fetched only when you request a preview.');}
+ if(which.indexOf('bank:')===0){this.query.placeholder=bankText(this.wiki,'Søg i nodearkivet …','Search the score archive …');this.status.textContent='';}
  if(this.pending.catalogue)this.pending.catalogue.abort();
  this.bankLoadEpoch=(this.bankLoadEpoch||0)+1;
  if(this.bankImporter){this.bankImporter.onDestroy();this.bankImporter=null;this.children=[];this.preview.textContent='';}
+ if(this.host)this.host.classList.remove('huwabc-has-results');
  this.bankSort='title';this.showCollectionOverview();
 };
 Search.prototype.showCollectionOverview=async function(){
  var self=this,which=this.source.value,epoch=this.searchEpoch;if(!this.overview)return;
- this.overview.textContent='';this.overview.appendChild(el('h3','',bankText(this.wiki,'Gå på opdagelse i samlingen','Explore this collection')));
+ this.overview.textContent='';
  if(which==='session'||which==='abcnotation'){
   this.overview.appendChild(el('p','huwabc-muted',bankText(this.wiki,'Du behøver ikke kende en titel. Åbn kildens melodioversigt for at finde titler, og søg derefter her.','You do not need to know a title. Browse the source collection to discover tunes, then search here.')));
   this.overview.appendChild(link(bankText(this.wiki,'Gennemse samlingen','Browse the collection'),which==='session'?'https://thesession.org/tunes':'https://abcnotation.com/'));
@@ -134,22 +139,26 @@ Search.prototype.showCollectionOverview=async function(){
   if(which.indexOf('bank:')===0){
    index=await banks.index(which.slice(5),this.wiki);groups=banks.filter(index,'');count=groups.length;
    groups.forEach(function(g){var e=g.preferred;['composer','meter','key'].forEach(function(k){var value=e[k];if(value)facets[value]=(facets[value]||0)+1;});(e.instruments||[]).forEach(function(value){if(value&&value!=='.')facets[value]=(facets[value]||0)+1;});});
-   examples=groups.slice().sort(function(a,b){return String(b.preferred.date).localeCompare(String(a.preferred.date));}).slice(0,8).map(function(g){return g.title;});
+   examples=groups.slice().sort(function(a,b){return String(b.preferred.date).localeCompare(String(a.preferred.date));}).slice(0,6).map(function(g){return {title:g.title,date:g.preferred.date};});
   }else if(which==='ian'){
-   var jazzItems=await jazz.list();count=jazzItems.length;examples=jazzItems.filter(function(_,i){return i%Math.max(1,Math.floor(count/8))===0;}).slice(0,8).map(function(e){return e.title;});
+   var jazzItems=await jazz.list();count=jazzItems.length;examples=jazzItems.filter(function(_,i){return i%Math.max(1,Math.floor(count/6))===0;}).slice(0,6).map(function(e){return {title:e.title};});
   }else if(which==='balkan'){
    var balkanItems=await balkan.list();count=balkanItems.length;
    balkanItems.forEach(function(e){[e.category,e.meter,e.key].forEach(function(value){if(value)facets[value]=(facets[value]||0)+1;});});
-   examples=balkanItems.filter(function(_,i){return i%Math.max(1,Math.floor(count/8))===0;}).slice(0,8).map(function(e){return e.titles[0];});
+   examples=balkanItems.filter(function(_,i){return i%Math.max(1,Math.floor(count/6))===0;}).slice(0,6).map(function(e){return {title:e.titles[0]};});
   }
   if(epoch!==this.searchEpoch||which!==this.source.value||!this.host.isConnected)return;
-  this.overview.textContent='';this.overview.appendChild(el('h3','',bankText(this.wiki,'Gå på opdagelse','Explore')+' · '+count+' '+bankText(this.wiki,'numre','tunes')));
-  this.overview.appendChild(button(bankText(this.wiki,'Vis alle numre','Browse all tunes'),function(){self.query.value='';self.bankSort='title';self.search(1);}));
-  if(groups)this.overview.appendChild(button(bankText(this.wiki,'Senest opdaterede','Recently updated'),function(){self.query.value='';self.bankSort='recent';self.search(1);}));
-  this.overview.appendChild(el('p','huwabc-muted',which==='ian'?bankText(this.wiki,'Jazzstandards · klik på en titel, eller åbn hele listen.','Jazz standards · choose a title or browse the entire list.'):bankText(this.wiki,'Klik på en oplysning for at afgrænse kataloget:','Click a category to filter the catalogue:')));
-  var filters=el('div','huwabc-search-save');Object.keys(facets).sort(function(a,b){return facets[b]-facets[a];}).slice(0,12).forEach(function(value){filters.appendChild(button(value+' ('+facets[value]+')',function(){self.query.value=value;self.search(1);}));});this.overview.appendChild(filters);
-  this.overview.appendChild(el('p','huwabc-muted',groups?bankText(this.wiki,'Eksempler blandt de senest opdaterede:','Examples from recent updates:'):bankText(this.wiki,'Eksempler fra forskellige steder i kataloget:','Examples from across the catalogue:')));
-  var suggestions=el('div','huwabc-search-save');examples.forEach(function(title){suggestions.appendChild(button(title,function(){self.query.value=title;self.search(1);}));});this.overview.appendChild(suggestions);
+  this.overview.textContent='';var bar=el('div','huwabc-overview-bar'),actions=el('div','huwabc-browse-actions');
+  bar.appendChild(el('span','huwabc-collection-count',count+' '+bankText(this.wiki,'numre i samlingen','tunes in the collection')));
+  var allButton=button(bankText(this.wiki,'Vis alle numre','Browse all tunes'),function(){self.query.value='';self.bankSort='title';self.search(1);});allButton.classList.add('huwabc-browse-action');actions.appendChild(allButton);
+  if(groups){var recentButton=button(bankText(this.wiki,'Senest opdaterede','Recently updated'),function(){self.query.value='';self.bankSort='recent';self.search(1);});recentButton.classList.add('huwabc-browse-action');actions.appendChild(recentButton);}
+  bar.appendChild(actions);this.overview.appendChild(bar);
+  if(Object.keys(facets).length){
+   var filters=el('details','huwabc-filters'),chips=el('div','huwabc-filter-chips');filters.appendChild(el('summary','',bankText(this.wiki,'Filtre','Filters')));
+   Object.keys(facets).sort(function(a,b){return facets[b]-facets[a];}).slice(0,12).forEach(function(value){var chip=button('',function(){self.query.value=value;self.search(1);});chip.classList.add('huwabc-filter-chip');chip.append(el('span','',value),el('span','huwabc-chip-count',String(facets[value])));chips.appendChild(chip);});filters.appendChild(chips);this.overview.appendChild(filters);
+  }
+  var suggestions=el('section','huwabc-collection-suggestions'),suggestionList=el('div','huwabc-suggestion-list');suggestions.appendChild(el('h3','',groups?bankText(this.wiki,'Seneste tilføjelser','Recent additions'):bankText(this.wiki,'Prøv et nummer','Try a tune')));
+  examples.forEach(function(example){var pick=button('',function(){self.query.value=example.title;self.search(1);});pick.classList.add('huwabc-suggestion');pick.appendChild(el('span','huwabc-suggestion-title',example.title));if(example.date)pick.appendChild(el('span','huwabc-suggestion-date',example.date));suggestionList.appendChild(pick);});suggestions.appendChild(suggestionList);this.overview.appendChild(suggestions);
  }catch(e){if(epoch===this.searchEpoch)this.overview.textContent=bankText(this.wiki,'Oversigten kunne ikke hentes: ','Could not load the overview: ')+e.message;}
 };
 Search.prototype.updateBankSelection=function(){
@@ -161,7 +170,7 @@ Search.prototype.searchBank=async function(page){
  page=page||1;
  var self=this,id=this.source.value.slice(5),epoch=++this.searchEpoch;
  if(this.pending.search)this.pending.search.abort();var controller=new AbortController();this.pending.search=controller;
- this.results.textContent='';this.info.textContent='';this.results.setAttribute('aria-busy','true');this.status.textContent=bankText(this.wiki,'Henter oplysninger om numrene …','Loading tune metadata …');
+ this.host.classList.add('huwabc-has-results');this.results.textContent='';this.info.textContent='';this.results.setAttribute('aria-busy','true');this.status.textContent=bankText(this.wiki,'Henter oplysninger om numrene …','Loading tune metadata …');
  try{
   var index=await banks.index(id,this.wiki,controller.signal);if(epoch!==this.searchEpoch||!this.host.isConnected)return;
   var groups=banks.filter(index,this.query.value),all=banks.filter(index,''),bank={id:index.id,name:index.name};
@@ -172,7 +181,7 @@ Search.prototype.searchBank=async function(page){
    check.type='checkbox';check.setAttribute('aria-label',bankText(self.wiki,'Vælg ','Select ')+group.title);check.checked=!!self.bankSelection[key];check.disabled=!/^(mscz|mscx|musicxml|mxl)$/.test(entry.format)||entry.compatibility==='legacy';
    check.onchange=function(){if(check.checked)self.bankSelection[key]={bank:bank,entry:entry};else delete self.bankSelection[key];self.updateBankSelection();};
    text.appendChild(el('strong','',group.title));text.appendChild(el('div','huwabc-muted',[entry.composer,entry.key,entry.meter,entry.voices?entry.voices+' '+bankText(self.wiki,'stemmer','voices'):'',entry.date,group.versions.length+' '+bankText(self.wiki,'version(er)','version(s)'),entry.status].filter(Boolean).join(' · ')));
-   label.append(check,text);row.append(label,button(bankText(self.wiki,'Oplysninger og versioner','Details and versions'),function(){self.bankChoiceKey=key;self.openBankDetail(bank,group,entry,check);}));self.results.appendChild(row);
+   label.append(check,text);row.append(label,button(bankText(self.wiki,'Se detaljer','View details'),function(){self.bankChoiceKey=key;self.openBankDetail(bank,group,entry,check);}));self.results.appendChild(row);
   });
   if(groups.length>100){var pages=Math.ceil(groups.length/100),nav=el('div','huwabc-search-nav'),prev=button(bankText(this.wiki,'Forrige side','Previous page'),function(){self.searchBank(page-1);}),next=button(bankText(this.wiki,'Næste side','Next page'),function(){self.searchBank(page+1);});prev.disabled=page<=1;next.disabled=page>=pages;nav.append(prev,el('span','',(page)+' / '+pages),next);this.results.appendChild(nav);}
  }catch(e){if(epoch===this.searchEpoch)this.status.textContent=e.name==='AbortError'?bankText(this.wiki,'Søgningen blev afbrudt.','Search cancelled.'):e.message;}
