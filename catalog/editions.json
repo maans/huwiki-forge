@@ -89,6 +89,21 @@
       }
     },
     {
+      "id": "repertoire",
+      "name": "Repertoire Edition",
+      "description": "Start an orchestra wiki with a customizable front page, score import and set lists.",
+      "version": "0.1.0",
+      "status": "test",
+      "manifest": "../editions/repertoire/manifest.json",
+      "home": {
+        "headingDa": "Opret dit orkester",
+        "headingEn": "Create your orchestra",
+        "descriptionDa": "Giv orkestret en forside, importér egne noder, og byg den første sætliste.",
+        "descriptionEn": "Customize the orchestra’s front page, import your scores and build your first set list.",
+        "order": "02.1"
+      }
+    },
+    {
       "id": "silba-atno-repertoire",
       "name": "Silba Ätno Repertoire",
       "description": "18 numre med nodebog, Music Minus One, stiknoder, stemmer og PDF-udskrift.",

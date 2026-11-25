@@ -1,0 +1,46 @@
+[
+  {
+    "title": "$:/SiteTitle",
+    "text": "Repertoire Edition"
+  },
+  {
+    "title": "$:/theme",
+    "text": "$:/themes/huwiki/modern"
+  },
+  {
+    "title": "$:/DefaultTiddlers",
+    "text": "[[Repertoire Edition]]"
+  },
+  {
+    "title": "Repertoire Edition",
+    "type": "text/vnd.tiddlywiki",
+    "text": "\\procedure phrase(da,en)\n<%if [{$:/language}prefix[$:/languages/da]] %><<da>><%else%><<en>><%endif%>\n\\end\n\n\\whitespace trim\n\\define orchestra() Repertoire/Orkestre/Start\n<$tiddler tiddler=<<orchestra>>>\n<div class=\"forge-repertoire-starter\">\n<$transclude $tiddler=\"$:/huwiki/repertoire-starter/banner\"/>\n<%if [<orchestra>repertoire-kind[orchestra]] %>\n<nav>\n<$link to=\"Repertoire · Import\"><<phrase \"Importér noder\" \"Import scores\">></$link>\n<$link to=\"HUWiki Repertoire – Start\"><<phrase \"Repertoire og sætlister\" \"Repertoire and set lists\">></$link>\n<$link to=\"Repertoire – Nodebog\"><<phrase \"Nodebog\" \"Tune book\">></$link>\n</nav>\n<details><summary><<phrase \"Redigér forside\" \"Edit front page\">></summary>\n<$transclude $tiddler=\"$:/huwiki/repertoire-starter/fields\"/>\n</details>\n<%else%>\n<$transclude $tiddler=\"$:/huwiki/repertoire-starter/fields\"/>\n<$let name={{{ [<orchestra>get[name]trim[]] }}}>\n<$button class=\"tc-btn-invisible forge-create-orchestra\" disabled={{{ [<name>!is[blank]then[no]else[yes]] }}}>\n<$action-setfield $tiddler=<<orchestra>> repertoire-kind=\"orchestra\" name={{{ [<orchestra>get[name]trim[]] }}}/>\n<$action-setfield $tiddler=\"$:/SiteTitle\" text={{{ [<orchestra>get[name]trim[]] }}}/>\n<<phrase \"Opret orkester\" \"Create orchestra\">>\n</$button>\n</$let>\n<%endif%>\n</div>\n</$tiddler>\n"
+  },
+  {
+    "title": "$:/huwiki/repertoire-starter/banner",
+    "type": "text/vnd.tiddlywiki",
+    "text": "<$let photo={{{ [<currentTiddler>get[banner-image]is[tiddler]] ~[<currentTiddler>get[banner-url]prefix[https://]] }}}>\n<header class=\"forge-orchestra-banner\">\n<$list filter=\"[<photo>!is[blank]]\" variable=\"banner\">\n<$image source=<<banner>> alt=\"\" class={{{ [<currentTiddler>get[banner-position]match[top]then[image-top]] [<currentTiddler>get[banner-position]match[bottom]then[image-bottom]] +[join[ ]] }}}/>\n</$list>\n<div class=\"forge-orchestra-heading\">\n<h1><$text text={{{ [<currentTiddler>get[name]!is[blank]] ~[[Repertoire Edition]] }}}/></h1>\n<p><$text text={{!!description}}/></p>\n</div>\n</header>\n</$let>\n"
+  },
+  {
+    "title": "$:/huwiki/repertoire-starter/fields",
+    "type": "text/vnd.tiddlywiki",
+    "text": "<div class=\"forge-repertoire-fields\">\n<label><<phrase \"Orkestrets navn\" \"Orchestra name\">> <$edit-text field=\"name\" tag=\"input\" default=\"\"/></label>\n<label><<phrase \"Kort beskrivelse\" \"Short description\">> <$edit-text field=\"description\" tag=\"textarea\" default=\"\" rows=\"2\"/></label>\n<label><<phrase \"Billede i wikien\" \"Image in this wiki\">>\n<$select field=\"banner-image\" default=\"\">\n<option value=\"\"><<phrase \"Vælg et billede\" \"Select an image\">></option>\n<$list filter=\"[all[tiddlers]!is[system]field:type[image/png]] [all[tiddlers]field:type[image/jpeg]] [all[tiddlers]field:type[image/webp]] [all[tiddlers]field:type[image/gif]]\" variable=\"picture\">\n<option value=<<picture>>><$text text=<<picture>>/></option>\n</$list>\n</$select>\n</label>\n<label><<phrase \"Eller direkte billedlink (HTTPS)\" \"Or direct image URL (HTTPS)\">> <$edit-text field=\"banner-url\" tag=\"input\" default=\"\"/></label>\n<label><<phrase \"Billedudsnit\" \"Image framing\">> <$select field=\"banner-position\" default=\"center\">\n<option value=\"top\"><<phrase \"Øverst\" \"Top\">></option><option value=\"center\"><<phrase \"Midten\" \"Middle\">></option><option value=\"bottom\"><<phrase \"Nederst\" \"Bottom\">></option>\n</$select></label>\n<label><<phrase \"Importér billedfil\" \"Import image file\">> <$browse accept=\"image/png,image/jpeg,image/webp,image/gif\"/></label>\n</div>\n"
+  },
+  {
+    "title": "$:/huwiki/repertoire-starter/styles",
+    "type": "text/css",
+    "text": ".forge-repertoire-starter{max-width:64rem;margin:auto}\n.forge-orchestra-banner{position:relative;display:flex;align-items:end;min-height:clamp(12rem,34vw,22rem);overflow:hidden;border-radius:1rem;background:#173c43;color:white}\n.forge-orchestra-banner img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center}\n.forge-orchestra-banner img.image-top{object-position:center top}.forge-orchestra-banner img.image-bottom{object-position:center bottom}\n.forge-orchestra-heading{position:relative;width:100%;padding:clamp(1rem,4vw,3rem);background:linear-gradient(transparent,#0b252be8);box-sizing:border-box}\n.forge-orchestra-heading h1{margin:0;color:white;font-size:clamp(2rem,5vw,3.5rem);overflow-wrap:anywhere}.forge-orchestra-heading p:empty{display:none}\n.forge-repertoire-starter nav{display:flex;flex-wrap:wrap;gap:.75rem;margin:1rem 0}.forge-repertoire-starter nav a,.forge-create-orchestra{padding:.7rem 1rem;border:1px solid #267266;border-radius:.6rem;color:inherit}\n.forge-repertoire-fields{display:grid;gap:.65rem;margin:1rem 0}.forge-repertoire-fields label{display:grid;gap:.25rem}.forge-repertoire-fields input,.forge-repertoire-fields select,.forge-repertoire-fields textarea{box-sizing:border-box;width:100%}\n",
+    "tags": "$:/tags/Stylesheet"
+  },
+  {
+    "title": "Repertoire · Import",
+    "type": "text/vnd.tiddlywiki",
+    "text": "[[Repertoire Edition]] · [[Repertoireværksted|HUWiki Repertoire – Start]]\n\n<$forge-orchestra-import/>\n"
+  },
+  {
+    "title": "$:/huwiki/repertoire-starter/import.js",
+    "type": "application/javascript",
+    "text": "\"use strict\";\nconst Importer=require(\"$:/plugins/huwiki/musescore-import/widget.js\")[\"huwiki-ms-import\"];\nconst repertoire=require(\"$:/plugins/huwiki/repertoire/model.js\");\nconst orchestra=\"Repertoire/Orkestre/Start\";\nconst destination=\"repertoire-import-orchestra\";\nfunction OrchestraImport(parseTreeNode,options){\n this.initialise(parseTreeNode,options);\n}\nOrchestraImport.prototype=Object.create(Importer.prototype);\nOrchestraImport.prototype.createAbcFields=function(model,state,abc){\n const fields=Importer.prototype.createAbcFields.call(this,model,state,abc);\n fields[destination]=orchestra;\n return fields;\n};\nOrchestraImport.prototype.refresh=function(changes){\n const wiki=this.wiki;\n if(wiki.getTiddler(orchestra)?.fields[\"repertoire-kind\"]===\"orchestra\"){\n  Object.keys(changes).forEach(title=>{\n   const score=wiki.getTiddler(title);\n   if(score?.fields[destination]===orchestra&&score.fields[\"abc-source\"]){\n    repertoire.addItem(wiki,orchestra,title);\n   }\n  });\n }\n return Importer.prototype.refresh.call(this,changes);\n};\nexports[\"forge-orchestra-import\"]=OrchestraImport;\n",
+    "module-type": "widget"
+  }
+]
