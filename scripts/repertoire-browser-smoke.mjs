@@ -26,11 +26,15 @@ try{
  await page.locator(".silba-home").waitFor();
  // Responsive SilbaÄtno hero: the sidebar can narrow a TiddlyWiki story
  // without shrinking the outer browser viewport. The headline must stay on
- // one line, and all four labelled icon actions must remain in one row.
+ // one line, and all five labelled icon actions must remain in one row.
  const actions=page.locator(".silba-actions .silba-action");
- assert.equal(await actions.count(),4,"Exactly four compact hero actions remain");
- assert.equal(await actions.locator("svg").count(),4,"Each icon must render as an actual SVG");
- assert.equal(await actions.locator(".silba-action-label").count(),4,"Icon links retain accessible names");
+ assert.equal(await actions.count(),5,"The five compact hero actions include the source archive");
+ assert.equal(await actions.locator("svg").count(),5,"Each icon must render as an actual SVG");
+ assert.equal(await actions.locator(".silba-action-label").count(),5,"Icon links retain accessible names");
+ const archiveAction=actions.filter({hasText:"Nodearkiv"});
+ assert.equal(await archiveAction.count(),1,"The source archive has one recognizable hero action");
+ assert.equal(decodeURIComponent((await archiveAction.getAttribute("href")).slice(1)),"$:/plugins/huwiki/musescore-bank-silba-atno/browse",
+  "Nodearkiv links to Silba Ätno’s installed catalogue");
  for(const width of [1000,800,690,520,360]){
   await page.locator(".silba-home").evaluate((node,w)=>node.style.width=w+"px",width);
   await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -52,7 +56,7 @@ try{
   assert.ok(geometry.links.every(link=>link.width>=43&&link.height>=43),
    "Icon buttons must keep iPad-friendly touch targets");
   assert.ok(geometry.links.every(link=>Math.abs(link.y-geometry.links[0].y)<2),
-   "All four actions must remain on the same row at "+width+"px");
+   "All five actions must remain on the same row at "+width+"px");
   assert.equal(geometry.photoPositionY,width<=690?"0%":"50%",
    "At "+width+"px the photo should "+(width<=690?"show the faces at the top":"remain centered"));
  }
