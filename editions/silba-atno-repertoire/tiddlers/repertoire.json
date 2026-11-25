@@ -156,7 +156,7 @@
     "silba-musescore-date": "2025-05-18",
     "silba-import-state": "abc-konverteret",
     "type": "text/vnd.tiddlywiki",
-    "abc-source": "X:1\nT:Cocek Srece\nC:Trad. serbisk,  v.2 Ebbe Munk\nM:4/4\nL:1/8\nQ:1/4=100\nV:1 name=\"Klaver\" clef=treble\nV:2 name=\"Klaver\" clef=treble\nV:3 clef=bass\nK:Dm\nV:1\n[P:Intro x 4] |:\"Dm\"z4\"A\" z4 :| [P:Vers 1]\"Dm\"z8 | \"A\"z8 | \"Dm\"z4\"A\" z4 |\n\"Dm\"z4\"F#dim\" z4 | \"Gm\"z8 | \"Bb\"z8 | \"A\"z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | \"A\"z4\"G/B\" z2\"A/C#\" z2 | \"Dm\"z4\"A\" z4 |\n\"Dm\"z4\"A\" z4 | [P:Vers 2] z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 |\nV:2\n|:z4 z2 A,2 :| [DF]4 [D-E]2 D2 | [A,^C]4 [A,D]2 [CE]2 | [D-F][DE] [A,D]4 z2 |\n[Ad][Gc] [^FA][_EF] [DE][CG] [A,D][^F,F] | [DG]6 [DF]2 | [B,E]4 [F,D]3 [B,E] | [A,^C]2 [E,A,]4 z2 |\n[E,A,][G,B,][A,^C][B,D] [CE][DF][EG][E^G] | [EA]2 [^CE]4 [E^F]2 | [EG]4 z [E-A]/[EG]/ [^D^F][EG] | [EA]2 [^CE]6 |\nz8 | [EA]4 [^CG]2 [A,F]2 | [A,E]2 [A,^C]2 [A,D]2 [CE]2 | [A,-F][A,E] D6 |\nz4 z2 A,2 | [DF]4 [D-E]2 D2 | [A,^C]4 [A,D]2 [CE]2 | [D-F][DE] [A,D]4 z2 |\nz [Ad] [A^c][Ad] [^F=c][FB] [DA][DG] | [DG]6 [DF]2 | [B,E]4 [F,D]3 [B,E] | [A,^C]2 [E,A,]4 z2 |\nz [A^c] [A^B][Ac] [G_B][GA] [EG][E^G] | [EA]2 [^CE]4 [E^F]2 | [EG]4 z [E-A]/[EG]/ [^D^F][EG] | [EA]2 [^CE]6 |\nz [A^c] [A^B][Ac] [G_B-][GB-] [FB-][EB] | [EA]4 [^CG]2 [A,F]2 | [A,E]2 [A,^C]2 [A,D]2 [CE]2 | [A,-F][A,E] D6 |\nz4 z2 A,2 |\nV:3\n|:D,2 D,D, A,,2 ^C,2 :| D,2 D,D, A,,2 D,2 | A,2 A,A, E,2 A,2 | D,2 D,D, A,,2 ^C,2 |\nD,2 D,D, ^F,4 | G,2 G,G, D,2 G,2 | B,2 B,B, F,2 B,2 | A,2 A,A, E,2 ^C,E, |\nx8 | x8 | x8 | x8 |\nx8 | x8 | A,2 A,A, =B,2 ^C2 | D,2 D,D, A,,2 ^C,2 |\nD,2 D,D, A,,2 ^C,2 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 |\n",
+    "abc-source": "X:1\nT:Cocek Srece\nC:Trad. serbisk,  v.2 Ebbe Munk\nM:4/4\nL:1/8\nQ:1/4=100\nV:1 name=\"Klaver\" clef=treble\nV:2 name=\"Klaver\" clef=treble\nV:3 clef=bass\nK:Dm\nV:1\n[P:Intro x 4] |:\"Dm\"z4\"A\" z4 :| [P:Vers 1]\"Dm\"z8 | \"A\"z8 | \"Dm\"z4\"A\" z4 |\n\"Dm\"z4\"F#dim\" z4 | \"Gm\"z8 | \"Bb\"z8 | \"A\"z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | \"A\"z4\"G/B\" z2\"A/C#\" z2 | \"Dm\"z4\"A\" z4 |\n\"Dm\"z4\"A\" z4 | [P:Vers 2] z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 |\nV:2\n|:z4 z2 A,2 :| [DF]4 [D-E]2 D2 | [A,^C]4 [A,D]2 [CE]2 | [D-F][DE] [A,D]4 z2 |\n[Ad][Gc] [^FA][_EF] [DE][CG] [A,D][^F,F] | [DG]6 [DF]2 | [B,E]4 [F,D]3 [B,E] | [A,^C]2 [E,A,]4 z2 |\n[E,A,][G,B,][A,^C][B,D] [CE][DF][EG][E^G] | [EA]2 [^CE]4 [E^F]2 | [EG]4 z [E-A]/[EG]/ [^D^F][EG] | [EA]2 [^CE]6 |\nz8 | [EA]4 [^CG]2 [A,F]2 | [A,E]2 [A,^C]2 [A,D]2 [CE]2 | [A,-F][A,E] D6 |\nz4 z2 A,2 | [DF]4 [D-E]2 D2 | [A,^C]4 [A,D]2 [CE]2 | [D-F][DE] [A,D]4 z2 |\nz [Ad] [A^c][Ad] [^F=c][FB] [DA][DG] | [DG]6 [DF]2 | [B,E]4 [F,D]3 [B,E] | [A,^C]2 [E,A,]4 z2 |\nz [A^c] [A^B][Ac] [G_B][GA] [EG][E^G] | [EA]2 [^CE]4 [E^F]2 | [EG]4 z [E-A]/[EG]/ [^D^F][EG] | [EA]2 [^CE]6 |\nz [A^c] [A^B][Ac] [G_B-][GB-] [FB-][EB] | [EA]4 [^CG]2 [A,F]2 | [A,E]2 [A,^C]2 [A,D]2 [CE]2 | [A,-F][A,E] D6 |\nz4 z2 A,2 |\nV:3\n|:D,2 D,D, A,,2 ^C,2 :| D,2 D,D, A,,2 D,2 | A,2 A,A, E,2 A,2 | D,2 D,D, A,,2 ^C,2 |\nD,2 D,D, ^F,4 | G,2 G,G, D,2 G,2 | B,2 B,B, F,2 B,2 | A,2 A,A, E,2 ^C,E, |\nA,2 A,A, E,2 ^C,E, | A,2 A,A, E,2 ^C,E, | A,2 A,A, E,2 ^C,E, | A,2 A,A, E,2 ^C,E, |\nA,2 A,A, E,2 ^C,E, | A,2 A,A, E,2 ^C,E, | A,2 A,A, =B,2 ^C2 | D,2 D,D, A,,2 ^C,2 |\nD,2 D,D, A,,2 ^C,2 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 | z8 | z8 | z8 |\nz8 |\n",
     "abc-view": "full",
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\":true,\"metronome\":false,\"style\":\"folk\",\"bassSource\":\"style\",\"bass\":\"alternating\",\"chords\":\"folk\",\"drums\":\"folk\",\"melodyInstrument\":\"source\",\"melodyVolume\":100,\"bassVolume\":50,\"chordVolume\":45,\"drumVolume\":40,\"droneEnabled\":false,\"variation\":20}",
@@ -165,7 +165,7 @@
     "huwiki-import-range": "1-33",
     "huwiki-import-original-instruments": "Klaver / Klaver / Klaver",
     "silba-abc-voices": "3",
-    "silba-abc-notes": "272"
+    "silba-abc-notes": "308"
   },
   {
     "title": "Silbaätno (Fm/Gm)",
@@ -325,7 +325,7 @@
     "silba-musescore-date": "2025-03-11",
     "silba-import-state": "abc-konverteret",
     "type": "text/vnd.tiddlywiki",
-    "abc-source": "X:1\nT:Hotel Nora\nC:Ebbe Munk\nM:7/8\nL:1/8\nQ:1/4=140\nV:1 name=\"Klaver\" clef=treble\nV:2 clef=bass\nV:3 name=\"Orkesterlilletromm…\" clef=perc\nK:Cm\nV:1\n[P:A x 4] |:\"Cm\"g2 e2 c3 | \"Ab/C\"e2 c2 A-AG | \"D7b9\"^F=A ce\"G\" d=BG | [P:13][1\"Cm\"cd- de- ef-f :|\n[P:24][2\"Cm\"c2 z2 z z z |: [P:B x 4]\"G7b9\"[fa][eg] [df][ce] [=B-d-][Bd][Ac] | [G=B]2 [Bd]2 [d-f-][df][Bd] | \"Ab\"[ce]2 [ce]2 [A-c-][Ac][FA] |\n[P:13][1\"G\"[G=B]2 [Bd]2 [dg]3 :| [P:24][2\"G\"[G=B][Gd] [Gg] z z z z |: [P:C x 4][K:Em]\"D7\"F2 c2\"G\" B2 G | Fc- cB- BG-G |\nF2 c2 B2 G | [P:13][1\"D7b9\"FA c_e\"G\" dBG :| [P:24][2\"D7\"F2 z2\"G\" z z z |\nV:2\n|:C,2 C,2 E,-E,G, | C,2 C,2 E,-E,A, | D,2 D,2 G,-G,G, | [1 C,2 C,2 E,F,G, :|\n[2 C,2 C,2 E,-E,G, |: G,,=B,,- B,,D,- D,F,-F, | G,,2 G,,2 =B,,-B,,D, | A,,2 A,,2 C,-C,E, |\n[1 G,,2 G,,2 =B,,-B,,D, :| [2 G,,G,, G,, z z z z |: [K:Em] D,2 D,2 G,,3 | x7 |\nx7 | [1 D,2 D,2 G,,3 :| [2 D,2 D,2 G,,3 |\nV:3\n|:z7 | z7 | z7 | [1 z7 :|\n[2 z7 |: z7 | z7 | z7 |\n[1 z7 :| [2 z7 |: [K:Em] z7 | z7 |\nz7 | [1 z7 :| [2 z7 |\n",
+    "abc-source": "X:1\nT:Hotel Nora\nC:Ebbe Munk\nM:7/8\nL:1/8\nQ:1/4=140\nV:1 name=\"Klaver\" clef=treble\nV:2 clef=bass\nV:3 name=\"Orkesterlilletromm…\" clef=perc\nK:Cm\nV:1\n[P:A x 4] |:\"Cm\"g2 e2 c3 | \"Ab/C\"e2 c2 A-AG | \"D7b9\"^F=A ce\"G\" d=BG | [P:13][1\"Cm\"cd- de- ef-f :|\n[P:24][2\"Cm\"c2 z2 z z z |: [P:B x 4]\"G7b9\"[fa][eg] [df][ce] [=B-d-][Bd][Ac] | [G=B]2 [Bd]2 [d-f-][df][Bd] | \"Ab\"[ce]2 [ce]2 [A-c-][Ac][FA] |\n[P:13][1\"G\"[G=B]2 [Bd]2 [dg]3 :| [P:24][2\"G\"[G=B][Gd] [Gg] z z z z |: [P:C x 4][K:Em]\"D7\"F2 c2\"G\" B2 G | Fc- cB- BG-G |\nF2 c2 B2 G | [P:13][1\"D7b9\"FA c_e\"G\" dBG :| [P:24][2\"D7\"F2 z2\"G\" z z z |\nV:2\n|:C,2 C,2 E,-E,G, | C,2 C,2 E,-E,A, | D,2 D,2 G,-G,G, | [1 C,2 C,2 E,F,G, :|\n[2 C,2 C,2 E,-E,G, |: G,,=B,,- B,,D,- D,F,-F, | G,,2 G,,2 =B,,-B,,D, | A,,2 A,,2 C,-C,E, |\n[1 G,,2 G,,2 =B,,-B,,D, :| [2 G,,G,, G,, z z z z |: [K:Em] D,2 D,2 G,,3 | D,2 D,2 G,,3 |\nD,2 D,2 G,,3 | [1 D,2 D,2 G,,3 :| [2 D,2 D,2 G,,3 |\nV:3\n|:z7 | z7 | z7 | [1 z7 :|\n[2 z7 |: z7 | z7 | z7 |\n[1 z7 :| [2 z7 |: [K:Em] z7 | z7 |\nz7 | [1 z7 :| [2 z7 |\n",
     "abc-view": "full",
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\":true,\"metronome\":false,\"style\":\"balkan\",\"bassSource\":\"voice:1\",\"bass\":\"alternating\",\"chords\":\"folk\",\"drums\":\"balkan\",\"melodyInstrument\":\"source\",\"melodyVolume\":100,\"bassVolume\":50,\"chordVolume\":45,\"drumVolume\":40,\"droneEnabled\":false,\"variation\":20}",
@@ -334,7 +334,7 @@
     "huwiki-import-range": "1-15",
     "huwiki-import-original-instruments": "Klaver / Klaver / Orkesterlilletromme",
     "silba-abc-voices": "3",
-    "silba-abc-notes": "151"
+    "silba-abc-notes": "157"
   },
   {
     "title": "Gucina Groove (Gm)",

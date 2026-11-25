@@ -93,7 +93,7 @@
       "usedMeasures": 33,
       "sourceStaves": 3,
       "voices": 3,
-      "notes": 272,
+      "notes": 308,
       "duplicateRemoved": false,
       "warnings": []
     },
@@ -181,7 +181,7 @@
       "usedMeasures": 15,
       "sourceStaves": 3,
       "voices": 3,
-      "notes": 151,
+      "notes": 157,
       "duplicateRemoved": true,
       "warnings": [
         "Slagtøjsnotation (perc) kan ikke gengives fuldt ud i denne version."
