@@ -97,7 +97,8 @@
       "manifest": "../editions/silba-atno-repertoire/manifest.json",
       "bundledPlugins": [
         "site-publisher",
-        "musescore-import"
+        "musescore-import",
+        "musescore-bank-silba-atno"
       ],
       "home": {
         "headingDa": "Spil efter orkestrets nodebog",
@@ -121,7 +122,8 @@
       "manifest": "../editions/akustisk-elektrisk-repertoire/manifest.json",
       "bundledPlugins": [
         "site-publisher",
-        "musescore-import"
+        "musescore-import",
+        "musescore-bank-akustisk-elektrisk"
       ],
       "home": {
         "headingDa": "Spil balkanmusik som duo",
@@ -347,7 +349,7 @@
     {
       "id": "musescore-import",
       "name": "MuseScore → ABC Importer",
-      "version": "0.1.5-beta.1",
+      "version": "0.1.7",
       "description": "Independent MusicXML/MuseScore to ABC importer; automatically included in Music Edition; preview and native TiddlyWiki import",
       "file": "../plugins/musescore-import/dist/plugin.json",
       "status": "test"
@@ -422,6 +424,22 @@
       "version": "0.1.19",
       "description": "Local wiki/site sharing, approved Gemini/OpenAI/LM Studio/Ollama AI connections, screenshot analysis and per-wiki media",
       "file": "../plugins/forgeshare/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "musescore-bank-akustisk-elektrisk",
+      "name": "Akustisk Elektrisk · Nodearkiv",
+      "version": "0.1.0",
+      "description": "Search original MuseScore files; select versions, preview and import with MuseScore → ABC / Søg i originalfiler, vælg version, forhåndsvis og importér",
+      "file": "../plugins/musescore-bank-akustisk-elektrisk/dist/plugin.json",
+      "status": "test"
+    },
+    {
+      "id": "musescore-bank-silba-atno",
+      "name": "Silba Ätno · Nodearkiv",
+      "version": "0.1.0",
+      "description": "Search original MuseScore files; select versions, preview and import with MuseScore → ABC / Søg i originalfiler, vælg version, forhåndsvis og importér",
+      "file": "../plugins/musescore-bank-silba-atno/dist/plugin.json",
       "status": "test"
     }
   ]

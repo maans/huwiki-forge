@@ -1,0 +1,12 @@
+{
+  "title": "$:/plugins/huwiki/musescore-bank-silba-atno",
+  "type": "application/json",
+  "name": "Silba Ätno · Nodearkiv",
+  "description": "Silba Ätno · søgbart katalog over originale MuseScore-filer / searchable original score catalogue",
+  "author": "HUWiki Forge",
+  "version": "0.1.0",
+  "plugin-type": "plugin",
+  "dependents": "$:/plugins/huwiki/abc $:/plugins/huwiki/musescore-import",
+  "requires-reload": "yes",
+  "core-version": ">=5.4.1"
+}

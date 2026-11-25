@@ -7,9 +7,9 @@
         "title": "$:/plugins/huwiki/abc",
         "type": "application/json",
         "name": "ABC Musik",
-        "description": "ABC Musik – Normal visning som standard, Avanceret som tilvalg, sidetal kun i Nodepult",
+        "description": "ABC Musik · søg i originale MuseScore-nodearkiver og vælg før forhåndsvisning og import",
         "author": "HUWiki",
-        "version": "0.3.50",
+        "version": "0.3.51",
         "plugin-type": "plugin",
         "stability": "experimental",
         "license": "MIT",
@@ -28,6 +28,21 @@
         "plugin-type": "plugin"
       },
       "path": "../../plugins/ai/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/musescore-bank-akustisk-elektrisk",
+        "type": "application/json",
+        "name": "Akustisk Elektrisk · Nodearkiv",
+        "description": "Akustisk Elektrisk · søgbart katalog over originale MuseScore-filer / searchable original score catalogue",
+        "author": "HUWiki Forge",
+        "version": "0.1.0",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/abc $:/plugins/huwiki/musescore-import",
+        "requires-reload": "yes",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/musescore-bank-akustisk-elektrisk/dist/plugin.json"
     },
     {
       "fields": {
@@ -352,9 +367,9 @@
         "title": "$:/plugins/huwiki/musescore-import",
         "type": "application/json",
         "name": "MuseScore → ABC Importer",
-        "description": "DA: MuseScore/MusicXML → ABC med node-preview, synkrone gentagelser, korrekte bindebuer og oktavbas. EN: Import MuseScore/MusicXML with preview, synchronized repeats, accurate ties and octave bass.",
+        "description": "DA: MuseScore/MusicXML → ABC med nodearkiv, stemmevalg, node-preview og TiddlyWiki-import. EN: Import MuseScore/MusicXML from source catalogues with voice selection, score preview and native import review.",
         "author": "HUWiki contributors (AI-assisted development)",
-        "version": "0.1.6",
+        "version": "0.1.7",
         "plugin-type": "plugin",
         "dependents": "$:/plugins/huwiki/abc",
         "stability": "STABILITY_1_EXPERIMENTAL",
@@ -459,6 +474,21 @@
         "plugin-type": "plugin"
       },
       "path": "../../plugins/shop/dist/plugin.json"
+    },
+    {
+      "fields": {
+        "title": "$:/plugins/huwiki/musescore-bank-silba-atno",
+        "type": "application/json",
+        "name": "Silba Ätno · Nodearkiv",
+        "description": "Silba Ätno · søgbart katalog over originale MuseScore-filer / searchable original score catalogue",
+        "author": "HUWiki Forge",
+        "version": "0.1.0",
+        "plugin-type": "plugin",
+        "dependents": "$:/plugins/huwiki/abc $:/plugins/huwiki/musescore-import",
+        "requires-reload": "yes",
+        "core-version": ">=5.4.1"
+      },
+      "path": "../../plugins/musescore-bank-silba-atno/dist/plugin.json"
     },
     {
       "fields": {

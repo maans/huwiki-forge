@@ -1,0 +1,87 @@
+{
+  "created": "2026-11-25",
+  "mailMessagesRead": 191,
+  "candidateFiles": 394,
+  "conversionChecked": 388,
+  "legacyFormatErrors": [
+    {
+      "file": "feierabend.mscz",
+      "reason": "Ikke en MuseScore MSCX-fil."
+    },
+    {
+      "file": "chasidisk_bryllupsdans_nr2_cbb.mscz",
+      "reason": "Ikke en MuseScore MSCX-fil."
+    },
+    {
+      "file": "cuprija-ekspres2.mscz",
+      "reason": "Ikke en MuseScore MSCX-fil."
+    },
+    {
+      "file": "bach-largo-1056-2.mscz",
+      "reason": "Ikke en MuseScore MSCX-fil."
+    },
+    {
+      "file": "bouree.mscz",
+      "reason": "Ikke en MuseScore MSCX-fil."
+    },
+    {
+      "file": "j-s-bach-bourree-in-e-minor-bwv-996.mscz",
+      "reason": "Ikke en MuseScore MSCX-fil."
+    }
+  ],
+  "banks": {
+    "akustisk-elektrisk": {
+      "titles": 211,
+      "sourceVersions": 347,
+      "pdfOnly": 0,
+      "missing": [
+        "Anders-Orsa-vals'n",
+        "Black Orpheus",
+        "Blue Bossa",
+        "Corcovado",
+        "Desafinado",
+        "Eight days a week",
+        "Eleanor Rigby",
+        "En filant ma quenouille",
+        "Girl from Ipanema",
+        "Here, there and everywhere",
+        "Huldre-trall",
+        "If you never come to me",
+        "I'll follow the sun",
+        "Impis vals'n",
+        "Jag vet en dejlig rosa",
+        "Knaft-Jonkes schottis",
+        "Kysdans",
+        "Meditation",
+        "Michelle",
+        "Når vandet fryser i hanerne",
+        "Norwegian Wood",
+        "One note samba",
+        "Penny Lane",
+        "Samba Cantina",
+        "Skottisch, Hjul-Stejle nr. 11",
+        "Strawberry Fields forever",
+        "The fool on the hill",
+        "Triste",
+        "Värmlandsvisan",
+        "Veill du vare ve",
+        "Wave",
+        "We can work it out",
+        "When I'm sixty-four",
+        "Yesterday"
+      ],
+      "activeSetMissing": []
+    },
+    "silba-atno": {
+      "titles": 49,
+      "sourceVersions": 127,
+      "pdfOnly": 0,
+      "missing": [
+        "Dance Me to the End of Love",
+        "Lulu Swing (D-dur)",
+        "Oh verden"
+      ],
+      "activeSetMissing": []
+    }
+  }
+}

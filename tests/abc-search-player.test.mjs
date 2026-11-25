@@ -47,6 +47,7 @@ function makeHarness(){
   "$:/plugins/huwiki/abc/session-data.js":{uniqueTitle:(_,title)=>title},
   "$:/plugins/huwiki/abc/jazz-catalog.js":{},
   "$:/plugins/huwiki/abc/balkan-catalog.js":{},
+  "$:/plugins/huwiki/abc/musescore-bank.js":{},
   "$:/plugins/huwiki/abc/loader.js":{header:(abc,key)=>key==="T"?"Test tune":""}
  };
  const output={};

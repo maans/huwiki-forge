@@ -605,6 +605,26 @@
         "name": "AniMus · Den græske havn",
         "description": "Håndmalet havn, skib og Theseus-figurer med en redigerbar startscene."
       }
+    },
+    "$:/plugins/huwiki/musescore-bank-akustisk-elektrisk": {
+      "da": {
+        "name": "Akustisk Elektrisk · Nodearkiv",
+        "description": "Søg i originale MuseScore-filer, vælg version og forhåndsvis før import."
+      },
+      "en": {
+        "name": "Akustisk Elektrisk · Score archive",
+        "description": "Search original MuseScore files, choose a version and preview before importing."
+      }
+    },
+    "$:/plugins/huwiki/musescore-bank-silba-atno": {
+      "da": {
+        "name": "Silba Ätno · Nodearkiv",
+        "description": "Søg i originale MuseScore-filer, vælg version og forhåndsvis før import."
+      },
+      "en": {
+        "name": "Silba Ätno · Score archive",
+        "description": "Search original MuseScore files, choose a version and preview before importing."
+      }
     }
   }
 }

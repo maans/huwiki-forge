@@ -73,7 +73,7 @@ test("Music Edition bundles the importer and all six lessons with ABC in one dep
  assert.match(abc["$:/plugins/huwiki/abc/minimal-player.css"].text,/huwabc-follow-backdrop/,"protect score camera background");
  assert.match(abc["$:/plugins/huwiki/abc/ExampleMacros"].text,/\\procedure abc-player/);
  const importer=byTitle.get("$:/plugins/huwiki/musescore-import");
- assert.equal(importer.version,"0.1.6");
+ assert.equal(importer.version,JSON.parse(await readFile(path.join(root,"plugins/musescore-import/plugin-info.json"),"utf8")).version);
  const internal=JSON.parse(importer.text).tiddlers;
  assert.ok(internal[importer.title+"/converter.js"]);
  assert.ok(internal[importer.title+"/widget.js"]);

@@ -18,6 +18,7 @@
     "../../plugins/musescore-import/dist/plugin.json",
     "../../plugins/site-publisher/dist/plugin.json",
     "../../plugins/print-article/dist/plugin.json",
-    "../../plugins/repertoire/dist/plugin.json"
+    "../../plugins/repertoire/dist/plugin.json",
+    "../../plugins/musescore-bank-akustisk-elektrisk/dist/plugin.json"
   ]
 }
