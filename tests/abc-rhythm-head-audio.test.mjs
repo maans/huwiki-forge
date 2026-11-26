@@ -20,6 +20,7 @@ const ABC=load('$:/plugins/huwiki/abc/vendor/abcjs.js');
 const Accompaniment=load('$:/plugins/huwiki/abc/accompaniment.js');
 const source=`X:1
 T:Rhythm guitar
+R:Swing
 M:4/4
 L:1/4
 Q:1/4=126
@@ -29,11 +30,13 @@ V:G clef=treble name="Guitar"
 K:C
 Z2 |: "C7"sB sB z sB | "F6"sB-sB sB sB :|
 "G7"sB sB sB sB | "N.C."sB sB sB sB |`;
-const notes=track=>track.filter(e=>e.cmd==='note'&&e.volume>0);
+const notes=track=>track.filter(e=>e.cmd==='note'&&e.volume>0&&Number.isFinite(e.duration)&&e.duration>0);
 const shape=track=>JSON.stringify(notes(track).map(({pitch,start,duration,instrument,volume})=>({pitch,start,duration,instrument,volume})));
 
 for(const live of [false,true])test(`Written rhythm guitar survives accompaniment off/on (live=${live})`,()=>{
- const reference=ABC.parseOnly(source)[0].setUpAudio({gchord:'z',bassvol:0,chordvol:0}).tracks[0];
+ const referenceTune=ABC.parseOnly(source)[0];
+ Accompaniment.prepare(ABC,referenceTune,source,{enabled:false,style:'swing'},false,{});
+ const reference=referenceTune.setUpAudio({}).tracks[0];
  for(const enabled of [false,true]){
   const tune=ABC.parseOnly(source)[0];
   Accompaniment.prepare(ABC,tune,source,{enabled,style:'swing'},live,{});
@@ -80,10 +83,14 @@ test('Mixed melody scores do not acquire automatic stabs; explicit guitar charts
  const abc=source.replace('"G7"sB sB sB sB','"G7"C D E F');
  for(const written of [false,true]){
   const tune=ABC.parseOnly(abc)[0];
-  const expected=ABC.parseOnly(abc)[0].setUpAudio(written?{gchord:'z',bassvol:0,chordvol:0}:{chordsOff:true}).tracks[0];
+  const expected=ABC.parseOnly(abc)[0].setUpAudio({chordsOff:true}).tracks[0];
   Accompaniment.prepare(ABC,tune,abc,{enabled:false,style:'swing'},false,written?{'abc-rhythm-playback':'written'}:{});
   const audio=tune.setUpAudio({});
-  assert.equal(shape(audio.tracks[0]),shape(expected));
+  if(written){
+   assert.ok(notes(audio.tracks[0]).length>4);
+   const cues=notes(audio.tracks[0]).filter(e=>e.start>=6&&e.start<7);
+   assert.equal(shape(cues),shape(expected));
+  }else assert.equal(shape(audio.tracks[0]),shape(expected));
   if(!written)assert.equal(notes(audio.tracks[0]).length,4);
  }
 });

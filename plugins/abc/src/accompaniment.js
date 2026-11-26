@@ -7,6 +7,7 @@ module-type: library
 'use strict';
 var notation=require('$:/plugins/huwiki/abc/notation.js');
 var jazz=require('$:/plugins/huwiki/abc/jazz-engine.js');
+var swingVoicings=require('$:/plugins/huwiki/abc/swing-voicings.js');
 var balkan7=require('$:/plugins/huwiki/abc/balkan7.js');
 var meterMap=require('$:/plugins/huwiki/abc/meter-map.js');
 var meterArranger=require('$:/plugins/huwiki/abc/meter-arranger.js');
@@ -215,6 +216,26 @@ function prepare(ABC,tune,source,config,live,fields){
  var missingBass=c.bassSource.indexOf('voice:')===0&&voiceRouting.selectedBass(c,baseCount)<0;
  if(c.bassSource!=='style')c.bass='off';
  var styleName=c.style==='auto'?c.detectedStyle:c.style;
+ var writtenSwing=writtenRhythm&&(styleName==='swing'||jazz.inferStyle(source,fields)==='swing'||fields&&fields['abc-rhythm-style']==='freddie-green');
+ var swingPlan=null,writtenHits=[];
+ if(meta.supported&&(styleName==='swing'||writtenSwing)){
+  var swingTimeline=meterMap.build(ABC,raw,source,rawBase);
+  swingPlan=swingVoicings.plan(swingTimeline.chords,{bars:swingTimeline.bars,transpose:raw.formatting&&raw.formatting.midi&&raw.formatting.midi.transpose&&raw.formatting.midi.transpose[0]});
+  // Capture unfolded positions and source transpositions before another audio pass resets them.
+  var swingVoices=repeatPlanModule.collect(raw).voices;
+  var swingTiming=swingVoices.map(function(voice){
+   var transpose=swingPlan.transpose;
+   return voice.measures.flatMap(function(measure){return measure.events.flatMap(function(e){
+    if(e.el_type==='midi'&&e.cmd==='transpose')transpose=Number(e.params[0])||0;
+    if(e.el_type!=='note')return [];
+    var starts=Array.isArray(e.currentTrackWholeNotes)?e.currentTrackWholeNotes:[e.currentTrackWholeNotes];
+    return starts.filter(Number.isFinite).map(function(start){return {start:start,duration:e.duration,rhythm:e.style==='rhythm',transpose:transpose};});
+   });}).sort(function(a,b){return a.start-b.start;});
+  });
+  var harmonyVoice=swingVoices.findIndex(function(voice){return voice.measures.some(function(measure){return measure.events.some(function(e){return (e.chord||[]).some(function(ch){return !ch.position||ch.position==='default';});});});});
+  swingPlan.shifts=swingTiming[Math.max(0,harmonyVoice)]||[];
+  if(writtenSwing)writtenHits=swingTiming.map(function(timing){return timing.filter(function(hit){return hit.rhythm;});});
+ }
  var useTimeline=meta.profile.changes||!!meterArranger.styles[styleName]||meta.profile.first&&meta.profile.first.explicit&&!(meta.meter.num===7&&meta.meter.den===8);
  var timeline=null,arrangedBars=[];
  if(meta.supported&&useTimeline){
@@ -266,9 +287,12 @@ function prepare(ABC,tune,source,config,live,fields){
    var activeComp=c.chords==='jazzcomp'||c.chords==='bossacomp'||c.chords==='balladcomp';
    var compStyle=c.chords==='bossacomp'?'bossa':c.chords==='balladcomp'?'jazzballad':styleName==='jazzwaltz'?'jazzwaltz':'swing';
    var chordNotes=generated({gchord:activeComp?'c'.repeat(meta.n):pat.chord,chordprog:c.chordInstrument,chordvol:c.chordVolume,bassvol:0});
+   // Preserve the selected source harmony across anticipations and timing variation.
+   if(styleName==='swing'&&swingPlan)chordNotes.forEach(function(e){e.huwabcHarmonyStart=e.start;});
    if(isBrazil&&c.chords==='bossacomp')chordNotes=jazz.brazilComp(chordNotes,meta.meter,analysis,grooveConfig,styleName,source);
    else if(activeComp)chordNotes=jazz.comp(chordNotes,meta.meter,analysis,grooveConfig,compStyle,source);
-   if(c.chords!=='arpeggio')chordNotes=jazz.voiceLead(chordNotes);
+   if(styleName==='swing'&&swingPlan&&c.chords!=='arpeggio')chordNotes=swingVoicings.voice(chordNotes,swingPlan,{guitar:[24,25,26,27,28].includes(c.chordInstrument),pulse:c.chords==='beats'});
+   else if(c.chords!=='arpeggio')chordNotes=jazz.voiceLead(chordNotes);
    if(compStyle==='swing'&&activeComp)chordNotes.forEach(function(e){if(Math.abs((e.start*8)%2-1)<.010)e.start+=.038;});
    add('Akkorder',c.chordInstrument,chordNotes);}
   if(c.drums!=='off'&&c.drumVolume){var drumNotes=pat.drums.flatMap(function(p){return generated({chordsOff:true,drum:p});}).sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});
@@ -286,7 +310,9 @@ function prepare(ABC,tune,source,config,live,fields){
  strip(tune);repeatPlayback.install(tune,repeatPlan);var original=tune.setUpAudio;
  Object.defineProperty(tune,'_huwabcArrangementBase',{value:original,writable:true,configurable:true});
  delete tune.noteTimings;
- tune.setUpAudio=function(options){var audioOptions=Object.assign({},options,{chordsOff:true,drum:'',drumIntro:0}),sequence=tune._huwabcNotationProjected||tune.visualTranspose?concertAudio(tune,melodySource,audioOptions,baseCount,writtenRhythm):notatedAudio(tune,original,audioOptions,baseCount,writtenRhythm),base=voiceRouting.apply(sequence,c,live),used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
+ tune.setUpAudio=function(options){var audioOptions=Object.assign({},options,{chordsOff:true,drum:'',drumIntro:0}),sequence=tune._huwabcNotationProjected||tune.visualTranspose?concertAudio(tune,melodySource,audioOptions,baseCount,writtenRhythm):notatedAudio(tune,original,audioOptions,baseCount,writtenRhythm);
+  if(writtenSwing&&swingPlan)sequence=swingVoicings.written(sequence,writtenHits,swingPlan);
+  var base=voiceRouting.apply(sequence,c,live),used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
   backings.forEach(function(part){var channel=9;if(part.instrument!==128){for(channel=0;channel<16&&used.has(channel);channel++);if(channel===16)throw new Error('Der er ikke flere ledige MIDI-kanaler til akkompagnement.');used.add(channel);}var track=[{cmd:'text',type:'name',text:part.name},{cmd:'program',channel:channel,instrument:part.instrument}].concat(part.notes.map(function(n){return Object.assign({},n,{instrument:part.instrument});}));track.huwabcPart={Bas:'bassVolume',Akkorder:'chordVolume','Slagtøj':'drumVolume',Metronom:'metronomeVolume'}[part.name];base.tracks.push(track);});return base;};
  return {tune:tune,message:[missingBass?'Den valgte basstemme findes ikke længere. Vælg bassens kilde igen.':'',c.enabled&&styleName==='ungrouped-11'?'Vælg en 11/8-stil eller angiv grupperingen i M:-feltet.':(c.enabled||c.metronome)?meta.message:''].filter(Boolean).join(' '),parts:backings,form:analysis,detectedStyle:styleName,timeline:timeline,bars:arrangedBars,warnings:(timeline?timeline.warnings:[]).concat(repeatPlan.warnings),repeatPlan:repeatPlan};
 }
