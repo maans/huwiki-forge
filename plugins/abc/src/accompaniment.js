@@ -243,9 +243,11 @@ function prepare(ABC,tune,source,config,live,fields){
   catch(error){meta.supported=false;meta.message=error.message;}
  }
  var pat=meta.supported&&!useTimeline?patterns(meta,c):null;
- var barCount=timeline?timeline.bars.length:jazz.calcBars(rawBase.tracks.flat(),meta.meter),analysis=jazz.form(source,barCount,meta.meter,c.form);
+ var playedTimeline=timeline||swingTimeline;
+ var barCount=playedTimeline?playedTimeline.bars.length:jazz.calcBars(rawBase.tracks.flat(),meta.meter),analysis=jazz.form(source,barCount,meta.meter,c.form,playedTimeline&&playedTimeline.bars);
+ if(playedTimeline)analysis.chords=playedTimeline.chords;
  var jazzStyle=['swing','bossa','samba','bossa-samba','jazzballad','jazzwaltz'].includes(styleName)?styleName:null;
- var isBrazil=['bossa','samba','bossa-samba'].includes(styleName);var grooveConfig=Object.assign({},c,{feel:styleName==='swing'||styleName==='jazzballad'?c.feel:'four'});
+ var isBrazil=['bossa','samba','bossa-samba'].includes(styleName);var grooveConfig=Object.assign({},c,{feel:styleName==='swing'||styleName==='jazzballad'?c.feel:'four',swing:styleName==='swing',tempo:rawBase.tempo});
  function generated(options){var t=strip(ABC.parseOnly(source)[0]);rhythmHeads(t,true);repeatPlayback.install(t,repeatPlan);return t.setUpAudio(options).tracks.slice(baseCount).flatMap(function(tr){return tr.filter(function(e){return e.cmd==='note'&&e.volume>0;}).map(function(e){return Object.assign({},e,{pitch:Number(e.pitch),volume:Number(e.volume)});});});}
  function add(name,instrument,notes){if(notes.length)backings.push({name:name,instrument:instrument,notes:notes});}
  // The chord-symbol bass mode also works with existing fixed-meter styles.
@@ -280,7 +282,7 @@ function prepare(ABC,tune,source,config,live,fields){
    if(c.drums!=='off'&&c.drumVolume)add('Slagtøj',128,balkanParts.drums);
   } else {
   if(c.bass!=='off'&&c.bass!=='written'&&c.bassVolume){var bassNotes=generated({gchord:pat.bass,bassprog:c.bassInstrument,bassvol:c.bassVolume,chordvol:0});
-   if(c.bass==='walking')bassNotes=jazz.walk(bassNotes,meta.meter,analysis,grooveConfig);
+   if(c.bass==='walking')bassNotes=jazz.walk(generated({gchord:'G'.repeat(meta.n),chordprog:c.bassInstrument,chordvol:c.bassVolume,bassvol:0}),meta.meter,analysis,grooveConfig);
    if(isBrazil&&c.bass==='bossa')bassNotes=jazz.brazilBass(generated({gchord:'f'.repeat(meta.n),bassprog:c.bassInstrument,bassvol:c.bassVolume,chordvol:0}),meta.meter,analysis,grooveConfig,styleName);
    add('Bas',c.bassInstrument,bassNotes);}
   if(c.chords!=='off'&&c.chordVolume){
@@ -293,10 +295,17 @@ function prepare(ABC,tune,source,config,live,fields){
    else if(activeComp)chordNotes=jazz.comp(chordNotes,meta.meter,analysis,grooveConfig,compStyle,source);
    if(styleName==='swing'&&swingPlan&&c.chords!=='arpeggio')chordNotes=swingVoicings.voice(chordNotes,swingPlan,{guitar:[24,25,26,27,28].includes(c.chordInstrument),pulse:c.chords==='beats'});
    else if(c.chords!=='arpeggio')chordNotes=jazz.voiceLead(chordNotes);
-   if(compStyle==='swing'&&activeComp)chordNotes.forEach(function(e){if(Math.abs((e.start*8)%2-1)<.010)e.start+=.038;});
+   if(compStyle==='swing'&&activeComp)chordNotes=chordNotes.filter(function(e){
+    if(Math.abs((e.start*8)%2-1)<.010)e.start+=.038;
+    var bar=playedTimeline&&playedTimeline.bars.find(function(b){return e.start>=b.start-.00002&&e.start<b.end-.00002;});
+    var end=bar?bar.end:rawBase.totalDuration;
+    (analysis.chords||[]).some(function(ch){if(ch.start>e.start+.00002){end=Math.min(end,ch.start);return true;}return false;});
+    e.duration=Math.min(e.duration,end-e.start);return e.duration>.00002;
+   });
    add('Akkorder',c.chordInstrument,chordNotes);}
   if(c.drums!=='off'&&c.drumVolume){var drumNotes=pat.drums.flatMap(function(p){return generated({chordsOff:true,drum:p});}).sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});
-    if(isBrazil)drumNotes=jazz.brazilDrums(meta.meter,analysis,grooveConfig,styleName,source);
+    if(styleName==='swing'&&c.drums==='swing')drumNotes=jazz.swingDrums(meta.meter,analysis,grooveConfig,source);
+    else if(isBrazil)drumNotes=jazz.brazilDrums(meta.meter,analysis,grooveConfig,styleName,source);
     else if(jazzStyle)drumNotes=jazz.drumDynamics(drumNotes,meta.meter,analysis,grooveConfig,source);
     add('Slagtøj',128,drumNotes);}
   }
@@ -456,7 +465,7 @@ function mount(parent,fields,onChange,opened,viewState,onLive){
  field('Stil','style',[['auto','Automatisk efter ABC-kildens R: / genre']].concat(allowedStyles.map(function(k){return [k,styles[k].label];})).concat([['custom','Egen blanding · eksperimentel']]));
  if(!allowedStyles.length){var meterNotice=E('p','Denne taktart eller et taktartsskift kræver en senere version af akkompagnementsmotoren. Vi undgår at tilbyde inkompatible stilarter.');meterNotice.className='huwabc-muted';grid.appendChild(meterNotice);}
  field('Form','form',[['auto','Automatisk (P:, gentagelser, taktantal)'],['AABA','AABA – 32-takters sang'],['ABAC','ABAC – kontrasterende afslutning'],['AAB','AAB – gentaget A, derefter B'],['AB','AB – to dele'],['BLUES','Blues – 12 takter'],['FREE','Fri form – ét afsnit'],['none','Ingen formautomatik']]);
- field('Bas-feel','feel',[['form','Efter form: A=2, B=4'],['two','2-feel hele vejen'],['four','4-feel hele vejen']]);
+ field('Bas og trommer · feel','feel',[['form','Efter form og tempo: A=2, B=4'],['two','2-feel hele vejen'],['four','4-feel hele vejen']]);
  field('Basmønster','bass',basses);field('Akkordmønster','chords',chords);
  var indianHint=E('p','Traditionel indisk musik bruger melodi, fast drone og slagtøj. Bas/akkorder er slået fra i de traditionelle stilarter. Vælg fusion eller Egen blanding for vestlige akkorder.');indianHint.className='huwabc-muted';grid.appendChild(indianHint);
  var variationLabel=E('label');variationLabel.className='huwabc-field huwabc-variation';variationLabel.appendChild(E('span','Variation · sandsynlighed pr. frase/takt'));var variation=E('input');variation.type='range';variation.min='0';variation.max='100';variation.step='5';var variationOutput=E('output');variation.setAttribute('aria-label','Variation i procent');variationLabel.appendChild(variation);variationLabel.appendChild(variationOutput);grid.appendChild(variationLabel);

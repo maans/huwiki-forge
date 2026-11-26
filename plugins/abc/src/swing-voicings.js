@@ -154,7 +154,7 @@ function voice(events,plan,options){
     factor=index===0?(backbeat?.46:.88):(backbeat?1.08:.76);
     if(regular)duration=Math.min(duration,backbeat?.25*.34:.25*.62);
    }
-   out.push(Object.assign({},sample,{pitch:pitch+transpose,start:group.start,duration:duration,volume:clamp(Math.round(volume*factor),1,127)}));
+   out.push(Object.assign({},sample,{pitch:pitch+transpose,start:group.start,duration:duration,volume:clamp(Math.round(volume*factor*(guitar?.5:1)),1,127)}));
   });
  });
  return out.sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});

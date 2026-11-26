@@ -56,3 +56,25 @@ Background:
 - Michael Pettersen, [The Short and Long of Freddie Green](https://w.freddiegreen.org/transcriptions/fromcoasttocoast.html).
 
 Validation: `node --test tests/abc-swing-voicings.test.mjs tests/abc-rhythm-head-audio.test.mjs`.
+
+## Rhythm and balance
+
+Jazz · Swing piano comping uses seeded four-bar phrases with offbeats, rests,
+short responses and occasional held chords. Faster swing has fewer piano attacks;
+the shell positions and explicit extensions above remain the same. Written rhythm
+figures keep their notated attacks. Swing guitar shells, including written chord
+stabs, now play at half their previous event velocity.
+
+With the form/tempo feel setting, A sections start in two-feel; B and C sections
+use quarter-note walking bass and a more active double-feel ride pattern. At
+160 quarter notes per minute and above, the variation setting also permits
+coordinated four-bar feel changes in other sections. Explicit two/four settings
+override this. Drum events are raised by 20% before the mixer's normal volume
+control. The score, melody, metronome and BPM are unchanged.
+
+Lettered P: section markers (including inline/descriptive markers) follow the
+actual unfolded playback timeline through repeats and voltas. Numeric rehearsal
+marks and second endings do not become B sections. Pickups and short final bars
+follow their actual duration. N.C. silences the generated pitched backing.
+
+Validation also includes `node --test tests/abc-swing-arrangement.test.mjs`.
