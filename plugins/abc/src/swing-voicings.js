@@ -10,7 +10,7 @@ var EPS=.004;
 function pc(n){return ((n%12)+12)%12;}
 function clamp(n,lo,hi){return Math.max(lo,Math.min(hi,n));}
 function chord(name){
- var text=String(name||'').trim().replace(/♯/g,'#').replace(/♭/g,'b').replace(/Δ|△/g,'maj').replace(/ø/g,'m7b5').replace(/°/g,'dim').replace(/6\/9|69/g,'6add9');
+ var text=String(name||'').trim().replace(/♯/g,'#').replace(/♭/g,'b').replace(/Δ|△|Maj|MAJ/g,'maj').replace(/ø/g,'m7b5').replace(/°/g,'dim').replace(/6\/9|69/g,'6add9');
  if(/^(?:N\.?\s*C\.?|tacet|no chord)$/i.test(text))return null;
  // Text directions are not chord symbols. Unknown symbols retain the original audio.
  if(!/^[A-Ha-h][#b]?(?:(?:maj|min|dim|aug|sus|add|omit|no|alt)|[mMo0-9+#b()\s,−-])*(?:\/[A-Ha-h][#b]?)?$/.test(text))return undefined;
@@ -22,7 +22,8 @@ function chord(name){
  // add9/add11 do not imply a seventh. Explicit 7sus does.
  var seventh=/(?:7|9|11|13)/.test(quality.replace(/add(?:9|11|13)/g,''));
  var sixth=!seventh&&/6/.test(quality);
- var companion=sixth?9:seventh?(intervals.includes(11)?11:intervals.includes(10)?10:intervals.includes(9)?9:null):intervals.includes(7)?7:intervals.includes(6)?6:intervals.includes(8)?8:null;
+ var diminished=/dim|^o/.test(quality);
+ var companion=diminished||sixth?9:seventh?(intervals.includes(11)?11:intervals.includes(10)?10:intervals.includes(9)?9:null):intervals.includes(7)?7:intervals.includes(6)?6:intervals.includes(8)?8:null;
  if(companion===null)return undefined;
  // Keep alterations and explicit colours; never turn a plain triad into a seventh chord.
  var colours=[];
@@ -52,12 +53,13 @@ function candidates(harmony){
     if(span>6)continue;
     var tones=[root,low,high];
     if(harmony.bass!==harmony.root){var harmonicRoot=48+harmony.root;while(harmonicRoot<=root)harmonicRoot+=12;if(!tones.includes(harmonicRoot))tones.push(harmonicRoot);}
+    var shell=tones.slice().sort(function(a,b){return a-b;}).filter(function(n,i,a){return !a.slice(0,i).some(function(before){return pc(before)===pc(n);});});
     harmony.colours.forEach(function(interval){
-     var n=60;while(pc(n)!==pc(harmony.root+interval))n++;
-     if(n>72)n-=12;if(!tones.includes(n))tones.push(n);
+     var n=Math.max.apply(null,shell)+1;while(pc(n)!==pc(harmony.root+interval))n++;
+     if(!tones.includes(n))tones.push(n);
     });
     tones.sort(function(a,b){return a-b;});
-    out.push({order:order,tones:tones,guides:[low,high],bass:root,local:Math.abs(low-55)*.08+Math.abs(high-62)*.08+Math.abs(root-47)*.025+span*.025});
+    out.push({order:order,tones:tones,shell:shell,guides:[low,high],bass:root,local:Math.abs(low-55)*.08+Math.abs(high-62)*.08+Math.abs(root-47)*.025+span*.025});
    }
   }
  });
@@ -127,7 +129,7 @@ function voice(events,plan,options){
   var quarter=(group.start-(bar?bar.start:0)+(bar?Math.max(0,bar.meter.num/bar.meter.den-bar.duration):0))*4;
   var beat=Math.round(quarter),onBeat=Math.abs(quarter-beat)<.02,backbeat=onBeat&&beat%2===1;
   var guitar=options.guitar===true,regular=guitar&&sample.duration<=.25+EPS&&(typeof options.pulse==='function'?options.pulse(group.start):options.pulse)&&onBeat;
-  target.voicing.tones.forEach(function(pitch,index){
+  (guitar?target.voicing.shell:target.voicing.tones).forEach(function(pitch,index){
    var duration=sample.duration,factor=1;
    if(guitar){
     factor=index===0?(backbeat?.46:.88):(backbeat?1.08:.76);

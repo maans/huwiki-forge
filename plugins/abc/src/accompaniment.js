@@ -216,7 +216,7 @@ function prepare(ABC,tune,source,config,live,fields){
  var missingBass=c.bassSource.indexOf('voice:')===0&&voiceRouting.selectedBass(c,baseCount)<0;
  if(c.bassSource!=='style')c.bass='off';
  var styleName=c.style==='auto'?c.detectedStyle:c.style;
- var writtenSwing=writtenRhythm&&(styleName==='swing'||jazz.inferStyle(source,fields)==='swing'||fields&&fields['abc-rhythm-style']==='freddie-green');
+ var writtenSwing=writtenRhythm&&(styleName==='swing'||jazz.inferStyle(source,fields)==='swing'||/^Q:[^\r\n]*\bswing\b/im.test(source)||fields&&fields['abc-rhythm-style']==='freddie-green');
  var swingPlan=null,writtenHits=[];
  if(meta.supported&&(styleName==='swing'||writtenSwing)){
   var swingTimeline=meterMap.build(ABC,raw,source,rawBase);

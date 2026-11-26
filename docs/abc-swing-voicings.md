@@ -19,8 +19,11 @@ For example, one possible turnaround is:
 | Am7 | A2 G3 C4 | 1–7–3 |
 | Dm7 | D3 F3 C4 | 1–3–7 |
 
-Sixths remain sixths; plain triads do not gain a seventh. Explicit suspensions,
-alterations, colours and slash bass are retained. C6 and Am7 are voiced according
+Sixths remain sixths; plain major/minor triads do not gain a seventh. Suspensions
+and slash bass are retained. Piano adds explicit alterations and colours above
+the shell; Freddie Green guitar omits these colours and plays the basic shell.
+Diminished guitar chords use root, minor third and sixth (1–♭3–6 or 1–6–♭3);
+piano can add the diminished fifth. C6 and Am7 are voiced according
 to the written symbol; playback does not substitute one symbol for another.
 N.C. silences the chord part. Unrecognized symbols keep their original realization.
 
@@ -28,7 +31,8 @@ Written rhythm heads in swing charts use the same harmonic plan as generated
 backing. Only rhythm-head attacks are revoiced; melodic cues retain their notes.
 Rests, tied durations, repeats and source MIDI transpositions are preserved.
 Automatic rhythm-chart detection and `abc-rhythm-playback: written/off` retain
-their existing meaning. A source marked `R:Swing` keeps its written guitar style
+their existing meaning. A source marked `R:Swing`, or swing in the `Q:` tempo
+label, keeps its written guitar style
 even if a different backing style is selected. The tiddler field
 `abc-rhythm-style: freddie-green` can also identify that written style.
 

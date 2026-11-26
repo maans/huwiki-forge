@@ -138,3 +138,22 @@ test('an explicitly selected arpeggio keeps its separate attacks',()=>{
  const comp=groups(result.tracks.find(t=>t.huwabcPart==='chordVolume'));
  assert.ok(comp.length>1);assert.ok(comp.every(g=>g.length===1));
 });
+
+test('piano adds colours above the shell; Freddie Green guitar plays only the shell',()=>{
+ for(const [name,shell,colour] of [['C9',[0,4,10],2],['C7b9',[0,4,10],1],['C7#9',[0,4,10],3],['C13',[0,4,10],9],['C7b5',[0,4,10],6],['C7#11',[0,4,10],6],['C7#5',[0,4,10],8],['C7b13',[0,4,10],8]]){
+  const abc=source(`"${name}"sB sB sB sB |`);
+  const result=audio(abc,{enabled:true,chords:'beats',chordInstrument:0,bass:'off',drums:'off'});
+  const guitar=groups(result.tracks[0])[0],piano=groups(result.tracks.find(t=>t.huwabcPart==='chordVolume'))[0];
+  assert.equal(guitar.length,3,name);assert.deepEqual(pcs(guitar),shell,name);
+  assert.deepEqual(piano.slice(0,3).map(n=>n.pitch),guitar.map(n=>n.pitch),name);
+  assert.equal(piano.at(-1).pitch%12,colour,name);assert.ok(piano.at(-1).pitch>Math.max(...guitar.map(n=>n.pitch)),name);
+ }
+});
+
+test('diminished guitar chords use root, minor third and sixth in either spread',()=>{
+ for(const name of ['Cdim','Cdim7','C°','Co'])for(const startOrder of ['137','173']){
+  const p=progression([name],{startOrder})[0];
+  assert.deepEqual(pcs(p.voicing.shell),[0,3,9]);
+  assert.deepEqual(plain(p.voicing.shell.map(n=>(n-p.voicing.shell[0])%12)),startOrder==='137'?[0,3,9]:[0,9,3]);
+ }
+});
