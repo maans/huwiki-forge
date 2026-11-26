@@ -5,18 +5,15 @@
  *
  * This is a command-line adapter for the existing converter, not a new importer.
  */
-import {readFile,writeFile,mkdir,mkdtemp,rm} from "node:fs/promises";
+import {readFile,writeFile,mkdir} from "node:fs/promises";
 import path from "node:path";
-import os from "node:os";
-import {createRequire} from "node:module";
+import {runInNewContext} from "node:vm";
 import {execFileSync} from "node:child_process";
 import {DOMParser} from "@xmldom/xmldom";
-const require=createRequire(import.meta.url);
 const root=path.resolve(import.meta.dirname,"..");
 const base=path.join(root,"editions/silba-atno-repertoire");
 const plugin=JSON.parse(await readFile(path.join(root,"plugins/musescore-import/dist/plugin.json"),"utf8"));
 const pluginTiddlers=JSON.parse(plugin.text).tiddlers;
-const converterSource=pluginTiddlers["$:/plugins/huwiki/musescore-import/converter.js"].text;
 const doc=new DOMParser().parseFromString("<root><child/></root>","application/xml");
 const elementProto=Object.getPrototypeOf(doc.documentElement);
 if(!("firstElementChild" in elementProto))Object.defineProperty(elementProto,"firstElementChild",{get(){
@@ -26,13 +23,16 @@ if(!("nextElementSibling" in elementProto))Object.defineProperty(elementProto,"n
  let n=this.nextSibling;while(n&&n.nodeType!==1)n=n.nextSibling;return n||null;
 }});
 globalThis.DOMParser=DOMParser;
-const tmp=await mkdtemp(path.join(os.tmpdir(),"silba-abc-"));
-let converter;
-try {
- const filename=path.join(tmp,"converter.cjs");
- await writeFile(filename,converterSource);
- converter=require(filename);
-}finally{await rm(tmp,{recursive:true,force:true});}
+const moduleCache={};
+function loadConverterModule(title){
+ if(moduleCache[title])return moduleCache[title];
+ const source=pluginTiddlers[title];
+ if(!source)throw Error('Missing bundled importer module: '+title);
+ const exports={};moduleCache[title]=exports;
+ runInNewContext(source.text,{exports,DOMParser,require:loadConverterModule});
+ return exports;
+}
+const converter=loadConverterModule('$:/plugins/huwiki/musescore-import/converter.js');
 const sources=JSON.parse(await readFile(path.join(base,"tiddlers/songs.json"),"utf8"));
 const ready=sources.filter(s=>s["silba-musescore-file"]);
 if(ready.length!==17)throw Error("Expected exactly 17 known MuseScore files; got "+ready.length);
@@ -142,4 +142,3 @@ await writeFile(reportFile,JSON.stringify({
 // The designed homepage and stylesheet are source-controlled in tiddlers/config.json.
 // Do not overwrite the correct WikiText/HTML layout during conversion.
 console.log("SilbaÄtno Repertoire: 17 editable ABC scores generated");
-

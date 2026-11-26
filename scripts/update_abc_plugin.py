@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replace only the bundled ABC tiddler inside existing single-file wikis."""
+"""Replace one bundled plugin inside existing single-file wikis."""
 from __future__ import annotations
 
 import argparse
@@ -59,9 +59,9 @@ def array_items(text: str):
         raise ValueError("Unexpected content follows a tiddler store")
 
 
-def replace_plugin(html: str, plugin: dict) -> tuple[str, str]:
+def replace_plugin(html: str, plugin: dict, expected_title: str = TITLE) -> tuple[str, str]:
     """Return updated HTML and status; all non-ABC bytes remain identical."""
-    if plugin.get("title") != TITLE or plugin.get("plugin-type") != "plugin":
+    if plugin.get("title") != expected_title or plugin.get("plugin-type") != "plugin":
         raise ValueError("The replacement is not the ABC plugin")
     replacement_version = version(plugin.get("version"))
     # Validate the embedded plugin before writing any wiki files.
@@ -76,7 +76,7 @@ def replace_plugin(html: str, plugin: dict) -> tuple[str, str]:
         if attrs.get("type", "").lower() != "application/json":
             continue
         for item, start, end in array_items(store["body"]):
-            if isinstance(item, dict) and item.get("title") == TITLE:
+            if isinstance(item, dict) and item.get("title") == expected_title:
                 found.append((item, store.start("body") + start, store.start("body") + end))
     if len(found) > 1:
         raise ValueError("A wiki contains duplicate ABC plugin tiddlers")
@@ -113,6 +113,7 @@ def atomic_write(path: Path, data: bytes) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--plugin", required=True, type=Path)
+    parser.add_argument("--title", default=TITLE)
     parser.add_argument("wikis", nargs="+", type=Path)
     args = parser.parse_args()
     plugin = json.loads(args.plugin.read_bytes().decode("utf-8"))
@@ -121,14 +122,14 @@ def main() -> None:
     # Validate all inputs before changing any file.
     for path in dict.fromkeys(args.wikis):
         original = path.read_bytes()
-        updated, status = replace_plugin(original.decode("utf-8"), plugin)
+        updated, status = replace_plugin(original.decode("utf-8"), plugin, args.title)
         counts[status] += 1
         if status == "updated":
             planned.append((path, updated.encode("utf-8")))
     for path, data in planned:
         atomic_write(path, data)
-    print("ABC {}: {} updated; {} already current; {} without ABC".format(
-        plugin["version"], counts["updated"], counts["current"], counts["absent"]))
+    print("{} {}: {} updated; {} already current; {} without plugin".format(
+        plugin["title"], plugin["version"], counts["updated"], counts["current"], counts["absent"]))
 
 
 if __name__ == "__main__":

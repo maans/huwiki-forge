@@ -4,6 +4,8 @@ module-type: library
 \*/
 (function(){
 "use strict";
+var percussionModule;
+function percussion(){return percussionModule||(percussionModule=require('$:/plugins/huwiki/musescore-import/percussion.js'));}
 var DT={maxima:8,long:4,breve:2,whole:1,half:.5,quarter:.25,eighth:.125,'16th':.0625,'32nd':.03125,'64th':.015625,'128th':.0078125};
 var CIRCLE="CGDAEBF", NAT={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
 var MAJOR={"-7":"Cb","-6":"Gb","-5":"Db","-4":"Ab","-3":"Eb","-2":"Bb","-1":"F","0":"C","1":"G","2":"D","3":"A","4":"E","5":"B","6":"F#","7":"C#"};
@@ -32,6 +34,66 @@ function shortPrintedName(name, abbreviation){
 }
 function safeAbcLabel(s){return String(s||'').replace(/["\\\r\n]/g,'').trim();}
 
+// MuseScore stores zero-based GM programs; MusicXML stores one-based values.
+// Printed names are only a fallback, never a reason to replace valid metadata.
+function gmProgram(value,oneBased){
+ var n=Number(value);if(value===null||value===undefined||String(value).trim()===''||!Number.isInteger(n))return null;
+ if(oneBased)n--;return n>=0&&n<128?n:null;
+}
+function namedProgram(name){
+ var s=cleanTitle(name).normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[øØ]/g,'o').replace(/[æÆ]/g,'ae').toLowerCase().replace(/[_.\-]+/g,' ').replace(/([a-z])([0-9])/g,'$1 $2').replace(/\s+/g,' ').trim();
+ if(/\b(?:drum(?:s|set| kit)?|trommer|slagt[oø]j|percussion)\b/.test(s))return 128;
+ if(/\b(?:muted trumpet|trompet.*sordin|trumpet.*mute)\b/.test(s))return 59;
+ if(/\b(?:trumpet|trompet|cornet|kornet)\b/.test(s))return 56;
+ if(/\b(?:trombone|trombon|basun)\b/.test(s))return 57;
+ if(/\btuba\b/.test(s))return 58;
+ if(/\b(?:french horn|valthorn|waldhorn)\b/.test(s))return 60;
+ if(/(?:baryton|baritone|bari).*sax|sax.*(?:baryton|baritone|bari)/.test(s))return 67;
+ if(/tenor.*sax|sax.*tenor/.test(s))return 66;
+ if(/(?:soprano|sopran).*sax|sax.*(?:soprano|sopran)/.test(s))return 64;
+ if(/(?:alto|alt).*sax|sax.*(?:alto|alt)/.test(s))return 65;
+ if(/\b(?:clarinet|klarinet)\b/.test(s))return 71;
+ if(/\b(?:bassoon|fagot)\b/.test(s))return 70;
+ if(/\bpiccolo\b/.test(s))return 72;
+ if(/\b(?:flute|flojte)\b/.test(s))return 73;
+ if(/\b(?:electric piano|elklaver)\b/.test(s))return 4;
+ if(/\b(?:piano|klaver)(?:\b|hojre|venstre)/.test(s))return 0;
+ if(/\b(?:electric bass|elbas|e bass|bass guitar|basguitar)\b/.test(s))return /pick|plekter/.test(s)?34:33;
+ if(/\b(?:double bass|upright bass|acoustic bass|kontrabas|contrabass|string bass)\b/.test(s)||/^(?:bas|bass)(?:\s+\d+)?$/.test(s))return 32;
+ if(/\b(?:jazz guitar|jazzguitar)\b/.test(s))return 26;
+ if(/\b(?:nylon guitar|classical guitar|klassisk guitar)\b/.test(s))return 24;
+ if(/\b(?:guitar|guitare)\b/.test(s))return 25;
+ if(/\b(?:violin|fiolin)\b/.test(s))return 40;
+ if(/\b(?:viola|bratsch)\b/.test(s))return 41;
+ if(/\b(?:cello|violoncello)\b/.test(s))return 42;
+ return null;
+}
+function inferInstrument(names){
+ for(var i=0;i<names.length;i++){var program=namedProgram(names[i]);if(program!==null)return {program:program,percussion:program===128,instrumentSource:'name'};}
+ return {program:null,percussion:false,instrumentSource:null};
+}
+function museInstrument(part,name){
+ var ins=el(part,'Instrument'),channels=els(ins,'Channel');
+ var percussion=num(ins,'useDrumset',0)===1||els(ins,'Drum').length>0;
+ if(percussion){var drumDefinitions={};els(ins,'Drum').forEach(function(drum){var pitch=Number(drum.getAttribute('pitch'));if(Number.isInteger(pitch))drumDefinitions[pitch]={line:num(drum,'line',null),head:tx(drum,'head','normal'),voice:num(drum,'voice',0),name:tx(drum,'name','')};});return {program:128,percussion:true,instrumentSource:'metadata',drumDefinitions:drumDefinitions};}
+ for(var i=0;i<channels.length;i++){
+  var p=el(channels[i],'program'),value=p&&(p.getAttribute('value')!==null?p.getAttribute('value'):p.textContent),program=gmProgram(value,false);
+  if(program!==null)return {program:program,percussion:false,instrumentSource:'metadata'};
+ }
+ return inferInstrument([name,tx(ins,'trackName'),tx(ins,'longName'),tx(ins,'instrumentId')]);
+}
+function musicXMLInstrument(part,name){
+ var instruments={},chosen=null,percussion=false;
+ els(part,'midi-instrument').forEach(function(item){
+  var id=item.getAttribute('id')||'',program=gmProgram(tx(item,'midi-program'),true),channel=num(item,'midi-channel',null),unpitched=gmProgram(tx(item,'midi-unpitched'),true);
+  var drum=channel===10||unpitched!==null;
+  instruments[id]={program:program,channel:channel,unpitched:unpitched,percussion:drum};
+  if(drum)percussion=true;
+  if(chosen===null&&program!==null)chosen=program;
+ });
+ var result=percussion?{program:128,percussion:true,instrumentSource:'metadata'}:chosen!==null?{program:chosen,percussion:false,instrumentSource:'metadata'}:inferInstrument([name].concat(els(part,'score-instrument').map(function(item){return tx(item,'instrument-name');})));
+ result.midiInstruments=instruments;return result;
+}
 function tpc(p){if(p===null||!isFinite(p))return null;var f=p-14,letter=CIRCLE[((f%7)+7)%7];var pc=((7*f)%12+12)%12;var delta=((pc-NAT[letter]+18)%12)-6;if(delta<-2||delta>2)return null;return {letter:letter,acc:delta,pc:pc};}
 function midiSpell(n,preferFlat){var pc=(n%12+12)%12;var sha=['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];var fl=['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'];var s=(preferFlat?fl:sha)[pc];return {letter:s[0],acc:s.length>1?(s[1]==='b'?-1:1):0,pc:pc};}
 function noteSpell(n,spelling,preferFlat){var s=spelling&&spelling.pc===((n%12+12)%12)?spelling:midiSpell(n,preferFlat);
@@ -160,16 +222,16 @@ function parseMuse(raw,filename){var root=xml(raw),score=root.localName==='Score
  for(var a=0;a<els(score,'metaTag').length;a++){var t=els(score,'metaTag')[a];if(t.getAttribute('name')==='composer')model.composer=cleanTitle(t.textContent);if(t.getAttribute('name')==='workTitle')model.title=cleanTitle(t.textContent);}
  for(var b=0;b<els(score,'Staff').length;b++){var staff=els(score,'Staff')[b],vbox=el(staff,'VBox');if(vbox){for(var e=0;e<els(vbox,'Text').length;e++){var q=els(vbox,'Text')[e],sty=tx(q,'style').toLowerCase();if(sty==='title')model.title=cleanTitle(tx(q,'text'));if(sty==='composer')model.composer=cleanTitle(tx(q,'text'));}}
  }
- var parts=[],staffToPart={},ordinalPart={},ordinal=0;els(score,'Part').forEach(function(part,idx){var name=cleanTitle(tx(part,'trackName',tx(part,'Instrument/trackName',''))),shortName=cleanTitle(tx(part,'Instrument/shortName',''));var sts=els(part,'Staff');sts.forEach(function(s){var id=s.getAttribute('id'),datum={name:name,shortName:shortName,partId:'muse-part-'+idx,clef:clef(tx(s,'defaultClef','G'))};ordinal++;ordinalPart[String(ordinal)]=datum;if(id)staffToPart[id]=datum;});parts.push(name);});
+ var parts=[],staffToPart={},ordinalPart={},ordinal=0;els(score,'Part').forEach(function(part,idx){var name=cleanTitle(tx(part,'trackName')||tx(part,'Instrument/trackName')||tx(part,'Instrument/longName')),shortName=cleanTitle(tx(part,'Instrument/shortName','')),instrument=museInstrument(part,name);var sts=els(part,'Staff');sts.forEach(function(s){var id=s.getAttribute('id'),datum=Object.assign({name:name,shortName:shortName,partId:'muse-part-'+idx,clef:instrument.percussion?'perc':clef(tx(s,'defaultClef','G'))},instrument);ordinal++;ordinalPart[String(ordinal)]=datum;if(id)staffToPart[id]=datum;});parts.push(name);});
  var scores=els(score,'Staff'); scores.forEach(function(s,idx){var id=s.getAttribute('id')||String(idx+1);var info=staffToPart[id]||ordinalPart[String(idx+1)]||{name:parts[idx]||'',shortName:'',partId:'unmapped-'+id,clef:'treble'};var staffMeter='4/4';var measures=els(s,'Measure').map(function(m,i){var result={index:i+1,meter:staffMeter,len:m.getAttribute('len')||'',startRepeat:!!el(m,'startRepeat'),endRepeat:!!el(m,'endRepeat'),endCount:num(m,'endRepeat',null),endingStart:null,voices:[]};
    Array.from(m.getElementsByTagName('Spanner')).forEach(function(sp){if(sp.getAttribute('type')==='Volta'){var v=tx(sp,'Volta/endings',tx(sp,'Volta/beginText',''));if(v)result.endingStart=String(v).replace(/[^0-9,\-]/g,'');}});
    var layers=els(m,'voice');if(!layers.length)layers=[m];
    layers.forEach(function(v){result.voices.push(museVoice(v,result,model));});staffMeter=result.meter;return result;});
   expandMuseMeasureRepeats(measures,model);
-  var staffFirstClef=null;for(var ci=0;ci<measures.length&&!staffFirstClef;ci++){for(var cj=0;cj<measures[ci].voices.length&&!staffFirstClef;cj++){var ce=measures[ci].voices[cj].find(function(e){return e.kind==='clef';});if(ce)staffFirstClef=ce.value;}}if(staffFirstClef)info.clef=staffFirstClef;
+  var staffFirstClef=null;for(var ci=0;ci<measures.length&&!staffFirstClef;ci++){for(var cj=0;cj<measures[ci].voices.length&&!staffFirstClef;cj++){var ce=measures[ci].voices[cj].find(function(e){return e.kind==='clef';});if(ce)staffFirstClef=ce.value;}}if(staffFirstClef)info.clef=info.percussion?'perc':staffFirstClef;if(info.clef==='perc'){info.percussion=true;info.program=128;}
   var maxVoices=Math.max(1,measures.reduce(function(n,m){return Math.max(n,m.voices.length);},0));
   var voices=[];for(var v=0;v<maxVoices;v++){var count=measures.reduce(function(sum,m){return sum+(m.voices[v]||[]).filter(function(e){return e.kind==='note';}).length;},0);if(count||v===0||measures.some(m=>(m.voices[v]||[]).some(e=>e.kind==='harmony'||e.kind==='rest')))voices.push({id:id+':'+v,index:v,label:(info.name||('Stemme '+(idx+1)))+(maxVoices>1?' · stemme '+(v+1):''),count:count,clef:info.clef});}
-  model.staves.push({id:id,name:info.name,shortName:info.shortName||'',partId:info.partId||'unmapped-'+id,clef:info.clef,measures:measures,voices:voices});model.totalMeasures=Math.max(model.totalMeasures,measures.length);
+  model.staves.push({id:id,name:info.name,shortName:info.shortName||'',partId:info.partId||'unmapped-'+id,clef:info.clef,program:info.program,percussion:!!info.percussion,drumDefinitions:info.drumDefinitions||{},instrumentSource:info.instrumentSource||null,measures:measures,voices:voices});model.totalMeasures=Math.max(model.totalMeasures,measures.length);
  });
  synchronizeScoreRepeats(model);
  if(!model.staves.length)throw Error('Filen indeholder ingen notesystemer.');
@@ -180,15 +242,15 @@ function parseMuse(raw,filename){var root=xml(raw),score=root.localName==='Score
 function parseMusicXML(raw,filename){var root=xml(raw);if(root.localName!=='score-partwise')throw Error('MusicXML score-partwise forventes (score-timewise er endnu ikke understøttet).');
  var model={format:'musicxml',name:filename,title:cleanTitle(tx(root,'work/work-title',tx(root,'movement-title','')))||filename.replace(/\.(xml|musicxml|mxl)$/i,''),composer:'',warnings:[],staves:[],totalMeasures:0};
  els(root,'identification').forEach(function(id){els(id,'creator').forEach(function(c){if(c.getAttribute('type')==='composer')model.composer=cleanTitle(c.textContent);});});
- var names={};var pl=el(root,'part-list');els(pl,'score-part').forEach(function(e){names[e.getAttribute('id')]={name:cleanTitle(tx(e,'part-name','')),shortName:cleanTitle(tx(e,'part-abbreviation',''))};});
- els(root,'part').forEach(function(part,idx){var id=part.getAttribute('id')||String(idx+1),clefName='treble',divisions=1,meter='4/4',key=0,transpose=0;var ms=els(part,'measure').map(function(m,i){var result={index:i+1,len:'',startRepeat:false,endRepeat:false,endCount:null,endingStart:null,voices:[],implicit:m.getAttribute('implicit')==='yes',actualDuration:null};var cursor=0,previousStart=0,items={},xmlBeamGroup={},xmlBeamCounter=0;var attributes=null, maxEnd=0;
+ var names={};var pl=el(root,'part-list');els(pl,'score-part').forEach(function(e){var name=cleanTitle(tx(e,'part-name',''));names[e.getAttribute('id')]=Object.assign({name:name,shortName:cleanTitle(tx(e,'part-abbreviation',''))},musicXMLInstrument(e,name));});
+ els(root,'part').forEach(function(part,idx){var id=part.getAttribute('id')||String(idx+1),instrument=names[id]||inferInstrument([]),clefName=instrument.percussion?'perc':'treble',divisions=1,meter='4/4',key=0,transpose=0;var ms=els(part,'measure').map(function(m,i){var result={index:i+1,len:'',startRepeat:false,endRepeat:false,endCount:null,endingStart:null,voices:[],implicit:m.getAttribute('implicit')==='yes',actualDuration:null};var cursor=0,previousStart=0,items={},xmlBeamGroup={},xmlBeamCounter=0;var attributes=null, maxEnd=0;
   for(var n=m.firstElementChild;n;n=n.nextElementSibling){var tg=n.localName;
    if(tg==='attributes'){
     if(num(n,'divisions')!==null)divisions=num(n,'divisions');
     if(el(n,'transpose'))transpose=num(n,'transpose/chromatic',0)+12*num(n,'transpose/octave-change',0);
     if(el(n,'time'))meter=tx(n,'time/beats','4')+'/'+tx(n,'time/beat-type','4');
     if(el(n,'key'))key=num(n,'key/fifths',0);
-    if(el(n,'clef'))clefName=({G:'treble',F:'bass',C:'alto',percussion:'perc'})[tx(n,'clef/sign')]||'treble';
+    if(el(n,'clef'))clefName=instrument.percussion?'perc':({G:'treble',F:'bass',C:'alto',percussion:'perc'})[tx(n,'clef/sign')]||'treble';
     (items['1']||(items['1']=[])).push({when:cursor,kind:'meter',value:meter},{when:cursor,kind:'key',fifths:key},{when:cursor,kind:'clef',value:clefName});
    }else if(tg==='backup')cursor-=num(n,'duration',0);
    else if(tg==='forward')cursor+=num(n,'duration',0);
@@ -206,7 +268,14 @@ function parseMusicXML(raw,filename){var root=xml(raw);if(root.localName!=='scor
     if(beamFlag==='end')delete xmlBeamGroup[v];
     if(el(n,'time-modification')){entry.tuplet={actual:num(n,'time-modification/actual-notes',3),normal:num(n,'time-modification/normal-notes',2)};entry.tupletStart=els(xp(n,'notations'),'tuplet').some(function(z){return z.getAttribute('type')==='start';});}
     if(!rest){var p=el(n,'pitch');if(p){var step=tx(p,'step','C'),alter=num(p,'alter',0),oct=num(p,'octave',4),pitch=(oct+1)*12+NAT[step]+alter;
-       var sp={letter:step,acc:alter,pc:(pitch%12+12)%12};entry.notes.push({pitch:pitch,spelling:sp,tie:els(n,'tie').some(function(z){return z.getAttribute('type')==='start';})});}else markWarn(model,'En unpitched/percussion-node er ikke oversat nøjagtigt.');}
+       var sp={letter:step,acc:alter,pc:(pitch%12+12)%12};entry.notes.push({pitch:pitch,spelling:sp,tie:els(n,'tie').some(function(z){return z.getAttribute('type')==='start';})});}else if(el(n,'unpitched')){
+       // MusicXML midi-unpitched is one based. The displayed staff position
+       // carries no sound identity: use the referenced MIDI instrument instead.
+       var reference=el(n,'instrument'),drumId=reference&&reference.getAttribute('id'),midi=instrument.midiInstruments||{},mapped=midi[drumId];
+       if(!mapped){var available=Object.keys(midi).filter(function(k){return midi[k].unpitched!==null;});if(available.length===1)mapped=midi[available[0]];}
+       if(mapped&&mapped.unpitched!==null){entry.notes.push({pitch:mapped.unpitched,percussion:{displayStep:tx(n,'unpitched/display-step'),displayOctave:num(n,'unpitched/display-octave',null),head:tx(n,'notehead','')||undefined},tie:els(n,'tie').some(function(z){return z.getAttribute('type')==='start';})});clefName='perc';}
+       else markWarn(model,'En trommenode mangler MIDI-trommelyd i MusicXML; kontrollér den oprindelige instrumentdefinition.');
+      }else markWarn(model,'En node mangler tonehøjde i MusicXML.');}
     if(isChord){var found=(items[v]||[]).slice().reverse().find(function(x){return x.kind==='note'&&x.when===previousStart;});if(found){found.notes=found.notes.concat(entry.notes);}else (items[v]||(items[v]=[])).push(entry);}else{(items[v]||(items[v]=[])).push(entry);previousStart=cursor;if(!isGrace)cursor+=d;maxEnd=Math.max(maxEnd,cursor);}
    }else if(tg==='direction'){
     var s=el(n,'sound');var bpm=s?Number(s.getAttribute('tempo')):null; if(bpm){(items['1']||(items['1']=[])).push({when:cursor,kind:'tempo',value:'1/4='+Math.round(bpm)});}
@@ -227,7 +296,7 @@ function parseMusicXML(raw,filename){var root=xml(raw);if(root.localName!=='scor
   return result;});
   var maxVoices=Math.max(1,ms.reduce(function(n,m){return Math.max(n,m.voices.length);},0)),voices=[];
   for(var k=0;k<maxVoices;k++){var count=ms.reduce(function(sum,m){return sum+(m.voices[k]||[]).filter(function(e){return e.kind==='note';}).length;},0);if(count||k===0)voices.push({id:id+':'+k,index:k, label:((names[id]||{}).name||'Part '+id)+(maxVoices>1?' · stemme '+(k+1):''),count:count,clef:clefName});}
-  model.staves.push({id:id,name:(names[id]||{}).name||'',shortName:(names[id]||{}).shortName||'',partId:'musicxml-part-'+id,clef:clefName,measures:ms,voices:voices});model.totalMeasures=Math.max(model.totalMeasures,ms.length);
+  model.staves.push({id:id,name:(names[id]||{}).name||'',shortName:(names[id]||{}).shortName||'',partId:'musicxml-part-'+id,clef:clefName,program:clefName==='perc'?128:instrument.program,percussion:clefName==='perc'||!!instrument.percussion,instrumentSource:instrument.instrumentSource||null,midiInstruments:instrument.midiInstruments||{},measures:ms,voices:voices});model.totalMeasures=Math.max(model.totalMeasures,ms.length);
  });
  synchronizeScoreRepeats(model);
  if(!model.staves.length)throw Error('Ingen stemmer fundet i MusicXML.');model.duplicate=findDuplicate(model);return model;
@@ -375,6 +444,7 @@ function projectHarmonies(input,marks,meter,format,total){
   if(groupStart&&e.tuplet)count++;
  });finish();return out;
 }
+function percussionVoice(o){return !!(o.st.percussion||o.st.clef==='perc'||o.v.clef==='perc');}
 function renderABC(model,selected,start,end,options){options=options||{};start=Math.max(1,Math.floor(start||1));end=Math.min(model.totalMeasures,Math.floor(end||model.totalMeasures));if(end<start)throw Error('Taktintervallet er ugyldigt.');if(!selected||!selected.length)throw Error('Vælg mindst én stemme.');
  var voices=[];selected.forEach(function(id){model.staves.forEach(function(st){st.voices.forEach(function(v){if(v.id===id)voices.push({st:st,v:v});});});});if(!voices.length)throw Error('Ingen kendte stemmer valgt.');
  var globalFirst={meter:'4/4',fifths:0,tempo:'1/4=100'};
@@ -389,19 +459,23 @@ function renderABC(model,selected,start,end,options){options=options||{};start=M
  if(!minor&&/\b(minor|moll|molltonart)\b/i.test(model.title))minor=true;
  if(typeof options.minor==='boolean')minor=options.minor;
  var header=['X:1','T:'+cleanTitle(options.title||model.title||'Ny melodi')];if(model.composer)header.push('C:'+model.composer);header.push('M:'+globalFirst.meter,'L:1/8','Q:'+globalFirst.tempo);
+ var drumNotes=[];
+ voices.forEach(function(o){if(percussionVoice(o))o.st.measures.slice(start-1,end).forEach(function(m){(m.voices[o.v.index]||[]).forEach(function(e){if(e.kind==='note')e.notes.forEach(function(n){drumNotes.push({pitch:n.pitch,drum:o.st.drumDefinitions&&o.st.drumDefinitions[n.pitch],percussion:n.percussion});});});});});
+ var kit=drumNotes.length?percussion().createMap(drumNotes):null;
+ if(voices.some(percussionVoice)){if(voices.length>1)header.push('%%score '+percussion().staffGroups(voices));if(kit)header.push.apply(header,kit.directives);}
  if(voices.length>1){
   var namedParts={};
   voices.forEach(function(o,i){
    var label='',key=o.st.partId||o.st.id;
    if(!namedParts[key]){label=shortPrintedName(o.st.name,o.st.shortName);namedParts[key]=true;}
-   header.push('V:'+(i+1)+(label?' name="'+safeAbcLabel(label)+'"':'')+' clef='+o.v.clef);
+   header.push('V:'+(i+1)+(label?' name="'+safeAbcLabel(label)+'"':'')+' clef='+(percussionVoice(o)?'perc':o.v.clef)+(percussionVoice(o)?' stafflines=5':''));
   });
- }header.push('K:'+signatureKey(globalFirst.fifths,minor)+(voices.length===1&&voices[0].v.clef!=='treble'?' clef='+voices[0].v.clef:''));
+ }header.push('K:'+signatureKey(globalFirst.fifths,minor)+(voices.length===1&&percussionVoice(voices[0])?' clef=perc stafflines=5':voices.length===1&&voices[0].v.clef!=='treble'?' clef='+voices[0].v.clef:''));
  var notesCount=0, warnings=model.warnings.slice(); if(model.duplicate&&end>=model.duplicate.start)warnings.push('Kontrollér transponeret dublet fra takt '+model.duplicate.start+' ('+(model.duplicate.shift>0?'+':'')+model.duplicate.shift+' halvtoner).');
- voices.forEach(function(vo){if(vo.v.clef==='perc')warnings.push('Slagtøjsnotation (perc) kan ikke gengives fuldt ud i denne version.');});
+ if(kit)warnings.push.apply(warnings,kit.warnings);
  var outputs=[],barLimit=Math.max(1,Math.min(12,Math.round(Number(options.barsPerLine)||4)));
  var lineBreaks=planLineBreaks(voices[0].st,voices[0].v.index,start,end,model.format,globalFirst.meter,barLimit);
- voices.forEach(function(vo,vi){var accKey=keyMap(globalFirst.fifths),currentKey=globalFirst.fifths,curMeter=globalFirst.meter, curTempo=globalFirst.tempo,lines=[],line='',beatCount=0, lyricLines=[],lastEnding='',breakCursor=0;
+ voices.forEach(function(vo,vi){var isDrum=percussionVoice(vo),accKey=keyMap(globalFirst.fifths),currentKey=globalFirst.fifths,curMeter=globalFirst.meter, curTempo=globalFirst.tempo,lines=[],line='',beatCount=0, lyricLines=[],lastEnding='',breakCursor=0;
   for(var bar=start;bar<=end;bar++){
     var measure=vo.st.measures[bar-1];if(!measure)continue;var evs=measure.voices[vo.v.index]||[], local={},pieces=[],prev=null,lyrics=[],beamGroups=inferredBeams(evs,curMeter,model.format),beamPrev=null;
     var meterEvent=evs.find(q=>q.kind==='meter'),barMeter=meterEvent?meterEvent.value:curMeter;
@@ -430,8 +504,9 @@ function renderABC(model,selected,start,end,options){options=options||{};start=M
       if(item.kind==='note'||item.kind==='rest'){
          var txt='',dur=item.dur;if(!isFinite(dur)||dur<=0){warnings.push('Varighed mangler i takt '+bar);continue;}
          if(model.format==='musicxml'&&item.tuplet)dur*=item.tuplet.actual/item.tuplet.normal;
-         if(item.kind==='rest'){txt=item.invisible?'x':'z';if(item.measureRest&&(!isFinite(dur)||dur<=.125))dur=ratio(curMeter,1);}else if(item.notes.length){var nn=[];item.notes.forEach(function(p){var visualPitch=p.pitch+octaveWrittenOffset(vo.v.clef,model.format);var s=noteSpell(visualPitch,p.spelling||tpc(p.tpc),currentKey<0);var expected=Object.prototype.hasOwnProperty.call(local,s.name)?local[s.name]:(accKey[s.letter]||0);var prefix='';if(s.acc!==expected){prefix=s.acc===-2?'__':s.acc===-1?'_':s.acc===0?'=':s.acc===1?'^':'^^';local[s.name]=s.acc;}nn.push(prefix+s.name+((p.tie&&item.notes.length>1)?'-':''));});txt=nn.length===1?nn[0]:'['+nn.join('')+']';if(nn.length===1&&item.notes[0].tie)txt+=frac(dur*8)+'-';else txt+=frac(dur*8);if(!item.continuation)notesCount+=nn.length;}else txt='z';
+         if(item.kind==='rest'){txt=item.invisible?'x':'z';if(item.measureRest&&(!isFinite(dur)||dur<=.125))dur=ratio(curMeter,1);}else if(item.notes.length){var nn=[];item.notes.forEach(function(p){if(isDrum){var drum=kit&&kit.byPitch[p.pitch];if(drum){nn.push(drum.token+((p.tie&&item.notes.length>1)?'-':''));return;}}var visualPitch=p.pitch+octaveWrittenOffset(vo.v.clef,model.format);var s=noteSpell(visualPitch,p.spelling||tpc(p.tpc),currentKey<0);var expected=Object.prototype.hasOwnProperty.call(local,s.name)?local[s.name]:(accKey[s.letter]||0);var prefix='';if(isDrum||s.acc!==expected){prefix=s.acc===-2?'__':s.acc===-1?'_':s.acc===0?'=':s.acc===1?'^':'^^';local[s.name]=s.acc;}nn.push(prefix+s.name+((p.tie&&item.notes.length>1)?'-':''));});txt=nn.length===1?nn[0]:'['+nn.join('')+']';if(nn.length===1&&item.notes[0].tie)txt+=frac(dur*8)+'-';else txt+=frac(dur*8);if(!item.continuation)notesCount+=nn.length;}else txt='z';
          if(item.kind==='rest')txt+=frac(dur*8);
+         if(isDrum&&item.kind==='note'&&kit){var decorations=[];item.notes.forEach(function(n){var d=kit.byPitch[n.pitch]?.decoration;if(d&&decorations.indexOf(d)<0)decorations.push(d);});txt=decorations.map(function(d){return '!'+d+'!';}).join('')+txt;}
          if(item.tuplet&&item.tupletStart){var tp=item.tuplet; txt='('+tp.actual+':'+tp.normal+':'+(item.tupletCount||tp.actual)+txt;}
          var thisBeam=beamGroups[e],join=prev&&beamPrev!==-1&&thisBeam!==-1&&beamPrev===thisBeam&&item.kind==='note'&&prev.kind==='note'&&item.dur<=.125&&prev.dur<=.125;
          pieces.push({music:txt,join:!!join});
@@ -478,10 +553,12 @@ function renderABC(model,selected,start,end,options){options=options||{};start=M
    // The line breaks are source-authoritative. ABCJS preview must not enable wrap.
    // Layout ranges include abbreviated measures at no cost to the 4-full-bar count.
    /*ABC-LAYOUT*/
-  outputs.push((voices.length>1?'V:'+(vi+1)+'\n':'')+lines.join('\n'));
+  var program=vo.st.program;if(program===undefined||program===null)program=vo.st.percussion||vo.v.clef==='perc'?128:namedProgram(vo.st.name||vo.v.label||'');
+  var playback=program===128||gmProgram(program,false)!==null?'%%MIDI program '+program+'\n':'';
+  outputs.push((voices.length>1?'V:'+(vi+1)+'\n':'')+playback+lines.join('\n'));
  });
  return {abc:header.join('\n')+'\n'+outputs.join('\n')+'\n',warnings:warnings,notes:notesCount,voices:voices.length,range:[start,end],barsPerLine:barLimit,lineBreaks:lineBreaks};
 }
-exports.parseMuse=parseMuse;exports.parseMusicXML=parseMusicXML;exports.renderABC=renderABC;exports.findDuplicate=findDuplicate;
+exports.namedProgram=namedProgram;exports.parseMuse=parseMuse;exports.parseMusicXML=parseMusicXML;exports.renderABC=renderABC;exports.findDuplicate=findDuplicate;
 exports.decodeScore=function(raw,name){var ext=(name.split('.').pop()||'').toLowerCase();if(ext==='musicxml'||ext==='xml')return parseMusicXML(raw,name);return parseMuse(raw,name);};
 })();

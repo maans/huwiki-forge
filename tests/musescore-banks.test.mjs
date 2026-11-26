@@ -81,8 +81,10 @@ test('closing a catalogue preview invalidates an in-flight source parse',async()
  const {widget}=importerHarness();let release;widget.readModel=()=>new Promise(resolve=>{release=resolve;});
  const loading=widget.openCatalogueFiles([{file:{name:'a.mscz'}}]);widget.onDestroy();release({staves:[],totalMeasures:0});assert.equal(await loading,false);assert.equal(widget.stage,undefined);
 });
-test('the maintained importer widget is bundled verbatim',async()=>{
- const pkg=await json('plugins/musescore-import/dist/plugin.json'),payload=JSON.parse(pkg.text);assert.equal(payload.tiddlers[pkg.title+'/widget.js'].text,widgetSource);assert.equal(pkg.version,'0.1.9');
+test('the maintained importer modules are bundled verbatim',async()=>{
+ const pkg=await json('plugins/musescore-import/dist/plugin.json'),payload=JSON.parse(pkg.text),info=await json('plugins/musescore-import/plugin-info.json');
+ assert.equal(pkg.version,info.version);
+ for(const file of ['widget.js','converter.js','percussion.js'])assert.equal(payload.tiddlers[pkg.title+'/'+file].text,await read('plugins/musescore-import/src/'+file));
 });
 
 function archiveImporterHarness(contents){
@@ -133,3 +135,4 @@ test('both repertoire homepages expose their own installed archive',async()=>{
   assert.ok(JSON.stringify(manifest).includes('plugins/musescore-bank-'+id+'/dist/plugin.json'),'linked archive is installed');
  }
 });
+
