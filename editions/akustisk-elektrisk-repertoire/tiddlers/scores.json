@@ -9,7 +9,8 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "cik-cik-capo1.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "abc-parts-new-line": "no"
   },
   {
     "title": "Čik, čik · E-greb · capo I",
@@ -21,7 +22,8 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "cik-cik-capo1.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "abc-parts-new-line": "no"
   },
   {
     "title": "Čik, čik · E♭-sax",
@@ -33,7 +35,8 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "cik-cik-capo1.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "abc-parts-new-line": "no"
   },
   {
     "title": "Majčin čoček",
