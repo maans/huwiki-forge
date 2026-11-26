@@ -130,9 +130,25 @@ function plan(changes,options){
   }
   var index=result[end].costs.indexOf(Math.min.apply(null,result[end].costs));
   for(var j=end;j>=start;j--){result[j].voicing=result[j].choices[index];index=result[j].parents[index];}
+  // Piano keeps its established whole-phrase voice leading independently.
+  // Lowering the guitar must not lower the piano's opening or later positions.
+  var pianoCosts=[],pianoParents=[];
+  for(var pi=start;pi<=end;pi++){
+   var pianoRow=result[pi],costs=[],parents=[];
+   pianoRow.choices.forEach(function(candidate){
+    if(pi===start){costs.push(candidate.local+(chosenOrder&&candidate.order!==chosenOrder?10000:0));parents.push(-1);return;}
+    var beforeRow=result[pi-1],best=Infinity,parent=0;
+    beforeRow.choices.forEach(function(before,j){
+     var cost=pianoCosts[pi-start-1][j]+transition(before,candidate,beforeRow.harmony,pianoRow.harmony)+candidate.local;
+     if(cost<best){best=cost;parent=j;}
+    });costs.push(best);parents.push(parent);
+   });pianoCosts.push(costs);pianoParents.push(parents);
+  }
+  var lastCosts=pianoCosts[pianoCosts.length-1],pianoIndex=lastCosts.indexOf(Math.min.apply(null,lastCosts));
+  for(var pj=end;pj>=start;pj--){var pianoChoice=result[pj].choices[pianoIndex];result[pj].pianoVoicing=brighter(result[pj].harmony,pianoChoice);pianoIndex=pianoParents[pj-start][pianoIndex];}
   start=end+1;
  }
- var output=result.map(function(row){return {start:row.start,harmony:row.harmony,voicing:row.voicing,pianoVoicing:row.voicing?brighter(row.harmony,row.voicing):undefined};});
+ var output=result.map(function(row){return {start:row.start,harmony:row.harmony,voicing:row.voicing,pianoVoicing:row.pianoVoicing};});
  output.bars=options.bars||[];output.transpose=Number(options.transpose)||0;return output;
 }
 function at(plan,time){
@@ -164,7 +180,7 @@ function voice(events,plan,options){
     factor=index===0?(backbeat?.46:.88):(backbeat?1.08:.76);
     if(regular)duration=Math.min(duration,backbeat?.25*.34:.25*.62);
    }
-   out.push(Object.assign({},sample,{pitch:pitch+transpose,start:group.start,duration:duration,volume:clamp(Math.round(volume*factor*(guitar?.5:1)),1,127)}));
+   out.push(Object.assign({},sample,{pitch:pitch+transpose,start:group.start,duration:duration,volume:clamp(Math.round(volume*factor),1,127)}));
   });
  });
  return out.sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});

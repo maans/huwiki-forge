@@ -68,7 +68,7 @@ try{
    };
    let player;
    try{player=Minimal.mount(host,{ABC,source,fields,wiki:$tw.wiki,audio:true,
-    showTitle:false,paged:true,shortcutHost:host});}
+    showTitle:false,paged:true,shortcutHost:host,mixerButton:true,mixerTitle:"Easy Money"});}
    finally{ABC.renderAbc=renderAbc;}
    const notes=sequence=>sequence.tracks[0].filter(note=>note.cmd==='note'&&note.volume>0)
     .map(note=>({start:note.start,duration:note.duration,pitch:note.pitch,volume:note.volume,
@@ -79,6 +79,13 @@ try{
    const controllerSequence=player.controller?.visualObj?.setUpAudio({});
    const controller=controllerSequence?notes(controllerSequence):[];
    const first=actual.length?actual.filter(note=>Math.abs(note.start-actual[0].start)<.004):[];
+   const pianoTrack=(controllerSequence?.tracks||[]).find(track=>track.huwabcPart==='chordVolume')||[];
+   const pianoNotes=pianoTrack.filter(note=>note.cmd==='note'&&note.volume>0);
+   const firstPiano=pianoNotes.length?pianoNotes.filter(note=>Math.abs(note.start-pianoNotes[0].start)<.004):[];
+   host.querySelector('.huwabc-mini-open')?.click();
+   const voiceSlider=document.querySelector('.huwabc-mini-mixer [data-voice-index="0"] input[type="range"]');
+   const mixerLevel=voiceSlider?Number(voiceSlider.value):null;
+   const voiceGain=Accompaniment.channelGain('voice:0',config);
    const mismatch=actual.findIndex((note,index)=>JSON.stringify(note)!==JSON.stringify(expected[index]));
    const rhythm=(player.visual?.lines||[]).flatMap(line=>(line.staff||[])
     .flatMap(staff=>(staff.voices||[]).flat())).find(event=>event.el_type==='note'&&event.style==='rhythm');
@@ -96,7 +103,7 @@ try{
    const detail={instrument,semitones:Instrument.current().semitones,plugin:$tw.wiki.getTiddler(pluginTitle()).fields.version,
     parsedCount:expected.length,renderedCount:actual.length,controllerCount:controller.length,
     firstParsed:expected.slice(0,6),firstRendered:actual.slice(0,6),firstController:controller.slice(0,6),
-    firstChord:first,noteAudition,chordAudition,chordText:chord?.textContent,
+    firstChord:first,firstPiano,mixerLevel,voiceGain,noteAudition,chordAudition,chordText:chord?.textContent,
     displayedMidiPitches:rhythm?.midiPitches,mismatch,mismatchActual:actual[mismatch],mismatchExpected:expected[mismatch],
     renderedMatches:JSON.stringify(actual)===JSON.stringify(expected),
     controllerMatches:JSON.stringify(controller)===JSON.stringify(expected),
@@ -111,15 +118,20 @@ try{
   assert.ok(result.svgCount>0,'The actual score must be rendered');
   assert.ok(result.controllerVisualSame,'The controller must retain the prepared rendered tune');
   assert.deepEqual(result.firstChord.map(note=>note.pitch),[43,53,58],instrument+': low guitar shell');
-  assert.deepEqual(result.firstChord.map(note=>note.volume),[46,40,40],instrument+': half guitar velocity');
+  assert.deepEqual(result.firstChord.map(note=>note.volume),[92,80,80],instrument+': guitar articulation before channel gain');
+  assert.deepEqual(result.firstPiano.map(note=>note.pitch),[55,65,70],instrument+': piano retains its bright independent opening');
+  assert.equal(result.mixerLevel,50,instrument+': guitar mixer slider must show 50%');
+  assert.equal(result.voiceGain,.5,instrument+': the actual guitar bus gain must be half');
   assert.ok(result.renderedMatches,instrument+': rendered player differs from parsed playback');
   assert.ok(result.controllerMatches,instrument+': controller playback differs from parsed playback');
   const previewShape=notes=>notes.map(note=>typeof note==='number'?{pitch:note}:({pitch:note.pitch,volume:note.volume,instrument:note.instrument}));
   const expectedPreview=result.firstChord.map(({pitch,volume,instrument})=>({pitch,volume,instrument}));
-  assert.deepEqual(previewShape(result.noteAudition),expectedPreview,instrument+': note click must preview the same low, half-volume guitar shell');
-  assert.deepEqual(previewShape(result.chordAudition),expectedPreview,instrument+': chord click must preview the same low, half-volume guitar shell');
+  assert.deepEqual(previewShape(result.noteAudition),expectedPreview,instrument+': note click must preview the same low, guitar shell on the half-gain voice bus');
+  assert.deepEqual(previewShape(result.chordAudition),expectedPreview,instrument+': chord click must preview the same low, guitar shell on the half-gain voice bus');
+  assert.ok(result.noteAudition.every(note=>note.huwabcPreviewPart==='voice:0'),instrument+': note preview uses the guitar voice bus');
+  assert.ok(result.chordAudition.every(note=>note.huwabcPreviewPart==='voice:0'),instrument+': chord preview uses the guitar voice bus');
  }
- console.log('Verified Easy Money low guitar shells and half velocity through rendered Minimal/controller audio');
+ console.log('Verified Easy Money low guitar, independent bright piano and half channel gain through rendered Minimal/controller audio');
 }catch(error){
  await writeFile(path.join(output,'diagnostic.json'),JSON.stringify(debug,null,2));
  throw error;

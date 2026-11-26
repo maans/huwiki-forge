@@ -294,7 +294,7 @@ function createMixer(ABC, getConfig, options) {
 function normalizePreview(notes) {
   return (notes || []).map(function (n) { return typeof n === 'number' ? { pitch: n } : n; }).filter(function (n) { return n && Number.isFinite(Number(n.pitch)); }).map(function (n) {
     var velocity = Number(n.volume);
-    return { pitch: Math.max(0, Math.min(127, Math.round(Number(n.pitch)))), instrument: Math.max(0, Math.min(128, Math.round(Number(n.instrument) || 0))), volume: Math.max(1, Math.min(127, Number.isFinite(velocity) ? velocity : 84)), duration: Math.max(.075, Math.min(.5, Number(n.durationInMeasures || n.duration) || .25)), cents: Number(n.cents) || 0 };
+    return { pitch: Math.max(0, Math.min(127, Math.round(Number(n.pitch)))), instrument: Math.max(0, Math.min(128, Math.round(Number(n.instrument) || 0))), volume: Math.max(1, Math.min(127, Number.isFinite(velocity) ? velocity : 84)), duration: Math.max(.075, Math.min(.5, Number(n.durationInMeasures || n.duration) || .25)), cents: Number(n.cents) || 0, part: /^(?:voice:\d+|bassVolume|chordVolume|drumVolume|metronomeVolume)$/.test(String(n.huwabcPreviewPart||''))?String(n.huwabcPreviewPart):null };
   });
 }
 function stopAuditions() { Array.from(previews).forEach(function (preview) { preview.cancel(); preview.release(); }); previews.clear(); }
@@ -303,7 +303,7 @@ async function audition(ABC, notes, tune, options) {
   stopAuditions();
   var ctx = mainContext(ABC), ms = tune && tune.millisecondsPerMeasure ? Number(tune.millisecondsPerMeasure()) : 2000;
   if (!Number.isFinite(ms) || ms < 100 || ms > 15000) ms = 2000;
-  var tracks = pitches.map(function (p) { var duration = Math.min(p.duration, 1150 / ms); return [{ cmd: 'program', channel: p.instrument === 128 ? 9 : 0, instrument: p.instrument }, { cmd: 'note', start: 0, duration: duration, pitch: p.pitch, volume: p.volume, instrument: p.instrument, cents: p.cents, gap: 0 }]; });
+  var tracks = pitches.map(function (p) { var duration = Math.min(p.duration, 1150 / ms),track=[{ cmd: 'program', channel: p.instrument === 128 ? 9 : 0, instrument: p.instrument }, { cmd: 'note', start: 0, duration: duration, pitch: p.pitch, volume: p.volume, instrument: p.instrument, cents: p.cents, gap: 0 }];if(p.part&&p.part.indexOf('voice:')===0)track.huwabcVoice=p.part.slice(6);else if(p.part)track.huwabcPart=p.part;return track; });
   var sequence = { tracks: tracks, totalDuration: Math.max.apply(null, tracks.map(function (t) { return t[1].duration; })), tempo: 120 };
   var mixer = createMixer(ABC, options.getConfig || function () { return { melodyVolume: 100 }; }, options), finished = false, cleanupTimer;
   function done() { if (finished) return; finished = true; clearTimeout(cleanupTimer); previews.delete(mixer); mixer.release(); }

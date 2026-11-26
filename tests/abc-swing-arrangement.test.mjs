@@ -125,12 +125,12 @@ test('N.C. silences generated piano and bass, and drum mute remains effective',(
  for(const key of ['bassVolume','chordVolume'])assert.equal(within(part(audio,key),1,2).length,0,key);
 });
 
-test('swing guitar stabs use half the former event velocity without changing their shells or gates',()=>{
+test('swing guitar articulation retains note velocity while the mixer owns its level',()=>{
  const plan=Swing.plan([{start:0,name:'C7'}]);
  const events=[48,52,58].map(pitch=>({cmd:'note',start:0,duration:.25,pitch,volume:80,instrument:26}));
  const voiced=Swing.voice(events,plan,{guitar:true,pulse:true});
  assert.deepEqual(plain(voiced.map(event=>event.pitch)),plain(plan[0].voicing.shell));
- assert.deepEqual(plain(voiced.map(event=>event.volume)),[35,30,30]);
+ assert.deepEqual(plain(voiced.map(event=>event.volume)),[70,61,61]);
  assert.ok(voiced.every(event=>Math.abs(event.duration-.155)<.0001));
 });
 
@@ -142,7 +142,7 @@ test('clicked swing rhythm heads and chord symbols use the same pitches and leve
  const events=tune.lines.flatMap(l=>(l.staff||[]).flatMap(s=>(s.voices||[]).flat())).filter(e=>e.style==='rhythm');
  for(const event of events){
   const when=Array.isArray(event.currentTrackWholeNotes)?event.currentTrackWholeNotes[0]:event.currentTrackWholeNotes;
-  const expected=notes(audio.tracks[0]).filter(n=>Math.abs(n.start-when)<.004);
+  const expected=notes(audio.tracks[0]).filter(n=>Math.abs(n.start-when)<.004).map(n=>({...n,huwabcPreviewPart:'voice:0'}));
   assert.deepEqual(plain(event.midiPitches),plain(expected));
   assert.deepEqual(plain(Accompaniment.rhythmAudition(tune,event.startChar)),plain(expected));
  }
@@ -160,5 +160,61 @@ test('written shell position and level follow the effective mixer instrument',()
  const piano=first(abc.replace('program 0','program 26'),{voiceSettings:{0:{instrument:0}}});
  const originalPiano=first(abc,{});
  assert.deepEqual(plain(sound(piano)),plain(sound(originalPiano)));
- assert.ok(guitar.every(n=>n.volume<60));assert.ok(piano.every(n=>n.volume>60));
+ assert.ok(guitar.every(n=>n.volume>60));assert.ok(piano.every(n=>n.volume>60));
+});
+
+
+test('swing guitar defaults to a real 50% mixer gain, retaining dynamics and explicit saved levels',()=>{
+ const abc=source('U:s=!style=rhythm!\nV:G name="Guitar"\n%%MIDI program 26\n!p!"Gm7"sB sB sB sB | !f!"C7"sB sB sB sB |');
+ const fields={'abc-source':abc,'abc-rhythm-playback':'written','abc-accompaniment':'{"style":"swing"}'};
+ const config=Accompaniment.read(fields);
+ assert.equal(config.voiceSettings[0].volume,50);
+ assert.equal(Accompaniment.channelGain('voice:0',config),.5);
+ function renderAt(live,c=config){const tune=ABC.parseOnly(abc)[0];Accompaniment.prepare(ABC,tune,abc,c,live,fields);return {tune,audio:tune.setUpAudio({})};}
+ const live=renderAt(true),exported=renderAt(false),liveNotes=notes(live.audio.tracks[0]),exportedNotes=notes(exported.audio.tracks[0]);
+ assert.equal(liveNotes.length,exportedNotes.length);
+ assert.ok(liveNotes.some(n=>n.start>=1&&n.volume>liveNotes[0].volume),'written dynamics survive the mixer change');
+ for(let i=0;i<liveNotes.length;i++)assert.ok(Math.abs(exportedNotes[i].volume-liveNotes[i].volume*.5)<=1,'nonlive gain is applied once');
+ const saved=Accompaniment.read({...fields,'abc-accompaniment':JSON.stringify({style:'swing',voiceSettings:{0:{volume:75}}})});
+ assert.equal(saved.voiceSettings[0].volume,75);assert.equal(Accompaniment.channelGain('voice:0',saved),.75);
+ const full=Accompaniment.read({...fields,'abc-accompaniment':JSON.stringify({style:'swing',voiceSettings:{0:{volume:100}}})});
+ assert.equal(Accompaniment.channelGain('voice:0',full),1,'an explicitly saved 100% remains a user choice');
+ const selectedGuitar=Accompaniment.read({...fields,'abc-source':abc.replace('program 26','program 0'),'abc-accompaniment':JSON.stringify({style:'swing',melodyInstrument:'26'})});
+ assert.equal(Accompaniment.channelGain('voice:0',selectedGuitar),.5,'a guitar chosen in the instrument selector gets the same default');
+ const muted=Accompaniment.read({...fields,'abc-accompaniment':JSON.stringify({style:'swing',voiceSettings:{0:{mode:'mute'}}})});
+ assert.equal(muted.voiceSettings[0].volume,50);assert.equal(Accompaniment.channelGain('voice:0',muted),0);
+ const piano=Accompaniment.read({...fields,'abc-source':abc.replace('program 26','program 0')});
+ assert.equal(Accompaniment.channelGain('voice:0',piano),1,'piano keeps its independent full mixer level');
+ const notSwing=Accompaniment.read({...fields,'abc-source':abc.replace('R:Swing','R:Bossa'),'abc-accompaniment':'{"style":"bossa"}'});
+ assert.equal(Accompaniment.channelGain('voice:0',notSwing),1,'other guitar styles keep their existing defaults');
+});
+
+test('clicked guitar previews route through an actual half-gain voice bus and respect mute',async()=>{
+ const gains=[],initial=[];
+ const ctx={currentTime:0,sampleRate:48000,state:'running',destination:{},resume:async()=>{},
+  createGain(){const gain={gain:{value:1,setTargetAtTime(value){this.value=value;}},connect(){},disconnect(){}};gains.push(gain);return gain;},
+  createBufferSource(){return {connect(){},disconnect(){},start(){},stop(){}};}};
+ class Synth{
+  constructor(){this.duration=.01;this.audioBuffers=[];}
+  async init(params){this.flattened=params.sequence;initial.push(params.sequence);return {loaded:[],error:[]};}
+  async prime(){this.audioBuffers=[{length:1,numberOfChannels:1,getChannelData:()=>Float32Array.of(.25)}];return {status:'ready'};}
+  stop(){} start(){this._kickOffSound(0);}
+ }
+ const fakeABC={synth:{CreateSynth:Synth,activeAudioContext:()=>ctx,registerAudioContext(){}}};
+ const dependencies={
+  '$:/plugins/huwiki/abc/accompaniment.js':Accompaniment,
+  '$:/plugins/huwiki/abc/audio-sequence.js':{notesFromSequence(sequence){return sequence.tracks.flatMap(track=>track.filter(n=>n.cmd==='note').map(n=>({...n,part:track.huwabcVoice!==undefined?'voice:'+track.huwabcVoice:(track.huwabcPart||'melodyVolume')})));}},
+  '$:/plugins/huwiki/abc/reserve-runtime.js':{},'$:/plugins/huwiki/abc/tinysynth-renderer.js':{}
+ };
+ const reserve={};runInNewContext(readFileSync(path.join(root,'plugins/abc/src/reserve-mixer.js'),'utf8'),{exports:reserve,require:name=>dependencies[name],setTimeout,clearTimeout,setInterval,clearInterval,console});
+ let config=Accompaniment.clean({voiceSettings:{0:{volume:50}}});
+ const sample={pitch:43,volume:92,instrument:26,duration:.15,huwabcPreviewPart:'voice:0'};
+ await reserve.audition(fakeABC,[sample],null,{getConfig:()=>config,engineMode:'original'});
+ assert.equal(initial.at(-1).tracks[0].huwabcVoice,'0');
+ assert.equal(initial.at(-1).tracks[0][1].volume,92,'preview note velocity is not reduced a second time');
+ assert.equal(gains.at(-1).gain.value,.5,'real post-render voice GainNode receives half amplitude');
+ config=Accompaniment.clean({voiceSettings:{0:{volume:50,mode:'mute'}}});
+ await reserve.audition(fakeABC,[sample],null,{getConfig:()=>config,engineMode:'original'});
+ assert.equal(gains.at(-1).gain.value,0,'the same preview voice bus respects mute');
+ reserve.stopAuditions();
 });

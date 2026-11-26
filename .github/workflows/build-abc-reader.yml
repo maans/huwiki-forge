@@ -55,7 +55,7 @@ jobs:
           git diff --check
       - name: Install browser controller for actual guitar playback acceptance
         run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
-      - name: Verify rendered Easy Money and both click previews
+      - name: Verify guitar gain, bright piano and both click previews
         run: node scripts/abc-swing-browser-smoke.mjs
         env:
           CHROME_BIN: /usr/bin/google-chrome

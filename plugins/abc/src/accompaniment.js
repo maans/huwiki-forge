@@ -93,7 +93,38 @@ function backingModes(c){
 function clean(c){c=c||{};if(styles[c.style])c=Object.assign({},styles[c.style],c);return {reverb:volume(c.reverb,0),backingModes:backingModes(c),droneEnabled:c.droneEnabled===true,droneVolume:volume(c.droneVolume,42),droneMode:choice(c.droneMode,['sa','sa-pa','sa-ma'],'sa-pa'),droneTimbre:choice(c.droneTimbre,['tanpura','shruti'],'shruti'),droneSa:choice(String(c.droneSa===undefined?'auto':c.droneSa),['auto','0','1','2','3','4','5','6','7','8','9','10','11'],'auto'),enabled:c.enabled===true,metronome:c.metronome===true,metronomeVolume:volume(c.metronomeVolume,60),metronomeSound:metronomeSounds[c.metronomeSound]?c.metronomeSound:'wood',metronomeAccent:c.metronomeAccent!==false,style:(styles[c.style]||c.style==='custom'||c.style==='auto')?c.style:'auto',bass:member(c.bass,basses,'alternate'),chords:member(c.chords,chords,'offbeat'),drums:member(c.drums,drums,'pop'),melodyInstrument:member(c.melodyInstrument,melodyInstruments,'source'),bassInstrument:Number(member(c.bassInstrument,bassInstruments,33)),chordInstrument:Number(member(c.chordInstrument,chordInstruments,24)),melodyVolume:volume(c.melodyVolume,100),bassVolume:volume(c.bassVolume,72),chordVolume:volume(c.chordVolume,48),drumVolume:volume(c.drumVolume,48),variation:volume(c.variation,35),seed:Number.isFinite(Number(c.seed))?Math.floor(Number(c.seed)):1,form:choice(c.form,['auto','AABA','ABAC','AAB','AB','BLUES','FREE','none'],'auto'),feel:choice(c.feel,['form','two','four'],'form'),bassSource:voiceRouting.bassSource(c.bassSource),voiceSettings:voiceRouting.clean(c.voiceSettings),repeatCounts:repeatPlanModule.clean(c.repeatCounts)};}
 function choice(v,choices,fallback){return choices.includes(v)?v:fallback;}
 function volume(n,d){return Number.isFinite(Number(n))?Math.max(0,Math.min(100,Math.round(Number(n)))):d;}
-function read(fields){try{return clean(JSON.parse(fields['abc-accompaniment']||'null'));}catch(_){return clean();}}
+// A guitar rhythm voice has a real mixer level, separate from note velocity.
+// Keep parsed source profiles bounded: opening the mixer must not repeatedly
+// sequence an entire chart just to choose its default level.
+var guitarProfiles=[];
+function guitarProfile(source,sequence,tune){
+ var saved=guitarProfiles.find(function(item){return item.source===source;});if(saved)return saved;
+ if(!tune){var ABC=require('$:/plugins/huwiki/abc/vendor/abcjs.js');tune=ABC.parseOnly(source)[0];if(!tune)return null;}
+ if(!sequence)sequence=tune.setUpAudio({chordsOff:true});
+ var profile={source:source,rhythm:rhythmChart(tune,{}),programs:(sequence.tracks||[]).map(function(track){
+  var program=track.find(function(event){return event.cmd==='program'&&Number.isFinite(Number(event.instrument));})||track.find(function(event){return event.cmd==='note'&&Number.isFinite(Number(event.instrument));});
+  return program?Number(program.instrument):0;
+ })};guitarProfiles.push(profile);if(guitarProfiles.length>8)guitarProfiles.shift();return profile;
+}
+function guitarLevels(c,saved,source,fields,sequence,tune){
+ fields=fields||{};source=String(source||'');saved=saved||{};
+ if(!source||fields['abc-rhythm-playback']==='off')return c;
+ var swing=c.style==='swing'||jazz.inferStyle(source,fields)==='swing'||/^Q:[^\r\n]*\bswing\b/im.test(source)||fields['abc-rhythm-style']==='freddie-green';
+ if(!swing)return c;
+ try{
+  var profile=guitarProfile(source,sequence,tune);if(!profile||fields['abc-rhythm-playback']!=='written'&&!profile.rhythm)return c;
+  profile.programs.forEach(function(program,index){
+   var key=String(index),original=saved.voiceSettings&&saved.voiceSettings[key];
+   if(original&&Object.prototype.hasOwnProperty.call(original,'volume')&&Number.isFinite(Number(original.volume)))return;
+   if(c.bassSource==='voice:'+key)return;
+   var setting=c.voiceSettings[key],selected=setting&&setting.instrument!=='inherit'?setting.instrument:c.melodyInstrument;
+   var actual=selected!=='source'&&selected!=='inherit'&&Number.isFinite(Number(selected))?Number(selected):program;
+   if([24,25,26,27,28].indexOf(actual)<0)return;
+   c.voiceSettings[key]=Object.assign({instrument:'inherit',mode:'normal',muted:false},setting||{},{volume:50});
+  });
+ }catch(_ignore){}return c;
+}
+function read(fields){fields=fields||{};var saved;try{saved=JSON.parse(fields['abc-accompaniment']||'null');}catch(_){saved=null;}return guitarLevels(clean(saved),saved,fields['abc-source']||'',fields);}
 function isIndianSource(source,fields){
  var metadata=(String(source||'').match(/^(?:T|R):[^\r\n]*/gmi)||[]).join(' ')+' '+String(fields&&fields['abc-rhythm']||'')+' '+String(fields&&fields['abc-style']||'')+' '+String(fields&&fields['abc-genre']||'');
  return /\b(?:raga|raag|konnakol|solkattu|mohanam|yaman|bhairav|indien|indian|carnatic|hindustani|adi\s*tala|rupaka|mi[sś]ra|c[āa]pu)\b/i.test(metadata);
@@ -215,7 +246,7 @@ function stampRhythmAuditions(tune,sequence){
    var lo=0,hi=notes.length;
    while(lo<hi){var mid=(lo+hi)>>1;if(notes[mid].start<when-.004)lo=mid+1;else hi=mid;}
    event.midiPitches=[];
-   for(var at=lo;at<notes.length&&Math.abs(notes[at].start-when)<.004;at++)event.midiPitches.push(Object.assign({},notes[at]));
+   for(var at=lo;at<notes.length&&Math.abs(notes[at].start-when)<.004;at++)event.midiPitches.push(Object.assign({},notes[at],{huwabcPreviewPart:'voice:'+index}));
    event.huwabcRhythmVoiced=true;
   });});
  });
@@ -229,6 +260,7 @@ function rhythmAudition(tune,sourceChar){
 }
 function prepare(ABC,tune,source,config,live,fields){
  var c=resolve(config,source,fields);if(live){c.enabled=true;c.bassVolume=c.chordVolume=c.drumVolume=100;}var repeatPlan=repeatPlanModule.build(ABC,source,c.repeatCounts),raw=strip(ABC.parseOnly(source)[0]);repeatPlayback.install(raw,repeatPlan);var meta=info(raw,source,fields),rawBase=raw.setUpAudio({chordsOff:true}),baseCount=rawBase.tracks.length,backings=[];
+ c=guitarLevels(c,config,source,fields,rawBase,raw);
  // Notated voices remain independent of the accompaniment switch. A selected
  // score bass replaces generated bass; its original timing and pitches survive.
  var melodySource=raw;

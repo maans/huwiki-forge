@@ -35,7 +35,7 @@ const shape=track=>JSON.stringify(notes(track).map(({pitch,start,duration,instru
 
 for(const live of [false,true])test(`Written rhythm guitar survives accompaniment off/on (live=${live})`,()=>{
  const referenceTune=ABC.parseOnly(source)[0];
- Accompaniment.prepare(ABC,referenceTune,source,{enabled:false,style:'swing'},false,{});
+ Accompaniment.prepare(ABC,referenceTune,source,{enabled:false,style:'swing'},live,{});
  const reference=referenceTune.setUpAudio({}).tracks[0];
  for(const enabled of [false,true]){
   const tune=ABC.parseOnly(source)[0];
@@ -89,7 +89,7 @@ test('Mixed melody scores do not acquire automatic stabs; explicit guitar charts
   if(written){
    assert.ok(notes(audio.tracks[0]).length>4);
    const cues=notes(audio.tracks[0]).filter(e=>e.start>=6&&e.start<7);
-   assert.equal(shape(cues),shape(expected));
+   assert.equal(shape(cues),shape(expected.map(n=>n.cmd==='note'?{...n,volume:Math.round(n.volume*.5)}:n)));
   }else assert.equal(shape(audio.tracks[0]),shape(expected));
   if(!written)assert.equal(notes(audio.tracks[0]).length,4);
  }

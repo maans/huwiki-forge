@@ -1,15 +1,12 @@
 # Jazz · Swing: shared shell voicings
 
-Swing playback plans a progression of three-note shells from the source chord
-symbols, independently of the chosen comping rhythm or instrument. It evaluates
-both 1–3–7 and 1–7–3 families across the whole phrase. Fifth-related roots favour
-exchanging the upper roles; stepwise roots favour retaining the interval shape.
-Common tones and small upper-voice movements determine the actual register.
-Repeated harmonies retain their position, and candidate shells favour reachable
-guitar grips on bass string 6/5 and strings 4 and 3. Guitar uses the lower shell;
-piano exchanges the upper voices into the brighter position over the same bass.
-For example D3–F3–C4 on guitar becomes D3–C4–F4 on piano. This exchanges
-1–3–7 and 1–7–3 positions without moving the entire chord up an octave.
+Swing playback plans connected guitar and piano shell progressions separately
+from the source chord symbols. Both 1–3–7 and 1–7–3 families remain available.
+Fifth-related roots favour exchanging upper roles; stepwise roots favour retaining
+the interval shape. Guitar starts in its lower working register and favours
+reachable grips on bass string 6/5 and strings 4 and 3. Piano retains its own
+brighter whole-phrase path, including its independent bass register and explicit
+extensions. Lowering the guitar no longer moves the piano down with it.
 
 For example, one possible turnaround is:
 
@@ -62,8 +59,9 @@ Validation: `node --test tests/abc-swing-voicings.test.mjs tests/abc-rhythm-head
 Jazz · Swing piano comping uses seeded four-bar phrases with offbeats, rests,
 short responses and occasional held chords. Faster swing has fewer piano attacks;
 the shell positions and explicit extensions above remain the same. Written rhythm
-figures keep their notated attacks. Swing guitar shells, including written chord
-stabs, now play at half their previous event velocity.
+figures keep their notated attacks. Written swing guitar voices default to 50% in the mixer. This is a real
+post-render channel gain, rather than reduced MIDI velocity: articulation and
+dynamic markings remain in the events, and the volume control stays adjustable.
 
 With the form/tempo feel setting, A sections start in two-feel; B and C sections
 use quarter-note walking bass and a more active double-feel ride pattern. At
@@ -86,7 +84,14 @@ unnecessary high guitar bass; an explicit starting-family choice remains valid.
 For Easy Money the opening Gm7 is G2–F3–B♭3, not G3–B♭3–F4.
 
 Rhythm-head MIDI metadata and chord-symbol click previews now use the same
-arranged pitches, instrument, articulation and velocity as playback. N.C. remains
+arranged pitches, instrument and articulation as playback, and route through
+the same voice channel gain. N.C. remains
 silent on clicks too. Instrument overrides are resolved before selecting guitar
 or piano shells. The browser acceptance test compares the full rendered Easy
 Money chart, controller audio, note preview and chord preview in C and B♭.
+
+Piano voice leading is independent of the lower guitar path. Across the complete
+Easy Money chart its piano positions match the brighter pre-0.3.58 arrangement;
+the opening piano Gm7 is G3–F4–B♭4 while guitar is G2–F3–B♭3. Browser acceptance
+checks these two openings separately, the visible guitar slider at 50%, channel
+gain 0.5, and the voice-bus routing of note and chord previews.

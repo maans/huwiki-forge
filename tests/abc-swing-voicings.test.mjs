@@ -89,7 +89,7 @@ test('guitar retains its swing voicings with backing off, bossa backing and conc
  for(const result of variants.slice(1))assert.deepEqual(plain(notes(result.tracks[0])),plain(notes(variants[0].tracks[0])));
 });
 
-test('repeats, rests, tied hits and N.C. survive; explicitly written cues stay unchanged',()=>{
+test('repeats, rests, tied hits and N.C. survive; written cues retain pitch and timing at the mixer level',()=>{
  const abc=source('Z2 |: "Dm7"sB sB z sB | "G7"sB-sB sB sB :| "Cmaj7"C D E F | "N.C."sB sB sB sB |');
  const result=audio(abc,{}, {'abc-rhythm-playback':'written'}),actual=notes(result.tracks[0]);
  assert.ok(actual.every(n=>n.start>=2&&n.start<7));
@@ -97,7 +97,7 @@ test('repeats, rests, tied hits and N.C. survive; explicitly written cues stay u
  assert.deepEqual(attacks,[2,2.25,2.75,3,3.5,3.75,4,4.25,4.75,5,5.5,5.75]);
  assert.equal(actual.find(n=>n.start===3).duration,.5);assert.equal(actual.find(n=>n.start===5).duration,.5);
  const reference=notes(ABC.parseOnly(abc)[0].setUpAudio({chordsOff:true}).tracks[0]).filter(n=>n.start>=6&&n.start<7);
- assert.deepEqual(plain(actual.filter(n=>n.start>=6&&n.start<7)),plain(reference));
+ assert.deepEqual(plain(actual.filter(n=>n.start>=6&&n.start<7)),plain(reference.map(n=>({...n,volume:Math.round(n.volume*.5)}))));
  assert.ok(actual.every(n=>n.instrument===26));
 });
 
@@ -146,7 +146,8 @@ test('piano adds colours above the shell; Freddie Green guitar plays only the sh
   const result=audio(abc,{enabled:true,chords:'beats',chordInstrument:0,bass:'off',drums:'off'});
   const guitar=groups(result.tracks[0])[0],piano=groups(result.tracks.find(t=>t.huwabcPart==='chordVolume'))[0];
   assert.equal(guitar.length,3,name);assert.deepEqual(pcs(guitar),shell,name);
-  assert.deepEqual(piano.slice(0,3).map(n=>n.pitch),[guitar[0].pitch,guitar[2].pitch,guitar[1].pitch+12],name);
+  assert.deepEqual(pcs(piano.slice(0,3)),shell,name);
+  assert.ok(piano[2].pitch>guitar[2].pitch,name+': piano keeps its higher working register');
   assert.equal(piano.at(-1).pitch%12,colour,name);assert.ok(piano.at(-1).pitch>Math.max(...piano.slice(0,3).map(n=>n.pitch)),name);
  }
 });
@@ -154,9 +155,10 @@ test('piano adds colours above the shell; Freddie Green guitar plays only the sh
 test('both shell families retain their harmony and register separation in every key',()=>{
  for(const root of ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'])for(const quality of ['m7','7','maj7','6','dim7','7b9','13'])for(const startOrder of ['137','173']){
   const row=progression([root+quality],{startOrder})[0],g=row.voicing,p=row.pianoVoicing;
-  assert.equal(p.bass,g.bass);assert.notEqual(p.order,g.order);
+  assert.equal(p.bass%12,g.bass%12);assert.notEqual(p.order,g.order);
   assert.deepEqual(pcs(p.shell),pcs(g.shell));
-  assert.equal(p.guides[0],g.guides[1]);assert.equal(p.guides[1],g.guides[0]+12);
+  assert.equal(p.guides[0]%12,g.guides[1]%12);assert.equal(p.guides[1]%12,g.guides[0]%12);
+  assert.ok(p.guides[1]>g.guides[1],'piano retains its higher register independently of guitar bass octave');
   assert.deepEqual(pcs(p.tones),pcs(g.tones));
  }
 });
@@ -184,7 +186,7 @@ test('Easy Money keeps its lower guitar opening when later harmony favours a hig
  for(const names of [['Gm7','F'],changes,changes.concat(changes)]){
   const plan=progression(names);
   assert.deepEqual(plain(plan[0].voicing.tones),[43,53,58]);
-  assert.deepEqual(plain(plan[0].pianoVoicing.tones),[43,58,65]);
+  assert.deepEqual(plain(plan[0].pianoVoicing.tones),[55,65,70],'the lower guitar policy must not lower the established piano opening');
   assert.ok(plan.every(row=>row.voicing.bass<=52),'later changes must not make this guitar phrase drift into a higher bass octave');
   for(let i=0;i<names.length;i++)if(names[i]==='Gm7')assert.deepEqual(plain(plan[i].voicing.tones),[43,53,58]);
  }
