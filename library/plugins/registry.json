@@ -9,7 +9,7 @@
         "name": "ABC Musik",
         "description": "ABC Musik · søg i originale MuseScore-nodearkiver og vælg før forhåndsvisning og import",
         "author": "HUWiki",
-        "version": "0.3.52",
+        "version": "0.3.53",
         "plugin-type": "plugin",
         "stability": "experimental",
         "license": "MIT",

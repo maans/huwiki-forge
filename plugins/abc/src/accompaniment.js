@@ -164,8 +164,35 @@ function patterns(meta,c){var n=meta.n,compound=meta.meter.den===8,step=compound
  return {bass:bass.join(''),chord:chord.join(''),drums:layers};}
 // Instrument clefs and capo alter only engraving. Copy the concert audio's
 // timing/pitch annotations onto the corresponding displayed notes for seeking.
-function concertAudio(tune,raw,options){
- var audio=raw.setUpAudio(options),played=repeatPlanModule.collect(raw),shown=repeatPlanModule.collect(tune);
+function rhythmHeads(tune,clear){
+ var found=false;
+ (tune.lines||[]).forEach(function(line){(line.staff||[]).forEach(function(staff){(staff.voices||[]).forEach(function(voice){voice.forEach(function(event){
+  if(event.style==='rhythm'){found=true;if(clear)delete event.style;}
+ });});});});
+ return found;
+}
+function rhythmChart(tune,fields){
+ var mode=fields&&fields['abc-rhythm-playback'];
+ if(mode==='written')return true;
+ if(mode==='off')return false;
+ var rhythm=false,melody=false;
+ (tune.lines||[]).forEach(function(line){(line.staff||[]).forEach(function(staff){(staff.voices||[]).forEach(function(voice){voice.forEach(function(event){
+  if(event.el_type!=='note'||!event.pitches||!event.pitches.length)return;
+  if(event.style==='rhythm')rhythm=true;
+  else if(event.pitches.length===1)melody=true;
+ });});});});
+ return rhythm&&!melody;
+}
+function notatedAudio(tune,setUpAudio,options,trackCount,writtenRhythm){
+ // ABCJS needs chord recognition to voice written rhythm heads. Suppress its
+ // automatic backing pattern instead, retaining the written attacks, ties,
+ // dynamics and instrument on their original voice tracks.
+ var audio=setUpAudio.call(tune,writtenRhythm?Object.assign({},options,{chordsOff:false,gchord:'z',bassvol:0,chordvol:0}):options);
+ audio.tracks=audio.tracks.slice(0,trackCount);
+ return audio;
+}
+function concertAudio(tune,raw,options,trackCount,writtenRhythm){
+ var audio=notatedAudio(raw,raw.setUpAudio,options,trackCount,writtenRhythm),played=repeatPlanModule.collect(raw),shown=repeatPlanModule.collect(tune);
  var timing=['currentTrackWholeNotes','currentTrackMilliseconds','midiPitches','midiGraceNotePitches'];
  function notes(voice){return voice.measures.flatMap(function(m){return m.events.filter(function(e){return e.el_type==='note';});});}
  shown.voices.forEach(function(voice,index){
@@ -184,6 +211,7 @@ function prepare(ABC,tune,source,config,live,fields){
   melodySource=notation.lowerTreble(strip(ABC.parseOnly(source)[0]));
   repeatPlayback.install(melodySource,repeatPlan);
  }
+ var writtenRhythm=rhythmChart(raw,fields);
  var missingBass=c.bassSource.indexOf('voice:')===0&&voiceRouting.selectedBass(c,baseCount)<0;
  if(c.bassSource!=='style')c.bass='off';
  var styleName=c.style==='auto'?c.detectedStyle:c.style;
@@ -197,7 +225,7 @@ function prepare(ABC,tune,source,config,live,fields){
  var barCount=timeline?timeline.bars.length:jazz.calcBars(rawBase.tracks.flat(),meta.meter),analysis=jazz.form(source,barCount,meta.meter,c.form);
  var jazzStyle=['swing','bossa','samba','bossa-samba','jazzballad','jazzwaltz'].includes(styleName)?styleName:null;
  var isBrazil=['bossa','samba','bossa-samba'].includes(styleName);var grooveConfig=Object.assign({},c,{feel:styleName==='swing'||styleName==='jazzballad'?c.feel:'four'});
- function generated(options){var t=strip(ABC.parseOnly(source)[0]);repeatPlayback.install(t,repeatPlan);return t.setUpAudio(options).tracks.slice(baseCount).flatMap(function(tr){return tr.filter(function(e){return e.cmd==='note'&&e.volume>0;}).map(function(e){return Object.assign({},e,{pitch:Number(e.pitch),volume:Number(e.volume)});});});}
+ function generated(options){var t=strip(ABC.parseOnly(source)[0]);rhythmHeads(t,true);repeatPlayback.install(t,repeatPlan);return t.setUpAudio(options).tracks.slice(baseCount).flatMap(function(tr){return tr.filter(function(e){return e.cmd==='note'&&e.volume>0;}).map(function(e){return Object.assign({},e,{pitch:Number(e.pitch),volume:Number(e.volume)});});});}
  function add(name,instrument,notes){if(notes.length)backings.push({name:name,instrument:instrument,notes:notes});}
  // The chord-symbol bass mode also works with existing fixed-meter styles.
  // Replace only their bass; retain their established comping and percussion.
@@ -258,7 +286,7 @@ function prepare(ABC,tune,source,config,live,fields){
  strip(tune);repeatPlayback.install(tune,repeatPlan);var original=tune.setUpAudio;
  Object.defineProperty(tune,'_huwabcArrangementBase',{value:original,writable:true,configurable:true});
  delete tune.noteTimings;
- tune.setUpAudio=function(options){var audioOptions=Object.assign({},options,{chordsOff:true,drum:'',drumIntro:0}),sequence=tune._huwabcNotationProjected||tune.visualTranspose?concertAudio(tune,melodySource,audioOptions):original.call(tune,audioOptions),base=voiceRouting.apply(sequence,c,live),used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
+ tune.setUpAudio=function(options){var audioOptions=Object.assign({},options,{chordsOff:true,drum:'',drumIntro:0}),sequence=tune._huwabcNotationProjected||tune.visualTranspose?concertAudio(tune,melodySource,audioOptions,baseCount,writtenRhythm):notatedAudio(tune,original,audioOptions,baseCount,writtenRhythm),base=voiceRouting.apply(sequence,c,live),used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
   backings.forEach(function(part){var channel=9;if(part.instrument!==128){for(channel=0;channel<16&&used.has(channel);channel++);if(channel===16)throw new Error('Der er ikke flere ledige MIDI-kanaler til akkompagnement.');used.add(channel);}var track=[{cmd:'text',type:'name',text:part.name},{cmd:'program',channel:channel,instrument:part.instrument}].concat(part.notes.map(function(n){return Object.assign({},n,{instrument:part.instrument});}));track.huwabcPart={Bas:'bassVolume',Akkorder:'chordVolume','Slagtøj':'drumVolume',Metronom:'metronomeVolume'}[part.name];base.tracks.push(track);});return base;};
  return {tune:tune,message:[missingBass?'Den valgte basstemme findes ikke længere. Vælg bassens kilde igen.':'',c.enabled&&styleName==='ungrouped-11'?'Vælg en 11/8-stil eller angiv grupperingen i M:-feltet.':(c.enabled||c.metronome)?meta.message:''].filter(Boolean).join(' '),parts:backings,form:analysis,detectedStyle:styleName,timeline:timeline,bars:arrangedBars,warnings:(timeline?timeline.warnings:[]).concat(repeatPlan.warnings),repeatPlan:repeatPlan};
 }
