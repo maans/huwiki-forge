@@ -258,6 +258,39 @@ function rhythmAudition(tune,sourceChar){
   if(event.el_type==='note'&&event.huwabcRhythmVoiced&&event.startChar===sourceChar){found=(event.midiPitches||[]).map(function(n){return Object.assign({},n);});return true;}return false;
  });});});return found;
 }
+// Four-to-the-bar rhythm charts leave piano comping free. Written pushes,
+// stops and held figures replace only those bars with the chart's real attacks.
+function writtenPianoRhythm(ABC,source,c,baseCount,repeatPlan,hits,bars,preferredVoice){
+ var reference=strip(ABC.parseOnly(source)[0]);repeatPlayback.install(reference,repeatPlan);
+ var sourceAudio=notatedAudio(reference,reference.setUpAudio,{},baseCount,true),audio=voiceRouting.apply(sourceAudio,c,true),voices=[];
+ (audio.tracks||[]).forEach(function(track,index){
+  var mask=hits[index]||[];if(!mask.length)return;
+  // The chart's written guitar role survives a mixer timbre change.
+  var sourceGuitar=(sourceAudio.tracks[index]||[]).some(function(event){return (event.cmd==='program'||event.cmd==='note')&&[24,25,26,27,28].indexOf(Number(event.instrument))>=0;});
+  var starts=new Set(mask.map(function(hit){return hit.start.toFixed(6);})),groups=[];
+  track.filter(function(note){return note.cmd==='note'&&note.volume>0&&(sourceGuitar||[24,25,26,27,28].indexOf(Number(note.instrument))>=0)&&starts.has(note.start.toFixed(6));}).sort(function(a,b){return a.start-b.start;}).forEach(function(note){
+   var group=groups[groups.length-1];if(!group||Math.abs(group.start-note.start)>.00002){group={start:note.start,duration:0};groups.push(group);}group.duration=Math.max(group.duration,Number(note.duration)||0);
+  });if(groups.length)voices.push({index:index,groups:groups});
+ });
+ var voice=voices.find(function(v){return v.index===preferredVoice;})||voices[0];if(!voice)return null;
+ return (bars||[]).map(function(bar){
+  var attacks=voice.groups.filter(function(group){return group.start>=bar.start-.00002&&group.start<bar.end-.00002;});
+  var regular=bar.meter.num===4&&bar.meter.den===4&&Math.abs(bar.duration-1)<.00002&&attacks.length===4&&attacks.every(function(hit,index){return Math.abs(hit.start-bar.start-index/4)<.00002&&Math.abs(hit.duration-.25)<.00002;});
+  return {start:bar.start,end:bar.end,follow:!regular,attacks:attacks};
+ });
+}
+function followWrittenPiano(events,seeds,rhythm,end){
+ if(!rhythm)return events;
+ var seedGroups=[];
+ seeds.slice().sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;}).forEach(function(note){var group=seedGroups[seedGroups.length-1];if(!group||Math.abs(group.start-note.start)>.00002){group={start:note.start,notes:[]};seedGroups.push(group);}group.notes.push(note);});
+ var output=events.filter(function(note){return !rhythm.some(function(bar){return bar.follow&&note.start>=bar.start-.00002&&note.start<bar.end-.00002;});});
+ rhythm.forEach(function(bar){if(!bar.follow)return;bar.attacks.forEach(function(hit){
+  var lo=0,hi=seedGroups.length-1,index=-1;while(lo<=hi){var mid=(lo+hi)>>1;if(seedGroups[mid].start<=hit.start+.00002){index=mid;lo=mid+1;}else hi=mid-1;}
+  var group=seedGroups[Math.max(0,index)];if(!group)return;
+  var duration=Math.min(hit.duration,end-hit.start);if(!(duration>.00002))return;
+  group.notes.forEach(function(note){output.push(Object.assign({},note,{start:hit.start,duration:duration,huwabcHarmonyStart:hit.start,huwabcWrittenRhythm:true}));});
+ });});return output.sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});
+}
 function prepare(ABC,tune,source,config,live,fields){
  var c=resolve(config,source,fields);if(live){c.enabled=true;c.bassVolume=c.chordVolume=c.drumVolume=100;}var repeatPlan=repeatPlanModule.build(ABC,source,c.repeatCounts),raw=strip(ABC.parseOnly(source)[0]);repeatPlayback.install(raw,repeatPlan);var meta=info(raw,source,fields),rawBase=raw.setUpAudio({chordsOff:true}),baseCount=rawBase.tracks.length,backings=[];
  c=guitarLevels(c,config,source,fields,rawBase,raw);
@@ -347,11 +380,17 @@ function prepare(ABC,tune,source,config,live,fields){
    var chordNotes=generated({gchord:activeComp?'c'.repeat(meta.n):pat.chord,chordprog:c.chordInstrument,chordvol:c.chordVolume,bassvol:0});
    // Preserve the selected source harmony across anticipations and timing variation.
    if(styleName==='swing'&&swingPlan)chordNotes.forEach(function(e){e.huwabcHarmonyStart=e.start;});
+   var chordSeeds=chordNotes;
    if(isBrazil&&c.chords==='bossacomp')chordNotes=jazz.brazilComp(chordNotes,meta.meter,analysis,grooveConfig,styleName,source);
    else if(activeComp)chordNotes=jazz.comp(chordNotes,meta.meter,analysis,grooveConfig,compStyle,source);
+   if(styleName==='swing'&&writtenSwing&&swingPlan&&c.chordInstrument>=0&&c.chordInstrument<=7&&c.chords!=='arpeggio'){
+    var writtenComp=writtenPianoRhythm(ABC,source,c,baseCount,repeatPlan,writtenHits,swingTimeline.bars,harmonyVoice);
+    chordNotes=followWrittenPiano(chordNotes,chordSeeds,writtenComp,rawBase.totalDuration);
+   }
    if(styleName==='swing'&&swingPlan&&c.chords!=='arpeggio')chordNotes=swingVoicings.voice(chordNotes,swingPlan,{guitar:[24,25,26,27,28].includes(c.chordInstrument),pulse:c.chords==='beats'});
    else if(c.chords!=='arpeggio')chordNotes=jazz.voiceLead(chordNotes);
    if(compStyle==='swing'&&activeComp)chordNotes=chordNotes.filter(function(e){
+    if(e.huwabcWrittenRhythm)return e.duration>.00002;
     if(Math.abs((e.start*8)%2-1)<.010)e.start+=.038;
     var bar=playedTimeline&&playedTimeline.bars.find(function(b){return e.start>=b.start-.00002&&e.start<b.end-.00002;});
     var end=bar?bar.end:rawBase.totalDuration;

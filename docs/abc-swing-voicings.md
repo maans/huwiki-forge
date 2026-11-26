@@ -95,3 +95,10 @@ Easy Money chart its piano positions match the brighter pre-0.3.58 arrangement;
 the opening piano Gm7 is G3–F4–B♭4 while guitar is G2–F3–B♭3. Browser acceptance
 checks these two openings separately, the visible guitar slider at 50%, channel
 gain 0.5, and the voice-bus routing of note and chord previews.
+
+In written swing guitar charts, a regular bar of four quarter-note chord stabs
+leaves the piano free to comp. A deviating written bar takes priority: piano
+follows its chord attacks, syncopations, ties and rests instead of inserting a
+free pattern over the figure. This uses the unfolded played measures, so repeat
+endings and pickups keep their actual rhythm. Piano still uses its independent
+brighter voicings. Bass and drums retain their own selected groove.

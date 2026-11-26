@@ -131,6 +131,29 @@ try{
   assert.ok(result.noteAudition.every(note=>note.huwabcPreviewPart==='voice:0'),instrument+': note preview uses the guitar voice bus');
   assert.ok(result.chordAudition.every(note=>note.huwabcPreviewPart==='voice:0'),instrument+': chord preview uses the guitar voice bus');
  }
+ const rhythmResult=await page.evaluate(async()=>{
+  const ABC=await $tw.modules.execute('$:/plugins/huwiki/abc/loader.js').load();
+  const Minimal=$tw.modules.execute('$:/plugins/huwiki/abc/minimal-player.js');
+  $tw.modules.execute('$:/plugins/huwiki/abc/instrument-view.js').change('c');
+  const source='X:1\nT:Written comp figures\nR:Swing\nM:4/4\nL:1/8\nQ:1/4=126\nU:s=!style=rhythm!\nV:G name="Guitar"\n%%MIDI program 26\nK:C\n"Gm7"sB2 sB2 sB2 sB2 | "Gm7"z sB z sB2 z sB2 | "C7"sB2-sB2 z2 sB2 | "N.C."z8 | "Gm7"sB2 sB2 sB2 sB2 |';
+  const fields={title:'Written comp figures','abc-source':source,'abc-rhythm-playback':'written','abc-accompaniment':'{"style":"swing","enabled":true,"variation":0}'};
+  const host=document.createElement('section');document.body.appendChild(host);
+  const player=Minimal.mount(host,{ABC,source,fields,wiki:$tw.wiki,audio:true,showTitle:false,paged:true});
+  const sequence=player.visual.setUpAudio({});
+  const guitar=sequence.tracks[0].filter(n=>n.cmd==='note'&&n.volume>0);
+  const piano=(sequence.tracks.find(t=>t.huwabcPart==='chordVolume')||[]).filter(n=>n.cmd==='note'&&n.volume>0);
+  const starts=(notes,start,end)=>Array.from(new Set(notes.filter(n=>n.start>=start-.00001&&n.start<end-.00001).map(n=>Math.round(n.start*100000)/100000))).sort((a,b)=>a-b);
+  const held=(notes)=>Math.max(...notes.filter(n=>Math.abs(n.start-2)<.00001).map(n=>n.duration));
+  const result={guitarFigures:starts(guitar,1,3),pianoFigures:starts(piano,1,3),guitarRegular:starts(guitar,0,1),pianoRegular:starts(piano,0,1),pianoStop:starts(piano,3,4),guitarHold:held(guitar),pianoHold:held(piano),tempo:sequence.tempo};
+  player.destroy();host.remove();return result;
+ });
+ debug.push(rhythmResult);console.log('ABC WRITTEN COMP',JSON.stringify(rhythmResult));
+ await writeFile(path.join(output,'diagnostic.json'),JSON.stringify(debug,null,2));
+ assert.deepEqual(rhythmResult.pianoFigures,rhythmResult.guitarFigures,'Rendered piano follows syncopations, stops and tied hits in the guitar chart');
+ assert.notDeepEqual(rhythmResult.pianoRegular,rhythmResult.guitarRegular,'Regular four-quarter guitar keeps the piano free to comp');
+ assert.deepEqual(rhythmResult.pianoStop,[],'N.C. does not acquire piano attacks');
+ assert.ok(Math.abs(rhythmResult.pianoHold-rhythmResult.guitarHold)<.00001,'Written tied figures keep one sustained piano attack');
+ assert.equal(rhythmResult.tempo,126,'Following written figures does not alter tempo');
  console.log('Verified Easy Money low guitar, independent bright piano and half channel gain through rendered Minimal/controller audio');
 }catch(error){
  await writeFile(path.join(output,'diagnostic.json'),JSON.stringify(debug,null,2));
