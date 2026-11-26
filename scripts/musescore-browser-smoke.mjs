@@ -52,10 +52,19 @@ try{
    const tune=ABC.renderAbc(engraving,result.abc,{add_classes:true,staffwidth:850})[0];
    const audio=tune.setUpAudio({});
    const staffCounts=tune.lines.filter(line=>line.staff).map(line=>line.staff.map(staff=>({clef:staff.clef.type,voices:staff.voices.length,lines:staff.stafflines??staff.clef.stafflines??5})));
+   // ABCJS names each SVG notehead after the input pitch, rather than its glyph.
+   // RelativeElement.c identifies the engraved symbol; graphelem is its SVG path.
+   const heads=(tune.engraver?.staffgroups||[]).flatMap(group=>group.voices.flatMap(voice=>voice.children.flatMap(element=>element.heads||[])));
+   const crossHeads=heads.filter(head=>head.c==='noteheads.indeterminate');
+   const visibleCrossHeads=crossHeads.filter(head=>{
+    const node=head.graphelem;
+    return node&&engraving.contains(node)&&node.matches('path.abcjs-notehead')&&node.getAttribute('d')&&node.getBBox().width>0;
+   });
    return {id:fixture.id,programs:model.staves.map(staff=>staff.program),sources:model.staves.map(staff=>staff.instrumentSource),
     warnings:result.warnings,abcWarnings:tune.warnings||[],abc:result.abc,staffCounts,
     tracks:audio.tracks.map(track=>track.filter(event=>event.cmd==='note').map(event=>({pitch:event.pitch,instrument:event.instrument,start:event.start,duration:event.duration}))),
-    xheads:engraving.querySelectorAll('[data-name="noteheads.indeterminate"], [data-name="noteheads.x"], .abcjs-notehead[data-name*="indeterminate"]').length,
+    xheads:visibleCrossHeads.length,
+    noteheadDiagnostics:heads.map(head=>({glyph:head.c,name:head.name,svg:head.graphelem?.outerHTML||null})),
     svg:engraving.querySelectorAll('svg').length};
   });
  },{sources,abcSource,fixtures});
@@ -77,7 +86,7 @@ try{
   assert.equal(first.at(-1).lines,5,`${result.id}: five drum staff lines`);
   assert.match(first.at(-1).clef,/perc/,`${result.id}: percussion clef`);
   assert.match(result.abc,/^%%percmap\s+\S+\s+42\s+x\s*$/m,`${result.id}: hi-hat cross noteheads`);
-  assert.ok(result.xheads>0,`${result.id}: visible SVG cross noteheads`);
+  assert.ok(result.xheads>0,`${result.id}: visible SVG cross noteheads; ${JSON.stringify(result.noteheadDiagnostics)}`);
   assert.ok(result.svg>0,`${result.id}: visible score`);
   assert.equal(result.abcWarnings.length,0,`${result.id}: valid ABC`);
   assert.ok(!result.warnings.some(w=>/unpitched|Slagtøjsnotation/.test(w)),`${result.id}: no obsolete percussion warning`);
