@@ -39,6 +39,7 @@ for(const startOrder of ['137','173'])test(`ii–V–I exchanges thirds/sevenths
 test('Cmaj7 → C6 → Am7 → Dm7 closes the requested turnaround',()=>{
  const plan=progression(['Dm7','G7','Cmaj7','C6','Am7','Dm7'],{startOrder:'137'});
  assert.deepEqual(plain(plan.map(p=>p.voicing.tones)),[[50,53,60],[43,53,59],[48,52,59],[48,52,57],[45,55,60],[50,53,60]]);
+ assert.deepEqual(plain(plan.map(p=>p.pianoVoicing.tones)),[[50,60,65],[43,59,65],[48,59,64],[48,57,64],[45,60,67],[50,60,65]]);
 });
 
 for(const startOrder of ['137','173'])test(`stepwise roots retain ${startOrder} in either direction`,()=>{
@@ -71,11 +72,11 @@ test('ordinary swing accompaniment uses shells while the written melody stays in
  assert.ok(comp.length>=3);for(const g of comp){assert.equal(g.length,3);assert.deepEqual(pcs(g),g[0].start<1? [0,2,5]:g[0].start<2?[5,7,11]:[0,4,11]);}
 });
 
-test('written guitar and generated piano share the same harmonic plan',()=>{
+test('written guitar uses the lower shell and generated piano the brighter position',()=>{
  const abc=source('"Dm7"sB sB sB sB | "G7"sB sB sB sB | "Cmaj7"sB sB sB sB |');
  const result=audio(abc,{enabled:true,chords:'beats',chordInstrument:0,bass:'off',drums:'off'});
  const guitar=groups(result.tracks[0]),piano=groups(result.tracks.find(t=>t.huwabcPart==='chordVolume'));
- for(const g of piano){const match=guitar.find(n=>Math.abs(n[0].start-g[0].start)<.004);assert.ok(match);assert.deepEqual(g.map(n=>n.pitch),match.map(n=>n.pitch));}
+ for(const g of piano){const match=guitar.find(n=>Math.abs(n[0].start-g[0].start)<.004);assert.ok(match);assert.deepEqual(g.map(n=>n.pitch),[match[0].pitch,match[2].pitch,match[1].pitch+12]);}
  const [one,two,three,four]=guitar;
  assert.ok(one[0].duration>two[0].duration&&three[0].duration>four[0].duration);
  assert.ok(one[0].volume/one[1].volume>two[0].volume/two[1].volume);
@@ -145,9 +146,26 @@ test('piano adds colours above the shell; Freddie Green guitar plays only the sh
   const result=audio(abc,{enabled:true,chords:'beats',chordInstrument:0,bass:'off',drums:'off'});
   const guitar=groups(result.tracks[0])[0],piano=groups(result.tracks.find(t=>t.huwabcPart==='chordVolume'))[0];
   assert.equal(guitar.length,3,name);assert.deepEqual(pcs(guitar),shell,name);
-  assert.deepEqual(piano.slice(0,3).map(n=>n.pitch),guitar.map(n=>n.pitch),name);
-  assert.equal(piano.at(-1).pitch%12,colour,name);assert.ok(piano.at(-1).pitch>Math.max(...guitar.map(n=>n.pitch)),name);
+  assert.deepEqual(piano.slice(0,3).map(n=>n.pitch),[guitar[0].pitch,guitar[2].pitch,guitar[1].pitch+12],name);
+  assert.equal(piano.at(-1).pitch%12,colour,name);assert.ok(piano.at(-1).pitch>Math.max(...piano.slice(0,3).map(n=>n.pitch)),name);
  }
+});
+
+test('both shell families retain their harmony and register separation in every key',()=>{
+ for(const root of ['C','Db','D','Eb','E','F','Gb','G','Ab','A','Bb','B'])for(const quality of ['m7','7','maj7','6','dim7','7b9','13'])for(const startOrder of ['137','173']){
+  const row=progression([root+quality],{startOrder})[0],g=row.voicing,p=row.pianoVoicing;
+  assert.equal(p.bass,g.bass);assert.notEqual(p.order,g.order);
+  assert.deepEqual(pcs(p.shell),pcs(g.shell));
+  assert.equal(p.guides[0],g.guides[1]);assert.equal(p.guides[1],g.guides[0]+12);
+  assert.deepEqual(pcs(p.tones),pcs(g.tones));
+ }
+});
+
+test('written piano and generated guitar use the same instrument-specific positions',()=>{
+ const abc=source('"Dm7"sB sB sB sB | "G7"sB sB sB sB | "Cmaj7"sB sB sB sB |');
+ const original=audio(abc,{enabled:true,chords:'beats',chordInstrument:0,bass:'off',drums:'off'});
+ const swapped=audio(abc.replace('%%MIDI program 26','%%MIDI program 0'),{enabled:true,chords:'beats',chordInstrument:26,bass:'off',drums:'off'});
+ for(const [a,b] of [[original.tracks[0],swapped.tracks.find(t=>t.huwabcPart==='chordVolume')],[original.tracks.find(t=>t.huwabcPart==='chordVolume'),swapped.tracks[0]]])assert.deepEqual(groups(a).map(g=>g.map(n=>n.pitch)),groups(b).map(g=>g.map(n=>n.pitch)));
 });
 
 test('diminished guitar chords use root, minor third and sixth in either spread',()=>{

@@ -65,6 +65,24 @@ function candidates(harmony){
  });
  return out;
 }
+function brighter(harmony,voicing){
+ // Exchange the two guide-note roles above the same bass: F3–C4 becomes C4–F4.
+ // This is the other shell position, rather than an octave copy of the guitar.
+ var guides=[voicing.guides[1],voicing.guides[0]+12];
+ var shell=[voicing.bass].concat(guides);
+ if(harmony.bass!==harmony.root){
+  var root=48+harmony.root;while(root<=voicing.bass)root+=12;
+  if(!shell.some(function(n){return pc(n)===harmony.root;}))shell.push(root);
+ }
+ shell=shell.sort(function(a,b){return a-b;}).filter(function(n,i,a){return !a.slice(0,i).some(function(before){return pc(before)===pc(n);});});
+ var tones=shell.slice();
+ harmony.colours.forEach(function(interval){
+  var n=Math.max.apply(null,shell)+1;while(pc(n)!==pc(harmony.root+interval))n++;
+  if(!tones.includes(n))tones.push(n);
+ });
+ tones.sort(function(a,b){return a-b;});
+ return {order:voicing.order==='137'?'173':'137',tones:tones,shell:shell,guides:guides,bass:voicing.bass};
+}
 function transition(a,b,oldHarmony,newHarmony){
  var distance=Math.abs(a.guides[0]-b.guides[0])+Math.abs(a.guides[1]-b.guides[1]);
  var cost=distance*2+Math.max(0,Math.abs(a.bass-b.bass)-5)*.3;
@@ -104,7 +122,7 @@ function plan(changes,options){
   for(var j=end;j>=start;j--){result[j].voicing=result[j].choices[index];index=result[j].parents[index];}
   start=end+1;
  }
- var output=result.map(function(row){return {start:row.start,harmony:row.harmony,voicing:row.voicing};});
+ var output=result.map(function(row){return {start:row.start,harmony:row.harmony,voicing:row.voicing,pianoVoicing:row.voicing?brighter(row.harmony,row.voicing):undefined};});
  output.bars=options.bars||[];output.transpose=Number(options.transpose)||0;return output;
 }
 function at(plan,time){
@@ -129,7 +147,8 @@ function voice(events,plan,options){
   var quarter=(group.start-(bar?bar.start:0)+(bar?Math.max(0,bar.meter.num/bar.meter.den-bar.duration):0))*4;
   var beat=Math.round(quarter),onBeat=Math.abs(quarter-beat)<.02,backbeat=onBeat&&beat%2===1;
   var guitar=options.guitar===true,regular=guitar&&sample.duration<=.25+EPS&&(typeof options.pulse==='function'?options.pulse(group.start):options.pulse)&&onBeat;
-  (guitar?target.voicing.shell:target.voicing.tones).forEach(function(pitch,index){
+  var voicing=guitar?target.voicing:target.pianoVoicing||target.voicing;
+  (guitar?voicing.shell:voicing.tones).forEach(function(pitch,index){
    var duration=sample.duration,factor=1;
    if(guitar){
     factor=index===0?(backbeat?.46:.88):(backbeat?1.08:.76);

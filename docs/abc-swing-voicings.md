@@ -6,18 +6,21 @@ both 1–3–7 and 1–7–3 families across the whole phrase. Fifth-related roo
 exchanging the upper roles; stepwise roots favour retaining the interval shape.
 Common tones and small upper-voice movements determine the actual register.
 Repeated harmonies retain their position, and candidate shells favour reachable
-guitar grips on bass string 6/5 and strings 4 and 3.
+guitar grips on bass string 6/5 and strings 4 and 3. Guitar uses the lower shell;
+piano exchanges the upper voices into the brighter position over the same bass.
+For example D3–F3–C4 on guitar becomes D3–C4–F4 on piano. This exchanges
+1–3–7 and 1–7–3 positions without moving the entire chord up an octave.
 
 For example, one possible turnaround is:
 
-| Chord | Sounding MIDI notes | Structure |
+| Chord | Guitar, sounding notes | Piano, sounding notes |
 | --- | --- | --- |
-| Dm7 | D3 F3 C4 | 1–3–7 |
-| G7 | G2 F3 B3 | 1–7–3 |
-| Cmaj7 | C3 E3 B3 | 1–3–7 |
-| C6 | C3 E3 A3 | 1–3–6 |
-| Am7 | A2 G3 C4 | 1–7–3 |
-| Dm7 | D3 F3 C4 | 1–3–7 |
+| Dm7 | D3 F3 C4 | D3 C4 F4 |
+| G7 | G2 F3 B3 | G2 B3 F4 |
+| Cmaj7 | C3 E3 B3 | C3 B3 E4 |
+| C6 | C3 E3 A3 | C3 A3 E4 |
+| Am7 | A2 G3 C4 | A2 C4 G4 |
+| Dm7 | D3 F3 C4 | D3 C4 F4 |
 
 Sixths remain sixths; plain major/minor triads do not gain a seventh. Suspensions
 and slash bass are retained. Piano adds explicit alterations and colours above
