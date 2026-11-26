@@ -135,12 +135,14 @@ exports.mount=function(host,options){
     var overHarmony=ChordKeys.parse(overviewChord.textContent);
     var charAttr=overviewChord.getAttribute('data-huwabc-source-char');
     if(charAttr!==null)cueStart(Number(charAttr),overviewChord,null);
-    if(overHarmony)audition(InstrumentView.soundingPitches(overHarmony.pitches),'Akkordlyd:');
+    var overNotes=Accompaniment.rhythmAudition(visual,charAttr===null?NaN:Number(charAttr));
+    if(overNotes!==null)audition(overNotes,'Akkordlyd:');else if(overHarmony)audition(InstrumentView.soundingPitches(overHarmony.pitches),'Akkordlyd:');
    }else if(chord){
     var harmony=ChordKeys.parse(chord.textContent);if(!harmony){show('Akkorden kunne ikke læses.',true);return;}
     var element=sourceElement(chord),sourceChar=element&&element.startChar;
     cueStart(typeof sourceChar==='number'?sourceChar:null,chord,element&&element.currentTrackMilliseconds);
-    audition(InstrumentView.soundingPitches(harmony.pitches),'Akkordlyd:');
+    var chordNotes=Accompaniment.rhythmAudition(visual,sourceChar);
+    audition(chordNotes!==null?chordNotes:InstrumentView.soundingPitches(harmony.pitches),'Akkordlyd:');
    }else{
     var start=Number(tab.getAttribute('data-huwabc-tab-source')),midi=Number(tab.getAttribute('data-huwabc-tab-midi'));
     cueStart(Number.isFinite(start)?start:null,tab,null);

@@ -175,3 +175,24 @@ test('diminished guitar chords use root, minor third and sixth in either spread'
   assert.deepEqual(plain(p.voicing.shell.map(n=>(n-p.voicing.shell[0])%12)),startOrder==='137'?[0,3,9]:[0,9,3]);
  }
 });
+
+
+test('Easy Money keeps its lower guitar opening when later harmony favours a higher global path',()=>{
+ // The chart's first seventeen harmony changes reproduced the whole-chart
+ // register drift: previously its final F pulled the initial Gm7 up to G3.
+ const changes='Gm7 C7 Am7 D7 Gm7 C7 F6 Gm7 Am7 D7 Gm7 C7 Am7 D7 Gm7 C7 F'.split(' ');
+ for(const names of [['Gm7','F'],changes,changes.concat(changes)]){
+  const plan=progression(names);
+  assert.deepEqual(plain(plan[0].voicing.tones),[43,53,58]);
+  assert.deepEqual(plain(plan[0].pianoVoicing.tones),[43,58,65]);
+  assert.ok(plan.every(row=>row.voicing.bass<=52),'later changes must not make this guitar phrase drift into a higher bass octave');
+  for(let i=0;i<names.length;i++)if(names[i]==='Gm7')assert.deepEqual(plain(plan[i].voicing.tones),[43,53,58]);
+ }
+ const plan=progression(changes);
+ assert.deepEqual(plain(plan.slice(0,4).map(row=>row.voicing.tones)),[[43,53,58],[48,52,58],[45,55,60],[50,54,60]]);
+});
+
+test('an explicit higher starting family remains available after the lower guitar default',()=>{
+ assert.deepEqual(plain(progression(['Gm7','C7'],{startOrder:'137'})[0].voicing.tones),[55,58,65]);
+ assert.deepEqual(plain(progression(['Gm7','C7'],{startOrder:'173'})[0].voicing.tones),[43,53,58]);
+});

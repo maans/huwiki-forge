@@ -78,3 +78,15 @@ marks and second endings do not become B sections. Pickups and short final bars
 follow their actual duration. N.C. silences the generated pitched backing.
 
 Validation also includes `node --test tests/abc-swing-arrangement.test.mjs`.
+
+The default opening guitar grip is fixed in the lower register before planning
+voice leading across the phrase. Later harmonies cannot pull a long chart's
+opening into the brighter family. A continuing register cost discourages an
+unnecessary high guitar bass; an explicit starting-family choice remains valid.
+For Easy Money the opening Gm7 is G2–F3–B♭3, not G3–B♭3–F4.
+
+Rhythm-head MIDI metadata and chord-symbol click previews now use the same
+arranged pitches, instrument, articulation and velocity as playback. N.C. remains
+silent on clicks too. Instrument overrides are resolved before selecting guitar
+or piano shells. The browser acceptance test compares the full rendered Easy
+Money chart, controller audio, note preview and chord preview in C and B♭.

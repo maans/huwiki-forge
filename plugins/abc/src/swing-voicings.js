@@ -103,17 +103,27 @@ function plan(changes,options){
   if(last&&last.harmony&&harmony&&last.harmony.key===harmony.key)return;
   result.push({start:event.start,harmony:harmony,choices:harmony?candidates(harmony):[]});
  });
- // Dynamic programming considers the whole phrase, allowing either starting grip.
+ // Fix the starting register before optimizing the whole phrase. Otherwise a
+ // distant chord can make a long chart choose the brighter opening guitar grip.
+ // Explicit shell-family choices still allow either starting position.
  for(var start=0;start<result.length;){
   if(!result[start].choices.length){start++;continue;}
   var end=start;while(end+1<result.length&&result[end+1].choices.length)end++;
+  var opening=result[start].choices,chosenOrder=['137','173'].includes(options.startOrder)?options.startOrder:null;
+  var first=opening.slice().filter(function(candidate){return !chosenOrder||candidate.order===chosenOrder;}).sort(function(a,b){
+   return a.guides[1]-b.guides[1]||a.guides[0]-b.guides[0]||a.bass-b.bass||a.local-b.local;
+  })[0];
   for(var i=start;i<=end;i++){
    var row=result[i];row.costs=[];row.parents=[];
+   var lowerGuides=Math.min.apply(null,row.choices.map(function(c){return c.guides[0]+c.guides[1];}));
    row.choices.forEach(function(candidate,index){
-    if(i===start){row.costs[index]=candidate.local+(options.startOrder&&candidate.order!==options.startOrder?10000:0);row.parents[index]=-1;return;}
+    if(i===start){row.costs[index]=candidate===first?candidate.local:Infinity;row.parents[index]=-1;return;}
     var previous=result[i-1],best=Infinity,parent=0;
     previous.choices.forEach(function(before,j){
-     var value=previous.costs[j]+transition(before,candidate,previous.harmony,row.harmony)+candidate.local;
+     // Keep guitar in its lower working register unless voice leading needs
+     // the other family. A long future must not reward a permanently high bass.
+     var register=chosenOrder?0:Math.max(0,candidate.bass-52)*8+(candidate.guides[0]+candidate.guides[1]-lowerGuides)*.7;
+     var value=previous.costs[j]+transition(before,candidate,previous.harmony,row.harmony)+candidate.local+register;
      if(value<best){best=value;parent=j;}
     });row.costs[index]=best;row.parents[index]=parent;
    });

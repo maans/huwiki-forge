@@ -133,3 +133,32 @@ test('swing guitar stabs use half the former event velocity without changing the
  assert.deepEqual(plain(voiced.map(event=>event.volume)),[35,30,30]);
  assert.ok(voiced.every(event=>Math.abs(event.duration-.155)<.0001));
 });
+
+test('clicked swing rhythm heads and chord symbols use the same pitches and levels as playback',()=>{
+ const abc=source('U:s=!style=rhythm!\nV:G name="Guitar"\n%%MIDI program 26\n"Gm7"sB sB sB sB | "N.C."sB sB sB sB |');
+ const tune=ABC.parseOnly(abc)[0];
+ Accompaniment.prepare(ABC,tune,abc,{style:'swing'},true,{'abc-rhythm-playback':'written'});
+ const audio=tune.setUpAudio({});
+ const events=tune.lines.flatMap(l=>(l.staff||[]).flatMap(s=>(s.voices||[]).flat())).filter(e=>e.style==='rhythm');
+ for(const event of events){
+  const when=Array.isArray(event.currentTrackWholeNotes)?event.currentTrackWholeNotes[0]:event.currentTrackWholeNotes;
+  const expected=notes(audio.tracks[0]).filter(n=>Math.abs(n.start-when)<.004);
+  assert.deepEqual(plain(event.midiPitches),plain(expected));
+  assert.deepEqual(plain(Accompaniment.rhythmAudition(tune,event.startChar)),plain(expected));
+ }
+ assert.equal(events[4].midiPitches.length,0,'N.C. also stays silent when clicked');
+ assert.equal(Accompaniment.rhythmAudition(tune,-123),null,'ordinary chord previews can retain their existing fallback');
+});
+
+test('written shell position and level follow the effective mixer instrument',()=>{
+ const abc=source('U:s=!style=rhythm!\nV:G name="Guitar"\n%%MIDI program 0\n"Gm7"sB sB sB sB |');
+ function first(sourceText,config){const tune=ABC.parseOnly(sourceText)[0];Accompaniment.prepare(ABC,tune,sourceText,{style:'swing',...config},true,{'abc-rhythm-playback':'written'});return notes(tune.setUpAudio({}).tracks[0]).filter(n=>n.start===0);}
+ const guitar=first(abc,{voiceSettings:{0:{instrument:26}}});
+ const originalGuitar=first(abc.replace('program 0','program 26'),{});
+ const sound=ns=>ns.map(({pitch,volume,instrument,start,duration})=>({pitch,volume,instrument,start,duration}));
+ assert.deepEqual(plain(sound(guitar)),plain(sound(originalGuitar)));
+ const piano=first(abc.replace('program 0','program 26'),{voiceSettings:{0:{instrument:0}}});
+ const originalPiano=first(abc,{});
+ assert.deepEqual(plain(sound(piano)),plain(sound(originalPiano)));
+ assert.ok(guitar.every(n=>n.volume<60));assert.ok(piano.every(n=>n.volume>60));
+});

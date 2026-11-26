@@ -203,6 +203,30 @@ function concertAudio(tune,raw,options,trackCount,writtenRhythm){
  });
  return audio;
 }
+// A clicked rhythm head must audition the same arranged notes as Play.
+// ABCJS otherwise leaves its original chord realization on midiPitches.
+function stampRhythmAuditions(tune,sequence){
+ repeatPlanModule.collect(tune).voices.forEach(function(voice,index){
+  var notes=(sequence.tracks[index]||[]).filter(function(n){return n.cmd==='note'&&n.volume>0;}).slice().sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});
+  voice.measures.forEach(function(measure){measure.events.forEach(function(event){
+   if(event.el_type!=='note'||event.style!=='rhythm')return;
+   var starts=Array.isArray(event.currentTrackWholeNotes)?event.currentTrackWholeNotes:[event.currentTrackWholeNotes],when=starts.find(Number.isFinite);
+   if(!Number.isFinite(when))return;
+   var lo=0,hi=notes.length;
+   while(lo<hi){var mid=(lo+hi)>>1;if(notes[mid].start<when-.004)lo=mid+1;else hi=mid;}
+   event.midiPitches=[];
+   for(var at=lo;at<notes.length&&Math.abs(notes[at].start-when)<.004;at++)event.midiPitches.push(Object.assign({},notes[at]));
+   event.huwabcRhythmVoiced=true;
+  });});
+ });
+}
+function rhythmAudition(tune,sourceChar){
+ if(!tune||!Number.isFinite(sourceChar))return null;
+ var found=null;
+ repeatPlanModule.collect(tune).voices.some(function(voice){return voice.measures.some(function(measure){return measure.events.some(function(event){
+  if(event.el_type==='note'&&event.huwabcRhythmVoiced&&event.startChar===sourceChar){found=(event.midiPitches||[]).map(function(n){return Object.assign({},n);});return true;}return false;
+ });});});return found;
+}
 function prepare(ABC,tune,source,config,live,fields){
  var c=resolve(config,source,fields);if(live){c.enabled=true;c.bassVolume=c.chordVolume=c.drumVolume=100;}var repeatPlan=repeatPlanModule.build(ABC,source,c.repeatCounts),raw=strip(ABC.parseOnly(source)[0]);repeatPlayback.install(raw,repeatPlan);var meta=info(raw,source,fields),rawBase=raw.setUpAudio({chordsOff:true}),baseCount=rawBase.tracks.length,backings=[];
  // Notated voices remain independent of the accompaniment switch. A selected
@@ -320,8 +344,9 @@ function prepare(ABC,tune,source,config,live,fields){
  Object.defineProperty(tune,'_huwabcArrangementBase',{value:original,writable:true,configurable:true});
  delete tune.noteTimings;
  tune.setUpAudio=function(options){var audioOptions=Object.assign({},options,{chordsOff:true,drum:'',drumIntro:0}),sequence=tune._huwabcNotationProjected||tune.visualTranspose?concertAudio(tune,melodySource,audioOptions,baseCount,writtenRhythm):notatedAudio(tune,original,audioOptions,baseCount,writtenRhythm);
-  if(writtenSwing&&swingPlan)sequence=swingVoicings.written(sequence,writtenHits,swingPlan);
-  var base=voiceRouting.apply(sequence,c,live),used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
+  var base=voiceRouting.apply(sequence,c,live);
+  if(writtenSwing&&swingPlan){base=swingVoicings.written(base,writtenHits,swingPlan);stampRhythmAuditions(tune,base);}
+  var used=new Set([9]);base.tracks.forEach(function(tr){tr.forEach(function(e){if(e.cmd==='program')used.add(e.channel);});});
   backings.forEach(function(part){var channel=9;if(part.instrument!==128){for(channel=0;channel<16&&used.has(channel);channel++);if(channel===16)throw new Error('Der er ikke flere ledige MIDI-kanaler til akkompagnement.');used.add(channel);}var track=[{cmd:'text',type:'name',text:part.name},{cmd:'program',channel:channel,instrument:part.instrument}].concat(part.notes.map(function(n){return Object.assign({},n,{instrument:part.instrument});}));track.huwabcPart={Bas:'bassVolume',Akkorder:'chordVolume','Slagtøj':'drumVolume',Metronom:'metronomeVolume'}[part.name];base.tracks.push(track);});return base;};
  return {tune:tune,message:[missingBass?'Den valgte basstemme findes ikke længere. Vælg bassens kilde igen.':'',c.enabled&&styleName==='ungrouped-11'?'Vælg en 11/8-stil eller angiv grupperingen i M:-feltet.':(c.enabled||c.metronome)?meta.message:''].filter(Boolean).join(' '),parts:backings,form:analysis,detectedStyle:styleName,timeline:timeline,bars:arrangedBars,warnings:(timeline?timeline.warnings:[]).concat(repeatPlan.warnings),repeatPlan:repeatPlan};
 }
@@ -628,6 +653,6 @@ function createMixer(ABC,getConfig){
 }
 function mountVoices(parent,ABC,source,getConfig,onChange,options){return require('$:/plugins/huwiki/abc/voice-controls.js').mount(parent,ABC,source,getConfig,onChange,options);}
 function mountRepeats(parent,ABC,source,getConfig,onChange){return require('$:/plugins/huwiki/abc/repeat-controls.js').mount(parent,ABC,source,getConfig,onChange);}
-exports.mountRepeats=mountRepeats;exports.repeatPlan=repeatPlanModule;exports.mountVoices=mountVoices;exports.voiceRouting=voiceRouting;exports.basses=basses;exports.chords=chords;exports.drums=drums;
+exports.rhythmAudition=rhythmAudition;exports.mountRepeats=mountRepeats;exports.repeatPlan=repeatPlanModule;exports.mountVoices=mountVoices;exports.voiceRouting=voiceRouting;exports.basses=basses;exports.chords=chords;exports.drums=drums;
 exports.channelGain=channelGain;exports.activeSolo=activeSolo;exports.backingModes=backingModes;exports.liveConfigChange=liveConfigChange;exports.createDrone=createDrone;exports.droneModes=droneModes;exports.droneTimbres=droneTimbres;exports.droneRoots=droneRoots;exports.createMixer=createMixer;exports.onlyVolumes=onlyVolumes;exports.clean=clean;exports.resolve=resolve;exports.read=read;exports.styles=styles;exports.metronomeSounds=metronomeSounds;exports.metronomePattern=metronomePattern;exports.prepare=prepare;exports.mount=mount;exports.patterns=patterns;exports.info=info;exports.meterProfile=meterProfile;exports.compatibleStyles=compatibleStyles;
 })();

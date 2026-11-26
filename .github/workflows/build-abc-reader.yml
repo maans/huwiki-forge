@@ -19,6 +19,7 @@ on:
       - 'tests/abc-swing-arrangement.test.mjs'
       - 'tests/music-edition.test.mjs'
       - 'scripts/build-abc-ui.mjs'
+      - 'scripts/abc-swing-browser-smoke.mjs'
       - 'scripts/update_abc_plugin.py'
       - '.github/workflows/build-abc-reader.yml'
   workflow_dispatch:
@@ -52,6 +53,19 @@ jobs:
           node --test tests/abc-rhythm-head-audio.test.mjs tests/abc-swing-voicings.test.mjs tests/abc-swing-arrangement.test.mjs
           node scripts/build-abc-ui.mjs --check
           git diff --check
+      - name: Install browser controller for actual guitar playback acceptance
+        run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
+      - name: Verify rendered Easy Money and both click previews
+        run: node scripts/abc-swing-browser-smoke.mjs
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+      - name: Preserve rendered guitar diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: abc-swing-playback
+          path: test-results/swing/
+          retention-days: 7
       - name: Update existing Forge wikis with the same verified release
         run: |
           node scripts/build-forge-home.mjs

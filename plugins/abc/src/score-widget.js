@@ -218,7 +218,8 @@ ABCWidget.prototype.draw=function(){
     if(audio.classList.contains('huwabc-playing'))floatingPiano.show(target);
     var selectable=visual&&visual.findSelectableElement&&visual.findSelectableElement(target),chordElement=selectable&&selectable.element&&selectable.element.absEl&&selectable.element.absEl.abcelem;
     cueStart(chordElement&&chordElement.startChar,target,chordElement&&chordElement.currentTrackMilliseconds);
-    auditionNotes(chordConcertPitches).catch(function(e){showStatus('Akkordlyd: '+e.message,true);});
+    var arrangedChord=accompaniment.rhythmAudition(visual,chordElement&&chordElement.startChar);
+    auditionNotes(arrangedChord!==null?arrangedChord:chordConcertPitches).catch(function(e){showStatus('Akkordlyd: '+e.message,true);});
   });
   if(!t || !source){status.textContent="Ingen ABC-kilde fundet i feltet abc-source. Brug importværkstedet til at oprette et nodeark.";host.appendChild(status);return;}
   var working=this.editing ? this.draft : source;
