@@ -37,7 +37,7 @@ I værkstedet kan du:
 - **Én eller to nodesider:** Automatisk én side i stående og to sider i liggende format (hvis der er plads); kan også vælges manuelt.
 - **Bladring:** Den aktive sætliste styrer rækkefølgen. På sidste nodeside går næste-knappen videre til næste nummer. Den eksisterende ABC-sidepult står for sidenavigation, SVG og afspilning.
 - **Nummerpanel:** **☷ Nummerliste** viser et kompakt søgbart sidepanel med numrene i den aktive sætliste. Det dækker noderne midlertidigt i stedet for at skubbe dem ned.
-- **Øvetilstand / Music Minus One:** Aktiver via den lille sektion under overskriften. Slå metronomen til, og vælg en **noteret stemme** som skal være lydløs, mens ABC's eksisterende note- og sidefølge fortsætter. Øveblandingen ændrer kun de aktive GainNodes og bliver ikke gemt i originalnoder eller orkestrets aftaler. De allerede eksisterende ABC-lydkontroller bruges – ingen ny lydmotor.
+- **Øvetilstand / Music Minus One:** Vælg en **noteret stemme** under Spil selv for at aktivere øvetilstanden og dæmpe stemmen. Fluebenet kan slå øveblandingen fra og gendanne den almindelige lyd. Metronomen kan bruges, mens ABC's eksisterende note- og sidefølge fortsætter. Øveblandingen ændrer kun de aktive GainNodes og bliver ikke gemt i originalnoder eller orkestrets aftaler. De allerede eksisterende ABC-lydkontroller bruges – ingen ny lydmotor.
 - **Fuldskærm:** Brug ⛶ Fuldskærm til koncentreret spil. Kun det aktuelle nummer indlæses i notationswidget'en.
 
 ## Sætlister, originale tempi og sortering
@@ -67,3 +67,4 @@ Test: `node --test tests/repertoire-edition.test.mjs`. Browser-accept: `node scr
 - SitePublisher viser musiknumrenes korte titler og et klikbart repertoireindeks. Musikerne kan bruge Tilbage til repertoire, forrige/næste nummer, tastatur, iPad-swipe og den eksisterende ABC-nodepults bladvending. Aftalerne følger nummeret uden at ændre originalnoderne.
 - PDF Publisher placerer aftalerne under sidste nodesystem, når der er plads. Hvis pladsen ikke rækker, får aftalerne deres egen side. Indholdsfortegnelsen bruger korte titler, og det valgte C/B♭/E♭-instrument er stadig angivet på PDF-forsiden.
 - iPad/Quine anvender fortsat Del / udskriv PDF som native fildeling, aldrig navigation til `blob:`.
+

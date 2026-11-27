@@ -283,7 +283,7 @@ Book.prototype.syncPracticeVoices=function(){
  if(selected&&!voices.some(function(v){return v.id===selected;})){
   this.practiceMuteByItem[this.activeItem]="";selected="";
  }
- select.value=selected;
+ select.value=this.practiceEnabled?selected:"";
  this.applyPractice();
 };
 Book.prototype.practicePanel=function(doc){
@@ -304,14 +304,15 @@ Book.prototype.practicePanel=function(doc){
  var voice=el(doc,"select","huwrep-input");
  voice.setAttribute("aria-label","Music Minus One: vælge stemme der skal være lydløs");
  voice.appendChild(choice(doc,"","Ingen – alle stemmer høres"));
- voice.value=this.practiceMuteByItem[this.activeItem]||"";
- voice.disabled=!this.practiceEnabled;muteLabel.appendChild(voice);controls.appendChild(muteLabel);
+ voice.value=this.practiceEnabled?(this.practiceMuteByItem[this.activeItem]||""):"";
+ muteLabel.appendChild(voice);controls.appendChild(muteLabel);
  var status=el(doc,"p","huwrep-muted","Vælg metronom og en stemme. Nodefølget fortsætter, selv om stemmen er lydløs.");
  status.setAttribute("role","status");controls.appendChild(status);
  box.appendChild(controls);
  this._practiceControls={enabled:enabled,metronome:metronome,voice:voice,status:status};
  enabled.addEventListener("change",function(){
-  self.practiceEnabled=enabled.checked;metronome.disabled=voice.disabled=!self.practiceEnabled;
+  self.practiceEnabled=enabled.checked;metronome.disabled=!self.practiceEnabled;
+  voice.value=self.practiceEnabled?(self.practiceMuteByItem[self.activeItem]||""):"";
   self._practiceAppliedKey=null;self.applyPractice();
  });
  metronome.addEventListener("change",function(){
@@ -319,6 +320,7 @@ Book.prototype.practicePanel=function(doc){
  });
  voice.addEventListener("change",function(){
   self.practiceMuteByItem[self.activeItem]=voice.value;
+  if(voice.value!==""){self.practiceEnabled=true;enabled.checked=true;metronome.disabled=false;}
   self._practiceAppliedKey=null;self.applyPractice();
  });
  return box;
@@ -539,3 +541,4 @@ Book.prototype._onKeyDown=function(event){
 };
 exports["huwiki-repertoire-book"]=Book;
 })();
+

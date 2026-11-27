@@ -356,12 +356,15 @@ try{
  await book.locator(".huwabc-reader-menu").click();
  const practice=book.locator(".huwrep-book-practice");
  await practice.locator("summary").click();
- await practice.locator("input[type=checkbox]").first().check();
- await practice.locator("input[type=checkbox]").nth(1).check();
+ const practiceEnabled=practice.locator("input[type=checkbox]").first();
+ assert.equal(await practiceEnabled.isChecked(),false,"Spil selv starts available before practice is enabled");
  const voice=practice.locator("select");
+ assert.equal(await voice.isEnabled(),true,"Choosing a part must not require a separate checkbox first");
  await page.waitForFunction(()=>
   document.querySelector('.huwrep-book-practice select option[value="1"]'),undefined,{timeout:90000});
  await voice.selectOption("1");
+ assert.equal(await practiceEnabled.isChecked(),true,"Choosing a part automatically enables practice");
+ await practice.locator("input[type=checkbox]").nth(1).check();
  await page.waitForFunction(()=>
   document.querySelector('.huwrep-book .huwabc-voice-row[data-voice-index="1"]')
    ?.classList.contains("huwabc-voice-is-muted"),undefined,{timeout:15000});
@@ -374,6 +377,13 @@ try{
  await page.waitForFunction(()=>
   !document.querySelector('.huwrep-book .huwabc-voice-row[data-voice-index="1"]')
    ?.classList.contains("huwabc-voice-is-muted"),undefined,{timeout:15000});
+ assert.equal(await voice.isEnabled(),true,"The part selector remains usable after practice is turned off");
+ assert.equal(await voice.inputValue(),"","No part is shown as muted while practice is off");
+ await voice.selectOption("1");
+ assert.equal(await practiceEnabled.isChecked(),true,"Selecting the same part after switching off reactivates practice");
+ await page.waitForFunction(()=>document.querySelector('.huwrep-book .huwabc-voice-row[data-voice-index="1"]')?.classList.contains("huwabc-voice-is-muted"));
+ await practiceEnabled.uncheck();
+ await page.waitForFunction(()=>!document.querySelector('.huwrep-book .huwabc-voice-row[data-voice-index="1"]')?.classList.contains("huwabc-voice-is-muted"));
  await page.setViewportSize({width:820,height:1180});
  await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-page-select")?.value==="single");
  await page.setViewportSize({width:1180,height:820});
@@ -405,3 +415,4 @@ try{
  console.log("Repertoire browser acceptance: direct Nodebog, searchable drawer, Music Minus One, metronome, one/two-page rotation");
  await context.close();
 }finally{await browser.close();}
+
