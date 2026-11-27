@@ -17,6 +17,7 @@ on:
       - 'tests/abc-rhythm-head-audio.test.mjs'
       - 'tests/abc-swing-voicings.test.mjs'
       - 'tests/abc-swing-arrangement.test.mjs'
+      - 'tests/abc-dance-styles.test.mjs'
       - 'tests/abc-swing-written-comp.test.mjs'
       - 'tests/abc-playback-preparing.test.mjs'
       - 'tests/abc-playback-feedback.test.mjs'
@@ -54,7 +55,7 @@ jobs:
       - name: Verify the full reader, original fallback, Music Edition and plugin registry
         run: |
           node --test tests/abc-reader-mode.test.mjs tests/abc-reader-edit.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-reader-fallback.test.mjs tests/abc-mini-mixer-title.test.mjs tests/abc-default-minimal.test.mjs tests/abc-chord-overview.test.mjs tests/abc-normal-clean.test.mjs tests/music-edition.test.mjs tests/forge-libraries.test.mjs
-          node --test tests/abc-rhythm-head-audio.test.mjs tests/abc-swing-voicings.test.mjs tests/abc-swing-arrangement.test.mjs tests/abc-swing-written-comp.test.mjs
+          node --test tests/abc-dance-styles.test.mjs tests/abc-rhythm-head-audio.test.mjs tests/abc-swing-voicings.test.mjs tests/abc-swing-arrangement.test.mjs tests/abc-swing-written-comp.test.mjs
           node --test tests/abc-playback-preparing.test.mjs tests/abc-playback-feedback.test.mjs
           node scripts/build-abc-ui.mjs --check
           git diff --check

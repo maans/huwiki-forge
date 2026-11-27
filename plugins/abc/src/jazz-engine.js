@@ -20,13 +20,15 @@ function noteInRegister(pitch,prev,min,max){
 function inferStyle(source,fields){
  fields=fields||{};
  var r=(String(source||'').match(/^R:\s*(.*)$/mi)||[])[1]||fields['abc-rhythm']||'';
- var notes=[r,fields['abc-style']||'',fields['abc-genre']||''].join(' ').toLowerCase();
+ var notes=[r,fields['abc-style']||'',fields['abc-genre']||'',fields['repertoire-style']||'',fields['repertoire-genre']||''].join(' ').toLowerCase();
+ var identity=(String(source||'').match(/^(?:T|C):[^\r\n]*/gmi)||[]).join(' ')+' '+String(fields['repertoire-work-title']||'');
  var fromJazz=/jazz|ian.hayden/i.test(String(fields['abc-origin-library']||'')+' '+String(fields['abc-origin-url']||''));
  var meter=(String(source||'').match(/^M:\s*([^\s]+)$/mi)||[])[1]||fields['abc-meter']||'';
+ if(/^(?:4\/4|2\/4|2\/2|C|C\|)$/.test(meter)&&(/tango|piazzolla|piazolla/.test(notes)||/\b(?:libertango|piazzolla|piazolla)\b/i.test(identity)))return 'piazzolla-tango';
+ if(meter==='3/4'&&/jazz[ -]?(?:waltz|vals)|(?:waltz|vals)[ -]?jazz/.test(notes))return 'jazzwaltz';
  if(/samba/.test(notes))return 'samba';
  if(/bossa|bossanova|bossa nova/.test(notes))return 'bossa';
  if(/ballad|slow jazz|jazz slow/.test(notes))return 'jazzballad';
- if(/jazz waltz|jazz vals/.test(notes))return 'jazzwaltz';
  if(/swing|bebop|jazz|blues|shuffle/.test(notes)||fromJazz)return meter==='3/4'?'jazzwaltz':'swing';
  if(/waltz|vals|valse/.test(notes)||meter==='3/4')return 'waltz';
  return 'pop';
@@ -187,6 +189,8 @@ function comp(events,meter,formResult,c,style,source){
    // mechanically increasing the piano's density with the rhythm section.
    if(fast&&pulses.length>1)pulses=pulses.slice(0,1);
   }else pulses=(choices[current]||choices[0]).map(function(slot){return [slot,style==='jazzballad'?.33:.13];});
+  // Lightly swung comping in triple time; do not swing the written melody.
+  if(style==='jazzwaltz')pulses=pulses.map(function(p){return [p[0]%2===1?p[0]+1/3:p[0],p[1]];});
   pulses.forEach(function(pulse){
    var slot=pulse[0],within=slot/8-offset;if(slot>=length*8||within< -EPS||within>=bar.duration-EPS)return;
    var at=bar.start+Math.max(0,within);if(silentAt(formResult,at))return;
@@ -302,6 +306,65 @@ function brazilDrums(meter,formResult,c,style,source){
  }
  return out.sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});
 }
+
+// Jazz waltz: three quarter-note ride pulses with a light triplet skip,
+// pedal hi-hat on 2 and 3, feathered bass drum on 1. No rock backbeat.
+function jazzWaltzDrums(meter,formResult,c,source){
+ var out=[],level=Number(c.drumVolume)||0,random=rng(hash(String(source||'')+'|'+String(c.seed||0)+'|jazzwaltz'));
+ if(level<=0)return out;
+ playedTimeline(formResult,meter).forEach(function(bar){
+  var m=bar.meter||meter;if(m.num!==3||m.den!==4)return;
+  var offset=pickupOffset(bar,meter);
+  function hit(q,pitch,strength){
+   var at=bar.start+q/4-offset;if(at<bar.start-EPS||at>=bar.end-EPS||silentAt(formResult,at,true))return;
+   out.push({cmd:'note',start:Math.max(bar.start,at),pitch:pitch,duration:Math.min(.055,bar.end-at),volume:clamp(Math.round(level*strength*(c.variation?.94+random()*.12:1)),1,127),instrument:128});
+  }
+  [0,1,2].forEach(function(q){hit(q,51,q===0?.85:.70);});
+  hit(1+2/3,51,.40);hit(1,44,.52);hit(2,44,.52);hit(0,36,.28);
+  if(c.variation>=50&&bar.index%4===3)hit(2+2/3,38,.26);
+ });
+ return out.sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});
+}
+// Nuevo tango accompaniment: an eighth-note 3+3+2 ostinato. Every fourth
+// complete bar may use marcato in four under the continuing chord rhythm.
+// The normalized eight-slot cell also supports 2/4 (sixteenths) and 2/2.
+function tangoEvents(events,meter,formResult,c,bass,source){
+ var groups=[];organise(events).forEach(function(e){var last=groups[groups.length-1];if(!last||Math.abs(last.start-e.start)>EPS){last={start:e.start,notes:[]};groups.push(last);}last.notes.push(e);});
+ if(!groups.length)return [];
+ var out=[],previous=null,random=rng(hash(String(source||'')+'|'+String(c.seed||0)+'|tango'+bass));
+ function at(time){var found=null;for(var i=0;i<groups.length&&groups[i].start<=time+EPS;i++)found=groups[i];return found;}
+ playedTimeline(formResult,meter).forEach(function(bar){
+  var m=bar.meter||meter;if(!((m.num===4&&m.den===4)||(m.num===2&&(m.den===4||m.den===2))))return;
+  var length=meterLength(m),step=length/8,offset=pickupOffset(bar,meter),sec=sectionAt(formResult,bar.index);
+  var marcato=bass&&c.variation>=50&&(bar.index-sec.start)%4===3&&bar.duration>=length-EPS;
+  var slots=marcato?[0,2,4,6]:[0,3,6];
+  slots.forEach(function(slot,index){
+   var start=bar.start+slot*step-offset;if(start<bar.start-EPS||start>=bar.end-EPS||silentAt(formResult,start))return;
+   var group=at(start);if(!group)return;
+   var end=harmonyEnd(formResult,start,Math.min(bar.end,start+step*(bass?1.38:.72)));
+   if(end<=start+EPS)return;
+   var strength=(slot===0?1:slot===3?.88:.94)*(c.variation?.96+random()*.08:1);
+   var chosen=bass?[group.notes[0]]:group.notes;
+   chosen.forEach(function(e){
+    var pitch=e.pitch;
+    if(bass){
+     var h=harmonyAt(formResult,start),name=h&&String(h.name||''),slash=name&&/\/([A-Ga-g])([#b♯♭]?)/.exec(name);
+     // G seeds give the transposed chord root; slash harmony gives the actual bass.
+     if(slash){var root=/^([A-Ga-g])([#b♯♭]?)/.exec(name),names={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+      function tone(x){return names[x[1].toUpperCase()]+(/[#♯]/.test(x[2])?1:/[b♭]/.test(x[2])?-1:0);}
+      if(root)pitch+=tone(slash)-tone(root);
+     }
+     pitch=noteInRegister(pitch,previous,33,53);previous=pitch;
+    }
+    out.push(Object.assign({},e,{start:Math.max(bar.start,start),pitch:pitch,duration:end-start,volume:clamp(Math.round((e.volume||65)*strength*(bass?.92:.86)),1,127)}));
+   });
+  });
+ });
+ return out.sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});
+}
+function tangoBass(events,meter,formResult,c,source){return tangoEvents(events,meter,formResult,c,true,source);}
+function tangoComp(events,meter,formResult,c,source){return tangoEvents(events,meter,formResult,c,false,source);}
+
 function voiceLead(events){
  var sorted=organise(events),groups=[];
  sorted.forEach(function(e){var g=groups[groups.length-1];if(!g||Math.abs(g.start-e.start)>.004){g={start:e.start,notes:[]};groups.push(g);}g.notes.push(e);});
@@ -332,6 +395,7 @@ function drumDynamics(events,meter,formResult,c,source){
   return Object.assign({},e,{start:Math.max(0,e.start+shift),volume:clamp(Math.round((e.volume||45)*factor),1,127)});
  });
 }
+exports.jazzWaltzDrums=jazzWaltzDrums;exports.tangoBass=tangoBass;exports.tangoComp=tangoComp;
 exports.inferStyle=inferStyle;exports.walk=walk;exports.voiceLead=voiceLead;
 exports.form=form;exports.calcBars=calcBars;exports.sectionAt=sectionAt;exports.feelAt=feelAt;exports.comp=comp;
 exports.drumDynamics=drumDynamics;exports.swingDrums=swingDrums;exports.describe=describe;
