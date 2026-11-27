@@ -54,7 +54,9 @@ jobs:
         with:
           node-version: 22
       - name: Build ABC with existing audio/sample bundles untouched
-        run: node scripts/build-abc-ui.mjs
+        run: |
+          node scripts/build-abc-ui.mjs
+          node scripts/build-musescore-import.mjs
       - name: Synchronize TiddlyWiki's native plugin registry
         run: node scripts/build-forge-plugin-library.mjs
       - name: Install TiddlyWiki for source and importer tests
