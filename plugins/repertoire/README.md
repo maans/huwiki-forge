@@ -1,4 +1,4 @@
-# HUWiki Repertoire · første udviklingsversion
+# Repertoire
 
 A TiddlyWiki 5 repertoire plugin. ABC Music is installed automatically as its shared notation and print engine. Scores remain in their original tiddlers.
 

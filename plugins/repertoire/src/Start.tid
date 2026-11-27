@@ -1,7 +1,9 @@
 title: HUWiki Repertoire – Start
 type: text/vnd.tiddlywiki
+caption: Repertoire
+huwiki-title-da: Repertoire
+huwiki-title-en: Repertoire
 
-! Repertoire
 
 <%if [{$:/language}prefix[$:/languages/da]] %>
 Et fælles musikbibliotek med orkestre og sætlister. Originalnoderne bliver i musikbiblioteket. ABC Musik følger med til nodevisning og udskrift.
