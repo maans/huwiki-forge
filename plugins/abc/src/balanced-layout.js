@@ -8,32 +8,32 @@ module-type: library
 // Work with written measures, never the repeated playback order. Empty repeat
 // and volta bar events still count in ABCJS's raw lineBreaks indices.
 function measures(voice,pickup){
- var out=[],raw=0,start=0,notes=0,duration=0,multiplier=1,part='',ending='',recordPart='',recordEnding='';
+ var out=[],raw=0,start=0,notes=0,duration=0,multiplier=1,part='',section=0,ending='',recordPart='',recordSection=0,recordEnding='';
  voice.forEach(function(e){
-  if(e.el_type==='part')part=e.title||'';
+  if(e.el_type==='part'){part=e.title||'';section++;}
   if(e.el_type==='note'){
-   if(!notes){recordPart=part;recordEnding=ending;}
+   if(!notes){recordPart=part;recordSection=section;recordEnding=ending;}
    notes++;
    if(e.startTriplet)multiplier=Number(e.tripletMultiplier)||1;
    duration+=(Number(e.duration)||0)*multiplier;
    if(e.endTriplet)multiplier=1;
   }
   if(e.el_type!=='bar')return;
-  if(notes){out.push({start:start,end:raw,notes:notes,duration:duration,part:recordPart,ending:recordEnding});start=raw+1;notes=0;duration=0;}
+  if(notes){out.push({start:start,end:raw,notes:notes,duration:duration,part:recordPart,section:recordSection,ending:recordEnding});start=raw+1;notes=0;duration=0;}
   if(e.endEnding)ending='';
   if(e.startEnding)ending=String(e.startEnding);
   raw++;
  });
- // A final measure is legal without a closing bar. Its metrics are not always
- // exposed by ABCJS; the caller falls back to ordinary wrapping in that case.
- if(notes)out.push({start:start,end:raw,notes:notes,duration:duration,part:recordPart,ending:recordEnding,unclosed:true});
- if(pickup&&out.length>1){out[0].pickup=true;out[0].part=out[1].part;}
+ // A final measure is legal without a closing bar. Use its measured width
+ // when ABCJS provides it; missing metrics still trigger the safe fallback.
+ if(notes)out.push({start:start,end:raw,notes:notes,duration:duration,part:recordPart,section:recordSection,ending:recordEnding,unclosed:true});
+ if(pickup&&out.length>1){out[0].pickup=true;out[0].part=out[1].part;out[0].section=out[1].section;}
  return out;
 }
 function plan(voice,widths,left,settings){
  settings=settings||{};
  var bars=measures(voice,settings.pickup),limit=(720-Math.max(0,Number(left)||0))/1.15;
- if(!bars.length||limit<80||!Array.isArray(widths)||bars.some(function(b){return b.unclosed||b.end>=widths.length;}))return null;
+ if(!bars.length||limit<80||!Array.isArray(widths)||bars.some(function(b){return b.end>=widths.length;}))return null;
  var sum=[0];
  for(var i=0;i<bars.length;i++){
   var width=0;for(var r=bars[i].start;r<=bars[i].end;r++)width+=Number(widths[r])||0;
@@ -41,13 +41,13 @@ function plan(voice,widths,left,settings){
   bars[i].width=width;sum.push(sum[i]+width);
  }
  var mandatory={},protectedBreak={},voltaPair={},runs=[];
- for(i=1;i<bars.length;i++)if(settings.parts!==false&&bars[i].part!==bars[i-1].part)mandatory[i]=true;
+ for(i=1;i<bars.length;i++)if(settings.parts!==false&&bars[i].section!==bars[i-1].section)mandatory[i]=true;
  // Keep every ending intact when it fits. A pair of endings is a preference,
  // not a new system: preceding body measures may share that system too.
  for(i=0;i<bars.length;){
   if(!bars[i].ending){i++;continue;}
-  var first=i,label=bars[i].ending,section=bars[i].part;
-  while(i<bars.length&&bars[i].ending===label&&bars[i].part===section)i++;
+  var first=i,label=bars[i].ending,section=bars[i].section;
+  while(i<bars.length&&bars[i].ending===label&&bars[i].section===section)i++;
   runs.push({start:first,end:i,label:label,part:section});
   if(sum[i]-sum[first]<=limit)for(var p=first+1;p<i;p++)protectedBreak[p]=true;
  }
@@ -68,7 +68,9 @@ function plan(voice,widths,left,settings){
    var onlyEnding=bars[begin].ending&&bars.slice(begin,end).every(function(m){return m.ending===bars[begin].ending;});
    if(onlyEnding&&end-begin<=2)cost+=8;
    if(voltaPair[end])cost+=2;
-   if(end<bars.length&&!mandatory[end]&&end-begin===1&&!bars[begin].pickup)cost+=3;
+   // Avoid a stranded last bar as well as a singleton in the middle. A real
+   // one-bar section or an over-wide measure can still stand on its own.
+   if(end-begin===1&&!bars[begin].pickup&&bars.length>1)cost+=12;
    cost+=best[begin].cost;
    if(!best[end]||cost<best[end].cost)best[end]={cost:cost,previous:begin};
   }
@@ -80,3 +82,4 @@ function plan(voice,widths,left,settings){
 }
 exports.measures=measures;exports.plan=plan;
 })();
+

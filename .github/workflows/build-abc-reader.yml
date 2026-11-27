@@ -8,6 +8,9 @@ on:
       - 'tests/abc-reader-mode.test.mjs'
       - 'tests/repertoire-catalogue.test.mjs'
       - 'tests/abc-search-player.test.mjs'
+      - 'tests/abc-automatic-layout.test.mjs'
+      - 'tests/abc-balanced-layout.test.mjs'
+      - 'scripts/abc-leadsheet-layout-browser-smoke.mjs'
       - 'scripts/build-repertoire-catalogue.mjs'
       - 'tests/abc-reader-edit.test.mjs'
       - 'tests/abc-ipad-lite-editor.test.mjs'
@@ -57,7 +60,7 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Verify the full reader, original fallback, Music Edition and plugin registry
         run: |
-          node --test tests/repertoire-catalogue.test.mjs tests/abc-search-player.test.mjs
+          node --test tests/repertoire-catalogue.test.mjs tests/abc-search-player.test.mjs tests/abc-automatic-layout.test.mjs tests/abc-balanced-layout.test.mjs
           node --test tests/abc-reader-mode.test.mjs tests/abc-reader-edit.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-reader-fallback.test.mjs tests/abc-mini-mixer-title.test.mjs tests/abc-default-minimal.test.mjs tests/abc-chord-overview.test.mjs tests/abc-normal-clean.test.mjs tests/music-edition.test.mjs tests/forge-libraries.test.mjs
           node --test tests/abc-dance-styles.test.mjs tests/abc-rhythm-head-audio.test.mjs tests/abc-swing-voicings.test.mjs tests/abc-swing-arrangement.test.mjs tests/abc-swing-written-comp.test.mjs
           node --test tests/abc-playback-preparing.test.mjs tests/abc-playback-feedback.test.mjs
@@ -69,6 +72,25 @@ jobs:
         run: node scripts/abc-swing-browser-smoke.mjs
         env:
           CHROME_BIN: /usr/bin/google-chrome
+      - uses: actions/checkout@v4
+        with:
+          repository: maans/hjem
+          ref: main
+          path: .leadsheet-fixtures
+          sparse-checkout: catalog/repertoire
+          persist-credentials: false
+      - name: Verify measured automatic layout on every shared leadsheet in C, B-flat and E-flat
+        run: node scripts/abc-leadsheet-layout-browser-smoke.mjs --catalog .leadsheet-fixtures/catalog/repertoire
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+      - name: Preserve leadsheet layout diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: abc-leadsheet-layout
+          path: test-results/leadsheet-layout/
+          if-no-files-found: ignore
+          retention-days: 7
       - name: Preserve rendered guitar diagnostics
         if: failure()
         uses: actions/upload-artifact@v4
@@ -112,5 +134,6 @@ jobs:
             done
             test "$pushed" -eq 1
           fi
+
 
 

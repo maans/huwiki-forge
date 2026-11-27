@@ -9,9 +9,11 @@ var Engraving=require("$:/plugins/huwiki/abc/engraving-rules.js");
 var VoltaLayout=require("$:/plugins/huwiki/abc/volta-layout.js");
 var BalancedLayout=require("$:/plugins/huwiki/abc/balanced-layout.js");
 var I18n=require("$:/plugins/huwiki/abc/i18n.js");
-var balancedHelp='Sidevisning og PDF bruger samme opsætning. Balanceret måler takternes bredde, fordeler hele fraser og volter og undgår korte, tomme linjer. Et nodesystem med alle stemmer og TAB holdes samlet. En optakt tæller ikke med i takter pr. linje.';
+var balancedHelp='Automatisk måler takternes bredde og fordeler linjerne jævnt med hensyn til formdele, optakter og volter. Vælg et fast taktantal eller kildens linjeskift for selv at styre opsætningen. Sidevisning og PDF bruger samme opsætning; musikken ændres ikke.';
 I18n.dictionary['Balanceret · fraser og volter']='Balanced · phrases and endings';
-I18n.dictionary[balancedHelp]='Screen pages and PDF share the same layout. Balanced measures bar widths, keeps phrases and endings together, and avoids short, empty systems. All voices and TAB stay together. A pickup does not count towards measures per system.';
+I18n.dictionary[balancedHelp]='Automatic measures bar widths and balances systems around sections, pickups and endings. Choose a fixed bar count or source line breaks for manual control. Screen pages and PDF share the same layout; the music is unchanged.';
+I18n.dictionary['Automatisk · balanceret']='Automatic · balanced';
+I18n.dictionary['Kildens linjeskift']='Source line breaks';
 var metricCache=[];
 function value(n,allowed){return allowed.indexOf(Number(n))>=0?Number(n):0;}
 function read(fields){return {bars:value(fields['abc-bars-per-line'],[2,3,4,6,8]),lines:value(fields['abc-lines-per-page'],[2,3,4,6,8])};}
@@ -71,7 +73,10 @@ function lineBreaksForVoice(voice,perLine,pickup,primaryLength){
   return VoltaLayout.balance(voice,breaks);
 }
 function options(ABC,source,fields){
-  if(fields['abc-bars-per-line']==='balanced')return balancedOptions(ABC,source,fields);
+  fields=fields||{};
+  var mode=String(fields['abc-bars-per-line']||'0');
+  if(mode==='source')return {wrap:null};
+  if(mode==='balanced'||mode==='0'||mode==='auto')return balancedOptions(ABC,source,fields);
   var settings=read(fields);if(!settings.bars)return {};
   var tune=ABC.parseOnly(source)[0];if(!tune)return {};
   var pickup=hasPickup(tune),seenFirstSection=false;
@@ -93,7 +98,7 @@ function balancedOptions(ABC,source,fields){
   if(cached)metrics=cached.metrics;
   else {
    var jazz=fields['abc-font']==='petaluma';
-   var result=ABC.tuneMetrics(source,{staffwidth:720,jazzchords:fields['abc-chords-style']!=='standard',format:{gchordfont:jazz?'PetalumaScript 20':'Helvetica 18 bold'}});
+   var result=ABC.tuneMetrics(source,{staffwidth:720,jazzchords:fields['abc-chords-style']!=='standard',format:{gchordfont:jazz?'PetalumaScript 20':fields['abc-chords-style']==='standard'?'Helvetica 16':'Helvetica 18 bold'}});
    metrics=result&&result[0]&&result[0].sections;
    if(!metrics)return {};
    metricCache.push({key:key,metrics:metrics});if(metricCache.length>8)metricCache.shift();
@@ -111,7 +116,7 @@ function mount(parent,fields,onChange){
   [['Takter pr. linje','abc-bars-per-line'],['Højst nodesystemer pr. side','abc-lines-per-page']].forEach(function(pair){
     var label=document.createElement('label');label.textContent=pair[0];
     var input=document.createElement('select');input.className='huwabc-select';
-    (pair[1]==='abc-bars-per-line'?[0,'balanced',2,3,4,6,8]:[0,2,3,4,6,8]).forEach(function(n){var opt=document.createElement('option');opt.value=n;opt.textContent=n==='balanced'?'Balanceret · fraser og volter':n?String(n):'Automatisk';input.appendChild(opt);});
+    (pair[1]==='abc-bars-per-line'?[0,'balanced','source',2,3,4,6,8]:[0,2,3,4,6,8]).forEach(function(n){var opt=document.createElement('option');opt.value=n;opt.textContent=n==='balanced'?'Balanceret · fraser og volter':n==='source'?'Kildens linjeskift':n?String(n):pair[1]==='abc-bars-per-line'?'Automatisk · balanceret':'Automatisk';input.appendChild(opt);});
     controls[pair[1]]=input;input.value=fields[pair[1]]||0;label.appendChild(input);grid.appendChild(label);
     input.onchange=function(){var next={};next[pair[1]]=input.value;onChange(next);};
   });
@@ -138,3 +143,4 @@ exports.prepare=Engraving.prepare;exports.read=read;exports.options=options;expo
 exports.hasPickup=hasPickup;
 exports.lineBreaksForVoice=lineBreaksForVoice;
 })();
+
