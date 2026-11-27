@@ -22,7 +22,7 @@ exports.mount=function(host,options){
   if(!configured)throw Error('PDF-viseren er ikke konfigureret i denne wiki. Åbn PDF-filen med linket nedenfor.');
   viewer=new URL(configured,win.location.href);
   if(viewer.origin!==origin||!/^https?:$/.test(viewer.protocol))throw Error('PDF-viseren skal ligge på samme websted som wikien.');
-  viewer.searchParams.set('file',source.href);viewer.searchParams.set('spread',String(spread));viewer.searchParams.set('title',options.title||'');viewer.searchParams.set('embedded','1');frame.src=viewer.href;
+  viewer.searchParams.set('file',source.href);viewer.searchParams.set('spread',String(spread));viewer.searchParams.set('title',options.title||'');viewer.searchParams.set('embedded','1');if(options.onFullscreen){viewer.searchParams.set('fullscreen-owner','book');viewer.searchParams.set('fullscreen-active',options.isFullscreen&&options.isFullscreen()?'yes':'no');}frame.src=viewer.href;
   host.appendChild(frame);
  }catch(error){message.textContent=error.message||String(error);message.classList.add('huwrep-error');}
  host.appendChild(message);if(link.href)host.appendChild(link);
@@ -34,6 +34,7 @@ exports.mount=function(host,options){
  function receive(event){
   if(closed||!viewer||event.origin!==origin||event.source!==frame.contentWindow)return;
   var state=event.data;if(!state||typeof state!=='object')return;
+  if(state.type==='birdland-pdf:fullscreen'){if(options.onFullscreen){var active=options.onFullscreen(state.exit===true);command('fullscreen-state',{active:!!active});}return;}
   if(state.type==='birdland-pdf:error'){message.hidden=false;message.textContent=String(state.message||'PDF-noderne kunne ikke vises. Åbn PDF-filen med linket.');message.classList.add('huwrep-error');return;}
   if(state.type==='birdland-pdf:boundary'){
    // A boundary can be reached while its final spread is still rendering.

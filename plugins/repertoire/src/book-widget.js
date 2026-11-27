@@ -475,7 +475,7 @@ Book.prototype.draw=function(){
   var pdfHost=el(doc,"section","huwrep-book-pdf");stage.appendChild(pdfHost);
   var PDF=require("$:/plugins/huwiki/repertoire/pdf-score.js");
   this._pdfPager=PDF.mount(pdfHost,{wiki:wiki,source:notation.pdf,title:shortName(wiki,this.activeItem),spread:Layout.mode(this.preference,this._win.innerWidth,this._win.innerHeight)==="spread"?2:1,
-   onState:function(){self.updatePDFStatus();},onBoundary:function(direction){self.turn(direction);}});
+   onState:function(){self.updatePDFStatus();},onBoundary:function(direction){self.turn(direction);},isFullscreen:function(){return host.classList.contains("huwrep-book-fullscreen");},onFullscreen:function(exit){var active=exit?false:!host.classList.contains("huwrep-book-fullscreen");host.classList.toggle("huwrep-book-fullscreen",active);fullScreenButton.textContent=active?"⛶ Mindre visning":"⛶ Fuldskærm";self.updateMode();return active;}});
  }else if(notation.abc){
   host.insertBefore(this.practicePanel(doc),stage);
   var scoreHost=el(doc,"div","huwrep-book-score");stage.appendChild(scoreHost);

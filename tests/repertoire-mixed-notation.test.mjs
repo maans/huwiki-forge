@@ -228,3 +228,22 @@ test('one book switches its dated-folder defaults and per-number source roles wi
  assert.ok(f.wiki.getTiddler('Four Brothers').fields['abc-source'].includes('F4|'),'canonical accompaniment survives all source choices');
  f.book.disposeScore();
 });
+
+test('PDF fullscreen belongs to the stable book and survives PDF to ABC to PDF navigation',async()=>{
+ const f=await drawnBookFixture(),host=f.host;
+ const orch=f.wiki.getTiddler(f.item).fields['orchestra-title'];
+ f.wiki.addTiddler(new Tiddler({title:'Next ABC tune','abc-source':'X:1\nT:Next\nK:C\nC4|'}));
+ const next=f.model.addItem(f.wiki,orch,'Next ABC tune').title;f.model.setEntries(f.wiki,f.set,[f.item,next]);
+ f.book.draw();f.state({type:'birdland-pdf:ready',pages:2,page:1,spread:2});
+ assert.match(host.querySelector('iframe').src,/fullscreen-owner=book/);
+ f.state({type:'birdland-pdf:fullscreen'});
+ assert.equal(host.classList.contains('huwrep-book-fullscreen'),true);
+ f.state({type:'birdland-pdf:boundary',direction:'next',pages:2,page:1,spread:2});
+ assert.equal(f.book.activeItem,next);assert.equal(f.host,host);
+ assert.equal(host.classList.contains('huwrep-book-fullscreen'),true);
+ f.book.selectItem(f.item);f.state({type:'birdland-pdf:ready',pages:2,page:1,spread:2});
+ assert.equal(host.classList.contains('huwrep-book-fullscreen'),true);
+ f.state({type:'birdland-pdf:fullscreen',exit:true});
+ assert.equal(host.classList.contains('huwrep-book-fullscreen'),false);
+ f.book.disposeScore();
+});
