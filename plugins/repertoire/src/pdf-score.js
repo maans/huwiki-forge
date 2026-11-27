@@ -34,7 +34,7 @@ exports.mount=function(host,options){
  function receive(event){
   if(closed||!viewer||event.origin!==origin||event.source!==frame.contentWindow)return;
   var state=event.data;if(!state||typeof state!=='object')return;
-  if(state.type==='birdland-pdf:fullscreen'){if(options.onFullscreen){var active=options.onFullscreen(state.exit===true);command('fullscreen-state',{active:!!active});}return;}
+  if(state.type==='birdland-pdf:fullscreen'){if(options.onFullscreen)options.onFullscreen(state.exit===true);return;}
   if(state.type==='birdland-pdf:error'){message.hidden=false;message.textContent=String(state.message||'PDF-noderne kunne ikke vises. Åbn PDF-filen med linket.');message.classList.add('huwrep-error');return;}
   if(state.type==='birdland-pdf:boundary'){
    // A boundary can be reached while its final spread is still rendering.
@@ -49,13 +49,16 @@ exports.mount=function(host,options){
   if(!Number.isInteger(state.pages)||state.pages<1||!Number.isInteger(state.page)||state.page<1||state.page>state.pages)return;
   var first=!ready;pages=state.pages;page=state.page;ready=true;
   if(state.spread===1||state.spread===2)spread=state.spread;
-  message.hidden=true;notify();
+  message.hidden=true;
+  if(first&&options.isFullscreen)command('fullscreen-state',{active:!!options.isFullscreen()});
+  notify();
   if(first&&options.onReady)options.onReady(api.info());
  }
  win.addEventListener('message',receive);
  var api={element:frame,info:function(){return {page:page,count:pages,shown:Math.min(spread,Math.max(1,pages-page+1)),mode:spread===2?'spread':'single',ready:ready};},
   go:function(index){return command('go',{page:Math.max(1,Math.floor(Number(index)||0)+1)});},
   next:function(){return command('next');},previous:function(){return command('previous');},
+  setFullscreen:function(active){command('fullscreen-state',{active:!!active});},
   setSpread:function(value){value=Number(value)===1?1:2;if(value===spread)return;spread=value;if(ready)command('spread',{spread:spread});else if(viewer){viewer.searchParams.set('spread',String(spread));frame.src=viewer.href;}},
   destroy:function(){if(closed)return;closed=true;win.removeEventListener('message',receive);frame.remove();message.remove();link.remove();}};
  return api;

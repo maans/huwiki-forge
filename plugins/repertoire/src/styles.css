@@ -216,3 +216,25 @@
 .huwrep-performance .huwabc-mixer-toggle{display:none!important}
 .huwrep-style-choice{display:flex;align-items:center;gap:10px;font-weight:650;margin:0 0 10px}
 .huwrep-style-choice select{flex:1;min-width:0}
+
+/* Immersive reading uses the browser fullscreen surface when available,
+   and the full visual viewport on tablets that only support inline content. */
+@media screen {
+ .huwrep-session.huwrep-book-fullscreen {
+  width:100%!important;
+  height:100vh!important;
+  height:100dvh!important;
+  box-sizing:border-box;
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+ }
+ .huwrep-session.huwrep-book-fullscreen:fullscreen {height:100%!important}
+ .huwrep-book-fullscreen .huwrep-book-header {padding:4px 8px}
+ .huwrep-book-fullscreen .huwrep-book-heading {padding:2px 8px}
+ .huwrep-book-fullscreen .huwrep-book-agreement,
+ .huwrep-book-fullscreen .helles-reader-lyrics,
+ .huwrep-book-fullscreen .huwrep-performance:has(.huwrep-sound-toggle:disabled) {display:none}
+ /* The embedded viewer already has page, song and print controls. Keep the
+    book's own controls and PDF link available when the frame cannot load. */
+ .huwrep-book-fullscreen:has(.huwrep-book-pdf-status[hidden]) .huwrep-book-footer,
+ .huwrep-book-fullscreen:has(.huwrep-book-pdf-status[hidden]) .huwrep-book-pdf-link {display:none}
+}

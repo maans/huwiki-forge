@@ -64,6 +64,7 @@ Book.prototype.onDestroy=function(){
  if(this._editCheck&&this._win)this._win.clearTimeout(this._editCheck);
  this._editCheck=null;this._editReturn=null;this._returnPage=null;
  this.disposeScore();
+ if(this.host&&this._nativeFullscreenChange)this.host.removeEventListener("fullscreenchange",this._nativeFullscreenChange);
  if(this.host&&this._boundKeys)this.host.removeEventListener("keydown",this._boundKeys);
  if(this.host&&this._readerBoundary)this.host.removeEventListener("huwabc-reader-boundary",this._readerBoundary);
  if(this.host&&this._swipeStart)this.host.removeEventListener("pointerdown",this._swipeStart);
@@ -100,6 +101,15 @@ Book.prototype.render=function(parent,nextSibling){
  this._swipeStart=this.onSwipeStart.bind(this);this._swipeEnd=this.onSwipeEnd.bind(this);
  host.addEventListener("pointerdown",this._swipeStart,{passive:true});host.addEventListener("pointerup",this._swipeEnd,{passive:true});
  var self=this;
+ this._nativeFullscreenChange=function(){
+  if(doc.fullscreenElement===host){
+   self._nativeFullscreen=true;
+  }else if(self._nativeFullscreen){
+   self._nativeFullscreen=false;
+   self.setFullscreen(false);
+  }
+ };
+ host.addEventListener("fullscreenchange",this._nativeFullscreenChange);
  this._readerBoundary=function(event){
   if(!event||!event.detail)return;
   var delta=Number(event.detail.direction);
@@ -133,7 +143,8 @@ Book.prototype.handleEditTiddler=function(event){
  // Release the old SVG, audio and observers before the draft editor renders.
  // Merely leaving ABC's reader otherwise leaves the fullscreen book on top.
  this.disposeScore();
- this.host.classList.remove("huwrep-book-fullscreen","huwrep-reader-active","huwrep-reader-practice");
+ this.setFullscreen(false);
+ this.host.classList.remove("huwrep-reader-active","huwrep-reader-practice");
  this.host.hidden=true;this.host.textContent="";
  // On physical iPads a draft rendered in the SAME frame as the old animated
  // score can exhaust WebKit's tab memory. Let the old SVG/audio layers be
@@ -193,7 +204,7 @@ Book.prototype.navigate=function(title){
   navigateSuppressNavigation:false});
 };
 Book.prototype.leave=function(title){
- this.host.classList.remove("huwrep-book-fullscreen");
+ this.setFullscreen(false);
  var story=this.getVariable("storyTiddler")||this.getVariable("currentTiddler");
  this.navigate(title);
  if(story&&story!==title)this.dispatchEvent({type:"tm-close-tiddler",param:story});
@@ -225,6 +236,24 @@ Book.prototype.pager=function(){
  return this._score&&this._score._pager&&this._score._pager.element&&this._score._pager.element.isConnected?
   this._score._pager:null;
 };
+Book.prototype.setFullscreen=function(active,requestNative){
+ var host=this.host,doc=host.ownerDocument;
+ host.classList.toggle("huwrep-book-fullscreen",active);
+ var button=host.querySelector(".huwrep-book-fullscreen-button");
+ if(button){
+  button.textContent=active?"⛶ Luk fuldskærm":"⛶ Fuldskærm";
+  button.setAttribute("aria-pressed",String(active));
+ }
+ if(active&&requestNative&&host.requestFullscreen){
+  host.requestFullscreen().catch(function(){
+   // Keep the fixed viewport reader when browser fullscreen is unavailable.
+  });
+ }else if(!active&&doc.fullscreenElement===host){
+  doc.exitFullscreen().catch(function(){});
+ }
+ this.updateMode();
+ return active;
+};
 Book.prototype.updateMode=function(){
  if(!this.host||!this.host.isConnected||!this._win)return;
  var width=this._win.innerWidth,height=this._win.innerHeight;
@@ -233,6 +262,7 @@ Book.prototype.updateMode=function(){
  if(!pager){this.updateNavigation();return;}
  if(this._pdfPager){
   if(pager.setSpread)pager.setSpread(mode==="spread"?2:1);
+  if(pager.setFullscreen)pager.setFullscreen(this.host.classList.contains("huwrep-book-fullscreen"));
   var state=pager.info();
   if(this.lastPage&&state.count>0){this.lastPage=false;var shown=state.mode==="spread"?2:1;pager.go(Math.floor((state.count-1)/shown)*shown,false);}
   this.updatePDFStatus();this.updateNavigation();return;
@@ -428,11 +458,11 @@ Book.prototype.draw=function(){
  toolbar.appendChild(btn(doc,"← Nodemapper og numre",function(){
   self.leave("HUWiki Repertoire – Start");
  }));
- var fullScreenButton=btn(doc,host.classList.contains("huwrep-book-fullscreen")?"⛶ Mindre visning":"⛶ Fuldskærm",function(){
-  var isFull=host.classList.toggle("huwrep-book-fullscreen");
-  fullScreenButton.textContent=isFull?"⛶ Mindre visning":"⛶ Fuldskærm";
-  self.updateMode();
+ var fullscreen=host.classList.contains("huwrep-book-fullscreen");
+ var fullScreenButton=btn(doc,fullscreen?"⛶ Luk fuldskærm":"⛶ Fuldskærm",function(){
+  self.setFullscreen(!host.classList.contains("huwrep-book-fullscreen"),true);
  },"huwrep-book-fullscreen-button");
+ fullScreenButton.setAttribute("aria-pressed",String(fullscreen));
  toolbar.appendChild(fullScreenButton);
  var settings=el(doc,"details","huwrep-session-settings");settings.appendChild(el(doc,"summary","","Visning og udskrift"));
  var settingsBody=el(doc,"div","huwrep-session-settings-body");settings.appendChild(settingsBody);toolbar.appendChild(settings);
@@ -449,7 +479,7 @@ Book.prototype.draw=function(){
   if(result&&result.error&&self._win&&self._win.alert)self._win.alert(result.error);
  }
  if(!this.pieceTitle){
-  printActions.appendChild(btn(doc,Printing.cueLabel(wiki),function(){printMenu.open=false;host.classList.remove("huwrep-book-fullscreen");Printing.cues(wiki,self.setlistTitle,self);}));
+  printActions.appendChild(btn(doc,Printing.cueLabel(wiki),function(){printMenu.open=false;self.setFullscreen(false);Printing.cues(wiki,self.setlistTitle,self);}));
   printActions.appendChild(btn(doc,"Sætliste og aftaler",function(){openPrint(false);}));
   printActions.appendChild(btn(doc,"Hele nodemappen med noder",function(){openPrint(true);},"huwrep-primary"));
  }else printActions.appendChild(btn(doc,"Udskriv dette nummer",function(){
@@ -564,7 +594,7 @@ Book.prototype.draw=function(){
   var pdfHost=el(doc,"section","huwrep-book-pdf");stage.appendChild(pdfHost);
   var PDF=require("$:/plugins/huwiki/repertoire/pdf-score.js");
   this._pdfPager=PDF.mount(pdfHost,{wiki:wiki,source:notation.pdf,title:shortName(wiki,this.activeItem),spread:Layout.mode(this.preference,this._win.innerWidth,this._win.innerHeight)==="spread"?2:1,
-   onState:function(){self.updatePDFStatus();self.updateNavigation();},onBoundary:function(direction){self.turn(direction);},isFullscreen:function(){return host.classList.contains("huwrep-book-fullscreen");},onFullscreen:function(exit){var active=exit?false:!host.classList.contains("huwrep-book-fullscreen");host.classList.toggle("huwrep-book-fullscreen",active);fullScreenButton.textContent=active?"⛶ Mindre visning":"⛶ Fuldskærm";self.updateMode();return active;}});
+   onState:function(){self.updatePDFStatus();self.updateNavigation();},onBoundary:function(direction){self.turn(direction);},isFullscreen:function(){return host.classList.contains("huwrep-book-fullscreen");},onFullscreen:function(exit){return self.setFullscreen(!exit&&!host.classList.contains("huwrep-book-fullscreen"));}});
   if(audioView){var audioOnly=el(doc,"div","huwrep-audio-only");audioOnly.hidden=true;stage.appendChild(audioOnly);host.insertBefore(this.practicePanel(doc),stage);this.mountScore(audioOnly,audioView.sourceTitle,agreement,row,true);}
  }else if(notation.abc){
   host.insertBefore(this.practicePanel(doc),stage);
@@ -639,7 +669,7 @@ Book.prototype._onKeyDown=function(event){
   }
  }
  if(event.key==="Escape"&&this.host&&this.host.classList.contains("huwrep-book-fullscreen")){
-  this.host.classList.remove("huwrep-book-fullscreen");var full=this.host.querySelector(".huwrep-book-fullscreen-button");if(full)full.textContent="⛶ Fuldskærm";this.updateMode();return;
+  this.setFullscreen(false);return;
  }
 };
 exports["huwiki-repertoire-book"]=Book;
