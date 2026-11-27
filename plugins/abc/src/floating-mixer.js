@@ -9,6 +9,7 @@ module-type: library
   var VoiceControls = require('$:/plugins/huwiki/abc/voice-controls.js');
   var Accompaniment = require('$:/plugins/huwiki/abc/accompaniment.js');
   var ChordChart = require('$:/plugins/huwiki/abc/chord-chart.js');
+  var PlaybackFeedback = require('$:/plugins/huwiki/abc/playback-feedback.js');
   var positions = new WeakMap();
 
 
@@ -49,7 +50,7 @@ module-type: library
     var overlap=doc.querySelectorAll('.huwabc-mini-mixer--floating').length;
     var x = Number.isFinite(initial.x) ? initial.x : 100+overlap*26;
     var y = Number.isFinite(initial.y) ? initial.y : 105+overlap*26;
-    var collapsed=!!initial.collapsed,skipTitleClick=false,currentlyPlaying=false,activeChord=-1;
+    var collapsed=!!initial.collapsed,skipTitleClick=false,currentlyPlaying=false,currentlyPreparing=false,activeChord=-1;
     var visibleRequested = options.initiallyVisible !== false;
     var closed = false, dragging = null, voices = [], rows = [], backingRows = [],chordNodes=[];
     var chart={chords:[],measures:[],noteTimes:{}};
@@ -71,7 +72,8 @@ module-type: library
     title.setAttribute('aria-label',caption+' · '+title.title);
     var count = node('span','huwabc-mini-mixer-count');
     var tools = node('div','huwabc-mini-mixer-tools');
-    var play=node('button','huwabc-mini-mixer-play','▶');play.type='button';
+    var play=node('button','huwabc-mini-mixer-play');play.type='button';
+    var playSymbol=node('span','huwabc-mini-mixer-play-symbol','▶');play.appendChild(playSymbol);
     play.title=word('Afspil','Play');play.setAttribute('aria-label',play.title);
     var toggleDock = node('button','huwabc-mini-mixer-detach');toggleDock.type = 'button';
     var close = node('button','huwabc-mini-mixer-close','×');close.type = 'button';
@@ -121,13 +123,20 @@ module-type: library
      zoomIn.addEventListener('click',function(e){e.stopPropagation();setChordFontSize(chordFontSize+1,true);});
      setChordFontSize(chordFontSize,false);
     function updatePlayback(value){
-      currentlyPlaying=!!value;play.textContent=currentlyPlaying?'⏸':'▶';
+      currentlyPlaying=!!value;playSymbol.textContent=currentlyPlaying?'⏸':'▶';
       play.title=word(currentlyPlaying?'Pause':'Afspil',currentlyPlaying?'Pause':'Play');
       play.setAttribute('aria-label',caption+' · '+play.title);
       play.setAttribute('aria-pressed',String(currentlyPlaying));
+      PlaybackFeedback.update(play,currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
+    }
+    function updatePreparing(value){
+      currentlyPreparing=!!value;
+      PlaybackFeedback.update(play,currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
+      if(!currentlyPreparing)updatePlayback(currentlyPlaying);
     }
     play.addEventListener('click',function(e){e.stopPropagation();if(typeof options.onTogglePlayback==='function')options.onTogglePlayback();});
     updatePlayback(options.getPlaying&&options.getPlaying());
+    updatePreparing(options.getPreparing&&options.getPreparing());
     function setCollapsed(value){
       collapsed=!!value;content.hidden=collapsed;count.hidden=collapsed;
       panel.classList.toggle('huwabc-mini-mixer--collapsed',collapsed);
@@ -489,7 +498,7 @@ module-type: library
     if (wiki && wiki.addEventListener) wiki.addEventListener('change',onWikiChange);
     return {element:panel,update:update,destroy:destroy,redock:function(){layout(false);},
       show:show,hide:hide,toggle:toggle,isVisible:isVisible,isFloating:function(){return floating;},
-      selectTab:chooseTab,updateEvent:updateEvent,updatePlayback:updatePlayback,collapse:setCollapsed};
+      selectTab:chooseTab,updateEvent:updateEvent,updatePlayback:updatePlayback,updatePreparing:updatePreparing,collapse:setCollapsed};
   }
   exports.displayMusicTitle=displayMusicTitle;
   exports.mount=mount;

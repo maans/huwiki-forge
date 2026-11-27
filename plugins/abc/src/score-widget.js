@@ -30,6 +30,7 @@ var InstrumentView=require("$:/plugins/huwiki/abc/instrument-view.js");
 var TransposedLayout=require("$:/plugins/huwiki/abc/transposed-layout.js");
 var Audition=require("$:/plugins/huwiki/abc/audition.js");
 var AudioController=require("$:/plugins/huwiki/abc/audio-controller.js");
+var PlaybackFeedback=require("$:/plugins/huwiki/abc/playback-feedback.js");
 var SoundHelp=require("$:/plugins/huwiki/abc/sound-help.js");
 var ScoreView=require("$:/plugins/huwiki/abc/score-view.js");
 var ReaderMode=require("$:/plugins/huwiki/abc/reader-mode.js");
@@ -224,13 +225,19 @@ ABCWidget.prototype.draw=function(){
   if(!t || !source){status.textContent="Ingen ABC-kilde fundet i feltet abc-source. Brug importværkstedet til at oprette et nodeark.";host.appendChild(status);return;}
   var working=this.editing ? this.draft : source;
   function showStatus(msg,error){status.textContent=msg||"";status.className="huwabc-status"+(error?" huwabc-error":"");}
-  var visual=null,ABC=null,controller=null,activeNotes=[],cursorLine=null,cueDataReady=false,fullMiniMixer=null;
+  var visual=null,ABC=null,controller=null,activeNotes=[],cursorLine=null,cueDataReady=false,fullMiniMixer=null,preparing=false;
+  function preparation(value){
+    preparing=!!value;
+    PlaybackFeedback.update(audioControls.querySelector('.abcjs-midi-start'),preparing,{language:I18n.language(self.wiki)});
+    if(fullMiniMixer)fullMiniMixer.updatePreparing(preparing);
+  }
   function ensureFullMiniMixer(){
     if(fullMiniMixer)return fullMiniMixer;
     if(!ABC||!accompControls)return null;
     fullMiniMixer=FloatingMixer.mount({ABC:ABC,source:working,host:host,wiki:self.wiki,title:self.title,
       initiallyVisible:!!self._standaloneView,sidebarMixer:!!self._standaloneView,
       getConfig:accompControls.config,getPlaying:function(){return !!(controller&&controller.isStarted);},
+      getPreparing:function(){return preparing||!!(controller&&controller.isPreparing);},
       onTogglePlayback:function(){var btn=audioControls.querySelector('.abcjs-midi-start');if(btn)btn.click();},
       onPreview:function(next){accompControls.setConfig(next,false);if(controller&&controller.midiBuffer)controller.midiBuffer.setVolumes();},
       onChange:function(next){accompControls.setConfig(next,true);} });
@@ -614,15 +621,15 @@ ABCWidget.prototype.draw=function(){
       controller=AudioController.install(new ABC.synth.SynthController(),ABC,{
         wiki:self.wiki,getConfig:accompControls.config,
         isCurrent:function(){return host.isConnected&&renderToken===self._renderToken;},
-        beforePlay:useCue,onStatus:soundHelp.update,
-        onError:function(error){soundHelp.error(error);showStatus('Lyd kunne ikke klargøres. Åbn Lydproblemer.',true);},
-        onStop:function(paused){if(fullMiniMixer)fullMiniMixer.updatePlayback(false);if(self._pager)self._pager.setPlaying(false);audio.classList.remove('huwabc-playing');if(self._accompControls)self._accompControls.stopDrone();clearFollow(!paused);soundHelp.stopped(paused);}
+        beforePlay:useCue,onStatus:soundHelp.update,onPreparing:preparation,
+        onError:function(error){preparation(false);soundHelp.error(error);showStatus('Lyd kunne ikke klargøres. Åbn Lydproblemer.',true);},
+        onStop:function(paused){preparation(false);if(fullMiniMixer)fullMiniMixer.updatePlayback(false);if(self._pager)self._pager.setPlaying(false);audio.classList.remove('huwabc-playing');if(self._accompControls)self._accompControls.stopDrone();clearFollow(!paused);soundHelp.stopped(paused);}
       });
       self._audioController=controller;controller._huwabcStopDrone=function(){if(self._accompControls)self._accompControls.stopDrone();};playback.register(controller);
       controller.load(audioControls,cursorControl,{displayPlay:true,displayLoop:true,displayRestart:true,displayProgress:true,displayWarp:true});
       // Stop belongs to the stable transport row; tempo is a separate row.
       audioControls.querySelector(".abcjs-inline-audio").appendChild(button("Stop",function(){playback.stopAll();},"huwabc-stop"));
-      labelPlayerControls(audioControls);repeatButton.mount(audioControls);
+      labelPlayerControls(audioControls);preparation(preparing||!!controller.isPreparing);repeatButton.mount(audioControls);
       var restart=audioControls.querySelector('.abcjs-midi-reset');
       if(restart)restart.addEventListener('click',function(){clearCue();if(self._accompControls)self._accompControls.stopDrone();},true);
       var keyHint=el('span','huwabc-transport-keyhint','Shift+Space · Afspil/pause');audioControls.appendChild(keyHint);

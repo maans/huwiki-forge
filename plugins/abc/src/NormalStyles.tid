@@ -145,3 +145,12 @@ type: text/css
  .huwabc-chord-overview-feel{font-size:.6rem}
 }
 @media print{.huwabc-chord-overview-player .huwabc-minimal-controls{display:none!important}.huwabc-chord-overview{break-inside:avoid}}
+
+/* Shared transport feedback, including the sidebar/floating mixer and Nodepult. */
+.huwabc-preparing-spinner,.huwabc-preparing-label{display:none;}
+button.huwabc-preparing{display:inline-flex!important;align-items:center;justify-content:center;gap:6px;min-width:94px!important;width:auto!important;cursor:progress;animation:none!important;}
+button.huwabc-preparing>:not(.huwabc-preparing-spinner):not(.huwabc-preparing-label){display:none!important;}
+button.huwabc-preparing>.huwabc-preparing-spinner{display:inline-block!important;width:12px;height:12px;flex:0 0 12px;box-sizing:border-box;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:huwabc-preparing-spin .8s linear infinite;}
+button.huwabc-preparing>.huwabc-preparing-label{display:inline!important;white-space:nowrap;font:600 12px/1.3 system-ui,sans-serif;}
+@keyframes huwabc-preparing-spin{to{transform:rotate(360deg);}}
+@media(prefers-reduced-motion:reduce){button.huwabc-preparing>.huwabc-preparing-spinner{animation:none;}}

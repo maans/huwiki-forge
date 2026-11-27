@@ -18,9 +18,12 @@ on:
       - 'tests/abc-swing-voicings.test.mjs'
       - 'tests/abc-swing-arrangement.test.mjs'
       - 'tests/abc-swing-written-comp.test.mjs'
+      - 'tests/abc-playback-preparing.test.mjs'
+      - 'tests/abc-playback-feedback.test.mjs'
       - 'tests/music-edition.test.mjs'
       - 'scripts/build-abc-ui.mjs'
       - 'scripts/abc-swing-browser-smoke.mjs'
+      - 'scripts/abc-playback-preparing-browser-smoke.mjs'
       - 'scripts/update_abc_plugin.py'
       - '.github/workflows/build-abc-reader.yml'
   workflow_dispatch:
@@ -52,6 +55,7 @@ jobs:
         run: |
           node --test tests/abc-reader-mode.test.mjs tests/abc-reader-edit.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-reader-fallback.test.mjs tests/abc-mini-mixer-title.test.mjs tests/abc-default-minimal.test.mjs tests/abc-chord-overview.test.mjs tests/abc-normal-clean.test.mjs tests/music-edition.test.mjs tests/forge-libraries.test.mjs
           node --test tests/abc-rhythm-head-audio.test.mjs tests/abc-swing-voicings.test.mjs tests/abc-swing-arrangement.test.mjs tests/abc-swing-written-comp.test.mjs
+          node --test tests/abc-playback-preparing.test.mjs tests/abc-playback-feedback.test.mjs
           node scripts/build-abc-ui.mjs --check
           git diff --check
       - name: Install browser controller for actual guitar playback acceptance
@@ -66,6 +70,18 @@ jobs:
         with:
           name: abc-swing-playback
           path: test-results/swing/
+          retention-days: 7
+      - name: Verify immediate preparation feedback on all player controls
+        run: node scripts/abc-playback-preparing-browser-smoke.mjs
+        env:
+          CHROME_BIN: /usr/bin/google-chrome
+      - name: Preserve playback preparation diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: abc-playback-preparing
+          path: test-results/playback-preparing/
+          if-no-files-found: ignore
           retention-days: 7
       - name: Update existing Forge wikis with the same verified release
         run: |

@@ -11,6 +11,7 @@ var PageView=require('$:/plugins/huwiki/abc/page-view.js');
 var ViewportAnchor=require('$:/plugins/huwiki/abc/viewport-anchor.js');
 var AudioController=require('$:/plugins/huwiki/abc/audio-controller.js');
 var Playback=require('$:/plugins/huwiki/abc/playback.js');
+var PlaybackFeedback=require('$:/plugins/huwiki/abc/playback-feedback.js');
 var Accompaniment=require('$:/plugins/huwiki/abc/accompaniment.js');
 var Tabs=require('$:/plugins/huwiki/abc/tabs.js');
 var JazzFont=require('$:/plugins/huwiki/abc/jazz-font.js');
@@ -35,7 +36,7 @@ exports.mount=function(host,options){
  var config=options.config?Accompaniment.clean(options.config):Accompaniment.read(fields);
  var activeNotes=[],cursorLine=null,detachObserver=null,locale=null,controlsLocale=null,playButton=null,unbindShortcuts=null;
  var pendingStart=null,chosenNode=null,cueDataReady=false,updateRevision=0,renderPending=false;
- var viewport=null,chordOverview=null,miniMixer=null,mixerButton=null;
+ var viewport=null,chordOverview=null,miniMixer=null,mixerButton=null,preparing=false;
  var showOverview=!!(options.followChordsOnly&&fields['abc-chords-overview']==='yes');
  var drone=options.audio===false?null:Accompaniment.createDrone(function(){return config;},function(){return source;});
  function make(tag,cls,text){var node=doc.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;}
@@ -65,6 +66,11 @@ exports.mount=function(host,options){
   activeNotes.forEach(function(node){if(node&&node.classList)node.classList.remove('huwabc-playing-note');});activeNotes=[];
   if(cursorLine&&cursorLine.parentNode)cursorLine.parentNode.removeChild(cursorLine);cursorLine=null;
   if(chordOverview)chordOverview.clear();
+ }
+ function preparation(value){
+  preparing=!!value;
+  PlaybackFeedback.update(playButton,preparing,{language:I18n.language(options.wiki)});
+  if(miniMixer)miniMixer.updatePreparing(preparing);
  }
  function playing(value){
   if(pager)pager.setPlaying(value);
@@ -160,7 +166,7 @@ exports.mount=function(host,options){
  function failure(error){
   if(error&&error.name==='AbortError'||!alive())return;
   playing(false);stopDrone();clearFollow();
-  if(playButton)playButton.removeAttribute('aria-busy');
+  preparation(false);
   show('Lyd kunne ikke indlæses: '+(error&&error.message||String(error)),true);
  }
  function follow(event){
@@ -201,7 +207,7 @@ exports.mount=function(host,options){
   playButton=controls.querySelector('.abcjs-midi-start');if(!playButton)return;
   playButton.textContent='';playButton.appendChild(icon('play'));playButton.appendChild(icon('pause'));
   playButton.appendChild(make('span','huwabc-minimal-label-play','Afspil'));playButton.appendChild(make('span','huwabc-minimal-label-pause','Pause'));
-  playing(false);
+  playing(false);preparation(preparing||!!(controller&&controller.isPreparing));
   // SynthController always adds a clock even when progress is disabled. Its
   // methods tolerate a missing clock, so remove it rather than show extra UI.
   ['.abcjs-midi-clock','.abcjs-css-warning'].forEach(function(selector){var node=controls.querySelector(selector);if(node&&node.parentNode)node.parentNode.removeChild(node);});
@@ -232,6 +238,7 @@ exports.mount=function(host,options){
    anchor:mixerButton,initialFloating:!options.sidebarMixer,initiallyVisible:false,
    getConfig:function(){return config;},onVisibilityChange:mixerVisibility,
    onTogglePlayback:function(){if(playButton)playButton.click();},getPlaying:function(){return !!(controller&&controller.isStarted);},
+   getPreparing:function(){return preparing||!!(controller&&controller.isPreparing);},
    onPreview:syncMixerPreview,
    onChange:function(next){syncMixerPreview(next);if(typeof options.onMixerChange==='function')options.onMixerChange(config);}
   });
@@ -360,15 +367,15 @@ exports.mount=function(host,options){
    var arranged=Accompaniment.prepare(ABC,visual,source,config,true,fields);
    if(arranged.message)show(arranged.message,true);
    controller=AudioController.install(new ABC.synth.SynthController(),ABC,{
-    wiki:options.wiki,getConfig:function(){return config;},isCurrent:alive,beforePlay:useCue,
+    wiki:options.wiki,getConfig:function(){return config;},isCurrent:alive,beforePlay:useCue,onPreparing:preparation,
     onStatus:function(value){
      if(!alive()||!value)return;
-     if(value.phase==='loading'){if(playButton)playButton.setAttribute('aria-busy','true');show('Indlæser lyd …');}
+     if(value.phase==='loading'){show('Indlæser lyd …');}
      else if(value.phase==='error')failure(new Error(value.details||value.reason||text('Lyden kunne ikke klargøres.')));
-     else {if(playButton)playButton.removeAttribute('aria-busy');if(!status.classList.contains('huwabc-error'))show('');}
+     else if(!preparing&&!status.classList.contains('huwabc-error'))show('');
     },
     onError:failure,
-    onStop:function(paused){if(!alive())return;playing(false);stopDrone();clearFollow();if(!paused)clearCue();if(playButton)playButton.removeAttribute('aria-busy');if(!status.classList.contains('huwabc-error'))show('');}
+    onStop:function(paused){if(!alive())return;playing(false);stopDrone();clearFollow();if(!paused)clearCue();preparation(false);if(!status.classList.contains('huwabc-error'))show('');}
    });
    api.controller=controller;controller._huwabcStopDrone=stopDrone;Playback.register(controller);
    controller.load(controls,{
