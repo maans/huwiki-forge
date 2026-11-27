@@ -460,7 +460,7 @@ module-type: library
       var backing=selectedTab==='accompaniment',chords=selectedTab==='chords',video=selectedTab==='youtube';
       if(video){if(options.onStopPlayback)options.onStopPlayback();else if((currentlyPlaying||options.getPlaying&&options.getPlaying())&&options.onTogglePlayback)options.onTogglePlayback();}
       list.hidden=backing||chords||video;backingList.hidden=!backing;chordList.hidden=!chords;youtubeList.hidden=!video;
-      roomRow.hidden=video;play.hidden=false;play.disabled=video&&!MiniYoutube.video(wiki,musicTitle).id;
+      roomRow.hidden=video;roomRow.style.display=video?'none':'flex';play.hidden=false;play.disabled=video&&!MiniYoutube.video(wiki,musicTitle).id;
       voiceTab.setAttribute('aria-selected',String(selectedTab==='voices'));
       backingTab.setAttribute('aria-selected',String(backing));
       chordTab.setAttribute('aria-selected',String(chords));
