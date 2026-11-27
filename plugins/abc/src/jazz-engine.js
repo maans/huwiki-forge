@@ -28,7 +28,13 @@ function inferStyle(source,fields){
  if(meter==='3/4'&&/jazz[ -]?(?:waltz|vals)|(?:waltz|vals)[ -]?jazz/.test(notes))return 'jazzwaltz';
  if(/samba/.test(notes))return 'samba';
  if(/bossa|bossanova|bossa nova/.test(notes))return 'bossa';
- if(/ballad|slow jazz|jazz slow/.test(notes))return 'jazzballad';
+ if(/ballad|slow jazz|jazz slow/.test(notes)){
+  // Q uses its written beat unit: half-note=50 is quarter-note=100.
+  var q=(String(source||'').match(/^Q:[^\r\n]*/mi)||[''])[0].replace(/"[^"]*"/g,''),parts=q.split('='),bpm=Number((parts[parts.length-1].match(/(\d+(?:\.\d+)?)\s*$/)||[])[1]),unit=.25;
+  if(parts.length>1){var units=Array.from(parts[0].matchAll(/(\d+)\s*\/\s*(\d+)/g));if(units.length)unit=units.reduce(function(sum,m){return sum+Number(m[1])/Number(m[2]);},0);}
+  if(/\b(?:slow|langsom|langsomt)\b/.test(notes)||bpm>0&&bpm*unit*4<=70)return 'slowjazzballad';
+  return 'jazzballad';
+ }
  if(/swing|bebop|jazz|blues|shuffle/.test(notes)||fromJazz)return meter==='3/4'?'jazzwaltz':'swing';
  if(/waltz|vals|valse/.test(notes)||meter==='3/4')return 'waltz';
  return 'pop';
@@ -401,3 +407,4 @@ exports.form=form;exports.calcBars=calcBars;exports.sectionAt=sectionAt;exports.
 exports.drumDynamics=drumDynamics;exports.swingDrums=swingDrums;exports.describe=describe;
 exports.brazilComp=brazilComp;exports.brazilBass=brazilBass;exports.brazilDrums=brazilDrums;exports.brazilStyle=brazilStyle;exports.hash=hash;
 })();
+

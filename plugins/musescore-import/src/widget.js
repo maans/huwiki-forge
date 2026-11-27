@@ -43,11 +43,12 @@ var EN={
  ' partitur(er) klar · ':' score(s) ready · ', ' fil(er) kunne ikke læses':' file(s) could not be read',
  'Filer, som ikke kunne indlæses (':'Files that could not be loaded (',
  ' takter · ':' measures · ', ' nodesystem(er)':' staff/staves',
- 'Mulig transponeret dublet fra takt ':'Possible transposed duplicate from measure ',
- 'Mulig transponeret dublet: takt ':'Possible transposed duplicate: measures ',
- ' halvtoner). Foreslået slut: ':' semitones). Suggested end: ',
+ 'Gentagelse i anden toneart fra takt ':'Repetition in another key from measure ',
+ '). Hele noden er medtaget.':'). The complete score is included.',
+ 'Gentagelse i anden toneart: takt ':'Repetition in another key: measures ',
+ ' halvtoner). Hele noden er medtaget.':' semitones). The complete score is included.',
  ' halvtoner fra første halvdel (':' semitones from the first half (',
- ' % rytmisk match). Intervallet er foreslået uden denne halvdel. Du kan frit ændre det.':'% rhythmic match). The proposed range excludes this half; you can change it.',
+ ' % rytmisk match). Det kan være en modulation eller en alternativ transponeret udgave. Hele noden er medtaget; du kan selv ændre taktintervallet.':'% rhythmic match). This may be a modulation or an alternative transposed version. The complete score is included; you can adjust the measure range.',
  'Nodeakkorder':'Note chords', ' nodeakkorder':' note chords',
  'Fra takt':'From measure','Til takt':'To measure',
  'Titel på den nye tiddler':'New tiddler title',
@@ -101,7 +102,6 @@ var EN={
  'En usædvanlig tuplet kræver manuel kontrol.':'An unusual tuplet needs manual review.',
  'MuseScore-location/flyttede nodepositioner findes; kontrollér rytmer i preview.':'MuseScore position offsets were found; check rhythms in the preview.',
  'Slagtøjsnotation (perc) kan ikke gengives fuldt ud i denne version.':'Percussion notation is not fully supported by this version.',
- 'Kontrollér transponeret dublet fra takt ':'Review transposed duplicate from measure ',
  'Varighed mangler i takt ':'Missing duration in measure ',
  'Gentagelse x':'Repeat x', ' i takt ':' in measure ',
  ' skal kontrolleres (ABC afspiller normalt to gange).':' needs review (ABC normally plays repeats twice).',
@@ -187,7 +187,7 @@ ImportWidget.prototype.readModel=async function(file){
 };
 ImportWidget.prototype.initialState=function(model){
  var first=model.staves.reduce(function(a,s){return a||s.voices.find(function(v){return v.count>0;})||null;},null);
- return {selected:first?[first.id]:[],start:1,end:model.duplicate?model.duplicate.start-1:model.totalMeasures,title:model.title,barsPerLine:4,ack:false};
+ return {selected:first?[first.id]:[],start:1,end:model.totalMeasures,title:model.title,barsPerLine:4,ack:false};
 };
 ImportWidget.prototype.openFiles=async function(files){
  if(files.length===1){this.batchItems=null;return this.openFile(files[0]);}
@@ -229,7 +229,7 @@ ImportWidget.prototype.showBatchStep2=function(){
  this.batchItems.forEach(function(item,i){
   var m=item.model,st=item.state,card=node(self.page,'section','humi-batch-card');
   var hd=node(card,'div','humi-batch-heading');node(hd,'strong','',(i+1)+'. '+m.title);node(card,'p','humi-meta',m.name+' · '+m.totalMeasures+' takter · '+m.staves.length+' nodesystem(er)');
-  if(m.duplicate)node(card,'p','humi-warning','Mulig transponeret dublet fra takt '+m.duplicate.start+' ('+(m.duplicate.shift>0?'+':'')+m.duplicate.shift+' halvtoner). Foreslået slut: '+st.end+'.');
+  if(m.duplicate)node(card,'p','humi-warning','Gentagelse i anden toneart fra takt '+m.duplicate.start+' ('+(m.duplicate.shift>0?'+':'')+m.duplicate.shift+' halvtoner). Hele noden er medtaget.');
   var voices=node(card,'div','humi-voices humi-batch-voices');
   m.staves.forEach(function(s){s.voices.forEach(function(v){if(v.count<=0)return;var a=node(voices,'label','humi-check'),x=node(a,'input');x.type='checkbox';x.value=v.id;x.checked=st.selected.indexOf(v.id)>=0;x.addEventListener('change',function(){st.selected=Array.from(voices.querySelectorAll('input:checked')).map(function(y){return y.value;});});node(a,'span','',v.label+' ('+v.count+' nodeakkorder)');});});
   var r=node(card,'div','humi-range'),a=field(r,'Fra takt','input',{type:'number',min:1,max:m.totalMeasures,value:st.start}),b=field(r,'Til takt','input',{type:'number',min:1,max:m.totalMeasures,value:st.end});
@@ -324,7 +324,7 @@ ImportWidget.prototype.queueBatch=function(){
 };
 ImportWidget.prototype.showStep2=function(){var self=this,m=this.model;if(!m)return this.showStep1();this.stage=2;this.frame(2,'Vælg stemmer og takter. Becifringer fra hele partituret kommer med én gang.');
  node(this.page,'h3','',m.title);node(this.page,'p','humi-meta',m.name+' · '+m.totalMeasures+' takter · '+m.staves.length+' nodesystem(er) · '+(m.version?'MuseScore '+m.version:m.format));
- if(m.duplicate){node(this.page,'p','humi-warning','Mulig transponeret dublet: takt '+m.duplicate.start+'–'+m.totalMeasures+' ligger '+(m.duplicate.shift>0?'+':'')+m.duplicate.shift+' halvtoner fra første halvdel ('+m.duplicate.confidence+' % rytmisk match). Intervallet er foreslået uden denne halvdel. Du kan frit ændre det.');}
+ if(m.duplicate){node(this.page,'p','humi-warning','Gentagelse i anden toneart: takt '+m.duplicate.start+'–'+m.totalMeasures+' ligger '+(m.duplicate.shift>0?'+':'')+m.duplicate.shift+' halvtoner fra første halvdel ('+m.duplicate.confidence+' % rytmisk match). Det kan være en modulation eller en alternativ transponeret udgave. Hele noden er medtaget; du kan selv ændre taktintervallet.');}
  node(this.page,'h4','', 'Stemmer og nodesystemer');var options=node(this.page,'div','humi-voices');
  m.staves.forEach(function(s){s.voices.forEach(function(v){if(v.count<=0)return;var label=node(options,'label','humi-check');var cb=node(label,'input');cb.type='checkbox';cb.value=v.id;cb.checked=self.state.selected.indexOf(v.id)>=0;cb.addEventListener('change',function(){self.state.selected=Array.from(options.querySelectorAll('input:checked')).map(function(x){return x.value;});});var t=node(label,'span','',v.label+' ('+v.count+' nodeakkorder)');});});
  var ranges=node(this.page,'div','humi-range');var a=field(ranges,'Fra takt','input',{type:'number',min:1,max:m.totalMeasures,value:this.state.start});var b=field(ranges,'Til takt','input',{type:'number',min:1,max:m.totalMeasures,value:this.state.end});
@@ -370,3 +370,4 @@ ImportWidget.prototype.queueSingle=function(){
 ImportWidget.prototype.onDestroy=function(){this._catalogueEpoch=(this._catalogueEpoch||0)+1;clearTimeout(this.previewTimer);(this.batchItems||[]).forEach(function(item){clearTimeout(item.timer);});};
 exports['huwiki-ms-import']=ImportWidget;
 })();
+

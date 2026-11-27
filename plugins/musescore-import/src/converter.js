@@ -473,7 +473,7 @@ function renderABC(model,selected,start,end,options){options=options||{};start=M
    header.push('V:'+(i+1)+(label?' name="'+safeAbcLabel(label)+'"':'')+' clef='+(percussionVoice(o)?'perc':o.v.clef)+(percussionVoice(o)?' stafflines=5':''));
   });
  }header.push('K:'+signatureKey(globalFirst.fifths,minor)+(voices.length===1&&percussionVoice(voices[0])?' clef=perc stafflines=5':voices.length===1&&voices[0].v.clef!=='treble'?' clef='+voices[0].v.clef:''));
- var notesCount=0, warnings=model.warnings.slice(); if(model.duplicate&&end>=model.duplicate.start)warnings.push('Kontrollér transponeret dublet fra takt '+model.duplicate.start+' ('+(model.duplicate.shift>0?'+':'')+model.duplicate.shift+' halvtoner).');
+ var notesCount=0, warnings=model.warnings.slice(); if(model.duplicate&&end>=model.duplicate.start)warnings.push('Gentagelse i anden toneart fra takt '+model.duplicate.start+' ('+(model.duplicate.shift>0?'+':'')+model.duplicate.shift+' halvtoner).');
  if(kit)warnings.push.apply(warnings,kit.warnings);
  var outputs=[],barLimit=Math.max(1,Math.min(12,Math.round(Number(options.barsPerLine)||4)));
  var lineBreaks=planLineBreaks(voices[0].st,voices[0].v.index,start,end,model.format,globalFirst.meter,barLimit);
@@ -564,3 +564,4 @@ function renderABC(model,selected,start,end,options){options=options||{};start=M
 exports.namedProgram=namedProgram;exports.parseMuse=parseMuse;exports.parseMusicXML=parseMusicXML;exports.renderABC=renderABC;exports.findDuplicate=findDuplicate;
 exports.decodeScore=function(raw,name){var ext=(name.split('.').pop()||'').toLowerCase();if(ext==='musicxml'||ext==='xml')return parseMusicXML(raw,name);return parseMuse(raw,name);};
 })();
+
