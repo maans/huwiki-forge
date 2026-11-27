@@ -134,3 +134,8 @@ Senere kan de samme mapper udvides med valg af sax-, trompet-, basun- og
 rytmegruppe samt C/B♭/E♭-notation. Stemmevalg skal være en separat indstilling
 fra kildevalget, så klingende lyd kan bevares. Dette er en planlagt mulighed;
 gruppeselectoren er ikke implementeret her.
+
+
+## Senere: sektioner og instrumentvisninger
+
+Samme daterede nodemappe skal kunne udvides med valg af saxofoner, trompeter, basuner og rytmegruppe. Den enkelte stemmes C-, B♭- eller E♭-visning og nøgle skal vælges uden at ændre den klingende toneart. Dette er planlagt; det nuværende valg af nodekilde er adskilt fra et senere valg af stemme eller sektion.
