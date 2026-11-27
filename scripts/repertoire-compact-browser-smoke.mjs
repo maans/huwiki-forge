@@ -13,6 +13,7 @@ try {
  await page.goto(pathToFileURL(path.join(root,'editions/silba-atno-repertoire/index.html')).href,{waitUntil:'domcontentloaded'});
  await page.waitForFunction(()=>window.$tw&&$tw.rootWidget);
  const source=await page.evaluate(()=>{
+  $tw.wiki.setText('$:/language','text',undefined,'$:/languages/da-DK');
   const title=$tw.wiki.allTitles().find(t=>!t.startsWith('$:/')&&$tw.wiki.getTiddler(t)?.fields['abc-source']);
   if(!title)throw Error('A real source score is required');
   const text=$tw.wiki.getTiddler(title).fields['abc-source'];
