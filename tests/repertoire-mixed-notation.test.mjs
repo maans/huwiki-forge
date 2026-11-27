@@ -160,9 +160,9 @@ test('switching PDF and ABC inside one song disposes the old view and preserves 
  const f=await drawnBookFixture(),before=JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),order=JSON.stringify(f.model.entries(f.wiki,f.set));
  f.book.draw();assert.ok(f.host.querySelector('iframe'));assert.equal(f.scoreInstances.length,0);
  const choose=value=>{const selection=f.host.querySelector('.huwrep-book-source');assert.ok(selection);selection.value=value;selection.dispatch('change');};
- assert.deepEqual(f.host.querySelector('.huwrep-book-source').children.map(option=>option.value),['abc','pdf']);
+ assert.deepEqual(f.host.querySelector('.huwrep-book-source').children.map(option=>option.value),['','leadsheet','pdf']);
  for(let i=0;i<3;i++){
-  choose('abc');assert.equal(f.host.querySelector('iframe'),null);assert.ok(f.host.querySelector('.test-abc-score'));
+  choose('leadsheet');assert.equal(f.host.querySelector('iframe'),null);assert.ok(f.host.querySelector('.test-abc-score'));
   assert.equal(f.listeners.get('message')?.size||0,0,'switching away releases old PDF message listener');
   assert.equal(f.book._score.title,'Four Brothers');
   choose('pdf');assert.ok(f.host.querySelector('iframe'));assert.equal(f.host.querySelector('.test-abc-score'),null);
@@ -198,5 +198,33 @@ test('a PDF boundary carries current child state before changing songs, even whe
  assert.equal(f.posts.length,0,'a boundary cannot recursively request next from stale page one');
  assert.equal(f.book._pdfPager,null);assert.ok(f.host.querySelector('.test-abc-score'));
  assert.equal(JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),sourceBefore);
+ f.book.disposeScore();
+});
+
+test('one book switches its dated-folder defaults and per-number source roles without replacing guitar stabs',async()=>{
+ const f=await drawnBookFixture(),canonical=f.wiki.getTiddler('Four Brothers');
+ f.wiki.addTiddler(new Tiddler(canonical,{'repertoire-leadsheet-source':'Sources/Four Brothers · Lead','repertoire-guitar-pdf':'pdf/four-brothers-guitar.pdf','repertoire-score-pdf':'pdf/four-brothers-score.pdf'}));
+ f.wiki.addTiddler(new Tiddler({title:'Sources/Four Brothers · Lead','abc-source':'X:1\nT:Four Brothers melody\nQ:1/4=125\nK:F\nFGA_B|','repertoire-work-title':'Four Brothers'}));
+ f.wiki.addTiddler(new Tiddler({title:'$:/config/maans/repertoire/default-source-role',text:'guitar'}));
+ const original=JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),order=JSON.stringify(f.model.entries(f.wiki,f.set)),orch=f.wiki.getTiddler(f.item).fields['orchestra-title'];
+ f.model.setPresentation(f.wiki,f.set,null,'leadsheet');f.book.draw();
+ assert.equal(f.book._score.title,'Sources/Four Brothers · Lead');assert.equal(f.host.querySelector('iframe'),null);
+ const folder=value=>{const select=f.host.querySelector('.huwrep-book-folder-view');assert.ok(select);select.value=value;select.dispatch('change');};
+ const number=value=>{const select=f.host.querySelector('.huwrep-book-source');assert.ok(select);select.value=value;select.dispatch('change');};
+ const pdf=()=>new URL((f.host.querySelector('iframe').getAttribute('src')||f.host.querySelector('iframe').src)).searchParams.get('file');
+ folder('guitar');assert.match(pdf(),/four-brothers-guitar\.pdf$/);assert.equal(f.book._score,null);
+ number('chord-stabs');assert.equal(f.book._score.title,'Four Brothers');assert.equal(f.host.querySelector('iframe'),null);
+ folder('score');assert.equal(f.book._score.title,'Four Brothers','the per-number exception survives changes to folder default');
+ number('');assert.match(pdf(),/four-brothers-score\.pdf$/);
+ folder('leadsheet');assert.equal(f.book._score.title,'Sources/Four Brothers · Lead');
+ number('guitar');assert.match(pdf(),/four-brothers-guitar\.pdf$/);
+ assert.equal(f.model.setlists(f.wiki,orch).length,1,'four views keep the same dated folder');assert.equal(JSON.stringify(f.model.entries(f.wiki,f.set)),order);
+ // A second historical date is a different folder, not a view clone. It must
+ // not inherit the first date's per-number choice for the same song.
+ const another=f.model.createSetlist(f.wiki,orch,'28. november 2026');f.model.setEntries(f.wiki,another,[f.item]);f.model.setPresentation(f.wiki,another,null,'leadsheet');
+ f.book.selectSetlist(another);assert.equal(f.book._score.title,'Sources/Four Brothers · Lead');
+ f.book.selectSetlist(f.set);assert.match(pdf(),/four-brothers-guitar\.pdf$/,'returning restores only that historical folder\'s exception');
+ assert.equal(f.book.activeItem,f.item);assert.equal(JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),original);
+ assert.ok(f.wiki.getTiddler('Four Brothers').fields['abc-source'].includes('F4|'),'canonical accompaniment survives all source choices');
  f.book.disposeScore();
 });

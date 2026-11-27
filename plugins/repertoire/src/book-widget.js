@@ -189,6 +189,8 @@ Book.prototype.selectSetlist=function(title){
  this.wiki.addTiddler(new $tw.Tiddler({title:TEMP,type:"text/plain",text:title}));
  this.draw();
 };
+Book.prototype.changeFolderView=function(role){model.setPresentation(this.wiki,this.setlistTitle,null,role);this.draw();};
+Book.prototype.changeItemView=function(role){model.setPresentation(this.wiki,this.setlistTitle,this.activeItem,role);this.draw();};
 Book.prototype.selectItem=function(title,last){
  this.activeItem=title;this.lastPage=!!last;
  this.draw();
@@ -389,6 +391,13 @@ Book.prototype.draw=function(){
  selector.value=this.setlistTitle;
  selector.addEventListener("change",function(){self.selectSetlist(this.value);});
  toolbar.appendChild(selector);
+ var folderView=el(doc,"select","huwrep-input huwrep-book-folder-view");folderView.setAttribute("aria-label","Visning for hele nodemappen");
+ var folderRoles=new Map();all.forEach(function(id){model.availableViews(wiki,id).forEach(function(v){if(!folderRoles.has(v.role))folderRoles.set(v.role,v.label);});});
+ var currentRole=set&&set.fields["repertoire-source-role"]||wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","");
+ if(!currentRole){var automatic=choice(doc,"","Visning · efter nummerets noder");automatic.disabled=true;folderView.appendChild(automatic);}
+ ["leadsheet","guitar","chord-stabs","score","abc","pdf"].forEach(function(role){if(folderRoles.has(role))folderView.appendChild(choice(doc,role,"Visning · "+folderRoles.get(role)));});
+ if(currentRole&&!folderRoles.has(currentRole)){var unavailable=choice(doc,currentRole,"Visning · "+(model.viewLabels[currentRole]||currentRole)+" (ikke tilgængelig)");unavailable.disabled=true;folderView.appendChild(unavailable);}
+ folderView.value=currentRole;folderView.addEventListener("change",function(){self.changeFolderView(folderView.value);});toolbar.appendChild(folderView);
  var mode=el(doc,"select","huwrep-input huwrep-book-view");
  mode.setAttribute("aria-label","Visning på iPad");
  [["auto","Automatisk efter skærmretning"],["single","Én side"],["spread","To sider"]].forEach(function(x){mode.appendChild(choice(doc,x[0],x[1]));});
@@ -447,17 +456,22 @@ Book.prototype.draw=function(){
  if(row.childNodes.length)host.appendChild(row);
  var stage=el(doc,"main","huwrep-book-stage");host.appendChild(stage);
  var source=wiki.getTiddler(name(wiki,this.activeItem)),f=source&&source.fields;
- var notation=source?model.notation(wiki,source):{abc:false,pdf:""};
- this._notationChoice=this._notationChoice||Object.create(null);
- var selected=this._notationChoice[f&&f.title]||(f&&f["repertoire-sheet-format"]==="pdf"?"pdf":notation.abc?"abc":"pdf");
- if(selected==="pdf"&&!notation.pdf)selected="abc";
- if(selected==="abc"&&!notation.abc)selected="pdf";
- if(notation.abc&&notation.pdf){
-  var sourceSelect=el(doc,"select","huwrep-input huwrep-book-source");sourceSelect.setAttribute("aria-label","Vælg noder til samme nummer");
-  sourceSelect.appendChild(choice(doc,"abc",notation.abcLabel||"ABC"));sourceSelect.appendChild(choice(doc,"pdf","PDF · originalnoder"));sourceSelect.value=selected;
-  sourceSelect.addEventListener("change",function(){self._notationChoice[f.title]=sourceSelect.value;self.draw();});toolbar.appendChild(sourceSelect);
+ var notation=source?model.presentation(wiki,this.setlistTitle,this.activeItem):{abc:false,pdf:"",role:"",format:""};
+ if(notation.label&&!notation.missing){row.appendChild(el(doc,"span","huwrep-book-source-caption","Noder: "+notation.label));if(!row.isConnected)host.insertBefore(row,stage);}
+ var variants=source?model.availableViews(wiki,source):[];
+ var overrides={};try{overrides=JSON.parse(set&&set.fields["repertoire-overrides"]||"{}");}catch(ignore){}
+ var itemRole=overrides[this.activeItem]&&overrides[this.activeItem].sourceRole||"";
+ if(variants.length||notation.role){
+  var sourceSelect=el(doc,"select","huwrep-input huwrep-book-source");sourceSelect.setAttribute("aria-label","Visning for dette nummer");
+  sourceSelect.appendChild(choice(doc,"","Dette nummer · følg mappen"));
+  variants.forEach(function(v){sourceSelect.appendChild(choice(doc,v.role,"Dette nummer · "+v.label));});
+  if(itemRole&&!variants.some(function(v){return v.role===itemRole;})){var unavailable=choice(doc,itemRole,"Dette nummer · "+(model.viewLabels[itemRole]||itemRole)+" (ikke tilgængelig)");unavailable.disabled=true;sourceSelect.appendChild(unavailable);}
+  sourceSelect.value=itemRole;sourceSelect.addEventListener("change",function(){self.changeItemView(sourceSelect.value);});toolbar.appendChild(sourceSelect);
  }
- if(selected==="pdf"&&notation.pdf){
+ var selected=notation.format;
+ if(notation.missing&&notation.role){
+  stage.appendChild(el(doc,"p","huwrep-muted huwrep-book-source-unavailable",(model.viewLabels[notation.role]||"Denne nodevisning")+" findes endnu ikke til dette nummer. Vælg en af nummerets tilgængelige visninger ovenfor."));
+ }else if(selected==="pdf"&&notation.pdf){
   var pdfHost=el(doc,"section","huwrep-book-pdf");stage.appendChild(pdfHost);
   var PDF=require("$:/plugins/huwiki/repertoire/pdf-score.js");
   this._pdfPager=PDF.mount(pdfHost,{wiki:wiki,source:notation.pdf,title:shortName(wiki,this.activeItem),spread:Layout.mode(this.preference,this._win.innerWidth,this._win.innerHeight)==="spread"?2:1,
@@ -471,7 +485,7 @@ Book.prototype.draw=function(){
    // only the active score widget exists. No orchestral ABC is duplicated.
    var Score=require("$:/plugins/huwiki/abc/score-widget.js")["huwiki-abc"];
    var tree={type:"huwiki-abc",attributes:{
-    tiddler:{type:"string",value:source.fields.title},
+    tiddler:{type:"string",value:notation.sourceTitle||source.fields.title},
     view:{type:"string",value:f["repertoire-sheet-format"]==="chords"?"chords":"full"},
     embedded:{type:"string",value:"yes"},
     audio:{type:"string",value:"all"},
@@ -559,6 +573,9 @@ Book.prototype.refresh=function(changed){
  if(titles.some(function(title){return title.indexOf("Repertoire/")===0;})){
   this.draw();return true;
  }
+ if(changed["$:/config/maans/repertoire/default-source-role"]){this.draw();return true;}
+ var canonicalTitle=name(this.wiki,this.activeItem);
+ if(this._score&&this._score.title!==canonicalTitle&&changed[canonicalTitle]){this.draw();return true;}
  if(this._pdfPager){
   var sourceTitle=name(this.wiki,this.activeItem),source=this.wiki.getTiddler(sourceTitle),asset=source&&source.fields["repertoire-pdf"];
   if(changed[sourceTitle]||asset&&changed[asset]){this.draw();return true;}

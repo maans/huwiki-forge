@@ -267,6 +267,27 @@ Repertoire.prototype.draw=function(){
  },"huwrep-primary"));
  setPanel.appendChild(row);
  if(this.setlistTitle){
+  var viewSetTitle=this.setlistTitle,viewSet=wiki.getTiddler(viewSetTitle),viewItems=model.entries(wiki,viewSetTitle);
+  if(!viewItems.length)viewItems=known.map(function(item){return item.fields.title;});
+  var folderViews=Object.create(null),viewOrder=["leadsheet","guitar","chord-stabs","score","abc","pdf"];
+  viewItems.forEach(function(id){model.availableViews(wiki,id).forEach(function(view){folderViews[view.role]=view;});});
+  var defaultViewRole=viewSet&&viewSet.fields["repertoire-source-role"]||"";
+  if(!defaultViewRole)defaultViewRole=wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","")||"";
+  var folderView=labelled(doc,"Visning for hele nodemappen",defaultViewRole,"select");
+  folderView.input.classList.add("huwrep-setlist-view");folderView.input.setAttribute("aria-label","Visning for hele nodemappen");
+  if(!defaultViewRole){var automatic=el(doc,"option","","Automatisk efter nummerets noder");automatic.value="";automatic.disabled=true;folderView.input.appendChild(automatic);}
+  Object.keys(folderViews).sort(function(a,b){return viewOrder.indexOf(a)-viewOrder.indexOf(b);}).forEach(function(role){option(doc,folderView.input,role,folderViews[role].label);});
+  if(defaultViewRole&&!folderViews[defaultViewRole]){
+   var unavailable=el(doc,"option","",(model.viewLabels&&model.viewLabels[defaultViewRole]||defaultViewRole)+" · mangler i denne mappe");unavailable.value=defaultViewRole;unavailable.disabled=true;folderView.input.appendChild(unavailable);
+  }
+  folderView.input.value=defaultViewRole;
+  folderView.input.disabled=!Object.keys(folderViews).length;
+  folderView.input.addEventListener("change",function(){
+   try{model.setPresentation(wiki,viewSetTitle,null,folderView.input.value);self.message="";self.draw();}
+   catch(error){self.alert(error.message);}
+  });
+  setPanel.appendChild(folderView.wrap);
+  setPanel.appendChild(el(doc,"p","huwrep-muted","Visningen følger den samme nummerliste. Et særskilt nodevalg pr. nummer bevares."));
   var publishInstrument=el(doc,"select","huwrep-input");publishInstrument.setAttribute("aria-label","Instrument til udgivelse");
   [["c","C"],["bb","B♭"],["eb","E♭ sopranino"],["ebalto","E♭ altsaxofon"]].forEach(function(x){option(doc,publishInstrument,x[0],x[1]);});
   setPanel.appendChild(publishInstrument);
@@ -347,6 +368,19 @@ Repertoire.prototype.draw=function(){
  var editorPanel=el(doc,"section","huwrep-editor-panel");workspace.appendChild(editorPanel);
  editorPanel.appendChild(el(doc,"div","huwrep-editor-position","NUMMER "+(activeIndex+1)+" AF "+list.length));
  editorPanel.appendChild(el(doc,"h4","huwrep-editor-title",shortSheetName(wiki,this.activeItem)));
+ var itemViews=model.availableViews(wiki,this.activeItem),itemView=labelled(doc,"Noder til dette nummer","","select"),itemRole="";
+ try{var savedViews=JSON.parse(wiki.getTiddler(setTitle).fields["repertoire-overrides"]||"{}");itemRole=savedViews[this.activeItem]&&savedViews[this.activeItem].sourceRole||"";}catch(_invalidViews){}
+ itemView.input.classList.add("huwrep-item-view");itemView.input.setAttribute("aria-label","Noder til dette nummer i den aktuelle mappe");
+ option(doc,itemView.input,"","Følg mappens visning");
+ itemViews.forEach(function(view){option(doc,itemView.input,view.role,view.label);});
+ if(itemRole&&!itemViews.some(function(view){return view.role===itemRole;})){
+  var missingView=el(doc,"option","",(model.viewLabels&&model.viewLabels[itemRole]||itemRole)+" · ikke tilgængelig");missingView.value=itemRole;missingView.disabled=true;itemView.input.appendChild(missingView);
+ }
+ itemView.input.value=itemRole;
+ itemView.input.addEventListener("change",function(){
+  try{model.setPresentation(wiki,setTitle,self.activeItem,itemView.input.value);self.message="";self.draw();}
+  catch(error){self.alert(error.message);}
+ });editorPanel.appendChild(itemView.wrap);
  var sourceTitle=sheetName(wiki,this.activeItem),sourceRecord=wiki.getTiddler(sourceTitle),sourceFields=sourceRecord&&sourceRecord.fields||{};
  var sourceOptions=el(doc,"details","huwrep-source-options");sourceOptions.appendChild(el(doc,"summary","","Nodekilder og kategori"));
  var pdfSource=labelled(doc,"PDF-fil (adresse eller PDF-tiddler)",sourceFields["repertoire-pdf"]||""),category=labelled(doc,"Kategori",model.category(sourceRecord),"select");
@@ -357,7 +391,7 @@ Repertoire.prototype.draw=function(){
    wiki.addTiddler(new $tw.Tiddler(current,{"repertoire-pdf":pdfSource.input.value.trim(),"repertoire-category":category.input.value,"repertoire-has-leadsheet":category.input.value==="leadsheet"?"yes":""}));self.draw();
   }catch(error){self.alert(error.message);}
  }));editorPanel.appendChild(sourceOptions);
- var effective=model.effective(wiki,setTitle,this.activeItem),original=model.sourceAgreement(wiki,this.activeItem);
+ var effective=model.effective(wiki,setTitle,this.activeItem),original=model.sourceAgreement(wiki,this.activeItem,setTitle);
  var originalLabel=[original.writtenKey?"Skrevet "+original.writtenKey+" · Klang C "+original.key:original.key?"ABC K:"+original.key:"Ingen ABC-toneart",original.tempo?"Q:"+original.tempo:"Intet ABC-tempo"].join(" · ");
  editorPanel.appendChild(el(doc,"p","huwrep-source-hint","Oprindelige noder: "+originalLabel));
  var tempoCurrent=tempoParts(effective.tempo),tempoOriginal=tempoParts(original.tempo);

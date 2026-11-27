@@ -33,12 +33,54 @@ function category(tiddler){
  var f=tiddler&&tiddler.fields||tiddler||{};
  return String(f["repertoire-category"]||"").toLowerCase()==="leadsheet"||String(f["repertoire-has-leadsheet"]||"").toLowerCase()==="yes"?"leadsheet":"";
 }
+function work(wiki,value){
+ var t=typeof value==="string"?wiki.getTiddler(value):value;
+ if(t&&t.fields[KIND]==="orchestra-item")t=wiki.getTiddler(t.fields["music-title"]);
+ return t;
+}
+function abcAvailable(t){var f=t&&t.fields||{};return typeof f["abc-source"]==="string"&&!!f["abc-source"].trim()||f.type==="text/vnd.abc"&&!!String(f.text||"").trim();}
+function pdfReference(wiki,value){var ref=String(value||""),asset=ref&&wiki.getTiddler(ref);return asset?String(asset.fields._canonical_uri||""):ref;}
+function configuredRole(wiki){return wiki.getTiddlerText?String(wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","")||""):"";}
+var viewLabels={leadsheet:"Leadsheet (ABC)",guitar:"Guitar (PDF)","chord-stabs":"Guitar · chord stabs (ABC)",score:"Partitur (PDF)",abc:"ABC",pdf:"PDF"};
+function availableViews(wiki,value){
+ var t=work(wiki,value),f=t&&t.fields||{},out=[],defaultRole=configuredRole(wiki),generic=pdfReference(wiki,f["repertoire-pdf"]||(f.type==="application/pdf"?f._canonical_uri:""));
+ var guitar=pdfReference(wiki,f["repertoire-guitar-pdf"])||(defaultRole!=="score"&&defaultRole!==""?generic:""),score=pdfReference(wiki,f["repertoire-score-pdf"])||(defaultRole==="score"?generic:"");
+ var leadRef=String(f["repertoire-leadsheet-source"]||""),lead=leadRef&&wiki.getTiddler(leadRef),stabsRef=String(f["repertoire-chord-stabs-source"]||""),stabs=stabsRef&&wiki.getTiddler(stabsRef);
+ var canonicalLead=abcAvailable(t)&&!leadRef&&category(t)==="leadsheet"&&f["repertoire-sheet-format"]!=="chords"&&!/guitar|chord.?stab/i.test(f["repertoire-abc-label"]||"");
+ function add(role,record,pdf){
+  var label=role==="leadsheet"?String(record&&record.fields["repertoire-abc-label"]||f["repertoire-abc-label"]||viewLabels[role]):viewLabels[role];
+  out.push({role:role,label:label,format:pdf?"pdf":"abc",abc:!pdf,pdf:pdf||"",sourceTitle:record&&record.fields.title||f.title||"",abcLabel:role==="leadsheet"?label:role==="chord-stabs"?viewLabels[role]:String(f["repertoire-abc-label"]||"ABC")});
+ }
+ if(abcAvailable(lead))add("leadsheet",lead);else if(canonicalLead)add("leadsheet",t);
+ if(guitar)add("guitar",t,guitar);
+ if(abcAvailable(stabs))add("chord-stabs",stabs);else if(abcAvailable(t)&&!canonicalLead)add(guitar||defaultRole==="guitar"||f["repertoire-sheet-format"]==="chords"||f["repertoire-source-role"]==="chord-stabs"?"chord-stabs":"abc",t);
+ if(score)add("score",t,score);
+ if(generic&&!guitar&&!score)add("pdf",t,generic);
+ return out;
+}
 function notation(wiki,value){
- var t=typeof value==="string"?wiki.getTiddler(value):value,f=t&&t.fields||{};
- var ref=String(f["repertoire-pdf"]||""),asset=ref&&wiki.getTiddler(ref);
- var pdf=asset?String(asset.fields._canonical_uri||""):ref;
- if(!pdf&&f.type==="application/pdf")pdf=String(f._canonical_uri||"");
- return {abc:typeof f["abc-source"]==="string"&&!!f["abc-source"].trim()||f.type==="text/vnd.abc"&&!!String(f.text||"").trim(),pdf:pdf,category:category(t),abcLabel:String(f["repertoire-abc-label"]||"ABC")};
+ var t=work(wiki,value),f=t&&t.fields||{},views=availableViews(wiki,t),pdf=views.find(function(v){return !!v.pdf;});
+ return {abc:views.some(function(v){return v.abc;}),pdf:pdf&&pdf.pdf||"",category:category(t),abcLabel:String(f["repertoire-abc-label"]||"ABC")};
+}
+function presentation(wiki,setlistTitle,itemTitle){
+ var item=wiki.getTiddler(itemTitle),t=work(wiki,item),f=t&&t.fields||{},itemFields=item&&item.fields||{},set=wiki.getTiddler(setlistTitle),setFields=set&&set.fields||{},override=overrides(set)[itemTitle]||{};
+ var role=override.sourceRole||setFields["repertoire-source-role"]||itemFields["repertoire-source-role"]||f["repertoire-source-role"]||configuredRole(wiki);
+ var format=override.sheetFormat||setFields["repertoire-sheet-format"]||itemFields["repertoire-sheet-format"]||f["repertoire-sheet-format"]||"";if(format==="chords")format="abc";
+ var views=availableViews(wiki,t),selected=role?views.find(function(v){return v.role===role;}):null;
+ if(!role){selected=views.find(function(v){return format?v.format===format:v.abc;})||(!format?views[0]:null);role=selected&&selected.role||"";}
+ if(selected&&format&&selected.format!==format)selected=null;
+ return Object.assign({abc:false,pdf:"",sourceTitle:"",role:role,format:format||(/^(guitar|score|pdf)$/.test(role)?"pdf":"abc"),label:viewLabels[role]||"Noder",category:category(t),missing:!selected},selected||{});
+}
+function setPresentation(wiki,setlistTitle,itemTitle,role){
+ if(role&&!Object.prototype.hasOwnProperty.call(viewLabels,role))throw Error("Ukendt nodevisning.");
+ var set=wiki.getTiddler(setlistTitle);if(!set)throw Error("Vælg en nodemappe eller sætliste.");
+ var format=/^(guitar|score|pdf)$/.test(role)?"pdf":"abc";
+ if(!itemTitle){update(wiki,set,{"repertoire-source-role":role,"repertoire-sheet-format":role?format:""});return;}
+ if(entries(wiki,setlistTitle).indexOf(itemTitle)<0)throw Error("Nummeret findes ikke i denne nodemappe.");
+ var changes=overrides(set),next=Object.assign({},changes[itemTitle]||{});
+ if(role){next.sourceRole=role;next.sheetFormat=format;}else{delete next.sourceRole;delete next.sheetFormat;}
+ if(Object.keys(next).length)changes[itemTitle]=next;else delete changes[itemTitle];
+ update(wiki,set,{"repertoire-overrides":JSON.stringify(changes)});
 }
 function matches(wiki,value,filters){
  var n=notation(wiki,value);filters=filters||{};
@@ -52,7 +94,7 @@ function setCategory(wiki,title,value){
 }
 function songs(wiki){
  return all(wiki).filter(function(t){
-  var f=t.fields,n=notation(wiki,t);return f[KIND]==="piece"||n.abc||!!n.pdf||f.type==="application/pdf"||
+  var f=t.fields;if(f["repertoire-work-title"]||/^(orchestra|orchestra-item|setlist)$/.test(f[KIND]||""))return false;var n=notation(wiki,t);return f[KIND]==="piece"||n.abc||!!n.pdf||f.type==="application/pdf"||
    typeof f["repertoire-image"]==="string"||(f.tags||[]).indexOf("RepertoireMelodi")>=0;
  }).sort(function(a,b){return a.fields.title.localeCompare(b.fields.title);});
 }
@@ -130,8 +172,10 @@ function overrides(setlist){
 }
 // Read the score header without modifying the original music tiddler.
 // A K: field describes the notated key signature; do not guess a concert key from the title.
-function sourceAgreement(wiki,itemTitle){
- var item=wiki.getTiddler(itemTitle),source=item&&wiki.getTiddler(item.fields["music-title"]);
+function sourceAgreement(wiki,itemTitle,setlistTitle){
+ var item=wiki.getTiddler(itemTitle),canonical=work(wiki,item),fields=canonical&&canonical.fields||{},chosen=presentation(wiki,setlistTitle,itemTitle);
+ var source=abcAvailable(canonical)?canonical:wiki.getTiddler(chosen.sourceTitle);
+ if(!abcAvailable(source)){var first=availableViews(wiki,canonical).find(function(v){return v.abc;});source=first&&wiki.getTiddler(first.sourceTitle);}
  var abc=source&&(source.fields["abc-source"]||"");
  if(!abc&&source&&source.fields.type==="text/vnd.abc")abc=source.fields.text||"";
  var key="",tempo="",lines=String(abc||"").split(/\r?\n/);
@@ -140,19 +184,20 @@ function sourceAgreement(wiki,itemTitle){
   if(q&&!tempo)tempo=q[1];
   if(k){key=(k[1].match(/^\S+/)||[])[0]||"";break;}
  }
- if(/^%%MIDI\s+transpose\s/m.test(abc)){
+ key=fields["repertoire-key"]||fields["abc-key"]||key;tempo=fields["repertoire-tempo"]||fields["abc-tempo"]||tempo;
+ if(!fields["repertoire-key"]&&/^%%MIDI\s+transpose\s/m.test(abc)){
   var live=require("$:/plugins/huwiki/repertoire/live-score.js"),offset=live.soundingOffset(abc);
   if(offset)return {key:live.shiftKey(key,offset),writtenKey:key,tempo:tempo};
  }
  return {key:key,tempo:tempo};
 }
-function baseline(wiki,itemTitle){
- var item=wiki.getTiddler(itemTitle),f=item&&item.fields||{},source=sourceAgreement(wiki,itemTitle);
+function baseline(wiki,itemTitle,setlistTitle){
+ var item=wiki.getTiddler(itemTitle),f=item&&item.fields||{},source=sourceAgreement(wiki,itemTitle,setlistTitle);
  return {key:f["repertoire-key"]||source.key,tempo:f["repertoire-tempo"]||source.tempo,
   form:f["repertoire-form"]||"",instrumentation:f["repertoire-instrumentation"]||"",cues:f["repertoire-cues"]||""};
 }
 function effective(wiki,setlistTitle,itemTitle){
- var details=baseline(wiki,itemTitle),setlist=wiki.getTiddler(setlistTitle);
+ var details=baseline(wiki,itemTitle,setlistTitle),setlist=wiki.getTiddler(setlistTitle);
  var override=setlist&&overrides(setlist)[itemTitle]||{};
  Object.keys(override).forEach(function(k){
   if(!Object.prototype.hasOwnProperty.call(details,k))return;
@@ -164,7 +209,7 @@ function effective(wiki,setlistTitle,itemTitle){
 }
 function saveArrangement(wiki,itemTitle,setlistTitle,values,scope){
  var item=wiki.getTiddler(itemTitle);if(!item||item.fields[KIND]!=="orchestra-item")throw Error("Repertoirepost mangler.");
- var source=sourceAgreement(wiki,itemTitle),base=baseline(wiki,itemTitle),details={
+ var source=sourceAgreement(wiki,itemTitle,setlistTitle),base=baseline(wiki,itemTitle,setlistTitle),details={
   key:normalized(values.key)||base.key,tempo:normalized(values.tempo)||base.tempo,
   form:String(values.form||"").trim(),instrumentation:String(values.instrumentation||"").trim(),cues:String(values.cues||"").trim()
  };
@@ -178,6 +223,7 @@ function saveArrangement(wiki,itemTitle,setlistTitle,values,scope){
   if(!list||list.fields["orchestra-title"]!==item.fields["orchestra-title"]||entries(wiki,setlistTitle).indexOf(itemTitle)<0)
    throw Error("Vælg en sætliste med denne melodi.");
   var changes=overrides(list),delta={};
+  ["sourceRole","sheetFormat"].forEach(function(field){if(changes[itemTitle]&&changes[itemTitle][field])delta[field]=changes[itemTitle][field];});
   ["key","tempo","form","instrumentation","cues"].forEach(function(field){
    if(details[field]!==base[field])delta[field]=details[field];
   });
@@ -189,7 +235,7 @@ function saveArrangement(wiki,itemTitle,setlistTitle,values,scope){
 }
 exports.orchestras=orchestras;
 exports.orchestra=orchestra;
-exports.songs=songs;exports.category=category;exports.notation=notation;exports.matches=matches;exports.setCategory=setCategory;
+exports.presentation=presentation;exports.availableViews=availableViews;exports.setPresentation=setPresentation;exports.viewLabels=viewLabels;exports.songs=songs;exports.category=category;exports.notation=notation;exports.matches=matches;exports.setCategory=setCategory;
 exports.parseTitles=parseTitles;
 exports.addPiece=addPiece;
 exports.items=items;

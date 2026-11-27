@@ -97,3 +97,40 @@ fx `pdf/four-brothers.pdf` virker, selv om viseren ligger i en anden mappe.
 Viseren udveksler `birdland-pdf:ready`, `birdland-pdf:state` og kommandoer via
 `postMessage`; både afsenderens origin og den konkrete iframe kontrolleres.
 Uden en konfigureret viser findes stadig et direkte PDF-link.
+
+## Én nodemappe med flere kildevisninger
+
+En dato eller koncert behøver kun én sætliste med én rækkefølge. **Visning**
+vælger mappens standard: Leadsheet (ABC), guitar-PDF, guitarens chord stabs
+(ABC) eller partitur-PDF. Nummerets eget valg kan følge mappen eller gemmes
+som en undtagelse. Mappens senere standardvalg bevarer særskilte numre;
+“følg mappen” fjerner undtagelsen. Mangler en kilde, vises det udtrykkeligt;
+en guitarstemme erstattes ikke automatisk med et partitur eller omvendt.
+
+Mappens felter er `repertoire-source-role` og `repertoire-sheet-format`.
+En undtagelse gemmes under nummerets id i `repertoire-overrides` som
+`sourceRole` og `sheetFormat`; toneart, tempo og aftaler bevares. Prioriteten
+er nummerets undtagelse, mappens standard, orkesterpostens standard og
+værkets standard. `$:/config/maans/repertoire/default-source-role` kan sætte
+wikiens sidste standard til fx `guitar` eller `score`.
+
+Værket beholder sin neutrale titel og guitarens eksisterende `abc-source`.
+Alternative ABC-kilder henvises med `repertoire-leadsheet-source` og eventuelt
+`repertoire-chord-stabs-source`. En kildetiddler kan ligge under `$:/` og have
+`repertoire-work-title` samt `caption` sat til værkets titel; den bliver ikke
+et ekstra kort i musikbiblioteket. `repertoire-guitar-pdf` og
+`repertoire-score-pdf` angiver de særskilte PDF-kilder. Det tidligere
+`repertoire-pdf` følger wikiens standardrolle; uden en rolle bliver det ved
+med at være et generisk PDF-valg. En manglende specifik kilde gættes ikke.
+
+Gennemsete Birdland-referencer i værkets `repertoire-key` og
+`repertoire-tempo` vinder over en alternativ kildes toneart og tempo.
+Nodebogen bruger fortsat det eksisterende midlertidige ABC-lag til at vise
+og spille de aftalte værdier uden at ændre originalerne. PDF/SitePublisher
+bruger fortsat de kanoniske tiddlers; eksport af den valgte kildevariant er
+ikke indført med denne visningsændring.
+
+Senere kan de samme mapper udvides med valg af sax-, trompet-, basun- og
+rytmegruppe samt C/B♭/E♭-notation. Stemmevalg skal være en separat indstilling
+fra kildevalget, så klingende lyd kan bevares. Dette er en planlagt mulighed;
+gruppeselectoren er ikke implementeret her.
