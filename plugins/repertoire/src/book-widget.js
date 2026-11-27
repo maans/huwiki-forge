@@ -626,6 +626,8 @@ Book.prototype.draw=function(){
  noteSummary.title="Nodeindstillinger · toneart, capo og tabulatur";noteSummary.setAttribute("aria-label",noteSummary.title);noteMenu.appendChild(noteSummary);
  var noteBody=el(doc,"div","huwrep-note-settings-body");noteMenu.appendChild(noteBody);toolbar.insertBefore(noteMenu,settings);
  noteMenu.addEventListener("toggle",function(){if(noteMenu.open){settings.open=false;host.classList.remove("huwrep-show-reading-controls");}});
+ settings.addEventListener("toggle",function(){if(settings.open)noteMenu.open=false;});
+ noteMenu.addEventListener("keydown",function(event){if(event.key==="Escape"){noteMenu.open=false;noteSummary.focus();event.stopPropagation();}});
  if(notation.abc){
   var noteSource=wiki.getTiddler(notation.sourceTitle||source.fields.title),noteFields=noteSource&&noteSource.fields||{};
   self._notationControls=require("$:/plugins/huwiki/abc/instrument-view.js").mount(noteBody,{wiki:wiki,key:noteFields["abc-key"]||(/^K:\s*(.+)$/m.exec(noteFields["abc-source"]||"")||[])[1]});
@@ -638,13 +640,13 @@ Book.prototype.draw=function(){
   variants.filter(function(v){return v.abc;}).forEach(function(v){noteBody.appendChild(btn(doc,"Åbn "+v.label,function(){self.changeItemView(v.role);}));});
  }
  if(audioView){
-  var readingControls=icon(doc,"Lyd og instrument","♫",function(){
+  var readingControls=btn(doc,"Flere lydindstillinger",function(){
    var open=host.classList.toggle("huwrep-show-reading-controls");
    readingControls.setAttribute("aria-expanded",String(open));
-   if(open)settings.open=false;
+   if(open){settings.open=false;noteMenu.open=false;}
   },"huwrep-reading-controls");
   readingControls.setAttribute("aria-expanded","false");
-  toolbar.insertBefore(readingControls,settings);
+  settingsBody.appendChild(readingControls);
  }
  if(notation.abc){
   var fit=btn(doc,"Hele siden",function(){

@@ -698,7 +698,7 @@ ABCWidget.prototype.drawMinimal=function(tiddler,source,renderToken){
   body.textContent='';
   self._minimalPlayer=MinimalPlayer.mount(body,{ABC:ABC,source:displayed,fields:prepared.fields,wiki:self.wiki,audio:view.audio,showTitle:view.showTitle,
    controlsHost:self._minimalControlsHost,shortcutHost:host,paged:self._standaloneView&&!view.range&&view.view!=='follow'&&view.view!=='chords',state:self._viewState,follow:view.view==='follow'||view.view==='chords',followChordsOnly:view.view==='chords',followChords:view.chords,followChordVoice:view.chordVoice,followVoice:view.voice,followMeasures:view.measures,swing:self._viewAttributes.swing,
-   sidebarMixer:self._standaloneView,mixerButton:self._standaloneView||view.mixer,mixerTitle:self.title,
+   sidebarMixer:self._standaloneView,mixerButton:self._standaloneView||view.mixer||!!host.closest(".huwrep-book"),mixerTitle:self.title,
    onMixerChange:function(next){var saved=self.wiki.getTiddler(self.title);if(saved)self.wiki.addTiddler(new $tw.Tiddler(saved,{'abc-accompaniment':JSON.stringify(accompaniment.clean(next))}));},
    isCurrent:function(){return host.isConnected&&renderToken===self._renderToken;}});
   self._updateMixer=function(fields){if(self._minimalPlayer)self._minimalPlayer.updateConfig(Object.assign(accompaniment.read(fields),view.range?{repeatCounts:{}}:{}));};
