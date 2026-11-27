@@ -55,11 +55,27 @@ function putHeader(source,letter,value){
  }
  return source;
 }
+// A modulation is arrangement metadata, not one unusually named key.
+// Validate every listed key before applying one uniform concert-pitch shift.
+function sequenceTarget(source,requested,offset){
+ var text=String(requested||'').trim().replace(/♭/g,'b').replace(/♯/g,'#');
+ var keys=text.split(/\s*(?:\+|→|->)\s*/);
+ if(keys.length<2)return text;
+ if(keys.some(function(k){return !keyOf(k);}))throw Error('Toneartsforløbet kan ikke læses.');
+ var sourceKeys=[];
+ Array.from(String(source).matchAll(/(?:^[ \t]*K:\s*|\[K:\s*)([^\s\]]+)/gm)).forEach(function(m){
+  var key=m[1];if(sourceKeys[sourceKeys.length-1]!==key)sourceKeys.push(key);
+ });
+ if(sourceKeys.length!==keys.length)throw Error('Det aftalte toneartsforløb findes ikke i ABC-noden.');
+ var shifts=keys.map(function(k,i){return stepsBetween(shiftKey(sourceKeys[i],offset),k);});
+ if(shifts.some(function(n){return n!==shifts[0];}))throw Error('Toneartsforløbet kræver forskellige skift. Redigér selve arrangementet.');
+ return keys[0];
+}
 function apply(ABC,source,agreement){
  var original=String(source||""),requested=agreement||{},keyName=header(original,"K").split(/\s+/)[0];
  if(!keyName)return {source:original,transposed:false,tempoChanged:false};
  var offset=soundingOffset(original),concertKey=shiftKey(keyName,offset);
- var target=String(requested.key||concertKey).trim();
+ var target=sequenceTarget(original,requested.key||concertKey,offset);
  var wanted=target===concertKey?keyName:shiftKey(target,-offset);
  var semitones=wanted===keyName?0:stepsBetween(keyName,wanted);
  var out=semitones?(Transpose||(Transpose=require("$:/plugins/huwiki/abc/transpose.js"))).apply(ABC,original,semitones):original;

@@ -507,3 +507,21 @@ test("Oh verden is a playable slow 4/4 Balkan ABC chord chart, not a WikiText co
  assert.ok(style.includes("bassTicks=[0,2];roles=[0,7];compTicks=[1,3]"));
 });
 
+
+
+
+test('arranged key sequences preserve modulation and transpose by one interval',async()=>{
+ const abcPkg=JSON.parse(await readFile(path.join(root,'plugins/abc/dist/plugin.json'),'utf8'));
+ const abcs=JSON.parse(abcPkg.text).tiddlers,cache={};
+ function load(name){if(cache[name])return cache[name];const module={exports:{}};cache[name]=module.exports;runInNewContext(abcs[name].text,{exports:module.exports,module,require:load});return cache[name]=module.exports;}
+ const ABC=load('$:/plugins/huwiki/abc/vendor/abcjs.js'),live={};
+ runInNewContext(tiddlers['$:/plugins/huwiki/repertoire/live-score.js'].text,{exports:live,require:load});
+ const source='X:1\nT:Modulation\nM:4/4\nL:1/4\nQ:1/4=50\nK:G\n"G"B4 | [K:Bb] "Bb"d4 |';
+ for(const key of ['G + Bb','G → B♭'])assert.equal(live.apply(ABC,source,{key}).source,source);
+ const shifted=live.apply(ABC,source,{key:'A + C'});
+ assert.match(shifted.source,/^K:A$/m);assert.match(shifted.source,/\[K:C\]/);
+ const pitches=s=>ABC.parseOnly(s)[0].setUpAudio({chordsOff:true}).tracks.flat().filter(e=>e.cmd==='note').map(e=>e.pitch);
+ assert.deepEqual(Array.from(pitches(shifted.source),(p,i)=>p-pitches(source)[i]),[2,2]);
+ assert.throws(()=>live.apply(ABC,source,{key:'G + C'}),/forskellige skift/);
+ assert.throws(()=>live.apply(ABC,source.replace('[K:Bb]',''),{key:'G + Bb'}),/findes ikke/);
+});
