@@ -35,7 +35,7 @@ module-type: library
     options = options || {};
     var doc = options.host && options.host.ownerDocument || document;
     var win = doc.defaultView || window;
-    if (!options.host || !options.ABC) return { update: function () {}, destroy: function () {}, show: function () {}, toggle: function () {} };
+    if (!options.host || !options.ABC&&!options.videoOnly) return { update: function () {}, destroy: function () {}, show: function () {}, toggle: function () {} };
     var wiki = options.wiki;
     var isDanish = !wiki || !wiki.getTiddlerText || /da/i.test(wiki.getTiddlerText('$:/language', 'da'));
     function word(da, en) { return isDanish ? da : en; }
@@ -528,7 +528,7 @@ module-type: library
       doc.removeEventListener('webkitfullscreenchange',onFullscreenChange);
       if (wiki && wiki.removeEventListener) wiki.removeEventListener('change',onWikiChange);
     }
-    var lastSource=String(options.source||'');rebuild(lastSource);rebuildChords(lastSource);chooseTab('voices');setCollapsed(collapsed);
+    var lastSource=String(options.source||'');if(!options.videoOnly){rebuild(lastSource);rebuildChords(lastSource);}chooseTab('voices');setCollapsed(collapsed);
     if (options.initialFloating && options.anchor && !Number.isFinite(initial.x)) positionFromAnchor(options.anchor);
     layout(floating);
     win.addEventListener('resize',onResize);

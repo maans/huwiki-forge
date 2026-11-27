@@ -42,4 +42,6 @@ test('collapsing the mixer keeps the video player alive; changing audio source o
  panel.updatePlayback(true);assert.equal(frame.src,'about:blank','ABC playback stops the video');
  panel.selectTab('youtube');const replacement=f.doc.querySelector('iframe');panel.hide();assert.equal(replacement.src,'about:blank');
  panel.show();assert.ok(f.doc.querySelector('iframe'));panel.destroy();assert.equal(f.doc.querySelector('iframe'),null);
+ const pdfMixer=mixer.mount({host:f.host,wiki:f.wiki,title:'Wave',videoOnly:true,initialFloating:true});
+ assert.ok(pdfMixer.element.querySelector('iframe'),'PDF-only songs have a video mixer without loading an ABC engine');pdfMixer.destroy();
 });

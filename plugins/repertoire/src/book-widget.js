@@ -229,13 +229,10 @@ Book.prototype.selectItem=function(title,last){
 Book.prototype.openMiniMixer=function(anchor){
  if(this._score&&this._score.openMiniMixer)return this._score.openMiniMixer(anchor);
  if(this._videoMixer){this._videoMixer.show({anchor:anchor,floating:true});return;}
- var self=this,token=this._mixerToken,source=name(this.wiki,this.activeItem);
- return require("$:/plugins/huwiki/abc/loader.js").load().then(function(ABC){
-  if(token!==self._mixerToken||!self.host||!self.host.isConnected)return;
-  if(self._video){self._video.destroy();self._video=null;}
-  self._videoMixer=require("$:/plugins/huwiki/abc/floating-mixer.js").mount({ABC:ABC,host:self.host,wiki:self.wiki,title:source,source:"",videoOnly:true,initiallyVisible:false,initialFloating:true});
-  self._videoMixer.show({anchor:anchor,floating:true});
- });
+ var source=name(this.wiki,this.activeItem);
+ if(this._video){this._video.destroy();this._video=null;}
+ this._videoMixer=require("$:/plugins/huwiki/abc/floating-mixer.js").mount({host:this.host,wiki:this.wiki,title:source,source:"",videoOnly:true,initiallyVisible:false,initialFloating:true});
+ this._videoMixer.show({anchor:anchor,floating:true});
 };
 Book.prototype.onSwipeStart=function(event){
  this._swipe=null;
