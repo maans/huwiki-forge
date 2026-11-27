@@ -46,6 +46,7 @@ Book.prototype=new Widget();
 Book.prototype.disposeScore=function(){
  if(this._pdfPager){this._pdfPager.destroy();this._pdfPager=null;}
  this._practiceBaseline=null;this._practiceAppliedKey=null;
+ this._practiceWasEnabled=false;
  this._practiceScoreHost=null;this._practiceControls=null;
  if(this._observer){this._observer.disconnect();this._observer=null;}
  if(this._soundObserver){this._soundObserver.disconnect();this._soundObserver=null;}
@@ -278,7 +279,7 @@ Book.prototype.turn=function(delta){
 Book.prototype.applyPractice=function(){
  var score=this._score,control=score&&score._accompControls;
  if(!control||!control.config||!control.setConfig)return;
- if(!this._practiceBaseline){
+ if(!this._practiceBaseline||!this._practiceWasEnabled){
   // Preserve the original mix, without modifying its tiddler.
   this._practiceBaseline=JSON.parse(JSON.stringify(control.config()));
  }
@@ -290,6 +291,7 @@ Book.prototype.applyPractice=function(){
   enabled:this.practiceEnabled,metronome:this.practiceMetronome,voice:chosen
  });
  this._practiceAppliedKey=token;
+ this._practiceWasEnabled=!!this.practiceEnabled;
  // The existing ABC mixer updates independent GainNodes during playback,
  // including the metronome channel. The score's visual clock is untouched.
  control.setConfig(next,false);
@@ -622,7 +624,7 @@ Book.prototype._onKeyDown=function(event){
   }
  }
  if(event.key==="Escape"&&this.host&&this.host.classList.contains("huwrep-book-fullscreen")){
-  this.host.classList.remove("huwrep-book-fullscreen");this.updateMode();return;
+  this.host.classList.remove("huwrep-book-fullscreen");var full=this.host.querySelector(".huwrep-book-fullscreen-button");if(full)full.textContent="⛶ Fuldskærm";this.updateMode();return;
  }
 };
 exports["huwiki-repertoire-book"]=Book;

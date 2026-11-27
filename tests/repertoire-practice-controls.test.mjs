@@ -93,3 +93,11 @@ test('Choosing no muted voice while practice is off leaves the original mix acti
  assert.equal(f.book.practiceEnabled,false);assert.equal(f.controls.enabled.checked,false);
  assert.equal(f.controls.metronome.disabled,true);assert.deepEqual(f.current,f.original);
 });
+
+test('entering Spil selv preserves the sound settings most recently chosen outside practice',()=>{
+ const f=fixture();f.book.applyPractice();
+ const control=f.book._score._accompControls,next=clone(control.config());next.style='bossa';next.chordVolume=37;
+ control.setConfig(next,true);f.book.practiceEnabled=true;f.book.practiceMuteByItem[f.book.activeItem]='0';f.book._practiceAppliedKey=null;f.book.applyPractice();
+ f.book.practiceEnabled=false;f.book._practiceAppliedKey=null;f.book.applyPractice();
+ assert.equal(control.config().style,'bossa');assert.equal(control.config().chordVolume,37);
+});
