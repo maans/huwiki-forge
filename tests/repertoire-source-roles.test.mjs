@@ -79,11 +79,14 @@ test('source selection precedence is entry, folder, orchestra item, then piece',
  const before=f.snapshot();for(let n=0;n<5;n++)model.presentation(wiki,setlist,items[0]);assert.equal(f.snapshot(),before,'reading the effective source is side-effect free');
 });
 
-test('a requested full score is never substituted with its guitar chart or accompaniment ABC',async()=>{
+test('missing folder scores fall back to available notation and keep the saved preference',async()=>{
  const f=await fixture(),{model,wiki,setlist,items}=f;
  model.setPresentation(wiki,setlist,null,'score');
  const absent=model.presentation(wiki,setlist,items[1]);
- assert.equal(absent.role,'score');assert.equal(absent.format,'pdf');assert.equal(absent.pdf,'');assert.equal(absent.abc,false);
+ assert.equal(absent.role,'guitar');assert.equal(absent.format,'pdf');assert.equal(absent.pdf,'pdf/easy-money-guitar.pdf');assert.equal(absent.abc,false);
+ assert.equal(absent.fallbackFrom,'score');assert.equal(absent.missing,false);
+ assert.equal(wiki.getTiddler(setlist).fields['repertoire-source-role'],'score');
+ assert.equal(model.presentation(wiki,setlist,items[0]).role,'score','the next available full score still wins');
  assert.ok(!Array.from(model.availableViews(wiki,items[1]),view=>view.role).includes('score'));
  const before=f.snapshot();assert.throws(()=>model.setPresentation(wiki,setlist,items[1],'invented-role'));assert.equal(f.snapshot(),before);
 });
@@ -146,4 +149,26 @@ test('saving musical agreements preserves the same per-number source exception, 
  assert.deepEqual(override,{sourceRole:'leadsheet',sheetFormat:'abc'},'clearing musical differences cannot erase the independent notation choice');
  assert.equal(model.presentation(wiki,setlist,items[0]).role,'leadsheet');
  assert.equal(JSON.stringify(f.canonical.map(row=>wiki.getTiddler(row.title).fields)),f.original);
+});
+
+
+
+test('the whole repertoire uses the same fallback without changing songs or order',async()=>{
+ const f=await fixture(),{model,wiki,orchestra,items}=f;
+ f.patch('Easy Money',{'repertoire-pdf':'','repertoire-guitar-pdf':'pdf/easy-money-guitar.pdf'});
+ f.patch('$:/config/maans/repertoire/default-source-role',{text:'score'});
+ const before=f.snapshot(),view=model.presentation(wiki,orchestra,items[1]);
+ assert.equal(view.role,'guitar');assert.equal(view.missing,false);assert.equal(view.fallbackFrom,'score');
+ assert.equal(model.presentation(wiki,orchestra,items[0]).role,'chord-stabs','an available song preference remains authoritative');
+ assert.equal(f.snapshot(),before);
+});
+
+test('a missing PDF uses ABC, and a missing YouTube view never starts unrelated audio',async()=>{
+ const f=await fixture(),{model,wiki,setlist,items}=f;
+ f.patch('Easy Money',{'repertoire-pdf':'','repertoire-guitar-pdf':''});
+ model.setPresentation(wiki,setlist,null,'score');
+ const before=f.snapshot(),view=model.presentation(wiki,setlist,items[1]);
+ assert.equal(view.role,'leadsheet');assert.equal(view.abc,true);assert.equal(view.missing,false);assert.equal(f.snapshot(),before);
+ model.setPresentation(wiki,setlist,null,'youtube');
+ assert.equal(model.presentation(wiki,setlist,items[1]).missing,true);assert.equal(model.presentation(wiki,setlist,items[1]).role,'youtube');
 });

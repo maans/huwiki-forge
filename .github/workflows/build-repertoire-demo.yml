@@ -21,6 +21,7 @@ on:
       - 'tests/repertoire-practice-controls.test.mjs'
       - 'tests/repertoire-cues.test.mjs'
       - 'tests/repertoire-youtube.test.mjs'
+      - 'tests/repertoire-source-roles.test.mjs'
       - 'tests/repertoire-mixed-notation.test.mjs'
       - 'research/videos/recordings.json'
       - 'scripts/apply_repertoire_videos.py'
@@ -60,7 +61,7 @@ jobs:
       - name: Synchronize native Forge plugin registry
         run: node scripts/build-forge-plugin-library.mjs
       - name: Verify orchestra, setlist and iPad book navigation
-        run: node --test tests/repertoire-youtube.test.mjs tests/repertoire-mixed-notation.test.mjs tests/repertoire-cues.test.mjs tests/abc-cue-print.test.mjs tests/repertoire-edition.test.mjs tests/repertoire-practice-controls.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-chord-overview.test.mjs
+        run: node --test tests/repertoire-source-roles.test.mjs tests/repertoire-youtube.test.mjs tests/repertoire-mixed-notation.test.mjs tests/repertoire-cues.test.mjs tests/abc-cue-print.test.mjs tests/repertoire-edition.test.mjs tests/repertoire-practice-controls.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-chord-overview.test.mjs
       - name: Assemble interactive Repertoire demo with original ABC scores
         run: node scripts/assemble-silba-etno-repertoire.mjs
       - name: Install browser controller for iPad reader acceptance

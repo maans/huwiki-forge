@@ -324,3 +324,19 @@ test('touch page turns remain available without entering a second reader mode',a
  f.book.disposeScore();
 });
 
+
+
+
+test('historical folders and the whole repertoire render existing charts under a missing score preference',async()=>{
+ const f=await drawnBookFixture(),orch=f.wiki.getTiddler(f.item).fields['orchestra-title'];
+ f.wiki.addTiddler(new Tiddler(f.wiki.getTiddler('Four Brothers'),{'repertoire-pdf':'','repertoire-guitar-pdf':'pdf/four-brothers-guitar.pdf'}));
+ f.wiki.addTiddler(new Tiddler({title:'$:/config/maans/repertoire/default-source-role',text:'score'}));
+ f.model.setPresentation(f.wiki,f.set,null,'score');
+ const saved=()=>JSON.stringify([...f.wiki.rows.values()].map(t=>t.fields).filter(t=>!t.title.startsWith('$:/temp/')));
+ const before=saved();
+ f.book.draw();assert.equal(f.book._selectedNotation.role,'guitar');assert.ok(f.host.querySelector('iframe'));assert.equal(f.host.querySelector('.huwrep-book-source-unavailable'),null);
+ f.book.selectSetlist(orch);assert.equal(f.book._selectedNotation.role,'guitar');assert.ok(f.host.querySelector('iframe'));
+ assert.equal(f.host.querySelector('.huwrep-book-source-unavailable'),null);
+ assert.equal(saved(),before);
+ f.book.disposeScore();
+});

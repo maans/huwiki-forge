@@ -87,8 +87,18 @@ function presentation(wiki,setlistTitle,itemTitle){
  var format=override.sheetFormat||setFields["repertoire-sheet-format"]||itemFields["repertoire-sheet-format"]||f["repertoire-sheet-format"]||"";if(format==="chords")format="abc";
  var views=availableViews(wiki,t),selected=role?views.find(function(v){return v.role===role;}):null;
  if(!role){selected=views.find(function(v){return format?v.format===format:v.abc;})||(!format?views[0]:null);role=selected&&selected.role||"";}
- if(selected&&format&&selected.format!==format)selected=null;
- return Object.assign({abc:false,pdf:"",sourceTitle:"",role:role,format:format||(role==="youtube"?"youtube":/^(guitar|score|pdf)$/.test(role)?"pdf":"abc"),label:viewLabels[role]||"Noder",category:category(t),missing:!selected},selected||{});
+ // A folder preference must not hide music that exists in another edition.
+ // Keep the saved preference so the next song can use its requested source.
+ var requestedRole=role,preferredFormat=format||(/^(guitar|score|pdf)$/.test(role)?"pdf":/^(leadsheet|chord-stabs|abc)$/.test(role)?"abc":"");
+ if(!selected&&role!=='youtube'&&format!=='youtube'){
+  var notationViews=views.filter(function(v){return v.role!=='youtube';});
+  var counterpart=role==='guitar'?'chord-stabs':role==='score'?'abc':'';
+  selected=notationViews.find(function(v){return counterpart&&v.role===counterpart;})||
+   notationViews.find(function(v){return preferredFormat&&v.format===preferredFormat;})||
+   notationViews.find(function(v){return v.role==='leadsheet';})||notationViews[0]||null;
+ }
+
+ return Object.assign({abc:false,pdf:"",sourceTitle:"",role:role,format:format||(role==="youtube"?"youtube":/^(guitar|score|pdf)$/.test(role)?"pdf":"abc"),label:viewLabels[role]||"Noder",category:category(t),missing:!selected,fallbackFrom:selected&&requestedRole&&selected.role!==requestedRole?requestedRole:""},selected||{});
 }
 function setPresentation(wiki,setlistTitle,itemTitle,role){
  if(role&&!Object.prototype.hasOwnProperty.call(viewLabels,role))throw Error("Ukendt nodevisning.");
@@ -271,3 +281,4 @@ exports.baseline=baseline;
 exports.effective=effective;
 exports.saveArrangement=saveArrangement;
 })();
+
