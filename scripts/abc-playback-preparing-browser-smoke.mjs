@@ -46,12 +46,14 @@ try{
   style.textContent='body{margin:0;background:#fff}.preparing-fixture{box-sizing:border-box;width:calc(100% - 350px);padding:24px}.tc-sidebar-scrollable{position:fixed;top:20px;right:15px;width:305px;max-height:940px;overflow:auto}.tc-sidebar-header{height:48px}';
   document.head.appendChild(style);
   const sidebar=document.createElement('aside');sidebar.className='tc-sidebar-scrollable';
+  sidebar.style.cssText='position:fixed;display:block;visibility:visible;top:20px;right:15px;left:auto;width:305px;max-height:940px;overflow:auto;transform:none';
   sidebar.innerHTML='<div><header class="tc-sidebar-header">Playback preparation test</header></div>';document.body.appendChild(sidebar);
  });
  async function setup(mode,sidebar=false,language='da'){
   await page.evaluate(async({mode,sidebar,language})=>{
    const previous=window.preparingHarness;
    if(previous){if(previous.player)previous.player.destroy();else if(previous.reader)previous.reader.onDestroy();previous.host.remove();}
+   $tw.wiki.setText('$:/state/sidebar','text',null,'yes');window.scrollTo(0,0);
    $tw.wiki.setText('$:/language','text',null,language==='da'?'$:/languages/da-DK':'$:/languages/en-GB');
    const ABC=await $tw.modules.execute('$:/plugins/huwiki/abc/loader.js').load();
    const Reserve=$tw.modules.execute('$:/plugins/huwiki/abc/reserve-mixer.js');
@@ -137,6 +139,17 @@ try{
 
  await setup('minimal',true);
  await page.locator('#preparing-fixture .huwabc-mini-open').click();
+ // The production mixer deliberately remembers floating placement across
+ // scores. Exercise its real Dock control before checking the docked case.
+ if((await state()).floating){
+  const dock=page.locator('.huwabc-mini-mixer-detach');
+  assert.equal(await dock.textContent(),'I sidepanel','A remembered floating mixer offers its normal Dock action');
+  await dock.click();
+ }
+ await page.waitForFunction(()=>{
+  const panel=document.querySelector('.huwabc-mini-mixer');
+  return panel&&!panel.hidden&&!panel.classList.contains('huwabc-mini-mixer--floating')&&panel.getBoundingClientRect().width>0;
+ });
  assert.equal((await state()).floating,false,'This case uses the docked sidebar mixer');
  await page.locator('.huwabc-mini-mixer-play').click();
  await assertBusy('sidebar mixer starts primary transport');
