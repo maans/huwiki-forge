@@ -261,3 +261,12 @@ test('a standalone number uses the same source choices without saving a syntheti
  assert.equal(JSON.stringify([...f.wiki.rows.values()].map(t=>t.fields)),before,'reading a single title cannot change setlists, musical agreements or source data');
  f.book.disposeScore();
 });
+
+test('touch page turns remain available without entering a second reader mode',async()=>{
+ const f=await drawnBookFixture();f.book.pieceTitle='Four Brothers';f.book.singleRole='leadsheet';f.book.draw();
+ const turns=[];f.book.turn=delta=>turns.push(delta);const target=f.host.querySelector('.huwrep-book-stage');
+ const touch={pointerType:'touch',isPrimary:true,pointerId:1,target,clientX:220,clientY:80};
+ f.book.onSwipeStart(touch);f.book.onSwipeEnd({...touch,clientX:100,clientY:85});assert.deepEqual(turns,[1]);
+ f.book.onSwipeStart(touch);f.book.onSwipeEnd({...touch,clientX:200,clientY:200});assert.deepEqual(turns,[1],'vertical scrolling does not change a page');
+ f.book.disposeScore();
+});

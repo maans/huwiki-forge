@@ -66,6 +66,8 @@ Book.prototype.onDestroy=function(){
  this.disposeScore();
  if(this.host&&this._boundKeys)this.host.removeEventListener("keydown",this._boundKeys);
  if(this.host&&this._readerBoundary)this.host.removeEventListener("huwabc-reader-boundary",this._readerBoundary);
+ if(this.host&&this._swipeStart)this.host.removeEventListener("pointerdown",this._swipeStart);
+ if(this.host&&this._swipeEnd)this.host.removeEventListener("pointerup",this._swipeEnd);
  this._boundKeys=null;this._readerBoundary=null;
  if(this._win&&this._resize)this._win.removeEventListener("resize",this._resize);
  if(this._win&&this._orientation)this._win.removeEventListener("orientationchange",this._orientation);
@@ -95,6 +97,8 @@ Book.prototype.render=function(parent,nextSibling){
  this._orientation=this.updateMode.bind(this);
  this._boundKeys=this._onKeyDown.bind(this);
  host.addEventListener("keydown",this._boundKeys);
+ this._swipeStart=this.onSwipeStart.bind(this);this._swipeEnd=this.onSwipeEnd.bind(this);
+ host.addEventListener("pointerdown",this._swipeStart,{passive:true});host.addEventListener("pointerup",this._swipeEnd,{passive:true});
  var self=this;
  this._readerBoundary=function(event){
   if(!event||!event.detail)return;
@@ -204,6 +208,17 @@ Book.prototype.changeItemView=function(role){if(this.pieceTitle)this.singleRole=
 Book.prototype.selectItem=function(title,last){
  this.activeItem=title;this.lastPage=!!last;
  this.draw();
+};
+Book.prototype.onSwipeStart=function(event){
+ this._swipe=null;
+ if(this._pdfPager||event.pointerType!=="touch"||!event.isPrimary||!event.target||!event.target.closest(".huwrep-book-stage"))return;
+ this._swipe={id:event.pointerId,x:event.clientX,y:event.clientY};
+};
+Book.prototype.onSwipeEnd=function(event){
+ var start=this._swipe;this._swipe=null;
+ if(!start||start.id!==event.pointerId)return;
+ var dx=event.clientX-start.x,dy=event.clientY-start.y;
+ if(Math.abs(dx)>85&&Math.abs(dx)>Math.abs(dy)*1.4)this.turn(dx>0?-1:1);
 };
 Book.prototype.pager=function(){
  if(this._pdfPager)return this._pdfPager;

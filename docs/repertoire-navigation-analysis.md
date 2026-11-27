@@ -41,7 +41,7 @@ Test med Birdlands 34 leadsheets, de fire guitar-ABC-arrangementer, originale gu
 
 ## Validering
 
-- 71 komponent- og integrationstests består, herunder blandede PDF/ABC-mapper, sæt-undtagelser, originalnoder, tastaturnavigation, redigering og seneste lydvalg før Spil selv.
+- 72 komponent- og integrationstests består, herunder blandede PDF/ABC-mapper, sæt-undtagelser, originalnoder, tastaturnavigation, redigering og seneste lydvalg før Spil selv.
 - En automatiseret Chromium-test mod de faktisk samlede wikier gennemløber alle 34 leadsheets og de fire guitararrangementer. Den kontrollerer én afspiller, synlige lydvalg, ændring af stil, PDF/ABC-skift med bevaret fuldskærm, en ren PDF, biblioteksklik uden ændring af sætlister og et dirigentpartitur. Skærmbredderne er 1280 og 1024 pixels.
 - Musikalske sekvenser kontrolleres særskilt: melodi, bas, akkorder og trommer kan afspilles i de 34 leadsheets, og originale guitar-ABC-kilder bevares.
 - En PDF bruger først sin tilsvarende arrangement-ABC, når den findes. Ellers kan et navngivet leadsheet levere lyd. Lydvalget og fravær af automatisk PDF-nodefølge fremgår ved afspilleren.
