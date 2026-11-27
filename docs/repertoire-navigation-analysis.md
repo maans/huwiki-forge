@@ -39,4 +39,11 @@ Rollerne er arbejdssituationer, ikke konti eller adgangsrettigheder. Samme bruge
 
 Test med Birdlands 34 leadsheets, de fire guitar-ABC-arrangementer, originale guitar-PDF'er, et fuldt partitur og et nummer uden ABC. Kontrollér direkte links, blandede mapper, standardvalg og undtagelser, afspilning, lydvalg, sideskift, fuldskærm, redigering og tilbagevenden. Kontrollér også at visninger ikke ændrer rækkefølge eller originalnoder, og at kun én afspiller lever ad gangen.
 
-Den forbundne browserstyring var ikke tilgængelig under gennemgangen. Grundlaget er de aktuelle publicerede tiddlere, visningskoden og komponent-/renderingstests. En visuel afprøvning i den faktiske Mac/iPad-browser er derfor en særskilt begrænsning, som ikke må omtales som gennemført.
+## Validering
+
+- 71 komponent- og integrationstests består, herunder blandede PDF/ABC-mapper, sæt-undtagelser, originalnoder, tastaturnavigation, redigering og seneste lydvalg før Spil selv.
+- En automatiseret Chromium-test mod de faktisk samlede wikier gennemløber alle 34 leadsheets og de fire guitararrangementer. Den kontrollerer én afspiller, synlige lydvalg, ændring af stil, PDF/ABC-skift med bevaret fuldskærm, en ren PDF, biblioteksklik uden ændring af sætlister og et dirigentpartitur. Skærmbredderne er 1280 og 1024 pixels.
+- Musikalske sekvenser kontrolleres særskilt: melodi, bas, akkorder og trommer kan afspilles i de 34 leadsheets, og originale guitar-ABC-kilder bevares.
+- En PDF bruger først sin tilsvarende arrangement-ABC, når den findes. Ellers kan et navngivet leadsheet levere lyd. Lydvalget og fravær af automatisk PDF-nodefølge fremgår ved afspilleren.
+
+Den forbundne lokale browserstyring var ikke tilgængelig. Testbrowseren er Chromium; fysisk afprøvning på brugerens Mac og iPad/Safari er ikke udført. Lydtestene beviser MIDI-hændelser og indstillinger, ikke den faktiske højttalerlyd.

@@ -215,7 +215,7 @@ test('one book switches its dated-folder defaults and per-number source roles wi
  const folder=value=>{const select=f.host.querySelector('.huwrep-book-folder-view');assert.ok(select);select.value=value;select.dispatch('change');};
  const number=value=>{const select=f.host.querySelector('.huwrep-book-source');assert.ok(select);select.value=value;select.dispatch('change');};
  const pdf=()=>new URL((f.host.querySelector('iframe').getAttribute('src')||f.host.querySelector('iframe').src)).searchParams.get('file');
- folder('guitar');assert.match(pdf(),/four-brothers-guitar\.pdf$/);assert.equal(f.book._score.title,'Sources/Four Brothers · Lead','PDF sound is supplied by its named leadsheet');
+ folder('guitar');assert.match(pdf(),/four-brothers-guitar\.pdf$/);assert.equal(f.book._score.title,'Four Brothers','guitar PDF prefers its matching arrangement ABC over an alternative leadsheet');
  number('chord-stabs');assert.equal(f.book._score.title,'Four Brothers');assert.equal(f.host.querySelector('iframe'),null);
  folder('score');assert.equal(f.book._score.title,'Four Brothers','the per-number exception survives changes to folder default');
  number('');assert.match(pdf(),/four-brothers-score\.pdf$/);

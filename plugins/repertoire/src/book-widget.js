@@ -538,7 +538,7 @@ Book.prototype.draw=function(){
   if(itemRole&&!variants.some(function(v){return v.role===itemRole;})){var unavailable=choice(doc,itemRole,"Dette nummer · "+(model.viewLabels[itemRole]||itemRole)+" (ikke tilgængelig)");unavailable.disabled=true;sourceSelect.appendChild(unavailable);}
   sourceSelect.value=itemRole;sourceSelect.addEventListener("change",function(){self.changeItemView(sourceSelect.value);});header.appendChild(sourceSelect);
  }
- var audioView=notation.abc?notation:variants.find(function(v){return v.role==="leadsheet";})||variants.find(function(v){return v.abc;});
+ var audioView=notation.abc?notation:variants.find(function(v){return notation.role==="guitar"&&v.role==="chord-stabs"||notation.role==="score"&&v.role==="abc";})||variants.find(function(v){return v.role==="leadsheet";})||variants.find(function(v){return v.abc;});
  this._selectedNotation=notation;
  if(audioView)settingsBody.appendChild(btn(doc,notation.abc?"Redigér ABC-noder":"Redigér lydkildens ABC-noder",function(){if(self._score&&self._score._reader)self._score._reader.openEditor();}));
  this._performance=Performance.create(this,notation,audioView);host.insertBefore(this._performance.element,stage);
