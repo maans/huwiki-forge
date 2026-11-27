@@ -84,7 +84,7 @@ try{
     h.widget=$tw.wiki.makeWidget(parser,{document});h.widget.render(host,null);
    }
    h.readerFrom=function find(widget){if(widget?._audioController)return widget;for(const child of widget?.children||[]){const found=find(child);if(found)return found;}return null;};
-   h.main=()=>host.querySelector('.abcjs-midi-start');
+   h.main=()=>host.querySelector('.abcjs-midi-start')||h.pager?.element.querySelector('.abcjs-midi-start');
    h.mini=()=>document.querySelector('.huwabc-mini-mixer-play');
    h.release=()=>{const item=h.pending.shift();if(!item)throw Error('No held resume');item.resolve();};
    h.reject=()=>{const item=h.pending.shift();if(!item)throw Error('No held resume');item.reject(new Error('Deterministic resume failure'));};
@@ -164,7 +164,9 @@ try{
 
  await setup('advanced');
  await page.locator('#preparing-fixture .huwabc-page-desk').click();
- await page.locator('#preparing-fixture .huwabc-page-mixer').click();
+ // Fullscreen owns a body-level surface outside the original score fixture.
+ await page.locator('.huwabc-page-is-desk .huwabc-page-mixer').click();
+ assert.equal(await page.locator('.huwabc-page-is-desk .huwabc-mini-mixer--floating').count(),1,'The mixer stays inside its fullscreen owner');
  await page.locator('.huwabc-mini-mixer-play').click();
  await assertBusy('advanced music stand and floating mixer');
  assert.equal(await page.locator('.huwabc-page-is-desk .abcjs-midi-start[aria-busy="true"]').count(),1,'Music stand retains the busy shared transport');
@@ -174,7 +176,7 @@ try{
  await page.evaluate(()=>window.preparingHarness.release());
  await page.waitForTimeout(50);
  assert.equal((await state()).starts,0,'Cancelled advanced preparation never starts later');
- await page.locator('#preparing-fixture .huwabc-page-desk').click();
+ await page.locator('.huwabc-page-is-desk .huwabc-page-desk').click();
 
  await setup('advanced');
  await page.locator('#preparing-fixture .abcjs-midi-start').click();
