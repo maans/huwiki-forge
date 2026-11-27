@@ -335,3 +335,16 @@
 /* ABCJS reserves 260px for its full transport. The compact toolbar only needs
    the visible play/stop icons, including on a portrait iPad. */
 .huwrep-session .huwrep-compact-transport .abcjs-inline-audio {width:auto!important;min-width:0!important;max-width:none!important}
+
+/* A recording is a peer of PDF and ABC, using the same compact book header. */
+.huwrep-youtube {box-sizing:border-box;width:100%;height:100%;min-height:300px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.6rem;padding:.65rem;background:#101917;color:#fff;overflow:auto;}
+.huwrep-youtube-frame {display:block;flex:1 1 auto;width:100%;max-width:1440px;min-height:200px;aspect-ratio:16/9;border:0;background:#000;}
+.huwrep-youtube-caption {flex:0 0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:center;gap:.35rem .9rem;width:100%;max-width:1440px;text-align:center;}
+.huwrep-youtube-caption p {width:100%;margin:0;}
+.huwrep-youtube-caption .huwrep-muted {color:#d2ded9;}
+.huwrep-youtube-caption a {background:#f4faf7;color:#173c31;}
+.huwrep-video-active .huwrep-book-stage {min-height:320px;}
+.huwrep-book-fullscreen.huwrep-video-active .huwrep-book-stage {min-height:0;}
+.huwrep-video-active .huwrep-performance {display:none!important;}
+.huwrep-video-edit label {display:block;}
+.huwrep-video-edit input {width:100%;box-sizing:border-box;margin:.4rem 0;}

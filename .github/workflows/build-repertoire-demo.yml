@@ -19,6 +19,10 @@ on:
       - 'tests/repertoire-edition.test.mjs'
       - 'tests/repertoire-practice-controls.test.mjs'
       - 'tests/repertoire-cues.test.mjs'
+      - 'tests/repertoire-youtube.test.mjs'
+      - 'tests/repertoire-mixed-notation.test.mjs'
+      - 'research/videos/recordings.json'
+      - 'scripts/apply_repertoire_videos.py'
       - 'scripts/repertoire-cues-browser-smoke.mjs'
       - 'scripts/repertoire-browser-smoke.mjs'
       - 'scripts/repertoire-compact-browser-smoke.mjs'
@@ -55,7 +59,7 @@ jobs:
       - name: Synchronize native Forge plugin registry
         run: node scripts/build-forge-plugin-library.mjs
       - name: Verify orchestra, setlist and iPad book navigation
-        run: node --test tests/repertoire-cues.test.mjs tests/abc-cue-print.test.mjs tests/repertoire-edition.test.mjs tests/repertoire-practice-controls.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-chord-overview.test.mjs
+        run: node --test tests/repertoire-youtube.test.mjs tests/repertoire-mixed-notation.test.mjs tests/repertoire-cues.test.mjs tests/abc-cue-print.test.mjs tests/repertoire-edition.test.mjs tests/repertoire-practice-controls.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-chord-overview.test.mjs
       - name: Assemble interactive Repertoire demo with original ABC scores
         run: node scripts/assemble-silba-etno-repertoire.mjs
       - name: Install browser controller for iPad reader acceptance
@@ -99,6 +103,8 @@ jobs:
         run: |
           node scripts/build-forge-home.mjs
           python3 scripts/update_abc_plugin.py --title '$:/plugins/huwiki/repertoire' --plugin plugins/repertoire/dist/plugin.json index.html editions/akustisk-elektrisk-repertoire/index.html
+      - name: Merge reviewed repertoire recording choices
+        run: python3 scripts/apply_repertoire_videos.py
       - name: Commit editable demo HTML to the existing Forge Pages directory
         run: |
           git config user.name 'github-actions[bot]'
@@ -106,11 +112,12 @@ jobs:
           # The ABC package is published by its own workflow. Keep this job
           # focused on the assembled demo so concurrent builds can rebase.
           git restore -- plugins/abc/dist/plugin.json
-          git add -- plugins/repertoire/dist/plugin.json library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json editions/akustisk-elektrisk-repertoire/index.html editions/silba-atno-repertoire/index.html
+          git add -- editions/silba-atno-repertoire/tiddlers editions/akustisk-elektrisk-repertoire/tiddlers plugins/repertoire/dist/plugin.json library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json editions/akustisk-elektrisk-repertoire/index.html editions/silba-atno-repertoire/index.html
           if ! git diff --cached --quiet; then
             git commit -m "build(repertoire): publish interactive 17-score Nodebog demo"
             git fetch origin main
             git rebase origin/main
             git push origin HEAD:main
           fi
+
 

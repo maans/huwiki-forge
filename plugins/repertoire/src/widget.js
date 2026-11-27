@@ -269,7 +269,7 @@ Repertoire.prototype.draw=function(){
  if(this.setlistTitle){
   var viewSetTitle=this.setlistTitle,viewSet=wiki.getTiddler(viewSetTitle),viewItems=model.entries(wiki,viewSetTitle);
   if(!viewItems.length)viewItems=known.map(function(item){return item.fields.title;});
-  var folderViews=Object.create(null),viewOrder=["leadsheet","guitar","chord-stabs","score","abc","pdf"];
+  var folderViews=Object.create(null),viewOrder=["leadsheet","guitar","chord-stabs","score","abc","pdf","youtube"];
   viewItems.forEach(function(id){model.availableViews(wiki,id).forEach(function(view){folderViews[view.role]=view;});});
   var defaultViewRole=viewSet&&viewSet.fields["repertoire-source-role"]||"";
   if(!defaultViewRole)defaultViewRole=wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","")||"";

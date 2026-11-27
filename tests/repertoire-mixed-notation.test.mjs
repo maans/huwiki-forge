@@ -136,6 +136,7 @@ test('keyboard page turns use the same PDF spread navigation',async()=>{
 
 async function drawnBookFixture(){
  const f=await pdfFixture();f.pager.destroy();
+ const video={};runInNewContext(await read('youtube-video.js'),{exports:video});
  const notation={title:'Four Brothers','abc-source':'X:1\nT:Four Brothers\nK:F\nF4|','repertoire-pdf':'pdf/four-brothers.pdf','repertoire-sheet-format':'pdf','repertoire-category':'leadsheet','repertoire-abc-label':'Leadsheet',text:'Keep notes'};
  f.wiki.addTiddler(new Tiddler(notation));
  const orch=f.model.orchestra(f.wiki,'Birdland'),item=f.model.addItem(f.wiki,orch,notation.title).title,set=f.model.createSetlist(f.wiki,orch,'Concert');f.model.setEntries(f.wiki,set,[item]);
@@ -148,6 +149,7 @@ async function drawnBookFixture(){
   if(name.endsWith('/performance-surface.js'))return performanceSurface;
   if(name.endsWith('/model.js'))return f.model;if(name.endsWith('/book-layout.js'))return f.layout;
   if(name.endsWith('/pdf-score.js'))return f.pdf;
+  if(name.endsWith('/youtube-video.js'))return video;
   if(name.endsWith('/score-widget.js'))return {'huwiki-abc':Score};
   if(name.endsWith('/print.js'))return {cueLabel:()=> 'Stiknoder'};
   if(name.endsWith('/live-score.js'))return {apply:(_ABC,source)=>({source})};
@@ -158,6 +160,17 @@ async function drawnBookFixture(){
  function state(data){const frame=f.host.querySelector('iframe');for(const fn of [...f.listeners.get('message')||[]])fn({data,source:frame?.contentWindow,origin:'https://example.test'});}
  return {...f,book,item,set,notation,scoreInstances,state};
 }
+
+test('switching ABC to YouTube stops its audio engine and switching back unloads the video',async()=>{
+ const f=await drawnBookFixture();f.model.setVideo(f.wiki,'Four Brothers','https://www.youtube.com/watch?v=8UNtQpMMSEM');
+ f.book.changeItemView('leadsheet');const score=f.book._score;
+ f.book.changeItemView('youtube');
+ assert.equal(score.destroyed,true);assert.equal(f.book._score,null);assert.equal(f.host.querySelector('.test-abc-score'),null);
+ const frame=f.host.querySelector('.huwrep-youtube-frame');assert.ok(frame);assert.equal(f.book._performance.element.hidden,true);
+ const order=JSON.stringify(f.model.entries(f.wiki,f.set));
+ f.book.changeItemView('leadsheet');assert.equal(frame.src,'about:blank');assert.equal(f.host.querySelector('.huwrep-youtube-frame'),null);assert.ok(f.book._score);
+ assert.equal(JSON.stringify(f.model.entries(f.wiki,f.set)),order);f.book.disposeScore();
+});
 
 test('switching PDF and ABC inside one song disposes the old view and preserves notation and setlist identity',async()=>{
  const f=await drawnBookFixture(),before=JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),order=JSON.stringify(f.model.entries(f.wiki,f.set));

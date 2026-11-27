@@ -41,7 +41,25 @@ function work(wiki,value){
 function abcAvailable(t){var f=t&&t.fields||{};return typeof f["abc-source"]==="string"&&!!f["abc-source"].trim()||f.type==="text/vnd.abc"&&!!String(f.text||"").trim();}
 function pdfReference(wiki,value){var ref=String(value||""),asset=ref&&wiki.getTiddler(ref);return asset?String(asset.fields._canonical_uri||""):ref;}
 function configuredRole(wiki){return wiki.getTiddlerText?String(wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","")||""):"";}
-var viewLabels={leadsheet:"Leadsheet (ABC)",guitar:"Guitar (PDF)","chord-stabs":"Guitar · chord stabs (ABC)",score:"Partitur (PDF)",abc:"ABC",pdf:"PDF"};
+var viewLabels={leadsheet:"Leadsheet (ABC)",guitar:"Guitar (PDF)","chord-stabs":"Guitar · chord stabs (ABC)",score:"Partitur (PDF)",abc:"ABC",pdf:"PDF",youtube:"YouTube"};
+// Accept only a single YouTube video, never arbitrary iframe HTML or hosts.
+function youtubeId(value){
+ var text=String(value||'').trim(),match;
+ if(/^[A-Za-z0-9_-]{11}$/.test(text))return text;
+ if((match=/^https?:\/\/(?:www\.)?youtu\.be\/([A-Za-z0-9_-]{11})(?:[?#]|$)/i.exec(text)))return match[1];
+ if((match=/^https?:\/\/(?:(?:www|m|music)\.)?youtube\.com\/(?:embed|shorts|live)\/([A-Za-z0-9_-]{11})(?:[?#]|$)/i.exec(text)))return match[1];
+ if(/^https?:\/\/(?:(?:www|m|music)\.)?youtube\.com\/watch\?/i.test(text)&&(match=/[?&]v=([A-Za-z0-9_-]{11})(?:[&#]|$)/.exec(text)))return match[1];
+ return '';
+}
+function video(wiki,value){
+ var t=work(wiki,value),f=t&&t.fields||{},id=youtubeId(f['repertoire-youtube']);
+ return {id:id,title:String(f['repertoire-youtube-title']||''),match:String(f['repertoire-youtube-match']||''),note:String(f['repertoire-youtube-note']||''),source:String(f['repertoire-youtube-source']||''),start:Math.max(0,parseInt(f['repertoire-youtube-start'],10)||0)};
+}
+function setVideo(wiki,title,url){
+ var t=work(wiki,title);if(!t)throw Error('Nummeret findes ikke.');
+ var id=youtubeId(url);if(String(url||'').trim()&&!id)throw Error('Indsæt et gyldigt link til én YouTube-video.');
+ update(wiki,t,{'repertoire-youtube':id?'https://www.youtube.com/watch?v='+id:'','repertoire-youtube-match':id?'manual':'','repertoire-youtube-title':'','repertoire-youtube-note':'','repertoire-youtube-source':'','repertoire-youtube-start':''});
+}
 function availableViews(wiki,value){
  var t=work(wiki,value),f=t&&t.fields||{},out=[],defaultRole=configuredRole(wiki),generic=pdfReference(wiki,f["repertoire-pdf"]||(f.type==="application/pdf"?f._canonical_uri:""));
  var guitar=pdfReference(wiki,f["repertoire-guitar-pdf"])||(defaultRole!=="score"&&defaultRole!==""?generic:""),score=pdfReference(wiki,f["repertoire-score-pdf"])||(defaultRole==="score"?generic:"");
@@ -56,6 +74,7 @@ function availableViews(wiki,value){
  if(abcAvailable(stabs))add("chord-stabs",stabs);else if(abcAvailable(t)&&!canonicalLead)add(guitar||defaultRole==="guitar"||f["repertoire-sheet-format"]==="chords"||f["repertoire-source-role"]==="chord-stabs"?"chord-stabs":"abc",t);
  if(score)add("score",t,score);
  if(generic&&!guitar&&!score)add("pdf",t,generic);
+ var clip=video(wiki,t);if(clip.id)out.push({role:"youtube",label:"YouTube",format:"youtube",abc:false,pdf:"",sourceTitle:f.title||"",video:clip});
  return out;
 }
 function notation(wiki,value){
@@ -69,12 +88,12 @@ function presentation(wiki,setlistTitle,itemTitle){
  var views=availableViews(wiki,t),selected=role?views.find(function(v){return v.role===role;}):null;
  if(!role){selected=views.find(function(v){return format?v.format===format:v.abc;})||(!format?views[0]:null);role=selected&&selected.role||"";}
  if(selected&&format&&selected.format!==format)selected=null;
- return Object.assign({abc:false,pdf:"",sourceTitle:"",role:role,format:format||(/^(guitar|score|pdf)$/.test(role)?"pdf":"abc"),label:viewLabels[role]||"Noder",category:category(t),missing:!selected},selected||{});
+ return Object.assign({abc:false,pdf:"",sourceTitle:"",role:role,format:format||(role==="youtube"?"youtube":/^(guitar|score|pdf)$/.test(role)?"pdf":"abc"),label:viewLabels[role]||"Noder",category:category(t),missing:!selected},selected||{});
 }
 function setPresentation(wiki,setlistTitle,itemTitle,role){
  if(role&&!Object.prototype.hasOwnProperty.call(viewLabels,role))throw Error("Ukendt nodevisning.");
  var set=wiki.getTiddler(setlistTitle);if(!set)throw Error("Vælg en nodemappe eller sætliste.");
- var format=/^(guitar|score|pdf)$/.test(role)?"pdf":"abc";
+ var format=role==="youtube"?"youtube":/^(guitar|score|pdf)$/.test(role)?"pdf":"abc";
  if(!itemTitle){update(wiki,set,{"repertoire-source-role":role,"repertoire-sheet-format":role?format:""});return;}
  if(entries(wiki,setlistTitle).indexOf(itemTitle)<0)throw Error("Nummeret findes ikke i denne nodemappe.");
  var changes=overrides(set),next=Object.assign({},changes[itemTitle]||{});
@@ -235,7 +254,7 @@ function saveArrangement(wiki,itemTitle,setlistTitle,values,scope){
 }
 exports.orchestras=orchestras;
 exports.orchestra=orchestra;
-exports.presentation=presentation;exports.availableViews=availableViews;exports.setPresentation=setPresentation;exports.viewLabels=viewLabels;exports.songs=songs;exports.category=category;exports.notation=notation;exports.matches=matches;exports.setCategory=setCategory;
+exports.youtubeId=youtubeId;exports.video=video;exports.setVideo=setVideo;exports.presentation=presentation;exports.availableViews=availableViews;exports.setPresentation=setPresentation;exports.viewLabels=viewLabels;exports.songs=songs;exports.category=category;exports.notation=notation;exports.matches=matches;exports.setCategory=setCategory;
 exports.parseTitles=parseTitles;
 exports.addPiece=addPiece;
 exports.items=items;
