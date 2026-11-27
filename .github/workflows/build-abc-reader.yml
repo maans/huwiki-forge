@@ -101,9 +101,16 @@ jobs:
           git add -- plugins/abc/dist/plugin.json library/plugins/registry.json index.html editions/forge/tiddlers/edition-index.json editions/forge/tiddlers/featured-plugins.json editions/akustisk-elektrisk-repertoire/index.html
           if ! git diff --cached --quiet; then
             git commit -m "build(abc): publish musician reader and synchronized plugin registry"
-            git fetch origin main
-            git rebase origin/main
-            git push origin HEAD:main
+            pushed=0
+            for attempt in 1 2 3 4; do
+              git fetch origin main
+              git rebase origin/main
+              if git push origin HEAD:main; then
+                pushed=1
+                break
+              fi
+            done
+            test "$pushed" -eq 1
           fi
 
 
