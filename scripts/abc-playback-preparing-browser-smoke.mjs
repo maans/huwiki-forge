@@ -10,13 +10,18 @@ import {chromium} from 'playwright-core';
 
 const root=path.resolve(import.meta.dirname,'..');
 const plugin=JSON.parse(await readFile(path.join(root,'plugins/abc/dist/plugin.json'),'utf8'));
+const danish=JSON.parse(await readFile(path.join(root,'languages/da-DK/plugin.json'),'utf8'));
+assert.equal(danish['plugin-type'],'language','Use the real packaged Danish language plugin');
 let replaced=0;
 const html=(await readFile(path.join(root,'editions/silba-atno-repertoire/index.html'),'utf8')).replace(
  /(<script\b[^>]*class=["'][^"']*\btiddlywiki-tiddler-store\b[^"']*["'][^>]*>)([\s\S]*?)(<\/script>)/g,
  (all,open,body,close)=>{
   const rows=JSON.parse(body);
   if(!Array.isArray(rows))return all;
-  return open+JSON.stringify(rows.map(row=>{if(row.title!==plugin.title)return row;replaced++;return plugin;})).replace(/</g,'\\u003c')+close;
+  const hasABC=rows.some(row=>row.title===plugin.title);
+  const updated=rows.filter(row=>row.title!==danish.title&&row.title!=='$:/language').map(row=>{if(row.title!==plugin.title)return row;replaced++;return plugin;});
+  if(hasABC)updated.push(danish,{title:'$:/language',text:danish.title});
+  return open+JSON.stringify(updated).replace(/</g,'\\u003c')+close;
  });
 assert.equal(replaced,1,'Exactly one production ABC plugin must be installed');
 const temporary=await mkdtemp(path.join(os.tmpdir(),'abc-preparing-browser-'));
@@ -24,13 +29,15 @@ const file=path.join(temporary,'index.html');await writeFile(file,html);
 const output=path.join(root,'test-results/playback-preparing');await mkdir(output,{recursive:true});
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 const diagnostics=[],errors=[];
+let page;
 try{
  const context=await browser.newContext({viewport:{width:1380,height:1000}});
  await context.route('**/*',route=>route.request().url().startsWith('file:')?route.continue():route.abort());
- const page=await context.newPage();page.setDefaultTimeout(30000);
+ page=await context.newPage();page.setDefaultTimeout(30000);
  page.on('pageerror',error=>errors.push(error.message));
  await page.goto(pathToFileURL(file).href,{waitUntil:'domcontentloaded',timeout:120000});
  await page.waitForFunction(()=>window.$tw&&$tw.wiki&&$tw.rootWidget);
+ assert.equal(await page.evaluate(()=>$tw.modules.execute('$:/plugins/huwiki/abc/i18n.js').language($tw.wiki)),'da','The browser fixture must start with an installed Danish locale');
  await page.evaluate(()=>{
   // Preserve production styles while replacing the unrelated edition story.
   for(const style of document.body.querySelectorAll('style'))document.head.appendChild(style.cloneNode(true));
@@ -41,13 +48,14 @@ try{
   const sidebar=document.createElement('aside');sidebar.className='tc-sidebar-scrollable';
   sidebar.innerHTML='<div><header class="tc-sidebar-header">Playback preparation test</header></div>';document.body.appendChild(sidebar);
  });
- async function setup(mode,sidebar=false){
-  await page.evaluate(async({mode,sidebar})=>{
+ async function setup(mode,sidebar=false,language='da'){
+  await page.evaluate(async({mode,sidebar,language})=>{
    const previous=window.preparingHarness;
    if(previous){if(previous.player)previous.player.destroy();else if(previous.reader)previous.reader.onDestroy();previous.host.remove();}
+   $tw.wiki.setText('$:/language','text',null,language==='da'?'$:/languages/da-DK':'$:/languages/en-GB');
    const ABC=await $tw.modules.execute('$:/plugins/huwiki/abc/loader.js').load();
    const Reserve=$tw.modules.execute('$:/plugins/huwiki/abc/reserve-mixer.js');
-   const h={mode,sidebar,pending:[],resumeCalls:0,primes:0,starts:0,state:'idle',buffers:[]};
+   const h={mode,sidebar,language,pending:[],resumeCalls:0,primes:0,starts:0,state:'idle',buffers:[]};
    window.preparingHarness=h;
    const host=document.createElement('main');host.className='preparing-fixture';host.id='preparing-fixture';document.body.appendChild(host);h.host=host;
    const heading=document.createElement('h1');heading.textContent=mode+' · delayed playback';host.appendChild(heading);
@@ -82,11 +90,11 @@ try{
     function state(button){const spinner=button?.querySelector('.huwabc-preparing-spinner'),label=button?.querySelector('.huwabc-preparing-label');return {busy:button?.getAttribute('aria-busy')==='true',label:label?.textContent,
      spinnerVisible:!!spinner&&!spinner.hidden&&getComputedStyle(spinner).display!=='none'&&spinner.getBoundingClientRect().width>0,
      labelVisible:!!label&&!label.hidden&&getComputedStyle(label).display!=='none'&&label.getBoundingClientRect().width>0};}
-    return {main:state(h.main()),mini:state(h.mini()),resumeCalls:h.resumeCalls,pending:h.pending.length,primes:h.primes,starts:h.starts,
+    return {language:h.language,main:state(h.main()),mini:state(h.mini()),resumeCalls:h.resumeCalls,pending:h.pending.length,primes:h.primes,starts:h.starts,
      isPreparing:h.controller?.isPreparing,started:h.controller?.isStarted,state:h.state,
      floating:document.querySelector('.huwabc-mini-mixer')?.classList.contains('huwabc-mini-mixer--floating')};
    };
-  },{mode,sidebar});
+  },{mode,sidebar,language});
   await page.waitForFunction(()=>{
    const h=window.preparingHarness;
    if(!h.controller&&h.widget){h.reader=h.readerFrom(h.widget);h.controller=h.reader?._audioController;h.pager=h.reader?._pager;}
@@ -98,7 +106,7 @@ try{
   const current=await state();diagnostics.push({name,...current});
   for(const surface of withMixer?['main','mini']:['main']){
    assert.equal(current[surface].busy,true,name+': '+surface+' must report busy before resume resolves');
-   assert.equal(current[surface].label,'Gør klar …',name+': '+surface+' has a clear preparation label');
+   assert.equal(current[surface].label,current.language==='da'?'Gør klar …':'Preparing …',name+': '+surface+' has the requested locale preparation label');
    assert.equal(current[surface].spinnerVisible,true,name+': '+surface+' has a visible spinner');
    assert.equal(current[surface].labelVisible,true,name+': '+surface+' has visible preparation text');
   }
@@ -162,10 +170,19 @@ try{
  await assertIdle('audio resume failure');
  assert.equal((await state()).starts,0,'Failed resume does not start playback');
  assert.ok(await page.locator('#preparing-fixture .huwabc-error').count(),'The failed resume gives a visible error');
+ await setup('minimal',false,'en');
+ await page.locator('#preparing-fixture .abcjs-midi-start').click();
+ await page.locator('#preparing-fixture .huwabc-mini-open').click();
+ await assertBusy('English primary and minimixer agree');
+ await page.evaluate(()=>window.preparingHarness.controller.huwikiStop());
+ await assertIdle('English cancellation');
+ await page.evaluate(()=>window.preparingHarness.release());
  assert.deepEqual(errors,[],'No browser exceptions or unhandled rejections');
  await writeFile(path.join(output,'diagnostics.json'),JSON.stringify({ok:true,diagnostics,errors},null,2));
  console.log(JSON.stringify({ok:true,cases:diagnostics.map(row=>row.name),samplesDownloaded:0}));
 }catch(error){
+ try{if(page&&!page.isClosed())await page.screenshot({path:path.join(output,'failure.png'),fullPage:true});}
+ catch(screenshotError){diagnostics.push({screenshotError:screenshotError.message});}
  await writeFile(path.join(output,'diagnostics.json'),JSON.stringify({diagnostics,errors,error:error.message},null,2));
  throw error;
 }finally{await browser.close();await rm(temporary,{recursive:true,force:true});}
