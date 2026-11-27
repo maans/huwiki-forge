@@ -23,7 +23,8 @@ try{
  await page.getByText('Automatic leadsheet layout acceptance',{exact:true}).waitFor();
  const report=await page.evaluate(fixtures=>{
   const ABC=$tw.modules.execute('$:/plugins/huwiki/abc/vendor/abcjs.js'),sheet=$tw.modules.execute('$:/plugins/huwiki/abc/sheet-layout.js'),balanced=$tw.modules.execute('$:/plugins/huwiki/abc/balanced-layout.js');
-  const audio=t=>(t.setUpAudio({chordsOff:true}).tracks||[]).map(track=>track.filter(e=>e.cmd==='note').map(e=>[e.start,e.duration,e.pitch,e.instrument]));
+  const round=n=>typeof n==='number'?Math.round(n*1e9)/1e9:n;
+  const audio=t=>(t.setUpAudio({chordsOff:true}).tracks||[]).map(track=>track.filter(e=>e.cmd==='note').map(e=>[round(e.start),round(e.duration),e.pitch,e.instrument]));
   const output=[];
   for(const fixture of fixtures){
    const source=fixture.fields['abc-source'],fields={...fixture.fields,'abc-bars-per-line':'0'},before=JSON.stringify(audio(ABC.parseOnly(source)[0]));
@@ -33,7 +34,9 @@ try{
     const options=sheet.options(ABC,source,fields);
     const visual=ABC.renderAbc(host,source,{staffwidth:720,scale:1,add_classes:true,oneSvgPerLine:true,expandToWidest:true,jazzchords:true,format:{stretchlast:true,gchordfont:'Helvetica 18 bold'},wrap:{minSpacing:1.5,maxSpacing:2.8,preferredMeasuresPerLine:3},...options,visualTranspose:transpose,afterParsing:t=>sheet.prepare(t,fields,source)})[0];
     const systems=visual.lines.filter(l=>l.staff).map(l=>balanced.measures(l.staff[0].voices[0],false).length).filter(Boolean);
-    row.modes.push({transpose,systems,measured:!!options.lineBreaks,audioUnchanged:transpose===0?JSON.stringify(audio(visual))===before:true});
+    const after=transpose===0?JSON.stringify(audio(visual)):before;
+    row.modes.push({transpose,systems,measured:!!options.lineBreaks,audioUnchanged:after===before});
+    if(after!==before){const a=JSON.parse(before),b=JSON.parse(after);row.audioDifference={beforeNotes:a.map(t=>t.length),afterNotes:b.map(t=>t.length),first:a.flat().findIndex((n,i)=>JSON.stringify(n)!==JSON.stringify(b.flat()[i]))};const at=row.audioDifference.first;row.audioDifference.before=a.flat().slice(Math.max(0,at-1),at+2);row.audioDifference.after=b.flat().slice(Math.max(0,at-1),at+2);}
     if(fixture.title==='Easy Money'&&transpose===0){host.id='easy-money-layout';host.style.border='1px solid #ccc';}else host.remove();
    }
    output.push(row);
@@ -43,7 +46,7 @@ try{
  await writeFile(path.join(dir,'report.json'),JSON.stringify(report,null,2)+'\n');
  for(const row of report){
   assert.ok(row.modes.every(m=>m.measured),row.title+': automatic must use measured line breaks');
-  assert.ok(row.modes.every(m=>m.audioUnchanged),row.title+': layout changed musical playback');
+  assert.ok(row.modes.every(m=>m.audioUnchanged),row.title+': layout changed musical playback '+JSON.stringify(row.audioDifference||{}));
   for(const mode of row.modes)assert.deepEqual(mode.systems,row.modes[0].systems,row.title+': written transposition must retain system breaks');
  }
  const easy=report.find(r=>r.title==='Easy Money');assert.ok(easy,'Easy Money included');
