@@ -24,7 +24,9 @@ try{
  const report=await page.evaluate(fixtures=>{
   const ABC=$tw.modules.execute('$:/plugins/huwiki/abc/vendor/abcjs.js'),sheet=$tw.modules.execute('$:/plugins/huwiki/abc/sheet-layout.js'),balanced=$tw.modules.execute('$:/plugins/huwiki/abc/balanced-layout.js');
   const round=n=>typeof n==='number'?Math.round(n*1e9)/1e9:n;
-  const audio=t=>(t.setUpAudio({chordsOff:true}).tracks||[]).map(track=>track.filter(e=>e.cmd==='note').map(e=>[round(e.start),round(e.duration),e.pitch,e.instrument]));
+  // Engraving may sort simultaneous chord pitches. Compare the same timed
+  // musical events, rather than the array order of notes sounding together.
+  const audio=t=>(t.setUpAudio({chordsOff:true}).tracks||[]).map(track=>track.filter(e=>e.cmd==='note').map(e=>[round(e.start),round(e.duration),e.pitch,e.instrument]).sort((a,b)=>a[0]-b[0]||a[2]-b[2]||a[1]-b[1]||a[3]-b[3]));
   const output=[];
   for(const fixture of fixtures){
    const source=fixture.fields['abc-source'],fields={...fixture.fields,'abc-bars-per-line':'0'},before=JSON.stringify(audio(ABC.parseOnly(source)[0]));
