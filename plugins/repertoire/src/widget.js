@@ -21,7 +21,7 @@ function button(doc,label,action,cls) {
 function labelled(doc,title,value,tag) {
  var l=el(doc,"label","huwrep-field"),caption=el(doc,"span","",title),
   input=el(doc,tag||"input","huwrep-input");
- if(tag!=="textarea")input.type="text";
+ if(!tag||tag==="input")input.type="text";
  input.value=value||"";l.append(caption,input);return {wrap:l,input:input};
 }
 function option(doc,select,title,label) {

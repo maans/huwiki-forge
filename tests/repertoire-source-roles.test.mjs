@@ -104,6 +104,12 @@ test('reviewed Birdland key and tempo remain authoritative when a different lead
 
 test('the workshop changes folder view and a per-number exception while keeping one ordered set',async()=>{
  const f=await fixture(),{model,wiki,setlist,items}=f,doc=svgDocument(),host=doc.createElement('section');doc.body.appendChild(host);
+ const createElement=doc.createElement.bind(doc);
+ doc.createElement=tag=>{
+  const element=createElement(tag);
+  if(tag==='select')Object.defineProperty(element,'type',{get:()=> 'select-one'});
+  return element;
+ };
  f.patch(setlist,{'repertoire-overrides':JSON.stringify({[items[1]]:{key:'Dm',tempo:'1/4=132',cues:'Keep my cue'}})});
  const exports={};function Widget(){}
  runInNewContext(await readFile(new URL('../plugins/repertoire/src/widget.js',import.meta.url),'utf8'),{exports,$tw,require(name){
