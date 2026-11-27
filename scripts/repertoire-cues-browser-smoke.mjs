@@ -14,7 +14,8 @@ try{
  // The saved demo follows the host wiki language; select the language this acceptance path exercises.
  await page.evaluate(()=>$tw.wiki.setText('$:/language','text',undefined,'$:/languages/da-DK'));
  await page.locator('.silba-actions').getByRole('link',{name:'Åbn repertoireværksted',exact:true}).click();
- const workshop=page.locator('.huwrep');
+ await page.locator('.huwrep-library').getByRole('button',{name:'Redigér sætlister',exact:true}).click();
+ const workshop=page.locator('.huwrep').filter({has:page.getByLabel('Aktuel sætliste',{exact:true})});
  await workshop.getByRole('button',{name:'Stiknoder og stemmer',exact:true}).click();
  const cues=page.locator('[data-tiddler-title="Repertoire – Stiknoder"] .huwabc-cues');
  await cues.waitFor();

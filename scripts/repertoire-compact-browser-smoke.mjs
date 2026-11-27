@@ -30,7 +30,7 @@ try {
   assert.ok(measure.header<=52,JSON.stringify(measure));
   assert.ok(Math.abs(measure.stageTop-measure.headerBottom)<=2,'only one line above the score');
   assert.ok(Math.abs(measure.width-width)<=2,'reader spans viewport');
-  assert.ok(measure.overflow<=2,'buttons fit on one line');
+  assert.ok(measure.overflow<=2,'buttons fit on one line: '+JSON.stringify({width,...measure}));
  }
  const before=await book.locator('.huwrep-book-stage').boundingBox();
  await book.locator('.huwrep-reading-controls').click();

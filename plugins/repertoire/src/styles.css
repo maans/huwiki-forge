@@ -332,3 +332,6 @@
 .huwrep-session .huwrep-compact-transport .abcjs-midi-start .huwabc-icon {flex:none;margin:0!important}
 .huwrep-session .huwrep-compact-transport .huwabc-stop {font-size:0!important}
 .huwrep-session .huwrep-compact-transport .huwabc-stop::after {font-size:16px!important}
+/* ABCJS reserves 260px for its full transport. The compact toolbar only needs
+   the visible play/stop icons, including on a portrait iPad. */
+.huwrep-session .huwrep-compact-transport .abcjs-inline-audio {width:auto!important;min-width:0!important;max-width:none!important}
