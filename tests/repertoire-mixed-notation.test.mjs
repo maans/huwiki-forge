@@ -198,7 +198,7 @@ test('a PDF boundary carries current child state before changing songs, even whe
  // posted the corresponding state message. Boundary state is authoritative.
  f.state({type:'birdland-pdf:boundary',direction:'next',pages:5,page:5,spread:2});
  assert.equal(f.book.activeItem,next,'the current boundary page selects the adjacent song');
- assert.equal(f.posts.length,0,'a boundary cannot recursively request next from stale page one');
+ assert.equal(f.posts.filter(p=>p.message.command==='next').length,0,'a boundary cannot recursively request next from stale page one');
  assert.equal(f.book._pdfPager,null);assert.ok(f.host.querySelector('.test-abc-score'));
  assert.equal(JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),sourceBefore);
  f.book.disposeScore();

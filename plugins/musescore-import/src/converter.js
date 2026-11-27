@@ -281,7 +281,9 @@ function parseMusicXML(raw,filename){var root=xml(raw);if(root.localName!=='scor
     var s=el(n,'sound');var bpm=s?Number(s.getAttribute('tempo')):null; if(bpm){(items['1']||(items['1']=[])).push({when:cursor,kind:'tempo',value:'1/4='+Math.round(bpm)});}
     var txt=tx(n,'direction-type/rehearsal');if(txt)(items['1']||(items['1']=[])).push({when:cursor,kind:'part',value:txt});
    }else if(tg==='harmony'){
-    var step=tx(n,'root/root-step',''),alt=num(n,'root/root-alter',0);var kind=tx(n,'kind','');var suff={minor:'m',major:'',dominant:'7',majorseventh:'maj7','major-seventh':'maj7','minor-seventh':'m7',diminished:'dim','half-diminished':'m7b5',augmented:'aug'};var v=step+(alt<0?'b':alt>0?'#':'')+(suff[kind]!==undefined?suff[kind]:kind);
+    var step=tx(n,'root/root-step',''),alt=num(n,'root/root-alter',0);var kind=tx(n,'kind','');
+    var suff={minor:'m',major:'',dominant:'7',majorseventh:'maj7','major-seventh':'maj7','minor-seventh':'m7',diminished:'dim','diminished-seventh':'dim7','half-diminished':'m7b5',augmented:'aug','augmented-seventh':'aug7','major-minor':'mMaj7','major-sixth':'6','minor-sixth':'m6','dominant-ninth':'9','major-ninth':'maj9','minor-ninth':'m9','dominant-11th':'11','major-11th':'maj11','minor-11th':'m11','dominant-13th':'13','major-13th':'maj13','minor-13th':'m13','suspended-second':'sus2','suspended-fourth':'sus4',power:'5'};
+    var v=step+(alt<0?'b':alt>0?'#':'')+(suff[kind]!==undefined?suff[kind]:kind);
     var bass=tx(n,'bass/bass-step',''),alter=num(n,'bass/bass-alter',0);
     if(bass)v+='/'+bass+(alter<0?'b':alter>0?'#':'');
     if(kind==='none')v='N.C.';
