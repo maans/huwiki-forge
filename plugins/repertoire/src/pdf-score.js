@@ -36,6 +36,11 @@ exports.mount=function(host,options){
   var state=event.data;if(!state||typeof state!=='object')return;
   if(state.type==='birdland-pdf:error'){message.hidden=false;message.textContent=String(state.message||'PDF-noderne kunne ikke vises. Åbn PDF-filen med linket.');message.classList.add('huwrep-error');return;}
   if(state.type==='birdland-pdf:boundary'){
+   // A boundary can be reached while its final spread is still rendering.
+   // Use the child's current position before the book decides to change song.
+   if(Number.isInteger(state.pages)&&state.pages>0&&Number.isInteger(state.page)&&state.page>=1&&state.page<=state.pages){
+    pages=state.pages;page=state.page;ready=true;if(state.spread===1||state.spread===2)spread=state.spread;
+   }
    var direction=state.direction==='next'?1:state.direction==='previous'?-1:Number(state.direction||state.delta);
    if((direction===1||direction===-1)&&options.onBoundary)options.onBoundary(direction);return;
   }

@@ -183,3 +183,20 @@ test('entering a PDF song backwards waits for ready and opens the final complete
  assert.match(f.host.querySelector('.huwrep-book-page-status').textContent,/3–4.*4/);
  assert.equal(f.book.lastPage,false);f.book.disposeScore();
 });
+
+test('a PDF boundary carries current child state before changing songs, even when the last render state was older',async()=>{
+ const f=await drawnBookFixture(),sourceBefore=JSON.stringify(f.wiki.getTiddler('Four Brothers').fields);
+ const orch=f.wiki.getTiddler(f.item).fields['orchestra-title'];
+ f.wiki.addTiddler(new Tiddler({title:'Next ABC tune','abc-source':'X:1\nT:Next ABC tune\nK:C\nC4|'}));
+ const next=f.model.addItem(f.wiki,orch,'Next ABC tune').title;f.model.setEntries(f.wiki,f.set,[f.item,next]);
+ f.book.draw();f.state({type:'birdland-pdf:ready',pages:5,page:1,spread:2});
+ assert.equal(f.book.activeItem,f.item);assert.equal(f.posts.length,0);
+ // The viewer can reach its final spread before an expensive page render has
+ // posted the corresponding state message. Boundary state is authoritative.
+ f.state({type:'birdland-pdf:boundary',direction:'next',pages:5,page:5,spread:2});
+ assert.equal(f.book.activeItem,next,'the current boundary page selects the adjacent song');
+ assert.equal(f.posts.length,0,'a boundary cannot recursively request next from stale page one');
+ assert.equal(f.book._pdfPager,null);assert.ok(f.host.querySelector('.test-abc-score'));
+ assert.equal(JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),sourceBefore);
+ f.book.disposeScore();
+});
