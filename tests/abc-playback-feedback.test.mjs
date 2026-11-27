@@ -91,6 +91,7 @@ function minimalHarness({language='da',failure=false}={}){
  const minimal={};runInNewContext(code.minimal,{exports:minimal,require:id=>modules[id]||{},document:doc,console});
  const ABC={parseOnly:()=>[visual],renderAbc:(_host,_source,options)=>{options.afterParsing(visual);return [visual];},synth:{supportsAudio:()=>true,SynthController:Controller}};
  const player=minimal.mount(host,{ABC,source:'X:1\nK:C\nC4|',fields:{},wiki:{getTiddlerText:(id,fallback)=>id==='$:/language'?language:fallback},mixerButton:true});
+ const play=controls.querySelector('.abcjs-midi-start');play.click=function(){const event={target:play,preventDefault(){},stopImmediatePropagation(){this.stopped=true;}};for(const listener of controls.listeners.click||[])listener.fn(event);if(!event.stopped)play.dispatch('click',{bubbles:false});};
  return {...h,player,host,controls,get options(){return controllerOptions;},release,reject,starts:()=>starts};
 }
 
@@ -99,7 +100,7 @@ test('minimal transport and a lazily opened mixer retain preparation until real 
  play.click();assert.equal(play.getAttribute('aria-busy'),'true','same event turn');
  assert.equal(play.querySelector('.huwabc-preparing-label').textContent,'Gør klar …');
  h.options.onStatus({phase:'ready'});assert.equal(play.getAttribute('aria-busy'),'true','sample-ready is earlier than start');
- h.controls.querySelector('.huwabc-mini-open').click();
+ assert.equal(h.controls.querySelector('.huwabc-mini-open'),null);
  const mini=h.doc.querySelector('.huwabc-mini-mixer-play');assert.ok(mini);assert.equal(mini.getAttribute('aria-busy'),'true');
  mini.click();play.click();h.release();await Promise.resolve();await Promise.resolve();await Promise.resolve();
  assert.equal(h.starts(),1);assert.equal(play.getAttribute('aria-busy'),null);assert.equal(mini.getAttribute('aria-busy'),null);assert.equal(mini.getAttribute('aria-pressed'),'true');
@@ -108,7 +109,7 @@ test('minimal transport and a lazily opened mixer retain preparation until real 
 
 test('failed preparation clears both transports and leaves a visible error',async()=>{
  const h=minimalHarness({language:'en',failure:true}),play=h.controls.querySelector('.abcjs-midi-start');
- play.click();h.controls.querySelector('.huwabc-mini-open').click();
+ play.click();assert.equal(h.controls.querySelector('.huwabc-mini-open'),null);
  const mini=h.doc.querySelector('.huwabc-mini-mixer-play');assert.equal(mini.querySelector('.huwabc-preparing-label').textContent,'Preparing …');
  h.release();for(let i=0;i<6;i++)await Promise.resolve();
  assert.equal(h.starts(),0);assert.equal(play.getAttribute('aria-busy'),null);assert.equal(mini.getAttribute('aria-busy'),null);
@@ -119,7 +120,7 @@ test('failed preparation clears both transports and leaves a visible error',asyn
 
 test('stopping a pending request immediately clears visible preparation on both controls',async()=>{
  const h=minimalHarness(),play=h.controls.querySelector('.abcjs-midi-start');
- play.click();h.controls.querySelector('.huwabc-mini-open').click();
+ play.click();assert.equal(h.controls.querySelector('.huwabc-mini-open'),null);
  const mini=h.doc.querySelector('.huwabc-mini-mixer-play');
  h.player.controller.pause();
  assert.equal(play.getAttribute('aria-busy'),null);assert.equal(mini.getAttribute('aria-busy'),null);
@@ -127,3 +128,4 @@ test('stopping a pending request immediately clears visible preparation on both 
  h.release();for(let i=0;i<6;i++)await Promise.resolve();assert.equal(h.starts(),0);
  h.player.destroy();
 });
+

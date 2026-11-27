@@ -17,6 +17,7 @@ on:
       - 'tests/abc-repeat-volta.test.mjs'
       - 'tests/abc-reader-fallback.test.mjs'
       - 'tests/abc-mini-mixer-title.test.mjs'
+      - 'tests/abc-mini-youtube.test.mjs'
       - 'tests/abc-default-minimal.test.mjs'
       - 'tests/abc-chord-overview.test.mjs'
       - 'tests/abc-normal-clean.test.mjs'
@@ -66,7 +67,7 @@ jobs:
           node --test tests/repertoire-catalogue.test.mjs tests/abc-search-player.test.mjs tests/abc-automatic-layout.test.mjs tests/abc-balanced-layout.test.mjs
           node --test tests/abc-reader-mode.test.mjs tests/abc-reader-edit.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-reader-fallback.test.mjs tests/abc-mini-mixer-title.test.mjs tests/abc-default-minimal.test.mjs tests/abc-chord-overview.test.mjs tests/abc-normal-clean.test.mjs tests/music-edition.test.mjs tests/forge-libraries.test.mjs
           node --test tests/abc-slow-ballad.test.mjs tests/abc-dance-styles.test.mjs tests/abc-rhythm-head-audio.test.mjs tests/abc-swing-voicings.test.mjs tests/abc-swing-arrangement.test.mjs tests/abc-swing-written-comp.test.mjs
-          node --test tests/abc-playback-preparing.test.mjs tests/abc-playback-feedback.test.mjs
+          node --test tests/abc-playback-preparing.test.mjs tests/abc-playback-feedback.test.mjs tests/abc-mini-youtube.test.mjs
           node scripts/build-abc-ui.mjs --check
           git diff --check
       - name: Install browser controller for actual guitar playback acceptance
@@ -137,6 +138,7 @@ jobs:
             done
             test "$pushed" -eq 1
           fi
+
 
 
 

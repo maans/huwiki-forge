@@ -9,7 +9,7 @@ module-type: library
 // This is intentionally a session-wide, non-persistent READING preference:
 // one choice applies to the four tunes without modifying a source tiddler.
 var I18n=require('$:/plugins/huwiki/abc/i18n.js');
-var active='c',subscribers=[],preferences={capo:null,tab:null};
+var active='c',subscribers=[],preferences={capo:null,tab:null,transpose:0};
 var profiles={
  c:{id:'c',button:'C',labelDa:'C · klingende',labelEn:'C · concert pitch',printDa:'C · klingende noder',printEn:'C · concert pitch',semitones:0},
  bb:{id:'bb',button:'B♭',labelDa:'B♭ · sopransax',labelEn:'B♭ · soprano sax',printDa:'B♭ · sopransaxofon',printEn:'B♭ · soprano saxophone',semitones:2},
@@ -34,9 +34,10 @@ strings.forEach(function(s){
  stringOptions.push(s);
  if(registerInstruments.includes(s[0]))stringOptions.push([s[0]+'-low',s[1]+' · oktav ned',s[2]+' · octave down']);
 });
-function current(){return Object.assign({},profiles[active],{semitones:profiles[active].semitones-(preferences.capo||0),capo:preferences.capo,tab:preferences.tab});}
+function current(){return Object.assign({},profiles[active],{semitones:profiles[active].semitones-(preferences.capo||0)+preferences.transpose,transpose:preferences.transpose,capo:preferences.capo,tab:preferences.tab});}
 function notifyAll(){subscribers.slice().forEach(function(fn){fn();});}
 function setCapo(value){value=Number(value);if(!Number.isInteger(value)||value<0||value>8||preferences.capo===value)return false;preferences.capo=value;notifyAll();return true;}
+function setTranspose(value){value=Number(value);if(!Number.isInteger(value)||value < -11||value > 11||value===preferences.transpose)return false;preferences.transpose=value;notifyAll();return true;}
 function setTab(value){if(value!=='off'&&!stringOptions.some(function(s){return s[0]===value;})||preferences.tab===value)return false;preferences.tab=value;notifyAll();return true;}
 function language(wiki){try{return I18n.language(wiki)==='en'?'en':'da';}catch(ignore){return 'da';}}
 function label(profile,lang,kind){return profile[(kind==='print'?'print':'label')+(lang==='en'?'En':'Da')];}
@@ -49,7 +50,9 @@ function mount(host,options){
  var buttons=d.createElement('div');buttons.className='huwabc-instrument-buttons';group.appendChild(buttons);
  function select(cls,aria){var n=d.createElement('select');n.className='huwabc-instrument-select '+cls;n.setAttribute('aria-label',aria);buttons.appendChild(n);return n;}
  function option(select,value,text){var n=d.createElement('option');n.value=value;n.textContent=text;select.appendChild(n);return n;}
+ var writtenKey=options.key?select('huwabc-key-select','Vist toneart'):null;
  var instrument=select('huwabc-written-select','Instrumentnoder'),capo=select('huwabc-capo-select','Capo'),tab=select('huwabc-tab-select','Tabulatur');
+ if(writtenKey)writtenKey.addEventListener('change',function(){setTranspose(writtenKey.value);});
  instrument.addEventListener('change',function(){change(instrument.value);});
  capo.addEventListener('change',function(){setCapo(capo.value);});
  tab.addEventListener('change',function(){setTab(tab.value);});
@@ -59,6 +62,17 @@ function mount(host,options){
   var english=lang()==='en',name=english?'Written notes':'Noder';
   legend.textContent=name+':';group.setAttribute('aria-label',english?'Instrument notation':'Instrumentnoder');
   instrument.textContent='';capo.textContent='';tab.textContent='';
+  if(writtenKey){
+   writtenKey.textContent='';
+   var key=/^([A-G])([#b]?)(m(?!ix)|min)?/i.exec(String(options.key)),names=['C','D♭','D','E♭','E','F','F♯','G','A♭','A','B♭','B'];
+   var pitch=key?{C:0,D:2,E:4,F:5,G:7,A:9,B:11}[key[1].toUpperCase()]+(key[2]==='#'?1:key[2]==='b'?-1:0):null;
+   for(var shift=-11;shift<=11;shift++){
+    var semitones=profiles[active].semitones-(preferences.capo||0)+shift;
+    var keyLabel=pitch===null?(shift>0?'+':'')+shift+' '+(english?'semitones':'halvtoner'):names[((pitch+semitones)%12+12)%12]+(key[3]?'m':'')+' ('+(shift>0?'+':'')+shift+')';
+    option(writtenKey,shift,shift===0?(english?'Notes: ':'Noder: ')+keyLabel:keyLabel);
+   }
+   writtenKey.value=String(preferences.transpose);writtenKey.setAttribute('aria-label',english?'Displayed key':'Vist toneart');
+  }
   order.forEach(function(id){option(instrument,id,id===active?profiles[id].button:label(profiles[id],lang()));});
   option(capo,0,english?'Capo · off':'Capo · fra');
   for(var fret=1;fret<=8;fret++)option(capo,fret,'Capo '+fret);
@@ -87,7 +101,7 @@ function observe(callback){
  subscribers.push(callback);
  return function(){var at=subscribers.indexOf(callback);if(at>=0)subscribers.splice(at,1);};
 }
-exports.observe=observe;exports.setCapo=setCapo;exports.setTab=setTab;
+exports.observe=observe;exports.setTranspose=setTranspose;exports.setCapo=setCapo;exports.setTab=setTab;
 exports.current=current;exports.change=change;exports.mount=mount;exports.soundingPitches=soundingPitches;
 exports.profiles=profiles;
 function keyName(k){return k&&k.root?k.root+(k.acc||'').replace(/#/g,'♯').replace(/b/g,'♭')+(k.mode==='m'?'m':k.mode?' '+k.mode:''):'';}
@@ -96,8 +110,10 @@ exports.notationStatus=function(wiki,concert,written){
  var parts=[],en=language(wiki)==='en';
  if(active!=='c')parts.push(profiles[active].button);
  if(v.capo)parts.push('Capo '+v.capo);
+ if(v.transpose)parts.push((v.transpose>0?'+':'')+v.transpose);
  parts.push((en?'Notes: ':'Noder: ')+b,(en?'Sounds: ':'Klinger: ')+a);
  return parts.join(' · ');
 };
-exports.printLabel=function(wiki){return (active==='c'&&preferences.capo?(language(wiki)==='en'?'Capo shapes':'Capogreb'):label(current(),language(wiki),'print'))+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+stringOptions.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
+exports.printLabel=function(wiki){return (active==='c'&&preferences.capo?(language(wiki)==='en'?'Capo shapes':'Capogreb'):label(current(),language(wiki),'print'))+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.transpose?' · '+(preferences.transpose>0?'+':'')+preferences.transpose:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+stringOptions.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
 })();
+

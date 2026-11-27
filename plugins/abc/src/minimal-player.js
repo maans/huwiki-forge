@@ -36,7 +36,7 @@ exports.mount=function(host,options){
  var config=options.config?Accompaniment.clean(options.config):Accompaniment.read(fields);
  var activeNotes=[],cursorLine=null,detachObserver=null,locale=null,controlsLocale=null,playButton=null,unbindShortcuts=null;
  var pendingStart=null,chosenNode=null,cueDataReady=false,updateRevision=0,renderPending=false;
- var viewport=null,chordOverview=null,miniMixer=null,mixerButton=null,preparing=false;
+ var viewport=null,chordOverview=null,miniMixer=null,mixerButton=null,preparing=false,nativeMixerClick=false;
  var showOverview=!!(options.followChordsOnly&&fields['abc-chords-overview']==='yes');
  var drone=options.audio===false?null:Accompaniment.createDrone(function(){return config;},function(){return source;});
  function make(tag,cls,text){var node=doc.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;}
@@ -55,8 +55,7 @@ exports.mount=function(host,options){
  if(controls)(externalControls?options.controlsHost:box).appendChild(controls);
  box.appendChild(paper);box.appendChild(status);host.appendChild(box);
  if(options.follow&&controls&&controls.parentNode===box)box.insertBefore(paper,controls);
- var pager=options.paged?PageView.mount(paper,{wiki:options.wiki,state:options.state,title:fields.title||"",audio:options.audio!==false,transport:function(){return controls;},
-  onMixer:function(anchor){if(options.audio===false)return;ensureMiniMixer().show({anchor:anchor,floating:true});}}):null;
+ var pager=options.paged?PageView.mount(paper,{wiki:options.wiki,state:options.state,title:fields.title||"",audio:options.audio!==false,transport:function(){return controls;}}):null;
  function show(message,error){
   if(!alive())return;
   status.textContent=message?text(message):'';status.hidden=!message;
@@ -237,7 +236,8 @@ exports.mount=function(host,options){
   miniMixer=FloatingMixer.mount({ABC:ABC,source:source,host:box,wiki:options.wiki,title:options.mixerTitle,
    anchor:mixerButton,initialFloating:!options.sidebarMixer,initiallyVisible:false,
    getConfig:function(){return config;},onVisibilityChange:mixerVisibility,
-   onTogglePlayback:function(){if(playButton)playButton.click();},getPlaying:function(){return !!(controller&&controller.isStarted);},
+   onTogglePlayback:function(){if(playButton){nativeMixerClick=true;try{playButton.click();}finally{nativeMixerClick=false;}}},
+   onTransportState:function(value,video){if(playButton){playButton.classList.toggle('abcjs-pushed',value);playButton.setAttribute('aria-pressed',String(value));playButton.title=(value?'Pause':'Afspil')+(video?' · YouTube':'');}},getPlaying:function(){return !!(controller&&controller.isStarted);},
    onStopPlayback:stopAndReset,
    getPreparing:function(){return preparing||!!(controller&&controller.isPreparing);},
    onPreview:syncMixerPreview,
@@ -384,7 +384,12 @@ exports.mount=function(host,options){
     onFinished:function(){if(!alive())return;playing(false);stopDrone();clearFollow();},
     onEvent:follow
    },{displayPlay:true,displayLoop:false,displayRestart:false,displayProgress:false,displayWarp:false});
-   labelButton();installMixerButton();
+   labelButton();
+   controls.addEventListener('click',function(event){
+    if(nativeMixerClick||!options.mixerButton||!event.target.closest('.abcjs-midi-start'))return;
+    event.preventDefault();event.stopImmediatePropagation();
+    var mixer=ensureMiniMixer();if(!mixer.isVisible())mixer.show({anchor:playButton});mixer.togglePlayback();
+   },true);
    var soundfont=options.wiki&&options.wiki.getTiddlerText?options.wiki.getTiddlerText('$:/config/huwiki/abc/soundfont','https://paulrosen.github.io/midi-js-soundfonts/abcjs/').trim():'https://paulrosen.github.io/midi-js-soundfonts/abcjs/';
    controller.setTune(visual,false,{soundFontUrl:soundfont,swing:ScoreView.swingValue(fields,options.swing)}).catch(failure);
    box.setAttribute('tabindex','0');box.setAttribute('aria-label',text('Musikafspiller'));
@@ -408,3 +413,4 @@ exports.mount=function(host,options){
  return api;
 };
 })();
+

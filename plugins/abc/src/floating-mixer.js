@@ -133,18 +133,20 @@ module-type: library
     function updatePlayback(value,video){
       if(!video&&value&&selectedTab==='youtube')chooseTab('voices');
       if(!video)currentlyPlaying=!!value;
-      var shown=video?!!value:currentlyPlaying;playSymbol.textContent=shown?'⏸':'▶';
+      var shown=selectedTab==='youtube'?youtube.isPlaying():currentlyPlaying;playSymbol.textContent=shown?'⏸':'▶';
       play.title=word(shown?'Pause':'Afspil',shown?'Pause':'Play')+(selectedTab==='youtube'?' · YouTube':'');
       play.setAttribute('aria-label',caption+' · '+play.title);
       play.setAttribute('aria-pressed',String(shown));
-      PlaybackFeedback.update(play,currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
+      if(options.onTransportState)options.onTransportState(shown,selectedTab==='youtube');
+      PlaybackFeedback.update(play,selectedTab!=='youtube'&&currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
     }
     function updatePreparing(value){
       currentlyPreparing=!!value;
-      PlaybackFeedback.update(play,currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
+      PlaybackFeedback.update(play,selectedTab!=='youtube'&&currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
       if(!currentlyPreparing)updatePlayback(currentlyPlaying);
     }
-    play.addEventListener('click',function(e){e.stopPropagation();if(selectedTab==='youtube'){youtube.toggle();return;}if(typeof options.onTogglePlayback==='function')options.onTogglePlayback();});
+    function togglePlayback(){if(selectedTab==='youtube')return youtube.toggle();if(typeof options.onTogglePlayback==='function')options.onTogglePlayback();return true;}
+    play.addEventListener('click',function(e){e.stopPropagation();togglePlayback();});
     updatePlayback(options.getPlaying&&options.getPlaying());
     updatePreparing(options.getPreparing&&options.getPreparing());
     function setCollapsed(value){
@@ -464,7 +466,7 @@ module-type: library
       voiceTab.setAttribute('aria-selected',String(selectedTab==='voices'));
       backingTab.setAttribute('aria-selected',String(backing));
       chordTab.setAttribute('aria-selected',String(chords));
-      youtubeTab.setAttribute('aria-selected',String(video));syncYoutube();
+      youtubeTab.setAttribute('aria-selected',String(video));syncYoutube();updatePlayback(currentlyPlaying,true);
       if(chords&&activeChord>=0)ensureChordVisible(chordNodes[activeChord]);
       count.textContent=selectedTab==='voices'&&voices.length?'('+voices.length+')':'';
        if(chords){
@@ -537,8 +539,9 @@ module-type: library
     if (wiki && wiki.addEventListener) wiki.addEventListener('change',onWikiChange);
     return {element:panel,update:update,destroy:destroy,redock:function(){layout(false);},
       show:show,hide:hide,toggle:toggle,isVisible:isVisible,isFloating:function(){return floating;},
-      selectTab:chooseTab,updateEvent:updateEvent,updatePlayback:updatePlayback,updatePreparing:updatePreparing,collapse:setCollapsed};
+      togglePlayback:togglePlayback,isPlaying:function(){return selectedTab==='youtube'?youtube.isPlaying():currentlyPlaying;},selectTab:chooseTab,updateEvent:updateEvent,updatePlayback:updatePlayback,updatePreparing:updatePreparing,collapse:setCollapsed};
   }
   exports.displayMusicTitle=displayMusicTitle;
   exports.mount=mount;
 })();
+

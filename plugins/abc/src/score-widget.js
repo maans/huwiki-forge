@@ -230,7 +230,15 @@ ABCWidget.prototype.draw=function(){
   if(!t || !source){status.textContent="Ingen ABC-kilde fundet i feltet abc-source. Brug importværkstedet til at oprette et nodeark.";host.appendChild(status);return;}
   var working=this.editing ? this.draft : source;
   function showStatus(msg,error){status.textContent=msg||"";status.className="huwabc-status"+(error?" huwabc-error":"");}
-  var visual=null,ABC=null,controller=null,activeNotes=[],cursorLine=null,cueDataReady=false,fullMiniMixer=null,preparing=false;
+  var visual=null,ABC=null,controller=null,activeNotes=[],cursorLine=null,cueDataReady=false,fullMiniMixer=null,preparing=false,nativeMixerClick=false;
+  audioControls.addEventListener('click',function(event){
+    var target=event.target&&event.target.closest&&event.target.closest('.abcjs-midi-start');
+    if(!target||nativeMixerClick)return;
+    var mixer=ensureFullMiniMixer();if(!mixer)return;
+    event.preventDefault();event.stopImmediatePropagation();
+    if(!mixer.isVisible())mixer.show({anchor:target});
+    mixer.togglePlayback();
+  },true);
   function preparation(value){
     preparing=!!value;
     PlaybackFeedback.update(audioControls.querySelector('.abcjs-midi-start'),preparing,{language:I18n.language(self.wiki)});
@@ -243,7 +251,8 @@ ABCWidget.prototype.draw=function(){
       initiallyVisible:!!self._standaloneView,sidebarMixer:!!self._standaloneView,
       getConfig:accompControls.config,getPlaying:function(){return !!(controller&&controller.isStarted);},
       getPreparing:function(){return preparing||!!(controller&&controller.isPreparing);},
-      onTogglePlayback:function(){var btn=audioControls.querySelector('.abcjs-midi-start');if(btn)btn.click();},
+      onTogglePlayback:function(){var btn=audioControls.querySelector('.abcjs-midi-start');if(btn){nativeMixerClick=true;try{btn.click();}finally{nativeMixerClick=false;}}},
+      onTransportState:function(playing,video){var btn=audioControls.querySelector('.abcjs-midi-start');if(btn){btn.classList.toggle('abcjs-pushed',playing);btn.setAttribute('aria-pressed',String(playing));btn.title=(playing?'Pause':'Afspil')+(video?' · YouTube':'');}},
       onStopPlayback:function(){if(controller)playback.stopOne(controller);},
       onPreview:function(next){accompControls.setConfig(next,false);if(controller&&controller.midiBuffer)controller.midiBuffer.setVolumes();},
       onChange:function(next){accompControls.setConfig(next,true);} });
@@ -460,8 +469,7 @@ ABCWidget.prototype.draw=function(){
   }catch(e){showStatus((I18n.language(self.wiki)==='da'?'Site-afspiller: ':'Site player: ')+e.message,true);}},"huwabc-site-export"));
   // Player is a permanent part of the music sheet – no separate tab or "Lyt" button.
   host.appendChild(score);host.appendChild(audio);host.appendChild(quickSettings);host.appendChild(settingsPanel);host.appendChild(learn);
-  self._pager=PageView.mount(score,{wiki:self.wiki,state:self._viewState,title:self.title,audio:true,transport:function(){return audioControls;},onDesk:function(){floatingPiano.hide();},
-    onMixer:function(anchor){var mini=ensureFullMiniMixer();if(mini)mini.show({anchor:anchor,floating:true});}});
+  self._pager=PageView.mount(score,{wiki:self.wiki,state:self._viewState,title:self.title,audio:true,transport:function(){return audioControls;},onDesk:function(){floatingPiano.hide();}});
   // One shared musician view for stand-alone ABC scores and embedded notation.
   // Switching it changes only CSS/controls; it never recreates the score or player.
   self._reader=ReaderMode.mount({host:host,paper:score,actions:actions,title:self.title,
@@ -734,3 +742,4 @@ ABCWidget.prototype.refresh=function(changes){
 exports["huwiki-abc"]=ABCWidget;
 exports.prepareEditorHandoff=prepareEditorHandoff;
 })();
+

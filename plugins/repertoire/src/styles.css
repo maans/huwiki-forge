@@ -348,3 +348,15 @@
 .huwrep-video-active .huwrep-performance {display:none!important;}
 .huwrep-video-edit label {display:block;}
 .huwrep-video-edit input {width:100%;box-sizing:border-box;margin:.4rem 0;}
+
+
+/* Notation choices stay behind one symbol beside the existing menu. */
+.huwrep-compact-header > .huwrep-note-settings{order:6;position:relative;flex:none;margin:0}
+.huwrep-note-settings > summary{display:flex;align-items:center;justify-content:center;list-style:none;cursor:pointer;width:36px;height:36px;box-sizing:border-box;border:1px solid #a5c1b5;border-radius:6px;font-size:22px}
+.huwrep-note-settings > summary::-webkit-details-marker{display:none}
+.huwrep-note-settings-body{position:absolute;right:0;top:calc(100% + 6px);z-index:110;width:min(340px,calc(100vw - 24px));padding:12px;background:#f6faf7;color:#214d40;border:1px solid #a5c1b5;border-radius:8px;box-shadow:0 12px 32px #14251c40;max-height:calc(100dvh - 100px);overflow:auto;isolation:isolate}
+.huwrep-note-settings-body .huwabc-instrument-group,.huwrep-note-settings-body .huwabc-instrument-buttons{display:flex!important;flex-direction:column;align-items:stretch;gap:8px}
+.huwrep-note-settings-body .huwabc-instrument-select{width:100%!important;max-width:none}
+.huwrep-note-settings-body .huwabc-instrument-hint{font-size:12px}
+.huwrep-compact-header > .huwrep-video-play{order:2;white-space:nowrap;overflow:hidden}
+@media print{.huwrep-note-settings{display:none!important}}

@@ -140,6 +140,7 @@ async function drawnBookFixture(){
  const notation={title:'Four Brothers','abc-source':'X:1\nT:Four Brothers\nK:F\nF4|','repertoire-pdf':'pdf/four-brothers.pdf','repertoire-sheet-format':'pdf','repertoire-category':'leadsheet','repertoire-abc-label':'Leadsheet',text:'Keep notes'};
  f.wiki.addTiddler(new Tiddler(notation));
  const orch=f.model.orchestra(f.wiki,'Birdland'),item=f.model.addItem(f.wiki,orch,notation.title).title,set=f.model.createSetlist(f.wiki,orch,'Concert');f.model.setEntries(f.wiki,set,[item]);
+ const instrumentView={};runInNewContext(await readFile(new URL('../plugins/abc/src/instrument-view.js',import.meta.url),'utf8'),{exports:instrumentView,require:()=>({language:()=> 'da'})});
  const scoreInstances=[],bookExports={};function Widget(){}
  function Score(tree){this.title=tree.attributes.tiddler.value;scoreInstances.push(this);}
  Score.prototype.render=function(host){const body=f.doc.createElement('div');body.className='test-abc-score';body.textContent='ABC rendered from '+this.title;host.appendChild(body);this._pager={element:body,info:()=>({count:2,page:1,shown:2}),next(){},previous(){},go(){}};};
@@ -150,6 +151,7 @@ async function drawnBookFixture(){
   if(name.endsWith('/model.js'))return f.model;if(name.endsWith('/book-layout.js'))return f.layout;
   if(name.endsWith('/pdf-score.js'))return f.pdf;
   if(name.endsWith('/youtube-video.js'))return video;
+  if(name.endsWith('/instrument-view.js'))return instrumentView;
   if(name.endsWith('/score-widget.js'))return {'huwiki-abc':Score};
   if(name.endsWith('/print.js'))return {cueLabel:()=> 'Stiknoder'};
   if(name.endsWith('/live-score.js'))return {apply:(_ABC,source)=>({source})};
@@ -339,4 +341,19 @@ test('historical folders and the whole repertoire render existing charts under a
  assert.equal(f.host.querySelector('.huwrep-book-source-unavailable'),null);
  assert.equal(saved(),before);
  f.book.disposeScore();
+});
+
+
+
+test('notation settings stay behind one icon, offer capo/key/TAB, and replace the separate mixer button',async()=>{
+ const f=await drawnBookFixture();f.book.singleRole='abc';f.book.pieceTitle='Four Brothers';f.book.draw();
+ const menu=f.host.querySelector('.huwrep-note-settings');assert.ok(menu);assert.ok(!menu.open);
+ assert.equal(f.host.querySelector('.huwrep-open-minimixer'),null);
+ assert.ok(menu.querySelector('.huwabc-key-select'));assert.ok(menu.querySelector('.huwabc-capo-select'));assert.ok(menu.querySelector('.huwabc-tab-select'));
+ assert.ok(menu.textContent.includes('Udskriv de viste noder'));
+ const before=f.wiki.getTiddler('Four Brothers').fields['abc-source'];
+ const capo=menu.querySelector('.huwabc-capo-select');capo.value='4';capo.dispatch('change');
+ const key=menu.querySelector('.huwabc-key-select');key.value='2';key.dispatch('change');
+ assert.equal(capo.value,'4');assert.equal(key.value,'2');assert.equal(f.wiki.getTiddler('Four Brothers').fields['abc-source'],before);
+ const controls=f.book._notationControls;f.book.disposeScore();assert.equal(controls.element.parentNode,null);
 });

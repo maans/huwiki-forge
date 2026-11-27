@@ -49,6 +49,7 @@ function Book(parseTreeNode,options){this.initialise(parseTreeNode,options);}
 Book.prototype=new Widget();
 Book.prototype.disposeScore=function(){
  this._mixerToken=(this._mixerToken||0)+1;
+ if(this._notationControls){this._notationControls.destroy();this._notationControls=null;}
  if(this._videoMixer){this._videoMixer.destroy();this._videoMixer=null;}
  if(this._video){this._video.destroy();this._video=null;}
  if(this._pdfPager){this._pdfPager.destroy();this._pdfPager=null;}
@@ -231,7 +232,7 @@ Book.prototype.openMiniMixer=function(anchor){
  if(this._videoMixer){this._videoMixer.show({anchor:anchor,floating:true});return;}
  var source=name(this.wiki,this.activeItem);
  if(this._video){this._video.destroy();this._video=null;}
- this._videoMixer=require("$:/plugins/huwiki/abc/floating-mixer.js").mount({host:this.host,wiki:this.wiki,title:source,source:"",videoOnly:true,initiallyVisible:false,initialFloating:true});
+ this._videoMixer=require("$:/plugins/huwiki/abc/floating-mixer.js").mount({host:this.host,wiki:this.wiki,title:source,source:"",videoOnly:true,initiallyVisible:false,initialFloating:true,onTransportState:function(playing){if(anchor){anchor.textContent=playing?"⏸":"▶";anchor.title=playing?"Pause · YouTube":"Afspil · YouTube";anchor.setAttribute("aria-label",anchor.title);anchor.setAttribute("aria-pressed",String(playing));}}});
  this._videoMixer.show({anchor:anchor,floating:true});
 };
 Book.prototype.onSwipeStart=function(event){
@@ -616,8 +617,26 @@ Book.prototype.draw=function(){
  this._selectedNotation=notation;
  if(audioView)toolbar.insertBefore(icon(doc,notation.abc?"Redigér ABC-noder":"Redigér lydkildens ABC-noder","✎",function(){if(self._score&&self._score._reader)self._score._reader.openEditor();},"huwrep-edit-score"),settings);
  this._performance=Performance.create(this,notation,audioView);host.insertBefore(this._performance.element,stage);
- var miniMixer=btn(doc,"Minimixer",function(){self.openMiniMixer(miniMixer);},"huwrep-open-minimixer");
- toolbar.insertBefore(miniMixer,settings);
+ // Playback opens the mixer; no separate toolbar button is needed.
+ if(!audioView){
+  var videoPlay=icon(doc,"Afspil · YouTube","▶",function(){self.openMiniMixer(videoPlay);if(self._videoMixer)self._videoMixer.togglePlayback();},"huwrep-video-play");
+  toolbar.insertBefore(videoPlay,settings);
+ }
+ var noteMenu=el(doc,"details","huwrep-note-settings"),noteSummary=el(doc,"summary","","♯");
+ noteSummary.title="Nodeindstillinger · toneart, capo og tabulatur";noteSummary.setAttribute("aria-label",noteSummary.title);noteMenu.appendChild(noteSummary);
+ var noteBody=el(doc,"div","huwrep-note-settings-body");noteMenu.appendChild(noteBody);toolbar.insertBefore(noteMenu,settings);
+ noteMenu.addEventListener("toggle",function(){if(noteMenu.open){settings.open=false;host.classList.remove("huwrep-show-reading-controls");}});
+ if(notation.abc){
+  var noteSource=wiki.getTiddler(notation.sourceTitle||source.fields.title),noteFields=noteSource&&noteSource.fields||{};
+  self._notationControls=require("$:/plugins/huwiki/abc/instrument-view.js").mount(noteBody,{wiki:wiki,key:noteFields["abc-key"]||(/^K:\s*(.+)$/m.exec(noteFields["abc-source"]||"")||[])[1]});
+  noteBody.appendChild(btn(doc,"Udskriv de viste noder",function(){
+   var actions=self._score&&self._score.host&&self._score.host.querySelectorAll(".huwabc-actions button");
+   var print=Array.from(actions||[]).find(function(b){return /PDF.*Udskriv|PDF.*Print/.test(b.textContent);});if(print)print.click();
+  }));
+ }else{
+  noteBody.appendChild(el(doc,"p","huwrep-muted","Originale PDF-noder kan ikke ændres med capo, toneart eller tabulatur."));
+  variants.filter(function(v){return v.abc;}).forEach(function(v){noteBody.appendChild(btn(doc,"Åbn "+v.label,function(){self.changeItemView(v.role);}));});
+ }
  if(audioView){
   var readingControls=icon(doc,"Lyd og instrument","♫",function(){
    var open=host.classList.toggle("huwrep-show-reading-controls");
@@ -737,3 +756,4 @@ Book.prototype._onKeyDown=function(event){
 };
 exports["huwiki-repertoire-book"]=Book;
 })();
+

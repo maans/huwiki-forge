@@ -67,7 +67,8 @@ exports.mount=function(host,options){
   });
   edit.appendChild(input);edit.appendChild(save);edit.appendChild(message);host.appendChild(edit);
  }
- return {show:function(){if(closed)return;visible=true;draw();},hide:function(){visible=false;stop();},toggle:function(){if(closed||!visible)return false;if(!ready){pendingPlay=!pendingPlay;return true;}if(playing)player.pauseVideo();else player.playVideo();return true;},stop:stop,refresh:function(){if(visible&&!closed)draw();},destroy:function(){closed=true;stop();host.textContent="";}};
+ return {show:function(){if(closed)return;visible=true;if(!frame)draw();},hide:function(){visible=false;stop();},isPlaying:function(){return playing||pendingPlay;},toggle:function(){if(closed||!visible)return false;if(!ready){pendingPlay=!pendingPlay;state(pendingPlay);return true;}var pause=playing;state(!pause);if(pause)player.pauseVideo();else player.playVideo();return true;},stop:stop,refresh:function(){if(visible&&!closed)draw();},destroy:function(){closed=true;stop();host.textContent="";}};
 };
 exports.id=id;
 })();
+
