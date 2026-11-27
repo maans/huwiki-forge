@@ -14,7 +14,7 @@ assert.ok(fixtures.length>=30,'use the real shared leadsheet library');
 const dir=path.join(root,'test-results/leadsheet-layout');await mkdir(dir,{recursive:true});
 const plugin=JSON.parse(await readFile(path.join(root,'plugins/abc/dist/plugin.json'),'utf8'));
 const file=path.join(dir,'fixture.html');
-await writeFile(file,assembleHtml(await readFile(path.join(root,'core/empty.html'),'utf8'),[plugin,{title:'$:/DefaultTiddlers',text:'Layout acceptance'},{title:'Layout acceptance',text:'Automatic leadsheet layout acceptance'}]));
+await writeFile(file,assembleHtml(await readFile(path.join(root,'core/empty.html'),'utf8'),[plugin,{title:'$:/DefaultTiddlers',text:'[[Layout acceptance]]'},{title:'Layout acceptance',text:'Automatic leadsheet layout acceptance'}]));
 const {chromium}=await import('playwright-core');
 const browser=await chromium.launch({executablePath:process.env.CHROME_BIN||'/usr/bin/google-chrome',headless:true,args:['--no-sandbox','--disable-dev-shm-usage']});
 try{
