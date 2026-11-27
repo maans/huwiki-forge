@@ -43,6 +43,7 @@ function prefersFrameSeparatedEdit(win){
 function Book(parseTreeNode,options){this.initialise(parseTreeNode,options);}
 Book.prototype=new Widget();
 Book.prototype.disposeScore=function(){
+ if(this._pdfPager){this._pdfPager.destroy();this._pdfPager=null;}
  this._practiceBaseline=null;this._practiceAppliedKey=null;
  this._practiceScoreHost=null;this._practiceControls=null;
  if(this._observer){this._observer.disconnect();this._observer=null;}
@@ -80,10 +81,10 @@ Book.prototype.render=function(parent,nextSibling){
  }
  this._win=doc.defaultView;
  this.addEventListener("tm-edit-tiddler","handleEditTiddler");
- this.preference=this.wiki.getTiddlerText(MODE)||"auto";
+ this.preference=this.wiki.getTiddlerText(MODE)||this.wiki.getTiddlerText("$:/config/maans/repertoire/default-page-mode","spread");
  if(["auto","single","spread"].indexOf(this.preference)<0)this.preference="auto";
  this.setlistTitle=this.getAttribute("setlist","")||this.wiki.getTiddlerText(TEMP)||"";
- this.activeItem="";
+ this.activeItem="";this._notationChoice=Object.create(null);
  this.practiceEnabled=false;this.practiceMetronome=false;
  this.practiceMuteByItem=Object.create(null);this.practiceOpen=false;
  this._resize=this.updateMode.bind(this);
@@ -193,6 +194,7 @@ Book.prototype.selectItem=function(title,last){
  this.draw();
 };
 Book.prototype.pager=function(){
+ if(this._pdfPager)return this._pdfPager;
  return this._score&&this._score._pager&&this._score._pager.element&&this._score._pager.element.isConnected?
   this._score._pager:null;
 };
@@ -202,6 +204,12 @@ Book.prototype.updateMode=function(){
  var mode=Layout.mode(this.preference,width,height),selector;
  var pager=this.pager();
  if(!pager)return;
+ if(this._pdfPager){
+  if(pager.setSpread)pager.setSpread(mode==="spread"?2:1);
+  var state=pager.info();
+  if(this.lastPage&&state.count>0){this.lastPage=false;var shown=state.mode==="spread"?2:1;pager.go(Math.floor((state.count-1)/shown)*shown,false);}
+  this.updatePDFStatus();return;
+ }
  this.host.classList.toggle('huwrep-book-one-page',pager.info().count===1);
  selector=pager.element.querySelector(".huwabc-page-select");
  if(selector&&selector.value!==mode){
@@ -220,6 +228,13 @@ Book.prototype.updateMode=function(){
   if(!Number.isInteger(anchor.event)||!pager.revealOrdinal||!pager.revealOrdinal(anchor.event,true))
    pager.go(Number(anchor.page)||0,false);
  }
+};
+Book.prototype.updatePDFStatus=function(){
+ var pager=this._pdfPager;if(!pager||!this.host)return;
+ var info=pager.info();this.host.classList.toggle('huwrep-book-one-page',info.count===1);
+ if(this._displayMode)this._displayMode.textContent=info.mode==="spread"?"To sider":"Én side";
+ if(this._pageStatus)this._pageStatus.textContent=info.count?"Side "+info.page+(info.shown>1?"–"+Math.min(info.count,info.page+info.shown-1):"")+" / "+info.count:"PDF-noderne indlæses …";
+ if(this.lastPage&&info.count>0){this.lastPage=false;var spread=info.mode==="spread"?2:1;pager.go(Math.floor((info.count-1)/spread)*spread,false);}
 };
 Book.prototype.turn=function(delta){
  var all=model.entries(this.wiki,this.setlistTitle);
@@ -432,7 +447,22 @@ Book.prototype.draw=function(){
  if(row.childNodes.length)host.appendChild(row);
  var stage=el(doc,"main","huwrep-book-stage");host.appendChild(stage);
  var source=wiki.getTiddler(name(wiki,this.activeItem)),f=source&&source.fields;
- if(f&&typeof f["abc-source"]==="string"){
+ var notation=source?model.notation(wiki,source):{abc:false,pdf:""};
+ this._notationChoice=this._notationChoice||Object.create(null);
+ var selected=this._notationChoice[f&&f.title]||(f&&f["repertoire-sheet-format"]==="pdf"?"pdf":notation.abc?"abc":"pdf");
+ if(selected==="pdf"&&!notation.pdf)selected="abc";
+ if(selected==="abc"&&!notation.abc)selected="pdf";
+ if(notation.abc&&notation.pdf){
+  var sourceSelect=el(doc,"select","huwrep-input huwrep-book-source");sourceSelect.setAttribute("aria-label","Vælg noder til samme nummer");
+  sourceSelect.appendChild(choice(doc,"abc",notation.abcLabel||"ABC"));sourceSelect.appendChild(choice(doc,"pdf","PDF · originalnoder"));sourceSelect.value=selected;
+  sourceSelect.addEventListener("change",function(){self._notationChoice[f.title]=sourceSelect.value;self.draw();});toolbar.appendChild(sourceSelect);
+ }
+ if(selected==="pdf"&&notation.pdf){
+  var pdfHost=el(doc,"section","huwrep-book-pdf");stage.appendChild(pdfHost);
+  var PDF=require("$:/plugins/huwiki/repertoire/pdf-score.js");
+  this._pdfPager=PDF.mount(pdfHost,{wiki:wiki,source:notation.pdf,title:shortName(wiki,this.activeItem),spread:Layout.mode(this.preference,this._win.innerWidth,this._win.innerHeight)==="spread"?2:1,
+   onState:function(){self.updatePDFStatus();},onBoundary:function(direction){self.turn(direction);}});
+ }else if(notation.abc){
   host.insertBefore(this.practicePanel(doc),stage);
   var scoreHost=el(doc,"div","huwrep-book-score");stage.appendChild(scoreHost);
   this._practiceScoreHost=scoreHost;this._practiceVoiceSignature="";
@@ -529,12 +559,27 @@ Book.prototype.refresh=function(changed){
  if(titles.some(function(title){return title.indexOf("Repertoire/")===0;})){
   this.draw();return true;
  }
+ if(this._pdfPager){
+  var sourceTitle=name(this.wiki,this.activeItem),source=this.wiki.getTiddler(sourceTitle),asset=source&&source.fields["repertoire-pdf"];
+  if(changed[sourceTitle]||asset&&changed[asset]){this.draw();return true;}
+ }
  if(this._score&&this._score.refresh){
   try{return !!this._score.refresh(changed);}catch(_ignored){return false;}
  }
  return false;
 };
 Book.prototype._onKeyDown=function(event){
+ if(this._pdfPager&&!event.defaultPrevented&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
+  var target=event.target,tag=String(target&&target.tagName||"").toUpperCase();
+  if(!/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(tag)&&!(target&&target.isContentEditable)){
+   var delta=/^(ArrowRight|PageDown| )$/.test(event.key)?1:/^(ArrowLeft|PageUp)$/.test(event.key)?-1:0;
+   if(delta){event.preventDefault();event.stopPropagation();this.turn(delta);return;}
+   if(event.key==="Home"||event.key==="End"){
+    event.preventDefault();event.stopPropagation();var info=this._pdfPager.info(),spread=info.mode==="spread"?2:1;
+    this._pdfPager.go(event.key==="Home"?0:Math.floor(Math.max(0,info.count-1)/spread)*spread,false);return;
+   }
+  }
+ }
  if(event.key==="Escape"&&this.host&&this.host.classList.contains("huwrep-book-fullscreen")){
   this.host.classList.remove("huwrep-book-fullscreen");this.updateMode();return;
  }

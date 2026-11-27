@@ -63,6 +63,8 @@ Repertoire.prototype.render=function(parent,nextSibling){
  this.orchestraTitle=this.orchestraTitle||this.getAttribute("orchestra","");
  this.setlistTitle=this.setlistTitle||this.getAttribute("setlist","");
  this.activeItem=this.activeItem||"";
+ this.categoryFilter=this.categoryFilter||this.getAttribute("category","all");
+ this.formatFilter=this.formatFilter||this.getAttribute("format","all");
  var host=this.host=el(this.document,"section","huwrep");
  parent.insertBefore(host,nextSibling);this.domNodes.push(host);this.draw();
 };
@@ -95,7 +97,7 @@ Repertoire.prototype.addScorePicker=function(panel,orch,setTitle){
  status.setAttribute("role","status");
  var catalogues=Banks.list(wiki),indexes=null,loading=null;
  var songs=model.songs(wiki).filter(function(song){
-  return typeof song.fields["abc-source"]==="string"||song.fields.type==="text/vnd.abc";
+  var n=model.notation(wiki,song);return (n.abc||!!n.pdf)&&model.matches(wiki,song,{category:self.categoryFilter,format:self.formatFilter});
  });
  function renderQueue(){
   chosen.textContent="";
@@ -152,6 +154,7 @@ Repertoire.prototype.addScorePicker=function(panel,orch,setTitle){
    }));
   });
   var count=matches.length;
+  if(self.formatFilter==="pdf"||self.categoryFilter==="leadsheet"){if(!count)results.appendChild(el(doc,"span","huwrep-muted","Ingen forslag i den valgte visning"));return;}
   (indexes||[]).forEach(function(index,i){
    if(index.status!=="fulfilled")return;
    Banks.filter(index.value,query).forEach(function(group){
@@ -220,10 +223,18 @@ Repertoire.prototype.draw=function(){
    self.alert(r.titles+" titler behandlet · "+r.createdItems+" tilføjet repertoiret · "+r.createdPieces+" nye biblioteksposter.");}
   catch(e){self.alert(e.message);}
  }));
+ var filters=el(doc,"div","huwrep-inline huwrep-library-filters");importPanel.appendChild(filters);
+ var categoryFilter=el(doc,"select","huwrep-input");categoryFilter.setAttribute("aria-label","Nodekategori");
+ [["all","Alle kategorier"],["leadsheet","Leadsheets"]].forEach(function(p){option(doc,categoryFilter,p[0],p[1]);});categoryFilter.value=this.categoryFilter||"all";
+ var formatFilter=el(doc,"select","huwrep-input");formatFilter.setAttribute("aria-label","Nodeformat");
+ [["all","PDF og ABC"],["pdf","PDF-noder"],["abc","ABC-noder"]].forEach(function(p){option(doc,formatFilter,p[0],p[1]);});formatFilter.value=this.formatFilter||"all";
+ filters.append(categoryFilter,formatFilter);
+ categoryFilter.addEventListener("change",function(){self.categoryFilter=this.value;self.draw();});formatFilter.addEventListener("change",function(){self.formatFilter=this.value;self.draw();});
  var songList=model.songs(wiki),known=model.items(wiki,orch),
   owned=Object.create(null);
  known.forEach(function(t){owned[t.fields["music-title"]]=true;});
- var available=songList.filter(function(s){return !owned[s.fields.title];});
+ this._sourceTitles=Object.create(null);songList.forEach(function(s){self._sourceTitles[s.fields.title]=true;});
+ var available=songList.filter(function(s){return !owned[s.fields.title]&&model.matches(wiki,s,{category:self.categoryFilter,format:self.formatFilter});});
  if(available.length){
   var chooser=el(doc,"div","huwrep-inline"),source=el(doc,"select","huwrep-input");
   source.setAttribute("aria-label","Eksisterende melodi i musikbiblioteket");
@@ -282,7 +293,8 @@ Repertoire.prototype.draw=function(){
   this.selectionMessage||(setTitle?"Tryk på en titel for at vælge nummeret. Tryk igen for at fjerne det fra sætlisten.":"Vælg eller opret en sætliste ovenfor for at vælge numre."));
  hint.setAttribute("role","status");repertoire.appendChild(hint);
  var ul=el(doc,"ul","huwrep-song-grid");repertoire.appendChild(ul);
- known.forEach(function(item){
+ var visibleKnown=known.filter(function(item){return model.matches(wiki,item.fields["music-title"],{category:self.categoryFilter,format:self.formatFilter});});
+ visibleKnown.forEach(function(item){
   var id=item.fields.title,title=shortSheetName(wiki,id),selected=list.indexOf(id)>=0;
   var li=el(doc,"li","huwrep-song-item");
   var tile=button(doc,"",function(){
@@ -303,12 +315,15 @@ Repertoire.prototype.draw=function(){
   tile.setAttribute("aria-pressed",String(selected));
   tile.setAttribute("aria-label",(selected?"Fjern ":"Tilføj ")+title+(selected?" fra sætlisten":" til sætlisten"));
   tile.appendChild(el(doc,"span","huwrep-song-title",title));
+  var notation=model.notation(wiki,item.fields["music-title"]),badges=[notation.category==="leadsheet"?"Leadsheet":"",notation.pdf?"PDF":"",notation.abc?"ABC":""].filter(Boolean);
+  if(badges.length)tile.appendChild(el(doc,"span","huwrep-song-formats",badges.join(" · ")));
   var details=[item.fields["repertoire-key"],item.fields["repertoire-tempo"]].filter(Boolean).join(" · ");
   if(details)tile.appendChild(el(doc,"span","huwrep-song-detail",details));
   var indicator=el(doc,"span","huwrep-song-indicator",selected?"✓":"+");
   indicator.setAttribute("aria-hidden","true");tile.appendChild(indicator);
   li.appendChild(tile);ul.appendChild(li);
  });
+ if(known.length&&!visibleKnown.length)repertoire.appendChild(el(doc,"p","huwrep-muted","Ingen numre i denne visning. Hele repertoiret og sætlisterne er bevaret."));
  if(!known.length)repertoire.appendChild(el(doc,"p","huwrep-muted","Orkestret har endnu ingen melodier."));
  if(!setTitle)return;
  var stand=el(doc,"div","huwrep-panel huwrep-stand");host.appendChild(stand);
@@ -332,6 +347,16 @@ Repertoire.prototype.draw=function(){
  var editorPanel=el(doc,"section","huwrep-editor-panel");workspace.appendChild(editorPanel);
  editorPanel.appendChild(el(doc,"div","huwrep-editor-position","NUMMER "+(activeIndex+1)+" AF "+list.length));
  editorPanel.appendChild(el(doc,"h4","huwrep-editor-title",shortSheetName(wiki,this.activeItem)));
+ var sourceTitle=sheetName(wiki,this.activeItem),sourceRecord=wiki.getTiddler(sourceTitle),sourceFields=sourceRecord&&sourceRecord.fields||{};
+ var sourceOptions=el(doc,"details","huwrep-source-options");sourceOptions.appendChild(el(doc,"summary","","Nodekilder og kategori"));
+ var pdfSource=labelled(doc,"PDF-fil (adresse eller PDF-tiddler)",sourceFields["repertoire-pdf"]||""),category=labelled(doc,"Kategori",model.category(sourceRecord),"select");
+ option(doc,category.input,"","Almindeligt repertoire");option(doc,category.input,"leadsheet","Leadsheet (også i hele repertoiret)");category.input.value=model.category(sourceRecord);
+ sourceOptions.append(pdfSource.wrap,category.wrap,button(doc,"Gem nodekilder og kategori",function(){
+  try{
+   var current=wiki.getTiddler(sourceTitle);if(!current)throw Error("Melodien findes ikke.");
+   wiki.addTiddler(new $tw.Tiddler(current,{"repertoire-pdf":pdfSource.input.value.trim(),"repertoire-category":category.input.value,"repertoire-has-leadsheet":category.input.value==="leadsheet"?"yes":""}));self.draw();
+  }catch(error){self.alert(error.message);}
+ }));editorPanel.appendChild(sourceOptions);
  var effective=model.effective(wiki,setTitle,this.activeItem),original=model.sourceAgreement(wiki,this.activeItem);
  var originalLabel=[original.writtenKey?"Skrevet "+original.writtenKey+" · Klang C "+original.key:original.key?"ABC K:"+original.key:"Ingen ABC-toneart",original.tempo?"Q:"+original.tempo:"Intet ABC-tempo"].join(" · ");
  editorPanel.appendChild(el(doc,"p","huwrep-source-hint","Oprindelige noder: "+originalLabel));
@@ -461,7 +486,8 @@ Repertoire.prototype.refresh=function(changedTiddlers){
   if(actual&&actual.fields.list===pending.list){this._ownReorder=null;return false;}
  }
  if(pending&&keys.indexOf(pending.title)>=0)this._ownReorder=null;
- var affected=keys.some(function(title){return title.indexOf("Repertoire/")===0;});
+ var sourceTitles=this._sourceTitles||{};
+ var affected=keys.some(function(title){return title.indexOf("Repertoire/")===0||sourceTitles[title];});
  if(affected){
   var keepFocus=this.document.activeElement===this.scoreSearch;
   this.refreshSelf();

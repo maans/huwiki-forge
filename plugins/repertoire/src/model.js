@@ -29,9 +29,30 @@ function parseTitles(text){
   return normalized(line.replace(/^\s*(?:[•*–-]|\d+[.)])\s+/,"").split("\t")[0]);
  }).filter(function(s){if(!s)return false;var k=s.toLocaleLowerCase();if(seen[k])return false;seen[k]=true;return true;});
 }
+function category(tiddler){
+ var f=tiddler&&tiddler.fields||tiddler||{};
+ return String(f["repertoire-category"]||"").toLowerCase()==="leadsheet"||String(f["repertoire-has-leadsheet"]||"").toLowerCase()==="yes"?"leadsheet":"";
+}
+function notation(wiki,value){
+ var t=typeof value==="string"?wiki.getTiddler(value):value,f=t&&t.fields||{};
+ var ref=String(f["repertoire-pdf"]||""),asset=ref&&wiki.getTiddler(ref);
+ var pdf=asset?String(asset.fields._canonical_uri||""):ref;
+ if(!pdf&&f.type==="application/pdf")pdf=String(f._canonical_uri||"");
+ return {abc:typeof f["abc-source"]==="string"&&!!f["abc-source"].trim()||f.type==="text/vnd.abc"&&!!String(f.text||"").trim(),pdf:pdf,category:category(t),abcLabel:String(f["repertoire-abc-label"]||"ABC")};
+}
+function matches(wiki,value,filters){
+ var n=notation(wiki,value);filters=filters||{};
+ return (!filters.category||filters.category==="all"||n.category===filters.category)&&
+  (!filters.format||filters.format==="all"||filters.format==="abc"&&n.abc||filters.format==="pdf"&&!!n.pdf);
+}
+function setCategory(wiki,title,value){
+ var t=wiki.getTiddler(title);if(!t)throw Error("Melodien findes ikke.");
+ if(value!==""&&value!=="leadsheet")throw Error("Ukendt nodekategori.");
+ update(wiki,t,{"repertoire-category":value,"repertoire-has-leadsheet":value==="leadsheet"?"yes":""});
+}
 function songs(wiki){
  return all(wiki).filter(function(t){
-  var f=t.fields;return f[KIND]==="piece"||typeof f["abc-source"]==="string"||
+  var f=t.fields,n=notation(wiki,t);return f[KIND]==="piece"||n.abc||!!n.pdf||f.type==="application/pdf"||
    typeof f["repertoire-image"]==="string"||(f.tags||[]).indexOf("RepertoireMelodi")>=0;
  }).sort(function(a,b){return a.fields.title.localeCompare(b.fields.title);});
 }
@@ -168,7 +189,7 @@ function saveArrangement(wiki,itemTitle,setlistTitle,values,scope){
 }
 exports.orchestras=orchestras;
 exports.orchestra=orchestra;
-exports.songs=songs;
+exports.songs=songs;exports.category=category;exports.notation=notation;exports.matches=matches;exports.setCategory=setCategory;
 exports.parseTitles=parseTitles;
 exports.addPiece=addPiece;
 exports.items=items;

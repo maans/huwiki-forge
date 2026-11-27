@@ -68,3 +68,32 @@ Test: `node --test tests/repertoire-edition.test.mjs`. Browser-accept: `node scr
 - PDF Publisher placerer aftalerne under sidste nodesystem, når der er plads. Hvis pladsen ikke rækker, får aftalerne deres egen side. Indholdsfortegnelsen bruger korte titler, og det valgte C/B♭/E♭-instrument er stadig angivet på PDF-forsiden.
 - iPad/Quine anvender fortsat Del / udskriv PDF som native fildeling, aldrig navigation til `blob:`.
 
+
+## PDF, ABC og Leadsheets i samme repertoire
+
+Et nummer beholder sin oprindelige titel og kan have både `abc-source` og
+`repertoire-pdf`. PDF-feltet er en adresse eller en PDF-tiddler med
+`_canonical_uri`. Et valgt nummer står kun én gang i sætlisten, også når begge
+nodeformater findes. `repertoire-sheet-format: pdf` vælger original-PDF som
+første visning; ellers vælges ABC, når det findes. `repertoire-abc-label` kan
+navngive varianten, fx “Leadsheet · anden udgave”. Formatvalget i nodebogen
+ændrer kun den aktuelle visning.
+
+`repertoire-category: leadsheet` eller `repertoire-has-leadsheet: yes` gør
+nummeret synligt i kategorien Leadsheets. Det bliver også i hele repertoiret.
+Værkstedets filtre kan vise PDF, ABC og Leadsheets; “Nodekilder og kategori”
+redigerer disse oplysninger uden at ændre ABC-koden. Et særskilt overblik kan
+bruge `<$huwiki-repertoire category="leadsheet"/>`.
+
+Nodebogen starter med to sider (et gemt valg respekteres). PDF viser 1+2,
+derefter 3+4, og fortsætter til næste nummer ved sidste opslag. Forrige opslag
+fra side 1 går til det foregående nummers sidste opslag. Sideknapper og
+PageUp/PageDown bruger samme navigation. ABC beholder sine lyd-, øve- og
+transponeringsfunktioner; de scannede PDF-sider ændres ikke.
+
+PDF-viseren konfigureres i `$:/config/maans/repertoire/pdf-viewer` med en URL
+på samme websted som wikien. PDF-adresser opløses i forhold til wikien, så
+fx `pdf/four-brothers.pdf` virker, selv om viseren ligger i en anden mappe.
+Viseren udveksler `birdland-pdf:ready`, `birdland-pdf:state` og kommandoer via
+`postMessage`; både afsenderens origin og den konkrete iframe kontrolleres.
+Uden en konfigureret viser findes stadig et direkte PDF-link.
