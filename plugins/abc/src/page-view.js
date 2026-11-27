@@ -11,6 +11,7 @@ module-type: library
 var I18n=require('$:/plugins/huwiki/abc/i18n.js');
 var PrintExport=require('$:/plugins/huwiki/abc/print-export.js');
 var InstrumentView=require('$:/plugins/huwiki/abc/instrument-view.js');
+var Fullscreen=require('$:/plugins/huwiki/abc/fullscreen.js');
 var serial=0,activeDesk=null;
 function geometry(fields){
  fields=fields||{};
@@ -153,7 +154,8 @@ function mount(root,opts){
  var ahead=E('aside','huwabc-page-ahead'),aheadLabel=E('div','huwabc-page-ahead-label'),aheadImage=E('div','huwabc-page-ahead-image');ahead.appendChild(aheadLabel);ahead.appendChild(aheadImage);ahead.hidden=true;shell.appendChild(ahead);
  var transportSlot=E('div','huwabc-page-transport');shell.appendChild(transportSlot);
  var warning=E('div','huwabc-page-warning');warning.hidden=true;shell.appendChild(warning);
- var transport=null,transportMark=null,deskOldMode=null,deskOldZoom=null,oldOverflow='',oldFocus=null,oldScroll=0;
+ var transport=null,transportMark=null,deskOldMode=null,deskOldZoom=null,oldFocus=null;
+ var fullscreen=shell.closest('.huwrep-book')?null:Fullscreen.mount({host:shell,onExit:function(){setDesk(false);}});
  function requestedCount(){return {spread:2,three:3,four:4}[mode]||1;}
  function isPaged(){return mode!=='stack'&&mode!=='flow';}
  function countShown(){return Math.min(requestedCount(),Math.max(1,pages.length),Math.max(1,Math.floor((viewport.clientWidth+12)/332)));}
@@ -330,7 +332,7 @@ function mount(root,opts){
   if(desk){
    if(nav.parentNode!==transportSlot)transportSlot.insertBefore(nav,transportSlot.firstChild);
    activeDesk=api;deskOldMode=mode;deskOldZoom=zoom;mode='spread';zoom='page';
-   oldFocus=doc.activeElement;oldScroll=win.scrollY;oldOverflow=doc.body.style.overflow;doc.body.style.overflow='hidden';
+   oldFocus=doc.activeElement;if(fullscreen)fullscreen.enter(true);
    shell.setAttribute('role','dialog');shell.setAttribute('aria-modal','true');shell.setAttribute('aria-label',tr('Nodepult. Escape går tilbage.','Music stand. Escape returns.'));
    transport=typeof opts.transport==='function'?opts.transport():opts.transport;
    if(transport&&transport.parentNode){transportMark=doc.createComment('music stand transport');transport.parentNode.insertBefore(transportMark,transport);transportSlot.appendChild(transport);}
@@ -338,9 +340,9 @@ function mount(root,opts){
   }else{
    if(nav.parentNode===transportSlot)shell.insertBefore(nav,ahead);
    if(transportMark&&transportMark.parentNode){transportMark.parentNode.insertBefore(transport,transportMark);transportMark.remove();}transportMark=null;transport=null;
-   doc.body.style.overflow=oldOverflow;shell.removeAttribute('role');shell.removeAttribute('aria-modal');
+   if(fullscreen)fullscreen.exit();shell.removeAttribute('role');shell.removeAttribute('aria-modal');
    if(activeDesk===api)activeDesk=null;pageIndex=activePage;mode='single';zoom=deskOldZoom||'width';save('pageMode','single');
-   if(opts.onDesk)opts.onDesk(false);if(oldFocus&&oldFocus.isConnected)oldFocus.focus({preventScroll:true});win.scrollTo(0,oldScroll);
+   if(opts.onDesk)opts.onDesk(false);if(oldFocus&&oldFocus.isConnected)oldFocus.focus({preventScroll:true});
   }
   previewKey='';paint();
  }
@@ -431,7 +433,7 @@ function mount(root,opts){
   var b=d.querySelector('button');b.textContent=tr('Udskriv / Gem som PDF','Print / Save as PDF');b.addEventListener('click',function(){win.print();});win.focus();return true;
  }
  function destroy(){
-  if(closed)return;if(desk)setDesk(false);closed=true;
+  if(closed)return;if(desk)setDesk(false);closed=true;if(fullscreen)fullscreen.destroy();
   if(observer)observer.disconnect();win.removeEventListener('resize',scheduleResize);if(resizeFrame)win.cancelAnimationFrame(resizeFrame);shell.removeEventListener('keydown',keys,true);
   ['click','mousedown','mouseup'].forEach(function(type){root.removeEventListener(type,suppress,true);});root.removeEventListener('pointerdown',down);root.removeEventListener('pointerup',up);
   viewport.removeEventListener('wheel',manualScroll);viewport.removeEventListener('scroll',scrolled);viewport.removeEventListener('pointerdown',scrollPointer);root.removeEventListener('pointercancel',cancelTouch);root.removeEventListener('pointermove',moved);

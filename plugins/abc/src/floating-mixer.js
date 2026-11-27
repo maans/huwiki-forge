@@ -47,6 +47,7 @@ module-type: library
     function saveState() { try { win.sessionStorage.setItem(storeKey, JSON.stringify({floating:floating,x:x,y:y,collapsed:collapsed})); } catch (_) {} }
     var initial = safeState() || positions.get(doc) || {};
     var floating = !!(options.initialFloating || initial.floating);
+    var floatingAnchor=options.anchor||null;
     var overlap=doc.querySelectorAll('.huwabc-mini-mixer--floating').length;
     var x = Number.isFinite(initial.x) ? initial.x : 100+overlap*26;
     var y = Number.isFinite(initial.y) ? initial.y : 105+overlap*26;
@@ -176,11 +177,27 @@ module-type: library
       y = Math.max(4, Math.min(y, Math.max(4, win.innerHeight - Math.min(height,win.innerHeight) - 4)));
       panel.style.left = Math.round(x) + 'px';panel.style.top = Math.round(y) + 'px';
     }
+    function floatingParent() {
+      var native=doc.fullscreenElement||doc.webkitFullscreenElement;
+      if(native)return native;
+      var anchor=floatingAnchor&&floatingAnchor.closest&&floatingAnchor.closest('.huwabc-fullscreen-surface');
+      var own=options.host.closest&&options.host.closest('.huwabc-fullscreen-surface');
+      var retained=panel.parentNode&&panel.parentNode.classList&&panel.parentNode.classList.contains('huwabc-fullscreen-surface')?panel.parentNode:null;
+      return anchor||own||retained||doc.querySelector('.huwabc-fullscreen-surface')||doc.body;
+    }
+    function placeFloating() {
+      var parent=floatingParent();
+      if(panel.parentNode!==parent)parent.appendChild(panel);
+    }
+    function onFullscreenChange() {
+      if(closed||!floating)return;
+      placeFloating();clamp();
+    }
     function layout(nextFloating) {
       floating = !canDock || !!nextFloating;
       panel.classList.toggle('huwabc-mini-mixer--floating',floating);
       if (floating) {
-        if (panel.parentNode !== doc.body) doc.body.appendChild(panel);
+        placeFloating();
         panel.style.position = 'fixed';
         clamp();
       } else {
@@ -216,6 +233,7 @@ module-type: library
     function show(opts) {
       opts = opts || {};
       if (closed) return;
+      if(opts.anchor)floatingAnchor=opts.anchor;
       if (opts.anchor && !visibleRequested && !options.sidebarMixer) positionFromAnchor(opts.anchor);
       visibleRequested = true;
       if (!floating && (!sidebarVisible() || opts.floating)) layout(true);
@@ -224,7 +242,7 @@ module-type: library
       // panel itself, both now and after that layout, rather than its container.
       revealDocked(opts.anchor);
       win.requestAnimationFrame(function(){revealDocked(opts.anchor);});
-      if (floating) {clamp();panel.style.zIndex = '10100';}
+      if (floating) {placeFloating();clamp();panel.style.zIndex = '10100';}
     }
     function hide() { if (closed) return;visibleRequested = false;syncVisibility(); }
     function toggle(opts) {if (isVisible()) hide();else show(opts);}
@@ -489,12 +507,16 @@ module-type: library
       endDrag();positions.set(doc,{floating:floating,x:x,y:y});
       closed=true;if (panel.parentNode) panel.parentNode.removeChild(panel);
       win.removeEventListener('resize',onResize);
+      doc.removeEventListener('fullscreenchange',onFullscreenChange);
+      doc.removeEventListener('webkitfullscreenchange',onFullscreenChange);
       if (wiki && wiki.removeEventListener) wiki.removeEventListener('change',onWikiChange);
     }
     var lastSource=String(options.source||'');rebuild(lastSource);rebuildChords(lastSource);chooseTab('voices');setCollapsed(collapsed);
     if (options.initialFloating && options.anchor && !Number.isFinite(initial.x)) positionFromAnchor(options.anchor);
     layout(floating);
     win.addEventListener('resize',onResize);
+    doc.addEventListener('fullscreenchange',onFullscreenChange);
+    doc.addEventListener('webkitfullscreenchange',onFullscreenChange);
     if (wiki && wiki.addEventListener) wiki.addEventListener('change',onWikiChange);
     return {element:panel,update:update,destroy:destroy,redock:function(){layout(false);},
       show:show,hide:hide,toggle:toggle,isVisible:isVisible,isFloating:function(){return floating;},

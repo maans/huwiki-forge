@@ -51,6 +51,7 @@ function fixture({readerActive=true,preexistingSource=false,createDraft=true,ipa
  const classes=new Set(["huwrep-book-fullscreen","huwrep-reader-active"]);
  let dom="original score SVG and controls";
  const host={hidden:false,isConnected:true,
+  querySelector(){return null;},
   classList:{contains(name){return classes.has(name);},remove(...names){for(const n of names)classes.delete(n);},toggle(name,yes){if(yes)classes.add(name);else classes.delete(name);}},
   get textContent(){return dom;},set textContent(value){dom=value;log.push("dom:"+value);},
   removeEventListener(){}};
@@ -58,6 +59,7 @@ function fixture({readerActive=true,preexistingSource=false,createDraft=true,ipa
  parent.setVariable("tv-story-list",storyTitle);
  const book=new Book({type:"huwiki-repertoire-book",attributes:{}},{wiki,parentWidget:parent,document:{}});
  Object.assign(book,{host,_win:win,activeItem:item,setlistTitle:setlist,preference:"auto",children:[]});
+ book._fullscreen={enter(){log.push("fullscreen entered");},exit(){log.push("fullscreen exited");},destroy(){log.push("fullscreen destroyed");}};
  book.addEventListener("tm-edit-tiddler","handleEditTiddler");
  const reader={active:readerActive,mode:"vis",fitMode:"width",controlsOpen:true};
  const pageCalls=[];

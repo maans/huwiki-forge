@@ -37,7 +37,9 @@ function harness(onEdit){
  host.append(actions,paper);
  // A presentation class must never be used to redispatch a synthetic click.
  actions.querySelector=()=>({click(){syntheticClicks++;}});
- const exports={};runInNewContext(source,{exports});
+ // Fullscreen DOM restoration has its own lifecycle tests; this harness
+ // exercises the editor handoff and retains its deliberately small DOM.
+ const exports={};runInNewContext(source,{exports,require(){return {mount(){return {enter(){},exit(){},destroy(){}};}};}});
  const reader=exports.mount({host,actions,paper,pager:()=>null,onEdit});
  const click=()=>{
   const event={type:"click",preventDefault(){this.prevented=true;},stopPropagation(){this.stopped=true;}};

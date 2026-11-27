@@ -62,6 +62,8 @@ function Reader(options){
  this.mode="vis";this.controlsOpen=false;this.fitMode="fit";this.active=false;
  try{var remembered=this.win.localStorage.getItem("huwabc-reader-fit-mode");if(["fit","width","original"].includes(remembered))this.fitMode=remembered;}catch(_ignored){}
  this.cleanup=[];this._touch=null;
+ var self=this;
+ this.fullscreen=this.book?null:require("$:/plugins/huwiki/abc/fullscreen.js").mount({host:this.host,onExit:function(){self.exit();}});
  this.create();
  // Repertoire already owns a reading preference. Show the same selected mode
  // instead of silently resetting it when a musician enters ABC's reader.
@@ -187,12 +189,15 @@ Reader.prototype.openEditor=function(event){
 Reader.prototype.enter=function(state){
  if(state){this.mode=state.mode==="practice"?"practice":"vis";this.fitMode=["fit","width","original"].includes(state.fitMode)?state.fitMode:(state.fill?"width":this.fitMode);this.controlsOpen=!!state.controlsOpen;}
  else {this.mode="vis";this.controlsOpen=false;}
- this.active=true;this.fitChoice.value=this.fitMode;if(this.book){var list=this.book.querySelector(".huwrep-book-list");if(list)list.hidden=true;}this.sync();this.applyPages();this.update();this.updateScale();
+ this.active=true;
+ if(this.fullscreen)this.fullscreen.enter(!state);
+ this.fitChoice.value=this.fitMode;if(this.book){var list=this.book.querySelector(".huwrep-book-list");if(list)list.hidden=true;}this.sync();this.applyPages();this.update();this.updateScale();
  if(this.win)this.win.dispatchEvent(new this.win.Event("resize"));
 };
 Reader.prototype.exit=function(options){
  var wasActive=this.active;
  this.active=false;this._touch=null;this.controlsOpen=false;
+ if(this.fullscreen)this.fullscreen.exit();
  if(this.book){
   var list=this.book.querySelector(".huwrep-book-list");
   if(list)list.hidden=true;
@@ -320,6 +325,7 @@ Reader.prototype.destroy=function(){
  // Teardown must not wake every other score's resize listeners while the
  // old DOM and audio resources are being removed for an editor transition.
  this.exit({notify:false});
+ if(this.fullscreen){this.fullscreen.destroy();this.fullscreen=null;}
  this.cleanup.splice(0).forEach(function(fn){fn();});
  if(this.entry&&this.entry.parentNode)this.entry.parentNode.removeChild(this.entry);
  if(this.toolbar&&this.toolbar.parentNode)this.toolbar.parentNode.removeChild(this.toolbar);

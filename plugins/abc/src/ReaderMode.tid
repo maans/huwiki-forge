@@ -4,6 +4,17 @@ tags: $:/tags/Stylesheet
 
 /* Musicians' reading view: the score owns the screen, without altering ABC
    notation, audio or TiddlyWiki's normal editor. Only the active score changes. */
+@media screen {
+ .huwabc-fullscreen-surface.huwabc-fullscreen-surface.huwabc-fullscreen-surface{
+  position:fixed!important;inset:0!important;width:100vw!important;
+  height:100vh!important;height:100dvh!important;max-width:none!important;
+  max-height:none!important;margin:0!important;box-sizing:border-box!important;
+  isolation:isolate;
+ }
+ .huwabc-fullscreen-surface{z-index:10040!important}
+ .huwabc-fullscreen-surface:fullscreen{width:100%!important;height:100%!important}
+ .huwabc-fullscreen-surface:-webkit-full-screen{width:100%!important;height:100%!important}
+}
 .huwabc-reader-toolbar[hidden],
 .huwabc-reader-edges[hidden],
 .huwabc-reader-menu-panel[hidden]{display:none!important}
@@ -28,7 +39,7 @@ tags: $:/tags/Stylesheet
 }
 /* The original toolbars and secondary panels remain mounted so audio, mixer
    and the page renderer keep their existing state. They are just not visible. */
-.huwabc-reader-active > :not(.huwabc-page-shell):not(.huwabc-audio):not(.huwabc-reader-toolbar):not(.huwabc-reader-edges){
+.huwabc-reader-active > :not(.huwabc-page-shell):not(.huwabc-audio):not(.huwabc-reader-toolbar):not(.huwabc-reader-edges):not(.huwabc-mini-mixer){
  display:none!important
 }
 /* PageView rehomes the SVG inside a top-level page-shell. The original
@@ -121,7 +132,7 @@ tags: $:/tags/Stylesheet
  cursor:pointer;
  border:1px solid #9aa8a0;
  box-shadow:0 1px 8px #0002;
- background:#f8faf7ef;
+ background:#f8faf7;
  color:#172d27;
  border-radius:9px;
  min-height:44px;
@@ -134,7 +145,7 @@ tags: $:/tags/Stylesheet
  cursor:pointer;
  border:1px solid #9aa8a0;
  box-shadow:0 1px 8px #0002;
- background:#f8faf7ef;
+ background:#f8faf7;
  color:#172d27;
  border-radius:9px;
  min-width:44px;
@@ -150,7 +161,7 @@ tags: $:/tags/Stylesheet
  max-height:65dvh;
  overflow:auto;
  padding:13px;
- background:#1a2924f2;
+ background:#1a2924;
  box-shadow:0 12px 32px #0005;
  border-radius:11px
 }

@@ -227,7 +227,8 @@
   box-sizing:border-box;
   padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
  }
- .huwrep-session.huwrep-book-fullscreen:fullscreen {height:100%!important}
+ .huwrep-session.huwrep-book-fullscreen:fullscreen,
+ .huwrep-session.huwrep-book-fullscreen:-webkit-full-screen {height:100%!important}
  .huwrep-book-fullscreen .huwrep-book-header {padding:4px 8px}
  .huwrep-book-fullscreen .huwrep-book-heading {padding:2px 8px}
  .huwrep-book-fullscreen .huwrep-book-agreement,
@@ -237,6 +238,18 @@
     book's own controls and PDF link available when the frame cannot load. */
  .huwrep-book-fullscreen:has(.huwrep-book-pdf-status[hidden]) .huwrep-book-footer,
  .huwrep-book-fullscreen:has(.huwrep-book-pdf-status[hidden]) .huwrep-book-pdf-link {display:none}
+}
+
+/* Each reading surface owns its layers. Audio and native score selectors
+   must never paint above the opaque display menu. */
+.huwrep-session {isolation:isolate}
+.huwrep-session > :is(.huwrep-book-heading,.huwrep-performance,.huwrep-book-practice,.huwrep-book-footer) {position:relative;z-index:1}
+.huwrep-session > .huwrep-book-stage {z-index:0;isolation:isolate}
+.huwrep-session-settings-body {z-index:1;isolation:isolate;background:#fff;opacity:1}
+.huwrep-session-settings:not([open]) > .huwrep-session-settings-body {display:none!important}
+@media screen {
+ .huwrep-session.huwrep-book-fullscreen {z-index:30000!important;min-width:0!important;width:100vw!important;max-height:none!important}
+ .huwrep-book-fullscreen .huwrep-book-stage {min-height:0!important}
 }
 
 .huwrep-book:not(.huwrep-book-fullscreen) :is(.huwrep-reading-controls,.huwrep-reading-fit) {display:none}
