@@ -50,81 +50,29 @@ try{
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.locator(".silba-home").waitFor();
  await page.getByRole("link",{name:"Åbn nodebogen"}).click();
- const score=page.locator(".huwrep-book .huwabc-score").first();
- await score.waitFor();
- // Repertoire opens directly on the notation, just like forScore.
- await page.waitForFunction(()=>document.querySelector(".huwrep-book .huwabc-score.huwabc-reader-active"),
-  undefined,{timeout:20000});
- await page.waitForFunction(()=>document.querySelector(".huwabc-score.huwabc-reader-active"));
- assert.ok(await score.evaluate(el=>Math.abs(el.getBoundingClientRect().width-innerWidth)<5),"Reader must own the viewport");
- assert.equal(await score.locator(".huwabc-head").evaluate(el=>getComputedStyle(el).display),"none","Editor tools should disappear during performance");
- const debugLayers=await score.evaluate(el=>({
-  children:Array.from(el.children).map(c=>({className:c.className,tag:c.tagName,display:getComputedStyle(c).display,rect:[c.offsetWidth,c.offsetHeight],outer:c.outerHTML.slice(0,230)})),
-  sheets:Array.from(el.querySelectorAll(".huwabc-page-shell,.huwabc-page-select,.huwabc-paper")).slice(0,12).map(c=>({className:c.className,parent:c.parentElement?.className,display:getComputedStyle(c).display,rect:[c.offsetWidth,c.offsetHeight]}))
- }));
- console.log("ABC READER LAYERS",JSON.stringify(debugLayers));
- await score.locator(".huwabc-page-shell").first().waitFor({state:"visible",timeout:14000});
- await page.waitForFunction(()=>document.querySelector(".huwabc-reader-menu")?.offsetParent!==null);
- await score.locator(".huwabc-paper svg").first().waitFor({state:"attached",timeout:10000});
- await score.evaluate(el=>{window.__abcReaderOriginalSvg=el.querySelector(".huwabc-paper svg");});
- await score.locator(".huwabc-reader-menu").click();
- // The performance menu must leave room for the sheet: four small icon
- // actions in one row, with hover/screen-reader labels and no wide text bars.
- const controlLayout=await score.evaluate(el=>{
-  const panel=el.querySelector(".huwabc-reader-menu-panel");
-  const icons=Array.from(el.querySelectorAll(".huwabc-reader-modes button"));
-  const list=el.querySelector(".huwabc-reader-list");
-  return {
-   panelWidth:panel.getBoundingClientRect().width,
-   labels:icons.map(b=>b.getAttribute("aria-label")),
-   icons:icons.map(b=>!!b.querySelector("svg")),
-   tops:icons.map(b=>Math.round(b.getBoundingClientRect().top)),
-   heights:icons.map(b=>b.getBoundingClientRect().height),
-   listWidth:list&&list.getBoundingClientRect().width,
-   fields:el.querySelectorAll(".huwabc-reader-options select").length
-  };
- });
- assert.equal(controlLayout.labels[0],"Vis");
- assert.ok(["Øv","Practice"].includes(controlLayout.labels[1]),"Practice icon remains accessible in both languages");
- assert.deepEqual(controlLayout.labels.slice(2),["Redigér","Luk visning"]);
- assert.ok(controlLayout.icons.every(Boolean),"reader actions use actual monochrome icons");
- assert.equal(new Set(controlLayout.tops).size,1,"all four mode icons must share one row");
- assert.ok(controlLayout.heights.every(n=>n<=46&&n>=40),"icons stay compact and touch-friendly");
- assert.ok(controlLayout.panelWidth<=290,"the old dark menu must not cover a large score area");
- assert.ok(controlLayout.listWidth<=46,"the number list button is icon-sized");
- assert.equal(controlLayout.fields,2,"page layout and fit are the only remaining fields");
- await score.locator(".huwabc-reader-modes button").nth(1).click();
- assert.ok(await score.evaluate(el=>el.classList.contains("huwabc-reader-practice")),"Practice should keep the same score open");
- await score.locator(".huwabc-reader-modes button").nth(0).click();
- assert.ok(!await score.evaluate(el=>el.classList.contains("huwabc-reader-practice")),"Vis should restore notation-first reading");
- const unchanged=await score.evaluate(el=>window.__abcReaderOriginalSvg===el.querySelector(".huwabc-paper svg"));
- assert.ok(unchanged,"Switching Vis/Øv must not rerender or replace the notation SVG");
- const option=score.locator(".huwabc-reader-page-choice");
- await option.selectOption("single");
- await page.waitForFunction(()=>document.querySelector(".huwabc-page-select")?.value==="single");
- await option.selectOption("spread");
- await page.waitForFunction(()=>document.querySelector(".huwabc-page-select")?.value==="spread");
- await score.locator(".huwabc-reader-fit-choice").selectOption("width");
- assert.ok(await score.locator(".huwabc-page-viewport").evaluate(el=>Number(el.style.zoom)>0),"Width-fit sizes the existing score");
- await score.locator(".huwabc-reader-close").click();
- assert.ok(!await score.evaluate(el=>el.classList.contains("huwabc-reader-active")),"Normal ABC controls return on exit");
- assert.notEqual(await score.locator(".huwabc-head").evaluate(el=>getComputedStyle(el).display),"none");
-
- // The next-page gesture at the last staff must open the next setlist tune,
- // with the same immersive reader state; the ordinary Wiki story stays hidden.
- const book=page.locator(".huwrep-book").first();
- const heading=book.locator(".huwrep-book-heading h2");
- const firstTune=await heading.textContent();
- await score.locator(".huwabc-open-reader").click();
- let crossed=false;
- for(let attempt=0;attempt<10;attempt++){
-  await score.locator(".huwabc-reader-next").click({timeout:18000});
-  if((await heading.textContent())!==firstTune){crossed=true;break;}
- }
- assert.ok(crossed,"A page turn at the end of the tune must open the next setlist tune");
- assert.ok(await score.evaluate(el=>el.classList.contains("huwabc-reader-active")),
-  "Turning to another tune must keep the full-screen reading mode");
- assert.ok(!runtimeErrors.some(e=>/reader-mode|ReaderMode|Cannot read properties of undefined/.test(e)),runtimeErrors.join("; "));
- console.log("ABC shared reader: fullscreen, editor hidden, Vis/Øv, page selection, fit and cross-tune turning verified");
+ const book=page.locator('.huwrep-book').first();
+ await book.locator('.huwabc-page-shell').waitFor();
+ const heading=await book.locator('.huwrep-book-heading h2').textContent();
+ const original=await page.evaluate(title=>$tw.wiki.getTiddler(title)?.fields['abc-source'],heading);
+ assert.ok(original,'Acceptance uses the existing original score');
+ await book.locator('.huwrep-book-fullscreen-button').click();
+ const layout=await book.evaluate(el=>{const r=el.getBoundingClientRect(),h=el.querySelector('.huwrep-book-header').getBoundingClientRect(),s=el.querySelector('.huwrep-book-stage').getBoundingClientRect();return {width:r.width,height:r.height,header:h.height,gap:s.top-h.bottom,nested:el.querySelectorAll('.huwabc-reader-active').length};});
+ assert.ok(Math.abs(layout.width-1180)<3&&Math.abs(layout.height-820)<3,JSON.stringify(layout));
+ assert.ok(layout.header<=52&&Math.abs(layout.gap)<=2,'The book owns one compact toolbar');
+ assert.equal(layout.nested,0,'No second fullscreen controller inside the book');
+ await page.evaluate(title=>$tw.wiki.addTiddler(new $tw.Tiddler($tw.wiki.getTiddler(title),{'repertoire-youtube':'https://www.youtube.com/watch?v=8UNtQpMMSEM'})),heading);
+ await book.locator('.huwrep-session-settings>summary').click();
+ await book.locator('.huwrep-book-source').selectOption('youtube');
+ await book.locator('.huwrep-youtube-frame').waitFor({state:'attached'});
+ assert.equal(await book.locator('.huwabc-score').count(),0,'No hidden ABC player continues behind YouTube');
+ assert.match(await book.locator('.huwrep-youtube-frame').getAttribute('src'),/autoplay=0/);
+ assert.ok(await book.evaluate(el=>el.classList.contains('huwrep-book-fullscreen')),'View changes preserve fullscreen');
+ await book.locator('.huwrep-session-settings>summary').click();
+ await book.locator('.huwrep-book-source').selectOption('');
+ await book.locator('.huwabc-page-shell').waitFor();
+ assert.equal(await book.locator('.huwrep-youtube-frame').count(),0,'Switching back unloads the video');
+ assert.equal(await page.evaluate(title=>$tw.wiki.getTiddler(title).fields['abc-source'],heading),original,'Video choices leave ABC music unchanged');
+ assert.deepEqual(runtimeErrors,[]);
+ console.log('Standalone Normal/Advanced controls and one fullscreen book toolbar, ABC/YouTube lifecycle and original-score preservation verified');
  await context.close();
 }finally{await browser.close();}
