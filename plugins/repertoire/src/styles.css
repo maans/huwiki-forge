@@ -238,3 +238,37 @@
  .huwrep-book-fullscreen:has(.huwrep-book-pdf-status[hidden]) .huwrep-book-footer,
  .huwrep-book-fullscreen:has(.huwrep-book-pdf-status[hidden]) .huwrep-book-pdf-link {display:none}
 }
+
+.huwrep-book:not(.huwrep-book-fullscreen) :is(.huwrep-reading-controls,.huwrep-reading-fit) {display:none}
+@media screen {
+ .huwrep-session > .huwrep-book-header {z-index:100}
+ .huwrep-book-fullscreen:not(.huwrep-show-reading-controls) :is(
+  .huwrep-performance,.huwrep-book-practice,.huwabc-instrument-bar,
+  .huwabc-instrument-group
+ ) {display:none!important}
+ .huwrep-book-fullscreen .huwrep-book-score > .huwabc-score {
+  height:100%;display:flex;flex-direction:column;min-height:0
+ }
+ .huwrep-session.huwrep-book-fullscreen .huwabc-page-shell {
+  display:flex;flex-direction:column;flex:1 1 auto;min-height:0;overflow:hidden
+ }
+ .huwrep-book-fullscreen .huwabc-page-viewport {
+  flex:1 1 auto;min-height:0;max-height:none!important;overflow:auto;container-type:size
+ }
+ .huwrep-book-fullscreen .huwabc-page-nav {display:none!important}
+ /* The printed page ratio still applies. In a landscape viewport the
+    width option deliberately allows vertical scrolling to keep notes large. */
+ .huwrep-book-fullscreen .huwabc-paginated {
+  --huwabc-track-width:100%!important;
+  --huwrep-sheet-width:calc(100% - 16px);
+  --huwabc-page-width:var(--huwrep-sheet-width)!important;
+ }
+ .huwrep-book-fullscreen [data-pages-shown="2"] .huwabc-paginated {
+  --huwrep-sheet-width:calc((100% - 32px) / 2);
+ }
+ @supports (height:1cqh) {
+  .huwrep-book-fullscreen.huwrep-fit-whole-page .huwabc-paginated {
+   --huwabc-page-width:min(var(--huwrep-sheet-width),calc((100cqh - 8px) * var(--huwabc-page-ratio)))!important;
+  }
+ }
+}

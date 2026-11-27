@@ -239,6 +239,11 @@ Book.prototype.pager=function(){
 Book.prototype.setFullscreen=function(active,requestNative){
  var host=this.host,doc=host.ownerDocument;
  host.classList.toggle("huwrep-book-fullscreen",active);
+ var settings=host.querySelector(".huwrep-session-settings");
+ if(settings)settings.open=false;
+ var controls=host.querySelector(".huwrep-reading-controls");
+ host.classList.remove("huwrep-show-reading-controls");
+ if(controls)controls.setAttribute("aria-expanded","false");
  var button=host.querySelector(".huwrep-book-fullscreen-button");
  if(button){
   button.textContent=active?"⛶ Luk fuldskærm":"⛶ Fuldskærm";
@@ -458,6 +463,7 @@ Book.prototype.draw=function(){
  toolbar.appendChild(btn(doc,"← Nodemapper og numre",function(){
   self.leave("HUWiki Repertoire – Start");
  }));
+ host.classList.remove("huwrep-show-reading-controls");
  var fullscreen=host.classList.contains("huwrep-book-fullscreen");
  var fullScreenButton=btn(doc,fullscreen?"⛶ Luk fuldskærm":"⛶ Fuldskærm",function(){
   self.setFullscreen(!host.classList.contains("huwrep-book-fullscreen"),true);
@@ -587,6 +593,24 @@ Book.prototype.draw=function(){
  this._selectedNotation=notation;
  if(audioView)settingsBody.appendChild(btn(doc,notation.abc?"Redigér ABC-noder":"Redigér lydkildens ABC-noder",function(){if(self._score&&self._score._reader)self._score._reader.openEditor();}));
  this._performance=Performance.create(this,notation,audioView);host.insertBefore(this._performance.element,stage);
+ if(audioView){
+  var readingControls=btn(doc,"Lyd og instrument",function(){
+   var open=host.classList.toggle("huwrep-show-reading-controls");
+   readingControls.setAttribute("aria-expanded",String(open));
+   if(open)settings.open=false;
+  },"huwrep-reading-controls");
+  readingControls.setAttribute("aria-expanded","false");
+  toolbar.insertBefore(readingControls,settings);
+ }
+ if(notation.abc){
+  var fit=btn(doc,"Hele siden",function(){
+   self.fitWholePage=host.classList.toggle("huwrep-fit-whole-page");
+   fit.setAttribute("aria-pressed",String(self.fitWholePage));
+  },"huwrep-reading-fit");
+  host.classList.toggle("huwrep-fit-whole-page",!!this.fitWholePage);
+  fit.setAttribute("aria-pressed",String(!!this.fitWholePage));
+  toolbar.insertBefore(fit,settings);
+ }
  var selected=notation.format;
  if(notation.missing&&notation.role){
   stage.appendChild(el(doc,"p","huwrep-muted huwrep-book-source-unavailable",(model.viewLabels[notation.role]||"Denne nodevisning")+" findes endnu ikke til dette nummer. Vælg en af nummerets tilgængelige visninger ovenfor."));
@@ -594,7 +618,7 @@ Book.prototype.draw=function(){
   var pdfHost=el(doc,"section","huwrep-book-pdf");stage.appendChild(pdfHost);
   var PDF=require("$:/plugins/huwiki/repertoire/pdf-score.js");
   this._pdfPager=PDF.mount(pdfHost,{wiki:wiki,source:notation.pdf,title:shortName(wiki,this.activeItem),spread:Layout.mode(this.preference,this._win.innerWidth,this._win.innerHeight)==="spread"?2:1,
-   onState:function(){self.updatePDFStatus();self.updateNavigation();},onBoundary:function(direction){self.turn(direction);},isFullscreen:function(){return host.classList.contains("huwrep-book-fullscreen");},onFullscreen:function(exit){return self.setFullscreen(!exit&&!host.classList.contains("huwrep-book-fullscreen"));}});
+   onState:function(){self.updatePDFStatus();self.updateNavigation();},onBoundary:function(direction){self.turn(direction);},isFullscreen:function(){return host.classList.contains("huwrep-book-fullscreen");},onFullscreen:function(exit){return self.setFullscreen(!exit&&!host.classList.contains("huwrep-book-fullscreen"),!exit);}});
   if(audioView){var audioOnly=el(doc,"div","huwrep-audio-only");audioOnly.hidden=true;stage.appendChild(audioOnly);host.insertBefore(this.practicePanel(doc),stage);this.mountScore(audioOnly,audioView.sourceTitle,agreement,row,true);}
  }else if(notation.abc){
   host.insertBefore(this.practicePanel(doc),stage);
