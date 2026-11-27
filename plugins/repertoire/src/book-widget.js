@@ -27,6 +27,7 @@ function btn(doc,label,onClick,css){
 function choice(doc,id,label){
  var o=el(doc,"option","",label);o.value=id;return o;
 }
+function notationSignature(views){return JSON.stringify(views.map(function(v){return [v.role,v.label,v.sourceTitle,v.pdf,v.video||null];}));}
 function icon(doc,label,glyph,action,css){
  var b=btn(doc,glyph,action,css);b.title=label;b.setAttribute("aria-label",label);return b;
 }
@@ -579,6 +580,7 @@ Book.prototype.draw=function(){
  var source=wiki.getTiddler(name(wiki,this.activeItem)),f=source&&source.fields;
  var notation=source?model.presentation(wiki,this.setlistTitle,this.activeItem):{abc:false,pdf:"",role:"",format:""};
  var variants=source?model.availableViews(wiki,source):[];
+ this._notationSignature=notationSignature(variants);
  if(this.pieceTitle){
   var wanted=this.singleRole||wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","");
   notation=variants.find(function(v){return v.role===wanted;})||variants.find(function(v){return v.role==="leadsheet";})||variants[0]||{abc:false,pdf:"",role:"",format:"",missing:true};
@@ -686,6 +688,7 @@ Book.prototype.refresh=function(changed){
  }
  if(changed["$:/config/maans/repertoire/default-source-role"]){this.draw();return true;}
  var canonicalTitle=name(this.wiki,this.activeItem);
+ if(changed[canonicalTitle]&&this._notationSignature!==notationSignature(model.availableViews(this.wiki,canonicalTitle))){this.draw();return true;}
  if(this._score&&this._score.title!==canonicalTitle&&changed[canonicalTitle]){this.draw();return true;}
  if(this._video&&changed[canonicalTitle]){this.draw();return true;}
  if(this._pdfPager){

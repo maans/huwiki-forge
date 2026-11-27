@@ -172,6 +172,17 @@ test('switching ABC to YouTube stops its audio engine and switching back unloads
  assert.equal(JSON.stringify(f.model.entries(f.wiki,f.set)),order);f.book.disposeScore();
 });
 
+test('adding a video to an already open ABC original refreshes its presentation choices',async()=>{
+ const f=await drawnBookFixture();f.book.changeItemView('leadsheet');
+ const original=f.book._score;
+ assert.equal(f.host.querySelector('.huwrep-book-source').children.some(o=>o.value==='youtube'),false);
+ f.model.setVideo(f.wiki,'Four Brothers','https://www.youtube.com/watch?v=8UNtQpMMSEM');
+ assert.equal(f.book.refresh({'Four Brothers':{modified:true}}),true);
+ assert.ok(f.host.querySelector('.huwrep-book-source').children.some(o=>o.value==='youtube'));
+ assert.equal(original.destroyed,true);assert.equal(f.scoreInstances.filter(s=>!s.destroyed).length,1);
+ f.book.disposeScore();
+});
+
 test('switching PDF and ABC inside one song disposes the old view and preserves notation and setlist identity',async()=>{
  const f=await drawnBookFixture(),before=JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),order=JSON.stringify(f.model.entries(f.wiki,f.set));
  f.book.draw();assert.ok(f.host.querySelector('iframe'));assert.equal(f.scoreInstances.length,1,'PDF can use its associated ABC as one sound source');

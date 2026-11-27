@@ -441,7 +441,7 @@
         "name": "Repertoire",
         "description": "Repertoire, nodebog, stiknoder, stemmer og PDF / Repertoire, tune book, cue sheets, parts and PDF",
         "author": "HUWiki",
-        "version": "0.3.7",
+        "version": "0.3.8",
         "plugin-type": "plugin",
         "dependents": "$:/plugins/huwiki/abc",
         "stability": "experimental",
