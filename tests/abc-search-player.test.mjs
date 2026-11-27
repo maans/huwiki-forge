@@ -4,9 +4,6 @@ import {readFile} from "node:fs/promises";
 import {runInNewContext} from "node:vm";
 
 const read=path=>readFile(new URL("../"+path,import.meta.url),"utf8");
-const plugin=JSON.parse(await read("plugins/abc/dist/plugin.json"));
-const pluginInfo=JSON.parse(await read("plugins/abc/plugin-info.json"));
-const modules=JSON.parse(plugin.text).tiddlers;
 const moduleTitle="$:/plugins/huwiki/abc/search-widget.js";
 const source=await read("plugins/abc/src/search-widget.js");
 
@@ -48,6 +45,7 @@ function makeHarness(){
   "$:/plugins/huwiki/abc/jazz-catalog.js":{},
   "$:/plugins/huwiki/abc/balkan-catalog.js":{},
   "$:/plugins/huwiki/abc/musescore-bank.js":{},
+  "$:/plugins/huwiki/abc/repertoire-catalog.js":{},
   "$:/plugins/huwiki/abc/loader.js":{header:(abc,key)=>key==="T"?"Test tune":""}
  };
  const output={};
@@ -63,10 +61,13 @@ function makeHarness(){
  const Search=output["huwiki-abc-search"];
  const search=new Search({type:"huwiki-abc-search"},{wiki,document,parentWidget:null});
  search.preview=document.createElement("section");search.status=document.createElement("p");
- return {search,document,records,scores};
+ return {search,document,records,scores,deps};
 }
 
-test("the maintained ABC collection search widget is bundled verbatim",()=>{
+test("the maintained ABC collection search widget is bundled verbatim",async()=>{
+ const plugin=JSON.parse(await read("plugins/abc/dist/plugin.json"));
+ const pluginInfo=JSON.parse(await read("plugins/abc/plugin-info.json"));
+ const modules=JSON.parse(plugin.text).tiddlers;
  assert.equal(modules[moduleTitle].text,source);
  assert.equal(plugin.version,pluginInfo.version);
 });
@@ -101,3 +102,19 @@ test("switching search results retires the old score, and closing search cleans 
  assert.equal(aborted,1);
  assert.equal(records.has(search.temp),false);
 });
+
+test('shared-library ABC preview uses the existing player, retains provenance and ignores stale choices',async()=>{
+ const {search,document,records,scores,deps}=makeHarness();
+ search.host={isConnected:true};search.info=document.createElement('div');search.searchEpoch=1;
+ const pending=[];deps['$:/plugins/huwiki/abc/repertoire-catalog.js'].load=v=>new Promise(resolve=>pending.push({v,resolve}));
+ const group=title=>({title,collections:['Birdland'],variants:[{id:title,format:'abc',label:'Leadsheet (ABC)',collection:'Birdland',sourceURL:'https://example.test/#'+title}]});
+ search.openRepertoire(group('First'));search.openRepertoire(group('Second'));
+ pending[1].resolve({'abc-source':'X:1\nT:Second\nK:C\nC|'});await new Promise(r=>setImmediate(r));
+ pending[0].resolve({'abc-source':'X:1\nT:First\nK:C\nC|'});await new Promise(r=>setImmediate(r));
+ assert.equal(scores.length,1);assert.match(records.get(search.temp).fields['abc-source'],/T:Second/);
+ assert.equal(records.get(search.temp).fields['abc-origin-library'],'repertoire');
+ assert.equal(records.get(search.temp).fields['abc-origin-url'],'https://example.test/#Second');
+ search.openRepertoire(group('Third'));search.onDestroy();pending[2].resolve({'abc-source':'X:1\nK:C\nC|'});await new Promise(r=>setImmediate(r));
+ assert.equal(scores.length,1);assert.equal(records.has(search.temp),false);
+});
+

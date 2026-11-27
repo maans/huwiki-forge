@@ -13,6 +13,7 @@ var jazz=require('$:/plugins/huwiki/abc/jazz-catalog.js');
 var balkan=require('$:/plugins/huwiki/abc/balkan-catalog.js');
 var loader=require('$:/plugins/huwiki/abc/loader.js');
 var banks=require('$:/plugins/huwiki/abc/musescore-bank.js');
+var repertoire=require('$:/plugins/huwiki/abc/repertoire-catalog.js');
 var serial=0;
 function el(tag,cls,text){var n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;}
 function button(text,fn){var b=el('button','huwabc-btn',text);b.type='button';b.onclick=fn;return b;}
@@ -23,12 +24,12 @@ Search.prototype=new Widget();
 Search.prototype.render=function(parent,next){
  this.parentDomNode=parent;this.computeAttributes();var self=this;
  var host=this.host=el('section','huwabc-search');parent.insertBefore(host,next);this.domNodes.push(host);
- var initial=this.getAttribute('source','session');
+ var initial=this.getAttribute('source','repertoire');
  if(initial.indexOf('bank:')!==0)host.appendChild(el('h2','',bankText(this.wiki,'Find musik','Find music')));
  host.appendChild(el('p','huwabc-search-intro',bankText(this.wiki,'Find originalnoder, sammenlign versioner og vælg de stemmer, du vil bruge.','Find original scores, compare versions and choose the parts you need.')));
  var form=el('form','huwabc-search-form');
  var source=this.source=el('select','huwabc-select');source.setAttribute('aria-label','Musikbibliotek');
- [['session','The Session'],['ian','Ian Hayden · jazzstandards'],['balkan','Balkan, Klezmer & Østeuropa · JamBuddy'],['abcnotation','ABCnotation.com']].forEach(function(pair){var op=el('option','',pair[1]);op.value=pair[0];source.appendChild(op);});
+ [['repertoire',bankText(this.wiki,'Fælles nodebibliotek · Leadsheets og repertoire','Shared score library · Leadsheets and repertoire')],['session','The Session'],['ian','Ian Hayden · jazzstandards'],['balkan','Balkan, Klezmer & Østeuropa · JamBuddy'],['abcnotation','ABCnotation.com']].forEach(function(pair){var op=el('option','',pair[1]);op.value=pair[0];source.appendChild(op);});
  banks.list(this.wiki).forEach(function(bank){var op=el('option','',bank.name+' · MuseScore');op.value='bank:'+bank.id;source.appendChild(op);});
  if(Array.from(source.options).some(function(op){return op.value===initial;}))source.value=initial;
  var q=this.query=el('input','huwabc-input');q.type='search';q.placeholder='Søg på titel, fx Kesh';q.setAttribute('aria-label','Søg efter melodititel');q.maxLength=150;
@@ -36,7 +37,9 @@ Search.prototype.render=function(parent,next){
  Object.keys(data.meters).sort().forEach(function(k){var o=el('option','',k);o.value=k;type.appendChild(o);});
  var libraryField=el('label','huwabc-library-field');libraryField.append(el('span','',bankText(this.wiki,'Samling','Collection')),source);
  var typeField=this.typeField=el('label','huwabc-type-field');typeField.append(el('span','','Meloditype'),type);
- var queryRow=el('div','huwabc-search-query'),go=el('button','huwabc-btn huwabc-primary','Søg');go.type='submit';queryRow.append(q,go);form.append(libraryField,typeField,queryRow);host.appendChild(form);
+ var libraryKind=this.libraryKind=el('select','huwabc-select');libraryKind.setAttribute('aria-label','Nodeformat i biblioteket');
+ [['all','Alle numre'],['leadsheet','Leadsheets (ABC)'],['abc','Alle ABC-udgaver'],['pdf','Numre med PDF']].forEach(function(p){var o=el('option','',p[1]);o.value=p[0];libraryKind.appendChild(o);});libraryKind.value='all';libraryKind.hidden=true;libraryKind.onchange=function(){self.search(1);};
+ var queryRow=el('div','huwabc-search-query'),go=el('button','huwabc-btn huwabc-primary','Søg');go.type='submit';queryRow.append(q,go);form.append(libraryField,typeField,libraryKind,queryRow);host.appendChild(form);
  this.overview=el('section','huwabc-collection-overview');host.appendChild(this.overview);
  this.bankCart=el('div','huwabc-search-save');this.bankCart.hidden=true;
  this.bankImport=button('',function(){self.loadBankItems(Object.keys(self.bankSelection).map(function(k){return self.bankSelection[k];}));});
@@ -58,6 +61,7 @@ Search.prototype.get=async function(kind,path){
 };
 Search.prototype.search=async function(page){
  if(this.host)this.host.classList.add('huwabc-has-results');
+ if(this.source.value==='repertoire')return this.searchRepertoire(page||1);
  if(this.source.value.indexOf('bank:')===0)return this.searchBank(page||1);
  if(this.source.value==='ian')return this.searchIan();
  if(this.source.value==='balkan')return this.searchBalkan();
@@ -115,9 +119,11 @@ Search.prototype.sourceChanged=function(){
  this.seq.search=(this.seq.search||0)+1;this.seq.detail=(this.seq.detail||0)+1;
  this.searchEpoch=(this.searchEpoch||0)+1;
  this.type.hidden=which!=='session';this.type.disabled=which!=='session';if(this.typeField)this.typeField.hidden=which!=='session';
+ if(this.libraryKind)this.libraryKind.hidden=which!=='repertoire';
  this.query.placeholder=which==='session'?'Søg på titel, fx Kesh':which==='ian'?'Søg på jazzstandard, fx Just Friends':which==='balkan'?'Søg på Balkanmelodi, fx Pajdusko':'Søg på ABCnotation, fx Autumn Leaves';
  this.results.textContent='';this.info.textContent='';this.status.textContent=which==='ian'?'Søg i Ian Haydens jazzsamling. Kataloget indlæses fra GitHub.':which==='balkan'?'Søg i JamBuddys Balkanindeks (Balkan, klezmer og østeuropæiske melodier). Importér én melodi ad gangen med kildeangivelse.':which==='abcnotation'?'Søg på ABCnotation.com og indsæt ABC-teksten fra den valgte melodi.':'Søg i The Sessions offentlige melodisamling.';
  if(which.indexOf('bank:')===0){this.query.placeholder=bankText(this.wiki,'Søg i nodearkivet …','Search the score archive …');this.status.textContent='';}
+ if(which==='repertoire'){this.query.placeholder=bankText(this.wiki,'Søg på tværs af repertoire, titel eller komponist …','Search repertoire, title or composer …');this.status.textContent='';}
  if(this.pending.catalogue)this.pending.catalogue.abort();
  this.bankLoadEpoch=(this.bankLoadEpoch||0)+1;
  if(this.bankImporter){this.bankImporter.onDestroy();this.bankImporter=null;this.children=[];this.preview.textContent='';}
@@ -127,6 +133,11 @@ Search.prototype.sourceChanged=function(){
 Search.prototype.showCollectionOverview=async function(){
  var self=this,which=this.source.value,epoch=this.searchEpoch;if(!this.overview)return;
  this.overview.textContent='';
+ if(which==='repertoire'){
+  this.overview.appendChild(el('p','huwabc-muted',bankText(this.wiki,'Alle publicerede repertoirer og numrene i denne wiki. Åbn en færdig ABC-udgave, eller vælg original-PDF.','All published repertoires and the tunes in this wiki. Open a converted ABC version or choose the original PDF.')));
+  var browse=button(bankText(this.wiki,'Vis alle numre','Browse all tunes'),function(){self.query.value='';self.search(1);});this.overview.appendChild(browse);
+  return this.searchRepertoire(1);
+ }
  if(which==='session'||which==='abcnotation'){
   this.overview.appendChild(el('p','huwabc-muted',bankText(this.wiki,'Du behøver ikke kende en titel. Åbn kildens melodioversigt for at finde titler, og søg derefter her.','You do not need to know a title. Browse the source collection to discover tunes, then search here.')));
   this.overview.appendChild(link(bankText(this.wiki,'Gennemse samlingen','Browse the collection'),which==='session'?'https://thesession.org/tunes':'https://abcnotation.com/'));
@@ -160,6 +171,44 @@ Search.prototype.showCollectionOverview=async function(){
   var suggestions=el('section','huwabc-collection-suggestions'),suggestionList=el('div','huwabc-suggestion-list');suggestions.appendChild(el('h3','',groups?bankText(this.wiki,'Seneste tilføjelser','Recent additions'):bankText(this.wiki,'Prøv et nummer','Try a tune')));
   examples.forEach(function(example){var pick=button('',function(){self.query.value=example.title;self.search(1);});pick.classList.add('huwabc-suggestion');pick.appendChild(el('span','huwabc-suggestion-title',example.title));if(example.date)pick.appendChild(el('span','huwabc-suggestion-date',example.date));suggestionList.appendChild(pick);});suggestions.appendChild(suggestionList);this.overview.appendChild(suggestions);
  }catch(e){if(epoch===this.searchEpoch)this.overview.textContent=bankText(this.wiki,'Oversigten kunne ikke hentes: ','Could not load the overview: ')+e.message;}
+};
+Search.prototype.searchRepertoire=async function(page){
+ var self=this,epoch=++this.searchEpoch,query=this.query.value.trim(),kind=this.libraryKind&&this.libraryKind.value||'all';
+ this.results.textContent='';this.info.textContent='';this.status.textContent=bankText(this.wiki,'Henter det fælles nodebibliotek …','Loading the shared score library …');this.results.setAttribute('aria-busy','true');
+ try{
+  var index=await repertoire.index(this.wiki);if(epoch!==this.searchEpoch||this.source.value!=='repertoire'||!this.host.isConnected)return;
+  var found=repertoire.filter(index,query,kind),pages=Math.max(1,Math.ceil(found.length/50));page=Math.max(1,Math.min(page,pages));
+  this.status.textContent=found.length+' '+bankText(this.wiki,'numre fundet','tunes found')+(index.warning?' · '+index.warning:'');
+  found.slice((page-1)*50,page*50).forEach(function(group){
+   var row=el('div','huwabc-search-row'),info=el('div');info.appendChild(el('strong','',group.title));
+   var abc=group.variants.filter(function(v){return v.format==='abc';}),pdf=group.variants.filter(function(v){return v.format==='pdf';});
+   info.appendChild(el('div','huwabc-muted',group.collections.join(' · ')+' · '+(abc.length?abc.length+' ABC':'')+(pdf.length?' · '+pdf.length+' PDF':'')));
+   row.appendChild(info);row.appendChild(button(abc.length?bankText(self.wiki,'Åbn ABC / vælg udgave','Open ABC / choose version'):bankText(self.wiki,'Se nodekilder','View score sources'),function(){self.openRepertoire(group);}));self.results.appendChild(row);
+  });
+  if(!found.length)this.results.appendChild(el('p','huwabc-muted',bankText(this.wiki,'Prøv en anden titel eller vælg Alle numre. De øvrige samlinger findes i samlingsvælgeren.','Try another title or select All tunes. Other collections are available in the collection selector.')));
+  if(pages>1){var nav=el('div','huwabc-search-nav'),previous=button('Forrige side',function(){self.searchRepertoire(page-1);}),next=button('Næste side',function(){self.searchRepertoire(page+1);});previous.disabled=page===1;next.disabled=page===pages;nav.append(previous,el('span','',page+' / '+pages),next);this.results.appendChild(nav);}
+ }catch(e){if(epoch===this.searchEpoch)this.status.textContent=e.message;}
+ finally{if(epoch===this.searchEpoch)this.results.removeAttribute('aria-busy');}
+};
+Search.prototype.openRepertoire=function(group){
+ var self=this,epoch=this.searchEpoch,variants=group.variants.filter(function(v){return v.format==='abc';});
+ this.repertoireSelection=(this.repertoireSelection||0)+1;var selection=this.repertoireSelection;
+ if(this.score){this.score.onDestroy();this.score=null;}this.preview.textContent='';this.children=[];this.info.textContent='';this.info.appendChild(el('h3','',group.title));
+ var choose=el('select','huwabc-select');choose.setAttribute('aria-label','ABC-udgave af nummeret');
+ variants.forEach(function(v,i){var o=el('option','',[v.label,v.collection,v.key,v.meter].filter(Boolean).join(' · '));o.value=String(i);choose.appendChild(o);});choose.value='0';
+ async function open(){
+  var variant=variants[+choose.value],request=++self.repertoireLoad;self.status.textContent='Henter ABC-udgaven …';
+  try{var fields=await repertoire.load(variant);if(epoch!==self.searchEpoch||selection!==self.repertoireSelection||request!==self.repertoireLoad||!self.host.isConnected)return;
+   fields['abc-origin-library']='repertoire';fields['abc-origin-entry']=variant.id;fields['abc-collection']=group.collections.join(' · ');if(variant.sourceURL)fields['abc-origin-url']=variant.sourceURL;
+   self.openFields(fields,group.title,variant.label+(variant.collection?' · '+variant.collection:''));
+  }catch(e){if(epoch===self.searchEpoch&&selection===self.repertoireSelection)self.status.textContent=e.message;}
+ }
+ this.repertoireLoad=0;
+ if(variants.length){this.info.append(choose,button(bankText(this.wiki,'Åbn ABC-udgaven','Open ABC version'),open));choose.onchange=open;open();}
+ group.variants.forEach(function(v){if(v.format==='pdf'&&/^https?:\/\//.test(v.url||''))self.info.appendChild(el('p')).appendChild(link(v.label+' · '+(v.collection||''),v.url));});
+ var source=group.sourceURL||group.variants.map(function(v){return v.sourceURL;}).find(Boolean);if(source&&/^https?:\/\//.test(source))this.info.appendChild(el('p')).appendChild(link(bankText(this.wiki,'Åbn nummeret i repertoirewikien','Open tune in its repertoire wiki'),source));
+ if(!variants.length)this.status.textContent=bankText(this.wiki,'Ingen færdig ABC-udgave endnu. Vælg en af originalkilderne.','No converted ABC version yet. Choose one of the original sources.');
+ this.info.scrollIntoView({block:'nearest'});
 };
 Search.prototype.updateBankSelection=function(){
  var n=Object.keys(this.bankSelection||{}).length;if(!this.bankCart)return;
@@ -320,7 +369,8 @@ Search.prototype.searchABCNotation=function(){
   }catch(e){self.status.textContent=e.message;}
  });action.classList.add('huwabc-primary');this.results.appendChild(action);this.status.textContent='Åbn søgeresultaterne, kopiér ABC-koden, og indsæt den her.';
 };
-Search.prototype.onDestroy=function(){if(this._localeObserver){this._localeObserver.destroy();this._localeObserver=null;}if(this.bankImporter){this.bankImporter.onDestroy();this.bankImporter=null;}this.bankLoadEpoch=(this.bankLoadEpoch||0)+1;var self=this;Object.keys(this.pending).forEach(function(k){self.seq[k]=(self.seq[k]||0)+1;self.pending[k].abort();});this.wiki.deleteTiddler(this.temp);};
+Search.prototype.onDestroy=function(){this.searchEpoch=(this.searchEpoch||0)+1;if(this.score){this.score.onDestroy();this.score=null;}if(this._localeObserver){this._localeObserver.destroy();this._localeObserver=null;}if(this.bankImporter){this.bankImporter.onDestroy();this.bankImporter=null;}this.bankLoadEpoch=(this.bankLoadEpoch||0)+1;var self=this;Object.keys(this.pending).forEach(function(k){self.seq[k]=(self.seq[k]||0)+1;self.pending[k].abort();});this.wiki.deleteTiddler(this.temp);};
 Search.prototype.refresh=function(changes){return this.refreshChildren(changes);};
 exports['huwiki-abc-search']=Search;
 })();
+

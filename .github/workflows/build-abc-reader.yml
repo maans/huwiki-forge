@@ -6,6 +6,9 @@ on:
       - 'plugins/abc/src/**'
       - 'plugins/abc/plugin-info.json'
       - 'tests/abc-reader-mode.test.mjs'
+      - 'tests/repertoire-catalogue.test.mjs'
+      - 'tests/abc-search-player.test.mjs'
+      - 'scripts/build-repertoire-catalogue.mjs'
       - 'tests/abc-reader-edit.test.mjs'
       - 'tests/abc-ipad-lite-editor.test.mjs'
       - 'tests/abc-repeat-volta.test.mjs'
@@ -54,6 +57,7 @@ jobs:
         run: npm ci --ignore-scripts
       - name: Verify the full reader, original fallback, Music Edition and plugin registry
         run: |
+          node --test tests/repertoire-catalogue.test.mjs tests/abc-search-player.test.mjs
           node --test tests/abc-reader-mode.test.mjs tests/abc-reader-edit.test.mjs tests/abc-repeat-volta.test.mjs tests/abc-reader-fallback.test.mjs tests/abc-mini-mixer-title.test.mjs tests/abc-default-minimal.test.mjs tests/abc-chord-overview.test.mjs tests/abc-normal-clean.test.mjs tests/music-edition.test.mjs tests/forge-libraries.test.mjs
           node --test tests/abc-dance-styles.test.mjs tests/abc-rhythm-head-audio.test.mjs tests/abc-swing-voicings.test.mjs tests/abc-swing-arrangement.test.mjs tests/abc-swing-written-comp.test.mjs
           node --test tests/abc-playback-preparing.test.mjs tests/abc-playback-feedback.test.mjs
@@ -101,4 +105,5 @@ jobs:
             git rebase origin/main
             git push origin HEAD:main
           fi
+
 

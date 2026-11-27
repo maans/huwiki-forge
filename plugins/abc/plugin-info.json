@@ -3,12 +3,13 @@
   "name": "ABC Musik",
   "title": "$:/plugins/huwiki/abc",
   "stability": "experimental",
-  "description": "ABC Musik · søg i originale MuseScore-nodearkiver og vælg før forhåndsvisning og import",
+  "description": "ABC Musik · fælles søgbart nodebibliotek, leadsheets, originale nodearkiver, afspilning og import",
   "plugin-type": "plugin",
   "license": "MIT",
   "type": "application/json",
-  "version": "0.3.65",
+  "version": "0.3.66",
   "author": "HUWiki",
   "revision": "18",
-  "modified": "20261127173000000"
+  "modified": "20261127230000000"
 }
+
