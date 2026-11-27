@@ -22,8 +22,8 @@ try{
  await page.waitForFunction(()=>window.$tw&&$tw.rootWidget&&$tw.wiki);
  // Normal is the default article view; Advanced exposes the former extras.
  await page.evaluate(()=>{
-  $tw.wiki.addTiddler({title:'Standalone ABC acceptance','music-template':'off',text:'<div class="huw-music-view"><section class="huw-music-media huw-music-media-abc"><div class="huw-music-section-label">ABC</div><$huwiki-abc tiddler="Låt från Dalarne"/></section></div>'});
-  $tw.wiki.addTiddler({title:'$:/StoryList',list:['Standalone ABC acceptance']});
+  $tw.wiki.addTiddler(new $tw.Tiddler($tw.wiki.getTiddler('Låt från Dalarne'),{'music-template':'off',text:'<div class="huw-music-view"><section class="huw-music-media huw-music-media-abc"><div class="huw-music-section-label">ABC</div><$huwiki-abc tiddler=<<currentTiddler>>/></section></div>'}));
+  $tw.wiki.addTiddler({title:'$:/StoryList',list:['Låt från Dalarne']});
  });
  let article=page.locator(".huw-music-media-abc>.huwabc-score.huwabc-standalone").first();
  await article.waitFor();
