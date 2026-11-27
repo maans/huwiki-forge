@@ -1,7 +1,7 @@
 [
   {
     "title": "Brudmarch från Jämtland",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "01",
     "silba-section": "hovedliste",
@@ -18,11 +18,19 @@
     "huwiki-import-range": "1-48",
     "huwiki-import-original-instruments": "Piano",
     "silba-abc-voices": "1",
-    "silba-abc-notes": "92"
+    "silba-abc-notes": "92",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=jPzcz0CiSLs",
+    "repertoire-youtube-title": "Ola Løkken · Brudmarsch från Jämtland",
+    "repertoire-youtube-match": "traditional",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=jPzcz0CiSLs",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Låt från Dalarne",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "02",
     "silba-section": "hovedliste",
@@ -39,11 +47,12 @@
     "huwiki-import-range": "1-19",
     "huwiki-import-original-instruments": "Piano",
     "silba-abc-voices": "1",
-    "silba-abc-notes": "34"
+    "silba-abc-notes": "34",
+    "music-template": "off"
   },
   {
     "title": "Brudmasj fra Nord-gudbrandsdal",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "03",
     "silba-section": "hovedliste",
@@ -60,11 +69,19 @@
     "huwiki-import-range": "1-23",
     "huwiki-import-original-instruments": "Piano",
     "silba-abc-voices": "1",
-    "silba-abc-notes": "91"
+    "silba-abc-notes": "91",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=teUA5Q-4aJQ",
+    "repertoire-youtube-title": "Jan Garbarek & Kåre Nordstoga · Gamal bruremarsj fra Nord-Gudbrandsdal",
+    "repertoire-youtube-match": "traditional",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=teUA5Q-4aJQ",
+    "repertoire-youtube-start": "218",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Ålidhems höjder",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "04",
     "silba-section": "hovedliste",
@@ -81,11 +98,12 @@
     "huwiki-import-range": "1-21",
     "huwiki-import-original-instruments": "Piano",
     "silba-abc-voices": "1",
-    "silba-abc-notes": "121"
+    "silba-abc-notes": "121",
+    "music-template": "off"
   },
   {
     "title": "Cupria Express (Fm)",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "06",
     "silba-section": "hovedliste",
@@ -102,11 +120,19 @@
     "huwiki-import-range": "1-19",
     "huwiki-import-original-instruments": "Piano / Piano",
     "silba-abc-voices": "2",
-    "silba-abc-notes": "173"
+    "silba-abc-notes": "173",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=DNQDUJ8Izpc",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Ćuprija Ekspres (Ebbe Munk)",
+    "repertoire-youtube-match": "original",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=DNQDUJ8Izpc",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Mita, Barfly (Gm)",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "07",
     "silba-section": "hovedliste",
@@ -123,11 +149,12 @@
     "huwiki-import-range": "1-22",
     "huwiki-import-original-instruments": "Fløjte / Piano / Piano",
     "silba-abc-voices": "3",
-    "silba-abc-notes": "332"
+    "silba-abc-notes": "332",
+    "music-template": "off"
   },
   {
     "title": "Gadjo Cocek (Dm/Iberisk A)",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "08",
     "silba-section": "hovedliste",
@@ -144,11 +171,19 @@
     "huwiki-import-range": "1-9",
     "huwiki-import-original-instruments": "Piano / Piano",
     "silba-abc-voices": "2",
-    "silba-abc-notes": "118"
+    "silba-abc-notes": "118",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=kpTGa6ssvjk",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Gadjo Čoček (Ebbe Munk)",
+    "repertoire-youtube-match": "original",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=kpTGa6ssvjk",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Cocek Srece",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "09",
     "silba-section": "hovedliste",
@@ -165,11 +200,19 @@
     "huwiki-import-range": "1-33",
     "huwiki-import-original-instruments": "Klaver / Klaver / Klaver",
     "silba-abc-voices": "3",
-    "silba-abc-notes": "308"
+    "silba-abc-notes": "308",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=1ZZpnAsqKV8",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Čoček Sreče",
+    "repertoire-youtube-match": "traditional",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=1ZZpnAsqKV8",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Silbaätno (Fm/Gm)",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "10",
     "silba-section": "hovedliste",
@@ -186,11 +229,12 @@
     "huwiki-import-range": "1-24",
     "huwiki-import-original-instruments": "Piano",
     "silba-abc-voices": "1",
-    "silba-abc-notes": "189"
+    "silba-abc-notes": "189",
+    "music-template": "off"
   },
   {
     "title": "Majstore (Dm/Iberisk A)",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "11",
     "silba-section": "hovedliste",
@@ -207,11 +251,12 @@
     "huwiki-import-range": "1-39",
     "huwiki-import-original-instruments": "Piano / Piano",
     "silba-abc-voices": "2",
-    "silba-abc-notes": "272"
+    "silba-abc-notes": "272",
+    "music-template": "off"
   },
   {
     "title": "Syv sind (Em)",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "12",
     "silba-section": "hovedliste",
@@ -228,11 +273,19 @@
     "huwiki-import-range": "1-20",
     "huwiki-import-original-instruments": "Piano / Piano",
     "silba-abc-voices": "2",
-    "silba-abc-notes": "190"
+    "silba-abc-notes": "190",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=G3Sux3vVTxE",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Syv Sind (Ebbe Munk)",
+    "repertoire-youtube-match": "original",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=G3Sux3vVTxE",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Englishman in New York",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "13",
     "silba-section": "hovedliste",
@@ -249,11 +302,19 @@
     "huwiki-import-range": "1-30",
     "huwiki-import-original-instruments": "Piano / Piano",
     "silba-abc-voices": "2",
-    "silba-abc-notes": "318"
+    "silba-abc-notes": "318",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=d27gTrPPAyk",
+    "repertoire-youtube-title": "Sting · Englishman in New York (1987)",
+    "repertoire-youtube-match": "original",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=d27gTrPPAyk",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Libertango (Am)",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "14",
     "silba-section": "hovedliste",
@@ -270,11 +331,19 @@
     "huwiki-import-range": "1-35",
     "huwiki-import-original-instruments": "Fløjte",
     "silba-abc-voices": "1",
-    "silba-abc-notes": "188"
+    "silba-abc-notes": "188",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=8UNtQpMMSEM",
+    "repertoire-youtube-title": "Astor Piazzolla · Libertango (1974)",
+    "repertoire-youtube-match": "original",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=8UNtQpMMSEM",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Purim Niggun",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "15",
     "silba-section": "usikre",
@@ -292,11 +361,12 @@
     "huwiki-import-range": "1-21",
     "huwiki-import-original-instruments": "Piano",
     "silba-abc-voices": "1",
-    "silba-abc-notes": "102"
+    "silba-abc-notes": "102",
+    "music-template": "off"
   },
   {
     "title": "Arabsko Kolo (Dm)",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "19",
     "silba-section": "ude",
@@ -313,11 +383,19 @@
     "huwiki-import-range": "1-9",
     "huwiki-import-original-instruments": "Piano / Piano",
     "silba-abc-voices": "2",
-    "silba-abc-notes": "196"
+    "silba-abc-notes": "196",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=8z6Xi9PkjZE",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Arabsko Kolo (Ebbe Munk)",
+    "repertoire-youtube-match": "original",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=8z6Xi9PkjZE",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Hotel Nora",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "20",
     "silba-section": "ude",
@@ -334,11 +412,19 @@
     "huwiki-import-range": "1-15",
     "huwiki-import-original-instruments": "Klaver / Klaver / Orkesterlilletromme",
     "silba-abc-voices": "3",
-    "silba-abc-notes": "157"
+    "silba-abc-notes": "157",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=wvm0RyH1deQ",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Hotel Nora (Ebbe Munk)",
+    "repertoire-youtube-match": "original",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=wvm0RyH1deQ",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Gucina Groove (Gm)",
-    "text": "",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack",
     "silba-order": "21",
     "silba-section": "ude",
@@ -355,6 +441,14 @@
     "huwiki-import-range": "1-8",
     "huwiki-import-original-instruments": "Piano",
     "silba-abc-voices": "1",
-    "silba-abc-notes": "78"
+    "silba-abc-notes": "78",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=vWpfZYbwGVE",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Gučina Groove (Ebbe Munk)",
+    "repertoire-youtube-match": "original",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://www.youtube.com/watch?v=vWpfZYbwGVE",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   }
 ]

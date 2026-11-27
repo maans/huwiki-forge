@@ -1,7 +1,7 @@
 [
   {
     "title": "Čik, čik",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Čik, čik\nC:Rade Krstić\nM:4/4\nL:1/8\nQ:1/4=125\nV:1 clef=treble\nV:2 clef=bass\nK:F\nV:1\n[P:A] |:\"F\"z/ c/f/a/ d'/c'/c'/b/ b/a/b/c'/ b/a/^g/a/ | z/ c/f/a/ d'/c'/c'/b/ b/a/b/c'/ b/a/^g/a/ | z/ c/f/a/ d'/c'/c'/b/ b/a/b/c'/ b/a/^g/a/ | \"G\"b3/2 a/\"G/B\" a3/2 g/\"C7\" g4 :|\n[P:Fine ved DC] z4 z2 fg |: [P:Bx4]\"C7\"gf/g/ f/e/_d z2 de | [1-3\"Bbm\"_d2 c2\"C7\" z2 fg :| [4[M:2/4]\"Bbm\"_d2 c2 |: [P:Cx4][M:4/4]\"C7\"c_ded cded |\n\"Bbm\"z _d/(d/ d/)d/d\"C7\" e/d/c/d/ c2 :: [P:Dx4]\"C7\"z g- g2- gf/g/ f/e/_d | \"Bbm\"z _d/d/ de\"C7\" d2 c2 :| [P:DC]\"F\"z/ c/f/a/ d'/c'/c'/b/ b/a/b/c'/ b/a/^g/a/ |\nz/ c/f/a/ d'/c'/c'/b/ b/a/b/c'/ b/a/^g/a/ | z/ c/f/a/ d'/c'/c'/b/ b/a/b/c'/ b/a/^g/a/ | \"G\"b3/2 a/\"G/B\" a3/2 g/\"C7\" g4 | [P:Fine] z4 z2 fg |\nV:2\n|:F,/ z/ z z2 z4 | F,2 C,A,, F,,2 A,,C, | F,2 C,A,, F,,2 A,,C, | G,,2 =B,,2 C,C,C,C, :|\nC,C, C,_D, C, z2 z |: C2 G,E, C,2 E,G, | [1-3 B,2 =B,2 C2 G,E, :| [4[M:2/4] B,2 =B,2 |: [M:4/4] C2 G,E, C,2 E,G, |\nB,2 =B,2 C2 G,E, :: C2 G,E, C,2 E,G, | B,2 =B,2 C2 G,E, :| F,/ z/ z z2 z4 |\nF,2 C,A,, F,,2 A,,C, | F,2 C,A,, F,,2 A,,C, | G,,2 =B,,2 C,C,C,C, | C,C, C,_D, C, z2 z |\n",
@@ -10,11 +10,19 @@
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "cik-cik-capo1.mscz",
     "huwiki-import-format": "mscx",
-    "abc-parts-new-line": "no"
+    "abc-parts-new-line": "no",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=y5_o_m4h5yA",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Čik čik (Sibiu, 2024)",
+    "repertoire-youtube-match": "own",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://akustisk-elektrisk.dk/",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Čik, čik · E-greb · capo I",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Čik, čik · E-greb · capo I\nC:Rade Krstić\nM:4/4\nL:1/8\n%%MIDI transpose 1\nQ:1/4=125\nV:1 clef=treble\nV:2 clef=bass\nK:E\nV:1\n[P:A] |:\"E\"z/ B/e/g/ c'/b/b/a/ a/g/a/b/ a/g/^^f/g/ | z/ B/e/g/ c'/b/b/a/ a/g/a/b/ a/g/^^f/g/ | z/ B/e/g/ c'/b/b/a/ a/g/a/b/ a/g/^^f/g/ | \"F#\"a3/2 g/\"F#/A#\" g3/2 f/\"B7\" f4 :|\n[P:Fine ved DC] z4 z2 ef |: [P:Bx4]\"B7\"fe/f/ e/d/=c z2 cd | [1-3\"Am\"=c2 B2\"B7\" z2 ef :| [4[M:2/4]\"Am\"=c2 B2 |: [P:Cx4][M:4/4]\"B7\"B=cdc Bcdc |\n\"Am\"z =c/(c/ c/)c/c\"B7\" d/c/B/c/ B2 :: [P:Dx4]\"B7\"z f- f2- fe/f/ e/d/=c | \"Am\"z =c/c/ cd\"B7\" c2 B2 :| [P:DC]\"E\"z/ B/e/g/ c'/b/b/a/ a/g/a/b/ a/g/^^f/g/ |\nz/ B/e/g/ c'/b/b/a/ a/g/a/b/ a/g/^^f/g/ | z/ B/e/g/ c'/b/b/a/ a/g/a/b/ a/g/^^f/g/ | \"F#\"a3/2 g/\"F#/A#\" g3/2 f/\"B7\" f4 | [P:Fine] z4 z2 ef |\nV:2\n|:E,/ z/ z z2 z4 | E,2 B,,G,, E,,2 G,,B,, | E,2 B,,G,, E,,2 G,,B,, | F,,2 ^A,,2 B,,B,,B,,B,, :|\nB,,B,, B,,=C, B,, z2 z |: B,2 F,D, B,,2 D,F, | [1-3 A,2 ^A,2 B,2 F,D, :| [4[M:2/4] A,2 ^A,2 |: [M:4/4] B,2 F,D, B,,2 D,F, |\nA,2 ^A,2 B,2 F,D, :: B,2 F,D, B,,2 D,F, | A,2 ^A,2 B,2 F,D, :| E,/ z/ z z2 z4 |\nE,2 B,,G,, E,,2 G,,B,, | E,2 B,,G,, E,,2 G,,B,, | F,,2 ^A,,2 B,,B,,B,,B,, | B,,B,, B,,=C, B,, z2 z |\n",
@@ -23,11 +31,19 @@
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "cik-cik-capo1.mscz",
     "huwiki-import-format": "mscx",
-    "abc-parts-new-line": "no"
+    "abc-parts-new-line": "no",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=y5_o_m4h5yA",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Čik čik (Sibiu, 2024)",
+    "repertoire-youtube-match": "own",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://akustisk-elektrisk.dk/",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Čik, čik · E♭-sax",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Čik, čik · E♭-sax\nC:Rade Krstić\nM:4/4\nL:1/8\n%%MIDI transpose 3\nQ:1/4=125\nV:1 clef=treble\nV:2 clef=bass\nK:D\nV:1\n[P:A] |:\"D\"z/ A/d/f/ b/a/a/g/ g/f/g/a/ g/f/^e/f/ | z/ A/d/f/ b/a/a/g/ g/f/g/a/ g/f/^e/f/ | z/ A/d/f/ b/a/a/g/ g/f/g/a/ g/f/^e/f/ | \"E\"g3/2 f/\"E/G#\" f3/2 e/\"A7\" e4 :|\n[P:Fine ved DC] z4 z2 de |: [P:Bx4]\"A7\"ed/e/ d/c/_B z2 Bc | [1-3\"Gm\"_B2 A2\"A7\" z2 de :| [4[M:2/4]\"Gm\"_B2 A2 |: [P:Cx4][M:4/4]\"A7\"A_BcB ABcB |\n\"Gm\"z _B/(B/ B/)B/B\"A7\" c/B/A/B/ A2 :: [P:Dx4]\"A7\"z e- e2- ed/e/ d/c/_B | \"Gm\"z _B/B/ Bc\"A7\" B2 A2 :| [P:DC]\"D\"z/ A/d/f/ b/a/a/g/ g/f/g/a/ g/f/^e/f/ |\nz/ A/d/f/ b/a/a/g/ g/f/g/a/ g/f/^e/f/ | z/ A/d/f/ b/a/a/g/ g/f/g/a/ g/f/^e/f/ | \"E\"g3/2 f/\"E/G#\" f3/2 e/\"A7\" e4 | [P:Fine] z4 z2 de |\nV:2\n|:D,/ z/ z z2 z4 | D,2 A,,F,, D,,2 F,,A,, | D,2 A,,F,, D,,2 F,,A,, | E,,2 ^G,,2 A,,A,,A,,A,, :|\nA,,A,, A,,_B,, A,, z2 z |: A,2 E,C, A,,2 C,E, | [1-3 G,2 ^G,2 A,2 E,C, :| [4[M:2/4] G,2 ^G,2 |: [M:4/4] A,2 E,C, A,,2 C,E, |\nG,2 ^G,2 A,2 E,C, :: A,2 E,C, A,,2 C,E, | G,2 ^G,2 A,2 E,C, :| D,/ z/ z z2 z4 |\nD,2 A,,F,, D,,2 F,,A,, | D,2 A,,F,, D,,2 F,,A,, | E,,2 ^G,,2 A,,A,,A,,A,, | A,,A,, A,,_B,, A,, z2 z |\n",
@@ -36,11 +52,19 @@
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "cik-cik-capo1.mscz",
     "huwiki-import-format": "mscx",
-    "abc-parts-new-line": "no"
+    "abc-parts-new-line": "no",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=y5_o_m4h5yA",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Čik čik (Sibiu, 2024)",
+    "repertoire-youtube-match": "own",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://akustisk-elektrisk.dk/",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Majčin čoček",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Majčin čoček\nC:Dragan Kneževic\nM:9/8\nL:1/8\nQ:1/4=150\nV:1 name=\"Klaver\" clef=treble\nV:2 clef=bass\nK:Cm\nV:1\n[P:A] |:\"Cm\"C2 z2\"Eb\" E2 G-G-G | \"Fm\"c2 A c\"Ab\"=BA G-GE | \"Bb\"DEF GAF c-cA | \"Eb\"G2- G AG^F\"G\" G=A=B |\n\"Cm\"c2 z2\"Eb\" G2 e-e-e | \"Bb\"fed fed c=BA | \"Fm\"c=BA G\"Cm\"FE DEF | \"Cm\"E2- E G\"Cm/G\"FD E-E-E ::\n[P:E]\"D7b9\"c2 c2 c2 c=Bc | c=Bc B c2 cBc | c=Bc B c2 edc | \"Eb\"B6 z z z |\nB2 B2 B2 B=AB | B=AB A B2 BAB | \"F\"c=A\"Eb\"B G\"D\"A^F\"Cm\" GFE | \"D7\"^F6 DF=A ::\n[P:F]\"F\"z9 :| \"F\"[F-=A-]6 [FA]3 | [=A-c-]6 [Ac]3 | \"F7\"[ce]6 [ce][Bd][=Ac] |\n\"Bb\"[B-d-]6 [Bd]3 | \"Bbm\"[B_d]6 [Bd][=Ac][GB] | \"F\"[=Ac]6 [GB][^FA][EG] |: \"D\"[D^F]6\"Ebmaj7/D\" [EG][EG][EG] ::\n[P:Gx3] edc B =A2 eee :| \"D\"d z8 |\nV:2\n|:C,2 z2 E,2 G,3 | F,2 F,2 A,2 CC z | B,2 F,2 B,2 F,F, z | E,2 E,2 E,2 G,G,G, |\nC,2 z2 E,2 G,3 | B,2 F,2 B,2 B,B, z | F,2 F,2 G,2 CC z | C2 C2 G,2 CC z ::\nD,2 =A,,2 D,2 D,D,D, | D,2 =A,,2 D,2 D,D,D, | D,2 =A,,2 D,2 D,D,D, | E,2 B,,2 E,2 E,E,E, |\nE,2 B,,2 E,2 E,E,E, | E,2 B,,2 E,2 E,E,E, | F,2 E,2 D,2 C,C,C, | D,2 =A,,2 C,2 D,D,D, ::\nF,2 F, F, F,2 F,F,F, :| F,2 F, F, F,2 F,F,F, | F,2 F, F, F,2 F,F,F, | F,2 F, F, F,2 F,F,F, |\nB,2 B, B, B,2 B,B,B, | B,2 B, B, B,2 B,B,B, | F,2 F, F, F,2 F,F,F, |: D,2 D, D, D,2 E,E,E, ::\nE,D,C, B,, =A,,2 E,E,E, :| D, z8 |\n",
@@ -59,11 +83,12 @@
     "abc-origin-url": "https://forge.xn--mns-ula.dk/catalog/musescore/sources/ed635bc23f5f6b842045821ecb011da6abed3e32e52429e4b6909d1b15b5cdb2.mscz",
     "abc-collection": "Akustisk Elektrisk",
     "huwiki-source-date": "2019-05-12",
-    "huwiki-source-contributor": "Ebbe Munk"
+    "huwiki-source-contributor": "Ebbe Munk",
+    "music-template": "off"
   },
   {
     "title": "Majčin čoček · Hm-greb · capo I",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Majčin čoček · Hm-greb · capo I\nC:Dragan Knežević, arr. E.M.\nM:9/8\nL:1/8\n%%MIDI transpose 1\nQ:1/8=300\nV:1 clef=treble\nV:2 clef=bass\nK:Bm\nV:1\n[P:A] |:\"Bm\"B,2 z2\"D\" D2 F-F-F | \"Em\"B2 G B\"G\"^AG F-FD | \"A\"CDE FGE B-BG | \"D\"F2- F GF^E\"F#\" F^G^A |\n\"Bm\"B2 z2\"D\" F2 d-d-d | \"A\"edc edc B^AG | \"Em\"B^AG F\"Bm\"ED CDE | \"Bm\"D2- D F\"Bm/F#\"EC D-D-D ::\n[P:E]\"C#7b9\"B2 B2 B2 B^AB | B^AB A B2 BAB | B^AB A B2 dcB | \"D\"A6 z z z |\nA2 A2 A2 A^GA | A^GA G A2 AGA | \"E\"B^G\"D\"A F\"C#\"G^E\"Bm\" FED | \"C#7\"!fermata!^E6 CE^G ::\n[P:F]\"E\"z9 :| \"E\"[E-^G-]6 [EG]3 | [^G-B-]6 [GB]3 | \"E7\"[Bd]6 [Bd][Ac][^GB] |\n\"A\"[A-c-]6 [Ac]3 | \"Am\"[A=c]6 [Ac][^GB][FA] | \"E\"[^GB]6 [FA][^EG][DF] |: \"C#\"[C^E]6\"Dmaj7/C#\" [DF][DF][DF] ::\n[P:Gx3] dcB A ^G2 ddd :| [P:DC]\"Bm\"B,2 z2\"D\" D2 F-F-F | \"Em\"B2 G B\"G\"^AG F-FD | \"A\"CDE FGE B-BG |\n\"D\"F2- F GF^E\"F#\" F^G^A | \"Bm\"B2 z2\"D\" F2 d-d-d | \"A\"edc edc B^AG | \"Em\"B^AG F\"Bm\"ED CDE |\n\"Bm\"D2- D F\"Bm/F#\"EC D-D-D | [P:E]\"C#7b9\"B2 B2 B2 B^AB | B^AB A B2 BAB | B^AB A B2 dcB |\n\"D\"A6 z z z | A2 A2 A2 A^GA | A^GA G A2 AGA | \"E\"B^G\"D\"A F\"C#\"G^E\"Bm\" FED |\n\"C#7\"!fermata!^E6 CE^G | [P:F]\"E\"z9 | \"E\"[E-^G-]6 [EG]3 | [^G-B-]6 [GB]3 |\n\"E7\"[Bd]6 [Bd][Ac][^GB] | \"A\"[A-c-]6 [Ac]3 | \"Am\"[A=c]6 [Ac][^GB][FA] | \"E\"[^GB]6 [FA][^EG][DF] |\n\"C#\"[C^E]6\"Dmaj7/C#\" [DF][DF][DF] | [P:G] dcB A ^G2 ddd | [P:Fine]\"C#\"c z8 |\nV:2\n|:B,,2 z2 D,2 F,3 | E,2 E,2 G,2 B,B, z | A,2 E,2 A,2 E,E, z | D,2 D,2 D,2 F,F,F, |\nB,,2 z2 D,2 F,3 | A,2 E,2 A,2 A,A, z | E,2 E,2 F,2 B,B, z | B,2 B,2 F,2 B,B, z ::\nC,2 ^G,,2 C,2 C,C,C, | C,2 ^G,,2 C,2 C,C,C, | C,2 ^G,,2 C,2 C,C,C, | D,2 A,,2 D,2 D,D,D, |\nD,2 A,,2 D,2 D,D,D, | D,2 A,,2 D,2 D,D,D, | E,2 D,2 C,2 B,,B,,B,, | C,2 ^G,,2 B,,2 C,C,C, ::\nE,2 E, E, E,2 E,E,E, :| E,2 E, E, E,2 E,E,E, | E,2 E, E, E,2 E,E,E, | E,2 E, E, E,2 E,E,E, |\nA,2 A, A, A,2 A,A,A, | A,2 A, A, A,2 A,A,A, | E,2 E, E, E,2 E,E,E, |: C,2 C, C, C,2 D,D,D, ::\nD,C,B,, A,, ^G,,2 D,D,D, :| B,,2 z2 D,2 F,3 | E,2 E,2 G,2 B,B, z | A,2 E,2 A,2 E,E, z |\nD,2 D,2 D,2 F,F,F, | B,,2 z2 D,2 F,3 | A,2 E,2 A,2 A,A, z | E,2 E,2 F,2 B,B, z |\nB,2 B,2 F,2 B,B, z | C,2 ^G,,2 C,2 C,C,C, | C,2 ^G,,2 C,2 C,C,C, | C,2 ^G,,2 C,2 C,C,C, |\nD,2 A,,2 D,2 D,D,D, | D,2 A,,2 D,2 D,D,D, | D,2 A,,2 D,2 D,D,D, | E,2 D,2 C,2 B,,B,,B,, |\nC,2 ^G,,2 B,,2 C,C,C, | E,2 E, E, E,2 E,E,E, | E,2 E, E, E,2 E,E,E, | E,2 E, E, E,2 E,E,E, |\nE,2 E, E, E,2 E,E,E, | A,2 A, A, A,2 A,A,A, | A,2 A, A, A,2 A,A,A, | E,2 E, E, E,2 E,E,E, |\nC,2 C, C, C,2 D,D,D, | D,C,B,, A,, ^G,,2 D,D,D, | C, z8 |\n",
@@ -71,11 +96,12 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "majcin_cocek_capo1.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "music-template": "off"
   },
   {
     "title": "Majčin čoček · B♭-sax",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Majčin čoček · B♭-sax\nC:Dragan Knežević, arr. E.M.\nM:9/8\nL:1/8\n%%MIDI transpose -2\nQ:1/8=300\nV:1 clef=treble\nV:2 clef=bass\nK:Dm\nV:1\n[P:A] |:\"Dm\"D2 z2\"F\" F2 A-A-A | \"Gm\"d2 B d\"Bb\"^cB A-AF | \"C\"EFG ABG d-dB | \"F\"A2- A BA^G\"A\" A=B^c |\n\"Dm\"d2 z2\"F\" A2 f-f-f | \"C\"gfe gfe d^cB | \"Gm\"d^cB A\"Dm\"GF EFG | \"Dm\"F2- F A\"Dm/A\"GE F-F-F ::\n[P:E]\"E7b9\"d2 d2 d2 d^cd | d^cd c d2 dcd | d^cd c d2 fed | \"F\"c6 z z z |\nc2 c2 c2 c=Bc | c=Bc B c2 cBc | \"G\"d=B\"F\"c A\"E\"B^G\"Dm\" AGF | \"E7\"!fermata!^G6 EG=B ::\n[P:F]\"G\"z9 :| \"G\"[G-=B-]6 [GB]3 | [=B-d-]6 [Bd]3 | \"G7\"[df]6 [df][ce][=Bd] |\n\"C\"[c-e-]6 [ce]3 | \"Cm\"[c_e]6 [ce][=Bd][Ac] | \"G\"[=Bd]6 [Ac][^GB][FA] |: \"E\"[E^G]6\"Fmaj7/E\" [FA][FA][FA] ::\n[P:Gx3] fed c =B2 fff :| [P:DC]\"Dm\"D2 z2\"F\" F2 A-A-A | \"Gm\"d2 B d\"Bb\"^cB A-AF | \"C\"EFG ABG d-dB |\n\"F\"A2- A BA^G\"A\" A=B^c | \"Dm\"d2 z2\"F\" A2 f-f-f | \"C\"gfe gfe d^cB | \"Gm\"d^cB A\"Dm\"GF EFG |\n\"Dm\"F2- F A\"Dm/A\"GE F-F-F | [P:E]\"E7b9\"d2 d2 d2 d^cd | d^cd c d2 dcd | d^cd c d2 fed |\n\"F\"c6 z z z | c2 c2 c2 c=Bc | c=Bc B c2 cBc | \"G\"d=B\"F\"c A\"E\"B^G\"Dm\" AGF |\n\"E7\"!fermata!^G6 EG=B | [P:F]\"G\"z9 | \"G\"[G-=B-]6 [GB]3 | [=B-d-]6 [Bd]3 |\n\"G7\"[df]6 [df][ce][=Bd] | \"C\"[c-e-]6 [ce]3 | \"Cm\"[c_e]6 [ce][=Bd][Ac] | \"G\"[=Bd]6 [Ac][^GB][FA] |\n\"E\"[E^G]6\"Fmaj7/E\" [FA][FA][FA] | [P:G] fed c =B2 fff | [P:Fine]\"E\"e z8 |\nV:2\n|:D,2 z2 F,2 A,3 | G,2 G,2 B,2 DD z | C2 G,2 C2 G,G, z | F,2 F,2 F,2 A,A,A, |\nD,2 z2 F,2 A,3 | C2 G,2 C2 CC z | G,2 G,2 A,2 DD z | D2 D2 A,2 DD z ::\nE,2 =B,,2 E,2 E,E,E, | E,2 =B,,2 E,2 E,E,E, | E,2 =B,,2 E,2 E,E,E, | F,2 C,2 F,2 F,F,F, |\nF,2 C,2 F,2 F,F,F, | F,2 C,2 F,2 F,F,F, | G,2 F,2 E,2 D,D,D, | E,2 =B,,2 D,2 E,E,E, ::\nG,2 G, G, G,2 G,G,G, :| G,2 G, G, G,2 G,G,G, | G,2 G, G, G,2 G,G,G, | G,2 G, G, G,2 G,G,G, |\nC2 C C C2 CCC | C2 C C C2 CCC | G,2 G, G, G,2 G,G,G, |: E,2 E, E, E,2 F,F,F, ::\nF,E,D, C, =B,,2 F,F,F, :| D,2 z2 F,2 A,3 | G,2 G,2 B,2 DD z | C2 G,2 C2 G,G, z |\nF,2 F,2 F,2 A,A,A, | D,2 z2 F,2 A,3 | C2 G,2 C2 CC z | G,2 G,2 A,2 DD z |\nD2 D2 A,2 DD z | E,2 =B,,2 E,2 E,E,E, | E,2 =B,,2 E,2 E,E,E, | E,2 =B,,2 E,2 E,E,E, |\nF,2 C,2 F,2 F,F,F, | F,2 C,2 F,2 F,F,F, | F,2 C,2 F,2 F,F,F, | G,2 F,2 E,2 D,D,D, |\nE,2 =B,,2 D,2 E,E,E, | G,2 G, G, G,2 G,G,G, | G,2 G, G, G,2 G,G,G, | G,2 G, G, G,2 G,G,G, |\nG,2 G, G, G,2 G,G,G, | C2 C C C2 CCC | C2 C C C2 CCC | G,2 G, G, G,2 G,G,G, |\nE,2 E, E, E,2 F,F,F, | F,E,D, C, =B,,2 F,F,F, | E, z8 |\n",
@@ -83,11 +109,12 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "majcin_cocek_capo1.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "music-template": "off"
   },
   {
     "title": "To sekunder",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:To sekunder\nC:Ebbe Munk\nM:7/8\nL:1/8\nQ:1/8=280\nV:1 clef=treble\nV:2 clef=bass\nK:C\nV:1\n[P:A] |:A2 d2 cc z | d2 _B2 ^c-ce | A2 d2 cc z | d2 _B2 ^cBA ::\n[P:B] a/c'/b/a/ f2 ee z | d2 _B2 ^c-ce | a/c'/b/a/ f2 ee z | d2 _B2 ^cBA ::\n[P:C] e/a/f/e/ _e2 cc z | _B2 _d2 c-cd | e/a/f/e/ _e2 cc z | _B2 _d2 c z z :|\nV:2\n|:\"A7\"A,,E,, A,,2 A,,-A,,-A,, | \"Bb13\"G,,E,, _B,,2\"A7\" A,,-A,,-A,, | \"A7\"A,,E,, A,,2 A,,-A,,-A,, | \"Bb13\"G,,E,, _B,,2\"A7\" A,,-A,,-A,, ::\n\"A7\"A,,E,, A,,2 A,,-A,,-A,, | \"Bb13\"G,,E,, _B,,2\"A7\" A,,-A,,-A,, | \"A7\"A,,E,, A,,2 A,,-A,,-A,, | \"Bb13\"G,,E,, _B,,2\"A7\" A,,-A,,-A,, ::\n\"Gb13\"C,_G,, C,2 C,-C,-C, | \"Gb13\"G,,2 _B,,2\"F7\" C,-C,-C, | \"Gb13\"C,_G,, C,2 C,-C,-C, | \"Gb13\"G,,2 _B,,2\"F7\" C,-C,-C, :|\n",
@@ -95,11 +122,12 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "to-sekunder-ceb.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "music-template": "off"
   },
   {
     "title": "To sekunder · Capo III og E♭-sax",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:To sekunder · Capo III og E♭-sax\nC:Ebbe Munk\nM:7/8\nL:1/8\n%%MIDI transpose 3\nQ:1/8=280\nV:1 clef=treble\nV:2 clef=bass\nK:A\nV:1\n[P:A] |:F2 B2 AA z | B2 =G2 ^A-Ac | F2 B2 AA z | B2 =G2 ^AGF ::\n[P:B] f/a/g/f/ d2 cc z | B2 =G2 ^A-Ac | f/a/g/f/ d2 cc z | B2 =G2 ^AGF ::\n[P:C] c/f/d/c/ =c2 AA z | =G2 _B2 A-AB | c/f/d/c/ =c2 AA z | =G2 _B2 A z z :|\nV:2\n|:\"F#7\"F,,C,, F,,2 F,,-F,,-F,, | \"G13\"E,,C,, =G,,2\"F#7\" F,,-F,,-F,, | \"F#7\"F,,C,, F,,2 F,,-F,,-F,, | \"G13\"E,,C,, =G,,2\"F#7\" F,,-F,,-F,, ::\n\"F#7\"F,,C,, F,,2 F,,-F,,-F,, | \"G13\"E,,C,, =G,,2\"F#7\" F,,-F,,-F,, | \"F#7\"F,,C,, F,,2 F,,-F,,-F,, | \"G13\"E,,C,, =G,,2\"F#7\" F,,-F,,-F,, ::\n\"Eb13\"A,,_E,, A,,2 A,,-A,,-A,, | \"Eb13\"E,,2 =G,,2\"D7\" A,,-A,,-A,, | \"Eb13\"A,,_E,, A,,2 A,,-A,,-A,, | \"Eb13\"E,,2 =G,,2\"D7\" A,,-A,,-A,, :|\n",
@@ -107,11 +135,12 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "to-sekunder-ceb.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "music-template": "off"
   },
   {
     "title": "Dobar Bubnjar",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Dobar Bubnjar\nC:Ebbe Munk\nM:9/8\nL:1/8\nQ:1/8=270\nV:1 clef=treble\nV:2 clef=bass\nK:Fm\nV:1\n[P:A] |:z a-a g-gf =egc | z f-f f-ff dc=e | z a-a g-gf =egc | fff z z2 cd=e ::\n[P:B] Bdc =e d2 fed | z z z f=ed ceg | Bdc =e d2 fed | ccc z z2 cd=e ::\n[P:C] z Bc =A B2 d3 | z z z f=ed ceg | z Bc =A B2 d3 | ccc z z2 [c=e][df][eg] :|\nV:2\n|:\"Fm\"F,2 F,2 F,2\"C7\" C,-C,=E, | \"Fm\"F,2 F,2 F,2\"C7\" C,=E,G, | \"Fm\"F,2 F,2 F,2\"C7\" C,-C,=E, | \"Fm\"F,2 F,2 F,2\"C7\" C,3 ::\n\"Bbm\"B,,2 B,,2 B,,2 B,,D,-D, | \"C7\"C,2 C,2 C,2 C,D,-D, | \"Bbm\"B,,2 B,,2 B,,2 B,,D,-D, | \"C7\"C,2 C,2 C,2 C,D,-D, ::\n\"Bbm\"B,,2 B,,2 B,,2 F,=E,D, | \"C7\"C,2 C,2 C,2 C,D,-D, | \"Bbm\"B,,2 B,,2 B,,2 F,=E,D, | \"C7\"C,C,C, z z2 C,D,-D, :|\n",
@@ -119,11 +148,19 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "dobar-bubnjar-eb-capo1.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=kd06OPd-MFs",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Dobar Bubnjar (Sibiu, 2024)",
+    "repertoire-youtube-match": "own",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://akustisk-elektrisk.dk/",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Dobar Bubnjar · Em-greb · capo I",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Dobar Bubnjar · Em-greb · capo I\nC:Ebbe Munk\nM:9/8\nL:1/8\n%%MIDI transpose 1\nQ:1/8=270\nV:1 clef=treble\nV:2 clef=bass\nK:Em\nV:1\n[P:A] |:z g-g f-fe ^dfB | z e-e e-ee cB^d | z g-g f-fe ^dfB | eee z z2 Bc^d ::\n[P:B] AcB ^d c2 edc | z z z e^dc Bdf | AcB ^d c2 edc | BBB z z2 Bc^d ::\n[P:C] z AB ^G A2 c3 | z z z e^dc Bdf | z AB ^G A2 c3 | BBB z z2 [B^d][ce][df] :|\nV:2\n|:\"Em\"E,2 E,2 E,2\"B7\" B,,-B,,^D, | \"Em\"E,2 E,2 E,2\"B7\" B,,^D,F, | \"Em\"E,2 E,2 E,2\"B7\" B,,-B,,^D, | \"Em\"E,2 E,2 E,2\"B7\" B,,3 ::\n\"Am\"A,,2 A,,2 A,,2 A,,C,-C, | \"B7\"B,,2 B,,2 B,,2 B,,C,-C, | \"Am\"A,,2 A,,2 A,,2 A,,C,-C, | \"B7\"B,,2 B,,2 B,,2 B,,C,-C, ::\n\"Am\"A,,2 A,,2 A,,2 E,^D,C, | \"B7\"B,,2 B,,2 B,,2 B,,C,-C, | \"Am\"A,,2 A,,2 A,,2 E,^D,C, | \"B7\"B,,B,,B,, z z2 B,,C,-C, :|\n",
@@ -131,11 +168,19 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "dobar-bubnjar-eb-capo1.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=kd06OPd-MFs",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Dobar Bubnjar (Sibiu, 2024)",
+    "repertoire-youtube-match": "own",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://akustisk-elektrisk.dk/",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   },
   {
     "title": "Dobar Bubnjar · E♭-sax",
-    "text": "<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\n<$link to=\"Nodekilder\">MuseScore-originaler og kilder</$link>",
     "tags": "ABC RepertoireMelodi",
     "type": "text/vnd.tiddlywiki",
     "abc-source": "X:1\nT:Dobar Bubnjar · E♭-sax\nC:Ebbe Munk\nM:9/8\nL:1/8\n%%MIDI transpose 3\nQ:1/8=270\nV:1 clef=treble\nV:2 clef=treble\nK:Dm\nV:1\n[P:A] |:z f-f e-ed ^ceA | z d-d d-dd BA^c | z f-f e-ed ^ceA | ddd z z2 AB^c ::\n[P:B] GBA ^c B2 dcB | z z z d^cB Ace | GBA ^c B2 dcB | AAA z z2 AB^c ::\n[P:C] z GA ^F G2 B3 | z z z d^cB Ace | z GA ^F G2 B3 | AAA z z2 [A^c][Bd][ce] :|\nV:2\n|:\"Dm\"D,2 D,2 D,2\"A7\" A,,-A,,^C, | \"Dm\"D,2 D,2 D,2\"A7\" A,,^C,E, | \"Dm\"D,2 D,2 D,2\"A7\" A,,-A,,^C, | \"Dm\"D,2 D,2 D,2\"A7\" A,,3 ::\n\"Gm\"G,,2 G,,2 G,,2 G,,B,,-B,, | \"A7\"A,,2 A,,2 A,,2 A,,B,,-B,, | \"Gm\"G,,2 G,,2 G,,2 G,,B,,-B,, | \"A7\"A,,2 A,,2 A,,2 A,,B,,-B,, ::\n\"Gm\"G,,2 G,,2 G,,2 D,^C,B,, | \"A7\"A,,2 A,,2 A,,2 A,,B,,-B,, | \"Gm\"G,,2 G,,2 G,,2 D,^C,B,, | \"A7\"A,,A,,A,, z z2 A,,B,,-B,, :|\n",
@@ -143,6 +188,14 @@
     "abc-bars-per-line": "4",
     "abc-accompaniment": "{\"enabled\": false, \"metronome\": false, \"bassSource\": \"voice:1\", \"melodyInstrument\": \"source\"}",
     "huwiki-import-source": "dobar-bubnjar-eb-capo1.mscz",
-    "huwiki-import-format": "mscx"
+    "huwiki-import-format": "mscx",
+    "music-template": "off",
+    "repertoire-youtube": "https://www.youtube.com/watch?v=kd06OPd-MFs",
+    "repertoire-youtube-title": "Akustisk Elektrisk · Dobar Bubnjar (Sibiu, 2024)",
+    "repertoire-youtube-match": "own",
+    "repertoire-youtube-note": "",
+    "repertoire-youtube-source": "https://akustisk-elektrisk.dk/",
+    "repertoire-youtube-start": "0",
+    "repertoire-youtube-curated": "2026-11-27"
   }
 ]

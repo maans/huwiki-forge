@@ -1,7 +1,7 @@
 [
   {
     "title": "Oh verden",
-    "text": "B-stykket spilles med dobbelt rytmisk puls (dobbelt tempo). Becifringerne er endnu ikke verificeret.",
+    "text": "<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n<details class=\"huwrep-practice-notes\"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field=\"musik-status\"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field=\"musik-mål\" tag=\"input\"/></label>\n\n</details>\n\nB-stykket spilles med dobbelt rytmisk puls (dobbelt tempo). Becifringerne er endnu ikke verificeret.",
     "tags": "ABC SilbaÄtno SilbaÄtnoTrack RepertoireMelodi",
     "silba-order": "05",
     "silba-section": "hovedliste",
@@ -19,7 +19,8 @@
     "abc-accompaniment": "{\"enabled\":true,\"style\":\"balkan-44\",\"bassSource\":\"style\",\"bass\":\"balkan\",\"chords\":\"balkan\",\"drums\":\"balkan\",\"bassInstrument\":32,\"chordInstrument\":21,\"melodyVolume\":0,\"bassVolume\":58,\"chordVolume\":51,\"drumVolume\":28,\"variation\":10,\"metronome\":false,\"form\":\"AB\"}",
     "abc-bars-per-line": "4",
     "abc-chords-overview": "yes",
-    "abc-double-time-section": "B"
+    "abc-double-time-section": "B",
+    "music-template": "off"
   },
   {
     "title": "Hjul og Stejle nr. 6 – Bulgarsk Horo (G)",
