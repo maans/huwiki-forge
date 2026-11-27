@@ -106,6 +106,10 @@ function prepareEditorHandoff(widget){
 }
 function ABCWidget(parseTreeNode,options){this.initialise(parseTreeNode,options);}
 ABCWidget.prototype=new Widget();
+ABCWidget.prototype.openMiniMixer=function(anchor){
+ if(this._minimalPlayer&&this._minimalPlayer.openMixer)return this._minimalPlayer.openMixer(anchor);
+ return this._showMiniMixer?this._showMiniMixer(anchor):false;
+};
 ABCWidget.prototype.execute=function(){
  this.title=this.getAttribute("tiddler",this.getVariable("currentTiddler"));
  // A new tune starts as a compact score, regardless of any old saved full view.
@@ -240,10 +244,12 @@ ABCWidget.prototype.draw=function(){
       getConfig:accompControls.config,getPlaying:function(){return !!(controller&&controller.isStarted);},
       getPreparing:function(){return preparing||!!(controller&&controller.isPreparing);},
       onTogglePlayback:function(){var btn=audioControls.querySelector('.abcjs-midi-start');if(btn)btn.click();},
+      onStopPlayback:function(){if(controller)playback.stopOne(controller);},
       onPreview:function(next){accompControls.setConfig(next,false);if(controller&&controller.midiBuffer)controller.midiBuffer.setVolumes();},
       onChange:function(next){accompControls.setConfig(next,true);} });
     self._floatingMixer=fullMiniMixer;return fullMiniMixer;
   }
+  self._showMiniMixer=function(anchor){var mixer=ensureFullMiniMixer();if(!mixer)return false;mixer.show({anchor:anchor,floating:true});return true;};
   var soundHelp=SoundHelp.mount(audio,{
     getEngineMode:function(){return self.wiki.getTiddlerText('$:/config/huwiki/abc/audio-engine-mode','auto');},
     onEngine:function(mode){

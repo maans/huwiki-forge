@@ -335,7 +335,7 @@ test("Nodebog prints PDF scores and cues with hidden-safe editor state",()=>{
  assert.match(printing.text,/tm-huwiki-print-article/);
  assert.match(printing.text,/tm-huwiki-sitepublisher/);
  assert.doesNotMatch(printing.text,/window\.open|owner\.open|win\.print/);
- assert.match(tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"].text,/Hele nodemappen med noder/);
+ assert.match(tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"].text,/Samlet PDF for sættet/);
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Instrumentering: hvem spiller hvad/);
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text,/\.huwrep-book\[hidden\]\{display:none!important\}/);
 });

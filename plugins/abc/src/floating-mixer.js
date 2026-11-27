@@ -10,6 +10,7 @@ module-type: library
   var Accompaniment = require('$:/plugins/huwiki/abc/accompaniment.js');
   var ChordChart = require('$:/plugins/huwiki/abc/chord-chart.js');
   var PlaybackFeedback = require('$:/plugins/huwiki/abc/playback-feedback.js');
+  var MiniYoutube = require('$:/plugins/huwiki/abc/mini-youtube.js');
   var positions = new WeakMap();
 
 
@@ -86,12 +87,18 @@ module-type: library
     var voiceTab = node('button','huwabc-mini-mixer-tab',word('Stemmer','Voices'));
     var backingTab = node('button','huwabc-mini-mixer-tab',word('Akkompagnement','Accompaniment'));
     var chordTab=node('button','huwabc-mini-mixer-tab',word('C7 · Akkorder','C7 · Chords'));
+    var youtubeTab=node('button','huwabc-mini-mixer-tab','YouTube');youtubeTab.type='button';youtubeTab.setAttribute('role','tab');
     voiceTab.type=backingTab.type=chordTab.type='button';
     [voiceTab,backingTab,chordTab].forEach(function(b){b.setAttribute('role','tab');});
     tabbar.appendChild(voiceTab);tabbar.appendChild(backingTab);tabbar.appendChild(chordTab);content.appendChild(tabbar);
+    tabbar.appendChild(youtubeTab);tabbar.style.gridTemplateColumns='repeat(4,minmax(0,1fr))';
+    if(options.videoOnly){voiceTab.hidden=backingTab.hidden=chordTab.hidden=true;tabbar.style.gridTemplateColumns='1fr';}
     var list = node('div','huwabc-mini-mixer-list');list.setAttribute('role','tabpanel');content.appendChild(list);
     var backingList = node('div','huwabc-mini-mixer-list huwabc-mini-mixer-backing');backingList.setAttribute('role','tabpanel');content.appendChild(backingList);
     var chordList=node('div','huwabc-mini-mixer-chordlist');chordList.setAttribute('role','tabpanel');content.appendChild(chordList);
+    var youtubeList=node('div','huwabc-mini-mixer-youtube');youtubeList.setAttribute('role','tabpanel');youtubeList.style.cssText='padding:8px;max-width:100%;overflow:auto';content.appendChild(youtubeList);
+    var youtube=MiniYoutube.mount(youtubeList,{wiki:wiki,title:musicTitle,onState:function(playing){if(selectedTab==='youtube')updatePlayback(playing,true);},onPlay:function(){if(options.onStopPlayback)options.onStopPlayback();}}),youtubeVisible=false;
+    function syncYoutube(){var want=selectedTab==='youtube'&&isVisible();if(want===youtubeVisible)return;youtubeVisible=want;if(want)youtube.show();else youtube.hide();}
     var roomRow=node('label','huwabc-mini-mixer-reverb');
     var roomLabel=word('Rumklang','Reverb');
     roomRow.appendChild(node('span','',roomLabel));
@@ -123,11 +130,13 @@ module-type: library
      zoomOut.addEventListener('click',function(e){e.stopPropagation();setChordFontSize(chordFontSize-1,true);});
      zoomIn.addEventListener('click',function(e){e.stopPropagation();setChordFontSize(chordFontSize+1,true);});
      setChordFontSize(chordFontSize,false);
-    function updatePlayback(value){
-      currentlyPlaying=!!value;playSymbol.textContent=currentlyPlaying?'⏸':'▶';
-      play.title=word(currentlyPlaying?'Pause':'Afspil',currentlyPlaying?'Pause':'Play');
+    function updatePlayback(value,video){
+      if(!video&&value&&selectedTab==='youtube')chooseTab('voices');
+      if(!video)currentlyPlaying=!!value;
+      var shown=video?!!value:currentlyPlaying;playSymbol.textContent=shown?'⏸':'▶';
+      play.title=word(shown?'Pause':'Afspil',shown?'Pause':'Play')+(selectedTab==='youtube'?' · YouTube':'');
       play.setAttribute('aria-label',caption+' · '+play.title);
-      play.setAttribute('aria-pressed',String(currentlyPlaying));
+      play.setAttribute('aria-pressed',String(shown));
       PlaybackFeedback.update(play,currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
     }
     function updatePreparing(value){
@@ -135,7 +144,7 @@ module-type: library
       PlaybackFeedback.update(play,currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
       if(!currentlyPreparing)updatePlayback(currentlyPlaying);
     }
-    play.addEventListener('click',function(e){e.stopPropagation();if(typeof options.onTogglePlayback==='function')options.onTogglePlayback();});
+    play.addEventListener('click',function(e){e.stopPropagation();if(selectedTab==='youtube'){youtube.toggle();return;}if(typeof options.onTogglePlayback==='function')options.onTogglePlayback();});
     updatePlayback(options.getPlaying&&options.getPlaying());
     updatePreparing(options.getPreparing&&options.getPreparing());
     function setCollapsed(value){
@@ -143,6 +152,7 @@ module-type: library
       panel.classList.toggle('huwabc-mini-mixer--collapsed',collapsed);
       title.setAttribute('aria-expanded',String(!collapsed));
       title.title=word(collapsed?'Fold mixer ud':'Fold mixer sammen',collapsed?'Expand mixer':'Collapse mixer');
+      syncYoutube();
       if(floating)clamp();saveState();
     }
     title.addEventListener('click',function(e){
@@ -166,6 +176,7 @@ module-type: library
     function isVisible() { return !closed && visibleRequested && (floating || sidebarVisible()); }
     function syncVisibility() {
       panel.hidden = !isVisible();
+      syncYoutube();
       if (lastReportedVisible !== !panel.hidden) {
         lastReportedVisible = !panel.hidden;
         if (typeof options.onVisibilityChange === 'function') options.onVisibilityChange(!panel.hidden, floating);
@@ -445,17 +456,21 @@ module-type: library
       button.setAttribute('aria-label',label+' · '+mode+'. '+button.title);
     }
     function chooseTab(tab) {
-      selectedTab=['voices','accompaniment','chords'].indexOf(tab)>=0?tab:'voices';
-      var backing=selectedTab==='accompaniment',chords=selectedTab==='chords';
-      list.hidden=backing||chords;backingList.hidden=!backing;chordList.hidden=!chords;
+      selectedTab=options.videoOnly?'youtube':['voices','accompaniment','chords','youtube'].indexOf(tab)>=0?tab:'voices';
+      var backing=selectedTab==='accompaniment',chords=selectedTab==='chords',video=selectedTab==='youtube';
+      if(video){if(options.onStopPlayback)options.onStopPlayback();else if((currentlyPlaying||options.getPlaying&&options.getPlaying())&&options.onTogglePlayback)options.onTogglePlayback();}
+      list.hidden=backing||chords||video;backingList.hidden=!backing;chordList.hidden=!chords;youtubeList.hidden=!video;
+      roomRow.hidden=video;play.hidden=false;play.disabled=video&&!MiniYoutube.video(wiki,musicTitle).id;
       voiceTab.setAttribute('aria-selected',String(selectedTab==='voices'));
       backingTab.setAttribute('aria-selected',String(backing));
       chordTab.setAttribute('aria-selected',String(chords));
+      youtubeTab.setAttribute('aria-selected',String(video));syncYoutube();
       if(chords&&activeChord>=0)ensureChordVisible(chordNodes[activeChord]);
       count.textContent=selectedTab==='voices'&&voices.length?'('+voices.length+')':'';
        if(chords){
          info.textContent='';info.classList.add('huwabc-mini-mixer-info--chord');
          info.appendChild(zoomOut);info.appendChild(zoomIn);
+       }else if(video){info.classList.remove('huwabc-mini-mixer-info--chord');info.textContent=word('YouTube til det åbne nummer','YouTube for the current tune');
        }else{
          info.classList.remove('huwabc-mini-mixer-info--chord');
          info.textContent=word('Tryk på N / S / M for at skifte · solo virker på tværs af faner',
@@ -465,6 +480,7 @@ module-type: library
     voiceTab.addEventListener('click',function(){chooseTab('voices');});
     backingTab.addEventListener('click',function(){chooseTab('accompaniment');});
     chordTab.addEventListener('click',function(){chooseTab('chords');});
+    youtubeTab.addEventListener('click',function(){chooseTab('youtube');});
     function refreshControls() {
       roomSlider.value=String(current.reverb||0);roomValue.textContent=roomSlider.value+'%';
       var settings=Routing.clean(current.voiceSettings);
@@ -500,12 +516,13 @@ module-type: library
     }
     function onWikiChange(changes) {
       if (changes && changes['$:/state/sidebar']) syncVisibility();
+      if(changes&&(changes[musicTitle]||changes[MiniYoutube.video(wiki,musicTitle).workTitle]))youtube.refresh();
     }
     function onResize(){if (floating) clamp();else if(visibleRequested&&!sidebarVisible())layout(true);else syncVisibility();}
     function destroy() {
       if (closed) return;
       endDrag();positions.set(doc,{floating:floating,x:x,y:y});
-      closed=true;if (panel.parentNode) panel.parentNode.removeChild(panel);
+      closed=true;youtube.destroy();if (panel.parentNode) panel.parentNode.removeChild(panel);
       win.removeEventListener('resize',onResize);
       doc.removeEventListener('fullscreenchange',onFullscreenChange);
       doc.removeEventListener('webkitfullscreenchange',onFullscreenChange);

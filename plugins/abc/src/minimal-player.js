@@ -238,6 +238,7 @@ exports.mount=function(host,options){
    anchor:mixerButton,initialFloating:!options.sidebarMixer,initiallyVisible:false,
    getConfig:function(){return config;},onVisibilityChange:mixerVisibility,
    onTogglePlayback:function(){if(playButton)playButton.click();},getPlaying:function(){return !!(controller&&controller.isStarted);},
+   onStopPlayback:stopAndReset,
    getPreparing:function(){return preparing||!!(controller&&controller.isPreparing);},
    onPreview:syncMixerPreview,
    onChange:function(next){syncMixerPreview(next);if(typeof options.onMixerChange==='function')options.onMixerChange(config);}
@@ -340,7 +341,7 @@ exports.mount=function(host,options){
  var stopInstrumentObserver=InstrumentView.observe(function(){
   if(alive())update(fields,source,{score:true});
  });
- var api={element:box,pager:pager,controller:null,visual:null,destroy:destroy,update:update,updateConfig:function(next){
+ var api={element:box,pager:pager,controller:null,visual:null,destroy:destroy,update:update,openMixer:function(anchor){if(options.audio===false||closed)return false;ensureMiniMixer().show({anchor:anchor,floating:true});return true;},updateConfig:function(next){
   var fresh=Accompaniment.clean(next),live=Accompaniment.liveConfigChange(config,fresh);config=fresh;
   fields=Object.assign({},fields,{'abc-accompaniment':JSON.stringify(config)});
   if(miniMixer)miniMixer.update(config);

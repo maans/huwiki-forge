@@ -273,7 +273,7 @@ Repertoire.prototype.draw=function(){
   viewItems.forEach(function(id){model.availableViews(wiki,id).forEach(function(view){folderViews[view.role]=view;});});
   var defaultViewRole=viewSet&&viewSet.fields["repertoire-source-role"]||"";
   if(!defaultViewRole)defaultViewRole=wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","")||"";
-  var folderView=labelled(doc,"Visning for hele nodemappen",defaultViewRole,"select");
+  var folderView=labelled(doc,"Foretrukken visning for nodemappen",defaultViewRole,"select");
   folderView.input.classList.add("huwrep-setlist-view");folderView.input.setAttribute("aria-label","Visning for hele nodemappen");
   if(!defaultViewRole){var automatic=el(doc,"option","","Automatisk efter nummerets noder");automatic.value="";automatic.disabled=true;folderView.input.appendChild(automatic);}
   Object.keys(folderViews).sort(function(a,b){return viewOrder.indexOf(a)-viewOrder.indexOf(b);}).forEach(function(role){option(doc,folderView.input,role,folderViews[role].label);});

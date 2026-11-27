@@ -56,6 +56,10 @@ jobs:
           node-version: 22
       - name: Assemble common ABC reader from the latest sources
         run: node scripts/build-abc-ui.mjs
+      - name: Build Publisher and verify mixed set PDFs and mini video transport
+        run: |
+          node scripts/build-print-article.mjs --check
+          node --test tests/repertoire-mixed-publication.test.mjs tests/abc-mini-youtube.test.mjs
       - name: Build Repertoire plugin from versioned source modules
         run: node scripts/build-repertoire-plugin.mjs
       - name: Synchronize native Forge plugin registry
@@ -121,5 +125,3 @@ jobs:
             git rebase origin/main
             git push origin HEAD:main
           fi
-
-
