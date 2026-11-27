@@ -40,9 +40,9 @@ try {
  assert.ok(Math.abs(before.height-after.height)<2,'sound settings overlay without shrinking the score');
  await book.locator('.huwrep-reading-controls').click();
  await book.locator('.huwrep-edit-score').click();
- await page.getByRole('heading',{name:'Redigér nodeark',exact:true}).waitFor();
+ await page.locator('.huwabc-edit-workshop').waitFor();
  assert.equal(await page.evaluate(title=>$tw.wiki.findDraft(title)!==undefined,source.title),true);
- await page.getByRole('button',{name:'Fortryd redigering af denne tiddler',exact:true}).click();
+ await page.getByRole('button',{name:/Fortryd redigering af denne tiddler|Cancel editing this tiddler/}).click();
  await book.locator('.huwabc-page-shell').waitFor();
  assert.equal(await page.evaluate(title=>$tw.wiki.getTiddler(title).fields['abc-source'],source.title),source.text);
  assert.deepEqual(errors,[]);
