@@ -4,9 +4,9 @@ tags: $:/tags/SideBar
 caption: Repertoire
 
 <%if [{$:/language}prefix[$:/languages/da]] %>
-[[Repertoireværksted|HUWiki Repertoire – Start]]
+[[Nodemapper og numre|HUWiki Repertoire – Start]]
 
-[[Nodebog|Repertoire – Nodebog]] · [[Stiknoder og stemmer|Repertoire – Stiknoder]]
+[[Nodepult|Repertoire – Nodebog]] · [[Redigér sætlister|Repertoire – Sætlister]]
 <%else%>
 [[Repertoire workshop|HUWiki Repertoire – Start]]
 

@@ -18,7 +18,7 @@ test('A blank wiki selecting only Repertoire receives ABC and both print entry p
  const rep=built.tiddlers.find(t=>t.title==='$:/plugins/huwiki/repertoire');
  const pages=JSON.parse(rep.text).tiddlers;
  for(const title of ['Repertoire – Stiknoder','Repertoire – Cue sheets and parts'])assert.match(pages[title].text,/huwiki-abc-cues setlist=/);
- assert.match(pages['$:/plugins/huwiki/repertoire/Sidebar'].text,/Repertoire – Stiknoder/);
+ assert.match(pages['$:/plugins/huwiki/repertoire/Sidebar'].text,/Repertoire – Sætlister/);assert.match(pages['$:/plugins/huwiki/repertoire/book-widget.js'].text,/Printing\.cues/);
 });
 test('Workshop and tune book print entry preserve the selected set list in both languages',async()=>{
  const source=await readFile(path.join(root,'plugins/repertoire/src/print.js'),'utf8');

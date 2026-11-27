@@ -6,13 +6,9 @@ huwiki-title-en: Repertoire
 
 
 <%if [{$:/language}prefix[$:/languages/da]] %>
-Et fælles musikbibliotek med orkestre og sætlister. Originalnoderne bliver i musikbiblioteket. ABC Musik følger med til nodevisning og udskrift.
-
-[[Nodebog|Repertoire – Nodebog]] · [[Stiknoder og stemmer|Repertoire – Stiknoder]]
+Vælg en nodemappe eller find et nummer. Noder, afspilning og lydvalg åbner på den samme nodepult.
 <%else%>
-One music library, with orchestras and set lists. Original scores stay in the music library. ABC Music provides notation and printing.
-
-[[Tune book|Repertoire – Nodebog]] · [[Cue sheets and parts|Repertoire – Cue sheets and parts]]
+Choose a folder or find a tune. Notation, playback and sound controls open on the same music stand.
 <%endif%>
 
-<$huwiki-repertoire/>
+<$huwiki-repertoire-library/>

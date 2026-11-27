@@ -11,6 +11,7 @@ var Layout=require("$:/plugins/huwiki/repertoire/book-layout.js");
 var Practice=require("$:/plugins/huwiki/repertoire/practice.js");
 var Printing=require("$:/plugins/huwiki/repertoire/print.js");
 var LiveScore=require("$:/plugins/huwiki/repertoire/live-score.js");
+var Performance=require("$:/plugins/huwiki/repertoire/performance-surface.js");
 var TEMP="$:/temp/huwiki/repertoire/active-setlist";
 var MODE="$:/temp/huwiki/repertoire/book-mode";
 function el(doc,tag,cls,label){
@@ -47,6 +48,7 @@ Book.prototype.disposeScore=function(){
  this._practiceBaseline=null;this._practiceAppliedKey=null;
  this._practiceScoreHost=null;this._practiceControls=null;
  if(this._observer){this._observer.disconnect();this._observer=null;}
+ if(this._soundObserver){this._soundObserver.disconnect();this._soundObserver=null;}
  if(this._score){
   // Keep the immersive ABC reading state when a page turn changes melody.
   if(this._score._reader)this._readerCarry=this._score._reader.snapshot();
@@ -72,7 +74,7 @@ Book.prototype.onDestroy=function(){
 Book.prototype.render=function(parent,nextSibling){
  this.parentDomNode=parent;this.computeAttributes();
  var doc=this.document;
- var host=this.host=el(doc,"section","huwrep-book");
+ var host=this.host=el(doc,"section","huwrep-book huwrep-session");
  parent.insertBefore(host,nextSibling);this.domNodes.push(host);
  if(this.getAttribute("fullscreen","no")==="yes")host.classList.add("huwrep-book-fullscreen");
  if(doc.isTiddlyWikiFakeDom){
@@ -84,6 +86,7 @@ Book.prototype.render=function(parent,nextSibling){
  this.preference=this.wiki.getTiddlerText(MODE)||this.wiki.getTiddlerText("$:/config/maans/repertoire/default-page-mode","spread");
  if(["auto","single","spread"].indexOf(this.preference)<0)this.preference="auto";
  this.setlistTitle=this.getAttribute("setlist","")||this.wiki.getTiddlerText(TEMP)||"";
+ this.pieceTitle=this.getAttribute("piece","");this.singleRole=this.getAttribute("role","");
  this.activeItem="";this._notationChoice=Object.create(null);
  this.practiceEnabled=false;this.practiceMetronome=false;
  this.practiceMuteByItem=Object.create(null);this.practiceOpen=false;
@@ -184,13 +187,19 @@ Book.prototype.navigate=function(title){
   navigateFromTitle:this.getVariable("currentTiddler"),navigateFromNode:this,
   navigateSuppressNavigation:false});
 };
+Book.prototype.leave=function(title){
+ this.host.classList.remove("huwrep-book-fullscreen");
+ var story=this.getVariable("storyTiddler")||this.getVariable("currentTiddler");
+ this.navigate(title);
+ if(story&&story!==title)this.dispatchEvent({type:"tm-close-tiddler",param:story});
+};
 Book.prototype.selectSetlist=function(title){
  this.setlistTitle=title;this.activeItem="";
  this.wiki.addTiddler(new $tw.Tiddler({title:TEMP,type:"text/plain",text:title}));
  this.draw();
 };
-Book.prototype.changeFolderView=function(role){model.setPresentation(this.wiki,this.setlistTitle,null,role);this.draw();};
-Book.prototype.changeItemView=function(role){model.setPresentation(this.wiki,this.setlistTitle,this.activeItem,role);this.draw();};
+Book.prototype.changeFolderView=function(role){if(this.pieceTitle)this.singleRole=role;else model.setPresentation(this.wiki,this.setlistTitle,null,role);this.draw();};
+Book.prototype.changeItemView=function(role){if(this.pieceTitle)this.singleRole=role;else model.setPresentation(this.wiki,this.setlistTitle,this.activeItem,role);this.draw();};
 Book.prototype.selectItem=function(title,last){
  this.activeItem=title;this.lastPage=!!last;
  this.draw();
@@ -205,12 +214,12 @@ Book.prototype.updateMode=function(){
  var width=this._win.innerWidth,height=this._win.innerHeight;
  var mode=Layout.mode(this.preference,width,height),selector;
  var pager=this.pager();
- if(!pager)return;
+ if(!pager){this.updateNavigation();return;}
  if(this._pdfPager){
   if(pager.setSpread)pager.setSpread(mode==="spread"?2:1);
   var state=pager.info();
   if(this.lastPage&&state.count>0){this.lastPage=false;var shown=state.mode==="spread"?2:1;pager.go(Math.floor((state.count-1)/shown)*shown,false);}
-  this.updatePDFStatus();return;
+  this.updatePDFStatus();this.updateNavigation();return;
  }
  this.host.classList.toggle('huwrep-book-one-page',pager.info().count===1);
  selector=pager.element.querySelector(".huwabc-page-select");
@@ -230,6 +239,14 @@ Book.prototype.updateMode=function(){
   if(!Number.isInteger(anchor.event)||!pager.revealOrdinal||!pager.revealOrdinal(anchor.event,true))
    pager.go(Number(anchor.page)||0,false);
  }
+ this.updateNavigation();
+};
+Book.prototype.updateNavigation=function(){
+ if(!this._previousPage||!this._nextPage)return;
+ var all=this._entries||[],index=all.indexOf(this.activeItem),pager=this.pager(),info=pager&&pager.info(),ready=!pager||!!info.count;
+ this._previousPage.disabled=!ready||index<=0&&(!info||info.page<=1);
+ this._nextPage.disabled=!ready||index>=all.length-1&&(!info||info.page+info.shown-1>=info.count);
+ if(info&&info.count&&this._pageStatus){var text="Side "+info.page+(info.shown>1?"–"+Math.min(info.count,info.page+info.shown-1):"")+" / "+info.count;if(this._pageStatus.textContent!==text)this._pageStatus.textContent=text;}
 };
 Book.prototype.updatePDFStatus=function(){
  var pager=this._pdfPager;if(!pager||!this.host)return;
@@ -239,7 +256,7 @@ Book.prototype.updatePDFStatus=function(){
  if(this.lastPage&&info.count>0){this.lastPage=false;var spread=info.mode==="spread"?2:1;pager.go(Math.floor((info.count-1)/spread)*spread,false);}
 };
 Book.prototype.turn=function(delta){
- var all=model.entries(this.wiki,this.setlistTitle);
+ var all=this.pieceTitle?[this.pieceTitle]:model.entries(this.wiki,this.setlistTitle);
  var i=all.indexOf(this.activeItem),pager=this.pager();
  if(i<0)return;
  if(!pager){
@@ -250,6 +267,7 @@ Book.prototype.turn=function(delta){
  var info=pager.info(),target=Layout.direction(info.page,info.count,info.shown,delta,i,all.length);
  if(target.kind==="page"){
   if(delta>0)pager.next();else pager.previous();
+  this.updateNavigation();
  }else if(target.kind==="song"){
   this.selectItem(all[target.index],target.lastPage);
  }else if(target.kind==="unready"){
@@ -306,7 +324,7 @@ Book.prototype.syncPracticeVoices=function(){
 Book.prototype.practicePanel=function(doc){
  var self=this,box=el(doc,"details","huwrep-book-practice");
  box.open=!!this.practiceOpen;
- box.appendChild(el(doc,"summary","","Øvetilstand · Music Minus One"));
+ box.appendChild(el(doc,"summary","","Spil selv · dæmp en stemme"));
  box.addEventListener("toggle",function(){self.practiceOpen=box.open;});
  var controls=el(doc,"div","huwrep-book-practice-controls");
  var enabledLabel=el(doc,"label","huwrep-book-practice-check");
@@ -342,19 +360,56 @@ Book.prototype.practicePanel=function(doc){
  });
  return box;
 };
+Book.prototype.mountScore=function(scoreHost,sourceTitle,agreement,row,audioOnly){
+ var self=this,doc=this.document,wiki=this.wiki,host=this.host;
+ this._practiceVoiceSignature="";
+ try{
+  var Score=require("$:/plugins/huwiki/abc/score-widget.js")["huwiki-abc"];
+  var source=wiki.getTiddler(sourceTitle),f=source&&source.fields||{};
+  var tree={type:"huwiki-abc",attributes:{tiddler:{type:"string",value:sourceTitle},view:{type:"string",value:f["repertoire-sheet-format"]==="chords"?"chords":"full"},embedded:{type:"string",value:"yes"},audio:{type:"string",value:"all"},"show-title":{type:"string",value:"no"}}};
+  this._score=new Score(tree,{wiki:wiki,parentWidget:this,document:doc});
+  this._score._repertoireScore=function(ABC,abcSource){
+   try{var prepared=LiveScore.apply(ABC,abcSource,agreement);if(self._scoreError){self._scoreError.remove();self._scoreError=null;}return prepared.source;}
+   catch(error){if(!self._scoreError){self._scoreError=el(doc,"span","huwrep-book-transform-error");self._scoreError.setAttribute("role","alert");row.appendChild(self._scoreError);}self._scoreError.textContent="Spilleaftalen kunne ikke anvendes: "+error.message;return abcSource;}
+  };
+  this.children=[this._score];this._score.render(scoreHost,null);
+  // The book owns reading/fullscreen. Never enter a second fullscreen layer
+  // whose Vis/Øv mode would hide the shared player and the book's controls.
+  if(this._score._reader&&this._score._reader.active)this._score._reader.exit({notify:false});
+  this._scoreHost=scoreHost;
+  var audio=this._performance.attach(this._score,scoreHost);
+  this._practiceScoreHost=audio||scoreHost;
+  var win=this._win;
+  if(win&&win.MutationObserver){
+   var sync=function(){
+    var moved=self._performance&&self._performance.attach(self._score,scoreHost);
+    if(moved){self._practiceScoreHost=moved;if(self._soundObserver){self._soundObserver.disconnect();self._soundObserver.observe(moved,{childList:true,subtree:true});}}
+    self.updateMode();self.syncPracticeVoices();self.applyPractice();
+   };
+   this._observer=new win.MutationObserver(sync);this._observer.observe(scoreHost,{childList:true,subtree:true});
+   if(audio){this._soundObserver=new win.MutationObserver(sync);this._soundObserver.observe(audio,{childList:true,subtree:true});}
+  }
+  this.updateMode();this.syncPracticeVoices();this.applyPractice();
+ }catch(error){
+  if(this._score){try{this._score.onDestroy();}catch(ignore){}this._score=null;}this.children=[];
+  scoreHost.appendChild(el(doc,"p","huwrep-muted","Noderne kunne ikke vises: "+error.message));
+  if(this._performance)this._performance.element.appendChild(el(doc,"p","huwrep-error","Afspilleren kunne ikke indlæses: "+error.message));
+ }
+};
 Book.prototype.draw=function(){
  var self=this,doc=this.document,wiki=this.wiki,host=this.host;
  if(!host||this._editReturn)return;
  this.disposeScore();host.textContent="";
  var sets=model.collections(wiki);
- if(!sets.some(function(s){return s.fields.title===self.setlistTitle;}))
+ if(!this.pieceTitle&&!sets.some(function(s){return s.fields.title===self.setlistTitle;}))
   this.setlistTitle=sets.length?sets[0].fields.title:"";
- var set=model.collection(wiki,this.setlistTitle),all=set?model.entries(wiki,this.setlistTitle):[];
+ var set=this.pieceTitle?null:model.collection(wiki,this.setlistTitle),all=this.pieceTitle?[this.pieceTitle]:set?model.entries(wiki,this.setlistTitle):[];
+ this._entries=all;this._previousPage=null;this._nextPage=null;
  if(all.indexOf(this.activeItem)<0)this.activeItem=all.length?all[0]:"";
  var index=all.indexOf(this.activeItem);
  var toolbar=el(doc,"header","huwrep-book-header");host.appendChild(toolbar);
- toolbar.appendChild(btn(doc,"← Repertoireværksted",function(){
-  self.disposeScore();host.classList.remove("huwrep-book-fullscreen");host.hidden=true;self.navigate("HUWiki Repertoire – Start");
+ toolbar.appendChild(btn(doc,"← Nodemapper og numre",function(){
+  self.leave("HUWiki Repertoire – Start");
  }));
  var fullScreenButton=btn(doc,host.classList.contains("huwrep-book-fullscreen")?"⛶ Mindre visning":"⛶ Fuldskærm",function(){
   var isFull=host.classList.toggle("huwrep-book-fullscreen");
@@ -362,6 +417,8 @@ Book.prototype.draw=function(){
   self.updateMode();
  },"huwrep-book-fullscreen-button");
  toolbar.appendChild(fullScreenButton);
+ var settings=el(doc,"details","huwrep-session-settings");settings.appendChild(el(doc,"summary","","Visning og udskrift"));
+ var settingsBody=el(doc,"div","huwrep-session-settings-body");settings.appendChild(settingsBody);toolbar.appendChild(settings);
  var printMenu=el(doc,"details","huwrep-book-print-menu");
  printMenu.appendChild(el(doc,"summary","","PDF / Udskriv"));
  var printActions=el(doc,"div","huwrep-book-print-actions");
@@ -374,11 +431,17 @@ Book.prototype.draw=function(){
   var result=Printing.open(wiki,self.setlistTitle,self,{scores:scores,instrumentId:printInstrument.value});
   if(result&&result.error&&self._win&&self._win.alert)self._win.alert(result.error);
  }
- printActions.appendChild(btn(doc,Printing.cueLabel(wiki),function(){printMenu.open=false;host.classList.remove("huwrep-book-fullscreen");Printing.cues(wiki,self.setlistTitle,self);}));
- printActions.appendChild(btn(doc,"Sætliste og aftaler",function(){openPrint(false);}));
- printActions.appendChild(btn(doc,"Hele nodebogen med noder",function(){openPrint(true);},"huwrep-primary"));
- printMenu.appendChild(printActions);toolbar.appendChild(printMenu);
- if(wiki.getTiddler("$:/plugins/huwiki/site-publisher"))toolbar.appendChild(btn(doc,"Udgiv site",function(){
+ if(!this.pieceTitle){
+  printActions.appendChild(btn(doc,Printing.cueLabel(wiki),function(){printMenu.open=false;host.classList.remove("huwrep-book-fullscreen");Printing.cues(wiki,self.setlistTitle,self);}));
+  printActions.appendChild(btn(doc,"Sætliste og aftaler",function(){openPrint(false);}));
+  printActions.appendChild(btn(doc,"Hele nodemappen med noder",function(){openPrint(true);},"huwrep-primary"));
+ }else printActions.appendChild(btn(doc,"Udskriv dette nummer",function(){
+  if(self._selectedNotation&&self._selectedNotation.pdf){var a=host.querySelector("a.huwrep-book-pdf-link");if(a)a.click();return;}
+  var actions=self._score&&self._score.host&&self._score.host.querySelectorAll(".huwabc-actions button");
+  var print=Array.from(actions||[]).find(function(b){return /PDF.*Udskriv|PDF.*Print/.test(b.textContent);});if(print)print.click();
+ }));
+ printMenu.appendChild(printActions);settingsBody.appendChild(printMenu);
+ if(!this.pieceTitle&&wiki.getTiddler("$:/plugins/huwiki/site-publisher"))settingsBody.appendChild(btn(doc,"Udgiv site",function(){
   var result=Printing.open(wiki,self.setlistTitle,self,{scores:true,site:true,instrumentId:printInstrument.value});
   if(result&&result.error&&self._win&&self._win.alert)self._win.alert(result.error);
  }));
@@ -390,14 +453,14 @@ Book.prototype.draw=function(){
  });
  selector.value=this.setlistTitle;
  selector.addEventListener("change",function(){self.selectSetlist(this.value);});
- toolbar.appendChild(selector);
+ if(!this.pieceTitle)settingsBody.appendChild(selector);
  var folderView=el(doc,"select","huwrep-input huwrep-book-folder-view");folderView.setAttribute("aria-label","Visning for hele nodemappen");
  var folderRoles=new Map();all.forEach(function(id){model.availableViews(wiki,id).forEach(function(v){if(!folderRoles.has(v.role))folderRoles.set(v.role,v.label);});});
  var currentRole=set&&set.fields["repertoire-source-role"]||wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","");
  if(!currentRole){var automatic=choice(doc,"","Visning · efter nummerets noder");automatic.disabled=true;folderView.appendChild(automatic);}
  ["leadsheet","guitar","chord-stabs","score","abc","pdf"].forEach(function(role){if(folderRoles.has(role))folderView.appendChild(choice(doc,role,"Visning · "+folderRoles.get(role)));});
  if(currentRole&&!folderRoles.has(currentRole)){var unavailable=choice(doc,currentRole,"Visning · "+(model.viewLabels[currentRole]||currentRole)+" (ikke tilgængelig)");unavailable.disabled=true;folderView.appendChild(unavailable);}
- folderView.value=currentRole;folderView.addEventListener("change",function(){self.changeFolderView(folderView.value);});toolbar.appendChild(folderView);
+ folderView.value=currentRole;folderView.addEventListener("change",function(){self.changeFolderView(folderView.value);});if(!this.pieceTitle)settingsBody.appendChild(folderView);
  var mode=el(doc,"select","huwrep-input huwrep-book-view");
  mode.setAttribute("aria-label","Visning på iPad");
  [["auto","Automatisk efter skærmretning"],["single","Én side"],["spread","To sider"]].forEach(function(x){mode.appendChild(choice(doc,x[0],x[1]));});
@@ -407,8 +470,9 @@ Book.prototype.draw=function(){
   wiki.addTiddler(new $tw.Tiddler({title:MODE,type:"text/plain",text:this.value}));
   self.updateMode();
  });
- toolbar.appendChild(mode);
- this._displayMode=el(doc,"span","huwrep-muted huwrep-book-mode","");toolbar.appendChild(this._displayMode);
+ settingsBody.appendChild(mode);
+ this._displayMode=el(doc,"span","huwrep-muted huwrep-book-mode","");settingsBody.appendChild(this._displayMode);
+ settingsBody.appendChild(btn(doc,"Redigér sætlister og spilleaftaler",function(){self.leave("Repertoire – Sætlister");}));
  var header=el(doc,"div","huwrep-book-heading");host.appendChild(header);
  if(!all.length){
   header.appendChild(el(doc,"h2","","Sætlisten er tom"));
@@ -424,7 +488,7 @@ Book.prototype.draw=function(){
   listToggle.setAttribute("aria-expanded",String(!listBox.hidden));
   if(!listBox.hidden)search.focus();
  });
- listToggle.setAttribute("aria-expanded","false");toolbar.appendChild(listToggle);
+ listToggle.setAttribute("aria-expanded","false");if(all.length>1)toolbar.insertBefore(listToggle,settings);
  var title=el(doc,"div","huwrep-book-list-heading");
  title.appendChild(el(doc,"strong","","Numre i sætlisten"));
  title.appendChild(btn(doc,"Luk ×",function(){
@@ -457,17 +521,25 @@ Book.prototype.draw=function(){
  var stage=el(doc,"main","huwrep-book-stage");host.appendChild(stage);
  var source=wiki.getTiddler(name(wiki,this.activeItem)),f=source&&source.fields;
  var notation=source?model.presentation(wiki,this.setlistTitle,this.activeItem):{abc:false,pdf:"",role:"",format:""};
- if(notation.label&&!notation.missing){row.appendChild(el(doc,"span","huwrep-book-source-caption","Noder: "+notation.label));if(!row.isConnected)host.insertBefore(row,stage);}
  var variants=source?model.availableViews(wiki,source):[];
+ if(this.pieceTitle){
+  var wanted=this.singleRole||wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","");
+  notation=variants.find(function(v){return v.role===wanted;})||variants.find(function(v){return v.role==="leadsheet";})||variants[0]||{abc:false,pdf:"",role:"",format:"",missing:true};
+ }
+ if(notation.label&&!notation.missing){row.appendChild(el(doc,"span","huwrep-book-source-caption","Noder: "+notation.label));if(!row.isConnected)host.insertBefore(row,stage);}
  var overrides={};try{overrides=JSON.parse(set&&set.fields["repertoire-overrides"]||"{}");}catch(ignore){}
- var itemRole=overrides[this.activeItem]&&overrides[this.activeItem].sourceRole||"";
+ var itemRole=this.pieceTitle?notation.role:overrides[this.activeItem]&&overrides[this.activeItem].sourceRole||"";
  if(variants.length||notation.role){
   var sourceSelect=el(doc,"select","huwrep-input huwrep-book-source");sourceSelect.setAttribute("aria-label","Visning for dette nummer");
-  sourceSelect.appendChild(choice(doc,"","Dette nummer · følg mappen"));
-  variants.forEach(function(v){sourceSelect.appendChild(choice(doc,v.role,"Dette nummer · "+v.label));});
+  if(!this.pieceTitle)sourceSelect.appendChild(choice(doc,"","Noder · følg nodemappen"));
+  variants.forEach(function(v){sourceSelect.appendChild(choice(doc,v.role,"Noder · "+v.label));});
   if(itemRole&&!variants.some(function(v){return v.role===itemRole;})){var unavailable=choice(doc,itemRole,"Dette nummer · "+(model.viewLabels[itemRole]||itemRole)+" (ikke tilgængelig)");unavailable.disabled=true;sourceSelect.appendChild(unavailable);}
-  sourceSelect.value=itemRole;sourceSelect.addEventListener("change",function(){self.changeItemView(sourceSelect.value);});toolbar.appendChild(sourceSelect);
+  sourceSelect.value=itemRole;sourceSelect.addEventListener("change",function(){self.changeItemView(sourceSelect.value);});header.appendChild(sourceSelect);
  }
+ var audioView=notation.abc?notation:variants.find(function(v){return v.role==="leadsheet";})||variants.find(function(v){return v.abc;});
+ this._selectedNotation=notation;
+ if(audioView)settingsBody.appendChild(btn(doc,notation.abc?"Redigér ABC-noder":"Redigér lydkildens ABC-noder",function(){if(self._score&&self._score._reader)self._score._reader.openEditor();}));
+ this._performance=Performance.create(this,notation,audioView);host.insertBefore(this._performance.element,stage);
  var selected=notation.format;
  if(notation.missing&&notation.role){
   stage.appendChild(el(doc,"p","huwrep-muted huwrep-book-source-unavailable",(model.viewLabels[notation.role]||"Denne nodevisning")+" findes endnu ikke til dette nummer. Vælg en af nummerets tilgængelige visninger ovenfor."));
@@ -475,62 +547,12 @@ Book.prototype.draw=function(){
   var pdfHost=el(doc,"section","huwrep-book-pdf");stage.appendChild(pdfHost);
   var PDF=require("$:/plugins/huwiki/repertoire/pdf-score.js");
   this._pdfPager=PDF.mount(pdfHost,{wiki:wiki,source:notation.pdf,title:shortName(wiki,this.activeItem),spread:Layout.mode(this.preference,this._win.innerWidth,this._win.innerHeight)==="spread"?2:1,
-   onState:function(){self.updatePDFStatus();},onBoundary:function(direction){self.turn(direction);},isFullscreen:function(){return host.classList.contains("huwrep-book-fullscreen");},onFullscreen:function(exit){var active=exit?false:!host.classList.contains("huwrep-book-fullscreen");host.classList.toggle("huwrep-book-fullscreen",active);fullScreenButton.textContent=active?"⛶ Mindre visning":"⛶ Fuldskærm";self.updateMode();return active;}});
+   onState:function(){self.updatePDFStatus();self.updateNavigation();},onBoundary:function(direction){self.turn(direction);},isFullscreen:function(){return host.classList.contains("huwrep-book-fullscreen");},onFullscreen:function(exit){var active=exit?false:!host.classList.contains("huwrep-book-fullscreen");host.classList.toggle("huwrep-book-fullscreen",active);fullScreenButton.textContent=active?"⛶ Mindre visning":"⛶ Fuldskærm";self.updateMode();return active;}});
+  if(audioView){var audioOnly=el(doc,"div","huwrep-audio-only");audioOnly.hidden=true;stage.appendChild(audioOnly);host.insertBefore(this.practicePanel(doc),stage);this.mountScore(audioOnly,audioView.sourceTitle,agreement,row,true);}
  }else if(notation.abc){
   host.insertBefore(this.practicePanel(doc),stage);
   var scoreHost=el(doc,"div","huwrep-book-score");stage.appendChild(scoreHost);
-  this._practiceScoreHost=scoreHost;this._practiceVoiceSignature="";
-  try {
-   // The full notation engine (pagination, audio and page dots) is reused;
-   // only the active score widget exists. No orchestral ABC is duplicated.
-   var Score=require("$:/plugins/huwiki/abc/score-widget.js")["huwiki-abc"];
-   var tree={type:"huwiki-abc",attributes:{
-    tiddler:{type:"string",value:notation.sourceTitle||source.fields.title},
-    view:{type:"string",value:f["repertoire-sheet-format"]==="chords"?"chords":"full"},
-    embedded:{type:"string",value:"yes"},
-    audio:{type:"string",value:"all"},
-    "show-title":{type:"string",value:"no"}}};
-   this._score=new Score(tree,{wiki:wiki,parentWidget:this,document:doc});
-   // The current setlist owns a temporary performance layer, never the source tiddler.
-   this._score._repertoireScore=function(ABC,abcSource){
-    try{
-     var prepared=LiveScore.apply(ABC,abcSource,agreement);
-     if(self._scoreError){self._scoreError.remove();self._scoreError=null;}
-     return prepared.source;
-    }catch(error){
-     if(!self._scoreError){
-      self._scoreError=el(doc,"span","huwrep-book-transform-error");
-      self._scoreError.setAttribute("role","alert");
-      row.appendChild(self._scoreError);
-      if(!row.isConnected)host.insertBefore(row,stage);
-     }
-     self._scoreError.textContent="Spilleaftalen kunne ikke anvendes: "+error.message;
-     return abcSource;
-    }
-   };
-   this.children=[this._score];
-   this._score.render(scoreHost,null);
-   // Keep the same reader state as we cross a tune boundary.
-   if(this._score._reader){
-    // A repertoire book opens on the notation, not on six editor panels.
-    // An explicit exit is respected on subsequent tunes.
-    var readerState=this._readerCarry===undefined?
-     {active:true,mode:"vis",controlsOpen:false,fill:false}:this._readerCarry;
-    if(readerState.active)this._score._reader.enter(readerState);
-   }
-   var win=this._win;
-   if(win&&win.MutationObserver){
-    this._observer=new win.MutationObserver(function(){
-     self.updateMode();self.syncPracticeVoices();self.applyPractice();
-    });
-    this._observer.observe(scoreHost,{childList:true,subtree:true});
-   }
-   this.updateMode();this.syncPracticeVoices();this.applyPractice();
-  }catch(error){
-   this.disposeScore();
-   scoreHost.appendChild(el(doc,"p","huwrep-muted","Noderne kunne ikke vises: "+error.message));
-   stage.appendChild(btn(doc,"Åbn originalen",function(){self.navigate(source.fields.title);}));
-  }
+  this.mountScore(scoreHost,notation.sourceTitle||source.fields.title,agreement,row,false);
  }else{
   var imageTitle=f&&f["repertoire-image"]||"";
   var image=wiki.getTiddler(imageTitle)||source;
@@ -558,7 +580,8 @@ Book.prototype.draw=function(){
  var songNext=btn(doc,"Næste nummer ⇥",function(){if(index<all.length-1)self.selectItem(all[index+1],false);});
  songPrev.disabled=index===0;songNext.disabled=index===all.length-1;
  this._pageStatus=el(doc,"span","huwrep-muted huwrep-book-page-status","Sidevisning følger iPadens skærmretning");
- footer.append(songPrev,prev,this._pageStatus,next,songNext);
+ this._previousPage=prev;this._nextPage=next;
+ footer.append(prev,this._pageStatus,next);
  this.updateMode();
 };
 Book.prototype.refresh=function(changed){
@@ -570,6 +593,7 @@ Book.prototype.refresh=function(changed){
   return false;
  }
  var titles=Object.keys(changed||{});
+ if(changed[this.setlistTitle]&&!this.pieceTitle){this.draw();return true;}
  if(titles.some(function(title){return title.indexOf("Repertoire/")===0;})){
   this.draw();return true;
  }
@@ -586,14 +610,14 @@ Book.prototype.refresh=function(changed){
  return false;
 };
 Book.prototype._onKeyDown=function(event){
- if(this._pdfPager&&!event.defaultPrevented&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
+ if(this.pager()&&!event.defaultPrevented&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
   var target=event.target,tag=String(target&&target.tagName||"").toUpperCase();
   if(!/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(tag)&&!(target&&target.isContentEditable)){
-   var delta=/^(ArrowRight|PageDown| )$/.test(event.key)?1:/^(ArrowLeft|PageUp)$/.test(event.key)?-1:0;
+   var delta=/^(ArrowRight|PageDown)$/.test(event.key)||this._pdfPager&&event.key===" "?1:/^(ArrowLeft|PageUp)$/.test(event.key)?-1:0;
    if(delta){event.preventDefault();event.stopPropagation();this.turn(delta);return;}
    if(event.key==="Home"||event.key==="End"){
-    event.preventDefault();event.stopPropagation();var info=this._pdfPager.info(),spread=info.mode==="spread"?2:1;
-    this._pdfPager.go(event.key==="Home"?0:Math.floor(Math.max(0,info.count-1)/spread)*spread,false);return;
+    event.preventDefault();event.stopPropagation();var pager=this.pager(),info=pager.info(),spread=info.shown||1;
+    pager.go(event.key==="Home"?0:Math.floor(Math.max(0,info.count-1)/spread)*spread,false);return;
    }
   }
  }

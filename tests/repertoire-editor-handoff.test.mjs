@@ -16,6 +16,7 @@ const exports={};
 runInNewContext(code,{exports,$tw:tw,require(name){
  if(name==="$:/core/modules/widgets/widget.js")return {widget:Widget};
  if(name.endsWith("/book-layout.js"))return layout;
+ if(name.endsWith("/performance-surface.js"))return {};
  if(name.endsWith("/model.js")||name.endsWith("/practice.js")||name.endsWith("/print.js"))return {};
  if(name.endsWith("/live-score.js"))return {apply(_ABC,source){return {source};}};
  throw new Error("Unexpected module "+name);

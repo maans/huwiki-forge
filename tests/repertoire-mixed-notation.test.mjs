@@ -6,6 +6,7 @@ import {svgDocument} from './helpers/svg-test-dom.mjs';
 
 const root=new URL('../plugins/repertoire/src/',import.meta.url);
 const read=name=>readFile(new URL(name,root),'utf8');
+const performanceSurface={};runInNewContext(await read('performance-surface.js'),{exports:performanceSurface});
 const json=value=>JSON.parse(JSON.stringify(value));
 class Tiddler {constructor(...values){this.fields=Object.assign({},...values.map(v=>v?.fields||v));}}
 const $tw={Tiddler,utils:{stringifyList:items=>items.map(x=>/\s/.test(x)?'[['+x+']]':x).join(' ')}};
@@ -94,6 +95,7 @@ async function bookFixture(){
  function Widget(){}
  runInNewContext(await read('book-widget.js'),{exports:bookModule,$tw,require(name){
   if(name==='$:/core/modules/widgets/widget.js')return {widget:Widget};
+  if(name.endsWith('/performance-surface.js'))return performanceSurface;
   if(name.endsWith('/model.js'))return f.model;if(name.endsWith('/book-layout.js'))return f.layout;
   return {};
  }});
@@ -143,6 +145,7 @@ async function drawnBookFixture(){
  Score.prototype.onDestroy=function(){this.destroyed=true;};
  runInNewContext(await read('book-widget.js'),{exports:bookExports,$tw,require(name){
   if(name==='$:/core/modules/widgets/widget.js')return {widget:Widget};
+  if(name.endsWith('/performance-surface.js'))return performanceSurface;
   if(name.endsWith('/model.js'))return f.model;if(name.endsWith('/book-layout.js'))return f.layout;
   if(name.endsWith('/pdf-score.js'))return f.pdf;
   if(name.endsWith('/score-widget.js'))return {'huwiki-abc':Score};
@@ -158,16 +161,16 @@ async function drawnBookFixture(){
 
 test('switching PDF and ABC inside one song disposes the old view and preserves notation and setlist identity',async()=>{
  const f=await drawnBookFixture(),before=JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),order=JSON.stringify(f.model.entries(f.wiki,f.set));
- f.book.draw();assert.ok(f.host.querySelector('iframe'));assert.equal(f.scoreInstances.length,0);
+ f.book.draw();assert.ok(f.host.querySelector('iframe'));assert.equal(f.scoreInstances.length,1,'PDF can use its associated ABC as one sound source');
  const choose=value=>{const selection=f.host.querySelector('.huwrep-book-source');assert.ok(selection);selection.value=value;selection.dispatch('change');};
  assert.deepEqual(f.host.querySelector('.huwrep-book-source').children.map(option=>option.value),['','leadsheet','pdf']);
  for(let i=0;i<3;i++){
   choose('leadsheet');assert.equal(f.host.querySelector('iframe'),null);assert.ok(f.host.querySelector('.test-abc-score'));
   assert.equal(f.listeners.get('message')?.size||0,0,'switching away releases old PDF message listener');
   assert.equal(f.book._score.title,'Four Brothers');
-  choose('pdf');assert.ok(f.host.querySelector('iframe'));assert.equal(f.host.querySelector('.test-abc-score'),null);
+  choose('pdf');assert.ok(f.host.querySelector('iframe'));assert.equal(f.host.querySelector('.test-abc-score').closest('.huwrep-audio-only').hidden,true,'PDF keeps its one ABC sound source out of the notation stage');
   assert.equal(f.listeners.get('message')?.size,1,'repeated switching keeps exactly one active viewer');
-  assert.equal(f.scoreInstances.at(-1).destroyed,true,'switching away releases ABC engine and audio');
+  assert.equal(f.scoreInstances.at(-2).destroyed,true,'switching away releases the previous ABC engine and audio');assert.equal(f.scoreInstances.filter(score=>!score.destroyed).length,1);
  }
  assert.equal(f.book.activeItem,f.item);assert.equal(f.book.setlistTitle,f.set);
  assert.equal(JSON.stringify(f.wiki.getTiddler('Four Brothers').fields),before);assert.equal(JSON.stringify(f.model.entries(f.wiki,f.set)),order);
@@ -212,7 +215,7 @@ test('one book switches its dated-folder defaults and per-number source roles wi
  const folder=value=>{const select=f.host.querySelector('.huwrep-book-folder-view');assert.ok(select);select.value=value;select.dispatch('change');};
  const number=value=>{const select=f.host.querySelector('.huwrep-book-source');assert.ok(select);select.value=value;select.dispatch('change');};
  const pdf=()=>new URL((f.host.querySelector('iframe').getAttribute('src')||f.host.querySelector('iframe').src)).searchParams.get('file');
- folder('guitar');assert.match(pdf(),/four-brothers-guitar\.pdf$/);assert.equal(f.book._score,null);
+ folder('guitar');assert.match(pdf(),/four-brothers-guitar\.pdf$/);assert.equal(f.book._score.title,'Sources/Four Brothers · Lead','PDF sound is supplied by its named leadsheet');
  number('chord-stabs');assert.equal(f.book._score.title,'Four Brothers');assert.equal(f.host.querySelector('iframe'),null);
  folder('score');assert.equal(f.book._score.title,'Four Brothers','the per-number exception survives changes to folder default');
  number('');assert.match(pdf(),/four-brothers-score\.pdf$/);
@@ -245,5 +248,16 @@ test('PDF fullscreen belongs to the stable book and survives PDF to ABC to PDF n
  assert.equal(host.classList.contains('huwrep-book-fullscreen'),true);
  f.state({type:'birdland-pdf:fullscreen',exit:true});
  assert.equal(host.classList.contains('huwrep-book-fullscreen'),false);
+ f.book.disposeScore();
+});
+
+test('a standalone number uses the same source choices without saving a synthetic folder or losing fullscreen',async()=>{
+ const f=await drawnBookFixture();f.book.pieceTitle='Four Brothers';f.book.singleRole='leadsheet';
+ const before=JSON.stringify([...f.wiki.rows.values()].map(t=>t.fields));f.book.draw();
+ assert.equal(f.book.activeItem,'Four Brothers');assert.equal(f.host.querySelector('iframe'),null);
+ f.host.querySelector('.huwrep-book-fullscreen-button').click();
+ const view=f.host.querySelector('.huwrep-book-source');view.value='pdf';view.dispatch('change');
+ assert.ok(f.host.querySelector('iframe'));assert.equal(f.host.classList.contains('huwrep-book-fullscreen'),true);
+ assert.equal(JSON.stringify([...f.wiki.rows.values()].map(t=>t.fields)),before,'reading a single title cannot change setlists, musical agreements or source data');
  f.book.disposeScore();
 });

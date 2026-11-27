@@ -176,3 +176,43 @@
 .huwrep-book-pdf-status,.huwrep-book-pdf-link{margin:.5rem 1rem}.huwrep-book-pdf-status[hidden]{display:none!important}
 .huwrep-book-fullscreen .huwrep-book-pdf{height:100%}.huwrep-book-fullscreen .huwrep-book-pdf-frame{flex:1;height:100%;min-height:0}
 .huwrep-book-source{max-width:25rem}.huwrep-error{color:#9b312b}
+
+/* One performance surface for a single piece and every folder. */
+.huwrep-session[hidden],.huwrep-session [hidden]{display:none!important}
+.huwrep-session .huwabc-head,.huwrep-session .huwabc-quick-settings,.huwrep-session .huwabc-settings,.huwrep-session .huwabc-learn-panels,.huwrep-session .huwabc-open-reader,.huwrep-session .huwabc-page-toolbar,.huwrep-session .huwabc-reader-toolbar,.huwrep-session .huwabc-reader-edges{display:none!important}
+.huwrep-session .huwabc-score{margin:0;padding:0;border:0;box-shadow:none}
+.huwrep-session .huwabc-audio{margin:0;padding:0;border:0;background:transparent;box-shadow:none}
+.huwrep-session .huwabc-audio-caption{display:none}
+.huwrep-session .huwabc-audio-controls{margin:0;padding:.35rem 0}
+.huwrep-performance{position:relative;flex:none;padding:6px 12px;border-bottom:1px solid #cfddd3;background:#f3f8f4}
+.huwrep-performance-tools{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.huwrep-audio-source{font-size:.8em;flex:1 1 240px}
+.huwrep-session .huwabc-accompaniment{margin:.5rem 0;padding:.6rem;border:1px solid #c6d9d0;border-radius:8px;max-height:40dvh;overflow:auto}
+.huwrep-session .huwrep-book-heading{flex-wrap:wrap}
+.huwrep-session .huwrep-book-source{width:auto;max-width:100%;font-size:.86em;min-height:40px}
+.huwrep-session-settings{position:relative;z-index:72;margin-left:auto}
+.huwrep-session-settings>summary{display:flex;align-items:center;cursor:pointer;min-height:42px;border:1px solid #a5c1b5;border-radius:7px;padding:0 12px;background:#fff;list-style:none}
+.huwrep-session-settings>summary::-webkit-details-marker{display:none}
+.huwrep-session-settings-body{position:absolute;right:0;top:calc(100% + 5px);display:flex;flex-direction:column;gap:8px;width:min(370px,85vw);max-height:70dvh;overflow:auto;padding:12px;box-sizing:border-box;border:1px solid #a5c1b5;border-radius:9px;background:white;box-shadow:0 12px 32px #14251c40}
+.huwrep-session-settings-body>.huwrep-input,.huwrep-session-settings-body>.huwrep-button{width:100%;text-align:left;white-space:normal}
+.huwrep-session .huwrep-book-footer>.huwrep-button{flex:1 1 25%;max-width:38rem}
+.huwrep-session.huwrep-book-one-page .huwrep-book-page-turn{display:block!important}
+.huwrep-session .huwrep-book-practice>summary{min-height:36px;display:list-item}
+.huwrep-session.huwrep-book-fullscreen .huwrep-book-stage{overflow:auto;min-height:0;flex:1}
+.huwrep-session.huwrep-book-fullscreen .huwrep-book-score{height:100%}
+.huwrep-session.huwrep-book-fullscreen .huwabc-page-shell{height:100%;max-height:100%;overflow:auto;box-sizing:border-box}
+.huwrep-session .huwrep-book-stage{align-items:stretch}
+@media(max-width:650px){.huwrep-session .huwrep-book-header{gap:5px}.huwrep-session .huwrep-book-header>.huwrep-button{font-size:.82em;padding:6px}.huwrep-session-settings>summary{font-size:.82em;padding:0 8px}.huwrep-performance{padding:5px 7px}.huwrep-session .huwrep-book-heading{gap:5px}.huwrep-session .huwrep-book-heading h2{flex:1 1 65%}.huwrep-session .huwrep-book-source{width:100%}}
+@media print{.huwrep-performance,.huwrep-book-practice,.huwrep-session-settings{display:none!important}}
+.huwrep-session .huwabc-settings-panel{display:none!important}
+.huwrep-library{display:flex;flex-direction:column;gap:12px}
+.huwrep-library [hidden]{display:none!important}
+.huwrep-library-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px}
+.huwrep-library-actions button[aria-pressed=true]{background:#176b53;color:white;border-color:#176b53}
+.huwrep-library-folder{display:block;width:100%;margin:7px 0;padding:14px;text-align:left;white-space:normal}
+.huwrep-library-song-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:8px;margin-top:12px}
+.huwrep-library-song{display:flex;flex-direction:column;align-items:flex-start;gap:7px;white-space:normal;text-align:left;padding:12px;min-height:80px}
+.huwrep-library-song small{font-size:.75em;font-weight:400}
+.huwrep-performance .huwabc-mixer-toggle{display:none!important}
+.huwrep-style-choice{display:flex;align-items:center;gap:10px;font-weight:650;margin:0 0 10px}
+.huwrep-style-choice select{flex:1;min-width:0}

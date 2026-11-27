@@ -45,7 +45,7 @@ test("Repertoire installs its shared ABC print engine automatically",async()=>{
  assert.equal(pkg["plugin-type"],"plugin");
  assert.equal(pkg.dependents,"$:/plugins/huwiki/abc");
  assert.equal(tiddlers["$:/plugins/huwiki/repertoire/widget.js"]["module-type"],"widget");
- assert.match(tiddlers["HUWiki Repertoire – Start"].text,/<\$huwiki-repertoire\/>/);
+ assert.match(tiddlers["HUWiki Repertoire – Start"].text,/<\$huwiki-repertoire-library\/>/);
 });
 
 test("Setlist score changes notes, chords, key and tempo without changing original score",async()=>{
@@ -143,7 +143,7 @@ test("Repertoire sorting supports pointer and keyboard with TiddlyWiki drag-high
  const widget=tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text;
  const css=tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text;
  assert.match(widget,/Reorder\.mount\(order,list/);
- assert.match(widget,/model\.sourceAgreement\(wiki,this\.activeItem\)/);
+ assert.match(widget,/model\.sourceAgreement\(wiki,this\.activeItem,setTitle\)/);
  assert.match(widget,/tempoForSave\(tempo\.input\.value,beat,effective\.tempo\)/);
  assert.match(widget,/keyField\(doc,effective\.key\)/);
  assert.match(css,/\.huwrep-order-row\.tc-dragover/);
@@ -244,7 +244,7 @@ test("Repertoire Nodebog ships its live reader and link in the workshop",()=>{
  assert.equal(book["module-type"],"widget");
  assert.equal(layout["module-type"],"library");
  assert.ok(tiddlers["Repertoire – Nodebog"].text.includes("<$huwiki-repertoire-book"));
- assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Åbn nodebogen/);
+ assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Åbn nodepult/);
  assert.ok(book.text.includes(".huwabc-page-select"));
  assert.match(book.text,/huwrep-book-fullscreen/);
  assert.match(book.text,/huwabc-reader-boundary/,"the reader arrows must cross song boundaries");
@@ -334,7 +334,7 @@ test("Nodebog prints PDF scores and cues with hidden-safe editor state",()=>{
  assert.match(printing.text,/tm-huwiki-print-article/);
  assert.match(printing.text,/tm-huwiki-sitepublisher/);
  assert.doesNotMatch(printing.text,/window\.open|owner\.open|win\.print/);
- assert.match(tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"].text,/Hele nodebogen med noder/);
+ assert.match(tiddlers["$:/plugins/huwiki/repertoire/book-widget.js"].text,/Hele nodemappen med noder/);
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/widget.js"].text,/Instrumentering: hvem spiller hvad/);
  assert.match(tiddlers["$:/plugins/huwiki/repertoire/styles.css"].text,/\.huwrep-book\[hidden\]\{display:none!important\}/);
 });
@@ -505,3 +505,4 @@ test("Oh verden is a playable slow 4/4 Balkan ABC chord chart, not a WikiText co
  assert.ok(style.includes("'balkan-44'"));
  assert.ok(style.includes("bassTicks=[0,2];roles=[0,7];compTicks=[1,3]"));
 });
+
