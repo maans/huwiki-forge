@@ -187,8 +187,8 @@ Repertoire.prototype.draw=function(){
  if(!host)return;
  if(this._orderDispose){this._orderDispose();this._orderDispose=null;}
  host.textContent="";
- host.appendChild(el(doc,"h2","","Repertoire"));
- host.appendChild(el(doc,"p","huwrep-muted","Musikbibliotek → orkester → repertoire → sætlister. Noderne bliver i deres oprindelige tiddlers."));
+ host.appendChild(el(doc,"h2","","Redigér sætlister"));
+ host.appendChild(el(doc,"p","huwrep-muted","Vælg en sætliste, ret rækkefølgen og aftal toneart, tempo og indsatser. Åbn nodepulten for at læse og spille."));
  if(this.message){var status=el(doc,"p","huwrep-status",this.message);status.setAttribute("role","status");host.appendChild(status);}
  var orchList=model.orchestras(wiki);
  if(!orchList.some(function(t){return t.fields.title===self.orchestraTitle;})){
@@ -212,8 +212,8 @@ Repertoire.prototype.draw=function(){
  },"huwrep-primary"));
  if(!this.orchestraTitle)return;
  var orch=this.orchestraTitle;
- var importPanel=el(doc,"div","huwrep-panel");host.appendChild(importPanel);
- importPanel.appendChild(el(doc,"h3","","Tilføj musik"));
+ var importPanel=el(doc,"details","huwrep-panel");host.appendChild(importPanel);
+ importPanel.appendChild(el(doc,"summary","","Tilføj musik til repertoiret"));
  importPanel.appendChild(el(doc,"p","huwrep-muted","Indsæt én titel pr. linje fra et dokument eller regneark. Eksisterende titler bliver genbrugt, aldrig overskrevet."));
  var paste=labelled(doc,"Indsæt sangtitler","","textarea");paste.input.rows=4;
  paste.input.placeholder="Brudmarch från Jämtland\nCupria Express\n...";
@@ -300,7 +300,7 @@ Repertoire.prototype.draw=function(){
    var result=Printing.open(wiki,self.setlistTitle,self,{scores:false});
    if(result&&result.error)self.alert(result.error);
   }));
-  setPanel.appendChild(button(doc,"Åbn nodebogen",function(){
+  setPanel.appendChild(button(doc,"Åbn nodepult",function(){
    wiki.addTiddler(new $tw.Tiddler({title:"$:/temp/huwiki/repertoire/active-setlist",type:"text/plain",text:self.setlistTitle}));
    self.navigate("Repertoire – Nodebog");
   },"huwrep-primary"));
