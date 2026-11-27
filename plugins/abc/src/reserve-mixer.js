@@ -69,21 +69,25 @@ async function validateOriginal(buffer, meta, cancelled) {
   var notes = groupedNotes(meta), parts = ['melodyVolume'];
   meta.sequence.tracks.forEach(function (t) { var k = t.huwabcVoice !== undefined ? 'voice:' + t.huwabcVoice : (t.huwabcPart || 'melodyVolume'); if (parts.indexOf(k) < 0) parts.push(k); });
   var required = new Set(notes.map(function (n) { return n.part; }));
-  if (!notes.length) return;
+  var stats={parts:[]};
+  if (!notes.length) return stats;
   if (!buffer.audioBuffers || buffer.audioBuffers.length !== parts.length) throw new Error('Det oprindelige samplebibliotek leverede ikke alle stemmer.');
   for (var b = 0; b < buffer.audioBuffers.length; b++) {
-    var audio = buffer.audioBuffers[b], nonzero = false;
+    var audio = buffer.audioBuffers[b], nonzero = false, peak=0;
     if (!audio || !audio.length) throw new Error('En lydstemme kunne ikke dannes.');
     for (var c = 0; c < audio.numberOfChannels; c++) {
       var data = audio.getChannelData(c);
       for (var i = 0; i < data.length; i++) {
         if (!Number.isFinite(data[i])) throw new Error('Det oprindelige samplebibliotek gav ugyldige lyddata.');
         if (Math.abs(data[i]) > 1e-9) nonzero = true;
+        peak=Math.max(peak,Math.abs(data[i]));
         if ((i & 262143) === 0) { rejectIfCancelled(cancelled); await new Promise(function (resolve) { setTimeout(resolve, 0); }); }
       }
     }
     if (required.has(parts[b]) && !nonzero) throw new Error('Det oprindelige samplebibliotek gav tavs lyd i en nødvendig stemme.');
+    stats.parts.push({part:parts[b],peak:peak});
   }
+  return stats;
 }
 function createFluidBuffer(ABC, getConfig, meta, buffers, headroom, cancelled) {
   var synth = new ABC.synth.CreateSynth(), gains = [], keys = Object.keys(buffers);
@@ -246,8 +250,8 @@ function createMixer(ABC, getConfig, options) {
         var candidate=inner,usedABC=originalABC;
         try {
           var result=await waitFor(candidate.prime(),current.cancelled,Math.max(1,current.deadline-Date.now()));
-          await validateOriginal(candidate,current.meta,current.cancelled);rejectIfCancelled(current.cancelled);
-          status({engine:'original',phase:'ready',reason:null,local:current.offline,details:null,progress:1});
+          var stats=await validateOriginal(candidate,current.meta,current.cancelled);rejectIfCancelled(current.cancelled);
+          status({engine:'original',phase:'ready',reason:null,local:current.offline,details:null,progress:1,stats:stats});
           return result;
         }catch(e){
           if(e.name==='AbortError'||current.cancelled())throw abortError();
@@ -283,7 +287,10 @@ function createMixer(ABC, getConfig, options) {
   api.download = function () { if (inner) return inner.download(); };
   api.getAudioBuffer = function () { return inner && inner.getAudioBuffer(); };
   api.getIsRunning = function () { return !!(inner && inner.getIsRunning()); };
-  api.getState = function () { return Object.assign({}, state); };
+  api.getState = function () {
+    var ctx=mainContext(ABC),config=getConfig(),keys=inner&&inner._huwikiParts||[];
+    return Object.assign({},state,{output:{context:ctx.state,running:!!(inner&&inner.isRunning),channels:keys.map(function(key){return {part:key,gain:Accompaniment.channelGain(key,config)};})}});
+  };
   api.setForceReserve = function(value){forced=!!value;api.cancel();state.phase='idle';return forced;};
   api.retryOriginal = function () { return api.setForceReserve(false); };
   api.audition = function (notes, tune, more) {return audition(ABC,notes,tune,Object.assign({},options,more||{},{getConfig:getConfig,engineMode:mode(),forceReserve:false}));};

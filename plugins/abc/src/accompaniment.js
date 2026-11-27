@@ -709,7 +709,7 @@ exports.roomSeconds=roomSeconds;
 function createMixer(ABC,getConfig){
  var synth=new ABC.synth.CreateSynth(),prime=synth.prime,gains=[],keys=[],room=null;
  synth.prime=async function(){var full=synth.flattened,groups={melodyVolume:[]},buffers=[],result;
-  full.tracks.forEach(function(t){var key=t.huwabcVoice!==undefined?'voice:'+t.huwabcVoice:(t.huwabcPart||'melodyVolume');(groups[key]||(groups[key]=[])).push(t);});keys=Object.keys(groups);
+  full.tracks.forEach(function(t){var key=t.huwabcVoice!==undefined?'voice:'+t.huwabcVoice:(t.huwabcPart||'melodyVolume');(groups[key]||(groups[key]=[])).push(t);});keys=Object.keys(groups);synth._huwikiParts=keys;
   try{for(var i=0;i<keys.length;i++){synth.flattened=Object.assign({},full,{tracks:groups[keys[i]]});result=await prime.call(synth);buffers.push(synth.audioBuffers[0]);}synth.audioBuffers=buffers.filter(Boolean);return result;}finally{synth.flattened=full;}
  };
  synth.setVolumes=function(){var ctx=ABC.synth.activeAudioContext();if(!ctx)return;if(room)room.update(gains,getConfig().reverb/100);gains.forEach(function(g,i){g.gain.setTargetAtTime(channelGain(keys[i],getConfig()),ctx.currentTime,.015);});};

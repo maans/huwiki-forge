@@ -285,3 +285,44 @@
   }
  }
 }
+
+/* A single toolbar for PDF and ABC. Secondary controls overlay the score. */
+.huwrep-session > .huwrep-compact-header {flex-wrap:nowrap;gap:4px;padding:4px;min-height:44px;box-sizing:border-box}
+.huwrep-compact-header > .huwrep-button,.huwrep-compact-header .huwrep-book-page-turn,
+.huwrep-compact-header > .huwrep-session-settings > summary {flex:0 0 36px;min-width:36px;min-height:36px;height:36px;padding:4px;font-size:20px;text-align:center;justify-content:center;box-sizing:border-box}
+.huwrep-compact-header > .huwrep-book-heading {order:1;flex:1 1 100px;min-width:0;display:block;padding:0 4px}
+.huwrep-compact-header .huwrep-book-heading h2 {overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:1em;font-weight:650}
+.huwrep-compact-header .huwrep-book-heading > .huwrep-muted {display:none}
+.huwrep-compact-header > .huwrep-book-footer {order:3;display:flex!important;flex:none;flex-wrap:nowrap;align-items:center;gap:4px;padding:0;border:0;background:transparent}
+.huwrep-compact-header .huwrep-book-footer > .huwrep-book-page-status {display:inline!important;flex:none;font-size:.72em;white-space:nowrap;margin:0}
+.huwrep-compact-header > .huwrep-book-fullscreen-button {order:6}
+.huwrep-compact-header > .huwrep-reading-controls {order:5;display:block!important}
+.huwrep-compact-header > .huwrep-session-settings {order:7;flex:none;margin:0}
+.huwrep-compact-header > .huwrep-button[aria-expanded]:not(.huwrep-reading-controls) {order:4}
+.huwrep-session .huwrep-compact-transport {order:2;flex:none;display:flex;align-items:center;margin:0;padding:0}
+.huwrep-compact-transport .abcjs-inline-audio {display:flex!important;flex-wrap:nowrap!important;gap:4px!important;min-height:0!important;margin:0!important;padding:0!important;background:transparent!important}
+.huwrep-compact-transport .abcjs-inline-audio > :not(.abcjs-midi-start):not(.huwabc-stop) {display:none!important}
+.huwrep-compact-transport > :not(.abcjs-inline-audio) {display:none!important}
+.huwrep-session .huwrep-compact-transport .abcjs-midi-start {min-height:36px!important;height:36px!important;width:36px!important;min-width:36px!important;padding:6px!important;box-sizing:border-box!important}
+.huwrep-compact-transport .abcjs-midi-start::after {display:none!important}
+.huwrep-compact-transport .huwabc-stop {width:36px;height:36px;min-height:36px;font-size:0;padding:4px}
+.huwrep-compact-transport .huwabc-stop::after {content:'■';font-size:16px}
+.huwrep-session > .huwrep-performance {display:none!important;position:absolute;z-index:90;top:48px;right:4px;width:min(650px,calc(100% - 8px));max-height:calc(100dvh - 70px);overflow:auto;padding:10px;box-sizing:border-box;border:1px solid #a5c1b5;border-radius:8px;background:#f6faf7;box-shadow:0 12px 32px #14251c40;isolation:isolate}
+.huwrep-session.huwrep-show-reading-controls > .huwrep-performance {display:block!important}
+.huwrep-session .huwrep-performance .huwabc-instrument-bar,
+.huwrep-session .huwrep-performance .huwrep-book-practice {display:flex!important;flex-wrap:wrap}
+.huwrep-session .huwrep-performance .huwrep-book-practice {display:block!important;margin-top:8px}
+.huwrep-session .huwrep-performance .huwabc-accompaniment {max-height:none}
+.huwrep-session .huwrep-performance .huwrep-book-practice > summary {font-size:.9em}
+.huwrep-performance .huwrep-audio-source {flex-basis:auto}
+.huwrep-session .huwrep-session-settings-body > .huwrep-book-source {max-width:none;width:100%}
+.huwrep-compact-header .huwrep-session-settings-body {max-height:calc(100dvh - 65px)}
+.huwrep-session.huwrep-book-fullscreen .huwrep-compact-header {flex:0 0 auto;padding:4px;min-height:44px}
+.huwrep-session.huwrep-book-fullscreen .huwrep-book-stage {flex:1 1 auto;min-height:0}
+@media(max-width:600px){
+ .huwrep-compact-header .huwrep-book-footer > .huwrep-book-page-status {display:none!important}
+ .huwrep-compact-header > .huwrep-book-heading {flex-basis:40px}
+ .huwrep-compact-header > .huwrep-button,.huwrep-compact-header .huwrep-book-page-turn,.huwrep-compact-header > .huwrep-session-settings > summary {min-width:32px;flex-basis:32px;width:32px}
+ .huwrep-compact-transport .huwabc-stop {display:none!important}
+}
+.huwrep-compact-header > .huwrep-edit-score {order:6}

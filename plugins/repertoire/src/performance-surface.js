@@ -24,8 +24,13 @@ exports.create=function(book,notation,audioView){
  var accompaniment=null;
  sound.addEventListener("click",function(){book.soundOpen=!book.soundOpen;if(accompaniment)accompaniment.hidden=!book.soundOpen;sound.setAttribute("aria-expanded",String(!!book.soundOpen));});
  return {element:host,attach:function(score,scoreHost){
+  var instrument=scoreHost.querySelector(".huwabc-instrument-bar");if(instrument)host.appendChild(instrument);
   var audio=scoreHost.querySelector(".huwabc-audio");if(!audio)return null;
   transport.textContent="";transport.appendChild(audio);
+  // Keep the original bound controls together, including their async load
+  // target. Only their parent changes; playback and its preparation survive.
+  var controls=audio.querySelector(".huwabc-audio-controls");
+  if(controls&&book._toolbar){controls.classList.add("huwrep-compact-transport");book._toolbar.appendChild(controls);}
   accompaniment=score._accompControls&&score._accompControls.element||audio.querySelector(".huwabc-accompaniment");
   if(accompaniment){
    accompaniment.hidden=!book.soundOpen;

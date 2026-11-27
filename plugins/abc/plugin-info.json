@@ -7,8 +7,8 @@
   "plugin-type": "plugin",
   "license": "MIT",
   "type": "application/json",
-  "version": "0.3.62",
+  "version": "0.3.63",
   "author": "HUWiki",
   "revision": "18",
-  "modified": "20261127144000000"
+  "modified": "20261127160000000"
 }

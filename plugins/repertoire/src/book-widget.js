@@ -27,6 +27,9 @@ function btn(doc,label,onClick,css){
 function choice(doc,id,label){
  var o=el(doc,"option","",label);o.value=id;return o;
 }
+function icon(doc,label,glyph,action,css){
+ var b=btn(doc,glyph,action,css);b.title=label;b.setAttribute("aria-label",label);return b;
+}
 function name(wiki,item){
  var t=wiki.getTiddler(item);return t?t.fields["music-title"]||item:item;
 }
@@ -240,7 +243,9 @@ Book.prototype.setFullscreen=function(active,requestNative){
  if(controls)controls.setAttribute("aria-expanded","false");
  var button=host.querySelector(".huwrep-book-fullscreen-button");
  if(button){
-  button.textContent=active?"⛶ Luk fuldskærm":"⛶ Fuldskærm";
+  button.textContent=active?"⛶":"⛶";
+  button.title=active?"Luk fuldskærm":"Fuldskærm";
+  button.setAttribute("aria-label",button.title);
   button.setAttribute("aria-pressed",String(active));
  }
  if(this._fullscreen){
@@ -411,6 +416,8 @@ Book.prototype.mountScore=function(scoreHost,sourceTitle,agreement,row,audioOnly
   var source=wiki.getTiddler(sourceTitle),f=source&&source.fields||{};
   var tree={type:"huwiki-abc",attributes:{tiddler:{type:"string",value:sourceTitle},view:{type:"string",value:f["repertoire-sheet-format"]==="chords"?"chords":"full"},embedded:{type:"string",value:"yes"},audio:{type:"string",value:"all"},"show-title":{type:"string",value:"no"}}};
   this._score=new Score(tree,{wiki:wiki,parentWidget:this,document:doc});
+  this._score._repertoireTransport=this._toolbar;
+  this._score._repertoireSettings=this._performance.element;
   this._score._repertoireScore=function(ABC,abcSource){
    try{var prepared=LiveScore.apply(ABC,abcSource,agreement);if(self._scoreError){self._scoreError.remove();self._scoreError=null;}return prepared.source;}
    catch(error){if(!self._scoreError){self._scoreError=el(doc,"span","huwrep-book-transform-error");self._scoreError.setAttribute("role","alert");row.appendChild(self._scoreError);}self._scoreError.textContent="Spilleaftalen kunne ikke anvendes: "+error.message;return abcSource;}
@@ -450,18 +457,19 @@ Book.prototype.draw=function(){
  this._entries=all;this._previousPage=null;this._nextPage=null;
  if(all.indexOf(this.activeItem)<0)this.activeItem=all.length?all[0]:"";
  var index=all.indexOf(this.activeItem);
- var toolbar=el(doc,"header","huwrep-book-header");host.appendChild(toolbar);
- toolbar.appendChild(btn(doc,"← Nodemapper og numre",function(){
+ var toolbar=this._toolbar=el(doc,"header","huwrep-book-header huwrep-compact-header");host.appendChild(toolbar);
+ toolbar.appendChild(icon(doc,"Nodemapper og numre","←",function(){
   self.leave("HUWiki Repertoire – Start");
  }));
  host.classList.remove("huwrep-show-reading-controls");
  var fullscreen=host.classList.contains("huwrep-book-fullscreen");
- var fullScreenButton=btn(doc,fullscreen?"⛶ Luk fuldskærm":"⛶ Fuldskærm",function(){
+ var fullScreenButton=icon(doc,fullscreen?"Luk fuldskærm":"Fuldskærm","⛶",function(){
   self.setFullscreen(!host.classList.contains("huwrep-book-fullscreen"),true);
  },"huwrep-book-fullscreen-button");
  fullScreenButton.setAttribute("aria-pressed",String(fullscreen));
  toolbar.appendChild(fullScreenButton);
- var settings=el(doc,"details","huwrep-session-settings");settings.appendChild(el(doc,"summary","","Visning og udskrift"));
+ var settings=el(doc,"details","huwrep-session-settings"),settingsSummary=el(doc,"summary","","⋯");
+ settingsSummary.title="Visning og udskrift";settingsSummary.setAttribute("aria-label","Visning og udskrift");settings.appendChild(settingsSummary);
  var settingsBody=el(doc,"div","huwrep-session-settings-body");settings.appendChild(settingsBody);toolbar.appendChild(settings);
  var printMenu=el(doc,"details","huwrep-book-print-menu");
  printMenu.appendChild(el(doc,"summary","","PDF / Udskriv"));
@@ -520,7 +528,7 @@ Book.prototype.draw=function(){
  settingsBody.appendChild(mode);
  this._displayMode=el(doc,"span","huwrep-muted huwrep-book-mode","");settingsBody.appendChild(this._displayMode);
  settingsBody.appendChild(btn(doc,"Redigér sætlister og spilleaftaler",function(){self.leave("Repertoire – Sætlister");}));
- var header=el(doc,"div","huwrep-book-heading");host.appendChild(header);
+ var header=el(doc,"div","huwrep-book-heading");toolbar.appendChild(header);
  if(!all.length){
   header.appendChild(el(doc,"h2","","Sætlisten er tom"));
   host.appendChild(el(doc,"p","huwrep-muted","Vælg en sætliste med numre i Repertoireværkstedet."));
@@ -530,7 +538,7 @@ Book.prototype.draw=function(){
  header.appendChild(el(doc,"span","huwrep-muted",(index+1)+" / "+all.length+" numre"));
  var listBox=el(doc,"aside","huwrep-book-list");listBox.hidden=true;
  listBox.setAttribute("aria-label","Numre i den aktuelle sætliste");host.appendChild(listBox);
- var listToggle=btn(doc,"☷ Nummerliste",function(){
+ var listToggle=icon(doc,"Nummerliste","☷",function(){
   listBox.hidden=!listBox.hidden;
   listToggle.setAttribute("aria-expanded",String(!listBox.hidden));
   if(!listBox.hidden)search.focus();
@@ -581,14 +589,14 @@ Book.prototype.draw=function(){
   if(!this.pieceTitle)sourceSelect.appendChild(choice(doc,"","Noder · følg nodemappen"));
   variants.forEach(function(v){sourceSelect.appendChild(choice(doc,v.role,"Noder · "+v.label));});
   if(itemRole&&!variants.some(function(v){return v.role===itemRole;})){var unavailable=choice(doc,itemRole,"Dette nummer · "+(model.viewLabels[itemRole]||itemRole)+" (ikke tilgængelig)");unavailable.disabled=true;sourceSelect.appendChild(unavailable);}
-  sourceSelect.value=itemRole;sourceSelect.addEventListener("change",function(){self.changeItemView(sourceSelect.value);});header.appendChild(sourceSelect);
+  sourceSelect.value=itemRole;sourceSelect.addEventListener("change",function(){self.changeItemView(sourceSelect.value);});settingsBody.insertBefore(sourceSelect,settingsBody.firstChild);
  }
  var audioView=notation.abc?notation:variants.find(function(v){return notation.role==="guitar"&&v.role==="chord-stabs"||notation.role==="score"&&v.role==="abc";})||variants.find(function(v){return v.role==="leadsheet";})||variants.find(function(v){return v.abc;});
  this._selectedNotation=notation;
- if(audioView)settingsBody.appendChild(btn(doc,notation.abc?"Redigér ABC-noder":"Redigér lydkildens ABC-noder",function(){if(self._score&&self._score._reader)self._score._reader.openEditor();}));
+ if(audioView)toolbar.insertBefore(icon(doc,notation.abc?"Redigér ABC-noder":"Redigér lydkildens ABC-noder","✎",function(){if(self._score&&self._score._reader)self._score._reader.openEditor();},"huwrep-edit-score"),settings);
  this._performance=Performance.create(this,notation,audioView);host.insertBefore(this._performance.element,stage);
  if(audioView){
-  var readingControls=btn(doc,"Lyd og instrument",function(){
+  var readingControls=icon(doc,"Lyd og instrument","♫",function(){
    var open=host.classList.toggle("huwrep-show-reading-controls");
    readingControls.setAttribute("aria-expanded",String(open));
    if(open)settings.open=false;
@@ -603,7 +611,7 @@ Book.prototype.draw=function(){
   },"huwrep-reading-fit");
   host.classList.toggle("huwrep-fit-whole-page",!!this.fitWholePage);
   fit.setAttribute("aria-pressed",String(!!this.fitWholePage));
-  toolbar.insertBefore(fit,settings);
+  settingsBody.appendChild(fit);
  }
  var selected=notation.format;
  if(notation.missing&&notation.role){
@@ -638,15 +646,16 @@ Book.prototype.draw=function(){
   }
   if(source)stage.appendChild(btn(doc,"Åbn melodien",function(){self.navigate(source.fields.title);}));
  }
- var footer=el(doc,"footer","huwrep-book-footer");host.appendChild(footer);
- var prev=btn(doc,"‹ Forrige side / nummer",function(){self.turn(-1);},'huwrep-book-page-turn');
- var next=btn(doc,"Næste side / nummer ›",function(){self.turn(1);},'huwrep-book-page-turn');
+ var footer=el(doc,"nav","huwrep-book-footer");footer.setAttribute("aria-label","Sider og numre");toolbar.insertBefore(footer,fullScreenButton);
+ var prev=icon(doc,"Forrige side / nummer","‹",function(){self.turn(-1);},'huwrep-book-page-turn');
+ var next=icon(doc,"Næste side / nummer","›",function(){self.turn(1);},'huwrep-book-page-turn');
  var songPrev=btn(doc,"⇤ Forrige nummer",function(){if(index>0)self.selectItem(all[index-1],false);});
  var songNext=btn(doc,"Næste nummer ⇥",function(){if(index<all.length-1)self.selectItem(all[index+1],false);});
  songPrev.disabled=index===0;songNext.disabled=index===all.length-1;
  this._pageStatus=el(doc,"span","huwrep-muted huwrep-book-page-status","Sidevisning følger iPadens skærmretning");
  this._previousPage=prev;this._nextPage=next;
  footer.append(prev,this._pageStatus,next);
+ var practice=host.querySelector(".huwrep-book-practice");if(practice)this._performance.element.appendChild(practice);
  this.updateMode();
 };
 Book.prototype.refresh=function(changed){

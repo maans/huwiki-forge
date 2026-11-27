@@ -187,7 +187,8 @@ ABCWidget.prototype.draw=function(){
   var viewPiano=null,pianoFollow=null,viewPianoHost=el("div","huwabc-piano-view-host");
   var audioControls=el("div","huwabc-audio-controls");
   audioControls.appendChild(el("span","huwabc-player-wait","Indlæser afspiller …"));
-  audio.appendChild(audioControls);audioControls.appendChild(button("Stop",function(){playback.stopAll();},"huwabc-stop"));
+  if(self._repertoireTransport)audioControls.classList.add("huwrep-compact-transport");
+  (self._repertoireTransport||audio).appendChild(audioControls);audioControls.appendChild(button("Stop",function(){playback.stopAll();},"huwabc-stop"));
   // Shared learning surface: just as on a public Site page, opened only on demand.
   var learn=el("div","huwabc-learn-panels");
   var pianoDetails=el("details","huwabc-learn-panel"),pianoSummary=el("summary","","♫  Klaviatur");
@@ -638,7 +639,7 @@ ABCWidget.prototype.draw=function(){
       rates.setAttribute('aria-label','Øvehastighed i procent');rates.addEventListener('change',function(){practice=Number(rates.value);changeTempo('practice');});
       function tempoSync(){if(visual)controller.currentTempo=Math.round(visual.getBeatsPerMeasure()/visual.millisecondsPerMeasure()*60000*(controller.warp||100)/100);liveButton.setAttribute('aria-pressed',String(mode==='live'));practiceButton.setAttribute('aria-pressed',String(mode==='practice'));tempoText.textContent=(mode==='live'?'Originaltempo':practice+' %')+(controller.currentTempo?' · '+Math.round(controller.currentTempo)+' BPM':'');}
       function changeTempo(next){mode=next;liveButton.disabled=practiceButton.disabled=rates.disabled=true;tempoSync();controller.setWarp(mode==='live'?100:practice).then(function(){tempoSync();}).catch(function(e){showStatus('Tempo kunne ikke ændres: '+e.message,true);}).finally(function(){liveButton.disabled=practiceButton.disabled=rates.disabled=false;});}
-      tempoPanel.appendChild(liveButton);tempoPanel.appendChild(practiceButton);tempoPanel.appendChild(rates);tempoPanel.appendChild(tempoText);audioControls.appendChild(tempoPanel);self._syncTempo=tempoSync;tempoSync();
+      tempoPanel.appendChild(liveButton);tempoPanel.appendChild(practiceButton);tempoPanel.appendChild(rates);tempoPanel.appendChild(tempoText);(self._repertoireSettings||audioControls).appendChild(tempoPanel);self._syncTempo=tempoSync;tempoSync();
       if(visual)attachTune(visual);
       if(self._standaloneView)ensureFullMiniMixer();
     }catch(e){audioControls.textContent="Afspilleren kunne ikke startes.";showStatus("Afspillerfejl: "+e.message,true);}
