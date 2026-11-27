@@ -209,7 +209,8 @@ test("SilbaÄtno importer keeps technical conversion diagnostics in the report, 
  const converter=await readFile(path.join(root,"scripts/build-silba-etno-repertoire.mjs"),"utf8");
  assert.equal(scores.length,17);
  assert.equal(report.entries.length,17);
- assert.ok(scores.every(song=>song.text===""&&song["abc-source"]&&song["huwiki-import-source"]));
+ assert.ok(scores.every(song=>song["abc-source"]&&song["huwiki-import-source"]));
+ for(const song of scores)assert.doesNotMatch(song.text||'',/duplicateRemoved|import-warning|Importdiagnostik|Konverteringsrapport/i,'Reader controls may replace an empty article; conversion diagnostics stay in the report');
  assert.ok(report.entries.every(entry=>typeof entry.duplicateRemoved==="boolean"&&Array.isArray(entry.warnings)));
  const example=report.entries.find(entry=>entry.source==="laat-fraan-dalarna-cbb.mscz");
  assert.ok(example&&example.duplicateRemoved,"Original duplicate-removal information is preserved");

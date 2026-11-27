@@ -21,7 +21,10 @@ try{
  await page.goto(url,{waitUntil:"domcontentloaded",timeout:120000});
  await page.waitForFunction(()=>window.$tw&&$tw.rootWidget&&$tw.wiki);
  // Normal is the default article view; Advanced exposes the former extras.
- await page.locator(".silba-home").getByRole("link",{name:"Låt från Dalarne"}).click();
+ await page.evaluate(()=>{
+  $tw.wiki.addTiddler({title:'Standalone ABC acceptance','music-template':'off',text:'<div class="huw-music-view"><section class="huw-music-media huw-music-media-abc"><div class="huw-music-section-label">ABC</div><$huwiki-abc tiddler="Låt från Dalarne"/></section></div>'});
+  $tw.wiki.addTiddler({title:'$:/StoryList',list:['Standalone ABC acceptance']});
+ });
  let article=page.locator(".huw-music-media-abc>.huwabc-score.huwabc-standalone").first();
  await article.waitFor();
  assert.equal(await article.evaluate(el=>el.classList.contains("huwabc-minimal")),true);
@@ -55,7 +58,7 @@ try{
  const heading=await book.locator('.huwrep-book-heading h2').textContent();
  const original=await page.evaluate(title=>$tw.wiki.getTiddler(title)?.fields['abc-source'],heading);
  assert.ok(original,'Acceptance uses the existing original score');
- await book.locator('.huwrep-book-fullscreen-button').click();
+ if(!await book.evaluate(el=>el.classList.contains('huwrep-book-fullscreen')))await book.locator('.huwrep-book-fullscreen-button').click();
  const layout=await book.evaluate(el=>{const r=el.getBoundingClientRect(),h=el.querySelector('.huwrep-book-header').getBoundingClientRect(),s=el.querySelector('.huwrep-book-stage').getBoundingClientRect();return {width:r.width,height:r.height,header:h.height,gap:s.top-h.bottom,nested:el.querySelectorAll('.huwabc-reader-active').length};});
  assert.ok(Math.abs(layout.width-1180)<3&&Math.abs(layout.height-820)<3,JSON.stringify(layout));
  assert.ok(layout.header<=52&&Math.abs(layout.gap)<=2,'The book owns one compact toolbar');

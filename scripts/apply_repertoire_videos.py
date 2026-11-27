@@ -1,8 +1,9 @@
 """Merge reviewed recording metadata into existing repertoire originals."""
-import json,re,unicodedata
+import json,re,unicodedata,sys
 from pathlib import Path
 ROOT=Path(__file__).resolve().parents[1]
 DATA=json.loads((ROOT/'research/videos/recordings.json').read_text())
+ONLY=sys.argv[sys.argv.index('--only')+1] if '--only' in sys.argv else None
 FIELDS=('repertoire-youtube','repertoire-youtube-title','repertoire-youtube-match','repertoire-youtube-note','repertoire-youtube-source','repertoire-youtube-start','repertoire-youtube-curated')
 def key(title):
     title=str(title).split(' · ')[0]
@@ -19,6 +20,12 @@ def merge(rows,group):
     for row in rows:
         if row.get('repertoire-work-title') or row.get('repertoire-kind') in ('orchestra-item','setlist','orchestra'):continue
         if row.get('repertoire-kind')!='piece' and not row.get('abc-source'):continue
+        if group in ('silba','akustisk') and row.get('abc-source') and row.get('type','text/vnd.tiddlywiki')=='text/vnd.tiddlywiki' and not re.search(r'<\$huwiki-(?:abc|repertoire-piece|repertoire-book)\b',row.get('text','')):
+            original=row.get('text','')
+            practice='<details class="huwrep-practice-notes"><summary>Øvestatus og noter</summary>\n\n<label>Status <$select field="musik-status"><option>Ny</option><option>Øver</option><option>Kan selv</option><option>Klar til undervisning</option></$select></label>\n\n<label>Mit øvemål <$edit-text field="musik-mål" tag="input"/></label>\n\n</details>'
+            row['text']='<$huwiki-repertoire-piece tiddler=<<currentTiddler>>/>\n\n'+practice+'\n\n'+original
+            row['music-template']='off'
+            changed+=1
         record=matches.get(key(row.get('title','')))
         if not record:continue
         if row.get('repertoire-youtube-match')=='manual':continue
@@ -54,11 +61,11 @@ if __name__=='__main__':
         if not (ROOT/base).exists():continue
         for path in (ROOT/base).rglob('index.html'):
             group=collection(path)
-            if group:total+=html(path,group)
+            if group and (not ONLY or group==ONLY):total+=html(path,group)
     for path in [ROOT/'research/helles/tiddlers.json',*list((ROOT/'editions').glob('*/tiddlers/*.json'))]:
         if not path.exists():continue
         group='helles' if path.parent==ROOT/'research/helles' else collection(path)
-        if not group:continue
+        if not group or ONLY and group!=ONLY:continue
         rows=json.loads(path.read_text())
         if isinstance(rows,list) and merge(rows,group):path.write_text(json.dumps(rows,ensure_ascii=False,indent=2)+'\n')
     print(f'YouTube recording metadata merged: {total} additions/updates; manual choices preserved')
