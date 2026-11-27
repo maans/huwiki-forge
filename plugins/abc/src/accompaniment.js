@@ -707,7 +707,12 @@ function createRoom(ctx, destination) {
 exports.createRoom=createRoom;
 exports.roomSeconds=roomSeconds;
 function createMixer(ABC,getConfig){
- var synth=new ABC.synth.CreateSynth(),prime=synth.prime,gains=[],keys=[],room=null;
+ var synth=new ABC.synth.CreateSynth(),prime=synth.prime,rawStop=synth.stop,gains=[],keys=[],room=null,run=0;
+ synth.stop=function(){
+  run++;
+  (synth.directSource||[]).forEach(function(source){source.onended=null;});
+  return rawStop.apply(synth,arguments);
+ };
  synth.prime=async function(){var full=synth.flattened,groups={melodyVolume:[]},buffers=[],result;
   full.tracks.forEach(function(t){var key=t.huwabcVoice!==undefined?'voice:'+t.huwabcVoice:(t.huwabcPart||'melodyVolume');(groups[key]||(groups[key]=[])).push(t);});keys=Object.keys(groups);synth._huwikiParts=keys;
   try{for(var i=0;i<keys.length;i++){synth.flattened=Object.assign({},full,{tracks:groups[keys[i]]});result=await prime.call(synth);buffers.push(synth.audioBuffers[0]);}synth.audioBuffers=buffers.filter(Boolean);return result;}finally{synth.flattened=full;}
@@ -718,7 +723,7 @@ function createMixer(ABC,getConfig){
   synth.directSource=synth.audioBuffers.map(function(buffer,i){var gain=ctx.createGain();gain.gain.value=channelGain(keys[i],getConfig());gain.connect(ctx.destination);gains.push(gain);var source=ctx.createBufferSource();source.buffer=buffer;source.connect(gain);return source;});
   room=createRoom(ctx);room.update(gains,getConfig().reverb/100);
   var when=ctx.currentTime;synth.directSource.forEach(function(source){source.start(when,seconds);});
-  if(synth.onEnded&&synth.directSource[0])synth.directSource[0].onended=function(){synth.onEnded(synth.callbackContext);};
+  if(synth.onEnded&&synth.directSource[0]){var stamp=run,first=synth.directSource[0];first.onended=function(){if(stamp===run&&synth.isRunning&&synth.directSource[0]===first)synth.onEnded(synth.callbackContext);};}
  };
  return synth;
 }

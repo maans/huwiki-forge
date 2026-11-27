@@ -27,6 +27,7 @@ jobs:
           node-version: 22
       - run: npm install --no-save --no-package-lock --ignore-scripts playwright-core@1.56.1
       - run: node scripts/build-abc-ui.mjs
+      - run: node scripts/build-repertoire-plugin.mjs
       - run: node scripts/build-repertoire-plugin.mjs --check
       - run: node scripts/build-forge-plugin-library.mjs
       - run: node --test tests/repertoire-cues.test.mjs tests/repertoire-edition.test.mjs tests/abc-cue-print.test.mjs

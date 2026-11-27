@@ -326,3 +326,9 @@
  .huwrep-compact-transport .huwabc-stop {display:none!important}
 }
 .huwrep-compact-header > .huwrep-edit-score {order:6}
+.huwrep-session .huwrep-compact-transport .abcjs-midi-start .huwabc-control-label,
+.huwrep-session .huwrep-compact-transport .abcjs-midi-start .huwabc-control-label-pause {display:none!important}
+.huwrep-session .huwrep-compact-transport .abcjs-midi-start {display:inline-flex!important;align-items:center!important;justify-content:center!important;gap:0!important;overflow:hidden}
+.huwrep-session .huwrep-compact-transport .abcjs-midi-start .huwabc-icon {flex:none;margin:0!important}
+.huwrep-session .huwrep-compact-transport .huwabc-stop {font-size:0!important}
+.huwrep-session .huwrep-compact-transport .huwabc-stop::after {font-size:16px!important}

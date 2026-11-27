@@ -218,3 +218,25 @@ test('clicked guitar previews route through an actual half-gain voice bus and re
  assert.equal(gains.at(-1).gain.value,0,'the same preview voice bus respects mute');
  reserve.stopAuditions();
 });
+
+test('stopping, seeking and restarting audio cannot finish the new playback through an old source callback',async()=>{
+ const sources=[];
+ const ctx={currentTime:0,sampleRate:48000,destination:{},
+  createGain(){return {gain:{value:1,setTargetAtTime(){}},connect(){},disconnect(){}};},
+  createBufferSource(){const source={connect(){},start(){},stop(){},onended:null};sources.push(source);return source;}};
+ class Synth{
+  constructor(){this.directSource=[];this.audioBuffers=[];this.isRunning=false;}
+  async init(params){this.flattened=params.sequence;return {error:[]};}
+  async prime(){this.audioBuffers=[{length:1,numberOfChannels:1,getChannelData:()=>Float32Array.of(.2)}];}
+  start(){this._kickOffSound(0);}
+  stop(){this.directSource.forEach(s=>s.stop());this.directSource=[];this.isRunning=false;}
+ }
+ const abc={synth:{CreateSynth:Synth,activeAudioContext:()=>ctx}},mix=Accompaniment.createMixer(abc,()=>Accompaniment.clean({}));
+ let ended=0;mix.onEnded=()=>ended++;
+ await mix.init({sequence:{totalDuration:1,tracks:[[{cmd:'note',pitch:60,start:0,duration:1,volume:90}]]}});await mix.prime();
+ mix.start();const old=sources[0],queued=old.onended;
+ mix.stop();assert.equal(old.onended,null);
+ mix.start();queued();assert.equal(ended,0,'an already queued stopped-source event must not finish the new playback');
+ sources.at(-1).onended();assert.equal(ended,1,'a natural end of the current source still finishes normally');
+ mix.stop();
+});

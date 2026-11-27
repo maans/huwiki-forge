@@ -91,7 +91,7 @@ async function validateOriginal(buffer, meta, cancelled) {
 }
 function createFluidBuffer(ABC, getConfig, meta, buffers, headroom, cancelled) {
   var synth = new ABC.synth.CreateSynth(), gains = [], keys = Object.keys(buffers);
-  var ctx = mainContext(ABC), room, rawStop = synth.stop, rawStart = synth.start, rawSeek = synth.seek;
+  var ctx = mainContext(ABC), room, rawStop = synth.stop, rawStart = synth.start, rawSeek = synth.seek, run=0;
   synth.audioBufferPossible = true; synth.flattened = meta.sequence;
   synth.millisecondsPerMeasure = meta.ms; synth.meterSize = meta.meterSize; synth.beatsPerMeasure = meta.beats;
   synth.fadeLength = 2000; synth.duration = meta.sequence.totalDuration * meta.secondsPerWhole + 2;
@@ -101,7 +101,7 @@ function createFluidBuffer(ABC, getConfig, meta, buffers, headroom, cancelled) {
   synth.disposeMixer = function () { if (room) {room.dispose(); room = null;} gains.forEach(function (g) { try { g.disconnect(); } catch (_) {} }); gains = []; };
   synth._kickOffSound = function (seconds) {
     rejectIfCancelled(cancelled);
-    rawStop.call(synth); synth.disposeMixer(); synth.isRunning = true;
+    synth.stop(); synth.isRunning = true;
     var at = ctx.currentTime, offset = Math.min(Math.max(0, seconds || 0), Math.max(0, synth.duration - 1 / ctx.sampleRate));
     synth.directSource = synth.audioBuffers.map(function (buffer, i) {
       var gain = ctx.createGain(), source = ctx.createBufferSource();
@@ -109,7 +109,7 @@ function createFluidBuffer(ABC, getConfig, meta, buffers, headroom, cancelled) {
       source.buffer = buffer; source.connect(gain); source.start(at, offset); return source;
     });
     room = Accompaniment.createRoom(ctx); room.update(gains, getConfig().reverb / 100);
-    if (synth.onEnded && synth.directSource[0]) synth.directSource[0].onended = function () { synth.onEnded(synth.callbackContext); };
+    if (synth.onEnded && synth.directSource[0]) {var stamp=run,first=synth.directSource[0];first.onended = function () { if(stamp===run&&synth.isRunning&&synth.directSource[0]===first)synth.onEnded(synth.callbackContext); };}
   };
   synth.start = function () { rejectIfCancelled(cancelled); return rawStart.call(synth); };
   synth.seek = function (position, units) {
@@ -119,7 +119,7 @@ function createFluidBuffer(ABC, getConfig, meta, buffers, headroom, cancelled) {
     if (wasRunning) synth.startTimeSec = ctx.currentTime - (synth.pausedTimeSec || 0);
     return result;
   };
-  synth.stop = function () { var n = rawStop.call(synth); synth.disposeMixer(); return n; };
+  synth.stop = function () {run++;(synth.directSource||[]).forEach(function(source){source.onended=null;});var n = rawStop.call(synth); synth.disposeMixer(); return n; };
   synth._huwikiParts = keys; synth._huwikiHeadroom = headroom;
   return synth;
 }

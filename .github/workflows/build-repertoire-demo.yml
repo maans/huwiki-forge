@@ -21,6 +21,7 @@ on:
       - 'tests/repertoire-cues.test.mjs'
       - 'scripts/repertoire-cues-browser-smoke.mjs'
       - 'scripts/repertoire-browser-smoke.mjs'
+      - 'scripts/repertoire-compact-browser-smoke.mjs'
       - 'scripts/abc-reader-browser-smoke.mjs'
       - 'scripts/abc-reader-browser-smoke.mjs'
       - 'editions/silba-atno-repertoire/manifest.json'
@@ -62,7 +63,7 @@ jobs:
       - name: Check real Nodebog page turning and Music Minus One in Chrome
         env:
           CHROME_BIN: /usr/bin/google-chrome
-        run: node scripts/repertoire-browser-smoke.mjs
+        run: node scripts/repertoire-compact-browser-smoke.mjs
       - name: Print all 18 pieces through the shared Repertoire cue entry
         env:
           CHROME_BIN: /usr/bin/google-chrome

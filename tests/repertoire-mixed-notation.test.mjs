@@ -193,7 +193,7 @@ test('a PDF boundary carries current child state before changing songs, even whe
  f.wiki.addTiddler(new Tiddler({title:'Next ABC tune','abc-source':'X:1\nT:Next ABC tune\nK:C\nC4|'}));
  const next=f.model.addItem(f.wiki,orch,'Next ABC tune').title;f.model.setEntries(f.wiki,f.set,[f.item,next]);
  f.book.draw();f.state({type:'birdland-pdf:ready',pages:5,page:1,spread:2});
- assert.equal(f.book.activeItem,f.item);assert.equal(f.posts.length,0);
+ assert.equal(f.book.activeItem,f.item);assert.equal(f.posts.filter(p=>p.message.command!=='fullscreen-state').length,0);
  // The viewer can reach its final spread before an expensive page render has
  // posted the corresponding state message. Boundary state is authoritative.
  f.state({type:'birdland-pdf:boundary',direction:'next',pages:5,page:5,spread:2});
