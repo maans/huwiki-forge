@@ -4,14 +4,16 @@ import {readFile} from 'node:fs/promises';
 import {runInNewContext} from 'node:vm';
 import {svgDocument} from './helpers/svg-test-dom.mjs';
 const read=name=>readFile(new URL('../plugins/abc/src/'+name,import.meta.url),'utf8');
-const code={feedback:await read('playback-feedback.js'),mixer:await read('floating-mixer.js'),minimal:await read('minimal-player.js')};
+const code={feedback:await read('playback-feedback.js'),mixer:await read('floating-mixer.js'),minimal:await read('minimal-player.js'),youtube:await read('mini-youtube.js')};
 function shared(){
  const doc=svgDocument(),win=doc.defaultView;
  Object.assign(win,{innerWidth:1280,innerHeight:900,sessionStorage:{getItem:()=>null,setItem(){}},addEventListener(){},removeEventListener(){},requestAnimationFrame(fn){fn();},getComputedStyle:()=>({display:'block',visibility:'visible'})});
  const feedback={};runInNewContext(code.feedback,{exports:feedback});
  const config={enabled:false,voiceSettings:{},backingModes:{},bassSource:'style',reverb:0,bassVolume:60,chordVolume:60,drumVolume:60,metronomeVolume:60,droneVolume:60};
  const accompaniment={clean:v=>({...config,...v}),read:()=>({...config}),activeSolo:()=>false,createDrone:()=>({stop(){},start(){},configure(){}}),prepare:(_A,t)=>({tune:t}),liveConfigChange:()=>false};
+ const youtube={};runInNewContext(code.youtube,{exports:youtube});
  const modules={
+  '$:/plugins/huwiki/abc/mini-youtube.js':youtube,
   '$:/plugins/huwiki/abc/playback-feedback.js':feedback,
   '$:/plugins/huwiki/abc/voice-routing.js':{clean:v=>v||{},describe:()=>[],bassSource:v=>v},
   '$:/plugins/huwiki/abc/voice-controls.js':{},
