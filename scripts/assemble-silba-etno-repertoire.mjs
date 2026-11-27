@@ -31,7 +31,7 @@ const scores=assembled.tiddlers.filter(t=>String(t.tags||"").split(/\s+/).includ
 const charts=assembled.tiddlers.filter(t=>String(t.tags||"").split(/\s+/).includes("SilbaÄtnoTrack")&&t["abc-source"]&&t["repertoire-sheet-format"]==="chords");
 if(scores.length!==17||charts.length!==1)throw Error("Cannot publish: expected 17 original ABC scores and one editable chord sheet, got "+scores.length+" + "+charts.length);
 const core=await readFile(path.join(root,"core/empty.html"),"utf8");
-// Normalize the inert browser-save comment inherited from the core template.
-const html=assembleHtml(core,assembled.tiddlers).replace(/^(<!-- saved from url=.*-->)[\t ]+$/gm,"$1");
+// Remove the inert browser-save comment inherited from the core template.
+const html=assembleHtml(core,assembled.tiddlers).replace(/^<!-- saved from url=[^\n]*(?:\n|$)/m,"");
 await writeFile(path.join(folder,"index.html"),html);
 console.log("Editable SilbaÄtno Repertoire wiki:",Buffer.byteLength(html),"bytes",scores.length,"scores plus",charts.length,"chord chart");
