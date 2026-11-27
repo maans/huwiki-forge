@@ -16,6 +16,7 @@ on:
       - 'plugins/repertoire/src/**'
       - 'plugins/repertoire/plugin-info.json'
       - 'scripts/build-repertoire-plugin.mjs'
+      - 'scripts/assemble-silba-etno-repertoire.mjs'
       - 'tests/repertoire-edition.test.mjs'
       - 'tests/repertoire-practice-controls.test.mjs'
       - 'tests/repertoire-cues.test.mjs'
