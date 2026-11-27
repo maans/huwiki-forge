@@ -209,12 +209,17 @@ Book.prototype.leave=function(title){
  if(story&&story!==title)this.dispatchEvent({type:"tm-close-tiddler",param:story});
 };
 Book.prototype.selectSetlist=function(title){
- this.setlistTitle=title;this.activeItem="";
+ this.setlistTitle=title;this.activeItem="";this._youtubeView=false;
  this.wiki.addTiddler(new $tw.Tiddler({title:TEMP,type:"text/plain",text:title}));
  this.draw();
 };
-Book.prototype.changeFolderView=function(role){if(this.pieceTitle)this.singleRole=role;else model.setPresentation(this.wiki,this.setlistTitle,null,role);this.draw();};
-Book.prototype.changeItemView=function(role){if(this.pieceTitle)this.singleRole=role;else model.setPresentation(this.wiki,this.setlistTitle,this.activeItem,role);this.draw();};
+Book.prototype.changeFolderView=function(role){this._youtubeView=!this.pieceTitle&&role==="youtube";if(this.pieceTitle)this.singleRole=role;else model.setPresentation(this.wiki,this.setlistTitle,null,role);this.draw();};
+Book.prototype.changeItemView=function(role){
+ this._youtubeView=!this.pieceTitle&&role==="youtube";
+ if(this.pieceTitle)this.singleRole=role;
+ else if(!this._youtubeView)model.setPresentation(this.wiki,this.setlistTitle,this.activeItem,role);
+ this.draw();
+};
 Book.prototype.selectItem=function(title,last){
  this.activeItem=title;this.lastPage=!!last;
  this.draw();
@@ -514,7 +519,7 @@ Book.prototype.draw=function(){
  if(!this.pieceTitle)settingsBody.appendChild(selector);
  var folderView=el(doc,"select","huwrep-input huwrep-book-folder-view");folderView.setAttribute("aria-label","Visning for hele nodemappen");
  var folderRoles=new Map();all.forEach(function(id){model.availableViews(wiki,id).forEach(function(v){if(!folderRoles.has(v.role))folderRoles.set(v.role,v.label);});});
- var currentRole=set&&set.fields["repertoire-source-role"]||wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","");
+ var currentRole=this._youtubeView?"youtube":set&&set.fields["repertoire-source-role"]||wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","");
  if(!currentRole){var automatic=choice(doc,"","Visning · efter nummerets noder");automatic.disabled=true;folderView.appendChild(automatic);}
  ["leadsheet","guitar","chord-stabs","score","abc","pdf","youtube"].forEach(function(role){if(folderRoles.has(role))folderView.appendChild(choice(doc,role,"Visning · "+folderRoles.get(role)));});
  if(currentRole&&!folderRoles.has(currentRole)){var unavailable=choice(doc,currentRole,"Visning · "+(model.viewLabels[currentRole]||currentRole)+" (ikke tilgængelig)");unavailable.disabled=true;folderView.appendChild(unavailable);}
@@ -581,13 +586,15 @@ Book.prototype.draw=function(){
  var notation=source?model.presentation(wiki,this.setlistTitle,this.activeItem):{abc:false,pdf:"",role:"",format:""};
  var variants=source?model.availableViews(wiki,source):[];
  this._notationSignature=notationSignature(variants);
+ // A video choice in a tune book follows navigation without rewriting song overrides.
+ if(this._youtubeView&&!this.pieceTitle)notation=variants.find(function(v){return v.role==="youtube";})||{abc:false,pdf:"",role:"youtube",format:"youtube",missing:true};
  if(this.pieceTitle){
   var wanted=this.singleRole||wiki.getTiddlerText("$:/config/maans/repertoire/default-source-role","");
   notation=variants.find(function(v){return v.role===wanted;})||variants.find(function(v){return v.role==="leadsheet";})||variants[0]||{abc:false,pdf:"",role:"",format:"",missing:true};
  }
  if(notation.label&&!notation.missing){row.appendChild(el(doc,"span","huwrep-book-source-caption",(notation.role==="youtube"?"Visning: ":"Noder: ")+notation.label));if(!row.isConnected)host.insertBefore(row,stage);}
  var overrides={};try{overrides=JSON.parse(set&&set.fields["repertoire-overrides"]||"{}");}catch(ignore){}
- var itemRole=this.pieceTitle?notation.role:overrides[this.activeItem]&&overrides[this.activeItem].sourceRole||"";
+ var itemRole=this.pieceTitle?notation.role:this._youtubeView?"youtube":overrides[this.activeItem]&&overrides[this.activeItem].sourceRole||"";
  if(variants.length||notation.role){
   var sourceSelect=el(doc,"select","huwrep-input huwrep-book-source");sourceSelect.setAttribute("aria-label","Visning for dette nummer");
   if(!this.pieceTitle)sourceSelect.appendChild(choice(doc,"","Noder · følg nodemappen"));
@@ -701,12 +708,12 @@ Book.prototype.refresh=function(changed){
  return false;
 };
 Book.prototype._onKeyDown=function(event){
- if(this.pager()&&!event.defaultPrevented&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
+ if((this.pager()||this._youtubeView||this._selectedNotation&&this._selectedNotation.role==="youtube")&&!event.defaultPrevented&&!event.altKey&&!event.ctrlKey&&!event.metaKey){
   var target=event.target,tag=String(target&&target.tagName||"").toUpperCase();
   if(!/^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(tag)&&!(target&&target.isContentEditable)){
    var delta=/^(ArrowRight|PageDown)$/.test(event.key)||this._pdfPager&&event.key===" "?1:/^(ArrowLeft|PageUp)$/.test(event.key)?-1:0;
    if(delta){event.preventDefault();event.stopPropagation();this.turn(delta);return;}
-   if(event.key==="Home"||event.key==="End"){
+   if(this.pager()&&(event.key==="Home"||event.key==="End")){
     event.preventDefault();event.stopPropagation();var pager=this.pager(),info=pager.info(),spread=info.shown||1;
     pager.go(event.key==="Home"?0:Math.floor(Math.max(0,info.count-1)/spread)*spread,false);return;
    }
@@ -718,4 +725,5 @@ Book.prototype._onKeyDown=function(event){
 };
 exports["huwiki-repertoire-book"]=Book;
 })();
+
 

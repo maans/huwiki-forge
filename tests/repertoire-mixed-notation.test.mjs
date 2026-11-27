@@ -172,6 +172,35 @@ test('switching ABC to YouTube stops its audio engine and switching back unloads
  assert.equal(JSON.stringify(f.model.entries(f.wiki,f.set)),order);f.book.disposeScore();
 });
 
+test('YouTube follows next, previous, keyboard and list selection without overwriting notation choices',async()=>{
+ const f=await drawnBookFixture(),orch=f.wiki.getTiddler(f.item).fields['orchestra-title'];
+ f.model.setVideo(f.wiki,'Four Brothers','https://youtu.be/8UNtQpMMSEM');
+ f.wiki.addTiddler(new Tiddler({title:'Next tune','abc-source':'X:1\nK:C\nC4|','repertoire-pdf':'pdf/next.pdf','repertoire-youtube':'https://youtu.be/YUeuU9mu8mU'}));
+ f.wiki.addTiddler(new Tiddler({title:'No video','abc-source':'X:1\nK:C\nC4|'}));
+ const next=f.model.addItem(f.wiki,orch,'Next tune').title,missing=f.model.addItem(f.wiki,orch,'No video').title;
+ f.model.setEntries(f.wiki,f.set,[f.item,next,missing]);
+ f.model.setPresentation(f.wiki,f.set,f.item,'leadsheet');f.model.setPresentation(f.wiki,f.set,next,'pdf');
+ const before=JSON.stringify([...f.wiki.rows.values()].map(t=>t.fields));
+ const choose=value=>{const select=f.host.querySelector('.huwrep-book-source');select.value=value;select.dispatch('change');};
+ f.book.draw();choose('youtube');
+ const firstFrame=f.host.querySelector('.huwrep-youtube-frame');f.book.turn(1);
+ assert.equal(firstFrame.src,'about:blank');assert.equal(f.book.activeItem,next);assert.equal(f.book._selectedNotation.role,'youtube');
+ assert.match(f.host.querySelector('.huwrep-youtube-frame').src,/YUeuU9mu8mU/);
+ assert.equal(f.host.querySelector('.huwrep-book-source').value,'youtube');
+ let prevented=0;f.book._onKeyDown({key:'ArrowLeft',target:f.host,preventDefault(){prevented++;},stopPropagation(){}});
+ assert.equal(prevented,1);assert.equal(f.book.activeItem,f.item);assert.equal(f.book._selectedNotation.role,'youtube');
+ f.book.selectItem(missing,false);
+ assert.equal(f.book._selectedNotation.role,'youtube');assert.equal(f.book._selectedNotation.missing,true);
+ assert.equal(f.host.querySelector('iframe'),null);assert.match(f.host.textContent,/findes endnu ikke/);
+ f.book.turn(-1);assert.equal(f.book.activeItem,next);assert.equal(f.book._selectedNotation.role,'youtube');
+ assert.equal(JSON.stringify([...f.wiki.rows.values()].map(t=>t.fields)),before,'reading in video mode preserves scores, set order and saved notation overrides');
+ choose('pdf');assert.equal(f.book._selectedNotation.role,'pdf');
+ f.book.selectItem(f.item,false);assert.equal(f.book._selectedNotation.role,'leadsheet','choosing notation ends the video session');
+ f.book.changeFolderView('youtube');assert.equal(f.book._selectedNotation.role,'youtube','folder video mode also overrides a saved per-song notation choice');
+ f.book.selectSetlist(f.set);assert.equal(f.book._selectedNotation.role,'leadsheet','opening a set anew restores its saved per-song choice');
+ f.book.disposeScore();
+});
+
 test('adding a video to an already open ABC original refreshes its presentation choices',async()=>{
  const f=await drawnBookFixture();f.book.changeItemView('leadsheet');
  const original=f.book._score;
@@ -294,3 +323,4 @@ test('touch page turns remain available without entering a second reader mode',a
  f.book.onSwipeStart(touch);f.book.onSwipeEnd({...touch,clientX:200,clientY:200});assert.deepEqual(turns,[1],'vertical scrolling does not change a page');
  f.book.disposeScore();
 });
+
