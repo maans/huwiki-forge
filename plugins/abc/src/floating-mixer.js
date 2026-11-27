@@ -145,7 +145,7 @@ module-type: library
       PlaybackFeedback.update(play,selectedTab!=='youtube'&&currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
       if(!currentlyPreparing)updatePlayback(currentlyPlaying);
     }
-    function togglePlayback(){if(selectedTab==='youtube')return youtube.toggle();if(typeof options.onTogglePlayback==='function')options.onTogglePlayback();return true;}
+    function togglePlayback(){Array.prototype.forEach.call(doc.querySelectorAll('.huwrep-note-settings[open]'),function(menu){menu.open=false;});if(selectedTab==='youtube')return youtube.toggle();if(typeof options.onTogglePlayback==='function')options.onTogglePlayback();return true;}
     play.addEventListener('click',function(e){e.stopPropagation();togglePlayback();});
     updatePlayback(options.getPlaying&&options.getPlaying());
     updatePreparing(options.getPreparing&&options.getPreparing());

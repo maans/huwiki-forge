@@ -360,3 +360,6 @@
 .huwrep-note-settings-body .huwabc-instrument-hint{font-size:12px}
 .huwrep-compact-header > .huwrep-video-play{order:2;white-space:nowrap;overflow:hidden}
 @media print{.huwrep-note-settings{display:none!important}}
+
+/* Keep the print choices clear without unloading a playing video. */
+body:has(.huwrep-note-settings[open]) .huwabc-mini-mixer{visibility:hidden}
