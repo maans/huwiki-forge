@@ -1,6 +1,6 @@
 {
-  "version": "0.3.15",
+  "version": "0.3.16",
   "description": "Repertoire, nodebog, stiknoder, stemmer og PDF / Repertoire, tune book, cue sheets, parts and PDF",
-  "modified": "20261128014500000",
+  "modified": "20261128020000000",
   "dependents": "$:/plugins/huwiki/abc"
 }
