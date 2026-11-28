@@ -141,6 +141,7 @@ async function drawnBookFixture(){
  f.wiki.addTiddler(new Tiddler(notation));
  const orch=f.model.orchestra(f.wiki,'Birdland'),item=f.model.addItem(f.wiki,orch,notation.title).title,set=f.model.createSetlist(f.wiki,orch,'Concert');f.model.setEntries(f.wiki,set,[item]);
  const instrumentView={};runInNewContext(await readFile(new URL('../plugins/abc/src/instrument-view.js',import.meta.url),'utf8'),{exports:instrumentView,require:()=>({language:()=> 'da'})});
+ const mixerCalls=[],miniMixer={show(){mixerCalls.push('show');},selectTab(tab){mixerCalls.push(tab);},togglePlayback(){mixerCalls.push('play');},destroy(){}};
  const scoreInstances=[],bookExports={};function Widget(){}
  function Score(tree){this.title=tree.attributes.tiddler.value;scoreInstances.push(this);}
  Score.prototype.render=function(host){const body=f.doc.createElement('div');body.className='test-abc-score';body.textContent='ABC rendered from '+this.title;host.appendChild(body);this._pager={element:body,info:()=>({count:2,page:1,shown:2}),next(){},previous(){},go(){}};};
@@ -152,6 +153,7 @@ async function drawnBookFixture(){
   if(name.endsWith('/pdf-score.js'))return f.pdf;
   if(name.endsWith('/youtube-video.js'))return video;
   if(name.endsWith('/instrument-view.js'))return instrumentView;
+  if(name.endsWith('/floating-mixer.js'))return {mount(){mixerCalls.push('mount');return miniMixer;}};
   if(name.endsWith('/score-widget.js'))return {'huwiki-abc':Score};
   if(name.endsWith('/print.js'))return {cueLabel:()=> 'Stiknoder'};
   if(name.endsWith('/live-score.js'))return {apply:(_ABC,source)=>({source})};
@@ -160,7 +162,7 @@ async function drawnBookFixture(){
  const book=Object.create(bookExports['huwiki-repertoire-book'].prototype);
  Object.assign(book,{wiki:f.wiki,document:f.doc,_win:f.win,host:f.host,children:[],activeItem:item,setlistTitle:set,preference:'spread',practiceEnabled:false,practiceMetronome:false,practiceMuteByItem:Object.create(null),practiceOpen:false});
  function state(data){const frame=f.host.querySelector('iframe');for(const fn of [...f.listeners.get('message')||[]])fn({data,source:frame?.contentWindow,origin:'https://example.test'});}
- return {...f,book,item,set,notation,scoreInstances,state};
+ return {...f,book,item,set,notation,scoreInstances,state,mixerCalls};
 }
 
 test('switching ABC to YouTube stops its audio engine and switching back unloads the video',async()=>{
@@ -356,4 +358,14 @@ test('notation settings stay behind one icon, offer capo/key/TAB, and replace th
  const key=menu.querySelector('.huwabc-key-select');key.value='2';key.dispatch('change');
  assert.equal(capo.value,'4');assert.equal(key.value,'2');assert.equal(f.wiki.getTiddler('Four Brothers').fields['abc-source'],before);
  const controls=f.book._notationControls;f.book.disposeScore();assert.equal(controls.element.parentNode,null);
+});
+
+
+test('PDF play always selects YouTube before toggling, including after inspecting empty ABC tabs',async()=>{
+ const f=await drawnBookFixture(),t=f.wiki.getTiddler('Four Brothers');
+ f.wiki.addTiddler(new Tiddler({...t.fields,'abc-source':'','repertoire-youtube':'https://youtu.be/abcdefghijk'}));
+ f.book.draw();const play=f.host.querySelector('.huwrep-video-play');assert.ok(play);
+ play.click();assert.deepEqual(f.mixerCalls.slice(-2),['youtube','play']);
+ f.book._videoMixer.selectTab('voices');play.click();assert.deepEqual(f.mixerCalls.slice(-2),['youtube','play']);
+ f.book.disposeScore();
 });

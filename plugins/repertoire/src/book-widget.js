@@ -619,7 +619,7 @@ Book.prototype.draw=function(){
  this._performance=Performance.create(this,notation,audioView);host.insertBefore(this._performance.element,stage);
  // Playback opens the mixer; no separate toolbar button is needed.
  if(!audioView){
-  var videoPlay=icon(doc,"Afspil · YouTube","▶",function(){self.openMiniMixer(videoPlay);if(self._videoMixer)self._videoMixer.togglePlayback();},"huwrep-video-play");
+  var videoPlay=icon(doc,"Afspil · YouTube","▶",function(){self.openMiniMixer(videoPlay);if(self._videoMixer){self._videoMixer.selectTab("youtube");self._videoMixer.togglePlayback();}},"huwrep-video-play");
   toolbar.insertBefore(videoPlay,settings);
  }
  var noteMenu=el(doc,"details","huwrep-note-settings"),noteSummary=el(doc,"summary","","♯");
