@@ -6,7 +6,7 @@ for(const name of (await readdir(new URL('src/',root))).filter(name=>name.endsWi
  if(!title?.startsWith(plugin.title+'/')||!moduleType)throw Error('Invalid module '+name);
  payload.tiddlers[title]={title,type:'application/javascript','module-type':moduleType,text};
 }
-plugin.version='0.2.10-test.1';plugin.text=JSON.stringify(payload);
+plugin.version='0.2.11-test.1';plugin.text=JSON.stringify(payload);
 const next=JSON.stringify(plugin,null,2)+'\n';
 if(process.argv.includes('--check')){if(next!==original)throw Error('Publisher bundle is stale');}else await writeFile(target,next);
 console.log('PDF Publisher',plugin.version);

@@ -30,6 +30,7 @@ var FloatingMixer=require('$:/plugins/huwiki/abc/floating-mixer.js');
 // It creates only the controls it needs; a full editor/player is never mounted.
 exports.mount=function(host,options){
  options=options||{};
+ var instrumentView=options.instrumentView||InstrumentView;
  var ABC=options.ABC,fields=options.fields||{},source=String(options.source||'');
  if(!host||!ABC)throw new Error('Nodebiblioteket er ikke klar.');
  var doc=host.ownerDocument||document,closed=false,controller=null,visual=null;
@@ -55,7 +56,7 @@ exports.mount=function(host,options){
  if(controls)(externalControls?options.controlsHost:box).appendChild(controls);
  box.appendChild(paper);box.appendChild(status);host.appendChild(box);
  if(options.follow&&controls&&controls.parentNode===box)box.insertBefore(paper,controls);
- var pager=options.paged?PageView.mount(paper,{wiki:options.wiki,state:options.state,title:fields.title||"",audio:options.audio!==false,transport:function(){return controls;}}):null;
+ var pager=options.paged?PageView.mount(paper,{instrumentView:instrumentView,wiki:options.wiki,state:options.state,title:fields.title||"",audio:options.audio!==false,transport:function(){return controls;}}):null;
  function show(message,error){
   if(!alive())return;
   status.textContent=message?text(message):'';status.hidden=!message;
@@ -141,13 +142,13 @@ exports.mount=function(host,options){
     var charAttr=overviewChord.getAttribute('data-huwabc-source-char');
     if(charAttr!==null)cueStart(Number(charAttr),overviewChord,null);
     var overNotes=Accompaniment.rhythmAudition(visual,charAttr===null?NaN:Number(charAttr));
-    if(overNotes!==null)audition(overNotes,'Akkordlyd:');else if(overHarmony)audition(InstrumentView.soundingPitches(overHarmony.pitches),'Akkordlyd:');
+    if(overNotes!==null)audition(overNotes,'Akkordlyd:');else if(overHarmony)audition(instrumentView.soundingPitches(overHarmony.pitches),'Akkordlyd:');
    }else if(chord){
     var harmony=ChordKeys.parse(chord.textContent);if(!harmony){show('Akkorden kunne ikke læses.',true);return;}
     var element=sourceElement(chord),sourceChar=element&&element.startChar;
     cueStart(typeof sourceChar==='number'?sourceChar:null,chord,element&&element.currentTrackMilliseconds);
     var chordNotes=Accompaniment.rhythmAudition(visual,sourceChar);
-    audition(chordNotes!==null?chordNotes:InstrumentView.soundingPitches(harmony.pitches),'Akkordlyd:');
+    audition(chordNotes!==null?chordNotes:instrumentView.soundingPitches(harmony.pitches),'Akkordlyd:');
    }else{
     var start=Number(tab.getAttribute('data-huwabc-tab-source')),midi=Number(tab.getAttribute('data-huwabc-tab-midi'));
     cueStart(Number.isFinite(start)?start:null,tab,null);
@@ -264,14 +265,14 @@ exports.mount=function(host,options){
  }
  function render(){
   if(chordOverview){chordOverview.destroy();chordOverview=null;}
-  var tabView=Tabs.view(fields),tabConfig=tabView.config,tabEnabled=tabView.enabled,displayed=Display.presentation(source);
+  var tabView=Tabs.view(fields,instrumentView),tabConfig=tabView.config,tabEnabled=tabView.enabled,displayed=Display.presentation(source);
   var tabOptions=Tabs.options(ABC,displayed,tabEnabled,tabConfig),layout=fields['abc-layout']||'standard';
   var chordStyle=fields['abc-chords-style']||(options.wiki&&options.wiki.getTiddlerText?options.wiki.getTiddlerText('$:/config/huwiki/abc/chords-style','jazz'):'jazz');
   var jazzChords=chordStyle!=='standard',useJazz=fields['abc-font']==='petaluma';
    box.classList.toggle('huwabc-jazz-font',useJazz);
   // Respect explicit bars-per-line in chord charts as well as ordinary notation.
   var results=JazzFont.render(ABC,useJazz,function(){return ABC.renderAbc(paper,displayed,TransposedLayout.options(ABC,box,displayed,Object.assign({
-   visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options,responsive:'resize',staffwidth:720,scale:layout==='kompakt'?.88:1,jazzchords:jazzChords,
+   visualTranspose:instrumentView.current().semitones,tablature:tabOptions.options,responsive:'resize',staffwidth:720,scale:layout==='kompakt'?.88:1,jazzchords:jazzChords,
    format:JazzFont.formatFonts(useJazz,{stretchlast:true,gchordfont:useJazz?'PetalumaScript 20':jazzChords?'Helvetica 18 bold':'Helvetica 16'}),
    oneSvgPerLine:!!pager||!!viewport||showOverview,expandToWidest:true,add_classes:true,selectTypes:options.audio===false?false:undefined,selectionColor:'currentColor',clickListener:options.audio===false?undefined:noteClicked,
    wrap:{minSpacing:1.5,maxSpacing:2.8,preferredMeasuresPerLine:viewport?Math.max(2,Math.min(4,Number(options.followMeasures)||3)):layout==='jazz'?4:3},
@@ -279,7 +280,7 @@ exports.mount=function(host,options){
     SheetLayout.prepare(tune,fields,displayed);
     tune.formatting=tune.formatting||{};tune.formatting.staffsep=tabConfig.rhythm?145:90;if(tabConfig.rhythm)tune.formatting.sysstaffsep=120;
     Tabs.notation.project(ABC,tune,tabConfig,tabEnabled);
-    if(tabOptions.options.length)tune.tablatures=ABC.parseOnly(displayed,{visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options})[0].tablatures;
+    if(tabOptions.options.length)tune.tablatures=ABC.parseOnly(displayed,{visualTranspose:instrumentView.current().semitones,tablature:tabOptions.options})[0].tablatures;
     if(options.showTitle!==true){
      // Header/footer prose is presentation. Keep tempo, in-staff lyrics,
      // voice labels and every musical event unchanged.
@@ -338,7 +339,7 @@ exports.mount=function(host,options){
   else if(plan.live){if(controller&&controller.midiBuffer)controller.midiBuffer.setVolumes();if(drone)drone.configure();}
  }
  // Respect concert/written instrument changes made elsewhere without a toolbar.
- var stopInstrumentObserver=InstrumentView.observe(function(){
+ var stopInstrumentObserver=instrumentView.observe(function(){
   if(alive())update(fields,source,{score:true});
  });
  var api={element:box,pager:pager,controller:null,visual:null,destroy:destroy,update:update,openMixer:function(anchor){if(options.audio===false||closed)return false;ensureMiniMixer().show({anchor:anchor,floating:true});return true;},updateConfig:function(next){

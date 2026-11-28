@@ -6,10 +6,9 @@ module-type: library
 (function(){
 'use strict';
 // The original ABC and every audio/accompaniment path stay at concert pitch.
-// This is intentionally a session-wide, non-persistent READING preference:
-// one choice applies to the four tunes without modifying a source tiddler.
+// Standalone ABC keeps its session preference. Repertoire readers create their
+// own view so one song's capo/key/TAB never changes another song's notation.
 var I18n=require('$:/plugins/huwiki/abc/i18n.js');
-var active='c',subscribers=[],preferences={capo:null,tab:null,transpose:0};
 var profiles={
  c:{id:'c',button:'C',labelDa:'C · klingende',labelEn:'C · concert pitch',printDa:'C · klingende noder',printEn:'C · concert pitch',semitones:0},
  bb:{id:'bb',button:'B♭',labelDa:'B♭ · sopransax',labelEn:'B♭ · soprano sax',printDa:'B♭ · sopransaxofon',printEn:'B♭ · soprano saxophone',semitones:2},
@@ -34,8 +33,15 @@ strings.forEach(function(s){
  stringOptions.push(s);
  if(registerInstruments.includes(s[0]))stringOptions.push([s[0]+'-low',s[1]+' · oktav ned',s[2]+' · octave down']);
 });
+function create(initial,onSave){
+ initial=initial||{};
+ var active=profiles[initial.id]?initial.id:'c',subscribers=[],preferences={capo:null,tab:null,transpose:0};
+ if(Number.isInteger(initial.capo)&&initial.capo>=0&&initial.capo<=8)preferences.capo=initial.capo;
+ if(Number.isInteger(initial.transpose)&&initial.transpose>=-11&&initial.transpose<=11)preferences.transpose=initial.transpose;
+ if(initial.tab==='off'||stringOptions.some(function(s){return s[0]===initial.tab;}))preferences.tab=initial.tab;
+function snapshot(){return {id:active,capo:preferences.capo,tab:preferences.tab,transpose:preferences.transpose};}
 function current(){return Object.assign({},profiles[active],{semitones:profiles[active].semitones-(preferences.capo||0)+preferences.transpose,transpose:preferences.transpose,capo:preferences.capo,tab:preferences.tab});}
-function notifyAll(){subscribers.slice().forEach(function(fn){fn();});}
+function notifyAll(){if(onSave)onSave(snapshot());subscribers.slice().forEach(function(fn){fn();});}
 function setCapo(value){value=Number(value);if(!Number.isInteger(value)||value<0||value>8||preferences.capo===value)return false;preferences.capo=value;notifyAll();return true;}
 function setTranspose(value){value=Number(value);if(!Number.isInteger(value)||value < -11||value > 11||value===preferences.transpose)return false;preferences.transpose=value;notifyAll();return true;}
 function setTab(value){if(value!=='off'&&!stringOptions.some(function(s){return s[0]===value;})||preferences.tab===value)return false;preferences.tab=value;notifyAll();return true;}
@@ -82,7 +88,8 @@ function mount(host,options){
   instrument.title=label(profiles[active],lang());
   instrument.style.width=Math.max(72,Math.min(170,profiles[active].button.length*8+38))+'px';
   capo.style.width='112px';
-  tab.style.width=(preferences.tab&&preferences.tab!=='off'?Math.min(245,Math.max(150,tab.options[tab.selectedIndex].textContent.length*7+35)):96)+'px';
+  var tabChoice=stringOptions.find(function(s){return s[0]===preferences.tab;});
+  tab.style.width=(tabChoice?Math.min(245,Math.max(150,tabChoice[english?2:1].length*7+77)):96)+'px';
   instrument.setAttribute('aria-label',english?'Written instrument':'Instrumentnoder');
   tab.setAttribute('aria-label',english?'Tablature instrument':'Tabulaturinstrument');
   [instrument,capo,tab].forEach(function(n){n.setAttribute('data-active',String(n.value!=='c'&&n.value!=='0'&&n.value!=='off'));});
@@ -101,11 +108,10 @@ function observe(callback){
  subscribers.push(callback);
  return function(){var at=subscribers.indexOf(callback);if(at>=0)subscribers.splice(at,1);};
 }
-exports.observe=observe;exports.setTranspose=setTranspose;exports.setCapo=setCapo;exports.setTab=setTab;
-exports.current=current;exports.change=change;exports.mount=mount;exports.soundingPitches=soundingPitches;
-exports.profiles=profiles;
+var view={observe:observe,setTranspose:setTranspose,setCapo:setCapo,setTab:setTab,
+ current:current,change:change,mount:mount,soundingPitches:soundingPitches,snapshot:snapshot,profiles:profiles};
 function keyName(k){return k&&k.root?k.root+(k.acc||'').replace(/#/g,'♯').replace(/b/g,'♭')+(k.mode==='m'?'m':k.mode?' '+k.mode:''):'';}
-exports.notationStatus=function(wiki,concert,written){
+view.notationStatus=function(wiki,concert,written){
  var v=current(),a=keyName(concert),b=keyName(written);if(!v.semitones||!a||!b)return '';
  var parts=[],en=language(wiki)==='en';
  if(active!=='c')parts.push(profiles[active].button);
@@ -114,6 +120,9 @@ exports.notationStatus=function(wiki,concert,written){
  parts.push((en?'Notes: ':'Noder: ')+b,(en?'Sounds: ':'Klinger: ')+a);
  return parts.join(' · ');
 };
-exports.printLabel=function(wiki){return (active==='c'&&preferences.capo?(language(wiki)==='en'?'Capo shapes':'Capogreb'):label(current(),language(wiki),'print'))+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.transpose?' · '+(preferences.transpose>0?'+':'')+preferences.transpose:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+stringOptions.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
+view.printLabel=function(wiki){return (active==='c'&&preferences.capo?(language(wiki)==='en'?'Capo shapes':'Capogreb'):label(current(),language(wiki),'print'))+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.transpose?' · '+(preferences.transpose>0?'+':'')+preferences.transpose:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+stringOptions.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
+return view;
+}
+Object.assign(exports,create());exports.create=create;
 })();
 

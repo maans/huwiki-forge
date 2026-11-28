@@ -137,6 +137,7 @@ ABCWidget.prototype.onDestroy=function(){if(this._reader){this._reader.destroy()
 ABCWidget.prototype.render=function(parent,nextSibling){
   if(this._audioController||this._minimalPlayer)this.onDestroy();
   this.parentDomNode=parent;this.computeAttributes();this.execute();
+  if(!this._instrumentView){var written=this.getVariable('huwabc-notation-settings','');if(written)try{this._instrumentView=InstrumentView.create(JSON.parse(written));}catch(ignore){}}
   // Native TiddlyWiki static exports use FakeDom. Emit a self-contained reader
   // instead of starting an asynchronous editor widget in the live document.
   if(this.document.isTiddlyWikiFakeDom||this.getVariable('tv-config-static')==='yes'){
@@ -154,7 +155,7 @@ ABCWidget.prototype.render=function(parent,nextSibling){
   this._localeObserver=I18n.observe(host,this.wiki);
 };
 ABCWidget.prototype.draw=function(){
-  var self=this,host=this.host;if(!host)return;
+  var self=this,host=this.host,instrumentView=this._instrumentView||InstrumentView;if(!host)return;
   if(this._reader){this._readerState=this._reader.snapshot();this._reader.destroy();this._reader=null;}
   if(this._pianoFollow){this._pianoFollow.destroy();this._pianoFollow=null;}if(this._pager){this._pager.destroy();this._pager=null;}
   var renderToken=++this._renderToken,tuneRevision=0;
@@ -219,7 +220,7 @@ ABCWidget.prototype.draw=function(){
     if(tab){var tabStart=Number(tab.getAttribute('data-huwabc-tab-source')),tabMidi=Number(tab.getAttribute('data-huwabc-tab-midi'));cueStart(Number.isFinite(tabStart)?tabStart:null,tab,null);if(tab.hasAttribute('data-huwabc-tab-midi')&&Number.isFinite(tabMidi))auditionNotes([tabMidi]).catch(function(e){showStatus('Nodelyd: '+e.message,true);});return;}
     var target=event.target&&event.target.closest&&event.target.closest('.abcjs-chord');if(!target)return;
     var chord=chordKeys.parse(target.textContent);if(!chord){showStatus('Kan ikke vise denne akkord på klaviaturet.',true);return;}
-    var chordConcertPitches=InstrumentView.soundingPitches(chord.pitches);
+    var chordConcertPitches=instrumentView.soundingPitches(chord.pitches);
     pianoDetails.open=true;ensurePiano();pianoFollow.explain(chordConcertPitches,(I18n.language(self.wiki)==='da'?'Becifring: ':'Chord symbol: ')+chord.name);
     if(audio.classList.contains('huwabc-playing'))floatingPiano.show(target);
     var selectable=visual&&visual.findSelectableElement&&visual.findSelectableElement(target),chordElement=selectable&&selectable.element&&selectable.element.absEl&&selectable.element.absEl.abcelem;
@@ -390,10 +391,10 @@ ABCWidget.prototype.draw=function(){
       var jazzChords=chordStyle!=="standard";
       var displayed=Display.presentation(text);
       if(!self.editing&&self.getAttribute('preview')!=='yes')displayed=I18n.localizedSource(displayed,t.fields,I18n.language(self.wiki));
-      var tabView=tabs.view(self.wiki.getTiddler(self.title).fields),tabConfig=tabView.config;
+      var tabView=tabs.view(self.wiki.getTiddler(self.title).fields,instrumentView),tabConfig=tabView.config;
       var tabOptions=tabs.options(ABC,displayed,tabView.enabled,tabConfig);
       tabControls.availability(tabOptions.options.length>0);
-      var useJazz=self.wiki.getTiddler(self.title).fields['abc-font']==='petaluma';var result=jazzFont.render(ABC,useJazz,function(){return ABC.renderAbc(into,displayed,TransposedLayout.options(ABC,host,displayed,Object.assign({visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options,clickListener:function(abcElem,tuneNo,classes,analysis,drag,event){
+      var useJazz=self.wiki.getTiddler(self.title).fields['abc-font']==='petaluma';var result=jazzFont.render(ABC,useJazz,function(){return ABC.renderAbc(into,displayed,TransposedLayout.options(ABC,host,displayed,Object.assign({visualTranspose:instrumentView.current().semitones,tablature:tabOptions.options,clickListener:function(abcElem,tuneNo,classes,analysis,drag,event){
           if(event&&event.target&&event.target.closest&&event.target.closest('.abcjs-chord,[data-huwabc-tab-source]'))return;
           if(!abcElem)return;
           ensureCueData();
@@ -402,7 +403,7 @@ ABCWidget.prototype.draw=function(){
           if(pitches.length){pianoDetails.open=true;ensurePiano();pianoFollow.explain(pitches,I18n.language(self.wiki)==='da'?'Valgte toner':'Selected notes');if(audio.classList.contains('huwabc-playing'))floatingPiano.show(analysis&&analysis.selectableElement||event&&event.target);}
           cueStart(abcElem.startChar,analysis&&analysis.selectableElement||event&&event.target,abcElem.currentTrackMilliseconds);
           auditionNotes(abcElem.midiPitches).catch(function(e){showStatus('Nodelyd: '+e.message,true);});
-         },afterParsing:function(tune){sheetLayout.prepare(tune,self.wiki.getTiddler(self.title).fields,displayed);tune.formatting.staffsep=tabConfig.rhythm?145:90;if(tabConfig.rhythm)tune.formatting.sysstaffsep=120;tabs.notation.project(ABC,tune,tabConfig,tabView.enabled);if(tabOptions.options.length)tune.tablatures=ABC.parseOnly(displayed,{visualTranspose:InstrumentView.current().semitones,tablature:tabOptions.options})[0].tablatures;},responsive:"resize",staffwidth:720,scale:layout==="kompakt"?0.88:1,jazzchords:jazzChords,format:jazzFont.formatFonts(useJazz,{stretchlast:true,gchordfont:useJazz?"PetalumaScript 20":jazzChords?"Helvetica 18 bold":"Helvetica 16"}),add_classes:true,oneSvgPerLine:true,expandToWidest:true,wrap:{minSpacing:1.5,maxSpacing:2.8,preferredMeasuresPerLine:layout==="jazz"?4:3}},sheetLayout.options(ABC,displayed,self.wiki.getTiddler(self.title).fields))));});
+         },afterParsing:function(tune){sheetLayout.prepare(tune,self.wiki.getTiddler(self.title).fields,displayed);tune.formatting.staffsep=tabConfig.rhythm?145:90;if(tabConfig.rhythm)tune.formatting.sysstaffsep=120;tabs.notation.project(ABC,tune,tabConfig,tabView.enabled);if(tabOptions.options.length)tune.tablatures=ABC.parseOnly(displayed,{visualTranspose:instrumentView.current().semitones,tablature:tabOptions.options})[0].tablatures;},responsive:"resize",staffwidth:720,scale:layout==="kompakt"?0.88:1,jazzchords:jazzChords,format:jazzFont.formatFonts(useJazz,{stretchlast:true,gchordfont:useJazz?"PetalumaScript 20":jazzChords?"Helvetica 18 bold":"Helvetica 16"}),add_classes:true,oneSvgPerLine:true,expandToWidest:true,wrap:{minSpacing:1.5,maxSpacing:2.8,preferredMeasuresPerLine:layout==="jazz"?4:3}},sheetLayout.options(ABC,displayed,self.wiki.getTiddler(self.title).fields))));});
       if(!result || !result.length){showStatus("Kunne ikke danne noder. Kontrollér ABC-teksten.",true);return null;}
       result[0]._huwabcConcertKey=ABC.parseOnly(text)[0].getKeySignature();
       var tabWarning=tabOptions.options.length?tabs.finish(result[0],tabConfig):'';
@@ -436,7 +437,7 @@ ABCWidget.prototype.draw=function(){
   if(this.getAttribute("preview")!=="yes")actions.appendChild(button("Redigér noder",function(){openEditor("notes");},"huwabc-primary"));
   actions.appendChild(button("PDF / Udskriv",function(){
     if(!score.querySelector("svg")){showStatus("Der er endnu ingen noder at udskrive.",true);return;}
-    if(!self._pager||!self._pager.openPrintPreview(jazzFont.css(),InstrumentView.printLabel(self.wiki)))
+    if(!self._pager||!self._pager.openPrintPreview(jazzFont.css(),instrumentView.printLabel(self.wiki)))
       showStatus("Der er endnu ingen noder at udskrive.",true);
   }));
   actions.appendChild(button(I18n.language(self.wiki)==="en"?"Cue sheets and parts":"Stiknoder og stemmer",function(){
@@ -469,13 +470,13 @@ ABCWidget.prototype.draw=function(){
   }catch(e){showStatus((I18n.language(self.wiki)==='da'?'Site-afspiller: ':'Site player: ')+e.message,true);}},"huwabc-site-export"));
   // Player is a permanent part of the music sheet – no separate tab or "Lyt" button.
   host.appendChild(score);host.appendChild(audio);host.appendChild(quickSettings);host.appendChild(settingsPanel);host.appendChild(learn);
-  self._pager=PageView.mount(score,{wiki:self.wiki,state:self._viewState,title:self.title,audio:true,transport:function(){return audioControls;},onDesk:function(){floatingPiano.hide();}});
+  self._pager=PageView.mount(score,{instrumentView:instrumentView,wiki:self.wiki,state:self._viewState,title:self.title,audio:true,transport:function(){return audioControls;},onDesk:function(){floatingPiano.hide();}});
   // One shared musician view for stand-alone ABC scores and embedded notation.
   // Switching it changes only CSS/controls; it never recreates the score or player.
   self._reader=ReaderMode.mount({host:host,paper:score,actions:actions,title:self.title,
     pager:function(){return self._pager;},state:self._readerState,
     onEdit:this.getAttribute("preview")==="yes"?null:function(){return openEditor("notes");}});
-  self._instrumentViewControls=InstrumentView.mount(instrumentBar,{wiki:self.wiki,onChange:function(){
+  self._instrumentViewControls=instrumentView.mount(instrumentBar,{wiki:self.wiki,onChange:function(){
    if(!ABC)return;
    var restore=ViewportAnchor.capture(score,visual,host);
    clearCue();clearFollow(true);
@@ -696,7 +697,7 @@ ABCWidget.prototype.drawMinimal=function(tiddler,source,renderToken){
   minimalABC=ABC;var prepared=ScoreView.prepare(ABC,tools.getSource(self.wiki,self.title),current.fields,view);
   var displayed=I18n.localizedSource(prepared.source,prepared.fields,I18n.language(self.wiki));
   body.textContent='';
-  self._minimalPlayer=MinimalPlayer.mount(body,{ABC:ABC,source:displayed,fields:prepared.fields,wiki:self.wiki,audio:view.audio,showTitle:view.showTitle,
+  self._minimalPlayer=MinimalPlayer.mount(body,{instrumentView:self._instrumentView||InstrumentView,ABC:ABC,source:displayed,fields:prepared.fields,wiki:self.wiki,audio:view.audio,showTitle:view.showTitle,
    controlsHost:self._minimalControlsHost,shortcutHost:host,paged:self._standaloneView&&!view.range&&view.view!=='follow'&&view.view!=='chords',state:self._viewState,follow:view.view==='follow'||view.view==='chords',followChordsOnly:view.view==='chords',followChords:view.chords,followChordVoice:view.chordVoice,followVoice:view.voice,followMeasures:view.measures,swing:self._viewAttributes.swing,
    sidebarMixer:self._standaloneView,mixerButton:self._standaloneView||view.mixer||!!host.closest(".huwrep-book"),mixerTitle:self.title,
    onMixerChange:function(next){var saved=self.wiki.getTiddler(self.title);if(saved)self.wiki.addTiddler(new $tw.Tiddler(saved,{'abc-accompaniment':JSON.stringify(accompaniment.clean(next))}));},

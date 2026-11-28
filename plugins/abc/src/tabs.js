@@ -34,8 +34,8 @@ function parseTuning(value){
 function clean(c){c=c||{};var preset=presets[c.preset]?c.preset:'custom',tuning=c.tuning||presets.guitar.tuning,notes=parseTuning(tuning),capo=Number(c.capo||0);if(!Number.isInteger(capo)||capo<0||capo>12)throw new Error('Capo skal være et helt tal fra 0 til 12.');return {rhythm:c.rhythm===true,notation:['auto','guitar','bass','source'].includes(c.notation)?c.notation:'auto',preset:preset,tuning:tuning.trim().replace(/\s+/g,' '),capo:capo,notes:notes,notationExplicit:c.notationExplicit===true};}
 function read(fields){var c;try{c=JSON.parse(fields['abc-tabs-config']||'null');}catch(_){c=null;}// Migrate the v0.3.0–0.3.4 automatic 'source' fallback without overriding an explicit user choice.
  if(c&&c.notation==='source'&&!c.notationExplicit)c.notation='auto';try{return clean(c||{preset:'guitar',tuning:presets.guitar.tuning,notation:'auto'});}catch(_){return clean({preset:'guitar',tuning:presets.guitar.tuning,notation:'auto'});}}
-function view(fields){
- var c=read(fields),v=InstrumentView.current(),enabled=fields['abc-tabs']==='yes';
+function view(fields,instrumentView){
+ var c=read(fields),v=(instrumentView||InstrumentView).current(),enabled=fields['abc-tabs']==='yes';
  if(v.tab!==null){enabled=v.tab!=='off';if(enabled){
   var preset=v.tab.replace(/-low$/,'');
   c=clean(Object.assign({},c,{preset:preset,tuning:presets[preset].tuning,notation:'auto'}));

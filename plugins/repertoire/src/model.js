@@ -199,6 +199,22 @@ function overrides(setlist){
   return data&&typeof data==="object"&&!Array.isArray(data)?data:{};
  }catch(_e){return {};}
 }
+// Written notation belongs to this entry, independently of concert agreements.
+function notationSettings(wiki,setlistTitle,itemTitle){
+ var set=wiki.getTiddler(setlistTitle||''),record=set?overrides(set)[itemTitle]:null;
+ if(!set){var t=wiki.getTiddler('$:/config/huwiki/repertoire/notation/'+encodeURIComponent(itemTitle));try{record={notation:JSON.parse(t&&t.fields.text||'{}')};}catch(ignore){}}
+ var value=record&&record.notation;
+ return value&&typeof value==='object'&&!Array.isArray(value)?Object.assign({},value):{};
+}
+function setNotationSettings(wiki,setlistTitle,itemTitle,value){
+ var set=wiki.getTiddler(setlistTitle||'');
+ if(!set){wiki.addTiddler(new $tw.Tiddler({title:'$:/config/huwiki/repertoire/notation/'+encodeURIComponent(itemTitle),type:'application/json',text:JSON.stringify(value)}));return;}
+ if(entries(wiki,setlistTitle).indexOf(itemTitle)<0)throw Error('Nummeret findes ikke i denne nodemappe.');
+ var changes=overrides(set),next=Object.assign({},changes[itemTitle]||{});
+ next.notation=Object.assign({},value);changes[itemTitle]=next;
+ update(wiki,set,{'repertoire-overrides':JSON.stringify(changes)});
+}
+exports.notationSettings=notationSettings;exports.setNotationSettings=setNotationSettings;
 // Read the score header without modifying the original music tiddler.
 // A K: field describes the notated key signature; do not guess a concert key from the title.
 function sourceAgreement(wiki,itemTitle,setlistTitle){
@@ -281,4 +297,5 @@ exports.baseline=baseline;
 exports.effective=effective;
 exports.saveArrangement=saveArrangement;
 })();
+
 

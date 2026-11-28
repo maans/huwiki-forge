@@ -38,7 +38,7 @@ function open(wiki,setlistTitle,widget,options){
  if(!wiki.getTiddler(publisher))return {error:(site?"SitePublisher":"PDF Publisher")+" er ikke installeret i wikien."};
  // Default to the same written view as the reader, including capo, TAB and key.
  var instrument=null;try{instrument=require("$:/plugins/huwiki/abc/instrument-view.js");}catch(ignore){}
- var current=instrument&&typeof instrument.current==="function"?instrument.current():{id:"c"};
+ var current=widget._instrumentView?widget._instrumentView.current():instrument&&typeof instrument.current==="function"?instrument.current():{id:"c"};
  var instrumentId=instrument&&instrument.profiles&&instrument.profiles[options.instrumentId]?options.instrumentId:
   /^(c|bb|eb|ebalto)$/.test(options.instrumentId)?options.instrumentId:current.id;
  var instrumentName=instrument&&typeof instrument.printLabel==="function"&&instrumentId===current.id?instrument.printLabel(wiki):
@@ -46,17 +46,23 @@ function open(wiki,setlistTitle,widget,options){
  var orch=wiki.getTiddler(set.fields["orchestra-title"]),orchName=orch&&(orch.fields.name||orch.fields.title)||"Repertoire",setName=set.fields.name||set.fields.title;
  var entries=model.entries(wiki,setlistTitle).map(function(id,index){
   var item=wiki.getTiddler(id),title=item&&item.fields["music-title"]||id;
-  return {number:index+1,title:title,shortTitle:shortTitle(title,orchName),agreement:model.effective(wiki,setlistTitle,id),source:scores&&!site?printSource(wiki,setlistTitle,id):null};
+  var source=scores&&!site?printSource(wiki,setlistTitle,id):null;
+  if(source&&source.format==='abc'){
+   source.notation=Object.assign({id:instrument&&instrument.current?instrument.current().id:current.id,capo:null,tab:null,transpose:0},model.notationSettings(wiki,setlistTitle,id));
+   if(options.instrumentId&&options.instrumentId!=='current')source.notation.id=instrumentId;
+  }
+  return {number:index+1,title:title,shortTitle:shortTitle(title,orchName),agreement:model.effective(wiki,setlistTitle,id),source:source};
  });
  var missing=entries.filter(function(e){return e.source&&e.source.missing;});
  if(missing.length)return {error:"Sættets PDF kan ikke dannes, fordi der mangler noder eller tekst til: "+missing.map(function(e){return e.shortTitle;}).join(", ")+". Ingen numre er udeladt."};
  var prefix=ROOT+encodeURIComponent(setlistTitle)+"/"+(site?"site":scores?"nodebog":"saetliste")+"/"+instrumentId+"/";
  var summaryTitle=prefix+"summary",orderTitle=prefix+"order";
- var lines=["! "+clean(orchName)+" · "+clean(setName)+"\n",(scores&&!site?"''Nodebog til "+instrumentName+"''\n":""),"''"+entries.length+" numre''\n"];
+ var lines=["! "+clean(orchName)+" · "+clean(setName)+"\n",(scores&&!site?"''Nodebog · "+(!options.instrumentId||options.instrumentId==='current'?'hvert nummers nodeindstillinger':instrumentName)+"''\n":""),"''"+entries.length+" numre''\n"];
  entries.forEach(function(e){
   lines.push("\n!! "+(site?wikiLink(e.number,e.shortTitle,e.title):e.number+". "+clean(e.shortTitle))+"\n");
   var a=e.agreement;
   if(e.source)add(lines,"Udskriftsudgave",e.source.label+(e.source.format==="pdf"&&instrumentId!=="c"?" · original PDF, uden transponering":""));
+  if(e.source&&e.source.notation&&instrument&&instrument.create)add(lines,'Nodeindstillinger',instrument.create(e.source.notation).printLabel(wiki));
   if(a.key||a.tempo)lines.push("''"+[a.key?"Klingende toneart: "+clean(a.key):"",a.tempo?"Tempo: "+clean(a.tempo):""].filter(Boolean).join(" · ")+"''\n");
   add(lines,"Form",a.form);add(lines,"Instrumentering",a.instrumentation);add(lines,"Indsatser og tegn",a.cues);
  });

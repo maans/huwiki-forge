@@ -342,7 +342,7 @@ function isAbcScoreTitle(title){
 }
 function liveScoreRoot(scope){
  if(!scope)return null;
- var roots=scope.querySelectorAll('.huwabc-score.huwabc-standalone .huwabc-paginated');
+ var roots=scope.querySelectorAll('.huwabc-score .huwabc-paginated');
  for(var i=0;i<roots.length;i++)if(roots[i]._huwabcPager && roots[i].querySelectorAll('.huwabc-page').length)return roots[i];
  return null;
 }
@@ -411,9 +411,10 @@ function attachScoreAgreements(pages,geom,details){
   wrap.appendChild(svg);group.body.appendChild(wrap);
  });
 }
-async function renderAbcChapter(title,progress,pageOffset,autoFacing,countOnly,repertoireAgreements){
+async function renderAbcChapter(title,progress,pageOffset,autoFacing,countOnly,repertoireAgreements,notation){
  var modules=abcExportModules();if(!modules)return null;
- var frame=findFrame(title),root=liveScoreRoot(frame),holder=null;
+ var frame=findFrame(title),root=notation?null:liveScoreRoot(frame),holder=null,widget=null;
+ var written=notation&&modules.instrument.create?modules.instrument.create(notation):modules.instrument;
  try{
   if(!root){
    // The score may be closed. Render a full score offscreen, not static
@@ -422,8 +423,8 @@ async function renderAbcChapter(title,progress,pageOffset,autoFacing,countOnly,r
    holder.style.cssText='position:absolute;left:-10000px;top:0;width:950px;visibility:hidden;pointer-events:none;z-index:-1';
    document.body.appendChild(holder);
    var safe=String(title).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-   var parser=$tw.wiki.parseText('text/vnd.tiddlywiki','<$huwiki-abc tiddler="'+safe+'"/>');
-   var widget=$tw.wiki.makeWidget(parser,{document:document,parentWidget:$tw.rootWidget,variables:{currentTiddler:title,storyTiddler:title}});
+   var parser=$tw.wiki.parseText('text/vnd.tiddlywiki','<$huwiki-abc tiddler="'+safe+'" view="full"/>');
+   widget=$tw.wiki.makeWidget(parser,{document:document,parentWidget:$tw.rootWidget,variables:{currentTiddler:title,storyTiddler:title,'huwabc-notation-settings':notation?JSON.stringify(notation):''}});
    widget.render(holder,null);
    // The ABC widget finishes rendering asynchronously. Never fall back to
    // a screenshot of just its first visible page if the full pages fail.
@@ -442,12 +443,12 @@ async function renderAbcChapter(title,progress,pageOffset,autoFacing,countOnly,r
   // The arranger can read the real number of score pages without creating a PDF.
   if(countOnly)return {images:[],pages:pageNodes.length,needsFacingBlank:false};
   if(progress)progress('ABC '+title+' ('+pageNodes.length+')');
-  var label=modules.instrument.printLabel($tw.wiki),fontCss=modules.jazz.css();
+  var label=written.printLabel($tw.wiki),fontCss=modules.jazz.css();
   var needsFacingBlank=!!autoFacing && pageNodes.length===2 && pageOffset%2===0;
   var folioOffset=pageOffset+(needsFacingBlank?1:0);
   return {images:await modules.pdf.renderImages(pageNodes,geom,label,fontCss,folioOffset),
    pages:pageNodes.length,needsFacingBlank:needsFacingBlank};
- }finally{if(holder)holder.remove();}
+ }finally{if(widget)(function dispose(node){(node.children||[]).forEach(dispose);if(node.onDestroy)node.onDestroy();})(widget);if(holder)holder.remove();}
 }
 async function renderSelectedChapter(title,progress,pageOffset,autoFacing,countOnly,agreements,sources){
  var selected=sources&&sources[title];
@@ -465,7 +466,7 @@ async function renderSelectedChapter(title,progress,pageOffset,autoFacing,countO
   return null;
  }
  var mapped={};if(agreements&&agreements[title])mapped[sourceTitle]=agreements[title];
- return renderAbcChapter(sourceTitle,progress,pageOffset,autoFacing,countOnly,mapped);
+ return renderAbcChapter(sourceTitle,progress,pageOffset,autoFacing,countOnly,mapped,selected&&selected.notation);
 }
 async function createPublication(sections,contentsSection,ordered,progress,options){
  options=options||{};

@@ -55,17 +55,44 @@ test('selected source routing uses the alternative ABC and retains canonical mus
  const pdf=await render('Original',null,0,true,false,{},sources);assert.equal(pdf.source,'original.pdf');assert.equal(pdf.needsFacingBlank,true);
 });
 
-test('set PDF follows reader instrument, key, capo and TAB unless explicitly overridden',async()=>{
+test('set PDF follows each entry’s capo/key/TAB instead of copying the open reader to every song',async()=>{
  for(const id of ['c','bb','eb','tenor']){
-  const state={id,capo:3,tab:'mandolin',transpose:2};
-  const instrument={profiles:{c:{},bb:{},eb:{},tenor:{}},current:()=>state,
-   printLabel:()=>id+' · Capo 3 · Tab · Mandolin · +2'};
+  const instrument={};runInNewContext(await read('plugins/abc/src/instrument-view.js'),{exports:instrument,require:()=>({language:()=> 'da'})});
+  instrument.change(id);const state={id,capo:3,tab:'guitar',transpose:2};
   const f=await fixture(instrument),events=[],widget={dispatchEvent:e=>events.push(e)};
+  f.model.setNotationSettings(f.wiki,f.set,f.items[0],state);
+  widget._instrumentView=instrument.create(state);
+  f.wiki.addTiddler(new Tiddler({title:'Another ABC','abc-source':'X:1\nK:C\nC4|'}));
+  const another=f.model.addItem(f.wiki,f.orch,'Another ABC').title;f.model.addEntry(f.wiki,f.set,another);
   const result=f.printing.open(f.wiki,f.set,widget,{scores:true,instrumentId:'current'});
   assert.equal(events[0].paramObject.instrumentId,id);
-  assert.match(f.wiki.getTiddler(result.summary).fields.text,/Capo 3 · Tab · Mandolin · \+2/);
-  assert.deepEqual(state,{id,capo:3,tab:'mandolin',transpose:2});
+  const sources=JSON.parse(f.wiki.getTiddler(result.summary).fields['repertoire-publication-sources']);
+  assert.deepEqual(sources.Song.notation,state);
+  assert.deepEqual(sources['Another ABC'].notation,{id,capo:null,tab:null,transpose:0});
+  assert.match(f.wiki.getTiddler(result.summary).fields.text,/Capo 3/);
+  assert.deepEqual(state,{id,capo:3,tab:'guitar',transpose:2});
   f.printing.open(f.wiki,f.set,widget,{scores:true,instrumentId:'c'});
   assert.equal(events[1].paramObject.instrumentId,'c');
+  assert.equal(JSON.parse(f.wiki.getTiddler(result.summary).fields['repertoire-publication-sources']).Song.notation.capo,3);
  }
+});
+
+test('PDF chapters render their own notation even when another live score is already open',async()=>{
+ const js=await read('plugins/print-article/src/startup.js'),instrument={};
+ runInNewContext(await read('plugins/abc/src/instrument-view.js'),{exports:instrument,require:()=>({language:()=> 'da'})});
+ const calls=[],labels=[],holders=[],renderedRoot={querySelectorAll:()=>[{}]},oldLiveRoot={querySelectorAll:()=>[{},{}]};let disposed=0;
+ const modules={instrument,page:{geometry:()=>({name:'A4'}),safeClone:page=>page},jazz:{css:()=>''},pdf:{renderImages:async(pages,geom,label)=>{labels.push(label);return [{label}];}}};
+ const $tw={wiki:{getTiddler:()=>({fields:{}}),parseText:(type,text)=>text,makeWidget:(parser,options)=>{
+  calls.push({parser,options});return {render(holder){holder.root=renderedRoot;},onDestroy(){disposed++;}};
+ }}};
+ const E=()=>{const holder={style:{},remove(){this.removed=true;}};holders.push(holder);return holder;};
+ const start=js.indexOf('async function renderAbcChapter('),end=js.indexOf('async function renderSelectedChapter(',start);
+ const render=new Function('$tw','document','abcExportModules','findFrame','liveScoreRoot','E','attachScoreAgreements',js.slice(start,end)+';return renderAbcChapter;')($tw,{body:{appendChild(){}}},()=>modules,()=>({old:true}),scope=>scope.old?oldLiveRoot:scope.root,E,()=>{});
+ await render('First',null,0,false,false,{}, {id:'c',capo:3,transpose:2,tab:'guitar'});
+ await render('Second',null,1,false,false,{}, {id:'c',capo:null,transpose:0,tab:null});
+ assert.equal(calls.length,2);assert.match(calls[0].parser,/view="full"/);
+ assert.equal(JSON.parse(calls[0].options.variables['huwabc-notation-settings']).capo,3);
+ assert.equal(JSON.parse(calls[1].options.variables['huwabc-notation-settings']).capo,null);
+ assert.match(labels[0],/Capo 3/);assert.doesNotMatch(labels[1],/Capo/);
+ assert.equal(disposed,2);assert.ok(holders.every(holder=>holder.removed));assert.equal(instrument.current().capo,null);
 });

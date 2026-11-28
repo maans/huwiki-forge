@@ -435,6 +435,7 @@ Book.prototype.mountScore=function(scoreHost,sourceTitle,agreement,row,audioOnly
   var source=wiki.getTiddler(sourceTitle),f=source&&source.fields||{};
   var tree={type:"huwiki-abc",attributes:{tiddler:{type:"string",value:sourceTitle},view:{type:"string",value:f["repertoire-sheet-format"]==="chords"?"chords":"full"},embedded:{type:"string",value:"yes"},audio:{type:"string",value:"all"},"show-title":{type:"string",value:"no"}}};
   this._score=new Score(tree,{wiki:wiki,parentWidget:this,document:doc});
+  this._score._instrumentView=this._instrumentView;
   this._score._repertoireTransport=this._toolbar;
   this._score._repertoireSettings=this._performance.element;
   this._score._repertoireScore=function(ABC,abcSource){
@@ -475,6 +476,14 @@ Book.prototype.draw=function(){
  var set=this.pieceTitle?null:model.collection(wiki,this.setlistTitle),all=this.pieceTitle?[this.pieceTitle]:set?model.entries(wiki,this.setlistTitle):[];
  this._entries=all;this._previousPage=null;this._nextPage=null;
  if(all.indexOf(this.activeItem)<0)this.activeItem=all.length?all[0]:"";
+ this._instrumentView=null;
+ try{
+  var library=require('$:/plugins/huwiki/abc/instrument-view.js'),viewSet=this.pieceTitle?'':this.setlistTitle,viewItem=this.activeItem;
+  if(library.create)this._instrumentView=library.create(Object.assign({id:library.current().id},model.notationSettings(wiki,viewSet,viewItem)),function(value){
+   model.setNotationSettings(wiki,viewSet,viewItem,value);
+   var saved=viewSet&&wiki.getTiddler(viewSet);self._notationSavedSet=saved?JSON.stringify(saved.fields):null;
+  });
+ }catch(ignore){}
  var index=all.indexOf(this.activeItem);
  var toolbar=this._toolbar=el(doc,"header","huwrep-book-header huwrep-compact-header");host.appendChild(toolbar);
  toolbar.appendChild(icon(doc,"Nodemapper og numre","←",function(){
@@ -631,7 +640,8 @@ Book.prototype.draw=function(){
  noteMenu.addEventListener("keydown",function(event){if(event.key==="Escape"){noteMenu.open=false;noteSummary.focus();event.stopPropagation();}});
  if(notation.abc){
   var noteSource=wiki.getTiddler(notation.sourceTitle||source.fields.title),noteFields=noteSource&&noteSource.fields||{};
-  self._notationControls=require("$:/plugins/huwiki/abc/instrument-view.js").mount(noteBody,{wiki:wiki,key:noteFields["abc-key"]||(/^K:\s*(.+)$/m.exec(noteFields["abc-source"]||"")||[])[1]});
+  self._notationControls=(self._instrumentView||require("$:/plugins/huwiki/abc/instrument-view.js")).mount(noteBody,{wiki:wiki,key:noteFields["abc-key"]||(/^K:\s*(.+)$/m.exec(noteFields["abc-source"]||"")||[])[1]});
+  noteBody.appendChild(el(doc,'small','huwrep-muted',this.pieceTitle?'Kun dette nummer.':'Kun dette nummer i sættet.'));
   noteBody.appendChild(btn(doc,"Udskriv de viste noder",function(){
    var actions=self._score&&self._score.host&&self._score.host.querySelectorAll(".huwabc-actions button");
    var print=Array.from(actions||[]).find(function(b){return /PDF.*Udskriv|PDF.*Print/.test(b.textContent);});if(print)print.click();
@@ -716,6 +726,11 @@ Book.prototype.draw=function(){
 };
 Book.prototype.refresh=function(changed){
  changed=changed||{};
+ if(changed[this.setlistTitle]&&this._notationSavedSet){
+  var saved=this.wiki.getTiddler(this.setlistTitle);
+  if(saved&&JSON.stringify(saved.fields)===this._notationSavedSet){changed=Object.assign({},changed);delete changed[this.setlistTitle];}
+  this._notationSavedSet=null;
+ }
  if(this._editReturn){
   var state=this._editReturn;
   if(state.pendingNavigation)return false;

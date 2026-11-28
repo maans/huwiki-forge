@@ -87,6 +87,7 @@ function availablePageHeight(windowHeight,top,footerHeight,editor){
 }
 function mount(root,opts){
  opts=opts||{};var doc=root.ownerDocument,win=doc.defaultView,uid='huwabc-pages-'+(++serial),state=opts.state;
+ var instrumentView=opts.instrumentView||InstrumentView;
  var tune=null,fields={},g=geometry(fields),blocks=[],pages=[],records=[],svgIndex=new WeakMap(),pageIndex=0,activePage=0,selectedOrdinal=null,lastEvent=null,closed=false,desk=false,playing=false;
  var mode=state?state.get('pageMode',opts.editor?'flow':'single'):(opts.editor?'flow':'single'),zoom=state?state.get('pageZoom',opts.editor?'width':'page'):(opts.editor?'width':'page');
  // A user's follow preference is not the same as temporarily looking elsewhere.
@@ -233,7 +234,7 @@ function mount(root,opts){
   if(closed)return;
   var saved=layoutSerial?anchor():{event:initialAnchor,page:initialPage};
   manualScrollUntil=0;tune=nextTune||tune;fields=nextFields||fields;g=geometry(fields);blocks=[];svgIndex=new WeakMap();
-  notationStatus.textContent=tune&&typeof tune.getKeySignature==='function'?InstrumentView.notationStatus(opts.wiki,tune._huwabcConcertKey,tune.getKeySignature()):'';
+  notationStatus.textContent=tune&&typeof tune.getKeySignature==='function'?instrumentView.notationStatus(opts.wiki,tune._huwabcConcertKey,tune.getKeySignature()):'';
   notationStatus.hidden=!!opts.editor||!notationStatus.textContent;
   var svgs=Array.from(root.querySelectorAll('svg')).filter(function(s){return !s.ownerSVGElement;});
   svgs.forEach(function(svg){

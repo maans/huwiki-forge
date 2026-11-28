@@ -3,6 +3,8 @@ on:
   push:
     branches: [main]
     paths:
+      - 'plugins/print-article/src/**'
+      - 'scripts/build-print-article.mjs'
       - 'plugins/abc/src/**'
       - 'plugins/abc/plugin-info.json'
       - 'plugins/repertoire/src/**'
@@ -28,18 +30,20 @@ jobs:
         run: |
           node scripts/build-abc-ui.mjs
           node scripts/build-repertoire-plugin.mjs
+          node scripts/build-print-article.mjs
           node scripts/build-forge-plugin-library.mjs
       - name: Verify mixer lifecycle, playback, source choices and publication
         run: |
           node --test tests/abc-tab-collision.test.mjs tests/abc-rhythm-head-audio.test.mjs tests/abc-mini-youtube.test.mjs tests/abc-mini-mixer-title.test.mjs tests/abc-reader-mode.test.mjs tests/abc-playback-feedback.test.mjs tests/repertoire-mixed-notation.test.mjs tests/repertoire-youtube.test.mjs tests/repertoire-source-roles.test.mjs tests/repertoire-mixed-publication.test.mjs
           node scripts/build-abc-ui.mjs --check
           node scripts/build-repertoire-plugin.mjs --check
+          node scripts/build-print-article.mjs --check
       - name: Apply identical packages to existing Forge wikis
         run: |
           python3 - <<'PY'
           import pathlib, subprocess, sys
           files = [pathlib.Path('index.html'), *sorted(pathlib.Path('editions').rglob('index.html'))]
-          for name in ('abc', 'repertoire'):
+          for name in ('abc', 'repertoire', 'print-article'):
               subprocess.run([sys.executable, 'scripts/update_abc_plugin.py', '--title', f'$:/plugins/huwiki/{name}', '--plugin', f'plugins/{name}/dist/plugin.json', *map(str, files)], check=True)
           PY
           git diff --check
@@ -47,7 +51,7 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add -- plugins/abc/dist/plugin.json plugins/repertoire/dist/plugin.json library/plugins/registry.json index.html 'editions/**/index.html'
+          git add -- plugins/abc/dist/plugin.json plugins/repertoire/dist/plugin.json plugins/print-article/dist/plugin.json library/plugins/registry.json index.html 'editions/**/index.html'
           if ! git diff --cached --quiet; then
             git commit -m "build(music): publish shared ABC and Repertoire packages in all existing wikis"
             for attempt in 1 2 3 4; do

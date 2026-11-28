@@ -165,6 +165,27 @@ async function drawnBookFixture(){
  return {...f,book,item,set,notation,scoreInstances,state,mixerCalls};
 }
 
+test('capo, displayed key and TAB belong to one set entry and return when navigating back',async()=>{
+ const f=await drawnBookFixture(),{book,wiki,model,item,set}=f;
+ wiki.addTiddler(new Tiddler({title:'Another song','abc-source':'X:1\nK:C\nC4|','repertoire-kind':'piece'}));
+ const orch=wiki.getTiddler(item).fields['orchestra-title'],other=model.addItem(wiki,orch,'Another song').title;
+ model.setEntries(wiki,set,[item,other]);model.setPresentation(wiki,set,null,'leadsheet');book.draw();
+ const originalSource=wiki.getTiddler('Four Brothers').fields['abc-source'];
+ book._instrumentView.setCapo(3);book._instrumentView.setTranspose(2);book._instrumentView.setTab('guitar');
+ assert.equal(book._score._instrumentView,book._instrumentView);
+ assert.deepEqual(json(model.notationSettings(wiki,set,item)),{id:'c',capo:3,transpose:2,tab:'guitar'});
+ assert.deepEqual(json(model.notationSettings(wiki,set,other)),{});
+ const oldScore=book._score;book.refresh({[set]:{modified:true}});
+ assert.equal(book._score,oldScore,'saving the local choice must not close controls or rebuild the player');
+ book.selectItem(other);assert.equal(book._instrumentView.current().capo,null);assert.equal(book._instrumentView.current().transpose,0);assert.equal(book._instrumentView.current().tab,null);
+ book._instrumentView.setCapo(1);book.selectItem(item);
+ assert.equal(book._instrumentView.current().capo,3);assert.equal(book._instrumentView.current().transpose,2);assert.equal(book._instrumentView.current().tab,'guitar');
+ book.draw();assert.equal(book._instrumentView.current().capo,3,'redrawing/restoring a saved book keeps the setting');
+ const secondSet=model.createSetlist(wiki,orch,'Another set');model.setEntries(wiki,secondSet,[item]);
+ assert.deepEqual(json(model.notationSettings(wiki,secondSet,item)),{},'the same song in another set is independent');
+ assert.equal(wiki.getTiddler('Four Brothers').fields['abc-source'],originalSource);book.onDestroy();
+});
+
 test('switching ABC to YouTube stops its audio engine and switching back unloads the video',async()=>{
  const f=await drawnBookFixture();f.model.setVideo(f.wiki,'Four Brothers','https://www.youtube.com/watch?v=8UNtQpMMSEM');
  f.book.changeItemView('leadsheet');const score=f.book._score;

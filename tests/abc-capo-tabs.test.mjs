@@ -35,6 +35,16 @@ test('TAB applies the capo exactly once and leaves saved source fields intact',(
  assert.equal(JSON.stringify(fields),before);
  view.setTab('off');assert.equal(tabs.view(fields).enabled,false);
 });
+
+test('independent reading views do not notify or transpose another song or the shared reader',()=>{
+ const {view,tabs,abc}=environment(),saved=[],a=view.create({},value=>saved.push(value)),b=view.create();let notifications=0;
+ b.observe(()=>notifications++);a.setCapo(4);a.setTranspose(2);a.setTab('guitar');
+ assert.equal(a.current().semitones,-2);assert.equal(b.current().semitones,0);assert.equal(view.current().semitones,0);assert.equal(notifications,0);
+ assert.equal(tabs.view({},a).config.capo,4);assert.equal(tabs.view({},b).config.capo,0);assert.equal(tabs.view({},b).enabled,false);
+ const restored=view.create(saved.at(-1));assert.deepEqual(JSON.parse(JSON.stringify(restored.snapshot())),{id:'c',capo:4,tab:'guitar',transpose:2});
+ const source='X:1\nM:4/4\nL:1/4\nK:D\n"D"D E F G|',baseline=JSON.stringify(abc.parseOnly(source)[0].setUpAudio());
+ for(const reading of [a,b,restored])assert.equal(JSON.stringify(abc.parseOnly(source,{visualTranspose:reading.current().semitones})[0].setUpAudio()),baseline);
+});
 test('Physical string assignment supports reentrant banjo and charango without changing course order',()=>{
  const {tabs,view,notation}=environment();
  for(const preset of ['guitar','ukulele','tenorbanjo','irishbanjo','mandolin','banjo5','charango']){
@@ -143,3 +153,4 @@ test('Optional lower registers preserve tunings, lower heard notes once and leav
   view.setTab(kind);assert.equal(tabs.view({}).config.lowerOctave,false);
  }
 });
+
