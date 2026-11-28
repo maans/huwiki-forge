@@ -15,8 +15,9 @@ ATTRIBUTE = re.compile(r"(?P<name>[\w:-]+)\s*=\s*(?P<quote>['\"])(?P<value>.*?)\
 DECODER = json.JSONDecoder()
 
 
-def version(value: object) -> tuple[int, int, int]:
-    match = re.fullmatch(r"(\d+)\.(\d+)\.(\d+)", str(value))
+def version(value: object, *, allow_prerelease: bool = False) -> tuple[int, int, int]:
+    pattern = r"(\d+)\.(\d+)\.(\d+)" + (r"(?:-[0-9A-Za-z.-]+)?" if allow_prerelease else "")
+    match = re.fullmatch(pattern, str(value))
     if not match:
         raise ValueError("ABC must have a three-part numeric version")
     return tuple(map(int, match.groups()))
@@ -63,7 +64,7 @@ def replace_plugin(html: str, plugin: dict, expected_title: str = TITLE) -> tupl
     """Return updated HTML and status; all non-ABC bytes remain identical."""
     if plugin.get("title") != expected_title or plugin.get("plugin-type") != "plugin":
         raise ValueError("The replacement is not the ABC plugin")
-    replacement_version = version(plugin.get("version"))
+    replacement_version = version(plugin.get("version"), allow_prerelease=expected_title != TITLE)
     # Validate the embedded plugin before writing any wiki files.
     payload = json.loads(plugin.get("text", ""))
     if not isinstance(payload.get("tiddlers"), dict):
@@ -83,7 +84,7 @@ def replace_plugin(html: str, plugin: dict, expected_title: str = TITLE) -> tupl
     if not found:
         return html, "absent"
     existing, start, end = found[0]
-    if replacement_version < version(existing.get("version")):
+    if replacement_version < version(existing.get("version"), allow_prerelease=expected_title != TITLE):
         raise ValueError("Refusing to downgrade an existing ABC plugin")
     if existing == plugin:
         return html, "current"

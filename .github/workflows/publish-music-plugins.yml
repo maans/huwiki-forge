@@ -5,6 +5,7 @@ on:
     paths:
       - 'plugins/print-article/src/**'
       - 'scripts/build-print-article.mjs'
+      - 'scripts/update_abc_plugin.py'
       - 'plugins/abc/src/**'
       - 'plugins/abc/plugin-info.json'
       - 'plugins/repertoire/src/**'
