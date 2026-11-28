@@ -33,6 +33,19 @@ Z2 |: "C7"sB sB z sB | "F6"sB-sB sB sB :|
 const notes=track=>track.filter(e=>e.cmd==='note'&&e.volume>0&&Number.isFinite(e.duration)&&e.duration>0);
 const shape=track=>JSON.stringify(notes(track).map(({pitch,start,duration,instrument,volume})=>({pitch,start,duration,instrument,volume})));
 
+for(const [style,meter] of [['jazzballad','4/4'],['bossa','4/4'],['samba','4/4'],['jazzwaltz','3/4'],['swing','4/4']])test(`Rest-only chord charts accompany all 32 bars in ${style}`,()=>{
+ const beats=meter==='3/4'?3:4,barLength=beats/4;
+ const source=`X:1\nT:Chord form\nM:${meter}\nL:1/4\nQ:1/4=108\nK:C\n`+Array.from({length:32},(_,i)=>`"${['C','Am','Dm7','G7'][i%4]}"z${beats} |`).join('\n');
+ const tune=ABC.parseOnly(source)[0];
+ assert.equal(notes(tune.setUpAudio({chordsOff:true}).tracks[0]).length,0);
+ Accompaniment.prepare(ABC,tune,source,{enabled:true,style},false,{});
+ const audio=tune.setUpAudio({});
+ for(const bus of ['bassVolume','chordVolume','drumVolume']){
+  const events=audio.tracks.filter(t=>t.huwabcPart===bus).flatMap(notes);
+  for(let bar=0;bar<32;bar+=4)assert.ok(events.some(e=>e.start>=bar*barLength&&e.start<(bar+4)*barLength),`${bus} missing at bars ${bar+1}-${bar+4}`);
+ }
+});
+
 for(const live of [false,true])test(`Written rhythm guitar survives accompaniment off/on (live=${live})`,()=>{
  const referenceTune=ABC.parseOnly(source)[0];
  Accompaniment.prepare(ABC,referenceTune,source,{enabled:false,style:'swing'},live,{});

@@ -7,7 +7,6 @@ module-type: library
 'use strict';
 var notation=require('$:/plugins/huwiki/abc/notation.js');
 var jazz=require('$:/plugins/huwiki/abc/jazz-engine.js');
-var slowBallad=require('$:/plugins/huwiki/abc/slow-ballad.js');
 var swingVoicings=require('$:/plugins/huwiki/abc/swing-voicings.js');
 var balkan7=require('$:/plugins/huwiki/abc/balkan7.js');
 var meterMap=require('$:/plugins/huwiki/abc/meter-map.js');
@@ -23,19 +22,17 @@ var styles={
  bossa:{label:'Brasilien · Bossa nova (2 takter)',bass:'bossa',chords:'bossacomp',drums:'bossa',bassInstrument:32,chordInstrument:24},
  samba:{label:'Brasilien · Samba',bass:'bossa',chords:'bossacomp',drums:'samba',bassInstrument:32,chordInstrument:24},
  'bossa-samba':{label:'Brasilien · A bossa / B samba',bass:'bossa',chords:'bossacomp',drums:'samba',bassInstrument:32,chordInstrument:24},
- slowjazzballad:{label:'Jazz · Langsom ballade',bass:'balladroot',chords:'slowballadcomp',drums:'balladpulse',bassInstrument:32,chordInstrument:0},
  jazzballad:{label:'Jazz · Ballad',bass:'root',chords:'balladcomp',drums:'brush',bassInstrument:32,chordInstrument:0},
- 'piazzolla-tango':{label:'Tango · Piazzolla (nuevo tango · 3+3+2)',bass:'tango332',chords:'tango332',drums:'off',bassInstrument:32,chordInstrument:0},
- jazzwaltz:{label:'Jazz · Jazz waltz (3/4)',bass:'walking',chords:'jazzcomp',drums:'jazzwaltz',bassInstrument:32,chordInstrument:0},
+ jazzwaltz:{label:'Jazz · Vals',bass:'walking',chords:'jazzcomp',drums:'jazzwaltz',bassInstrument:32,chordInstrument:0},
  'india-adi':{label:'Indien · Ādi-tāla · traditionel (melodi, drone og mridangam)',bass:'off',chords:'off',drums:'mridangam',bassInstrument:32,chordInstrument:104},
  'india-adi-energi':{label:'Indien · fusion · vestlig bas og akkorder (valgfrit)',bass:'pulse',chords:'beats',drums:'tabla',bassInstrument:32,chordInstrument:104},
  'india-rupaka':{label:'Indien · Rūpaka-tāla · traditionel (melodi, drone og mridangam)',bass:'off',chords:'off',drums:'mridangam',bassInstrument:32,chordInstrument:104}
 };
 Object.keys(balkan7.styles).forEach(function(key){var b=balkan7.styles[key];styles[key]={label:b.label,bass:key==='in-misrachapu'?'off':'balkan',chords:key==='in-misrachapu'?'off':'balkan',drums:key==='in-misrachapu'?'mridangam':'balkan',bassInstrument:b.bassInstrument,chordInstrument:b.chordInstrument};});
 Object.assign(styles,meterArranger.styles);
-var basses=[['balladroot','Ballade · lange bastoner ved akkordskift'],['tango332','Tango · 3+3+2 / marcato'],['written','Følg becifringernes bas · vekselbas'],['off','Ingen bas'],['root','Grundtone ved taktstart'],['alternate','Vekselbas · to anslag'],['pulse','Vekselbas · puls'],['walking','Walking bass · næste akkord'],['bossa','Bossa · synkoperet bas'],['balkan','Balkan · asymmetrisk bas'],['nordic','Nordisk · vekselbas / gangrytme']];
-var chords=[['slowballadcomp','Langsom ballade · hvilende akkorder'],['tango332','Tango · korte 3+3+2-anslag'],['off','Ingen akkorder'],['beats','På slagene'],['offbeat','Efterslag'],['afterbeat','Efter basslaget'],['arpeggio','Brudte akkorder'],['jazzcomp','Jazz · comp på/efter slag'],['bossacomp','Bossa · synkoper'],['balladcomp','Ballad · luftige voicings'],['balkan','Balkan · gruppestyret akkompagnement'],['nordic','Nordisk · efterslag efter stilen']];
-var drums=[['balladpulse','Langsom ballade · diskret hi-hat'],['tapan','Kopanitsa · tapan (GM: dyb tromme og pind)'],['off','Intet slagtøj'],['pop','Let pop · stortromme, lilletromme og hi-hat'],['waltz','Vals · stortromme og hi-hat'],['shaker','Shaker'],['percussion','Congas og shaker'],['tabla','Tabla · GM-tilnærmelse'],['mridangam','Mridangam · GM-tilnærmelse'],['swing','Swing · ride og hi-hat'],['bossa','Bossa · surdo, rim og shaker'],['samba','Samba · surdo, tamborim, pandeiro, agogô'],['brush','Jazzballad · børster (MIDI)'],['jazzwaltz','Jazzvals · ride'],['balkan','Balkan · tapan / daouli / darbuka'],['nordic','Nordisk · let cajón (GM-tilnærmelse)']];
+var basses=[['written','Følg becifringernes bas · vekselbas'],['off','Ingen bas'],['root','Grundtone ved taktstart'],['alternate','Vekselbas · to anslag'],['pulse','Vekselbas · puls'],['walking','Walking bass · næste akkord'],['bossa','Bossa · synkoperet bas'],['balkan','Balkan · asymmetrisk bas'],['nordic','Nordisk · vekselbas / gangrytme']];
+var chords=[['off','Ingen akkorder'],['beats','På slagene'],['offbeat','Efterslag'],['afterbeat','Efter basslaget'],['arpeggio','Brudte akkorder'],['jazzcomp','Jazz · comp på/efter slag'],['bossacomp','Bossa · synkoper'],['balladcomp','Ballad · luftige voicings'],['balkan','Balkan · gruppestyret akkompagnement'],['nordic','Nordisk · efterslag efter stilen']];
+var drums=[['tapan','Kopanitsa · tapan (GM: dyb tromme og pind)'],['off','Intet slagtøj'],['pop','Let pop · stortromme, lilletromme og hi-hat'],['waltz','Vals · stortromme og hi-hat'],['shaker','Shaker'],['percussion','Congas og shaker'],['tabla','Tabla · GM-tilnærmelse'],['mridangam','Mridangam · GM-tilnærmelse'],['swing','Swing · ride og hi-hat'],['bossa','Bossa · surdo, rim og shaker'],['samba','Samba · surdo, tamborim, pandeiro, agogô'],['brush','Jazzballad · børster (MIDI)'],['jazzwaltz','Jazzvals · ride'],['balkan','Balkan · tapan / daouli / darbuka'],['nordic','Nordisk · let cajón (GM-tilnærmelse)']];
 var melodyInstruments=[['source','Som noteret i ABC'],[0,'Klaver'],[4,'Elklaver'],[21,'Harmonika'],[24,'Lut · nylon-guitar (GM)'],[25,'Mandolin · stål-guitar (GM)'],[46,'Harpe · orkesterharpe (GM)'],[105,'Banjo'],[64,'Sopransaxofon'],[66,'Tenorsaxofon'],[72,'Sopranino · piccolo-tilnærmelse (GM)'],[26,'Jazzguitar'],[56,'Trompet'],[65,'Altsaxofon'],[66,'Tenorsaxofon'],[71,'Klarinet'],[73,'Fløjte'],[40,'Violin'],[104,'Sitar · GM']];
 var bassInstruments=[[32,'Kontrabas'],[33,'Elbas · finger'],[34,'Elbas · plekter'],[35,'Båndløs bas'],[38,'Synthbas'],[0,'Klaver']];
 var chordInstruments=[[0,'Klaver'],[4,'Elklaver'],[24,'Guitar · nylon'],[25,'Mandolin · stål-guitar (GM)'],[105,'Banjo'],[46,'Harpe (GM)'],[26,'Jazzguitar'],[21,'Harmonika'],[48,'Strygere']];
@@ -55,10 +52,9 @@ function compatibleStyles(source){
  if(m.num===7&&m.den===8)return balkan7.compatible(source).concat(['meter-follow']);
  if(m.explicit||m.num===11&&m.den===8||m.num===9&&m.den===8)return newStyles;
  var k=m.num+'/'+m.den,legacy=[];
- if(k==='4/4')legacy=['pop','calm','swing','bossa','samba','bossa-samba','jazzballad','slowjazzballad','india-adi','india-adi-energi','piazzolla-tango'];
+ if(k==='4/4')legacy=['pop','calm','swing','bossa','samba','bossa-samba','jazzballad','india-adi','india-adi-energi'];
  else if(k==='3/4')legacy=['waltz','jazzwaltz','calm','india-rupaka'];
- else if(k==='2/4')legacy=['pop','calm','piazzolla-tango'];
- else if(k==='2/2')legacy=['piazzolla-tango'];
+ else if(k==='2/4')legacy=['pop','calm'];
  else if(k==='6/8'||k==='12/8')legacy=['calm'];
  return legacy.concat(newStyles);
 }
@@ -128,10 +124,7 @@ function guitarLevels(c,saved,source,fields,sequence,tune){
   });
  }catch(_ignore){}return c;
 }
-function read(fields){fields=fields||{};var saved;try{saved=JSON.parse(fields['abc-accompaniment']||'null');}catch(_){saved=null;}
- var meter=meterProfile(fields['abc-source']||'').first;
- if(saved&&saved.style==='swing'&&meter&&meter.num===3&&meter.den===4){saved=Object.assign({},saved,{style:'jazzwaltz'});if(saved.drums==='swing')saved.drums='jazzwaltz';}
- return guitarLevels(clean(saved),saved,fields['abc-source']||'',fields);}
+function read(fields){fields=fields||{};var saved;try{saved=JSON.parse(fields['abc-accompaniment']||'null');}catch(_){saved=null;}return guitarLevels(clean(saved),saved,fields['abc-source']||'',fields);}
 function isIndianSource(source,fields){
  var metadata=(String(source||'').match(/^(?:T|R):[^\r\n]*/gmi)||[]).join(' ')+' '+String(fields&&fields['abc-rhythm']||'')+' '+String(fields&&fields['abc-style']||'')+' '+String(fields&&fields['abc-genre']||'');
  return /\b(?:raga|raag|konnakol|solkattu|mohanam|yaman|bhairav|indien|indian|carnatic|hindustani|adi\s*tala|rupaka|mi[sś]ra|c[āa]pu)\b/i.test(metadata);
@@ -141,9 +134,7 @@ function isNordicSource(source,fields){
  return /\b(?:polka|polkett|brudmarch|brudmarsch|bruremarsj|brudemarsj|nordisk|svensk|swedish|danse)\b/i.test(metadata);
 }
 function isTraditionalIndian(style){return style==='india-adi'||style==='india-rupaka'||style==='in-misrachapu';}
-function resolve(config,source,fields){var c=clean(config),initialMeter=meterProfile(source).first;
- if(c.style==='swing'&&initialMeter&&initialMeter.num===3&&initialMeter.den===4){c.style='jazzwaltz';if(c.drums==='swing')c.drums='jazzwaltz';}
- if(meterArranger.styles[c.style]){var preset=meterArranger.styles[c.style];['bass','chords','drums','bassInstrument','chordInstrument'].forEach(function(k){if(!config||config[k]===undefined)c[k]=preset[k];});}if(c.style==='auto'){
+function resolve(config,source,fields){var c=clean(config);if(meterArranger.styles[c.style]){var preset=meterArranger.styles[c.style];['bass','chords','drums','bassInstrument','chordInstrument'].forEach(function(k){if(!config||config[k]===undefined)c[k]=preset[k];});}if(c.style==='auto'){
  var profile=meterProfile(source),m=profile.first;
  var choice=(isNordicSource(source,fields)&&m&&([2,4].indexOf(m.den)>=0))?meterArranger.autoStyle(source,fields):
     (profile.changes||m&&(m.num===9&&m.den===8||m.num===11&&m.den===8||m.explicit&&!(m.num===7&&m.den===8)))?meterArranger.autoStyle(source,fields):
@@ -341,10 +332,11 @@ function prepare(ABC,tune,source,config,live,fields){
   catch(error){meta.supported=false;meta.message=error.message;}
  }
  var pat=meta.supported&&!useTimeline?patterns(meta,c):null;
- // These grooves need actual unfolded bars for pickups, voltas and N.C.
- var danceTimeline=!useTimeline&&(styleName==='slowjazzballad'||c.bass==='balladroot'||c.chords==='slowballadcomp'||c.drums==='balladpulse'||styleName==='jazzwaltz'||c.drums==='jazzwaltz'||styleName==='piazzolla-tango'||c.bass==='tango332'||c.chords==='tango332')?meterMap.build(ABC,raw,source,rawBase):null;
- var playedTimeline=timeline||swingTimeline||danceTimeline;
- var barCount=playedTimeline?playedTimeline.bars.length:jazz.calcBars(rawBase.tracks.flat(),meta.meter),analysis=jazz.form(source,barCount,meta.meter,c.form,playedTimeline&&playedTimeline.bars);
+ var playedTimeline=timeline||swingTimeline;
+ // Chord charts can contain only rests. Their duration still defines the
+ // complete form, even when the notated melody has no sounding MIDI notes.
+ var durationBars=Math.ceil((Number(rawBase.totalDuration)||0)/(meta.meter.num/meta.meter.den)-.0001);
+ var barCount=playedTimeline?playedTimeline.bars.length:Math.max(durationBars,jazz.calcBars(rawBase.tracks.flat(),meta.meter)),analysis=jazz.form(source,barCount,meta.meter,c.form,playedTimeline&&playedTimeline.bars);
  if(playedTimeline)analysis.chords=playedTimeline.chords;
  var jazzStyle=['swing','bossa','samba','bossa-samba','jazzballad','jazzwaltz'].includes(styleName)?styleName:null;
  var isBrazil=['bossa','samba','bossa-samba'].includes(styleName);var grooveConfig=Object.assign({},c,{feel:styleName==='swing'||styleName==='jazzballad'?c.feel:'four',swing:styleName==='swing',tempo:rawBase.tempo});
@@ -382,29 +374,25 @@ function prepare(ABC,tune,source,config,live,fields){
    if(c.drums!=='off'&&c.drumVolume)add('Slagtøj',128,balkanParts.drums);
   } else {
   if(c.bass!=='off'&&c.bass!=='written'&&c.bassVolume){var bassNotes=generated({gchord:pat.bass,bassprog:c.bassInstrument,bassvol:c.bassVolume,chordvol:0});
-   if(c.bass==='balladroot')bassNotes=slowBallad.bass(generated({gchord:'G'.repeat(meta.n),chordprog:c.bassInstrument,chordvol:c.bassVolume,bassvol:0}),playedTimeline,grooveConfig);
-   if(c.bass==='tango332')bassNotes=jazz.tangoBass(generated({gchord:'G'.repeat(meta.n),chordprog:c.bassInstrument,chordvol:c.bassVolume,bassvol:0}),meta.meter,analysis,grooveConfig,source);
    if(c.bass==='walking')bassNotes=jazz.walk(generated({gchord:'G'.repeat(meta.n),chordprog:c.bassInstrument,chordvol:c.bassVolume,bassvol:0}),meta.meter,analysis,grooveConfig);
    if(isBrazil&&c.bass==='bossa')bassNotes=jazz.brazilBass(generated({gchord:'f'.repeat(meta.n),bassprog:c.bassInstrument,bassvol:c.bassVolume,chordvol:0}),meta.meter,analysis,grooveConfig,styleName);
    add('Bas',c.bassInstrument,bassNotes);}
   if(c.chords!=='off'&&c.chordVolume){
-   var activeComp=c.chords==='slowballadcomp'||c.chords==='tango332'||c.chords==='jazzcomp'||c.chords==='bossacomp'||c.chords==='balladcomp';
+   var activeComp=c.chords==='jazzcomp'||c.chords==='bossacomp'||c.chords==='balladcomp';
    var compStyle=c.chords==='bossacomp'?'bossa':c.chords==='balladcomp'?'jazzballad':styleName==='jazzwaltz'?'jazzwaltz':'swing';
    var chordNotes=generated({gchord:activeComp?'c'.repeat(meta.n):pat.chord,chordprog:c.chordInstrument,chordvol:c.chordVolume,bassvol:0});
    // Preserve the selected source harmony across anticipations and timing variation.
    if(styleName==='swing'&&swingPlan)chordNotes.forEach(function(e){e.huwabcHarmonyStart=e.start;});
    var chordSeeds=chordNotes;
-   if(c.chords==='slowballadcomp')chordNotes=slowBallad.chords(jazz.voiceLead(chordNotes),playedTimeline,grooveConfig);
-   else if(c.chords==='tango332')chordNotes=jazz.tangoComp(chordNotes,meta.meter,analysis,grooveConfig,source);
-   else if(isBrazil&&c.chords==='bossacomp')chordNotes=jazz.brazilComp(chordNotes,meta.meter,analysis,grooveConfig,styleName,source);
+   if(isBrazil&&c.chords==='bossacomp')chordNotes=jazz.brazilComp(chordNotes,meta.meter,analysis,grooveConfig,styleName,source);
    else if(activeComp)chordNotes=jazz.comp(chordNotes,meta.meter,analysis,grooveConfig,compStyle,source);
    if(styleName==='swing'&&writtenSwing&&swingPlan&&c.chordInstrument>=0&&c.chordInstrument<=7&&c.chords!=='arpeggio'){
     var writtenComp=writtenPianoRhythm(ABC,source,c,baseCount,repeatPlan,writtenHits,swingTimeline.bars,harmonyVoice);
     chordNotes=followWrittenPiano(chordNotes,chordSeeds,writtenComp,rawBase.totalDuration);
    }
    if(styleName==='swing'&&swingPlan&&c.chords!=='arpeggio')chordNotes=swingVoicings.voice(chordNotes,swingPlan,{guitar:[24,25,26,27,28].includes(c.chordInstrument),pulse:c.chords==='beats'});
-   else if(c.chords!=='arpeggio'&&c.chords!=='slowballadcomp')chordNotes=jazz.voiceLead(chordNotes);
-   if(compStyle==='swing'&&activeComp&&c.chords!=='tango332'&&c.chords!=='slowballadcomp')chordNotes=chordNotes.filter(function(e){
+   else if(c.chords!=='arpeggio')chordNotes=jazz.voiceLead(chordNotes);
+   if(compStyle==='swing'&&activeComp)chordNotes=chordNotes.filter(function(e){
     if(e.huwabcWrittenRhythm)return e.duration>.00002;
     if(Math.abs((e.start*8)%2-1)<.010)e.start+=.038;
     var bar=playedTimeline&&playedTimeline.bars.find(function(b){return e.start>=b.start-.00002&&e.start<b.end-.00002;});
@@ -414,9 +402,7 @@ function prepare(ABC,tune,source,config,live,fields){
    });
    add('Akkorder',c.chordInstrument,chordNotes);}
   if(c.drums!=='off'&&c.drumVolume){var drumNotes=pat.drums.flatMap(function(p){return generated({chordsOff:true,drum:p});}).sort(function(a,b){return a.start-b.start||a.pitch-b.pitch;});
-    if(c.drums==='balladpulse')drumNotes=slowBallad.drums(playedTimeline,grooveConfig);
-    else if(styleName==='swing'&&c.drums==='swing')drumNotes=jazz.swingDrums(meta.meter,analysis,grooveConfig,source);
-    else if(c.drums==='jazzwaltz')drumNotes=jazz.jazzWaltzDrums(meta.meter,analysis,grooveConfig,source);
+    if(styleName==='swing'&&c.drums==='swing')drumNotes=jazz.swingDrums(meta.meter,analysis,grooveConfig,source);
     else if(isBrazil)drumNotes=jazz.brazilDrums(meta.meter,analysis,grooveConfig,styleName,source);
     else if(jazzStyle)drumNotes=jazz.drumDynamics(drumNotes,meta.meter,analysis,grooveConfig,source);
     add('Slagtøj',128,drumNotes);}
@@ -724,14 +710,9 @@ function createRoom(ctx, destination) {
 exports.createRoom=createRoom;
 exports.roomSeconds=roomSeconds;
 function createMixer(ABC,getConfig){
- var synth=new ABC.synth.CreateSynth(),prime=synth.prime,rawStop=synth.stop,gains=[],keys=[],room=null,run=0;
- synth.stop=function(){
-  run++;
-  (synth.directSource||[]).forEach(function(source){source.onended=null;});
-  return rawStop.apply(synth,arguments);
- };
+ var synth=new ABC.synth.CreateSynth(),prime=synth.prime,gains=[],keys=[],room=null;
  synth.prime=async function(){var full=synth.flattened,groups={melodyVolume:[]},buffers=[],result;
-  full.tracks.forEach(function(t){var key=t.huwabcVoice!==undefined?'voice:'+t.huwabcVoice:(t.huwabcPart||'melodyVolume');(groups[key]||(groups[key]=[])).push(t);});keys=Object.keys(groups);synth._huwikiParts=keys;
+  full.tracks.forEach(function(t){var key=t.huwabcVoice!==undefined?'voice:'+t.huwabcVoice:(t.huwabcPart||'melodyVolume');(groups[key]||(groups[key]=[])).push(t);});keys=Object.keys(groups);
   try{for(var i=0;i<keys.length;i++){synth.flattened=Object.assign({},full,{tracks:groups[keys[i]]});result=await prime.call(synth);buffers.push(synth.audioBuffers[0]);}synth.audioBuffers=buffers.filter(Boolean);return result;}finally{synth.flattened=full;}
  };
  synth.setVolumes=function(){var ctx=ABC.synth.activeAudioContext();if(!ctx)return;if(room)room.update(gains,getConfig().reverb/100);gains.forEach(function(g,i){g.gain.setTargetAtTime(channelGain(keys[i],getConfig()),ctx.currentTime,.015);});};
@@ -740,7 +721,7 @@ function createMixer(ABC,getConfig){
   synth.directSource=synth.audioBuffers.map(function(buffer,i){var gain=ctx.createGain();gain.gain.value=channelGain(keys[i],getConfig());gain.connect(ctx.destination);gains.push(gain);var source=ctx.createBufferSource();source.buffer=buffer;source.connect(gain);return source;});
   room=createRoom(ctx);room.update(gains,getConfig().reverb/100);
   var when=ctx.currentTime;synth.directSource.forEach(function(source){source.start(when,seconds);});
-  if(synth.onEnded&&synth.directSource[0]){var stamp=run,first=synth.directSource[0];first.onended=function(){if(stamp===run&&synth.isRunning&&synth.directSource[0]===first)synth.onEnded(synth.callbackContext);};}
+  if(synth.onEnded&&synth.directSource[0])synth.directSource[0].onended=function(){synth.onEnded(synth.callbackContext);};
  };
  return synth;
 }
@@ -749,4 +730,3 @@ function mountRepeats(parent,ABC,source,getConfig,onChange){return require('$:/p
 exports.rhythmAudition=rhythmAudition;exports.mountRepeats=mountRepeats;exports.repeatPlan=repeatPlanModule;exports.mountVoices=mountVoices;exports.voiceRouting=voiceRouting;exports.basses=basses;exports.chords=chords;exports.drums=drums;
 exports.channelGain=channelGain;exports.activeSolo=activeSolo;exports.backingModes=backingModes;exports.liveConfigChange=liveConfigChange;exports.createDrone=createDrone;exports.droneModes=droneModes;exports.droneTimbres=droneTimbres;exports.droneRoots=droneRoots;exports.createMixer=createMixer;exports.onlyVolumes=onlyVolumes;exports.clean=clean;exports.resolve=resolve;exports.read=read;exports.styles=styles;exports.metronomeSounds=metronomeSounds;exports.metronomePattern=metronomePattern;exports.prepare=prepare;exports.mount=mount;exports.patterns=patterns;exports.info=info;exports.meterProfile=meterProfile;exports.compatibleStyles=compatibleStyles;
 })();
-
