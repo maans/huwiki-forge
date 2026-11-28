@@ -467,9 +467,12 @@ module-type: library
       button.setAttribute('aria-label',label+' · '+mode+'. '+button.title);
     }
     function chooseTab(tab) {
-      selectedTab=['voices','accompaniment','chords','youtube'].indexOf(tab)>=0?tab:'voices';
+      var nextTab=['voices','accompaniment','chords','youtube'].indexOf(tab)>=0?tab:'voices';
+      // Stop ABC while its tab is still selected: cancelling preparation can
+      // synchronously report the previous playing state before Stop completes.
+      if(nextTab==='youtube'&&(currentlyPlaying||currentlyPreparing||options.getPlaying&&options.getPlaying()||options.getPreparing&&options.getPreparing())){if(options.onStopPlayback)options.onStopPlayback();}
+      selectedTab=nextTab;
       var backing=selectedTab==='accompaniment',chords=selectedTab==='chords',video=selectedTab==='youtube';
-      if(video&&(currentlyPlaying||currentlyPreparing||options.getPlaying&&options.getPlaying()||options.getPreparing&&options.getPreparing())){if(options.onStopPlayback)options.onStopPlayback();}
       list.hidden=backing||chords||video;backingList.hidden=!backing;chordList.hidden=!chords;youtubeList.hidden=!video;
       roomRow.hidden=video||!!options.videoOnly;roomRow.style.display=video||options.videoOnly?'none':'flex';play.hidden=false;play.disabled=video?!MiniYoutube.video(wiki,musicTitle).id:!!options.videoOnly;
       voiceTab.setAttribute('aria-selected',String(selectedTab==='voices'));

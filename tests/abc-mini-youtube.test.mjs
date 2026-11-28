@@ -17,7 +17,7 @@ async function setup({ready=true}={}){
  }};
  const wiki={getTiddler(title){return {fields:{title,'repertoire-youtube':'https://youtu.be/abcdefghijk'}};},getTiddlerText(){return 'da';}};
  const youtube={};runInNewContext(await readFile(new URL('../plugins/abc/src/mini-youtube.js',import.meta.url),'utf8'),{exports:youtube});
- const mixer={};runInNewContext(await readFile(new URL('../plugins/abc/src/floating-mixer.js',import.meta.url),'utf8'),{exports:mixer,require(name){if(name.endsWith('/mini-youtube.js'))return youtube;if(name.endsWith('/accompaniment.js'))return {clean:()=>({reverb:0})};if(name.endsWith('/playback-feedback.js'))return {update(){}};return {};}});
+ const mixer={};runInNewContext(await readFile(new URL('../plugins/abc/src/floating-mixer.js',import.meta.url),'utf8'),{exports:mixer,require(name){if(name.endsWith('/mini-youtube.js'))return youtube;if(name.endsWith('/accompaniment.js'))return {clean:()=>({reverb:0,voiceSettings:{},backingModes:{},bassSource:'auto'}),activeSolo:()=>false};if(name.endsWith('/voice-routing.js'))return {clean:()=>({}),describe:()=>[]};if(name.endsWith('/chord-chart.js'))return {extract:()=>({chords:[],measures:[],noteTimes:{}})};if(name.endsWith('/playback-feedback.js'))return {update(){}};return {};}});
  const host=doc.createElement('div');doc.body.appendChild(host);
  return {doc,players,host,wiki,youtube,mixer,settle:async()=>{await Promise.resolve();await Promise.resolve();}};
 }
@@ -52,6 +52,26 @@ test('Closing YouTube stops it, while unrelated ABC state updates preserve video
  panel.updatePlayback(false);panel.updatePreparing(false);
  assert.equal(panel.isPlaying(),true);assert.equal(panel.element.querySelector('.huwabc-mini-mixer-play').getAttribute('aria-pressed'),'true');
  panel.hide();assert.equal(env.players[0].destroyed,1);panel.destroy();
+});
+
+test('One YouTube tab click stops ABC and opens the video despite synchronous Stop status callbacks',async()=>{
+ for(const active of ['playing','preparing']){
+  const env=await setup();let stops=0,playing=active==='playing',preparing=active==='preparing';
+  const panel=env.mixer.mount({host:env.host,ABC:{},wiki:env.wiki,title:'Song',initiallyVisible:false,
+   getPlaying:()=>playing,getPreparing:()=>preparing,onStopPlayback(){
+    stops++;preparing=false;panel.updatePreparing(false);
+    playing=false;panel.updatePlayback(false);
+   }});
+  panel.show();
+  panel.element.querySelectorAll('[role=tab]')[3].click();await env.settle();
+  const selected=panel.element.querySelectorAll('[role=tab]').filter(tab=>tab.getAttribute('aria-selected')==='true');
+  assert.deepEqual(selected.map(tab=>tab.textContent),['YouTube'],active);
+  assert.equal(env.players.length,1,active);assert.equal(stops,1,active);
+  assert.equal(env.players[0].plays,0,'Opening the tab must not auto-play video');
+  panel.togglePlayback();assert.equal(env.players[0].plays,1);
+  panel.togglePlayback();assert.equal(env.players[0].pauses,1);
+  panel.destroy();
+ }
 });
 
 test('Displayed key changes preserve concert audio and do not alter the ABC source',async()=>{
