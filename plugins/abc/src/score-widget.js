@@ -138,6 +138,8 @@ ABCWidget.prototype.render=function(parent,nextSibling){
   if(this._audioController||this._minimalPlayer)this.onDestroy();
   this.parentDomNode=parent;this.computeAttributes();this.execute();
   if(!this._instrumentView){var written=this.getVariable('huwabc-notation-settings','');if(written)try{this._instrumentView=InstrumentView.create(JSON.parse(written));}catch(ignore){}}
+  var agreement=this.getVariable('huwabc-repertoire-agreement','');
+  if(agreement&&!this._repertoireScore)try{var arranged=JSON.parse(agreement);this._repertoireScore=function(ABC,source){return require('$:/plugins/huwiki/repertoire/live-score.js').apply(ABC,source,arranged).source;};}catch(ignore){}
   // Native TiddlyWiki static exports use FakeDom. Emit a self-contained reader
   // instead of starting an asynchronous editor widget in the live document.
   if(this.document.isTiddlyWikiFakeDom||this.getVariable('tv-config-static')==='yes'){

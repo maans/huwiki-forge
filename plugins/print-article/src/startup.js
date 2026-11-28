@@ -424,7 +424,7 @@ async function renderAbcChapter(title,progress,pageOffset,autoFacing,countOnly,r
    document.body.appendChild(holder);
    var safe=String(title).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
    var parser=$tw.wiki.parseText('text/vnd.tiddlywiki','<$huwiki-abc tiddler="'+safe+'" view="full"/>');
-   widget=$tw.wiki.makeWidget(parser,{document:document,parentWidget:$tw.rootWidget,variables:{currentTiddler:title,storyTiddler:title,'huwabc-notation-settings':notation?JSON.stringify(notation):''}});
+   widget=$tw.wiki.makeWidget(parser,{document:document,parentWidget:$tw.rootWidget,variables:{currentTiddler:title,storyTiddler:title,'huwabc-notation-settings':notation?JSON.stringify(notation):'','huwabc-repertoire-agreement':repertoireAgreements&&repertoireAgreements[title]?JSON.stringify(repertoireAgreements[title]):''}});
    widget.render(holder,null);
    // The ABC widget finishes rendering asynchronously. Never fall back to
    // a screenshot of just its first visible page if the full pages fail.
@@ -443,7 +443,7 @@ async function renderAbcChapter(title,progress,pageOffset,autoFacing,countOnly,r
   // The arranger can read the real number of score pages without creating a PDF.
   if(countOnly)return {images:[],pages:pageNodes.length,needsFacingBlank:false};
   if(progress)progress('ABC '+title+' ('+pageNodes.length+')');
-  var label=written.printLabel($tw.wiki),fontCss=modules.jazz.css();
+  var label=root._huwabcPager&&root._huwabcPager.printLabel?root._huwabcPager.printLabel():written.printLabel($tw.wiki),fontCss=modules.jazz.css();
   var needsFacingBlank=!!autoFacing && pageNodes.length===2 && pageOffset%2===0;
   var folioOffset=pageOffset+(needsFacingBlank?1:0);
   return {images:await modules.pdf.renderImages(pageNodes,geom,label,fontCss,folioOffset),

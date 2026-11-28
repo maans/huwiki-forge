@@ -418,12 +418,14 @@ function mount(root,opts){
   if(outer&&outer!==viewport)observer.observe(outer);
  }
  win.addEventListener('resize',scheduleResize);
+ function printLabel(){return tune&&instrumentView.printDescription?instrumentView.printDescription(opts.wiki,tune._huwabcConcertKey,tune.getKeySignature()):instrumentView.printLabel(opts.wiki);}
  function openPrintPreview(css,instrumentLabel){
   if(!pages.length)return false;
   return PrintExport.open({doc:doc,language:I18n.language(opts.wiki),title:opts.title||tr('HUWiki Nodeark','HUWiki Sheet Music'),geom:g,
-   css:css||'',instrumentLabel:instrumentLabel||'',pages:pages.map(function(p){return safeClone(p.element);})});
+   css:css||'',instrumentLabel:tune?printLabel():instrumentLabel||'',pages:pages.map(function(p){return safeClone(p.element);})});
  }
  function printTo(win,css,instrumentLabel){
+  if(tune)instrumentLabel=printLabel();
   if(!pages.length)return false;var d=win.document;d.open();d.write('<!doctype html><html><head><meta charset="utf-8"><title></title></head><body><div class="print-tools"><button type="button"></button></div><main></main></body></html>');d.close();
   d.documentElement.lang=I18n.language(opts.wiki);d.title=(opts.title||tr('HUWiki Nodeark','HUWiki Sheet Music'))+(instrumentLabel?' · '+instrumentLabel:'');
   var style=d.createElement('style');style.textContent=(css||'')+'\n@page{size:'+g.width+'mm '+g.height+'mm;margin:0}html,body{margin:0;padding:0;color:#111;background:#eee;font-family:system-ui}.print-tools{text-align:center;padding:12px}.huwabc-page{display:block;position:relative;box-sizing:border-box;width:'+g.width+'mm!important;height:'+g.height+'mm!important;aspect-ratio:auto!important;margin:8mm auto!important;background:white;overflow:hidden;break-after:page;page-break-after:always}.huwabc-page:last-child{break-after:auto;page-break-after:auto}.huwabc-page-body{display:flow-root}.huwabc-page-folio{position:absolute;bottom:3mm;right:8mm;font:9pt system-ui;color:#777}.huwabc-system-block{line-height:0;break-inside:avoid}.huwabc-system-block svg{display:block;width:100%;height:auto;overflow:visible}@media print{html,body{background:white}.print-tools{display:none}.huwabc-page{margin:0!important;box-shadow:none!important}}';d.head.appendChild(style);
@@ -442,7 +444,7 @@ function mount(root,opts){
  }
  var api={layout:layout,onEvent:onEvent,setPlaying:setPlaying,select:function(n){var b=blockOf(n);if(b){var r=records.find(function(r){return r.node===n||r.node.contains(n)||n.contains(r.node);});if(r)selectedOrdinal=r.ordinal;activatePage(b.page);}},
   anchor:anchor,revealNode:revealNode,revealOrdinal:revealOrdinal,next:function(){return turn(1,true);},previous:function(){return turn(-1,true);},first:function(){return go(0,false);},go:go,
-  isDesk:function(){return desk;},setDesk:setDesk,isFollowing:isFollowing,destroy:destroy,printTo:printTo,openPrintPreview:openPrintPreview,viewport:viewport,element:shell,
+  isDesk:function(){return desk;},setDesk:setDesk,isFollowing:isFollowing,destroy:destroy,printTo:printTo,openPrintPreview:openPrintPreview,printLabel:printLabel,viewport:viewport,element:shell,
   info:function(){return {page:pageIndex+1,activePage:activePage+1,count:pages.length,mode:mode,shown:countShown(),requested:requestedCount(),follow:isFollowing(),followEnabled:followEnabled,followSuspended:followSuspended,playing:playing,desk:desk,anchor:anchor(),pages:pages.map(function(p){return {height:p.height,scale:p.scale,systems:p.systems};})};}};
  root._huwabcPager=api;return api;
 }

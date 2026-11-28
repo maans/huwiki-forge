@@ -121,6 +121,15 @@ view.notationStatus=function(wiki,concert,written){
  return parts.join(' · ');
 };
 view.printLabel=function(wiki){return (active==='c'&&preferences.capo?(language(wiki)==='en'?'Capo shapes':'Capogreb'):label(current(),language(wiki),'print'))+(preferences.capo?' · Capo '+preferences.capo:'')+(preferences.transpose?' · '+(preferences.transpose>0?'+':'')+preferences.transpose:'')+(preferences.tab&&preferences.tab!=='off'?' · Tab · '+stringOptions.find(function(s){return s[0]===preferences.tab;})[language(wiki)==='en'?2:1]:'');};
+view.printDescription=function(wiki,concert,written){
+ var en=language(wiki)==='en',v=current(),parts=[label(v,language(wiki),'print')],a=keyName(concert),b=keyName(written);
+ if(b)parts.push((en?'Notes: ':'Noder: ')+b);
+ if(a)parts.push((en?'Sounds: ':'Klinger: ')+a);
+ parts.push(v.capo?'Capo '+v.capo:en?'Capo off':'Capo fra');
+ var tab=stringOptions.find(function(s){return s[0]===v.tab;});
+ parts.push(tab?'Tab · '+tab[en?2:1]:en?'Tab off':'Tab fra');
+ return parts.join(' · ');
+};
 return view;
 }
 Object.assign(exports,create());exports.create=create;

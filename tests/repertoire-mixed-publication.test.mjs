@@ -88,10 +88,11 @@ test('PDF chapters render their own notation even when another live score is alr
  const E=()=>{const holder={style:{},remove(){this.removed=true;}};holders.push(holder);return holder;};
  const start=js.indexOf('async function renderAbcChapter('),end=js.indexOf('async function renderSelectedChapter(',start);
  const render=new Function('$tw','document','abcExportModules','findFrame','liveScoreRoot','E','attachScoreAgreements',js.slice(start,end)+';return renderAbcChapter;')($tw,{body:{appendChild(){}}},()=>modules,()=>({old:true}),scope=>scope.old?oldLiveRoot:scope.root,E,()=>{});
- await render('First',null,0,false,false,{}, {id:'c',capo:3,transpose:2,tab:'guitar'});
+ await render('First',null,0,false,false,{First:{key:'Gm',tempo:'1/4=110'}}, {id:'c',capo:3,transpose:2,tab:'guitar'});
  await render('Second',null,1,false,false,{}, {id:'c',capo:null,transpose:0,tab:null});
  assert.equal(calls.length,2);assert.match(calls[0].parser,/view="full"/);
  assert.equal(JSON.parse(calls[0].options.variables['huwabc-notation-settings']).capo,3);
+ assert.deepEqual(JSON.parse(calls[0].options.variables['huwabc-repertoire-agreement']),{key:'Gm',tempo:'1/4=110'});
  assert.equal(JSON.parse(calls[1].options.variables['huwabc-notation-settings']).capo,null);
  assert.match(labels[0],/Capo 3/);assert.doesNotMatch(labels[1],/Capo/);
  assert.equal(disposed,2);assert.ok(holders.every(holder=>holder.removed));assert.equal(instrument.current().capo,null);

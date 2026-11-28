@@ -42,6 +42,8 @@ test('independent reading views do not notify or transpose another song or the s
  assert.equal(a.current().semitones,-2);assert.equal(b.current().semitones,0);assert.equal(view.current().semitones,0);assert.equal(notifications,0);
  assert.equal(tabs.view({},a).config.capo,4);assert.equal(tabs.view({},b).config.capo,0);assert.equal(tabs.view({},b).enabled,false);
  const restored=view.create(saved.at(-1));assert.deepEqual(JSON.parse(JSON.stringify(restored.snapshot())),{id:'c',capo:4,tab:'guitar',transpose:2});
+ assert.match(a.printDescription(null,{root:'D'},{root:'C'}),/Noder: C · Klinger: D · Capo 4 · Tab · Guitar/);
+ assert.match(b.printDescription(null,{root:'D'},{root:'D'}),/Noder: D · Klinger: D · Capo fra · Tab fra/);
  const source='X:1\nM:4/4\nL:1/4\nK:D\n"D"D E F G|',baseline=JSON.stringify(abc.parseOnly(source)[0].setUpAudio());
  for(const reading of [a,b,restored])assert.equal(JSON.stringify(abc.parseOnly(source,{visualTranspose:reading.current().semitones})[0].setUpAudio()),baseline);
 });
