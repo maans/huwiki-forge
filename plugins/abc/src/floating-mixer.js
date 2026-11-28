@@ -97,7 +97,7 @@ module-type: library
     var chordList=node('div','huwabc-mini-mixer-chordlist');chordList.setAttribute('role','tabpanel');content.appendChild(chordList);
     var youtubeList=node('div','huwabc-mini-mixer-youtube');youtubeList.setAttribute('role','tabpanel');youtubeList.style.cssText='padding:8px;max-width:100%;overflow:auto';content.appendChild(youtubeList);
     var youtube=MiniYoutube.mount(youtubeList,{wiki:wiki,title:musicTitle,onState:function(playing){if(selectedTab==='youtube')updatePlayback(playing,true);},onPlay:function(){if((currentlyPlaying||currentlyPreparing)&&options.onStopPlayback)options.onStopPlayback();}}),youtubeVisible=false;
-    function syncYoutube(){var want=selectedTab==='youtube'&&isVisible();if(want===youtubeVisible)return;youtubeVisible=want;if(want)youtube.show();else youtube.hide();}
+    function syncYoutube(){var want=selectedTab==='youtube'&&visibleRequested&&!closed;if(want===youtubeVisible)return;youtubeVisible=want;if(want)youtube.show();else youtube.hide();}
     var roomRow=node('label','huwabc-mini-mixer-reverb');
     var roomLabel=word('Rumklang','Reverb');
     roomRow.appendChild(node('span','',roomLabel));
@@ -197,16 +197,26 @@ module-type: library
       var retained=panel.parentNode&&panel.parentNode.classList&&panel.parentNode.classList.contains('huwabc-fullscreen-surface')?panel.parentNode:null;
       return anchor||own||retained||doc.querySelector('.huwabc-fullscreen-surface')||doc.body;
     }
+    function movePanel(parent,before) {
+      before=before||null;
+      if(before===panel||panel.parentNode===parent&&panel.nextSibling===before)return;
+      // An ordinary remove/reinsert reloads an iframe and disconnects its API.
+      if(panel.isConnected&&parent.isConnected&&typeof parent.moveBefore==='function'){
+        try{parent.moveBefore(panel,before);return;}catch(ignore){}
+      }
+      var resume=youtube&&youtube.checkpoint&&youtube.checkpoint();
+      parent.insertBefore(panel,before);
+      if(resume&&youtube.restoreAfterMove)youtube.restoreAfterMove(resume);
+    }
     function placeFloating() {
-      var parent=floatingParent();
-      if(panel.parentNode!==parent)parent.appendChild(panel);
+      movePanel(floatingParent(),null);
     }
     function onFullscreenChange() {
       if(closed||!floating)return;
       placeFloating();clamp();
     }
     function layout(nextFloating) {
-      floating = !canDock || !!nextFloating;
+      floating = !canDock || !!nextFloating || !sidebarVisible();
       panel.classList.toggle('huwabc-mini-mixer--floating',floating);
       if (floating) {
         placeFloating();
@@ -214,8 +224,8 @@ module-type: library
         clamp();
       } else {
         panel.style.position = '';panel.style.left = '';panel.style.top = '';
-        if (dockHeader && dockHeader.parentNode === dock) dock.insertBefore(panel,dockHeader.nextSibling);
-        else if (panel.parentNode !== dock) dock.appendChild(panel);
+        if (dockHeader && dockHeader.parentNode === dock) movePanel(dock,dockHeader.nextSibling);
+        else movePanel(dock,null);
       }
       toggleDock.hidden = !canDock;
       toggleDock.textContent = floating ? word('I sidepanel','Dock') : word('Frigør','Detach');

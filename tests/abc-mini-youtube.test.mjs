@@ -8,9 +8,11 @@ async function setup({ready=true}={}){
  const doc=svgDocument(),players=[];
  Object.assign(doc.defaultView,{innerWidth:1200,innerHeight:900,location:{origin:'https://example.com'},requestAnimationFrame(){},addEventListener(){},removeEventListener(){},sessionStorage:{getItem(){return null;},setItem(){}}});
  doc.defaultView.YT={Player:class{
-  constructor(frame,{events}){this.frame=frame;this.events=events;this.plays=0;this.pauses=0;this.destroyed=0;players.push(this);if(ready)queueMicrotask(()=>events.onReady());}
+  constructor(frame,{events}){this.frame=frame;this.events=events;this.plays=0;this.pauses=0;this.destroyed=0;this.time=0;players.push(this);if(ready)queueMicrotask(()=>events.onReady());}
   playVideo(){this.plays++;this.events.onStateChange({data:1});}
   pauseVideo(){this.pauses++;this.events.onStateChange({data:2});}
+  getCurrentTime(){return this.time;}
+  seekTo(time){this.time=time;}
   destroy(){this.destroyed++;}
  }};
  const wiki={getTiddler(title){return {fields:{title,'repertoire-youtube':'https://youtu.be/abcdefghijk'}};},getTiddlerText(){return 'da';}};
@@ -77,4 +79,41 @@ test('A PDF-only mixer keeps all four tabs and opening or switching them never s
  assert.ok(panel.element.querySelector('.huwabc-mini-mixer-list').textContent.includes('ingen ABC-stemmer'));
  assert.equal(env.players.at(-1).plays,0);panel.togglePlayback();assert.equal(env.players.at(-1).plays,1);
  panel.destroy();
+});
+
+
+function sidebar(env,{atomic=true,visible=true}={}){
+ const doc=env.doc,root=doc.createElement('div'),wrapper=doc.createElement('div'),header=doc.createElement('div'),moves=[];
+ root.className='tc-sidebar-scrollable';header.className='tc-sidebar-header';header.box={x:900,y:30,width:280,height:80};
+ wrapper.appendChild(header);root.appendChild(wrapper);doc.body.appendChild(root);
+ Object.defineProperty(root,'firstElementChild',{get:()=>wrapper});
+ doc.defaultView.getComputedStyle=()=>({display:visible?'block':'none',visibility:'visible'});
+ if(atomic)for(const target of [doc.body,wrapper])target.moveBefore=function(node,before){moves.push(this);this.insertBefore(node,before);};
+ return {wrapper,moves};
+}
+
+test('Dock and detach preserve the same YouTube player, current time and active playback',async()=>{
+ const env=await setup(),dock=sidebar(env),panel=env.mixer.mount({host:env.host,wiki:env.wiki,title:'Song',videoOnly:true,initialFloating:true,initiallyVisible:false});
+ panel.show();await env.settle();panel.togglePlayback();const player=env.players[0];player.time=37.25;
+ panel.redock();await env.settle();assert.equal(panel.isFloating(),false);assert.equal(panel.isVisible(),true);assert.equal(panel.element.parentNode,dock.wrapper);
+ assert.equal(player.destroyed,0);assert.equal(env.players.length,1);assert.equal(panel.isPlaying(),true);assert.equal(player.time,37.25);
+ panel.show({floating:true});await env.settle();assert.equal(panel.element.parentNode,env.doc.body);assert.equal(panel.isFloating(),true);assert.equal(panel.isPlaying(),true);
+ assert.equal(player.destroyed,0);assert.equal(env.players.length,1);assert.equal(dock.moves.length,2);
+ panel.togglePlayback();assert.equal(player.pauses,1);panel.destroy();
+});
+
+test('Older browsers restore playback position after both dock and detach without losing pause state',async()=>{
+ const env=await setup(),dock=sidebar(env,{atomic:false}),panel=env.mixer.mount({host:env.host,wiki:env.wiki,title:'Song',videoOnly:true,initialFloating:true,initiallyVisible:false});
+ panel.show();await env.settle();panel.togglePlayback();env.players[0].time=42.5;
+ panel.redock();await env.settle();assert.equal(panel.element.parentNode,dock.wrapper);assert.equal(env.players[0].destroyed,1);
+ assert.equal(env.players[1].time,42.5);assert.equal(env.players[1].plays,1);assert.equal(panel.isPlaying(),true);
+ panel.togglePlayback();panel.show({floating:true});await env.settle();
+ assert.equal(env.players[2].time,42.5);assert.equal(env.players[2].plays,0);assert.equal(panel.isPlaying(),false);assert.equal(panel.isVisible(),true);panel.destroy();
+});
+
+test('A hidden sidebar cannot make a requested mixer disappear or stop its video',async()=>{
+ const env=await setup();sidebar(env,{visible:false});
+ const panel=env.mixer.mount({host:env.host,wiki:env.wiki,title:'Song',videoOnly:true,initialFloating:true,initiallyVisible:false});
+ panel.show();await env.settle();panel.togglePlayback();const player=env.players[0];
+ panel.redock();assert.equal(panel.isFloating(),true);assert.equal(panel.isVisible(),true);assert.equal(panel.isPlaying(),true);assert.equal(player.destroyed,0);panel.destroy();
 });

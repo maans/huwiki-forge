@@ -40,21 +40,22 @@ exports.mount=function(host,options){
  function el(tag,text){var n=doc.createElement(tag);if(text)n.textContent=text;return n;}
  function state(value){playing=value;if(options.onState)options.onState(value);}
  function stop(){generation++;ready=false;pendingPlay=false;if(player){try{player.destroy();}catch(ignore){}player=null;}if(frame){frame.src="about:blank";frame.remove();frame=null;}state(false);}
- function draw(){
+ function draw(resume){
   stop();host.textContent="";
   var clip=exports.video(wiki,options.title);
   if(clip.id&&visible){
    frame=el("iframe");frame.className="huwabc-mini-youtube-frame";frame.title=clip.title+" · YouTube";
-   frame.src="https://www.youtube-nocookie.com/embed/"+clip.id+"?enablejsapi=1&autoplay=0&playsinline=1&rel=0&origin="+encodeURIComponent(doc.defaultView.location&&doc.defaultView.location.origin||"")+"&start="+clip.start;
+   frame.src="https://www.youtube-nocookie.com/embed/"+clip.id+"?enablejsapi=1&autoplay=0&playsinline=1&rel=0&origin="+encodeURIComponent(doc.defaultView.location&&doc.defaultView.location.origin||"")+"&start="+Math.floor(resume?resume.time:clip.start);
    frame.style.cssText="width:100%;aspect-ratio:16/9;min-height:200px;border:0";
    frame.setAttribute("allow","autoplay; encrypted-media; picture-in-picture; fullscreen");frame.setAttribute("allowfullscreen","");frame.setAttribute("referrerpolicy","strict-origin-when-cross-origin");host.appendChild(frame);
    var token=generation,target=frame;
    loadApi(doc).then(function(YT){
     if(closed||!visible||token!==generation)return;
-    player=new YT.Player(target,{events:{onReady:function(){if(token!==generation)return;ready=true;if(pendingPlay){pendingPlay=false;player.playVideo();}},onStateChange:function(event){if(token!==generation)return;if(event.data===1&&options.onPlay)options.onPlay();state(event.data===1||event.data===3);},onError:function(){if(token!==generation)return;state(false);host.appendChild(el("p","Videoen kan ikke afspilles her. Brug linket til YouTube."));}}});
+    player=new YT.Player(target,{events:{onReady:function(){if(token!==generation)return;ready=true;if(resume&&resume.time>0&&player.seekTo)player.seekTo(resume.time,true);if(pendingPlay){pendingPlay=false;player.playVideo();}},onStateChange:function(event){if(token!==generation)return;if(event.data===1&&options.onPlay)options.onPlay();state(event.data===1||event.data===3);},onError:function(){if(token!==generation)return;state(false);host.appendChild(el("p","Videoen kan ikke afspilles her. Brug linket til YouTube."));}}});
    }).catch(function(error){if(!closed&&token===generation)host.appendChild(el("p",error.message));});
    var link=el("a","Åbn på YouTube ↗");link.href="https://www.youtube.com/watch?v="+clip.id;link.target="_blank";link.rel="noopener noreferrer";host.appendChild(link);
   }else if(!clip.id)host.appendChild(el("p","Der er endnu ikke knyttet en YouTube-video til dette nummer."));
+  if(resume&&resume.playing){pendingPlay=true;state(true);}
   var edit=el("details"),summary=el("summary",clip.id?"Skift YouTube-video":"Tilføj YouTube-video");edit.appendChild(summary);
   var input=el("input");input.type="url";input.placeholder="https://www.youtube.com/watch?v=…";input.setAttribute("aria-label","YouTube-link til nummeret");input.style.cssText="width:100%;box-sizing:border-box";
   if(clip.id)input.value="https://www.youtube.com/watch?v="+clip.id;
@@ -67,7 +68,13 @@ exports.mount=function(host,options){
   });
   edit.appendChild(input);edit.appendChild(save);edit.appendChild(message);host.appendChild(edit);
  }
- return {show:function(){if(closed)return;visible=true;if(!frame)draw();},hide:function(){visible=false;stop();},isPlaying:function(){return playing||pendingPlay;},toggle:function(){if(closed||!visible)return false;if(!ready){pendingPlay=!pendingPlay;state(pendingPlay);return true;}var pause=playing;state(!pause);if(pause)player.pauseVideo();else player.playVideo();return true;},stop:stop,refresh:function(){if(visible&&!closed)draw();},destroy:function(){closed=true;stop();host.textContent="";}};
+ function checkpoint(){
+  if(!frame)return null;
+  var time=exports.video(wiki,options.title).start;
+  try{if(player&&player.getCurrentTime)time=Number(player.getCurrentTime())||time;}catch(ignore){}
+  return {time:Math.max(0,time),playing:playing||pendingPlay};
+ }
+ return {checkpoint:checkpoint,restoreAfterMove:function(resume){if(!closed&&visible&&resume)draw(resume);},show:function(){if(closed)return;visible=true;if(!frame)draw();},hide:function(){visible=false;stop();},isPlaying:function(){return playing||pendingPlay;},toggle:function(){if(closed||!visible)return false;if(!ready){pendingPlay=!pendingPlay;state(pendingPlay);return true;}var pause=playing;state(!pause);if(pause)player.pauseVideo();else player.playVideo();return true;},stop:stop,refresh:function(){if(visible&&!closed)draw();},destroy:function(){closed=true;stop();host.textContent="";}};
 };
 exports.id=id;
 })();
