@@ -540,12 +540,13 @@ function buildPreview(title,preset) {
  if(!t){alert(tr.missing);return;}
  var docBody=document.body,overflow=docBody.style.overflow,prevFocus=document.activeElement;
  var overlay=E("section","huprint-overlay");overlay.setAttribute("role","dialog");overlay.setAttribute("aria-modal","true");overlay.setAttribute("aria-label",w.print);
- var bar=E("header","huprint-bar"),label=E("strong","huprint-label",w.print),back=EButton(tr.close,close),prepare=EButton(w.prepare,prepareNow),share=EButton(tr.share,shareNow),save=E("a","huprint-btn",tr.save),status=E("div","huprint-status","");
+ var bar=E("header","huprint-bar"),label=E("strong","huprint-label",w.print),back=EButton(tr.close,close),prepare=EButton(w.prepare,prepareNow),share=EButton(isAppleTouch()?tr.share:lang==="da"?"Udskriv PDF":"Print PDF",shareNow),save=E("a","huprint-btn",tr.save),status=E("div","huprint-status","");
  share.classList.add("huprint-primary");share.disabled=true;save.hidden=true;status.setAttribute("role","status");
  var optionsBtn=EButton(lang==="da"?"⚙ Indstillinger":"⚙ Settings",function(){settings.hidden=!settings.hidden;optionsBtn.setAttribute("aria-expanded",String(!settings.hidden));optionsBtn.textContent=settings.hidden?(lang==="da"?"⚙ Indstillinger":"⚙ Settings"):(lang==="da"?"✕ Skjul indstillinger":"✕ Hide settings");});
  optionsBtn.setAttribute("aria-expanded","false");
  bar.appendChild(label);bar.appendChild(optionsBtn);bar.appendChild(back);bar.appendChild(prepare);bar.appendChild(share);bar.appendChild(save);bar.appendChild(status);
  var settings=E("section","huprint-settings"),controls=E("div","huprint-controls"),sourceLabel=E("label","huprint-setting"),sourceSelect=E("select","huprint-select"),specificLabel=E("label","huprint-setting"),tagSelect=E("select","huprint-select"),listInput=E("input","huprint-input"),listHints=E("datalist"),headerLabel=E("label","huprint-setting"),headerSelect=E("select","huprint-select"),headerText=E("input","huprint-input"),tocLabel=E("label","huprint-setting"),tocCheck=E("input"),titlesLabel=E("label","huprint-setting"),titlesCheck=E("input"),autoFacingLabel=E("label","huprint-setting huprint-auto-facing"),autoFacingCheck=E("input"),selection=E("div","huprint-selection"),selectionHeading=E("strong","huprint-selection-heading",w.contents),selectionActions=E("div","huprint-selection-actions"),paperWrap=E("div","huprint-paper-wrap");
+ var output=$tw.modules.execute("$:/plugins/huwiki/print-article/output-actions.js").mount({document:document,window:window,navigator:navigator,language:lang,preferShare:isAppleTouch(),title:w.print,onError:function(error){if(pdfUrl)save.hidden=false;status.textContent=tr.failure+(error.message||error);}});
  var file=null,pdfUrl=null,previewUrls=[],closed=false,busy=false,entries=[{kind:"tiddler",title:title,checked:true,startLeft:false}],source="single",settingsVersion=0,automatic=false,refreshTimer=null,refreshQueued=false,previewMode="overview",focusedPage=0,lastPreviewImages=null;
  var pageCounts=Object.create(null),printedPlan=Object.create(null),countGeneration=0;
  function opt(select,key,name){var o=E("option",null,name);o.value=key;select.appendChild(o);}
@@ -593,8 +594,8 @@ function buildPreview(title,preset) {
  document.head.appendChild(style);docBody.appendChild(overlay);docBody.style.overflow="hidden";
  function revokePreviews(){previewUrls.forEach(function(url){URL.revokeObjectURL(url);});previewUrls=[];}
  function schedulePreview(){clearTimeout(refreshTimer);if(closed)return;status.textContent=lang==="da"?"Forhåndsvisningen opdateres automatisk …":"Preview updating automatically …";refreshTimer=setTimeout(function(){refreshTimer=null;if(busy){refreshQueued=true;return;}prepareNow();},750);}
- function resetFile(skipAuto){printedPlan=Object.create(null);Array.prototype.forEach.call(selection.querySelectorAll(".huprint-auto-plan"),function(n){n.remove();});updatePageBadges();file=null;share.disabled=true;save.hidden=true;if(pdfUrl){URL.revokeObjectURL(pdfUrl);pdfUrl=null;}settingsVersion++;status.textContent=w.pending;if(automatic&&!skipAuto)schedulePreview();}
- function close(){if(closed)return;closed=true;clearTimeout(refreshTimer);lastPreviewImages=null;if(restoreInstrument)restoreInstrument();docBody.style.overflow=overflow;overlay.remove();style.remove();revokePreviews();if(pdfUrl)URL.revokeObjectURL(pdfUrl);document.removeEventListener("keydown",keys,true);if(active&&active.close===close)active=null;try{if(prevFocus&&prevFocus.isConnected)prevFocus.focus();}catch(ignore){}}
+ function resetFile(skipAuto){output.reset();printedPlan=Object.create(null);Array.prototype.forEach.call(selection.querySelectorAll(".huprint-auto-plan"),function(n){n.remove();});updatePageBadges();file=null;share.disabled=true;save.hidden=true;if(pdfUrl){URL.revokeObjectURL(pdfUrl);pdfUrl=null;}settingsVersion++;status.textContent=w.pending;if(automatic&&!skipAuto)schedulePreview();}
+ function close(){if(closed)return;closed=true;output.destroy();clearTimeout(refreshTimer);lastPreviewImages=null;if(restoreInstrument)restoreInstrument();docBody.style.overflow=overflow;overlay.remove();style.remove();revokePreviews();if(pdfUrl)URL.revokeObjectURL(pdfUrl);document.removeEventListener("keydown",keys,true);if(active&&active.close===close)active=null;try{if(prevFocus&&prevFocus.isConnected)prevFocus.focus();}catch(ignore){}}
  function keys(ev){if(ev.key==="Escape"){ev.preventDefault();close();}}
  function currentTitles(){return entries.filter(function(e){return e.kind==="tiddler"&&e.checked;}).map(function(e){return e.title;});}
  function updatePageBadges(){
@@ -749,16 +750,19 @@ function buildPreview(title,preset) {
    result.chapterStats.forEach(function(stat){pageCounts[stat.title]=stat.pages;printedPlan[stat.title]=stat;});
    lastPreviewImages=result.images;renderSelection();
    renderBookSpreads(result.images);
-   var canShare=!!(navigator.share&&(!navigator.canShare||navigator.canShare({files:[file]})));
-   share.hidden=!canShare;share.disabled=!canShare;
-   if(!isAppleTouch()){pdfUrl=URL.createObjectURL(result.blob);save.href=pdfUrl;save.download=safeName(fname);save.hidden=false;}
-   status.textContent=(canShare?tr.ready:isAppleTouch()?tr.unsupported:tr.readyDesktop)+" · "+result.pages+" "+(lang==="da"?"PDF-sider":"PDF pages")+" · "+result.links+" "+(lang==="da"?"links":"links")+
+   await output.prepare(result.images);
+   if(closed||version!==settingsVersion)return;
+   var canShare=isAppleTouch()&&output.canShare(file);
+   share.hidden=false;share.disabled=false;
+   share.textContent=canShare?tr.share:lang==='da'?'Udskriv PDF':'Print PDF';
+   pdfUrl=URL.createObjectURL(result.blob);save.href=pdfUrl;save.download=safeName(fname);save.hidden=!!canShare;
+   status.textContent=(canShare?tr.ready:lang==="da"?"PDF klar. Vælg Udskriv PDF eller Gem PDF.":"PDF ready. Choose Print PDF or Save PDF.")+" · "+result.pages+" "+(lang==="da"?"PDF-sider":"PDF pages")+" · "+result.links+" "+(lang==="da"?"links":"links")+
     " · "+result.automaticBlanks+" "+w.autoSummary+" "+w.blank.toLowerCase()+" · "+result.manualBlanks+" "+w.manualSummary+" "+w.blank.toLowerCase()+
     (result.spreadWarnings.length?" · "+result.spreadWarnings.map(function(e){return e.title+": "+e.pages+" sider";}).join(", "):"");
   }catch(e){if(!closed)status.textContent=tr.failure+(e&&e.message||e);}
   finally{busy=false;prepare.disabled=false;if(refreshQueued&&!closed){refreshQueued=false;schedulePreview();}}
  }
- function shareNow(){if(!file||!navigator.share)return;navigator.share({files:[file],title:w.print}).catch(function(e){if(e&&e.name!=="AbortError")status.textContent=tr.shareFailure+(e.message||e);});}
+ function shareNow(){if(file)output.activate(file);}
  function changed(){resetFile();}
  sourceSelect.addEventListener("change",function(){setSource(sourceSelect.value);});tagSelect.addEventListener("change",function(){setSource(source);});listInput.addEventListener("change",function(){if(source==="list")setSource(source);});
  headerSelect.addEventListener("change",function(){headerText.hidden=headerSelect.value!=="custom";changed();});headerText.addEventListener("input",changed);tocCheck.addEventListener("change",changed);titlesCheck.addEventListener("change",changed);autoFacingCheck.addEventListener("change",changed);
