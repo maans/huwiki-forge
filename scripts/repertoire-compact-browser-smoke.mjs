@@ -34,10 +34,12 @@ try {
   assert.ok(measure.overflow<=2,'buttons fit on one line: '+JSON.stringify({width,...measure}));
  }
  const before=await book.locator('.huwrep-book-stage').boundingBox();
+ await book.locator('.huwrep-session-settings>summary').click();
  await book.locator('.huwrep-reading-controls').click();
  await book.locator('.huwrep-performance').waitFor({state:'visible'});
  const after=await book.locator('.huwrep-book-stage').boundingBox();
  assert.ok(Math.abs(before.height-after.height)<2,'sound settings overlay without shrinking the score');
+ await book.locator('.huwrep-session-settings>summary').click();
  await book.locator('.huwrep-reading-controls').click();
  await book.locator('.huwrep-edit-score').click();
  await page.locator('.huwabc-edit-workshop').waitFor();
