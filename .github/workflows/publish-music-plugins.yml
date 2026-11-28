@@ -31,7 +31,7 @@ jobs:
           node scripts/build-forge-plugin-library.mjs
       - name: Verify mixer lifecycle, playback, source choices and publication
         run: |
-          node --test tests/abc-rhythm-head-audio.test.mjs tests/abc-mini-youtube.test.mjs tests/abc-mini-mixer-title.test.mjs tests/abc-reader-mode.test.mjs tests/abc-playback-feedback.test.mjs tests/repertoire-mixed-notation.test.mjs tests/repertoire-youtube.test.mjs tests/repertoire-source-roles.test.mjs tests/repertoire-mixed-publication.test.mjs
+          node --test tests/abc-tab-collision.test.mjs tests/abc-rhythm-head-audio.test.mjs tests/abc-mini-youtube.test.mjs tests/abc-mini-mixer-title.test.mjs tests/abc-reader-mode.test.mjs tests/abc-playback-feedback.test.mjs tests/repertoire-mixed-notation.test.mjs tests/repertoire-youtube.test.mjs tests/repertoire-source-roles.test.mjs tests/repertoire-mixed-publication.test.mjs
           node scripts/build-abc-ui.mjs --check
           node scripts/build-repertoire-plugin.mjs --check
       - name: Apply identical packages to existing Forge wikis

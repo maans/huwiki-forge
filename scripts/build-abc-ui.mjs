@@ -4,12 +4,15 @@
 import {readFile,writeFile,readdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
+import {patchTabCollisions} from './abcjs-tab-collision-patch.mjs';
 
 const directory=fileURLToPath(new URL('../plugins/abc/',import.meta.url));
 const target=path.join(directory,'dist/plugin.json');
 const original=await readFile(target,'utf8'),base=JSON.parse(original);
 const info=JSON.parse(await readFile(path.join(directory,'plugin-info.json'),'utf8'));
 const payload=JSON.parse(base.text);
+const vendor=payload.tiddlers['$:/plugins/huwiki/abc/vendor/abcjs.js'];
+vendor.text=patchTabCollisions(vendor.text);
 for(const name of (await readdir(path.join(directory,'src'))).sort()){
  if(!/\.(?:js|tid)$/.test(name))continue;
  const source=await readFile(path.join(directory,'src',name),'utf8');
