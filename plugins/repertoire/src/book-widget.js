@@ -495,7 +495,7 @@ Book.prototype.draw=function(){
  var printActions=el(doc,"div","huwrep-book-print-actions");
  var printInstrument=el(doc,"select","huwrep-input");
  printInstrument.setAttribute("aria-label","Instrument i udgivelsen");
- [["c","C · klingende"],["bb","B♭ · +2 halvtoner"],["eb","E♭ · sopranino"],["ebalto","E♭ · altsaxofon"]].forEach(function(p){printInstrument.appendChild(choice(doc,p[0],p[1]));});
+ [["current","Følg nodeindstillingerne"],["c","C · klingende"],["bb","B♭ · +2 halvtoner"],["eb","E♭ · sopranino"],["ebalto","E♭ · altsaxofon"]].forEach(function(p){printInstrument.appendChild(choice(doc,p[0],p[1]));});
  printActions.appendChild(printInstrument);
  function openPrint(scores){
   printMenu.open=false;
@@ -507,12 +507,13 @@ Book.prototype.draw=function(){
   printActions.appendChild(btn(doc,Printing.cueLabel(wiki),function(){printMenu.open=false;self.setFullscreen(false);Printing.cues(wiki,self.setlistTitle,self);}));
   printActions.appendChild(btn(doc,"Sætliste og aftaler",function(){openPrint(false);}));
   printActions.appendChild(btn(doc,"Samlet PDF for sættet",function(){openPrint(true);},"huwrep-primary"));
- }else printActions.appendChild(btn(doc,"Udskriv dette nummer",function(){
-  self.setFullscreen(false);
+ }
+ printActions.insertBefore(btn(doc,"Udskriv de viste noder",function(){
+  printMenu.open=false;
   if(self._selectedNotation&&self._selectedNotation.pdf){var a=host.querySelector("a.huwrep-book-pdf-link");if(a)a.click();return;}
   var actions=self._score&&self._score.host&&self._score.host.querySelectorAll(".huwabc-actions button");
   var print=Array.from(actions||[]).find(function(b){return /PDF.*Udskriv|PDF.*Print/.test(b.textContent);});if(print)print.click();
- }));
+ }),printActions.firstChild);
  printMenu.appendChild(printActions);settingsBody.appendChild(printMenu);
  if(!this.pieceTitle&&wiki.getTiddler("$:/plugins/huwiki/site-publisher"))settingsBody.appendChild(btn(doc,"Udgiv site",function(){
   self.setFullscreen(false);

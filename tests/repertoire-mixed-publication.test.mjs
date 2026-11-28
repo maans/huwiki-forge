@@ -5,11 +5,11 @@ import {runInNewContext} from 'node:vm';
 
 const read=p=>readFile(new URL('../'+p,import.meta.url),'utf8');
 class Tiddler{constructor(...args){this.fields=Object.assign({},...args.map(x=>x?.fields||x));}}
-async function fixture(){
+async function fixture(instrument){
  const rows=new Map(),$tw={Tiddler,utils:{stringifyList:list=>list.map(x=>'[['+x+']]').join(' ')}};
  const wiki={allTitles:()=>[...rows.keys()],getTiddler:t=>rows.get(t),tiddlerExists:t=>rows.has(t),getCreationFields:()=>({}),addTiddler:t=>rows.set(t.fields.title,t),getTiddlerText:(t,f='')=>rows.get(t)?.fields.text??f,getTiddlerList:(t,field='list')=>Array.from(String(rows.get(t)?.fields[field]||'').matchAll(/\[\[([^\]]+)\]\]|([^\s]+)/g),m=>m[1]||m[2])};
  const model={},printing={};runInNewContext(await read('plugins/repertoire/src/model.js'),{exports:model,$tw});
- runInNewContext(await read('plugins/repertoire/src/print.js'),{exports:printing,$tw,require:()=>model});
+ runInNewContext(await read('plugins/repertoire/src/print.js'),{exports:printing,$tw,require:name=>name.endsWith('/instrument-view.js')?instrument:model});
  for(const t of [{title:'Song','repertoire-leadsheet-source':'Song lead','repertoire-guitar-pdf':'song.pdf'},{title:'Song lead','abc-source':'X:1\nK:C\nC4|','repertoire-work-title':'Song'},{title:'PDF only','repertoire-guitar-pdf':'original.pdf'},{title:'Words',text:'A verse and the agreed ending.'},{title:'Image','repertoire-image':'data:image/png;base64,AA=='},{title:'Missing'},{title:'$:/plugins/huwiki/print-article'}])wiki.addTiddler(new Tiddler(t));
  const orch=model.orchestra(wiki,'Helles'),titles=['Song','PDF only','Words','Image'],items=titles.map(t=>model.addItem(wiki,orch,t).title),set=model.createSetlist(wiki,orch,'Mixed');model.setEntries(wiki,set,items);model.setPresentation(wiki,set,null,'leadsheet');model.setPresentation(wiki,set,items[1],'guitar');
  return {rows,wiki,model,printing,orch,items,set,$tw};
@@ -53,4 +53,19 @@ test('selected source routing uses the alternative ABC and retains canonical mus
  await render('Song',null,0,false,false,{Song:{key:'Bb',cues:'Last chorus'}},sources);
  assert.equal(calls[0][0],'Song lead');assert.deepEqual(calls[0][5],{'Song lead':{key:'Bb',cues:'Last chorus'}});
  const pdf=await render('Original',null,0,true,false,{},sources);assert.equal(pdf.source,'original.pdf');assert.equal(pdf.needsFacingBlank,true);
+});
+
+test('set PDF follows reader instrument, key, capo and TAB unless explicitly overridden',async()=>{
+ for(const id of ['c','bb','eb','tenor']){
+  const state={id,capo:3,tab:'mandolin',transpose:2};
+  const instrument={profiles:{c:{},bb:{},eb:{},tenor:{}},current:()=>state,
+   printLabel:()=>id+' · Capo 3 · Tab · Mandolin · +2'};
+  const f=await fixture(instrument),events=[],widget={dispatchEvent:e=>events.push(e)};
+  const result=f.printing.open(f.wiki,f.set,widget,{scores:true,instrumentId:'current'});
+  assert.equal(events[0].paramObject.instrumentId,id);
+  assert.match(f.wiki.getTiddler(result.summary).fields.text,/Capo 3 · Tab · Mandolin · \+2/);
+  assert.deepEqual(state,{id,capo:3,tab:'mandolin',transpose:2});
+  f.printing.open(f.wiki,f.set,widget,{scores:true,instrumentId:'c'});
+  assert.equal(events[1].paramObject.instrumentId,'c');
+ }
 });

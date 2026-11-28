@@ -36,8 +36,13 @@ function open(wiki,setlistTitle,widget,options){
  if(!widget||typeof widget.dispatchEvent!=="function")return {error:"Udgivelse kræver det åbne repertoire."};
  var site=!!options.site,scores=!!options.scores,publisher=site?"$:/plugins/huwiki/site-publisher":"$:/plugins/huwiki/print-article";
  if(!wiki.getTiddler(publisher))return {error:(site?"SitePublisher":"PDF Publisher")+" er ikke installeret i wikien."};
- var instrumentId=/^(c|bb|eb|ebalto)$/.test(options.instrumentId)?options.instrumentId:"c";
- var instrumentName={c:"C · klingende noder",bb:"B♭ · transponeret",eb:"E♭ · sopranino",ebalto:"E♭ · altsaxofon"}[instrumentId];
+ // Default to the same written view as the reader, including capo, TAB and key.
+ var instrument=null;try{instrument=require("$:/plugins/huwiki/abc/instrument-view.js");}catch(ignore){}
+ var current=instrument&&typeof instrument.current==="function"?instrument.current():{id:"c"};
+ var instrumentId=instrument&&instrument.profiles&&instrument.profiles[options.instrumentId]?options.instrumentId:
+  /^(c|bb|eb|ebalto)$/.test(options.instrumentId)?options.instrumentId:current.id;
+ var instrumentName=instrument&&typeof instrument.printLabel==="function"&&instrumentId===current.id?instrument.printLabel(wiki):
+  {c:"C · klingende noder",bb:"B♭ · transponeret",eb:"E♭ · sopranino",ebalto:"E♭ · altsaxofon"}[instrumentId]||instrumentId;
  var orch=wiki.getTiddler(set.fields["orchestra-title"]),orchName=orch&&(orch.fields.name||orch.fields.title)||"Repertoire",setName=set.fields.name||set.fields.title;
  var entries=model.entries(wiki,setlistTitle).map(function(id,index){
   var item=wiki.getTiddler(id),title=item&&item.fields["music-title"]||id;
