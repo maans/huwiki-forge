@@ -129,3 +129,13 @@ test('stopping a pending request immediately clears visible preparation on both 
  h.player.destroy();
 });
 
+
+test('Opening an ABC score and its mixer does not request preparation or playback',async()=>{
+ const h=minimalHarness();
+ assert.equal(h.starts(),0);assert.equal(!!h.player.controller.isPreparing,false);
+ assert.equal(h.doc.querySelector('.huwabc-mini-mixer'),null);
+ h.player.openMixer(h.controls.querySelector('.abcjs-midi-start'));
+ assert.ok(h.doc.querySelector('.huwabc-mini-mixer'));assert.equal(h.starts(),0);assert.equal(!!h.player.controller.isPreparing,false);
+ h.release();for(let i=0;i<6;i++)await Promise.resolve();assert.equal(h.starts(),0);
+ h.player.destroy();
+});

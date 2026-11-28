@@ -230,10 +230,10 @@ ABCWidget.prototype.draw=function(){
   if(!t || !source){status.textContent="Ingen ABC-kilde fundet i feltet abc-source. Brug importværkstedet til at oprette et nodeark.";host.appendChild(status);return;}
   var working=this.editing ? this.draft : source;
   function showStatus(msg,error){status.textContent=msg||"";status.className="huwabc-status"+(error?" huwabc-error":"");}
-  var visual=null,ABC=null,controller=null,activeNotes=[],cursorLine=null,cueDataReady=false,fullMiniMixer=null,preparing=false,nativeMixerClick=false;
+  var visual=null,ABC=null,controller=null,activeNotes=[],cursorLine=null,cueDataReady=false,fullMiniMixer=null,preparing=false;
   audioControls.addEventListener('click',function(event){
     var target=event.target&&event.target.closest&&event.target.closest('.abcjs-midi-start');
-    if(!target||nativeMixerClick)return;
+    if(!target)return;
     var mixer=ensureFullMiniMixer();if(!mixer)return;
     event.preventDefault();event.stopImmediatePropagation();
     if(!mixer.isVisible())mixer.show({anchor:target});
@@ -251,7 +251,7 @@ ABCWidget.prototype.draw=function(){
       initiallyVisible:!!self._standaloneView,sidebarMixer:!!self._standaloneView,
       getConfig:accompControls.config,getPlaying:function(){return !!(controller&&controller.isStarted);},
       getPreparing:function(){return preparing||!!(controller&&controller.isPreparing);},
-      onTogglePlayback:function(){var btn=audioControls.querySelector('.abcjs-midi-start');if(btn){nativeMixerClick=true;try{btn.click();}finally{nativeMixerClick=false;}}},
+      onTogglePlayback:function(){if(controller)controller.play().catch(function(error){showStatus(error.message,true);});},
       onTransportState:function(playing,video){var btn=audioControls.querySelector('.abcjs-midi-start');if(btn){btn.classList.toggle('abcjs-pushed',playing);btn.setAttribute('aria-pressed',String(playing));btn.title=(playing?'Pause':'Afspil')+(video?' · YouTube':'');}},
       onStopPlayback:function(){if(controller)playback.stopOne(controller);},
       onPreview:function(next){accompControls.setConfig(next,false);if(controller&&controller.midiBuffer)controller.midiBuffer.setVolumes();},

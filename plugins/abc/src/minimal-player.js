@@ -36,7 +36,7 @@ exports.mount=function(host,options){
  var config=options.config?Accompaniment.clean(options.config):Accompaniment.read(fields);
  var activeNotes=[],cursorLine=null,detachObserver=null,locale=null,controlsLocale=null,playButton=null,unbindShortcuts=null;
  var pendingStart=null,chosenNode=null,cueDataReady=false,updateRevision=0,renderPending=false;
- var viewport=null,chordOverview=null,miniMixer=null,mixerButton=null,preparing=false,nativeMixerClick=false;
+ var viewport=null,chordOverview=null,miniMixer=null,mixerButton=null,preparing=false;
  var showOverview=!!(options.followChordsOnly&&fields['abc-chords-overview']==='yes');
  var drone=options.audio===false?null:Accompaniment.createDrone(function(){return config;},function(){return source;});
  function make(tag,cls,text){var node=doc.createElement(tag);if(cls)node.className=cls;if(text!==undefined)node.textContent=text;return node;}
@@ -236,7 +236,7 @@ exports.mount=function(host,options){
   miniMixer=FloatingMixer.mount({ABC:ABC,source:source,host:box,wiki:options.wiki,title:options.mixerTitle,
    anchor:mixerButton,initialFloating:!options.sidebarMixer,initiallyVisible:false,
    getConfig:function(){return config;},onVisibilityChange:mixerVisibility,
-   onTogglePlayback:function(){if(playButton){nativeMixerClick=true;try{playButton.click();}finally{nativeMixerClick=false;}}},
+   onTogglePlayback:function(){if(controller)controller.play().catch(failure);},
    onTransportState:function(value,video){if(playButton){playButton.classList.toggle('abcjs-pushed',value);playButton.setAttribute('aria-pressed',String(value));playButton.title=(value?'Pause':'Afspil')+(video?' · YouTube':'');}},getPlaying:function(){return !!(controller&&controller.isStarted);},
    onStopPlayback:stopAndReset,
    getPreparing:function(){return preparing||!!(controller&&controller.isPreparing);},
@@ -386,7 +386,7 @@ exports.mount=function(host,options){
    },{displayPlay:true,displayLoop:false,displayRestart:false,displayProgress:false,displayWarp:false});
    labelButton();
    controls.addEventListener('click',function(event){
-    if(nativeMixerClick||!options.mixerButton||!event.target.closest('.abcjs-midi-start'))return;
+    if(!options.mixerButton||!event.target.closest('.abcjs-midi-start'))return;
     event.preventDefault();event.stopImmediatePropagation();
     var mixer=ensureMiniMixer();if(!mixer.isVisible())mixer.show({anchor:playButton});mixer.togglePlayback();
    },true);

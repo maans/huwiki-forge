@@ -61,3 +61,20 @@ test('Displayed key changes preserve concert audio and do not alter the ABC sour
  for(const shift of [-11,-2,0,3,11]){view.setTranspose(shift);assert.equal(view.current().semitones,shift);assert.equal(JSON.stringify(abc.parseOnly(source,{visualTranspose:shift})[0].setUpAudio()),baseline);assert.equal(view.soundingPitches([60+shift])[0],60);}
  assert.equal(view.setTranspose(12),false);
 });
+
+test('A PDF-only mixer keeps all four tabs and opening or switching them never starts audio',async()=>{
+ const env=await setup();let plays=0,stops=0;
+ const panel=env.mixer.mount({host:env.host,wiki:env.wiki,title:'PDF tune',videoOnly:true,initiallyVisible:false,onTogglePlayback(){plays++;},onStopPlayback(){stops++;}});
+ const tabs=panel.element.querySelectorAll('[role=tab]');assert.equal(tabs.length,4);
+ assert.deepEqual(tabs.map(tab=>tab.textContent),['Stemmer','Akkompagnement','C7 · Akkorder','YouTube']);
+ assert.ok(tabs.every(tab=>!tab.hidden));
+ panel.show();await env.settle();assert.equal(env.players[0].plays,0);
+ for(const tab of ['voices','accompaniment','chords','youtube']){
+  panel.selectTab(tab);await env.settle();assert.equal(plays,0);assert.equal(stops,0);
+  assert.equal(panel.isPlaying(),false);
+  const button=panel.element.querySelector('.huwabc-mini-mixer-play');assert.equal(button.disabled,tab!=='youtube');
+ }
+ assert.ok(panel.element.querySelector('.huwabc-mini-mixer-list').textContent.includes('ingen ABC-stemmer'));
+ assert.equal(env.players.at(-1).plays,0);panel.togglePlayback();assert.equal(env.players.at(-1).plays,1);
+ panel.destroy();
+});

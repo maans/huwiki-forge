@@ -92,12 +92,11 @@ module-type: library
     [voiceTab,backingTab,chordTab].forEach(function(b){b.setAttribute('role','tab');});
     tabbar.appendChild(voiceTab);tabbar.appendChild(backingTab);tabbar.appendChild(chordTab);content.appendChild(tabbar);
     tabbar.appendChild(youtubeTab);tabbar.style.gridTemplateColumns='repeat(4,minmax(0,1fr))';
-    if(options.videoOnly){voiceTab.hidden=backingTab.hidden=chordTab.hidden=true;tabbar.style.gridTemplateColumns='1fr';}
     var list = node('div','huwabc-mini-mixer-list');list.setAttribute('role','tabpanel');content.appendChild(list);
     var backingList = node('div','huwabc-mini-mixer-list huwabc-mini-mixer-backing');backingList.setAttribute('role','tabpanel');content.appendChild(backingList);
     var chordList=node('div','huwabc-mini-mixer-chordlist');chordList.setAttribute('role','tabpanel');content.appendChild(chordList);
     var youtubeList=node('div','huwabc-mini-mixer-youtube');youtubeList.setAttribute('role','tabpanel');youtubeList.style.cssText='padding:8px;max-width:100%;overflow:auto';content.appendChild(youtubeList);
-    var youtube=MiniYoutube.mount(youtubeList,{wiki:wiki,title:musicTitle,onState:function(playing){if(selectedTab==='youtube')updatePlayback(playing,true);},onPlay:function(){if(options.onStopPlayback)options.onStopPlayback();}}),youtubeVisible=false;
+    var youtube=MiniYoutube.mount(youtubeList,{wiki:wiki,title:musicTitle,onState:function(playing){if(selectedTab==='youtube')updatePlayback(playing,true);},onPlay:function(){if((currentlyPlaying||currentlyPreparing)&&options.onStopPlayback)options.onStopPlayback();}}),youtubeVisible=false;
     function syncYoutube(){var want=selectedTab==='youtube'&&isVisible();if(want===youtubeVisible)return;youtubeVisible=want;if(want)youtube.show();else youtube.hide();}
     var roomRow=node('label','huwabc-mini-mixer-reverb');
     var roomLabel=word('Rumklang','Reverb');
@@ -145,7 +144,7 @@ module-type: library
       PlaybackFeedback.update(play,selectedTab!=='youtube'&&currentlyPreparing,{language:isDanish?'da':'en',caption:caption});
       if(!currentlyPreparing)updatePlayback(currentlyPlaying);
     }
-    function togglePlayback(){Array.prototype.forEach.call(doc.querySelectorAll('.huwrep-note-settings[open]'),function(menu){menu.open=false;});if(selectedTab==='youtube')return youtube.toggle();if(typeof options.onTogglePlayback==='function')options.onTogglePlayback();return true;}
+    function togglePlayback(){Array.prototype.forEach.call(doc.querySelectorAll('.huwrep-note-settings[open]'),function(menu){menu.open=false;});if(selectedTab==='youtube')return youtube.toggle();if(options.videoOnly)return false;if(typeof options.onTogglePlayback==='function')options.onTogglePlayback();return true;}
     play.addEventListener('click',function(e){e.stopPropagation();togglePlayback();});
     updatePlayback(options.getPlaying&&options.getPlaying());
     updatePreparing(options.getPreparing&&options.getPreparing());
@@ -458,11 +457,11 @@ module-type: library
       button.setAttribute('aria-label',label+' · '+mode+'. '+button.title);
     }
     function chooseTab(tab) {
-      selectedTab=options.videoOnly?'youtube':['voices','accompaniment','chords','youtube'].indexOf(tab)>=0?tab:'voices';
+      selectedTab=['voices','accompaniment','chords','youtube'].indexOf(tab)>=0?tab:'voices';
       var backing=selectedTab==='accompaniment',chords=selectedTab==='chords',video=selectedTab==='youtube';
-      if(video){if(options.onStopPlayback)options.onStopPlayback();else if((currentlyPlaying||options.getPlaying&&options.getPlaying())&&options.onTogglePlayback)options.onTogglePlayback();}
+      if(video&&(currentlyPlaying||currentlyPreparing||options.getPlaying&&options.getPlaying()||options.getPreparing&&options.getPreparing())){if(options.onStopPlayback)options.onStopPlayback();}
       list.hidden=backing||chords||video;backingList.hidden=!backing;chordList.hidden=!chords;youtubeList.hidden=!video;
-      roomRow.hidden=video;roomRow.style.display=video?'none':'flex';play.hidden=false;play.disabled=video&&!MiniYoutube.video(wiki,musicTitle).id;
+      roomRow.hidden=video||!!options.videoOnly;roomRow.style.display=video||options.videoOnly?'none':'flex';play.hidden=false;play.disabled=video?!MiniYoutube.video(wiki,musicTitle).id:!!options.videoOnly;
       voiceTab.setAttribute('aria-selected',String(selectedTab==='voices'));
       backingTab.setAttribute('aria-selected',String(backing));
       chordTab.setAttribute('aria-selected',String(chords));
@@ -530,7 +529,14 @@ module-type: library
       doc.removeEventListener('webkitfullscreenchange',onFullscreenChange);
       if (wiki && wiki.removeEventListener) wiki.removeEventListener('change',onWikiChange);
     }
-    var lastSource=String(options.source||'');if(!options.videoOnly){rebuild(lastSource);rebuildChords(lastSource);}chooseTab('voices');setCollapsed(collapsed);
+    var lastSource=String(options.source||'');
+    if(!options.videoOnly){rebuild(lastSource);rebuildChords(lastSource);}
+    else{
+      list.appendChild(node('p','huwabc-mini-mixer-empty',word('Dette nummer har ingen ABC-stemmer. YouTube kan stadig afspilles.','This tune has no ABC voices. YouTube is still available.')));
+      backingList.appendChild(node('p','huwabc-mini-mixer-empty',word('Akkompagnement kræver en ABC-udgave af nummeret.','Accompaniment requires an ABC version of this tune.')));
+      chordList.appendChild(node('p','huwabc-mini-mixer-empty',word('Akkordvisningen kræver becifringer i en ABC-udgave.','The chord view requires chord symbols in an ABC version.')));
+    }
+    chooseTab(options.videoOnly?'youtube':'voices');setCollapsed(collapsed);
     if (options.initialFloating && options.anchor && !Number.isFinite(initial.x)) positionFromAnchor(options.anchor);
     layout(floating);
     win.addEventListener('resize',onResize);
